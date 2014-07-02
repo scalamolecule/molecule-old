@@ -1,0 +1,15 @@
+.DS_Store
+.idea
+.idea_modules
+.lib
+*.swp
+*.iml
+*~
+*#
+project/boot
+project.vim
+project/.ivy
+project/.boot
+project/.sbt
+tags
+target
