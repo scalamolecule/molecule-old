@@ -115,10 +115,10 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 [pullrequests]: https://groups.google.com/forum/#!forum/scaladatomic
 [issues]: https://github.com/ScalaDatomic/molecule/issues
 
-[intro]: https://github.com/ScalaDatomic/molecule/wiki/Quick-introduction-to-DatomicMolecule
-[setup]: https://github.com/ScalaDatomic/molecule/wiki/1.2.-Setup-the-database
-[populate]: https://github.com/ScalaDatomic/molecule/wiki/1.3.-Populate-the-database
-[tutorial]: https://github.com/ScalaDatomic/molecule/wiki/1.4.-Molecule-Seattle-tutorial
+[intro]: https://github.com/ScalaDatomic/molecule/wiki/Quick-introduction-to-Datomic-Molecule
+[setup]: https://github.com/ScalaDatomic/molecule/wiki/Setup-a-Datomic-database
+[populate]: https://github.com/ScalaDatomic/molecule/wiki/Populate-the-database
+[tutorial]: https://github.com/ScalaDatomic/molecule/wiki/Molecule-Seattle-tutorial
 [tutorialcode]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
 [tutorialqueries]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
 [tutorialtransformations]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTransformationTests.scala
