@@ -3,7 +3,7 @@
 Molecule is a type safe and intuitive Scala query/modelling DSL for 
 [Datomic][datomic] - the immutable database of facts. 
 
-As an example of  : to find
+As an example: to find
 
 _Names of twitter/facebook_page communities in neighborhoods of southern districts_
  
