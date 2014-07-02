@@ -67,8 +67,8 @@ We still need to explore how far Molecule can match the expressive powers
 - [Populate Database][populate]: populate a Datomic database with Molecule
 - [Molecule Seattle tutorial][tutorial] examples of using Molecule (based on the 
 [Datomic Seattle tutorial][seattle])
-- Tests in [SeattleQueries]() shows the queries produced by the molecules in the tutorial
-- Tests in [SeattleTransformations]() shows the full dsl -> model -> query -> query string 
+- Tests in [SeattleQueries][tutorialqueries] shows the queries produced by the molecules in the tutorial
+- Tests in [SeattleTransformations][tutorialtransformations] shows the full dsl -> model -> query -> query string 
 transformations of molecules
 
 ## Using Molecule
