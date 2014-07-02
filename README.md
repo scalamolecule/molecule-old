@@ -10,7 +10,8 @@ we can compose a "molecule query" that is very close to our
 human sentence:
 
 ```scala
-Community.name.`type`("twitter" or "facebook_page").Neighborhood.District.region("sw" or "s" or "se")
+Community.name.`type`("twitter" or "facebook_page")
+  .Neighborhood.District.region("sw" or "s" or "se")
 ```
 
 Molecule transforms this to a little more elaborate Datalog query string and
