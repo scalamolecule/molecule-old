@@ -1,7 +1,7 @@
 # Molecule
 
 Molecule is a type safe and intuitive Scala query/modelling DSL for 
-[Datomic](http://www.datomic.com) - the immutable database of facts. As an
+[Datomic][datomic] - the immutable database of facts. As an
  example: to find
 
 _Names of twitter/facebook_page communities in neighborhoods of southern districts_
@@ -54,17 +54,18 @@ allows you to
 We still need to explore how far Molecule can match the expressive powers
  of Datalog. So far, all 
  examples in the
-[Seattle tutorial](http://docs.datomic.com/tutorial.html) have been 
+[Seattle tutorial][seattle] have been 
 "molecularized" succesfully (see the 
-[Molecule Seattle tutorial]() and 
+[Molecule Seattle tutorial][tutorial] and 
 [code]()). So as a proof-of-concept it looks promising...
 
 ## Getting started
 
-- [Quick introduction]() to Datomic/Molecule
-- [Setup Database](): initiate a Datomic database and create a database schema with Molecule
-- [Populate Database](): populate a Datomic database with Molecule
-- [Molecule Seattle tutorial]() examples of using Molecule (based on the [Datomic Seattle tutorial](http://docs.datomic.com/tutorial.html))
+- [Quick introduction][intro] to Datomic/Molecule
+- [Setup Database][setup]: initiate a Datomic database and create a database schema with Molecule
+- [Populate Database][populate]: populate a Datomic database with Molecule
+- [Molecule Seattle tutorial][tutorial] examples of using Molecule (based on the 
+[Datomic Seattle tutorial][seattle])
 - Tests in [SeattleQueries]() shows the queries produced by the molecules in the tutorial
 - Tests in [SeattleTransformations]() shows the full dsl -> model -> query -> query string 
 transformations of molecules
@@ -76,13 +77,13 @@ Molecule 0.1.0 for Scala 2.11.1 will soon be available at
  so that you can
 
 1. Add `"org.scaladatomic" % "molecule_2.11.1" % "0.1.0"` to your sbt build file.
-2. Define your domain in a [schema definition file]()
+2. Define your domain in a [schema definition file][setup]
 3. `sbt compile`
 4. `sbt`
 5. `gen-idea` to create your project // if you're using IntelliJ
-6. [Setup your database](Setup database)
-7. [Populate your database](Populate Database) with data
-8. [Make molecule queries](tutorial)
+6. [Setup your database][setup]
+7. [Populate your database][populate] with data
+8. [Make molecule queries][tutorial]
 
 Please feel free to [submit bugs](), come with pull requests and suggestions. 
 
@@ -95,4 +96,12 @@ June 2014
 
 
 ### Resources
-- [Datomic](http://www.datomic.com) website
+- [Datomic][datomic] website
+
+[datomic]: http://www.datomic.com
+[seattle]: http://docs.datomic.com/tutorial.html
+
+[intro]: https://github.com/ScalaDatomic/molecule/wiki/1.1.-Quick-introduction
+[setup]: https://github.com/ScalaDatomic/molecule/wiki/1.2.-Setup-the-database
+[populate]: https://github.com/ScalaDatomic/molecule/wiki/1.3.-Populate-the-database
+[tutorial]: https://github.com/ScalaDatomic/molecule/wiki/1.4.-Molecule-Seattle-tutorial
