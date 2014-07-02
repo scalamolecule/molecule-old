@@ -115,7 +115,7 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 [pullrequests]: https://groups.google.com/forum/#!forum/scaladatomic
 [issues]: https://github.com/ScalaDatomic/molecule/issues
 
-[intro]: https://github.com/ScalaDatomic/molecule/wiki/1.1.-Quick-introduction
+[intro]: https://github.com/ScalaDatomic/molecule/wiki/Quick-introduction-to-DatomicMolecule
 [setup]: https://github.com/ScalaDatomic/molecule/wiki/1.2.-Setup-the-database
 [populate]: https://github.com/ScalaDatomic/molecule/wiki/1.3.-Populate-the-database
 [tutorial]: https://github.com/ScalaDatomic/molecule/wiki/1.4.-Molecule-Seattle-tutorial
