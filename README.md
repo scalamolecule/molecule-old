@@ -78,10 +78,11 @@ Molecule 0.1.0 for Scala 2.11.1 will soon be available at
 1. Add `"org.scaladatomic" % "molecule_2.11.1" % "0.1.0"` to your sbt build file.
 2. Define your domain in a [schema definition file]()
 3. `sbt compile`
-4. `gen-idea` to create your project // if you're using IntelliJ
-5. [Setup your database](Setup database)
-6. [Populate your database](Populate Database) with data
-7. [Make molecule queries](tutorial)
+4. `sbt`
+5. `gen-idea` to create your project // if you're using IntelliJ
+6. [Setup your database](Setup database)
+7. [Populate your database](Populate Database) with data
+8. [Make molecule queries](tutorial)
 
 Please feel free to [submit bugs](), come with pull requests and suggestions. 
 
