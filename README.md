@@ -86,9 +86,9 @@ Molecule 0.1.0 for Scala 2.11.1 will soon be available at
 7. [Populate your database][populate] with data
 8. [Make molecule queries][tutorial]
 
-Please feel free to [submit bugs](), come with pull requests and suggestions. 
+Please feel free to [submit bugs][issues], come with [pull requests][pullrequests] and suggestions. 
 
-The [ScalaDatomic group]() is also open for your Molecule questions.
+The [ScalaDatomic group][scaladatomicgroup] is also open for your Molecule questions.
 
 Have fun!
 
@@ -101,6 +101,9 @@ June 2014
 
 [datomic]: http://www.datomic.com
 [seattle]: http://docs.datomic.com/tutorial.html
+[scaladatomicgroup]: https://groups.google.com/forum/#!forum/scaladatomic
+[pullrequests]: https://groups.google.com/forum/#!forum/scaladatomic
+[issues]: https://github.com/ScalaDatomic/molecule/issues
 
 [intro]: https://github.com/ScalaDatomic/molecule/wiki/1.1.-Quick-introduction
 [setup]: https://github.com/ScalaDatomic/molecule/wiki/1.2.-Setup-the-database
