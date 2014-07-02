@@ -11,7 +11,7 @@ object build extends Build with BuildSettings {
 trait BuildSettings extends Publishing {
   val commonSettings = Defaults.defaultSettings ++ Seq(
     organization := "org.scaladatomic",
-    version := "0.1-SNAPSHOT",
+    version := "0.1.0",
     scalaVersion := "2.11.1",
     scalacOptions := Seq(
       "-feature",
