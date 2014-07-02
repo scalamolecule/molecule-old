@@ -1,8 +1,9 @@
 # Molecule
 
 Molecule is a type safe and intuitive Scala query/modelling DSL for 
-[Datomic][datomic] - the immutable database of facts. As an
- example: to find
+[Datomic][datomic] - the immutable database of facts. 
+
+As an example of  : to find
 
 _Names of twitter/facebook_page communities in neighborhoods of southern districts_
  
@@ -86,9 +87,10 @@ Molecule 0.1.0 for Scala 2.11.1 will soon be available at
 7. [Populate your database][populate] with data
 8. [Make molecule queries][tutorial]
 
-Please feel free to [submit bugs][issues], come with [pull requests][pullrequests] and suggestions. 
+Please feel free to [submit bugs/issues][issues], come with [pull requests][pullrequests] and suggestions. 
 
-The [ScalaDatomic group][scaladatomicgroup] is also open for your Molecule questions.
+The [ScalaDatomic group][scaladatomicgroup] is also open for your Molecule questions and other discussions 
+related to how we can use Datomic with Scala.
 
 Have fun!
 
