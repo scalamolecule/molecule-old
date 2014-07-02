@@ -58,7 +58,7 @@ We still need to explore how far Molecule can match the expressive powers
 [Seattle tutorial][seattle] have been 
 "molecularized" succesfully (see the 
 [Molecule Seattle tutorial][tutorial] and 
-[code]()). So as a proof-of-concept it looks promising...
+[code][tutorialcode]). So as a proof-of-concept it looks promising...
 
 ## Getting started
 
@@ -106,3 +106,6 @@ June 2014
 [setup]: https://github.com/ScalaDatomic/molecule/wiki/1.2.-Setup-the-database
 [populate]: https://github.com/ScalaDatomic/molecule/wiki/1.3.-Populate-the-database
 [tutorial]: https://github.com/ScalaDatomic/molecule/wiki/1.4.-Molecule-Seattle-tutorial
+[tutorialcode]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
+[tutorialqueries]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
+[tutorialtransformations]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTransformationTests.scala
