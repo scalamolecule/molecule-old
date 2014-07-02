@@ -99,6 +99,7 @@ June 2014
 
 
 ### Resources
+- [ScalaDatomic google group][scaladatomicgroup] for questions and discussions about Molecule and other Scala-based Datomic resources
 - [Datomic][datomic] website
 
 [datomic]: http://www.datomic.com
