@@ -15,7 +15,7 @@ Community.name.`type`("twitter" or "facebook_page")
   .Neighborhood.District.region("sw" or "s" or "se")
 ```
 
-Molecule transforms this to a little more elaborate Datalog query string and
+Molecule transforms this at compile time (with macros) to a little more elaborate Datalog query string and
  input rules that finds those communities in the Datomic database:
 
 <pre>
