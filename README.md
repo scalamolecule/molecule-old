@@ -87,20 +87,27 @@ Molecule 0.1.0 for Scala 2.11.1 will soon be available at
 7. [Populate your database][populate] with data
 8. [Make molecule queries][tutorial]
 
-Please feel free to [submit bugs/issues][issues], come with [pull requests][pullrequests] and suggestions. 
 
-The [ScalaDatomic group][scaladatomicgroup] is also open for your Molecule questions and other discussions 
-related to how we can use Datomic with Scala.
-
-Have fun!
-
-Marc Grue<br>
-June 2014
-
-
-### Resources
+## Resources
 - [ScalaDatomic google group][scaladatomicgroup] for questions and discussions about Molecule and other Scala-based Datomic resources
+- [Issues][issues] - please feel free to raise issues/report bugs
+- [Pull requests][pullrequests] are welcome
 - [Datomic][datomic] website
+- [Datomisca](https://github.com/pellucidanalytics/datomisca), a Scala API for Datomic
+
+
+### Author
+[Marc Grue](http://marcgrue.com)
+
+### Credits/inspiration/acknowledgements
+- [Rogue](https://github.com/foursquare/rogue), type-safe Scala DSL for MongoDB
+- [Datomisca](https://github.com/pellucidanalytics/datomisca), a Scala API for Datomic
+- [SqlTyped](https://github.com/jonifreeman/sqltyped), Embedding SQL as an external DSL into Scala
+- [JScala](https://github.com/nau/jscala), Scala macro that produces JavaScript from Scala code
+- [Parboiled2](https://github.com/sirthias/parboiled2), A macro-based PEG parser generator for Scala
+
+### License
+Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki/Apache_license)
 
 [datomic]: http://www.datomic.com
 [seattle]: http://docs.datomic.com/tutorial.html
