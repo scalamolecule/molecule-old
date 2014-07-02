@@ -96,17 +96,17 @@ Molecule 0.1.0 for Scala 2.11.1 will soon be available at
 - [Datomisca](https://github.com/pellucidanalytics/datomisca), a Scala API for Datomic
 
 
-### Author
+#### Author
 [Marc Grue](http://marcgrue.com)
 
-### Credits/inspiration/acknowledgements
+#### Credits/inspiration/acknowledgements
 - [Rogue](https://github.com/foursquare/rogue), type-safe Scala DSL for MongoDB
 - [Datomisca](https://github.com/pellucidanalytics/datomisca), a Scala API for Datomic
 - [SqlTyped](https://github.com/jonifreeman/sqltyped), Embedding SQL as an external DSL into Scala
 - [JScala](https://github.com/nau/jscala), Scala macro that produces JavaScript from Scala code
 - [Parboiled2](https://github.com/sirthias/parboiled2), A macro-based PEG parser generator for Scala
 
-### License
+#### License
 Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki/Apache_license)
 
 [datomic]: http://www.datomic.com
