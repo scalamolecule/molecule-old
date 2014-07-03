@@ -75,7 +75,7 @@ transformations of molecules
 ## Using Molecule
 
 Molecule 0.1.0 for Scala 2.11.1 will soon be available at 
-[Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick%7Escaladci)
+[Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick%7Emolecule-dsl)
  so that you can
 
 1. Add `"org.scaladatomic" % "molecule_2.11.1" % "0.1.0"` to your sbt build file.
