@@ -111,14 +111,14 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 
 [datomic]: http://www.datomic.com
 [seattle]: http://docs.datomic.com/tutorial.html
-[scaladatomicgroup]: https://groups.google.com/forum/#!forum/scaladatomic
-[pullrequests]: https://groups.google.com/forum/#!forum/scaladatomic
-[issues]: https://github.com/ScalaDatomic/molecule/issues
+[scaladatomicgroup]: https://groups.google.com/forum/#!forum/molecule-dsl
+[pullrequests]: https://github.com/marcgrue/molecule/pulls
+[issues]: https://github.com/marcgrue/molecule/issues
 
-[intro]: https://github.com/ScalaDatomic/molecule/wiki/Quick-introduction-to-Datomic-and-Molecule
-[setup]: https://github.com/ScalaDatomic/molecule/wiki/Setup-a-Datomic-database
-[populate]: https://github.com/ScalaDatomic/molecule/wiki/Populate-the-database
-[tutorial]: https://github.com/ScalaDatomic/molecule/wiki/Molecule-Seattle-tutorial
-[tutorialcode]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
-[tutorialqueries]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
-[tutorialtransformations]: https://github.com/ScalaDatomic/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTransformationTests.scala
+[intro]: https://github.com/marcgrue/molecule/wiki/Quick-introduction-to-Datomic-and-Molecule
+[setup]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database
+[populate]: https://github.com/marcgrue/molecule/wiki/Populate-the-database
+[tutorial]: https://github.com/marcgrue/molecule/wiki/Molecule-Seattle-tutorial
+[tutorialcode]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
+[tutorialqueries]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
+[tutorialtransformations]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTransformationTests.scala
