@@ -89,7 +89,7 @@ Molecule 0.1.0 for Scala 2.11.1 will soon be available at
 
 
 ## Resources
-- [ScalaDatomic google group][scaladatomicgroup] for questions and discussions about Molecule and other Scala-based Datomic resources
+- [Molecule google list][scaladatomicgroup] for questions and discussions about Molecule and other Scala-based Datomic resources
 - [Issues][issues] - please feel free to raise issues/report bugs
 - [Pull requests][pullrequests] are welcome
 - [Datomic][datomic] website
