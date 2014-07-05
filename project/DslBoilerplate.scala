@@ -492,7 +492,7 @@ object DslBoilerplate {
     schemaFile
   }
 
-  def generate(srcManaged: File, domainDirs: Seq[String]) = {
+  def generate(srcManaged: File, domainDirs: Seq[String]): Seq[File] = {
 
     // Loop domain directories
     domainDirs flatMap { domainDir =>

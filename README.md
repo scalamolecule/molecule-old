@@ -74,22 +74,31 @@ transformations of molecules
 
 ## Using Molecule
 
+### Download code
+
+1. `git clone https://github.com/marcgrue/molecule.git`
+2. `sbt compile`
+3. Import into your IDE
+4. Poke around...
+
+
+### Dependency in your project
+
 Molecule 0.1.0 for Scala 2.11.1 will soon be available at 
 [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick%7Emolecule-dsl)
  so that you can
 
-1. Add `"org.scaladatomic" % "molecule_2.11.1" % "0.1.0"` to your sbt build file.
+1. Add `"com.marcgrue" % "molecule_2.11.1" % "0.1.0"` to your sbt build file.
 2. Define your domain in a [schema definition file][setup]
 3. `sbt compile`
-4. `sbt`
-5. `gen-idea` to create your project // if you're using IntelliJ
-6. [Setup your database][setup]
-7. [Populate your database][populate] with data
-8. [Make molecule queries][tutorial]
+4. Import into your IDE
+5. [Setup your database][setup]
+6. [Populate your database][populate] with data
+7. [Make molecule queries][tutorial]
 
 
 ## Resources
-- [Molecule google list][scaladatomicgroup] for questions and discussions about Molecule and other Scala-based Datomic resources
+- [Molecule google list][moleculegroup] for questions and discussions about Molecule and other Scala-based Datomic resources
 - [Issues][issues] - please feel free to raise issues/report bugs
 - [Pull requests][pullrequests] are welcome
 - [Datomic][datomic] website
@@ -111,7 +120,7 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 
 [datomic]: http://www.datomic.com
 [seattle]: http://docs.datomic.com/tutorial.html
-[scaladatomicgroup]: https://groups.google.com/forum/#!forum/molecule-dsl
+[moleculegroup]: https://groups.google.com/forum/#!forum/molecule-dsl
 [pullrequests]: https://github.com/marcgrue/molecule/pulls
 [issues]: https://github.com/marcgrue/molecule/issues
 
