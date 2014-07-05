@@ -253,7 +253,7 @@ object DslBoilerplate {
     // Arity classes ######################################################################################
 
     val inArity = 3
-    val outArity = 8
+    val outArity = 22
     val inRange = 0 to inArity
     val outRange = 0 to outArity
 

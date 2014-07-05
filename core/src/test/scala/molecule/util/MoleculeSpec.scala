@@ -63,7 +63,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
 
       // Molecule -> query
       def -->(query: Query) = new {
-        molecule.q === query
+        molecule._query === query
         def -->(queryString: String) = {
           query.pretty(30) + formatInputs(query) === queryString
         }
@@ -79,7 +79,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     }
 
     def -->(queryString: String) = {
-      molecule.q.pretty(30) + formatInputs(molecule.q) === queryString
+      molecule._query.pretty(30) + formatInputs(molecule._query) === queryString
     }
 
     def -->(data: Seq[Seq[Any]]) = new {

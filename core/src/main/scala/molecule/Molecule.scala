@@ -6,9 +6,9 @@ import molecule.ast.query.Query
 import molecule.db.DatomicFacade
 
 
-abstract class Molecule(val _model: Model, val q: Query) extends DatomicFacade {
-  override def toString: String = q.toList
-  def p = q.pretty
+abstract class Molecule(val _model: Model, val _query: Query) extends DatomicFacade {
+  override def toString: String = _query.toList
+  def p = _query.pretty
   def ids: Seq[Long]
   def size: Int = ids.size
 
