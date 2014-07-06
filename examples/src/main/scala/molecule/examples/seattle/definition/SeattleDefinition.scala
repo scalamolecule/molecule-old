@@ -1,7 +1,8 @@
 package molecule.examples.seattle.definition
-
 import molecule.ast.definition._
 
+
+@InOut(3, 8)
 trait Community {
   val name         = oneString.fullTextSearch
   val url          = oneString.fullTextSearch

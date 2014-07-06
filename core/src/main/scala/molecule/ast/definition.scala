@@ -1,9 +1,14 @@
 package molecule.ast
+import scala.annotation.StaticAnnotation
 
-//trait shared {
-//  def doc(s: String) = this
-//}
+
 object definition {
+
+  class InOut(inputArity: Int = 3, outputArity: Int = 8) extends StaticAnnotation
+
+  //trait shared {
+  //  def doc(s: String) = this
+  //}
 
   trait anyAttr {
     lazy val noHistory = this

@@ -16,10 +16,29 @@ object DslBoilerplate {
       sys.error("Found no package statement in definition file")
     }
 
-    val nsDefs: Seq[(String, Seq[Seq[Any]])] = raw.foldLeft(Seq("ns" -> Seq(Seq("attr definitions...": Any)))) {
+    val (inArity, outArity) = raw collect {
+      case r"@InOut\((\d+)$in, (\d+)$out\)" => (in.toString.toInt, out.toString.toInt) match {
+        case (inN: Int, _) if inN < 1 || inN > 3     => sys.error(s"Input arity in '${defFile.getName}' was $in. It should be between 1-3")
+        case (_, outN: Int) if outN < 1 || outN > 22 => sys.error(s"Output arity of '${defFile.getName}' was $out. It should be between 1-22")
+        case (inN: Int, outN: Int)                   => (inN, outN)
+      }
+    } match {
+      case Nil           => sys.error(
+        """Please annotate the first namespace definition with '@InOut(inArity, outArity)' where:
+          |inArity is a number between 1-3 for how many inputs molecules of this schema can await
+          |outArity is a number between 1-22 for how many output attributes molecules of this schema can have""".stripMargin)
+      case h :: t :: Nil => sys.error(
+        """
+          |Only the first namespace should be annotated with @InOut since all namespaces in a schema will need
+          |to share the same arities to be able to carry over type information uniformly across namespaces.""".stripMargin)
+      case annotations   => annotations.head
+    }
+
+    val nsDefs: Seq[(String, Seq[Seq[Any]])] = raw.foldLeft(Seq[(String, Seq[Seq[Any]])]()) {
       case (acc, l) => l match {
         case r"package (.*)$path\.[\w]*"                    => acc
         case "import molecule.ast.definition._"             => acc
+        case r"@InOut\(\d, \d+\)"                           => acc
         case r"trait (\w*)$ns \{"                           => acc :+ (ns -> Seq())
         case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$s" => {
           val attr = q1 + a + q2
@@ -36,6 +55,8 @@ object DslBoilerplate {
             case unexpected                   => sys.error("Unexpected attribute code in definition file:\n" + unexpected)
           }
           val ns = acc.last._1
+          //          val in = acc.last._2
+          //          val out = acc.last._3
           val prevAttrs = acc.last._2
           val attrDef = extract(s)
           val updatedAttrs = prevAttrs :+ attrDef
@@ -44,11 +65,11 @@ object DslBoilerplate {
         case "}"                                            => acc
         case unexpected                                     => sys.error("Unexpected code in definition file:\n" + unexpected)
       }
-    }.tail
-    (path, nsDefs)
+    }
+    (path, inArity, outArity, nsDefs)
   }
 
-  def handleNamespace(srcManaged: File, path: String, nsDef: (String, Seq[Seq[Any]])) = {
+  def handleNamespace(srcManaged: File, path: String, inArity: Int, outArity: Int, nsDef: (String, Seq[Seq[Any]])) = {
 
     // NS meta data.........................................
     val Ns = nsDef._1
@@ -252,8 +273,6 @@ object DslBoilerplate {
 
     // Arity classes ######################################################################################
 
-    val inArity = 3
-    val outArity = 22
     val inRange = 0 to inArity
     val outRange = 0 to outArity
 
@@ -501,10 +520,10 @@ object DslBoilerplate {
 
       // Loop definition files in each domain directory
       definitionFiles.flatMap { definitionFile =>
-        val (path, nsDefs) = extractNsDefinitions(definitionFile)
+        val (path, inArity, outArity, nsDefs) = extractNsDefinitions(definitionFile)
 
         // Loop namespaces in each definition file
-        val (schemaStmts, dslFiles) = nsDefs.map(handleNamespace(srcManaged, path, _)).unzip
+        val (schemaStmts, dslFiles) = nsDefs.map(handleNamespace(srcManaged, path, inArity, outArity, _)).unzip
 
         // Create schema file
         val domain = definitionFile.name.replace("Definition.scala", "")
