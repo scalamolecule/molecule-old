@@ -515,7 +515,7 @@ object DslBoilerplate {
 
     // Loop domain directories
     domainDirs flatMap { domainDir =>
-      val definitionFiles = IO.listFiles(new File(domainDir) / "definition").filter(f => f.isFile && f.name.endsWith("Definition.scala"))
+      val definitionFiles = IO.listFiles(new File(domainDir) / "schema").filter(f => f.isFile && f.name.endsWith("Definition.scala"))
       assert(definitionFiles.size > 0, "Found no definition files in path: " + domainDir)
 
       // Loop definition files in each domain directory

@@ -6,7 +6,8 @@
  */
 package molecule.examples.seattle.dsl
 import molecule._
-import ast.schemaDSL._
+import molecule.dsl.schemaDSL
+import schemaDSL._
 import ast.model._
 
 object Community extends Community_Out_0 {

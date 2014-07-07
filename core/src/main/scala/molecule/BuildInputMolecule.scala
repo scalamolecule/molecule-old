@@ -2,7 +2,8 @@ package molecule
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import molecule.ast.query._
-import molecule.ast.schemaDSL._
+import molecule.dsl.schemaDSL
+import schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._

@@ -1,15 +1,10 @@
 //package molecule.examples.dayOfDatomic
 //
-//import scala.language.postfixOps
-//import molecule.ast.schemaDefinition
-//import molecule.dsl.DefinitionDSL
+//import molecule.ast.definition._
 //
-//object SocialNewsDefinition extends DefinitionDSL {
-//
-//  import schemaDefinition._
 //
 //  trait Story {
-//    val title = fulltext ~ indexed
+//    val title = oneString.fullTextSearch. ~ indexed
 //    val url   = string ~ uniqueIdentity
 //    val slug  = string
 //  }

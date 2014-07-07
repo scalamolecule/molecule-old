@@ -1,5 +1,6 @@
-package molecule.examples.seattle.definition
-import molecule.ast.definition._
+package molecule.examples.seattle.schema
+import molecule.dsl.schemaDefinition
+import schemaDefinition._
 
 
 @InOut(3, 8)

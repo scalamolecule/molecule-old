@@ -2,7 +2,8 @@ package molecule
 import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.ast.schemaDSL.NS
+import molecule.dsl.schemaDSL
+import schemaDSL.NS
 
 
 // 1 input X outputs

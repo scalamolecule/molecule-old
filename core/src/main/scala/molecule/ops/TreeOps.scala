@@ -2,7 +2,8 @@ package molecule
 package ops
 import scala.reflect.macros.whitebox.Context
 import molecule.ast.query._
-import molecule.ast.schemaDSL._
+import molecule.dsl.schemaDSL
+import schemaDSL._
 
 trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   import c.universe._

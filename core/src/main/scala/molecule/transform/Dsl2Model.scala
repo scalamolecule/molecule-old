@@ -1,6 +1,7 @@
 package molecule.transform
 import molecule.ast.model._
-import molecule.ast.schemaDSL._
+import molecule.dsl.schemaDSL
+import schemaDSL._
 import molecule.ops.TreeOps
 
 import scala.language.experimental.macros

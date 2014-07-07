@@ -1,10 +1,9 @@
-package molecule
-package ast
+package molecule.dsl
+
+import scala.annotation.StaticAnnotation
 import datomic.Connection
 import molecule.ast.model._
 import molecule.db.DatomicFacade
-
-import scala.annotation.StaticAnnotation
 
 object schemaDSL {
 

@@ -2,9 +2,10 @@ import sbt.Keys._
 import sbt._
 
 object build extends Build with BuildSettings {
-  lazy val root                = project in file(".") settings (_root: _*) aggregate (molecule, `molecule-examples`)
-  lazy val molecule            = project in file("core") settings (_core: _*)
-  lazy val `molecule-examples` = project in file("examples") settings (_examples: _*) dependsOn molecule
+  lazy val molecule            = project in file(".") settings (_root: _*) aggregate (`molecule-core`, `molecule-coretest`, `molecule-examples`)
+  lazy val `molecule-core`     = project in file("core") settings (_core: _*)
+  lazy val `molecule-coretest` = project in file("coretest") settings (_coretest: _*) dependsOn `molecule-core`
+  lazy val `molecule-examples` = project in file("examples") settings (_examples: _*) dependsOn `molecule-core`
 }
 
 trait BuildSettings extends Boilerplate with Publishing {
@@ -34,24 +35,19 @@ trait BuildSettings extends Boilerplate with Publishing {
   )
   lazy val _root     = commonSettings :+ (packagedArtifacts := Map.empty)
   lazy val _core     = commonSettings
-  lazy val _examples = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate)
+  lazy val _coretest = commonSettings :+ (packagedArtifacts := Map.empty)
+  lazy val _examples = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate(
+    "examples/src/main/scala/molecule/examples/seattle"
+  ))
 }
 
 trait Boilerplate {
 
-  // Directories with schema definition files
-  lazy val inputDirs = Seq(
-    "examples/src/main/scala/molecule/examples/seattle"
-  )
-
-  lazy val boilerplate = sourceGenerators in Compile += Def.task[Seq[File]] {
+  def boilerplate(inputDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {
     val sourceDir = (sourceManaged in Compile).value
 
-    // Picking up inputs for source generation
-    val inputDirs = Seq("examples/src/main/scala/molecule/examples/seattle")
-
     // generate source files
-    val sourceFiles = DslBoilerplate.generate(sourceDir, inputDirs)
+    val sourceFiles = DslBoilerplate.generate(sourceDir, inputDirs.toSeq)
 
     // Avoid re-generating boilerplate if nothing has changed when running `sbt compile`
     val cache = FileFunction.cached(
