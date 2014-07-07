@@ -18,7 +18,7 @@ object DslBoilerplate {
 
     val (inArity, outArity) = raw collect {
       case r"@InOut\((\d+)$in, (\d+)$out\)" => (in.toString.toInt, out.toString.toInt) match {
-        case (inN: Int, _) if inN < 1 || inN > 3     => sys.error(s"Input arity in '${defFile.getName}' was $in. It should be between 1-3")
+        case (inN: Int, _) if inN < 0 || inN > 3     => sys.error(s"Input arity in '${defFile.getName}' was $in. It should be between 0-3")
         case (_, outN: Int) if outN < 1 || outN > 22 => sys.error(s"Output arity of '${defFile.getName}' was $out. It should be between 1-22")
         case (inN: Int, outN: Int)                   => (inN, outN)
       }
@@ -36,18 +36,36 @@ object DslBoilerplate {
 
     val nsDefs: Seq[(String, Seq[Seq[Any]])] = raw.foldLeft(Seq[(String, Seq[Seq[Any]])]()) {
       case (acc, l) => l match {
+        case r"\/\/.*" /* comments allowed */               => acc
         case r"package (.*)$path\.[\w]*"                    => acc
-        case "import molecule.ast.definition._"             => acc
+        case "import molecule.dsl.schemaDefinition._"       => acc
         case r"@InOut\(\d, \d+\)"                           => acc
         case r"trait (\w*)$ns \{"                           => acc :+ (ns -> Seq())
         case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$s" => {
           val attr = q1 + a + q2
           def extract(str: String, elements: Seq[Any] = Seq()): Seq[Any] = str match {
-            case r"oneString(.*)$rest"        => extract(rest, Seq("attr", attr, "String", 1, "OneString(ns, ns2)"))
-            case r"manyStrings(.*)$rest"      => extract(rest, Seq("attr", attr, "Set[String]", 2, "ManyString(ns, ns2)"))
-            case r"oneInt(.*)$rest"           => extract(rest, Seq("attr", attr, "Int", 1, "OneInt(ns, ns2)"))
-            case r"oneEnum\((.*)$enums\)"     => Seq("enum", attr, "String", 1, "OneEnum(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
-            case r"manyEnums\((.*)$enums\)"   => Seq("enum", attr, "String", 2, "ManyEnums(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
+
+            // One
+            case r"oneString(.*)$rest"  => extract(rest, Seq("attr", attr, "String", 1, "OneString(ns, ns2)"))
+            case r"oneByte(.*)$rest"    => extract(rest, Seq("attr", attr, "Byte", 1, "OneByte(ns, ns2)"))
+            case r"oneShort(.*)$rest"   => extract(rest, Seq("attr", attr, "Short", 1, "OneShort(ns, ns2)"))
+            case r"oneInt(.*)$rest"     => extract(rest, Seq("attr", attr, "Int", 1, "OneInt(ns, ns2)"))
+            case r"oneLong(.*)$rest"    => extract(rest, Seq("attr", attr, "Long", 1, "OneLong(ns, ns2)"))
+            case r"oneFloat(.*)$rest"   => extract(rest, Seq("attr", attr, "Float", 1, "OneFloat(ns, ns2)"))
+            case r"oneDouble(.*)$rest"  => extract(rest, Seq("attr", attr, "Double", 1, "OneDouble(ns, ns2)"))
+            case r"oneBoolean(.*)$rest" => extract(rest, Seq("attr", attr, "Boolean", 1, "OneBoolean(ns, ns2)"))
+            case r"oneDate(.*)$rest"    => extract(rest, Seq("attr", attr, "java.util.Date", 1, "OneDate(ns, ns2)"))
+            case r"oneUUID(.*)$rest"    => extract(rest, Seq("attr", attr, "java.util.UUID", 1, "OneUUID(ns, ns2)"))
+            case r"oneURI(.*)$rest"     => extract(rest, Seq("attr", attr, "java.net.URI", 1, "OneURI(ns, ns2)"))
+
+            // Many
+            case r"manyStrings(.*)$rest" => extract(rest, Seq("attr", attr, "Set[String]", 2, "ManyString(ns, ns2)"))
+
+            // Enums
+            case r"oneEnum\((.*)$enums\)"   => Seq("enum", attr, "String", 1, "OneEnum(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
+            case r"manyEnums\((.*)$enums\)" => Seq("enum", attr, "String", 2, "ManyEnums(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
+
+            // Options
             case r"\.fullTextSearch(.*)$rest" => extract(rest, elements :+ "FulltextSearch")
             case r"\.uniqueIdentity(.*)$rest" => extract(rest, elements :+ "UniqueIdentity")
             case r"oneRef\[(\w*)$ref\]"       => Seq("ref", attr, "OneRef", ref)
@@ -55,8 +73,6 @@ object DslBoilerplate {
             case unexpected                   => sys.error("Unexpected attribute code in definition file:\n" + unexpected)
           }
           val ns = acc.last._1
-          //          val in = acc.last._2
-          //          val out = acc.last._3
           val prevAttrs = acc.last._2
           val attrDef = extract(s)
           val updatedAttrs = prevAttrs :+ attrDef
@@ -73,7 +89,7 @@ object DslBoilerplate {
 
     // NS meta data.........................................
     val Ns = nsDef._1
-    val ns = Ns.toLowerCase
+    val ns = Ns.head.toLower + Ns.tail
     val attrDefs = nsDef._2
     val attrs0 = attrDefs.filter(a => a.head == "attr" || a.head == "enum").map { d =>
       val (cat, attr, tpe, card, defs) = (d.head, d.tail.head, d.tail.tail.head, d.tail.tail.tail.head, d.tail.tail.tail.tail)
@@ -117,8 +133,14 @@ object DslBoilerplate {
       val attr = attr0.replace("`", "")
       val valueType = if (cat == "enum") "ref"
       else baseType match {
-        case "Int" => "bigint"
-        case other => other.toLowerCase
+        case "Int"            => "long"
+        case "Date"           => "instant"
+        case "java.util.Date" => "instant"
+        case "UUID"           => "uuid"
+        case "java.util.UUID" => "uuid"
+        case "URI"            => "uri"
+        case "java.net.URI"   => "uri"
+        case other            => other.toLowerCase
       }
       val attr1 = Seq(
         "<id>" -> ":db.part/db",
@@ -129,7 +151,9 @@ object DslBoilerplate {
 
       val attr2 = defs.foldLeft(attr1) {
         case (acc, "FulltextSearch") => acc :+ (":db/fulltext" -> "true")
+        case (acc, "UniqueValue")    => acc :+ (":db/unique" -> ":db.unique/value")
         case (acc, "UniqueIdentity") => acc :+ (":db/unique" -> ":db.unique/identity")
+        case (acc, "Indexed")        => acc :+ (":db/index" -> "true.asInstanceOf[Object]")
         case (acc, _)                => acc
       }
 
@@ -397,8 +421,8 @@ object DslBoilerplate {
                    | */
                    |package $path.dsl
                    |import molecule._
-                   |import ast.schemaDSL._
                    |import ast.model._
+                   |import dsl.schemaDSL._
                    |
                    |object $Ns extends ${Ns}_Out_0 {
                    |  $attrClasses
@@ -458,7 +482,6 @@ object DslBoilerplate {
     val keyValues = for {
       (ns, nsStmts) <- schemaStmts
       attrStmts <- nsStmts
-      longest = 34
       (key, value) <- attrStmts
     } yield (ns, key, value)
 
@@ -479,6 +502,9 @@ object DslBoilerplate {
         case ":db/cardinality"        => (ns1, key, acc + s""",\n             ":db/cardinality"       , "$value"""")
         case ":db/fulltext"           => (ns1, key, acc + s""",\n             ":db/fulltext"          , true.asInstanceOf[Object]""")
         case ":db/unique"             => (ns1, key, acc + s""",\n             ":db/unique"            , "$value"""")
+        case ":db/index"              => (ns1, key, acc + s""",\n             ":db/index"             , true.asInstanceOf[Object]""")
+        case ":db/isComponent"        => (ns1, key, acc + s""",\n             ":db/isComponent"       , true.asInstanceOf[Object]""")
+        case ":db/noHistory"          => (ns1, key, acc + s""",\n             ":db/noHistory"         , true.asInstanceOf[Object]""")
         case ":db.install/_attribute" => (ns1, key, acc + s""",\n             ":db.install/_attribute", "$value"""")
 
         case "<enum>" if key1 != key => (ns1, key, acc +
@@ -495,7 +521,7 @@ object DslBoilerplate {
                    | * Instead, change the molecule definition files and recompile your project with `sbt compile`
                    | */
                    |package $path.schema
-                   |import molecule.db.Schema
+                   |import molecule.ast.Schema
                    |import datomic.{Util, Peer}
                    |
                    |object ${domain}Schema extends Schema {

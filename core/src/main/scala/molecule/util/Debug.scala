@@ -30,7 +30,7 @@ trait Debug {
               }
               indent + s"$a -> " + bb
             }
-            case value                         => indent + value
+            case value                         => indent + value //+ s" TYPE: " + value.getClass
           }
         }
 

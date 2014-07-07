@@ -1,12 +1,16 @@
 package molecule.db
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
+import java.util.{List => JList}
+
 import datomic._
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.Debug
+
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+import scala.language.existentials
 
 trait DatomicFacade extends Debug {
   val x = debug("DatomicFacade", 1, 99, false, 2)
@@ -63,18 +67,18 @@ trait DatomicFacade extends Debug {
 
     //    println(conn)
     //    println(conn.db)
-    //        println(query.format)
-    //        println("---------------- ")
-    //        println(query.pretty)
-    //        println("---------------- ")
-    //        println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
-    //        println("---------------- ")
+    //            println(query.format)
+    //            println("---------------- ")
+    //            println(query.pretty)
+    //            println("---------------- ")
+    //            println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
+    //            println("---------------- ")
 
     val first = if (query.in.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
-    //        println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
-    //        println("###########################################################################################\n")
+    //            println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
+    //            println("###########################################################################################\n")
 
     Peer.q(query.toMap, allInputs: _*)
   }
@@ -92,6 +96,16 @@ trait DatomicFacade extends Debug {
   def insertMany(conn: Connection, model: Model, argss: Seq[Seq[Any]]): Seq[Long] = {
     val tx = Model2Transaction(conn, model, argss)
     val javaTx = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
+    val javaTx2 = Util.list(
+      Util.list(
+        ":db/add",
+        Peer.tempid(":db.part/user"),
+        ":oneType/int",
+        42.asInstanceOf[Object]))
+    x(0
+      , javaTx
+      , javaTx2
+    )
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)
     val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail

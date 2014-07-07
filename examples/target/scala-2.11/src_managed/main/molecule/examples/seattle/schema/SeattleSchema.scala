@@ -5,8 +5,8 @@
  * Instead, change the molecule definition files and recompile your project with `sbt compile`
  */
 package molecule.examples.seattle.schema
-import datomic.{Util, Peer}
 import molecule.ast.Schema
+import datomic.{Util, Peer}
 
 object SeattleSchema extends Schema {
 

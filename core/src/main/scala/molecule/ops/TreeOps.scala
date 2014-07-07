@@ -177,6 +177,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     override def toString = {
       val s = sym.name.toString
       s.head.toLower + s.tail.takeWhile(_ != '_')
+//      s.toLowerCase.takeWhile(_ != '_')
+//      s.takeWhile(_ != '_')
     }
     def attrs = nsType.members.collect {
       case s: TermSymbol if s.isLazy && s.isPublic                       => new att(s)
@@ -231,7 +233,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def hasEnum(enumCandidate: String) = enumValues.contains(enumCandidate)
     def card = if (isOne || attrType <:< weakTypeOf[OneEnum[_, _]]) 1 else 2
     def isValue = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[Many[_, _, _]] || attrType <:< weakTypeOf[OneEnum[_, _]]
-    //    def keyw = KW(Symbol(ns.toString), Symbol(this.toString))
     def keyw = KW(ns.toString, this.toString)
     override def toString = sym.name.toString.head.toLower + sym.name.toString.tail
     def kw = KW(ns.toString, this.toString)

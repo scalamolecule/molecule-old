@@ -1,6 +1,5 @@
 package molecule.examples.seattle.schema
-import molecule.dsl.schemaDefinition
-import schemaDefinition._
+import molecule.dsl.schemaDefinition._
 
 
 @InOut(3, 8)
@@ -15,6 +14,7 @@ trait Community {
 
 trait Neighborhood {
   val name     = oneString.fullTextSearch.uniqueIdentity
+//  val name     = oneString.uniqueIdentity
   val district = oneRef[District]
 }
 

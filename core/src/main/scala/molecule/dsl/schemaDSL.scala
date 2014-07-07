@@ -44,27 +44,28 @@ object schemaDSL {
     def eq(value: T): NS2 = ns2
   }
 
+
+  // One-cardinality
+
   trait One[Ns, Ns2, T] extends ValueAttr[Ns, Ns2, T] {
     def apply(value: T*): NS = ns
   }
+  abstract class OneString[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, String]
+  abstract class OneInt[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, Int]
+  abstract class OneLong[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, Long]
+  abstract class OneFloat[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, Float]
+  abstract class OneDouble[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, Double]
+  abstract class OneBoolean[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, Boolean]
+  abstract class OneDate[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, java.util.Date]
+  abstract class OneUUID[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, java.util.UUID]
+  abstract class OneURI[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, java.net.URI]
+
+
+  // Many-cardinality
 
   trait Many[Ns, Ns2, T] extends ValueAttr[Ns, Ns2, T]
 
 
-  //  sealed trait ValueType
-  //  trait string extends ValueType
-  //  trait boolean extends ValueType
-  //  trait long extends ValueType
-  //  trait bigint extends ValueType
-  //  trait float extends ValueType
-  //  trait double extends ValueType
-  //  trait bigdec extends ValueType
-  //  trait instant extends ValueType
-  //  trait uuid extends ValueType
-  //  trait uri extends ValueType
-  abstract class OneString[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, String]
-  abstract class OneInt[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, Int]
-  abstract class OneLong[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, Long]
 
   abstract class ManyString[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[String]] {
     def apply(value: String*): NS = ns
@@ -77,17 +78,16 @@ object schemaDSL {
   object EnumValue
 
   trait Doc
+  trait UniqueValue
+  trait UniqueIdentity
+  trait Indexed
   trait FulltextSearch {self: Attr =>
     def contains(that: String): NS2 = ns2
   }
-  trait Indexed
-  trait NoHistory
   trait IsComponent
-  trait Mandatory
+  trait NoHistory
 
-  trait UniqueValue
-  trait UniqueIdentity
-
+//  trait Mandatory
 
   abstract class Insert(val elements: Seq[Element]) extends DatomicFacade {
     def save(implicit conn: Connection): Seq[Long] = upsertMolecule(conn, Model(elements))

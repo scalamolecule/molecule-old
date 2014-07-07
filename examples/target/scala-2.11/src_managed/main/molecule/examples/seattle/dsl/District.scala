@@ -6,9 +6,8 @@
  */
 package molecule.examples.seattle.dsl
 import molecule._
-import molecule.dsl.schemaDSL
-import schemaDSL._
 import ast.model._
+import dsl.schemaDSL._
 
 object District extends District_Out_0 {
   class name[NS, NS2](ns: NS, ns2: NS2) extends OneString(ns, ns2) with FulltextSearch with UniqueIdentity {

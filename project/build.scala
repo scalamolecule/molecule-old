@@ -35,7 +35,9 @@ trait BuildSettings extends Boilerplate with Publishing {
   )
   lazy val _root     = commonSettings :+ (packagedArtifacts := Map.empty)
   lazy val _core     = commonSettings
-  lazy val _coretest = commonSettings :+ (packagedArtifacts := Map.empty)
+  lazy val _coretest = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate(
+      "coretest/src/main/scala/molecule/types"
+    ))
   lazy val _examples = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate(
     "examples/src/main/scala/molecule/examples/seattle"
   ))

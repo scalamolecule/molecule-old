@@ -1,7 +1,8 @@
 package molecule
 package examples.seattle
 import scala.language.reflectiveCalls
-import molecule.db.DbSchema._
+import molecule.dsl.DbSchema
+import DbSchema._
 import molecule.examples.seattle.dsl._
 import molecule.examples.seattle.schema.SeattleSchema
 

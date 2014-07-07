@@ -1,4 +1,4 @@
-package molecule.db
+package molecule.dsl
 
 import molecule.dsl.schemaDSL._
 import molecule.{Out_0, Out_1}
@@ -10,7 +10,7 @@ object DbSchema {
   }
 
   trait Db_0 extends Out_0 {
-    import molecule.db.DbSchema.Db._
+    import Db._
     lazy val txInstant = new txInstant(this, new Db_1[java.util.Date] {}) with Db_1[java.util.Date]
   }
 

@@ -40,7 +40,7 @@ object Model2Transaction extends Debug with DatomicFacade {
         val (at, values) = (data._1, data._2)
         val (ns, attr, cardinality, enumPrefix) = (at._1, at._2, at._3, at._4)
         if (values == null)
-          // No fact added when value is null
+        // No fact added when value is null
           None
         else
           Some(Seq(ns, attr, cardinality, enumPrefix, values))
@@ -62,6 +62,10 @@ object Model2Transaction extends Debug with DatomicFacade {
     }
   }
 
+  def p(prefix: Any, value: Any) = {
+    // Allows value to be of another type when it's not prefixed by a String!
+    if (prefix.toString.nonEmpty) prefix.toString + value else value
+  }
 
   def upsertTransaction(db: Database, molecules: Seq[Seq[Seq[Seq[Any]]]], ids: Seq[Long] = Seq()): Seq[Seq[Any]] = {
     //    if (ids.nonEmpty)
@@ -91,8 +95,8 @@ object Model2Transaction extends Debug with DatomicFacade {
               }
               case set: Set[_]                => attrStmts ++ set.map(Seq(":db/add", id, s":$ns/$attr", _))
               case vs: List[_] if vs.size > 1 => attrStmts ++ vs.map(Seq(":db/add", id, s":$ns/$attr", _))
-              case value :: Nil               => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", s"$prefix$value")
-              case value                      => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", s"$prefix$value")
+              case value :: Nil               => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(prefix, value))
+              case value                      => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(prefix, value))
             }
           }
 

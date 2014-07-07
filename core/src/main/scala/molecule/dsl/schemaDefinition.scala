@@ -23,14 +23,6 @@ object schemaDefinition {
     lazy val fullTextSearch = this
   }
 
-  // Byte
-  object oneByte extends anyAttr
-  object manyByte extends anyAttr
-
-  // Short
-  object oneShort extends anyAttr
-  object manyShort extends anyAttr
-
   // Int
   object oneInt extends anyAttr
   object manyInt extends anyAttr
@@ -48,7 +40,7 @@ object schemaDefinition {
   object manyDouble extends anyAttr
 
   // Boolean
-  object boolean extends anyAttr
+  object oneBoolean extends anyAttr
 
   // Date
   object oneDate extends anyAttr

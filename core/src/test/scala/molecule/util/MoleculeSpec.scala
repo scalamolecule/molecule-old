@@ -1,9 +1,8 @@
 package molecule.util
-import datomic.Connection
+import datomic.{Connection, Peer}
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.db.DatomicFacade
-import molecule.dsl.schemaDSL
 import molecule.dsl.schemaDSL._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.{InputMolecule, Molecule}
@@ -11,6 +10,16 @@ import org.specs2.mutable._
 
 
 trait MoleculeSpec extends Specification with DatomicFacade {
+
+  def load(tx: java.util.List[_], uri: String): Connection = {
+    Peer.deleteDatabase(uri)
+    Peer.createDatabase(uri)
+    val conn = Peer.connect(uri)
+    conn.transact(tx).get()
+    conn
+  }
+
+  def typed[T](t: => T) {}
 
   implicit class Regex(sc: StringContext) {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
@@ -48,7 +57,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     val rules = if (query.in.rules.isEmpty) ""
     else {
       val p = (expr: QueryExpr) => Query2String(query).p(expr)
-      query.in.rules map p mkString ("[", "\n     ", "]")
+      query.in.rules map p mkString("[", "\n     ", "]")
     }
     val first = if (query.in.rules.isEmpty) Seq("datomic.db.Db@xxx") else Seq("datomic.db.Db@xxx", rules)
     val allInputs = first ++ inputs(query)

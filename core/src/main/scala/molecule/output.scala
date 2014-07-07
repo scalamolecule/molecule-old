@@ -2,9 +2,9 @@ package molecule
 import datomic.{Connection => Cnx}
 import molecule.ast.model._
 import molecule.ast.query.Query
-import molecule.dsl.schemaDSL
-import schemaDSL.NS
 import molecule.db.DatomicFacade._
+import molecule.dsl.schemaDSL
+import molecule.dsl.schemaDSL.NS
 import shapeless.{::, HNil}
 
 // Output molecule interfaces
@@ -155,8 +155,8 @@ trait Out9[A, B, C, D, E, F, G, H, I] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -169,8 +169,8 @@ trait Out10[A, B, C, D, E, F, G, H, I, J] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -183,8 +183,8 @@ trait Out11[A, B, C, D, E, F, G, H, I, J, K] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -197,8 +197,8 @@ trait Out12[A, B, C, D, E, F, G, H, I, J, K, L] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -211,8 +211,8 @@ trait Out13[A, B, C, D, E, F, G, H, I, J, K, L, M] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -225,8 +225,8 @@ trait Out14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -239,8 +239,8 @@ trait Out15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -253,8 +253,8 @@ trait Out16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -267,8 +267,8 @@ trait Out17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -281,8 +281,8 @@ trait Out18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] extends Out {
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -295,8 +295,8 @@ trait Out19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] extends Out
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -309,8 +309,8 @@ trait Out20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] extends 
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -323,8 +323,8 @@ trait Out21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] exten
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
@@ -337,8 +337,8 @@ trait Out22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] ex
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)] = tpls(conn).take(n)
 
-  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
-  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
+  def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil]
+  def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil] = hls.take(n)
 
   def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v))
   def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
