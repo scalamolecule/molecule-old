@@ -2,7 +2,7 @@ import sbt.Keys._
 import sbt._
 
 object build extends Build with BuildSettings {
-  lazy val molecule            = project in file(".") settings (_root: _*) aggregate (`molecule-core`, `molecule-coretest`, `molecule-examples`)
+  lazy val molecule            = project in file(".") settings (_root: _*) aggregate(`molecule-core`, `molecule-coretest`, `molecule-examples`)
   lazy val `molecule-core`     = project in file("core") settings (_core: _*)
   lazy val `molecule-coretest` = project in file("coretest") settings (_coretest: _*) dependsOn `molecule-core`
   lazy val `molecule-examples` = project in file("examples") settings (_examples: _*) dependsOn `molecule-core`
@@ -11,7 +11,7 @@ object build extends Build with BuildSettings {
 trait BuildSettings extends Boilerplate with Publishing {
   val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "com.marcgrue",
-    version := "0.1.0",
+    version := "0.1.1",
     scalaVersion := "2.11.1",
     scalacOptions := Seq(
       "-feature",
@@ -36,8 +36,8 @@ trait BuildSettings extends Boilerplate with Publishing {
   lazy val _root     = commonSettings :+ (packagedArtifacts := Map.empty)
   lazy val _core     = commonSettings
   lazy val _coretest = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate(
-      "coretest/src/main/scala/molecule/types"
-    ))
+    "coretest/src/main/scala/molecule/types"
+  ))
   lazy val _examples = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate(
     "examples/src/main/scala/molecule/examples/seattle"
   ))
