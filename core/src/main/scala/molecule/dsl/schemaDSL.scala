@@ -3,7 +3,6 @@ package molecule.dsl
 import datomic.Connection
 import molecule.ast.model._
 import molecule.db.DatomicFacade
-
 import scala.annotation.StaticAnnotation
 
 object schemaDSL {
@@ -97,8 +96,7 @@ object schemaDSL {
   trait UniqueValue
   trait UniqueIdentity
   trait Indexed
-  trait FulltextSearch {
-    self: Attr =>
+  trait FulltextSearch {self: Attr =>
     def contains(that: String): NS2 = ns2
   }
   trait IsComponent

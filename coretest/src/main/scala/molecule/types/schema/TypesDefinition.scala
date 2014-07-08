@@ -23,7 +23,6 @@ trait Many {
   val longM   = manyLong
   val floatM  = manyFloat
   val doubleM = manyDouble
-//  val boolM   = manyBoolean
   val dateM   = manyDate
   val uuidM   = manyUUID
   val uriM    = manyURI
