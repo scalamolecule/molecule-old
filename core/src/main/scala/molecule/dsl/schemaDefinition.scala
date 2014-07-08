@@ -19,7 +19,7 @@ object schemaDefinition {
     lazy val uniqueValue    = this
     lazy val uniqueIdentity = this
   }
-  object manyStrings extends anyAttr {
+  object manyString extends anyAttr {
     lazy val fullTextSearch = this
   }
 
@@ -61,7 +61,7 @@ object schemaDefinition {
     def apply(v1: Symbol, v2: Symbol, vs: Symbol*) = this
   }
   object oneEnum extends enum
-  object manyEnums extends enum
+  object manyEnum extends enum
 
   // Ref
   trait One[Ref]

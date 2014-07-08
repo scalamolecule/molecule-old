@@ -1,9 +1,10 @@
 package molecule.dsl
 
-import scala.annotation.StaticAnnotation
 import datomic.Connection
 import molecule.ast.model._
 import molecule.db.DatomicFacade
+
+import scala.annotation.StaticAnnotation
 
 object schemaDSL {
 
@@ -20,7 +21,6 @@ object schemaDSL {
       type NS2 = Ns2
     }
   }
-
   trait Ref
   abstract class OneRef extends Ref
   abstract class ManyRef extends Ref
@@ -44,9 +44,7 @@ object schemaDSL {
     def eq(value: T): NS2 = ns2
   }
 
-
   // One-cardinality
-
   trait One[Ns, Ns2, T] extends ValueAttr[Ns, Ns2, T] {
     def apply(value: T*): NS = ns
   }
@@ -60,35 +58,53 @@ object schemaDSL {
   abstract class OneUUID[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, java.util.UUID]
   abstract class OneURI[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, java.net.URI]
 
-
   // Many-cardinality
-
   trait Many[Ns, Ns2, T] extends ValueAttr[Ns, Ns2, T]
-
-
 
   abstract class ManyString[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[String]] {
     def apply(value: String*): NS = ns
   }
+  abstract class ManyInt[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[Int]] {
+    def apply(value: Int*): NS = ns
+  }
+  abstract class ManyLong[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[Long]] {
+    def apply(value: Long*): NS = ns
+  }
+  abstract class ManyFloat[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[Float]] {
+    def apply(value: Float*): NS = ns
+  }
+  abstract class ManyDouble[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[Double]] {
+    def apply(value: Double*): NS = ns
+  }
+  abstract class ManyDate[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[java.util.Date]] {
+    def apply(value: java.util.Date*): NS = ns
+  }
+  abstract class ManyUUID[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[java.util.UUID]] {
+    def apply(value: java.util.UUID*): NS = ns
+  }
+  abstract class ManyURI[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, Set[java.net.URI]] {
+    def apply(value: java.net.URI*): NS = ns
+  }
 
+  // Enums
   trait Enum
   abstract class OneEnum[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends One[Ns, Ns2, String] with Enum
   abstract class ManyEnums[Ns, Ns2](val ns: Ns, val ns2: Ns2) extends Many[Ns, Ns2, String] with Enum
-
   object EnumValue
 
-  trait Doc
+  // Attribute options
+  case class Doc(msg: String)
   trait UniqueValue
   trait UniqueIdentity
   trait Indexed
-  trait FulltextSearch {self: Attr =>
+  trait FulltextSearch {
+    self: Attr =>
     def contains(that: String): NS2 = ns2
   }
   trait IsComponent
   trait NoHistory
 
-//  trait Mandatory
-
+  //  trait Mandatory
   abstract class Insert(val elements: Seq[Element]) extends DatomicFacade {
     def save(implicit conn: Connection): Seq[Long] = upsertMolecule(conn, Model(elements))
   }

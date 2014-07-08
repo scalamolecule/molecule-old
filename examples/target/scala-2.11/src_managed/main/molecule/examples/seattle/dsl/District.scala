@@ -22,6 +22,7 @@ object District extends District_Out_0 {
   def insert = District_Insert()
 }
 
+// Todo: The entity api is not yet implemented in Molecule
 case class District_Entity(elements: Seq[Element] = Seq()) extends Entity(elements) {
   lazy val eid    = _get(1, "eid"   , "Long"  )
   lazy val name   = _get(1, "name"  , "String")
@@ -61,10 +62,10 @@ case class District_Update(override val elements: Seq[Element] = Seq(), override
   private def _assertNewFact(data: Seq[Any], card: Int, attr: String, tpe: String, enumPrefix: Option[String] = None) =
     District_Update(elements :+ Atom("district", attr, tpe, card, Eq(data.map(_.toString)), enumPrefix), ids)
 
-  private def _swap(oldNew: Seq[(String, String)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+  private def _swap(oldNew: Seq[(Any, Any)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
     District_Update(elements :+ Atom("district", attr, tpe, 2, Replace(oldNew.toMap), enumPrefix), ids)
 
-  private def _removeElements(values: Seq[String], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+  private def _removeElements(values: Seq[Any], attr: String, tpe: String, enumPrefix: Option[String] = None) =
     District_Update(elements :+ Atom("district", attr, tpe, 2, Remove(values), enumPrefix), ids)
 
   private def _retract(card: Int, attr: String) =

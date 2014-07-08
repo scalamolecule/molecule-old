@@ -6,7 +6,7 @@ import molecule.dsl.schemaDefinition._
 trait Community {
   val name         = oneString.fullTextSearch
   val url          = oneString.fullTextSearch
-  val category     = manyStrings.fullTextSearch
+  val category     = manyString.fullTextSearch
   val orgtype      = oneEnum('community, 'commercial, 'nonprofit, 'personal)
   val `type`       = oneEnum('email_list, 'twitter, 'facebook_page, 'blog, 'website, 'wiki, 'myspace, 'ning)
   val neighborhood = oneRef[Neighborhood]

@@ -76,6 +76,7 @@ object SeattleSchema extends Schema {
              ":db/cardinality"       , ":db.cardinality/one",
              ":db/fulltext"          , true.asInstanceOf[Object],
              ":db/unique"            , ":db.unique/identity",
+             ":db/index"             , true.asInstanceOf[Object],
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
@@ -93,6 +94,7 @@ object SeattleSchema extends Schema {
              ":db/cardinality"       , ":db.cardinality/one",
              ":db/fulltext"          , true.asInstanceOf[Object],
              ":db/unique"            , ":db.unique/identity",
+             ":db/index"             , true.asInstanceOf[Object],
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),

@@ -35,13 +35,14 @@ object Community extends Community_Out_0 {
   def insert = Community_Insert()
 }
 
+// Todo: The entity api is not yet implemented in Molecule
 case class Community_Entity(elements: Seq[Element] = Seq()) extends Entity(elements) {
-  lazy val eid      = _get(1, "eid"     , "Long"  )
-  lazy val name     = _get(1, "name"    , "String")
-  lazy val url      = _get(1, "url"     , "String")
-  lazy val category = _get(2, "category", "Set[String]")
-  lazy val orgtype  = _get(1, "orgtype" , "String")
-  lazy val `type`   = _get(1, "type"    , "String")
+  lazy val eid      = _get(1, "eid"     , "Long"       )
+  lazy val name     = _get(1, "name"    , "String"     )
+  lazy val url      = _get(1, "url"     , "String"     )
+  lazy val category = _get(2, "category", "Set[String]"     )
+  lazy val orgtype  = _get(1, "orgtype" , "String"     )
+  lazy val `type`   = _get(1, "type"    , "String"     )
 
   def Neighborhood = Neighborhood_Entity(elements)
 
@@ -50,12 +51,12 @@ case class Community_Entity(elements: Seq[Element] = Seq()) extends Entity(eleme
 }
 
 case class Community_Insert(override val elements: Seq[Element] = Seq()) extends Insert(elements) {
-  lazy val eid      = (data: Long  ) => _insert(Seq(data), 1, "eid"     , "Long"  )
-  lazy val name     = (data: String) => _insert(Seq(data), 1, "name"    , "String")
-  lazy val url      = (data: String) => _insert(Seq(data), 1, "url"     , "String")
+  lazy val eid      = (data: Long       ) => _insert(Seq(data), 1, "eid"     , "Long"       )
+  lazy val name     = (data: String     ) => _insert(Seq(data), 1, "name"    , "String"     )
+  lazy val url      = (data: String     ) => _insert(Seq(data), 1, "url"     , "String"     )
   lazy val category = category_
-  lazy val orgtype  = (data: String) => _insert(Seq(data), 1, "orgtype" , "String", Some(":community.orgtype/"))
-  lazy val `type`   = (data: String) => _insert(Seq(data), 1, "type"    , "String", Some(":community.type/"))
+  lazy val orgtype  = (data: String     ) => _insert(Seq(data), 1, "orgtype" , "String"     , Some(":community.orgtype/"))
+  lazy val `type`   = (data: String     ) => _insert(Seq(data), 1, "type"    , "String"     , Some(":community.type/"))
 
   private[molecule] object category_ {
     def apply(h: String, t: String*) = _insert(h +: t.toList, 2, "category", "Set[String]")
@@ -77,30 +78,30 @@ case class Community_Update(override val elements: Seq[Element] = Seq(), overrid
   lazy val `type`   = type_
 
   private[molecule] object eid_ {
-    def apply(data: Long)   = _assertNewFact(Seq(data), 1, "eid", "Long")
-    def apply()             = _retract(                 1, "eid")
+    def apply(data: Long)        = _assertNewFact(Seq(data), 1, "eid", "Long")
+    def apply()                  = _retract(                 1, "eid")
   }
   private[molecule] object name_ {
-    def apply(data: String) = _assertNewFact(Seq(data), 1, "name", "String")
-    def apply()             = _retract(                 1, "name")
+    def apply(data: String)      = _assertNewFact(Seq(data), 1, "name", "String")
+    def apply()                  = _retract(                 1, "name")
   }
   private[molecule] object url_ {
-    def apply(data: String) = _assertNewFact(Seq(data), 1, "url", "String")
-    def apply()             = _retract(                 1, "url")
+    def apply(data: String)      = _assertNewFact(Seq(data), 1, "url", "String")
+    def apply()                  = _retract(                 1, "url")
   }
   private[molecule] object category_ {
-    def add(data: String)                                = _assertNewFact(Seq(data),     2, "category", "Set[String]")
     def apply(h: (String, String), t: (String, String)*) = _swap(h +: t.toList            , "category", "Set[String]")
     def remove(values: String*)                          = _removeElements(Seq(values: _*), "category", "Set[String]")
+    def add(data: String)                                = _assertNewFact(Seq(data),     2, "category", "Set[String]")
     def apply()                                          = _retract(                     2, "category")
   }
   private[molecule] object orgtype_ {
-    def apply(data: String) = _assertNewFact(Seq(data), 1, "orgtype", "String", Some(":community.orgtype/"))
-    def apply()             = _retract(                 1, "orgtype")
+    def apply(data: String)      = _assertNewFact(Seq(data), 1, "orgtype", "String", Some(":community.orgtype/"))
+    def apply()                  = _retract(                 1, "orgtype")
   }
   private[molecule] object type_ {
-    def apply(data: String) = _assertNewFact(Seq(data), 1, "type", "String", Some(":community.type/"))
-    def apply()             = _retract(                 1, "type")
+    def apply(data: String)      = _assertNewFact(Seq(data), 1, "type", "String", Some(":community.type/"))
+    def apply()                  = _retract(                 1, "type")
   }
 
   def Neighborhood = Neighborhood_Update(elements)
@@ -108,10 +109,10 @@ case class Community_Update(override val elements: Seq[Element] = Seq(), overrid
   private def _assertNewFact(data: Seq[Any], card: Int, attr: String, tpe: String, enumPrefix: Option[String] = None) =
     Community_Update(elements :+ Atom("community", attr, tpe, card, Eq(data.map(_.toString)), enumPrefix), ids)
 
-  private def _swap(oldNew: Seq[(String, String)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+  private def _swap(oldNew: Seq[(Any, Any)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
     Community_Update(elements :+ Atom("community", attr, tpe, 2, Replace(oldNew.toMap), enumPrefix), ids)
 
-  private def _removeElements(values: Seq[String], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+  private def _removeElements(values: Seq[Any], attr: String, tpe: String, enumPrefix: Option[String] = None) =
     Community_Update(elements :+ Atom("community", attr, tpe, 2, Remove(values), enumPrefix), ids)
 
   private def _retract(card: Int, attr: String) =
@@ -119,15 +120,15 @@ case class Community_Update(override val elements: Seq[Element] = Seq(), overrid
 }
 
 case class Community_Retract(elements: Seq[Element] = Seq()) extends Retract(elements) {
-  lazy val eid      = _retract(1, "eid"     , "Long"  )
-  lazy val name     = _retract(1, "name"    , "String")
-  lazy val url      = _retract(1, "url"     , "String")
+  lazy val eid      = _retract(1, "eid"     , "Long"       )
+  lazy val name     = _retract(1, "name"    , "String"     )
+  lazy val url      = _retract(1, "url"     , "String"     )
   lazy val category = category_
-  lazy val orgtype  = _retract(1, "orgtype" , "String")
-  lazy val `type`   = _retract(1, "type"    , "String")
+  lazy val orgtype  = _retract(1, "orgtype" , "String"     )
+  lazy val `type`   = _retract(1, "type"    , "String"     )
 
   private[molecule] object category_ {
-    def apply()                      = _retract(2, "category", "Set[String]")
+    def apply()                           = _retract(2, "category", "Set[String]")
     def apply(h: String, t: String*) = _retract(2, "category", "Set[String]")
     def apply(data: Seq[String])     = _retract(2, "category", "Set[String]")
   }

@@ -59,18 +59,34 @@ object DslBoilerplate {
             case r"oneURI(.*)$rest"     => extract(rest, Seq("attr", attr, "java.net.URI", 1, "OneURI(ns, ns2)"))
 
             // Many
-            case r"manyStrings(.*)$rest" => extract(rest, Seq("attr", attr, "Set[String]", 2, "ManyString(ns, ns2)"))
+            case r"manyString(.*)$rest" => extract(rest, Seq("attr", attr, "Set[String]", 2, "ManyString(ns, ns2)"))
+            case r"manyInt(.*)$rest"    => extract(rest, Seq("attr", attr, "Set[Int]", 2, "ManyInt(ns, ns2)"))
+            case r"manyLong(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[Long]", 2, "ManyLong(ns, ns2)"))
+            case r"manyFloat(.*)$rest"  => extract(rest, Seq("attr", attr, "Set[Float]", 2, "ManyFloat(ns, ns2)"))
+            case r"manyDouble(.*)$rest" => extract(rest, Seq("attr", attr, "Set[Double]", 2, "ManyDouble(ns, ns2)"))
+            case r"manyDate(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[java.util.Date]", 2, "ManyDate(ns, ns2)"))
+            case r"manyUUID(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[java.util.UUID]", 2, "ManyUUID(ns, ns2)"))
+            case r"manyURI(.*)$rest"    => extract(rest, Seq("attr", attr, "Set[java.net.URI]", 2, "ManyURI(ns, ns2)"))
 
             // Enums
-            case r"oneEnum\((.*)$enums\)"   => Seq("enum", attr, "String", 1, "OneEnum(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
-            case r"manyEnums\((.*)$enums\)" => Seq("enum", attr, "String", 2, "ManyEnums(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
+            case r"oneEnum\((.*)$enums\)"  => Seq("enum", attr, "String", 1, "OneEnum(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
+            case r"manyEnum\((.*)$enums\)" => Seq("enum", attr, "Set[String]", 2, "ManyEnums(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
 
             // Options
-            case r"\.fullTextSearch(.*)$rest" => extract(rest, elements :+ "FulltextSearch")
-            case r"\.uniqueIdentity(.*)$rest" => extract(rest, elements :+ "UniqueIdentity")
-            case r"oneRef\[(\w*)$ref\]"       => Seq("ref", attr, "OneRef", ref)
-            case ""                           => elements
-            case unexpected                   => sys.error("Unexpected attribute code in definition file:\n" + unexpected)
+            case r"\.doc\(((\w|\s)*)$msg\)$rest" => extract(rest, elements :+ s"Doc: $msg")
+            case r"\.fullTextSearch(.*)$rest"    => extract(rest, elements :+ "FulltextSearch")
+            case r"\.uniqueValue(.*)$rest"       => extract(rest, elements :+ "UniqueValue")
+            case r"\.uniqueIdentity(.*)$rest"    => extract(rest, elements :+ "UniqueIdentity")
+            case r"\.indexed(.*)$rest"           => extract(rest, elements :+ "Indexed")
+            case r"\.isComponent(.*)$rest"       => extract(rest, elements :+ "IsComponent")
+            case r"\.noHistory(.*)$rest"         => extract(rest, elements :+ "NoHistory")
+
+            // Refs
+            case r"oneRef\[(\w*)$ref\]"  => Seq("ref", attr, "OneRef", ref)
+            case r"manyRef\[(\w*)$ref\]" => Seq("ref", attr, "ManyRef", ref)
+
+            case ""         => elements
+            case unexpected => sys.error("Unexpected attribute code in definition file:\n" + unexpected)
           }
           val ns = acc.last._1
           val prevAttrs = acc.last._2
@@ -93,15 +109,16 @@ object DslBoilerplate {
     val attrDefs = nsDef._2
     val attrs0 = attrDefs.filter(a => a.head == "attr" || a.head == "enum").map { d =>
       val (cat, attr, tpe, card, defs) = (d.head, d.tail.head, d.tail.tail.head, d.tail.tail.tail.head, d.tail.tail.tail.tail)
+
       val baseType = tpe match {
-        case r"Set\[(\w*)$t\]" => "" + t
-        case t                 => "" + t
+        case r"Set\[([\w\.]*)$t\]" => "" + t
+        case t                     => "" + t
       }
       (cat, attr, tpe, baseType, card, defs)
     }
     val rawBaseTypes = attrs0.map(a => a._3 match {
-      case r"Set\[(\w*)$t\]" => t
-      case t: String         => t
+      case r"Set\[([\w\.])$t\]" => t
+      case t: String            => t
     })
     val longestAttr = attrs0.map(_._2.toString.length).max
     val longestAttrClean = attrs0.map(_._2.toString.replace("`", "").length).max
@@ -136,9 +153,7 @@ object DslBoilerplate {
         case "Int"            => "long"
         case "Date"           => "instant"
         case "java.util.Date" => "instant"
-        case "UUID"           => "uuid"
         case "java.util.UUID" => "uuid"
-        case "URI"            => "uri"
         case "java.net.URI"   => "uri"
         case other            => other.toLowerCase
       }
@@ -150,12 +165,15 @@ object DslBoilerplate {
 
 
       val attr2 = defs.foldLeft(attr1) {
-        case (acc, "FulltextSearch") => acc :+ (":db/fulltext" -> "true")
-        case (acc, "UniqueValue")    => acc :+ (":db/unique" -> ":db.unique/value")
-        case (acc, "UniqueIdentity") => acc :+ (":db/unique" -> ":db.unique/identity")
-        case (acc, "Indexed")        => acc :+ (":db/index" -> "true.asInstanceOf[Object]")
-        case (acc, _)                => acc
-      }
+        case (acc, doc) if doc.startsWith("Doc: ") => acc :+ (":db/doc" -> doc.drop(5))
+        case (acc, "FulltextSearch")               => acc :+ (":db/fulltext" -> "true.asInstanceOf[Object]")
+        case (acc, "UniqueValue")                  => acc :+ (":db/unique" -> ":db.unique/value") :+ (":db/index" -> "true.asInstanceOf[Object]")
+        case (acc, "UniqueIdentity")               => acc :+ (":db/unique" -> ":db.unique/identity") :+ (":db/index" -> "true.asInstanceOf[Object]")
+        case (acc, "Indexed")                      => acc :+ (":db/index" -> "true.asInstanceOf[Object]")
+        case (acc, "IsComponent")                  => acc :+ (":db/isComponent" -> "true.asInstanceOf[Object]")
+        case (acc, "NoHistory")                    => acc :+ (":db/noHistory" -> "true.asInstanceOf[Object]")
+        case (acc, _)                              => acc
+      }.distinct
 
       val installStmt = ":db.install/_attribute" -> ":db.part/db"
 
@@ -239,12 +257,15 @@ object DslBoilerplate {
                  |    def apply()$pad       = _retract(                 $card, "$attrClean")
                  |  }""".stripMargin
       } else {
-        val pad = " " * (baseType.length * 4)
+        //        val pad = " " * (baseType.length * 4 - baseType.length)
+        val pad3 = " " * (baseType.length * 3)
+        val pad4 = " " * (baseType.length * 4)
+        //        val pad2 = " " * (baseType.length)
         s"""private[molecule] object ${attrClean}_ {
-                 |    def add(data: $baseType) $pad       = _assertNewFact(Seq(data),     2, "category", "Set[String]")
                  |    def apply(h: ($baseType, $baseType), t: ($baseType, $baseType)*) = _swap(h +: t.toList            , "$attrClean", "$tpe"$enumPrefix)
-                 |    def remove(values: $baseType*) $pad = _removeElements(Seq(values: _*), "category", "Set[String]")
-                 |    def apply() $padBaseType $pad                = _retract(                     $card, "$attrClean")
+                 |    def remove(values: $baseType*) $pad3       = _removeElements(Seq(values: _*), "$attrClean", "$tpe"$enumPrefix)
+                 |    def add(data: $baseType) $pad3             = _assertNewFact(Seq(data),     2, "$attrClean", "$tpe"$enumPrefix)
+                 |    def apply() $pad4                 = _retract(                     $card, "$attrClean")
                  |  }""".stripMargin
       }
     } mkString "\n  "
@@ -430,6 +451,7 @@ object DslBoilerplate {
                    |  def insert = ${Ns}_Insert()
                    |}
                    |
+                   |// Todo: The entity api is not yet implemented in Molecule
                    |case class ${Ns}_Entity(elements: Seq[Element] = Seq()) extends Entity(elements) {
                    |  $entities
                    |
@@ -450,10 +472,10 @@ object DslBoilerplate {
                    |  private def _assertNewFact(data: Seq[Any], card: Int, attr: String, tpe: String, enumPrefix: Option[String] = None) =
                    |    ${Ns}_Update(elements :+ Atom("$ns", attr, tpe, card, Eq(data.map(_.toString)), enumPrefix), ids)
                    |
-                   |  private def _swap(oldNew: Seq[(String, String)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+                   |  private def _swap(oldNew: Seq[(Any, Any)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
                    |    ${Ns}_Update(elements :+ Atom("$ns", attr, tpe, 2, Replace(oldNew.toMap), enumPrefix), ids)
                    |
-                   |  private def _removeElements(values: Seq[String], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+                   |  private def _removeElements(values: Seq[Any], attr: String, tpe: String, enumPrefix: Option[String] = None) =
                    |    ${Ns}_Update(elements :+ Atom("$ns", attr, tpe, 2, Remove(values), enumPrefix), ids)
                    |
                    |  private def _retract(card: Int, attr: String) =
@@ -500,6 +522,7 @@ object DslBoilerplate {
         case ":db/ident"              => (ns1, key, acc + s""",\n             ":db/ident"             , "$value"""")
         case ":db/valueType"          => (ns1, key, acc + s""",\n             ":db/valueType"         , "$value"""")
         case ":db/cardinality"        => (ns1, key, acc + s""",\n             ":db/cardinality"       , "$value"""")
+        case ":db/doc"                => (ns1, key, acc + s""",\n             ":db/doc"               , true.asInstanceOf[Object]""")
         case ":db/fulltext"           => (ns1, key, acc + s""",\n             ":db/fulltext"          , true.asInstanceOf[Object]""")
         case ":db/unique"             => (ns1, key, acc + s""",\n             ":db/unique"            , "$value"""")
         case ":db/index"              => (ns1, key, acc + s""",\n             ":db/index"             , true.asInstanceOf[Object]""")

@@ -21,8 +21,8 @@ object model {
   case class Fulltext(search: Seq[String]) extends Value
 
   // Actions
-  case class Replace(oldNew: Map[String, String]) extends Value
-  case class Remove(value: Seq[String]) extends Value
+  case class Replace(oldNew: Map[Any, Any]) extends Value
+  case class Remove(value: Seq[Any]) extends Value
 
   trait Expression
 

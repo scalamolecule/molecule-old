@@ -104,7 +104,7 @@ trait DatomicFacade extends Debug {
         42.asInstanceOf[Object]))
     x(0
       , javaTx
-      , javaTx2
+//      , javaTx2
     )
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)

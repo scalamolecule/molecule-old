@@ -4,6 +4,7 @@ import molecule.ast.model._
 import molecule.ast.query._
 import molecule.util.MacroHelpers
 
+import scala.language.existentials
 import scala.reflect.macros.whitebox.Context
 
 trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
@@ -93,8 +94,25 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Eq(values)       => q"Eq(Seq(..$values))"
     case Lt(value)        => q"Lt($value)"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
-    case Replace(values)  => q"Replace(Seq(..$values))"
-    case Remove(values)   => q"Remove(Seq(..$values))"
+    //    case Replace(values)  => q"Replace(Seq(..$values))"
+    //    case Remove(values)  => q"Remove(Seq(..$values))"
+
+    case Replace(values) => {
+      val v2 = values.map(v => (v._1, v._2) match {
+        case (q"$a", q"$b") => a -> b
+//        case (a: String, b: String) => q"$a" -> q"$b"
+//        case (a, b)                 => q"""${Literal(Constant("hej"))}""" -> q"""${Literal(Constant("marc"))}"""
+      }).toMap
+      q"Replace($v2)"
+    }
+    case Remove(values)  => {
+      val v2 = values.map(v => v match {
+        case q"$a" => a
+//        case a if a.isInstanceOf[String] => q"$a"
+//        case a                           => q"""${Literal(Constant("hej"))}"""
+      })
+      q"Remove(Seq(..$v2))"
+    }
   }
 
   implicit val liftAtom = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix})"}

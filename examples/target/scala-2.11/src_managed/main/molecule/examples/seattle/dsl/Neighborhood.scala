@@ -17,6 +17,7 @@ object Neighborhood extends Neighborhood_Out_0 {
   def insert = Neighborhood_Insert()
 }
 
+// Todo: The entity api is not yet implemented in Molecule
 case class Neighborhood_Entity(elements: Seq[Element] = Seq()) extends Entity(elements) {
   lazy val eid  = _get(1, "eid" , "Long"  )
   lazy val name = _get(1, "name", "String")
@@ -55,10 +56,10 @@ case class Neighborhood_Update(override val elements: Seq[Element] = Seq(), over
   private def _assertNewFact(data: Seq[Any], card: Int, attr: String, tpe: String, enumPrefix: Option[String] = None) =
     Neighborhood_Update(elements :+ Atom("neighborhood", attr, tpe, card, Eq(data.map(_.toString)), enumPrefix), ids)
 
-  private def _swap(oldNew: Seq[(String, String)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+  private def _swap(oldNew: Seq[(Any, Any)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
     Neighborhood_Update(elements :+ Atom("neighborhood", attr, tpe, 2, Replace(oldNew.toMap), enumPrefix), ids)
 
-  private def _removeElements(values: Seq[String], attr: String, tpe: String, enumPrefix: Option[String] = None) =
+  private def _removeElements(values: Seq[Any], attr: String, tpe: String, enumPrefix: Option[String] = None) =
     Neighborhood_Update(elements :+ Atom("neighborhood", attr, tpe, 2, Remove(values), enumPrefix), ids)
 
   private def _retract(card: Int, attr: String) =

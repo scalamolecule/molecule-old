@@ -62,11 +62,6 @@ object Model2Transaction extends Debug with DatomicFacade {
     }
   }
 
-  def p(prefix: Any, value: Any) = {
-    // Allows value to be of another type when it's not prefixed by a String!
-    if (prefix.toString.nonEmpty) prefix.toString + value else value
-  }
-
   def upsertTransaction(db: Database, molecules: Seq[Seq[Seq[Seq[Any]]]], ids: Seq[Long] = Seq()): Seq[Seq[Any]] = {
     //    if (ids.nonEmpty)
     //      assert(molecules.size == ids.size,
@@ -83,20 +78,21 @@ object Model2Transaction extends Debug with DatomicFacade {
 
           val namespaceStmts: Seq[Seq[Any]] = namespace.foldLeft(Seq[Seq[Any]]()) { case (attrStmts, atom) =>
             val (attr, prefix, values) = (atom(1), atom(3), atom(4))
+            def p(value: Any) = if (prefix.toString.nonEmpty) prefix.toString + value else value
             values match {
               case Seq(Replace(oldNew))       => oldNew.foldLeft(attrStmts) { case (acc, (oldValue, newValue)) =>
-                acc :+ Seq(":db/retract", id, s":$ns/$attr", oldValue) :+ Seq(":db/add", id, s":$ns/$attr", newValue)
+                acc :+ Seq(":db/retract", id, s":$ns/$attr", p(oldValue)) :+ Seq(":db/add", id, s":$ns/$attr", p(newValue))
               }
               case Seq(Remove(Seq()))         => getValues(db, id, ns, attr).foldLeft(attrStmts) { case (acc, removeValue) =>
-                acc :+ Seq(":db/retract", id, s":$ns/$attr", removeValue)
+                acc :+ Seq(":db/retract", id, s":$ns/$attr", p(removeValue))
               }
               case Seq(Remove(removeValues))  => removeValues.foldLeft(attrStmts) { case (acc, removeValue) =>
-                acc :+ Seq(":db/retract", id, s":$ns/$attr", removeValue)
+                acc :+ Seq(":db/retract", id, s":$ns/$attr", p(removeValue))
               }
-              case set: Set[_]                => attrStmts ++ set.map(Seq(":db/add", id, s":$ns/$attr", _))
-              case vs: List[_] if vs.size > 1 => attrStmts ++ vs.map(Seq(":db/add", id, s":$ns/$attr", _))
-              case value :: Nil               => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(prefix, value))
-              case value                      => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(prefix, value))
+              case set: Set[_]                => attrStmts ++ set.map(v => Seq(":db/add", id, s":$ns/$attr", p(v)))
+              case vs: List[_] if vs.size > 1 => attrStmts ++ vs.map(v => Seq(":db/add", id, s":$ns/$attr", p(v)))
+              case value :: Nil               => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(value))
+              case value                      => attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(value))
             }
           }
 
