@@ -2,14 +2,14 @@ import sbt.Keys._
 import sbt._
 
 object build extends Build with BuildSettings {
-  lazy val molecule            = project in file(".") settings (_root: _*) aggregate(`molecule-core`, `molecule-coretest`, `molecule-examples`)
-  lazy val `molecule-core`     = project in file("core") settings (_core: _*)
-  lazy val `molecule-coretest` = project in file("coretest") settings (_coretest: _*) dependsOn `molecule-core`
-  lazy val `molecule-examples` = project in file("examples") settings (_examples: _*) dependsOn `molecule-core`
+  lazy val root                = project in file(".") settings (_root: _*) aggregate(molecule, `molecule-coretest`, `molecule-examples`)
+  lazy val molecule            = project in file("core") settings (_core: _*)
+  lazy val `molecule-coretest` = project in file("coretest") settings (_coretest: _*) dependsOn molecule
+  lazy val `molecule-examples` = project in file("examples") settings (_examples: _*) dependsOn molecule
 }
 
 trait BuildSettings extends Boilerplate with Publishing {
-  val commonSettings = Defaults.coreDefaultSettings ++ Seq(
+  val commonSettings = Defaults.coreDefaultSettings ++ publishSettings ++ Seq(
     organization := "com.marcgrue",
     version := "0.1.1",
     scalaVersion := "2.11.1",
@@ -88,7 +88,7 @@ trait Publishing {
   )
 
   lazy val projectPomExtra =
-    <url>https://github.com/scaladatomic/molecule</url>
+    <url>https://github.com/marcgrue/molecule</url>
       <licenses>
         <license>
           <name>Apache License</name>
@@ -97,8 +97,8 @@ trait Publishing {
         </license>
       </licenses>
       <scm>
-        <url>git@github.com:scaladatomic/molecule.git</url>
-        <connection>scm:git:git@github.com:scaladatomic/molecule.git</connection>
+        <url>git@github.com:marcgrue/molecule.git</url>
+        <connection>scm:git:git@github.com:marcgrue/molecule.git</connection>
       </scm>
       <developers>
         <developer>
