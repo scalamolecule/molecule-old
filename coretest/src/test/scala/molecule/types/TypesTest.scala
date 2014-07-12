@@ -9,7 +9,7 @@ import shapeless._
 class TypesTest extends CoreTest {
 
   // Make db
-  implicit val conn = load(TypesSchema.tx, "datomic:mem://types")
+  implicit val conn = load(TypesSchema.tx)
 
   // Load data
   One.str.int.long.float.double.bool.date.uuid.uri.enum.insert(

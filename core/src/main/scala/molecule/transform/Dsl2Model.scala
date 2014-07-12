@@ -1,9 +1,7 @@
 package molecule.transform
 import molecule.ast.model._
-import molecule.dsl.schemaDSL
-import schemaDSL._
+import molecule.dsl.schemaDSL._
 import molecule.ops.TreeOps
-
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -85,6 +83,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   def getValues(attr: Tree, value0: Tree): Seq[String] = {
     value0 match {
+      case q"Seq(?)"                          => Seq("?")
+      case q"Seq(?!)"                         => Seq("?!")
       case q"Seq(molecule.this.`package`.?)"  => Seq("?")
       case q"Seq(molecule.this.`package`.?!)" => Seq("?!")
       case q"Seq(..$values)"                  => values.flatMap(v => resolveValues(v, att(q"$attr")).map(_.toString))

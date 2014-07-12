@@ -47,13 +47,6 @@ object model {
   case class And3[T1, T2, T3](e1: Exp1[T1], e2: Exp1[T2], e3: Exp1[T3]) extends Exp3[T1, T2, T3]
 
 
-  // Convenience constructors
-
-  object Atom{
-//    def apply(ns: Symbol, attr: Symbol) = new Atom(ns.name, attr.name, "String", 1, VarValue)
-//    def apply(ns: Symbol, attr: Symbol, tpeS: String, card: Int) = new Atom(ns.name, attr.name, tpeS, card, VarValue)
-//    def apply(ns: String, attr: String) = new Atom(ns.toString(), attr.toString(), "String", 1, VarValue)
-  }
 
   // From sqltyped...
 

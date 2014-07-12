@@ -1,13 +1,12 @@
-package molecule
+package molecule.out
 import datomic.{Connection => Cnx}
 import molecule.ast.model._
 import molecule.ast.query.Query
-import molecule.db.DatomicFacade._
-import molecule.dsl.schemaDSL
 import molecule.dsl.schemaDSL.NS
 import shapeless.{::, HNil}
 
-// Output molecule interfaces
+
+// Output models
 
 trait Out_0 extends NS
 trait Out_1[A] extends NS
@@ -34,16 +33,11 @@ trait Out_21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] exte
 trait Out_22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] extends NS
 
 
-// Output molecule implementations
+// Output molecules
 
-trait Out {
-  val _model: Model
-  val _query: Query
-}
+abstract class OutputMolecule0(val _model: Model, val _query: Query) extends OutputMolecule
 
-trait Out0 extends Out
-
-trait Out1[A] extends Out {
+abstract class OutputMolecule1[A](val _model: Model, val _query: Query) extends OutputMolecule {
   def get(implicit conn: Cnx): Seq[A]
   def take(n: Int)(implicit conn: Cnx): Seq[A] = get(conn).take(n)
 
@@ -52,7 +46,7 @@ trait Out1[A] extends Out {
   def insert(data: Seq[A])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, Seq(data))
 }
 
-trait Out2[A, B] extends Out {
+abstract class OutputMolecule2[A, B](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B)] = tpls(conn).take(n)
@@ -66,7 +60,7 @@ trait Out2[A, B] extends Out {
   def insert(data: Seq[A :: B :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out3[A, B, C] extends Out {
+abstract class OutputMolecule3[A, B, C](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C)] = tpls(conn).take(n)
@@ -80,7 +74,7 @@ trait Out3[A, B, C] extends Out {
   def insert(data: Seq[A :: B :: C :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out4[A, B, C, D] extends Out {
+abstract class OutputMolecule4[A, B, C, D](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D)] = tpls(conn).take(n)
@@ -94,7 +88,7 @@ trait Out4[A, B, C, D] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out5[A, B, C, D, E] extends Out {
+abstract class OutputMolecule5[A, B, C, D, E](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E)] = tpls(conn).take(n)
@@ -108,7 +102,7 @@ trait Out5[A, B, C, D, E] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out6[A, B, C, D, E, F] extends Out {
+abstract class OutputMolecule6[A, B, C, D, E, F](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F)] = tpls(conn).take(n)
@@ -122,7 +116,7 @@ trait Out6[A, B, C, D, E, F] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out7[A, B, C, D, E, F, G] extends Out {
+abstract class OutputMolecule7[A, B, C, D, E, F, G](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G)] = tpls(conn).take(n)
@@ -136,7 +130,7 @@ trait Out7[A, B, C, D, E, F, G] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out8[A, B, C, D, E, F, G, H] extends Out {
+abstract class OutputMolecule8[A, B, C, D, E, F, G, H](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H)] = tpls(conn).take(n)
@@ -150,7 +144,7 @@ trait Out8[A, B, C, D, E, F, G, H] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out9[A, B, C, D, E, F, G, H, I] extends Out {
+abstract class OutputMolecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)] = tpls(conn).take(n)
@@ -164,7 +158,7 @@ trait Out9[A, B, C, D, E, F, G, H, I] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out10[A, B, C, D, E, F, G, H, I, J] extends Out {
+abstract class OutputMolecule10[A, B, C, D, E, F, G, H, I, J](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J)] = tpls(conn).take(n)
@@ -178,7 +172,7 @@ trait Out10[A, B, C, D, E, F, G, H, I, J] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out11[A, B, C, D, E, F, G, H, I, J, K] extends Out {
+abstract class OutputMolecule11[A, B, C, D, E, F, G, H, I, J, K](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K)] = tpls(conn).take(n)
@@ -192,7 +186,7 @@ trait Out11[A, B, C, D, E, F, G, H, I, J, K] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out12[A, B, C, D, E, F, G, H, I, J, K, L] extends Out {
+abstract class OutputMolecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L)] = tpls(conn).take(n)
@@ -206,7 +200,7 @@ trait Out12[A, B, C, D, E, F, G, H, I, J, K, L] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out13[A, B, C, D, E, F, G, H, I, J, K, L, M] extends Out {
+abstract class OutputMolecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)] = tpls(conn).take(n)
@@ -220,7 +214,7 @@ trait Out13[A, B, C, D, E, F, G, H, I, J, K, L, M] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] extends Out {
+abstract class OutputMolecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)] = tpls(conn).take(n)
@@ -234,7 +228,7 @@ trait Out14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] extends Out {
+abstract class OutputMolecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)] = tpls(conn).take(n)
@@ -248,7 +242,7 @@ trait Out15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] extends Out {
+abstract class OutputMolecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)] = tpls(conn).take(n)
@@ -262,7 +256,7 @@ trait Out16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] extends Out {
+abstract class OutputMolecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)] = tpls(conn).take(n)
@@ -276,7 +270,7 @@ trait Out17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] extends Out {
+abstract class OutputMolecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)] = tpls(conn).take(n)
@@ -290,7 +284,7 @@ trait Out18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] extends Out {
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] extends Out {
+abstract class OutputMolecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)] = tpls(conn).take(n)
@@ -304,7 +298,7 @@ trait Out19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] extends Out
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] extends Out {
+abstract class OutputMolecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)] = tpls(conn).take(n)
@@ -318,7 +312,7 @@ trait Out20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] extends 
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] extends Out {
+abstract class OutputMolecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)] = tpls(conn).take(n)
@@ -332,7 +326,7 @@ trait Out21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] exten
   def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
 }
 
-trait Out22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] extends Out {
+abstract class OutputMolecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val _model: Model, val _query: Query) extends OutputMolecule {
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)] = tpls(conn).take(n)

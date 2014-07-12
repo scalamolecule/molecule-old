@@ -6,6 +6,8 @@
  */
 package molecule.examples.seattle.dsl
 import molecule._
+import in._
+import out._
 import ast.model._
 import dsl.schemaDSL._
 
@@ -58,7 +60,7 @@ case class Community_Insert(override val elements: Seq[Element] = Seq()) extends
   lazy val orgtype  = (data: String     ) => _insert(Seq(data), 1, "orgtype" , "String"     , Some(":community.orgtype/"))
   lazy val `type`   = (data: String     ) => _insert(Seq(data), 1, "type"    , "String"     , Some(":community.type/"))
 
-  private[molecule] object category_ {
+  private[dsl] object category_ {
     def apply(h: String, t: String*) = _insert(h +: t.toList, 2, "category", "Set[String]")
     def apply(data: Seq[String])     = _insert(data,          2, "category", "Set[String]")
   }
@@ -77,29 +79,29 @@ case class Community_Update(override val elements: Seq[Element] = Seq(), overrid
   lazy val orgtype  = orgtype_
   lazy val `type`   = type_
 
-  private[molecule] object eid_ {
+  private[dsl] object eid_ {
     def apply(data: Long)        = _assertNewFact(Seq(data), 1, "eid", "Long")
     def apply()                  = _retract(                 1, "eid")
   }
-  private[molecule] object name_ {
+  private[dsl] object name_ {
     def apply(data: String)      = _assertNewFact(Seq(data), 1, "name", "String")
     def apply()                  = _retract(                 1, "name")
   }
-  private[molecule] object url_ {
+  private[dsl] object url_ {
     def apply(data: String)      = _assertNewFact(Seq(data), 1, "url", "String")
     def apply()                  = _retract(                 1, "url")
   }
-  private[molecule] object category_ {
+  private[dsl] object category_ {
     def apply(h: (String, String), t: (String, String)*) = _swap(h +: t.toList            , "category", "Set[String]")
     def remove(values: String*)                          = _removeElements(Seq(values: _*), "category", "Set[String]")
     def add(data: String)                                = _assertNewFact(Seq(data),     2, "category", "Set[String]")
     def apply()                                          = _retract(                     2, "category")
   }
-  private[molecule] object orgtype_ {
+  private[dsl] object orgtype_ {
     def apply(data: String)      = _assertNewFact(Seq(data), 1, "orgtype", "String", Some(":community.orgtype/"))
     def apply()                  = _retract(                 1, "orgtype")
   }
-  private[molecule] object type_ {
+  private[dsl] object type_ {
     def apply(data: String)      = _assertNewFact(Seq(data), 1, "type", "String", Some(":community.type/"))
     def apply()                  = _retract(                 1, "type")
   }
@@ -127,7 +129,7 @@ case class Community_Retract(elements: Seq[Element] = Seq()) extends Retract(ele
   lazy val orgtype  = _retract(1, "orgtype" , "String"     )
   lazy val `type`   = _retract(1, "type"    , "String"     )
 
-  private[molecule] object category_ {
+  private[dsl] object category_ {
     def apply()                           = _retract(2, "category", "Set[String]")
     def apply(h: String, t: String*) = _retract(2, "category", "Set[String]")
     def apply(data: Seq[String])     = _retract(2, "category", "Set[String]")

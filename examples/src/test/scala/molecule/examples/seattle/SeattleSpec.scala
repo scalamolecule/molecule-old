@@ -28,23 +28,14 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     conn
   }
 
-  def load(tx: java.util.List[_], version: Int): Connection = {
-    val uri = "datomic:mem://seattle" + version
-    Peer.deleteDatabase(uri)
-    Peer.createDatabase(uri)
-    implicit val conn = Peer.connect(uri)
-
-    // Save schema
-    conn.transact(tx).get()
-
-    // Load data
+  def loadSeattle(version: Int): Connection = {
+    implicit val conn = load(SeattleSchema.tx, "seattle" + version)
+    // Load Seattle data
     Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region.insert(seattleData)
-
-    // Pass on connection
     conn
   }
 
-  implicit val conn = load(SeattleSchema.tx, 1)
+  implicit val conn = loadSeattle(1)
 
   lazy val seattleData = List(
     ("15th Ave Community", "http://groups.yahoo.com/group/15thAve_Community/", "email_list", "community", Set("15th avenue residents"), "Capitol Hill", "East", "e"),

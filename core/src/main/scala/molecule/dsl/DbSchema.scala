@@ -1,7 +1,6 @@
 package molecule.dsl
-
 import molecule.dsl.schemaDSL._
-import molecule.{Out_0, Out_1}
+import molecule.out.{Out_0, Out_1}
 
 object DbSchema {
 

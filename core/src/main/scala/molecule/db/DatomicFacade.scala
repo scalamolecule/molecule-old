@@ -13,20 +13,17 @@ import scala.collection.JavaConverters._
 import scala.language.existentials
 
 trait DatomicFacade extends Debug {
-  val x = debug("DatomicFacade", 1, 99, false, 2)
+  private val x = debug("DatomicFacade", 1, 99, false, 2)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
+  // Create database and load schema ========================================
 
-  // Schema =================================================================
-
-  def init(uri: String, schemaTemplate: Seq[Seq[String]]): Connection = {
+  def load(tx: java.util.List[_], identifier: String = "test"): Connection = {
+    val uri = "datomic:mem://" + identifier
     Peer.deleteDatabase(uri)
     Peer.createDatabase(uri)
     val conn = Peer.connect(uri)
-    val schemaTx = Util.list(schemaTemplate.map(transaction => Util.list(transaction.asJava: _*)).asJava: _*)
-
-    // Create database schema
-    conn.transact(schemaTx).get()
+    conn.transact(tx).get()
     conn
   }
 
@@ -96,16 +93,6 @@ trait DatomicFacade extends Debug {
   def insertMany(conn: Connection, model: Model, argss: Seq[Seq[Any]]): Seq[Long] = {
     val tx = Model2Transaction(conn, model, argss)
     val javaTx = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
-    val javaTx2 = Util.list(
-      Util.list(
-        ":db/add",
-        Peer.tempid(":db.part/user"),
-        ":oneType/int",
-        42.asInstanceOf[Object]))
-    x(0
-      , javaTx
-//      , javaTx2
-    )
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)
     val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
@@ -118,23 +105,10 @@ trait DatomicFacade extends Debug {
     val (attrs, args) = t.getNonEmptyAttrs(model).unzip
     val rawMolecules = t.chargeMolecules(attrs, Seq(args))
     val molecules = t.groupNamespaces(rawMolecules)
-    x(0 // change to 1 to print
-      , model
-      , args
-      , rawMolecules
-      , molecules
-    )
     val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, ids)
     val javaTx: java.util.List[_] = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)
-    x(0 // change to 1 to print
-      , args
-      , tx
-      , javaTx
-      , txResult
-      , txData)
-
     val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
     val newIds = newDatoms.map(_.e.asInstanceOf[Long]).distinct
     newIds

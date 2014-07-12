@@ -1,13 +1,13 @@
 package molecule
 package examples.seattle
 import java.io.FileReader
-import scala.language.reflectiveCalls
 import datomic._
 import molecule.dsl.DbSchema
-import DbSchema._
+import molecule.dsl.DbSchema._
 import molecule.examples.seattle.dsl._
 import molecule.examples.seattle.schema.SeattleSchema
 import shapeless._
+import scala.language.reflectiveCalls
 
 
 class SeattleTests extends SeattleSpec {
@@ -191,12 +191,13 @@ class SeattleTests extends SeattleSpec {
 
 
   "Invoking functions in queries" >> {
+    val beforeC = List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
 
-    m(Community.name < "C").take(3) === List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
-    Community.name.<("C").take(3) === List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
+    m(Community.name < "C").take(3) === beforeC
+    Community.name.<("C").take(3) === beforeC
 
     val communitiesBefore = m(Community.name < ?)
-    communitiesBefore("C").take(3) === List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
+    communitiesBefore("C").take(3) === beforeC
     communitiesBefore("A").take(3) === List("15th Ave Community")
   }
 
@@ -294,7 +295,7 @@ class SeattleTests extends SeattleSpec {
 
   "Manipulating data - insert" >> {
 
-    implicit val conn = load(SeattleSchema.tx, 3)
+    implicit val conn = loadSeattle(3)
 
     /* To insert data we have 2 options:
        1. Build a molecule with data and insert.
@@ -381,7 +382,7 @@ class SeattleTests extends SeattleSpec {
 
   "Manipulating data - update/retract" >> {
 
-    implicit val conn = load(SeattleSchema.tx, 4)
+    implicit val conn = loadSeattle(4)
 
 
     // One-cardinality attributes..........................

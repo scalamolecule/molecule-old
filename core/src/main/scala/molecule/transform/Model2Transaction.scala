@@ -1,5 +1,4 @@
-package molecule
-package transform
+package molecule.transform
 import datomic.{Connection, Database, Peer}
 import molecule.ast.model._
 import molecule.db.DatomicFacade

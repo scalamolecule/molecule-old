@@ -4,20 +4,13 @@ import molecule.ast.model._
 import molecule.ast.query._
 import molecule.db.DatomicFacade
 import molecule.dsl.schemaDSL._
+import molecule.in.InputMolecule
+import molecule.out.OutputMolecule
 import molecule.transform.{Model2Transaction, Query2String}
-import molecule.{InputMolecule, Molecule}
 import org.specs2.mutable._
 
 
 trait MoleculeSpec extends Specification with DatomicFacade {
-
-  def load(tx: java.util.List[_], uri: String): Connection = {
-    Peer.deleteDatabase(uri)
-    Peer.createDatabase(uri)
-    val conn = Peer.connect(uri)
-    conn.transact(tx).get()
-    conn
-  }
 
   def typed[T](t: => T) {}
 
@@ -67,7 +60,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       "\n\nINPUTS:" + allInputs.zipWithIndex.map(e => (e._2 + 1) + " " + e._1).mkString("\nList(\n  ", "\n  ", "\n)")
   }
 
-  implicit class dsl2model2query2string(molecule: Molecule)(implicit conn: Connection) {
+  implicit class dsl2model2query2string(molecule: OutputMolecule)(implicit conn: Connection) {
     def -->(model: Model) = new {
       molecule._model === model
 

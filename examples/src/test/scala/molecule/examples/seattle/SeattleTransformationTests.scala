@@ -1034,7 +1034,7 @@ class SeattleTransformationTests extends SeattleSpec {
 
   "Manipulating data - insert" >> {
 
-    implicit val conn = load(SeattleSchema.tx, 3)
+    implicit val conn = loadSeattle(3)
 
     /** Insert data into molecule and save ***********************************************/
 
@@ -1060,7 +1060,7 @@ class SeattleTransformationTests extends SeattleSpec {
       ) -->
       //  Some things to notice:
       //  - We start from the end of the molecule and traverse left. This allow us to create
-      //    the entities that we will subsequently refer to (#db/id[:db.part/user -1002037])
+      //    the entities that we will subsequently refer to (#db/id[:db.part/user -1000001])
       //  - Enum values are prefixed with their namespace ("nw" becomes ":district.region/nw")
       //  - Multiple values of many-cardinality attributes each get their own statement ("my" + "favorites")
       //
@@ -1128,7 +1128,7 @@ class SeattleTransformationTests extends SeattleSpec {
 
   "Manipulating data - update/retract" >> {
 
-    implicit val conn = load(SeattleSchema.tx, 4)
+    implicit val conn = loadSeattle(4)
 
     val belltownId = Community.name("belltown").ids.head
 

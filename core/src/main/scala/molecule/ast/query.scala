@@ -72,24 +72,7 @@ object query {
     def apply() = new Query(Find(Seq()), With(Seq()), In(Seq()), Where(List()))
   }
   object DataClause {
-//    def apply(e: String, attr: KW, tpeS: String, sym: Symbol) = new DataClause(ImplicitDS, Var(e, tpeS), attr, Var(sym.name, tpeS), Empty)
     def apply(e: String, attr: KW, tpeS: String, v: String) = new DataClause(ImplDS, Var(e, tpeS), attr, Var(v, tpeS), Empty)
     def apply(e: String, attr: KW, tpeS: String, value: Val) = new DataClause(ImplDS, Var(e, tpeS), attr, value, Empty)
-
-    // For simplifying tests
-//    def apply(e: Symbol, attr: KW, tpeS: String = "String", v: String = "") = new DataClause(ImplicitDS, Var(e.name, tpeS), attr, Val(v), Empty)
-//    def apply(e: Symbol, attr: KW, v: Symbol, tpeS: String = "String") = new DataClause(ImplicitDS, Var(e.name, tpeS), attr, Var(v.name, tpeS), Empty)
-//    def apply(e: Symbol, attr: KW, tpeS: String, v: Var) = new DataClause(ImplicitDS, Var(e.name, tpeS), attr, v, Empty)
-  }
-  object KW {
-    // For simplifying tests
-//    def apply(ns: Symbol, name: Symbol) = new KW(ns.name, name.name)
-  }
-  object Find {
-    // For simplifying tests
-//    def apply(sym: Symbol, tpeS: String = "String"): Find = new Find(Seq(Var(sym.name, tpeS)))
-  }
-  object Where {
-//    def apply(dc: DataClause): Where = new Where(List(dc))
   }
 }

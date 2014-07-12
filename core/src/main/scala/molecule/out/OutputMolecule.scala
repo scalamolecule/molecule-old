@@ -1,12 +1,14 @@
-package molecule
+package molecule.out
 import java.util.{Date => jDate}
-
 import molecule.ast.model.Model
 import molecule.ast.query.Query
 import molecule.db.DatomicFacade
 
 
-abstract class Molecule(val _model: Model, val _query: Query) extends DatomicFacade {
+trait OutputMolecule extends DatomicFacade {
+  val _model: Model
+  val _query: Query
+
   override def toString: String = _query.toList
   def p = _query.pretty
   def ids: Seq[Long]

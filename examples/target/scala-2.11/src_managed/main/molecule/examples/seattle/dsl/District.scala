@@ -6,6 +6,8 @@
  */
 package molecule.examples.seattle.dsl
 import molecule._
+import in._
+import out._
 import ast.model._
 import dsl.schemaDSL._
 
@@ -46,15 +48,15 @@ case class District_Update(override val elements: Seq[Element] = Seq(), override
   lazy val name   = name_
   lazy val region = region_
 
-  private[molecule] object eid_ {
+  private[dsl] object eid_ {
     def apply(data: Long)   = _assertNewFact(Seq(data), 1, "eid", "Long")
     def apply()             = _retract(                 1, "eid")
   }
-  private[molecule] object name_ {
+  private[dsl] object name_ {
     def apply(data: String) = _assertNewFact(Seq(data), 1, "name", "String")
     def apply()             = _retract(                 1, "name")
   }
-  private[molecule] object region_ {
+  private[dsl] object region_ {
     def apply(data: String) = _assertNewFact(Seq(data), 1, "region", "String", Some(":district.region/"))
     def apply()             = _retract(                 1, "region")
   }

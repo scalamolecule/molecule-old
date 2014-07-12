@@ -1,5 +1,4 @@
 package molecule.dsl
-
 import datomic.Connection
 import molecule.ast.model._
 import molecule.db.DatomicFacade

@@ -84,11 +84,11 @@ transformations of molecules
 
 ### Dependency in your project
 
-Molecule 0.1.1 for Scala 2.11.1 is available at 
-[Sonatype](https://oss.sonatype.org/content/repositories/releases/com/marcgrue/molecule_2.11/)
+Molecule 0.1.0 for Scala 2.11.1 will soon be available at 
+[Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick%7Emolecule-dsl)
  so that you can
 
-1. Add `"com.marcgrue" % "molecule_2.11.1" % "0.1.1"` to your sbt build file.
+1. Add `"com.marcgrue" % "molecule_2.11.1" % "0.1.0"` to your sbt build file.
 2. Define your domain in a [schema definition file][setup]
 3. `sbt compile`
 4. Import into your IDE

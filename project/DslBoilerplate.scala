@@ -229,7 +229,7 @@ object DslBoilerplate {
     val insertAttrs2 = attrs.filter(_._6 == 2).map { case (cat, attr, attrClean, tpe, baseType, card, _, padAttr, padAttrClean, padType, _) =>
       val pad = " " * (baseType.length - 2)
       val enumPrefix = if (cat == "enum") s""", Some(":$ns.$attrClean/")""" else ""
-      s"""private[molecule] object ${attrClean}_ {
+      s"""private[dsl] object ${attrClean}_ {
                |    def apply(h: $baseType, t: $baseType*) = _insert(h +: t.toList, $card, "$attrClean"$padAttrClean, "$tpe"$enumPrefix)
                |    def apply(data: Seq[$baseType])$pad = _insert(data,          $card, "$attrClean"$padAttrClean, "$tpe"$enumPrefix)
                |  }""".stripMargin
@@ -252,7 +252,7 @@ object DslBoilerplate {
       val enumPrefix = if (cat == "enum") s""", Some(":$ns.$attrClean/")""" else ""
       if (card == 1) {
         val pad = " " * longestBaseType
-        s"""private[molecule] object ${attrClean}_ {
+        s"""private[dsl] object ${attrClean}_ {
                  |    def apply(data: $baseType) $padBaseType= _assertNewFact(Seq(data), $card, "$attrClean", "$tpe"$enumPrefix)
                  |    def apply()$pad       = _retract(                 $card, "$attrClean")
                  |  }""".stripMargin
@@ -261,7 +261,7 @@ object DslBoilerplate {
         val pad3 = " " * (baseType.length * 3)
         val pad4 = " " * (baseType.length * 4)
         //        val pad2 = " " * (baseType.length)
-        s"""private[molecule] object ${attrClean}_ {
+        s"""private[dsl] object ${attrClean}_ {
                  |    def apply(h: ($baseType, $baseType), t: ($baseType, $baseType)*) = _swap(h +: t.toList            , "$attrClean", "$tpe"$enumPrefix)
                  |    def remove(values: $baseType*) $pad3       = _removeElements(Seq(values: _*), "$attrClean", "$tpe"$enumPrefix)
                  |    def add(data: $baseType) $pad3             = _assertNewFact(Seq(data),     2, "$attrClean", "$tpe"$enumPrefix)
@@ -288,7 +288,7 @@ object DslBoilerplate {
 
     val retractAttrs2 = attrs.filter(_._6 == 2).map { case (_, attr, attrClean, tpe, baseType, card, _, padAttr, padAttrClean, padType, padBaseType) =>
       val pad = " " * (baseType.length - 2)
-      s"""private[molecule] object ${attrClean}_ {
+      s"""private[dsl] object ${attrClean}_ {
                |    def apply() $padBaseType                     = _retract($card, "$attrClean", "$tpe")
                |    def apply(h: $baseType, t: $baseType*) = _retract($card, "$attrClean", "$tpe")
                |    def apply(data: Seq[$baseType]) $pad= _retract($card, "$attrClean", "$tpe")
@@ -442,6 +442,8 @@ object DslBoilerplate {
                    | */
                    |package $path.dsl
                    |import molecule._
+                   |import in._
+                   |import out._
                    |import ast.model._
                    |import dsl.schemaDSL._
                    |

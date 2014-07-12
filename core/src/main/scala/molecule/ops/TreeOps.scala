@@ -1,9 +1,8 @@
-package molecule
-package ops
-import scala.reflect.macros.whitebox.Context
+package molecule.ops
 import molecule.ast.query._
-import molecule.dsl.schemaDSL
-import schemaDSL._
+import molecule.dsl.schemaDSL._
+import molecule.out.Out_0
+import scala.reflect.macros.whitebox.Context
 
 trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   import c.universe._
@@ -44,17 +43,17 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
 
-  def inputMolecule_i_o(in: Int, out: Int) = (in, out) match {
-    case (1, 0) => tq"InputMolecule_1_0"
-    case (1, 1) => tq"InputMolecule_1_1"
-    case (1, 2) => tq"InputMolecule_1_2"
-    case (1, 3) => tq"InputMolecule_1_3"
-    case (1, 4) => tq"InputMolecule_1_4"
-    case (1, 5) => tq"InputMolecule_1_5"
-    case (1, 6) => tq"InputMolecule_1_6"
-    case (1, 7) => tq"InputMolecule_1_7"
-    case (1, 8) => tq"InputMolecule_1_8"
-    case (1, 9) => tq"InputMolecule_1_9"
+  def inputMolecule_i_o(inArity: Int, outArity: Int) = (inArity, outArity) match {
+    case (1, 0)  => tq"InputMolecule_1_0"
+    case (1, 1)  => tq"InputMolecule_1_1"
+    case (1, 2)  => tq"InputMolecule_1_2"
+    case (1, 3)  => tq"InputMolecule_1_3"
+    case (1, 4)  => tq"InputMolecule_1_4"
+    case (1, 5)  => tq"InputMolecule_1_5"
+    case (1, 6)  => tq"InputMolecule_1_6"
+    case (1, 7)  => tq"InputMolecule_1_7"
+    case (1, 8)  => tq"InputMolecule_1_8"
+    case (1, 9)  => tq"InputMolecule_1_9"
     case (1, 10) => tq"InputMolecule_1_10"
     case (1, 11) => tq"InputMolecule_1_11"
     case (1, 12) => tq"InputMolecule_1_12"
@@ -69,16 +68,16 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     case (1, 21) => tq"InputMolecule_1_21"
     case (1, 22) => tq"InputMolecule_1_22"
 
-    case (2, 0) => tq"InputMolecule_2_0"
-    case (2, 1) => tq"InputMolecule_2_1"
-    case (2, 2) => tq"InputMolecule_2_2"
-    case (2, 3) => tq"InputMolecule_2_3"
-    case (2, 4) => tq"InputMolecule_2_4"
-    case (2, 5) => tq"InputMolecule_2_5"
-    case (2, 6) => tq"InputMolecule_2_6"
-    case (2, 7) => tq"InputMolecule_2_7"
-    case (2, 8) => tq"InputMolecule_2_8"
-    case (2, 9) => tq"InputMolecule_2_9"
+    case (2, 0)  => tq"InputMolecule_2_0"
+    case (2, 1)  => tq"InputMolecule_2_1"
+    case (2, 2)  => tq"InputMolecule_2_2"
+    case (2, 3)  => tq"InputMolecule_2_3"
+    case (2, 4)  => tq"InputMolecule_2_4"
+    case (2, 5)  => tq"InputMolecule_2_5"
+    case (2, 6)  => tq"InputMolecule_2_6"
+    case (2, 7)  => tq"InputMolecule_2_7"
+    case (2, 8)  => tq"InputMolecule_2_8"
+    case (2, 9)  => tq"InputMolecule_2_9"
     case (2, 10) => tq"InputMolecule_2_10"
     case (2, 11) => tq"InputMolecule_2_11"
     case (2, 12) => tq"InputMolecule_2_12"
@@ -93,16 +92,16 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     case (2, 21) => tq"InputMolecule_2_21"
     case (2, 22) => tq"InputMolecule_2_22"
 
-    case (3, 0) => tq"InputMolecule_3_0"
-    case (3, 1) => tq"InputMolecule_3_1"
-    case (3, 2) => tq"InputMolecule_3_2"
-    case (3, 3) => tq"InputMolecule_3_3"
-    case (3, 4) => tq"InputMolecule_3_4"
-    case (3, 5) => tq"InputMolecule_3_5"
-    case (3, 6) => tq"InputMolecule_3_6"
-    case (3, 7) => tq"InputMolecule_3_7"
-    case (3, 8) => tq"InputMolecule_3_8"
-    case (3, 9) => tq"InputMolecule_3_9"
+    case (3, 0)  => tq"InputMolecule_3_0"
+    case (3, 1)  => tq"InputMolecule_3_1"
+    case (3, 2)  => tq"InputMolecule_3_2"
+    case (3, 3)  => tq"InputMolecule_3_3"
+    case (3, 4)  => tq"InputMolecule_3_4"
+    case (3, 5)  => tq"InputMolecule_3_5"
+    case (3, 6)  => tq"InputMolecule_3_6"
+    case (3, 7)  => tq"InputMolecule_3_7"
+    case (3, 8)  => tq"InputMolecule_3_8"
+    case (3, 9)  => tq"InputMolecule_3_9"
     case (3, 10) => tq"InputMolecule_3_10"
     case (3, 11) => tq"InputMolecule_3_11"
     case (3, 12) => tq"InputMolecule_3_12"
@@ -117,32 +116,32 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     case (3, 21) => tq"InputMolecule_3_21"
     case (3, 22) => tq"InputMolecule_3_22"
 
-    case (i, o) => abort(s"[BuildInputMolecule] Unsupported arity combination: $i in, $o out")
+    case (i, o) => abort(s"[TreeOps:inputMolecule_i_o] Unsupported arity combination: $i in, $o out")
   }
 
-  def dataX(outTypes: Seq[Type]) = outTypes.size match {
-    case 2 => tq"Out2[..$outTypes]"
-    case 3 => tq"Out3[..$outTypes]"
-    case 4 => tq"Out4[..$outTypes]"
-    case 5 => tq"Out5[..$outTypes]"
-    case 6 => tq"Out6[..$outTypes]"
-    case 7 => tq"Out7[..$outTypes]"
-    case 8 => tq"Out8[..$outTypes]"
-    case 9 => tq"Out9[..$outTypes]"
-    case 10 => tq"Out10[..$outTypes]"
-    case 11 => tq"Out11[..$outTypes]"
-    case 12 => tq"Out12[..$outTypes]"
-    case 13 => tq"Out13[..$outTypes]"
-    case 14 => tq"Out14[..$outTypes]"
-    case 15 => tq"Out15[..$outTypes]"
-    case 16 => tq"Out16[..$outTypes]"
-    case 17 => tq"Out17[..$outTypes]"
-    case 18 => tq"Out18[..$outTypes]"
-    case 19 => tq"Out19[..$outTypes]"
-    case 20 => tq"Out20[..$outTypes]"
-    case 21 => tq"Out21[..$outTypes]"
-    case 22 => tq"Out22[..$outTypes]"
-    case n => abort(s"[BuildInputMolecule:await] Unsupported arity for OutX: $n")
+  def outputMolecule_o(outArity: Int) = outArity match {
+    case 2  => tq"OutputMolecule2"
+    case 3  => tq"OutputMolecule3"
+    case 4  => tq"OutputMolecule4"
+    case 5  => tq"OutputMolecule5"
+    case 6  => tq"OutputMolecule6"
+    case 7  => tq"OutputMolecule7"
+    case 8  => tq"OutputMolecule8"
+    case 9  => tq"OutputMolecule9"
+    case 10 => tq"OutputMolecule10"
+    case 11 => tq"OutputMolecule11"
+    case 12 => tq"OutputMolecule12"
+    case 13 => tq"OutputMolecule13"
+    case 14 => tq"OutputMolecule14"
+    case 15 => tq"OutputMolecule15"
+    case 16 => tq"OutputMolecule16"
+    case 17 => tq"OutputMolecule17"
+    case 18 => tq"OutputMolecule18"
+    case 19 => tq"OutputMolecule19"
+    case 20 => tq"OutputMolecule20"
+    case 21 => tq"OutputMolecule21"
+    case 22 => tq"OutputMolecule22"
+    case o  => abort(s"[TreeOps:dataX] Unsupported arity for OutputMoleculeX: $o")
   }
 
   def namespaceSymbol(tree: Tree) = {
@@ -177,8 +176,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     override def toString = {
       val s = sym.name.toString
       s.head.toLower + s.tail.takeWhile(_ != '_')
-//      s.toLowerCase.takeWhile(_ != '_')
-//      s.takeWhile(_ != '_')
     }
     def attrs = nsType.members.collect {
       case s: TermSymbol if s.isLazy && s.isPublic                       => new att(s)
@@ -240,7 +237,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     // todo: if (nestedNS.isDefined) s":$ns.$nestedNS/$name" else s":$ns/$name"
     def enumPrefix = ns.enums.size match {
       case 0 => ""
-//      case 1 => s":$name/"
+      //      case 1 => s":$name/"
       case _ => s":$ns.$name/"
     }
   }

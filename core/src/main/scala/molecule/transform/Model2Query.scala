@@ -8,8 +8,6 @@ object Model2Query extends Debug {
 
   def apply(model: Model): Query = {
 
-    //    println(model)
-
     def resolve(q: Query, e: String, v: String, element: Element) = {
       val (v1, v2) = (v + 1, v + 2)
 
@@ -70,7 +68,7 @@ object Model2Query extends Debug {
           (e1, nextV) // :community/name -> :community/url
         else if (ns == prevAttr)
           (v1, nextV) // :community/neighborhood -> :neighborhood/name
-        else if ((prevNS, prevAttr) == ("db", "ident"))
+        else if ((prevNS, prevAttr) ==("db", "ident"))
           (e1, nextV) // :db/ident -> :someNS/someAttr
         else
           (e1, v1) // First clause starts with e = "?ent" and v = "?a"

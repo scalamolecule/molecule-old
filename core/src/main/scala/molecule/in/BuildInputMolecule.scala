@@ -1,12 +1,12 @@
-package molecule
-import scala.language.experimental.macros
-import scala.reflect.macros.whitebox.Context
+package molecule.in
 import molecule.ast.query._
-import molecule.dsl.schemaDSL
-import schemaDSL._
+import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
+import scala.language.experimental.macros
+import scala.reflect.macros.whitebox.Context
+
 
 trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
@@ -14,6 +14,8 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
   val imports = q"""
+      import molecule.in._
+      import molecule.out._
       import molecule.ast.query._
       import molecule.ast.model._
       import molecule.transform.Model2Transaction._
@@ -24,17 +26,17 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import datomic.Connection
       """
 
-  def await_in_x_out_0(inputDsl: Expr[NS], inTypes: Type*) = {
+  def await_in_x_out_0(inputDsl: c.Expr[NS], InTypes: Type*) = {
     val model = Dsl2Model(c)(inputDsl)
     val query = Model2Query(model)
-    val InputMolecule_i_o = inputMolecule_i_o(inTypes.size, 1)
-    val inputTypes = if (inTypes.length == 1) tq"Seq[..$inTypes]" else tq"Seq[(..$inTypes)]"
+    val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, 1)
+    val InputTypes = if (InTypes.length == 1) tq"Seq[..$InTypes]" else tq"Seq[(..$InTypes)]"
     expr( q"""
       ..$imports
-      new $InputMolecule_i_o[..$inTypes]($model, $query) {
-        def apply(values: $inputTypes)(implicit conn: Connection): Molecule with Out0 = {
+      new $InputMoleculeTpe[..$InTypes]($model, $query) {
+        def apply(values: $InputTypes)(implicit conn: Connection): OutputMolecule0 = {
           val (query1, entityQuery) = bindValues(values)
-          new Molecule(model, query1) with Out0 {
+          new OutputMolecule0(model, query1) {
             def ids: Seq[Long] = entityIds(entityQuery)(conn)
           }
         }
@@ -42,28 +44,28 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       """)
   }
 
-  def await_in_x_out_1(inputDsl: Expr[NS], A: Type, inTypes: Type*) = {
+  def await_in_x_out_1(inputDsl: c.Expr[NS], A: Type, InTypes: Type*) = {
     val model = Dsl2Model(c)(inputDsl)
     val query = Model2Query(model)
-    val InputMolecule_i_o = inputMolecule_i_o(inTypes.size, 1)
+    val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, 1)
 
     val cast = (data: Tree) => if (A <:< typeOf[Set[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
     else
       q"$data.get(0).asInstanceOf[$A]"
 
-    val inputTypes = if (inTypes.length == 1) tq"Seq[..$inTypes]" else tq"Seq[(..$inTypes)]"
+    val InputTypes = if (InTypes.length == 1) tq"Seq[..$InTypes]" else tq"Seq[(..$InTypes)]"
 
-    val bindValues2 = if (inTypes.size > 1) {
-      val (inTerms, inParams) = inTypes.zipWithIndex.map { case (t, i) =>
+    val bindValues2 = if (InTypes.size > 1) {
+      val (inTerms, inParams) = InTypes.zipWithIndex.map { case (t, i) =>
         val inTerm = TermName(s"in$i")
-        val inType = tq"Seq[$t]"
-        (inTerm, q"$inTerm: $inType")
+        val InType = tq"Seq[$t]"
+        (inTerm, q"$inTerm: $InType")
       }.unzip
       q"""
-        def apply(..$inParams)(implicit conn: Connection): Molecule with Out1[$A] = {
+        def apply(..$inParams)(implicit conn: Connection): OutputMolecule1[$A] = {
           val (query1, entityQuery) = bindValues2(..$inTerms)
-          new Molecule(model, query1) with Out1[$A] {
+          new OutputMolecule1[$A](model, query1) {
             def ids: Seq[Long] = entityIds(entityQuery)
             def get(implicit conn: Connection): Seq[$A] = results(_query, conn).toList.map(data => ${cast(q"data")})
           }
@@ -71,12 +73,13 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       """
     } else q""
 
+
     expr( q"""
       ..$imports
-      new $InputMolecule_i_o[..$inTypes, $A]($model, $query) {
-        def apply(values: $inputTypes)(implicit conn: Connection): Molecule with Out1[$A] = {
+      new $InputMoleculeTpe[..$InTypes, $A]($model, $query) {
+        def apply(values: $InputTypes)(implicit conn: Connection): OutputMolecule1[$A] = {
           val (query1, entityQuery) = bindValues(values)
-          new Molecule(model, query1) with Out1[$A] {
+          new OutputMolecule1[$A](model, query1) {
             def ids: Seq[Long] = entityIds(entityQuery)(conn)
             def get(implicit conn: Connection): Seq[$A] = results(_query, conn).toList.map(data => ${cast(q"data")})
           }
@@ -84,39 +87,38 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         $bindValues2
       }
       """)
+
   }
 
-  def await(inputDsl: Expr[NS], inTypes: Type*)(outTypes: Type*) = {
+  def await(inputDsl: c.Expr[NS], InTypes: Type*)(OutTypes: Type*) = {
     val model = Dsl2Model(c)(inputDsl)
     val query = Model2Query(model)
     val entityQuery = query.copy(find = Find(Seq(Var("ent", "Long"))))
-    val InputMolecule_i_o = inputMolecule_i_o(inTypes.size, outTypes.size)
-    val OutX = dataX(outTypes)
-
-    val tplValues = (data: Tree) => outTypes.zipWithIndex.map {
+    val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
+    val OutputMoleculeTpe = outputMolecule_o(OutTypes.size)
+    val tplValues = (data: Tree) => OutTypes.zipWithIndex.map {
       case (t, i) if t <:< typeOf[Set[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
       case (t, i)                         => q"$data.get($i).asInstanceOf[$t]"
     }
-
-    val hlType = outTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
-    val hlist = (data: Tree) => outTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
+    val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
+    val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
       case ((t, i), hl) if t <:< typeOf[Set[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
       case ((t, i), hl)                         => q"$hl.::($data.get($i).asInstanceOf[$t])"
     }
 
-    val bindValues2 = if (inTypes.size > 1) {
-      val (inTerms, inParams) = inTypes.zipWithIndex.map { case (t, i) =>
+    val bindValues2 = if (InTypes.size > 1) {
+      val (inTerms, inParams) = InTypes.zipWithIndex.map { case (t, i) =>
         val inTerm = TermName(s"in$i")
         val inType = tq"Seq[$t]"
         (inTerm, q"$inTerm: $inType")
       }.unzip
       q"""
-        def apply(..$inParams)(implicit conn: Connection): Molecule with $OutX = {
+        def apply(..$inParams)(implicit conn: Connection): $OutputMoleculeTpe[..$OutTypes] = {
           val (query1, entityQuery) = bindValues2(..$inTerms)
-          new Molecule(model, query1) with $OutX {
+          new $OutputMoleculeTpe[..$OutTypes](model, query1) {
             override def ids: Seq[Long] = entityIds(entityQuery)
-            def tpls(implicit conn: Connection): Seq[(..$outTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
-            def hls(implicit conn: Connection): Seq[$hlType]        = results(_query, conn).toList.map(data => ${hlist(q"data")})
+            def tpls(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
+            def hls(implicit conn: Connection): Seq[$HListType]        = results(_query, conn).toList.map(data => ${hlist(q"data")})
           }
         }
       """
@@ -124,13 +126,13 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
     expr( q"""
       ..$imports
-      new $InputMolecule_i_o[..$inTypes, ..$outTypes]($model, $query) {
-        def apply(values: Seq[(..$inTypes)])(implicit conn: Connection): Molecule with $OutX = {
+      new $InputMoleculeTpe[..$InTypes, ..$OutTypes]($model, $query) {
+        def apply(values: Seq[(..$InTypes)])(implicit conn: Connection): $OutputMoleculeTpe[..$OutTypes] = {
           val (query1, entityQuery) = bindValues(values)
-          new Molecule(model, query1) with $OutX {
+          new $OutputMoleculeTpe[..$OutTypes](model, query1) {
             override def ids: Seq[Long] = entityIds($entityQuery)
-            def tpls(implicit conn: Connection): Seq[(..$outTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
-            def hls(implicit conn: Connection): Seq[$hlType]        = results(_query, conn).toList.map(data => ${hlist(q"data")})
+            def tpls(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
+            def hls(implicit conn: Connection): Seq[$HListType]        = results(_query, conn).toList.map(data => ${hlist(q"data")})
           }
         }
         $bindValues2
@@ -501,5 +503,3 @@ object BuildInputMolecule {
   : c.Expr[InputMolecule_3_22[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]] =
     inst(c).await(inputDsl, c.weakTypeOf[I1], c.weakTypeOf[I2], c.weakTypeOf[I3])(c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P], c.weakTypeOf[Q], c.weakTypeOf[R], c.weakTypeOf[S], c.weakTypeOf[T], c.weakTypeOf[U], c.weakTypeOf[V])
 }
-
-
