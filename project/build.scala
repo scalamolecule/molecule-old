@@ -1,17 +1,57 @@
 import sbt.Keys._
 import sbt._
 
-object build extends Build with BuildSettings {
-  lazy val root                = project in file(".") settings (_root: _*) aggregate(molecule, `molecule-coretest`, `molecule-examples`)
-  lazy val molecule            = project in file("core") settings (_core: _*)
-  lazy val `molecule-coretest` = project in file("coretest") settings (_coretest: _*) dependsOn molecule
-  lazy val `molecule-examples` = project in file("examples") settings (_examples: _*) dependsOn molecule
-}
 
-trait BuildSettings extends Boilerplate with Publishing {
-  val commonSettings = Defaults.coreDefaultSettings ++ publishSettings ++ Seq(
+object MoleculeBuild extends Build with Boilerplate with Publishing {
+
+  lazy val molecule = Project(
+    id = "molecule",
+    base = file("."),
+    aggregate = Seq(moleculeCore, moleculeCoretest, moleculeExamples),
+    settings = commonSettings ++ Seq(
+      moduleName := "molecule-root",
+      publish :=(),
+      publishLocal :=()
+    )
+  )
+
+  lazy val moleculeCore = Project(
+    id = "molecule-core",
+    base = file("core"),
+    settings = commonSettings ++ publishSettings ++ Seq(
+      moduleName := "molecule"
+    )
+  )
+
+  lazy val moleculeCoretest = Project(
+    id = "molecule-coretest",
+    base = file("coretest"),
+    dependencies = Seq(moleculeCore),
+    settings = commonSettings ++ Seq(
+      moleculeDefinitionDirectories(
+        "coretest/src/main/scala/molecule/types"
+      ),
+      publish :=(),
+      publishLocal :=()
+    )
+  )
+
+  lazy val moleculeExamples = Project(
+    id = "molecule-examples",
+    base = file("examples"),
+    dependencies = Seq(moleculeCore),
+    settings = commonSettings ++ Seq(
+      moleculeDefinitionDirectories(
+        "examples/src/main/scala/molecule/examples/seattle"
+      ),
+      publish :=(),
+      publishLocal :=()
+    )
+  )
+
+  lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "com.marcgrue",
-    version := "0.1.1",
+    version := "0.1.2",
     scalaVersion := "2.11.1",
     scalacOptions := Seq(
       "-feature",
@@ -20,6 +60,7 @@ trait BuildSettings extends Boilerplate with Publishing {
       "-Xfatal-warnings",
       "-deprecation",
       "-unchecked"),
+
     resolvers ++= Seq(
       Resolver.sonatypeRepo("releases"),
       Resolver.sonatypeRepo("snapshots"),
@@ -33,19 +74,11 @@ trait BuildSettings extends Boilerplate with Publishing {
       "org.specs2" %% "specs2" % "2.3.11" % "test"
     )
   )
-  lazy val _root     = commonSettings :+ (packagedArtifacts := Map.empty)
-  lazy val _core     = commonSettings
-  lazy val _coretest = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate(
-    "coretest/src/main/scala/molecule/types"
-  ))
-  lazy val _examples = commonSettings ++ Seq(packagedArtifacts := Map.empty, boilerplate(
-    "examples/src/main/scala/molecule/examples/seattle"
-  ))
 }
 
 trait Boilerplate {
 
-  def boilerplate(inputDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {
+  def moleculeDefinitionDirectories(inputDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {
     val sourceDir = (sourceManaged in Compile).value
 
     // generate source files
@@ -53,7 +86,7 @@ trait Boilerplate {
 
     // Avoid re-generating boilerplate if nothing has changed when running `sbt compile`
     val cache = FileFunction.cached(
-      streams.value.cacheDirectory / "filesCache",
+      streams.value.cacheDirectory / "moleculeBoilerplate",
       inStyle = FilesInfo.lastModified,
       outStyle = FilesInfo.hash
     ) {
@@ -62,17 +95,17 @@ trait Boilerplate {
     cache(sourceFiles.toSet).toSeq
   }.taskValue
 
-  // Format file data for jar creation
-  def files2TupleRec(pathPrefix: String, dir: File): Seq[Tuple2[File, String]] = {
-    sbt.IO.listFiles(dir) flatMap {
-      f => {
-        if (f.isFile && !f.name.endsWith(".DS_Store") && (f.name.endsWith(".scala") || f.name.endsWith(".class")))
-          Seq((f, s"${pathPrefix}${f.getName}"))
-        else
-          files2TupleRec(s"${pathPrefix}${f.getName}/", f)
-      }
-    }
-  }
+//  // Format file data for jar creation - if we want to jar the generated class files for speedier project rebuilds during development...
+//  def files2TupleRec(pathPrefix: String, dir: File): Seq[Tuple2[File, String]] = {
+//    sbt.IO.listFiles(dir) flatMap {
+//      f => {
+//        if (f.isFile && !f.name.endsWith(".DS_Store") && (f.name.endsWith(".scala") || f.name.endsWith(".class")))
+//          Seq((f, s"${pathPrefix}${f.getName}"))
+//        else
+//          files2TupleRec(s"${pathPrefix}${f.getName}/", f)
+//      }
+//    }
+//  }
 }
 
 trait Publishing {
