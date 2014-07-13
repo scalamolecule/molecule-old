@@ -93,8 +93,8 @@ Since Molecule generates boilerplate code from your definitions it also needs to
 
 2. Setup your sbt build file [as in Molecule][moleculesbt]: 
     - Add library dependency `"com.marcgrue" % "molecule_2.11.1" % "0.1.1"`
-    - List directories where you have your [definition file(s)][setup]
-3. Define your domain schema in a [schema definition file][setup]
+    - List directories where you have your [definition file(s)][scheme]
+3. Define your domain schema in a [schema definition file][scheme]
 4. `sbt compile`
 5. Import into your IDE
 6. [Setup your database][setup]
@@ -132,6 +132,7 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 
 [intro]: https://github.com/marcgrue/molecule/wiki/Quick-introduction-to-Datomic-and-Molecule
 [setup]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database
+[scheme]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database#defining-a-schema
 [populate]: https://github.com/marcgrue/molecule/wiki/Populate-the-database
 [tutorial]: https://github.com/marcgrue/molecule/wiki/Molecule-Seattle-tutorial
 [tutorialcode]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
