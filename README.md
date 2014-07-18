@@ -132,6 +132,8 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 
 [intro]: https://github.com/marcgrue/molecule/wiki/Quick-introduction-to-Datomic-and-Molecule
 [setup]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database
+[scheme]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database#defining-a-schema
+[deffile]: https://github.com/marcgrue/molecule/blob/master/examples/src/main/scala/molecule/examples/seattle/schema/SeattleDefinition.scala
 [populate]: https://github.com/marcgrue/molecule/wiki/Populate-the-database
 [tutorial]: https://github.com/marcgrue/molecule/wiki/Molecule-Seattle-tutorial
 [tutorialcode]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
