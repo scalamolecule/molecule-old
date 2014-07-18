@@ -3,7 +3,7 @@ package examples.seattle
 import scala.language.reflectiveCalls
 import molecule.dsl.DbSchema
 import DbSchema._
-import molecule.examples.seattle.dsl._
+import molecule.examples.seattle.dsl.seattle._
 import molecule.examples.seattle.schema.SeattleSchema
 
 
@@ -34,7 +34,7 @@ class SeattleQueryTests extends SeattleSpec {
   "Querying _by_ attribute values" >> {
 
     // Names of twitter communities
-    m(Community.name.`type`("twitter")) -->
+    m(Community.name.`type`.apply("twitter")) -->
       """[:find ?a
         | :where
         |   [?ent :community/name ?a]

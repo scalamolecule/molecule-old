@@ -5,7 +5,7 @@ import molecule.ast.model._
 import molecule.ast.query._
 import molecule.dsl.DbSchema
 import DbSchema._
-import molecule.examples.seattle.dsl._
+import molecule.examples.seattle.dsl.seattle._
 import molecule.examples.seattle.schema.SeattleSchema
 
 
@@ -579,7 +579,7 @@ class SeattleTransformationTests extends SeattleSpec {
         Where(List(
           DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
           Funct(".compareTo ^String", List(Var("a", ""), Val("C", "String")), ScalarBinding(Var("a1", ""))),
-          Funct("<", List(Var("a1", ""), Val("0", "Int")), NoBinding)))
+          Funct("<", List(Var("a1", ""), Val(0, "Int")), NoBinding)))
       ) -->
       """[:find ?a
         | :where
@@ -599,7 +599,7 @@ class SeattleTransformationTests extends SeattleSpec {
         Where(List(
           DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
           Funct(".compareTo ^String", List(Var("a", ""), Var("a1", "")), ScalarBinding(Var("a2", ""))),
-          Funct("<", List(Var("a2", ""), Val("0", "Int")), NoBinding)))
+          Funct("<", List(Var("a2", ""), Val(0, "Int")), NoBinding)))
       ) -->
       """[:find ?a
         | :in $ ?a1
@@ -620,7 +620,7 @@ class SeattleTransformationTests extends SeattleSpec {
         Where(List(
           DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
           Funct(".compareTo ^String", List(Var("a", ""), Var("a1", "")), ScalarBinding(Var("a2", ""))),
-          Funct("<", List(Var("a2", ""), Val("0", "Int")), NoBinding)))
+          Funct("<", List(Var("a2", ""), Val(0, "Int")), NoBinding)))
       ) -->
       """[:find ?a
         | :in $ ?a1

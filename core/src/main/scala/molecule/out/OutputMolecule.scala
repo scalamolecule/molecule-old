@@ -2,7 +2,7 @@ package molecule.out
 import java.util.{Date => jDate}
 import molecule.ast.model.Model
 import molecule.ast.query.Query
-import molecule.db.DatomicFacade
+import molecule.DatomicFacade
 
 
 trait OutputMolecule extends DatomicFacade {

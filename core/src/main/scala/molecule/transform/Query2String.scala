@@ -13,10 +13,10 @@ case class Query2String(q: Query) {
     case AggrExpr(fn, args, v, tpeS)  => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
     case Var("?", _)                  => "?"
     case Var(v, _)                    => "?" + v
-    case Val(v, "Int")                => v
+    case Val(v, "Int")                => v.toString
     case Val(v, _)                    => "\"" + v + "\""
     case Dummy(_)                     => "_"
-    case NoVal(_)                     => ""
+    case NoVal                     => ""
     case DS(name)                     => "$" + name
     case DS                           => "$"
     case Empty                        => ""

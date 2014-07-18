@@ -2,7 +2,8 @@ package molecule.in
 import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.dsl.schemaDSL.NS
+import molecule.dsl.schemaDSL
+import schemaDSL.NS
 import molecule.out._
 
 
@@ -53,7 +54,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
   }
 
   def bindValues(inputTuples: Seq[(I1, I2)]) = {
-    val (vars, p1 :: p2 :: Nil) = varsAndPrefixes.unzip
+    val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
     val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
     val query1 = query.copy(in = In(Seq(InVar(RelationBinding(vars), values))))
     val entityQuery = query.copy(find = Find(Seq(Var("ent", "Long"))))

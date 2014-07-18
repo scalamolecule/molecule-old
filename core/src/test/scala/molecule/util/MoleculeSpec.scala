@@ -2,8 +2,9 @@ package molecule.util
 import datomic.{Connection, Peer}
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.db.DatomicFacade
-import molecule.dsl.schemaDSL._
+import molecule.DatomicFacade
+import molecule.dsl.schemaDSL
+import schemaDSL._
 import molecule.in.InputMolecule
 import molecule.out.OutputMolecule
 import molecule.transform.{Model2Transaction, Query2String}

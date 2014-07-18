@@ -7,7 +7,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
   lazy val molecule = Project(
     id = "molecule",
     base = file("."),
-    aggregate = Seq(moleculeCore, moleculeCoretest, moleculeExamples),
+    aggregate = Seq(moleculeCore, moleculeCoretest, moleculeDemo, moleculeExamples),
     settings = commonSettings ++ Seq(
       moduleName := "molecule-root",
       publish :=(),
@@ -36,12 +36,26 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     )
   )
 
+  lazy val moleculeDemo = Project(
+    id = "molecule-demo",
+    base = file("demo"),
+    dependencies = Seq(moleculeCore),
+    settings = commonSettings ++ Seq(
+      moleculeDefinitionDirectories(
+        "demo/src/main/scala/demo"
+      ),
+      publish :=(),
+      publishLocal :=()
+    )
+  )
+
   lazy val moleculeExamples = Project(
     id = "molecule-examples",
     base = file("examples"),
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
+        "examples/src/main/scala/molecule/examples/dayOfDatomic",
         "examples/src/main/scala/molecule/examples/seattle"
       ),
       publish :=(),
@@ -55,11 +69,11 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     scalaVersion := "2.11.1",
     scalacOptions := Seq(
       "-feature",
-      "-language:higherKinds",
-      "-language:implicitConversions",
-      "-Xfatal-warnings",
-      "-deprecation",
-      "-unchecked"),
+//      "-language:higherKinds",
+      "-language:implicitConversions"),
+//      "-Xfatal-warnings",
+//      "-deprecation",
+//      "-unchecked"),
 
     resolvers ++= Seq(
       Resolver.sonatypeRepo("releases"),

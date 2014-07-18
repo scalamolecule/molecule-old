@@ -2,8 +2,7 @@ package molecule
 package examples.seattle
 import java.io.FileReader
 import datomic.{Connection, Peer, Util}
-import molecule.db.DatomicFacade
-import molecule.examples.seattle.dsl._
+import molecule.examples.seattle.dsl.seattle._
 import molecule.examples.seattle.schema.SeattleSchema
 import molecule.util.MoleculeSpec
 

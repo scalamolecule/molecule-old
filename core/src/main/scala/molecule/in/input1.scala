@@ -2,7 +2,8 @@ package molecule.in
 import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.dsl.schemaDSL.NS
+import molecule.dsl.schemaDSL
+import schemaDSL.NS
 import molecule.out._
 
 
@@ -36,7 +37,7 @@ trait In_1_22[I1, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U,
 trait InputMolecule_1[I1] extends InputMolecule {
 
   def bindValues(in1: Seq[I1]) = {
-    val (vars, p1 :: Nil) = varsAndPrefixes.unzip
+    val (vars, Seq(p1)) = varsAndPrefixes.unzip
     val values = getValues(p1, in1)
     val query1 = if (values.size > 1)
       query.copy(in = In(Seq(InVar(CollectionBinding(vars.head), Seq(values)))))

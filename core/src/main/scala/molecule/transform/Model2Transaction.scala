@@ -1,7 +1,7 @@
 package molecule.transform
 import datomic.{Connection, Database, Peer}
 import molecule.ast.model._
-import molecule.db.DatomicFacade
+import molecule.DatomicFacade
 import molecule.util.Debug
 
 
@@ -62,12 +62,6 @@ object Model2Transaction extends Debug with DatomicFacade {
   }
 
   def upsertTransaction(db: Database, molecules: Seq[Seq[Seq[Seq[Any]]]], ids: Seq[Long] = Seq()): Seq[Seq[Any]] = {
-    //    if (ids.nonEmpty)
-    //      assert(molecules.size == ids.size,
-    //        s"[Model2Transaction:upsertTransaction] Number of molecules and ids should match\n" +
-    //          s"${molecules.size} molecules:\n  ${molecules.mkString("\n  ")} \n" +
-    //          s"${ids.size} ids      : $ids")
-
     molecules.zipAll(ids, Seq(Seq(Seq[Any]())), 0L).flatMap { case (molecule, id0) =>
       val (moleculeStmts: Seq[Seq[Any]], _, _) = molecule.foldLeft((Seq[Seq[Any]](), "": Any, "": Any)) {
         case ((stmts, prevNS, prevId), namespace) => {
@@ -78,6 +72,7 @@ object Model2Transaction extends Debug with DatomicFacade {
           val namespaceStmts: Seq[Seq[Any]] = namespace.foldLeft(Seq[Seq[Any]]()) { case (attrStmts, atom) =>
             val (attr, prefix, values) = (atom(1), atom(3), atom(4))
             def p(value: Any) = if (prefix.toString.nonEmpty) prefix.toString + value else value
+
             values match {
               case Seq(Replace(oldNew))       => oldNew.foldLeft(attrStmts) { case (acc, (oldValue, newValue)) =>
                 acc :+ Seq(":db/retract", id, s":$ns/$attr", p(oldValue)) :+ Seq(":db/add", id, s":$ns/$attr", p(newValue))

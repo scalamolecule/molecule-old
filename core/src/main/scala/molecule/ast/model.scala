@@ -16,9 +16,9 @@ object model {
   case object EnumVal extends Value
 
   // Expressions
-  case class Eq(values: Seq[String]) extends Value
-  case class Lt(value: String) extends Value
-  case class Fulltext(search: Seq[String]) extends Value
+  case class Eq(values: Seq[Any]) extends Value
+  case class Lt(value: Any) extends Value
+  case class Fulltext(search: Seq[Any]) extends Value
 
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value

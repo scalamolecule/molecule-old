@@ -39,7 +39,7 @@ object QueryOps {
     def data(e: String, a: Atom, v: String): Query = data(e, a.ns, a.name, a.tpeS, v)
 
     def data(e: String, ns: String, a: String, t: String): Query =
-      q.copy(where = Where(q.where.clauses :+ DataClause(ImplDS, Var(e, t), KW(ns, a), NoVal(), Empty)))
+      q.copy(where = Where(q.where.clauses :+ DataClause(ImplDS, Var(e, t), KW(ns, a), NoVal, Empty)))
 
     def data(e: String, ns: String, a: String, t: String, qvs: String): Query =
       q.copy(where = Where(q.where.clauses :+ DataClause(e, KW(ns, a), t, qvs)))
@@ -64,7 +64,7 @@ object QueryOps {
       q.output(v, t)
         .data(e, ns, a, t, v)
         .func(".compareTo ^" + t, Seq(Var(v), qv), ScalarBinding(Var(v2)))
-        .func(op, Seq(Var(v2), Val("0", "Int")))
+        .func(op, Seq(Var(v2), Val(0, "Int")))
 
 
     def fulltext(e: String, a: Atom, v: String, qv: QueryValue): Query =
@@ -74,10 +74,10 @@ object QueryOps {
       q.func("fulltext", Seq(DS(), KW(ns, a), qv), RelationBinding(Seq(Var("ent"), Var(v))))
 
 
-    def orRules(e: String, a: Atom, qvs: Seq[String]): Query = {
+    def orRules(e: String, a: Atom, qvs: Seq[Any]): Query = {
       val ruleName = "rule" + (q.in.rules.map(_.name).distinct.size + 1)
-      val newRules = qvs.foldLeft(q.in.rules) { case (rules, s) =>
-        val dataClause = DataClause(e, KW(a.ns, a.name), a.tpeS, Val(s))
+      val newRules = qvs.foldLeft(q.in.rules) { case (rules, arg) =>
+        val dataClause = DataClause(e, KW(a.ns, a.name), a.tpeS, Val(arg))
         val rule = Rule(ruleName, Seq(Var(e)), Seq(dataClause))
         rules :+ rule
       }

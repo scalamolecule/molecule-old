@@ -2,11 +2,9 @@ package molecule
 
 import java.net.URI
 import java.util.{UUID, Date}
-
-import molecule.db.DatomicFacade
 import molecule.util.MoleculeSpec
 
-trait CoreTest extends MoleculeSpec with DatomicFacade {
+trait CoreSpec extends MoleculeSpec with DatomicFacade {
   
   // Sample data
   val (str1, int1, long1, float1, double1, bool1, date1, uuid1, uri1, enum1) =

@@ -1,6 +1,6 @@
 //package molecule
 //package examples.dayOfDatomic.samples
-//import molecule.examples.dayOfDatomic.SocialNewsSchema.User
+//import molecule.examples.dayOfDatomic.dsl.socialNews._
 //import datomic._
 //
 //trait Generators {

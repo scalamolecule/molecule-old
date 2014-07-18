@@ -7,16 +7,13 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = debug("Dsl2Model", 1, 10, false)
+  val x = debug("Dsl2Model", 1, 10, true)
 
   def resolve(tree: Tree): Model = modelTreePF.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
 
   val modelTreePF: PartialFunction[Tree, Model] = {
     case q"TermValue.apply($ns)"                   => resolve(ns)
-    case ns@Select(Ident(_), _) if ns.isNS         => Model(Seq(defaultAtom(ns)))
-    case ns@Select(_, ns1) if ns.isD0 && !ns.isRef => Model(Seq(defaultAtom(ns)))
-    case ent@q"$prev.eid"                          => traverse(q"$prev", defaultAtom(prev, EntValue))
     case t@q"$prev.$cur.$op(..$values)"            => traverse(q"$prev", operation(q"$prev.$cur", q"$op", q"Seq(..$values)"))
     case ref@q"$prev.$cur" if ref.isRef            => traverse(q"$prev", bond(q"$prev", ref))
     case attr@q"$prev.$cur"                        => traverse(q"$prev", atom(attr))
@@ -41,28 +38,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     Atom(attr.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
   }
 
-  def defaultAtom(ns: Tree, value: Value = VarValue) = {
-    val (attrName, tpeS, card) = defaultAttr(ns)
-    Atom(nsString(ns), attrName, tpeS, card, value)
-  }
-
-  def defaultAttr(ns: Tree) = {
-    require(ns.isNS)
-    ns.tpe.members
-      .filter(_.annotations.filter(_.tree.tpe <:< typeOf[default]).nonEmpty)
-      .map(_.typeSignature).collectFirst {
-      case meth@MethodType(List(attr), tpe) => {
-        // Todo: there must be a better way than this...
-        val card = if (meth.resultType.baseType(weakTypeOf[One[Any, Any, Any]].typeSymbol) != NoType ||
-          meth.resultType.baseType(weakTypeOf[OneEnum[Any, Any]].typeSymbol) != NoType) 1
-        else 2
-        (attr.name.decodedName.toString, attr.typeSignature.resultType.toString, card)
-      }
-    }.headOption.getOrElse(
-        abortTree(ns, s"[Dsl2Model:defAttr] Namespace `$ns` needs default attribute to allow omitting an attribute. " +
-          "Please annotate a default attribute with `@default`." + ns.tpe.members))
-  }
-
   def atom(attr: Tree, value: Value = VarValue): Atom = attr match {
     case a if a.isEnum && value == VarValue => Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix))
     case a if a.isValueAttr                 => Atom(a.ns, a.name, a.tpeS, a.card, value)
@@ -81,14 +56,15 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   // Values --------------------------------------------------------------------------
 
-  def getValues(attr: Tree, value0: Tree): Seq[String] = {
+//  def getValues(attr: Tree, value0: Tree): Seq[String] = {
+  def getValues(attr: Tree, value0: Tree): Seq[Any] = {
     value0 match {
       case q"Seq(?)"                          => Seq("?")
       case q"Seq(?!)"                         => Seq("?!")
       case q"Seq(molecule.this.`package`.?)"  => Seq("?")
       case q"Seq(molecule.this.`package`.?!)" => Seq("?!")
-      case q"Seq(..$values)"                  => values.flatMap(v => resolveValues(v, att(q"$attr")).map(_.toString))
-      case value                              => resolveValues(value, att(q"$attr")).map(_.toString)
+      case q"Seq(..$values)"                  => values.flatMap(v => resolveValues(v, att(q"$attr")))
+      case value                              => resolveValues(value, att(q"$attr"))
     }
   }
 
@@ -100,11 +76,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   }
 
   def resolveValues(tree: Tree, at: att) = {
-    def validateStaticEnums(value: AnyRef) = {
+    def validateStaticEnums(value: Any) = {
       if (at.isEnum
         && value != "?"
         && !value.toString.startsWith("__ident__")
-        && !at.enumValues.contains(value)
+        && !at.enumValues.contains(value.toString)
       ) abort(s"[Dsl2Model:resolveValues] '$value' is not among available enum values of attribute ${at.kwS}:\n  " +
         at.enumValues.sorted.mkString("\n  "))
       value

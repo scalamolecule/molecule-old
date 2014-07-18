@@ -2,11 +2,11 @@ package molecule
 package types
 import java.net.URI
 import java.util.{Date, UUID}
-import molecule.types.dsl._
+import molecule.types.dsl.types._
 import molecule.types.schema._
 import shapeless._
 
-class TypesTest extends CoreTest {
+class TypesTest extends CoreSpec {
 
   // Make db
   implicit val conn = load(TypesSchema.tx)

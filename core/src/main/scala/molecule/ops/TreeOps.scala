@@ -2,6 +2,7 @@ package molecule.ops
 import molecule.ast.query._
 import molecule.dsl.schemaDSL._
 import molecule.out.Out_0
+
 import scala.reflect.macros.whitebox.Context
 
 trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
@@ -39,7 +40,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   def tpe(s: String) = s match {
     case "String" => tq"String"
     case "Int"    => tq"Int"
-    case unknown  => abort(s"[DslOps:tpe] Unknown type: $unknown")
+    case unknown  => abort(s"[TreeOps:tpe] Unknown type: $unknown")
   }
 
 
@@ -171,7 +172,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
         if s.asMethod.returnType <:< weakTypeOf[Attr] => s.asMethod.returnType
       case s: ClassSymbol if s.toType <:< typeOf[NS]  => s.toType
       case unexpected                                 =>
-        abortTree(q"$unexpected", s"[DslOps:nsp] Unexpected namespace symbol")
+        abortTree(q"$unexpected", s"[TreeOps:nsp] Unexpected namespace symbol")
     }
     override def toString = {
       val s = sym.name.toString
@@ -192,14 +193,13 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
   class att(val sym: Symbol) {
-    val x = debug("ModelOps:att", 2)
+    val x = debug("TreeOps:att", 2)
 
     lazy val attrType = sym match {
-      case t: TermSymbol if t.isLazy && t.isPrivate   => sym.typeSignature.typeSymbol.typeSignature
-      case t: MethodSymbol
-        if t.asMethod.returnType <:< weakTypeOf[Attr] => sym.asMethod.returnType
-      case unexpected                                 =>
-        abortTree(q"$unexpected", s"[DslOps:attrType] Unexpected attribute symbol")
+      case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
+      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Attr] => sym.asMethod.returnType
+      case unexpected                                                    =>
+        abortTree(q"$unexpected", s"[TreeOps:attrType] Unexpected attribute symbol")
     }
 
     lazy val tpe = sym match {
@@ -209,7 +209,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
       }
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref] => NoType
       case unexpected                                                   =>
-        abortTree(q"$unexpected", s"[DslOps:tpe] ModelOps.att(sym) can only take an Attr symbol")
+        abortTree(q"$unexpected", s"[TreeOps:tpe] ModelOps.att(sym) can only take an Attr symbol")
     }
 
     def name = TermName(toString)

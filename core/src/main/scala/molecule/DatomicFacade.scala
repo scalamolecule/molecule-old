@@ -1,6 +1,4 @@
-package molecule.db
-import java.util.{List => JList}
-
+package molecule
 import datomic._
 import molecule.ast.model._
 import molecule.ast.query._
@@ -107,6 +105,16 @@ trait DatomicFacade extends Debug {
     val molecules = t.groupNamespaces(rawMolecules)
     val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, ids)
     val javaTx: java.util.List[_] = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
+
+    x(0
+      , attrs
+      , args
+      , rawMolecules
+      , molecules
+      , tx
+      , javaTx
+    )
+
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)
     val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail

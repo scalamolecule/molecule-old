@@ -1,9 +1,11 @@
 package molecule.out
 import molecule.ast.model._
+import molecule.dsl.schemaDSL
 import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
+
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -19,7 +21,7 @@ trait BuildOutputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import molecule.ast.model._
       import molecule.transform.Model2Transaction._
       import molecule.transform.Model2Query
-      import molecule.db.DatomicFacade._
+      import molecule.DatomicFacade._
       import shapeless._
       import scala.collection.JavaConversions._
       import scala.collection.JavaConverters._
@@ -29,16 +31,18 @@ trait BuildOutputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   def basics(dsl: c.Expr[NS]) = {
     val model0 = Dsl2Model(c)(dsl)
     val identifiers = (model0.elements collect {
-      case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.startsWith("__ident__") =>
-        ident -> q"${TermName(ident.substring(9))}"
+      case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
+        ident -> q"${TermName(ident.toString.substring(9))}"
     }).toMap
+
     q"""
       ..$imports
       val model = Model($model0.elements.map {
         case atom@Atom(_, _, _, _, value, _) => value match {
-          case Eq(Seq(ident)) if ident.startsWith("__ident__") =>
-            atom.copy(value = Eq(Seq($identifiers.get(ident).get.toString)))
-          case _ => atom
+          case Eq(Seq(ident)) if ident.toString.startsWith("__ident__") =>
+            atom.copy(value = Eq(Seq($identifiers.get(ident.toString).get)))
+          case _ =>
+            atom
         }
         case ref => ref
       })
@@ -88,7 +92,7 @@ trait BuildOutputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       new $OutputMoleculeTpe[..$OutTypes](model, query) {
         def ids: Seq[Long] = entityIds(entityQuery)
         def tpls(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
-        def hls(implicit conn: Connection): Seq[$HListType]        = results(_query, conn).toList.map(data => ${hlist(q"data")})
+        def hls(implicit conn: Connection): Seq[$HListType]     = results(_query, conn).toList.map(data => ${hlist(q"data")})
       }
     """)
   }

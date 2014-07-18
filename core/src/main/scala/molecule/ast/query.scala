@@ -28,9 +28,9 @@ object query {
 
   sealed trait QueryValue extends QueryTerm
   case class Var(v: String, tpeS: String = "") extends QueryValue with Output
-  case class Val(v: String, tpeS: String = "String") extends QueryValue
-  case class Dummy(v: String = "") extends QueryValue
-  case class NoVal(v: String = "") extends QueryValue
+  case class Val(v: Any, tpeS: String = "String") extends QueryValue
+  case class Dummy(v: Any) extends QueryValue
+  case object NoVal extends QueryValue
 
 
   sealed trait DataSource extends QueryTerm

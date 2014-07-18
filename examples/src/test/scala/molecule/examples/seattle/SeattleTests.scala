@@ -4,7 +4,7 @@ import java.io.FileReader
 import datomic._
 import molecule.dsl.DbSchema
 import molecule.dsl.DbSchema._
-import molecule.examples.seattle.dsl._
+import molecule.examples.seattle.dsl.seattle._
 import molecule.examples.seattle.schema.SeattleSchema
 import shapeless._
 import scala.language.reflectiveCalls
@@ -261,7 +261,7 @@ class SeattleTests extends SeattleSpec {
     val schemaTxDate = txDates(1)
 
     // Take all Community entities
-    val communities = m(Community.eid)
+    val communities = m(Community.name)
 
     // Revisiting the past
 
@@ -321,7 +321,7 @@ class SeattleTests extends SeattleSpec {
       ("AAA", "myUrl", "twitter", "personal", Set("my", "favorites"), "myNeighborhood", "myDistrict", "nw"))
 
     // Now we have one more community
-    Community.size === 151
+    Community.name.size === 151
 
 
     /** Use molecule as template to insert matching data sets ********************************************/
@@ -351,7 +351,7 @@ class SeattleTests extends SeattleSpec {
 
     // Confirm that new entities have been inserted
     Community.name.contains("Com").get.sorted === List("Com A", "Com B", "Com C", "Com D")
-    m(Community).size === 157
+    Community.name.size === 157
 
 
     // Add multiple sets of entities with multiple facts across multiple namespaces in one go (!):
@@ -373,7 +373,7 @@ class SeattleTests extends SeattleSpec {
 
     // Data has been added
     Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.tpls === newCommunitiesData
-    Community.size === 160
+    Community.name.size === 160
 
     // 4 new categories added (these are facts, not entities)
     Community.category.get.head.size === 92

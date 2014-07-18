@@ -1,7 +1,8 @@
 package molecule.dsl
+
 import datomic.Connection
 import molecule.ast.model._
-import molecule.db.DatomicFacade
+import molecule.DatomicFacade
 import scala.annotation.StaticAnnotation
 
 object schemaDSL {
@@ -22,6 +23,7 @@ object schemaDSL {
   trait Ref
   abstract class OneRef extends Ref
   abstract class ManyRef extends Ref
+  abstract class Component extends Ref
 
   trait Attr {
     type NS

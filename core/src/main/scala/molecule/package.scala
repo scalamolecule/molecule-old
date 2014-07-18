@@ -3,6 +3,7 @@ import molecule.in._
 import molecule.out._
 import scala.language.experimental.macros
 import scala.language.implicitConversions
+import datomic.Connection
 
 
 package object molecule {
@@ -120,6 +121,9 @@ package object molecule {
   implicit def int2Model(i: Int) = TermValue(i)
   implicit def long2Model(l: Long) = TermValue(l)
   implicit def tuple2Model[A, B](tpl: (A, B)) = TermValue(tpl)
+
+  // Entity api
+  implicit def long2EntityId(id: Long)(implicit conn: Connection) = conn.db.entity(id)
 
   // Markers
   object ?

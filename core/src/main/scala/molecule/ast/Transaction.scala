@@ -1,5 +1,5 @@
 package molecule.ast
 
-trait Schema {
+trait Transaction {
   val tx: java.util.List[_]
 }

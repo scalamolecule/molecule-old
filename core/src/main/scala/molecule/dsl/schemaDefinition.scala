@@ -7,8 +7,11 @@ object schemaDefinition {
   // Annotation for arities of molecule inputs and outputs
   class InOut(inputArity: Int = 3, outputArity: Int = 8) extends StaticAnnotation
 
-  sealed trait anyAttr {
+  // Todo: Use phantom types to build valid combinations (checkout how Rogue does it)
+
+  private[molecule] sealed trait anyAttr {
     def doc(s: String) = this
+    lazy val indexed   = this
     lazy val noHistory = this
   }
 
@@ -56,20 +59,26 @@ object schemaDefinition {
 
   // Enum
   private[molecule] trait enum extends anyAttr {
-    // Requiring at least 2 values
-    def apply(v1: Symbol, v2: Symbol, vs: Symbol*) = this
+    // Require at least 2 enum values (any use case for only 1 enum??)
+    def apply(e1: Symbol, e2: Symbol, es: Symbol*) = this
   }
   object oneEnum extends enum
   object manyEnum extends enum
 
+
   // Ref
-  trait One[Ref]
-  object oneRef {
-    def apply[NS] = 7
+  object one {
+    def apply[NS1] = this
+    lazy val component   = this
   }
 
-  // todo?
-  // BigInt
-  // BigDec
-  // Bytes
+  object many {
+    def apply[NS1] = this
+    lazy val components = this
+  }
 }
+
+// todo?
+// BigInt
+// BigDec
+// Bytes

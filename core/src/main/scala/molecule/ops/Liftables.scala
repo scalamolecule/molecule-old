@@ -2,26 +2,39 @@ package molecule.ops
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.util.MacroHelpers
-//import scala.language.existentials
+
 import scala.reflect.macros.whitebox.Context
 
 trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   import c.universe._
 
+  // Lift allowed base types
+  implicit val liftAny = Liftable[Any] {
+    case s: String            => q"$s"
+    case i: Int               => q"$i"
+    case l: Long              => q"$l"
+    case f: Float             => q"$f"
+    case d: Double            => q"$d"
+    case b: Boolean           => q"$b"
+    case date: java.util.Date => q"new Date(${date.getTime})"
+    case uuid: java.util.UUID => q"java.util.UUID.fromString(${uuid.toString})"
+    case uri: java.net.URI    => q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
+    case other                => abort("[Liftables:liftAny] Can't lift unexpected base type: " + other.getClass)
+  }
+
   // Liftables for Query --------------------------------------------------------------
 
   implicit val liftVar    = Liftable[Var] { v => q"Var(${v.v}, ${v.tpeS})"}
-  implicit val liftVal    = Liftable[Val] { str => q"Val(${str.v})"}
+  implicit val liftVal    = Liftable[Val] { value => q"Val(${value.v}, ${value.tpeS})"}
   implicit val liftAttrKW = Liftable[KW] { kw => q"KW(${kw.ns}, ${kw.name})"}
   implicit val liftWith   = Liftable[With] { widh => q"With(Seq(..${widh.variables}))"}
 
   implicit val liftQueryValue = Liftable[QueryValue] {
     case Var(sym, tpeS) => q"Var($sym, $tpeS)"
-    case Val(str, tpeS) => q"Val($str, $tpeS)"
-    case Dummy(str)     => q"Dummy($str)"
-    case NoVal(str)     => q"NoVal($str)"
+    case Val(v, tpeS)   => q"Val($v, $tpeS)"
+    case Dummy(v)       => q"Dummy($v)"
+    case NoVal          => q"NoVal"
   }
-
 
   implicit val liftDataSource = Liftable[DataSource] {
     case DS(name) => q"DS($name)"
@@ -33,11 +46,11 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case KW(ns, name)   => q"KW($ns, $name)"
     case Empty          => q"Empty"
     case Var(sym, tpeS) => q"Var($sym, $tpeS)"
-    case Val(str, tpeS) => q"Val($str, $tpeS)"
+    case Val(v, tpeS)   => q"Val($v, $tpeS)"
     case DS(name)       => q"DS($name)"
     case DS             => q"DS"
     case ImplDS         => q"ImplDS"
-    case t              => abort("[DslOps:liftQueryTerm] Can't lift query term: " + t)
+    case t              => abort("[Liftables:liftQueryTerm] Can't lift query term: " + t)
   }
 
   implicit val liftOutput = Liftable[Output] {

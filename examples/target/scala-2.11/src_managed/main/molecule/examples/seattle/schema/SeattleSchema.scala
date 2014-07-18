@@ -5,10 +5,10 @@
  * Instead, change the molecule definition files and recompile your project with `sbt compile`
  */
 package molecule.examples.seattle.schema
-import molecule.ast.Schema
+import molecule.ast.Transaction
 import datomic.{Util, Peer}
 
-object SeattleSchema extends Schema {
+object SeattleSchema extends Transaction {
 
   lazy val tx = Util.list(
 
@@ -25,7 +25,6 @@ object SeattleSchema extends Schema {
              ":db/ident"             , ":community/url",
              ":db/valueType"         , ":db.type/string",
              ":db/cardinality"       , ":db.cardinality/one",
-             ":db/fulltext"          , true.asInstanceOf[Object],
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
@@ -64,7 +63,7 @@ object SeattleSchema extends Schema {
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
              ":db/ident"             , ":community/neighborhood",
              ":db/valueType"         , ":db.type/ref",
-             ":db/cardinality"       , ":db.cardinality/one",
+             ":db/cardinality"       , ":db.cardinality/many",
              ":db.install/_attribute", ":db.part/db"),
 
 
@@ -76,13 +75,12 @@ object SeattleSchema extends Schema {
              ":db/cardinality"       , ":db.cardinality/one",
              ":db/fulltext"          , true.asInstanceOf[Object],
              ":db/unique"            , ":db.unique/identity",
-             ":db/index"             , true.asInstanceOf[Object],
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
              ":db/ident"             , ":neighborhood/district",
              ":db/valueType"         , ":db.type/ref",
-             ":db/cardinality"       , ":db.cardinality/one",
+             ":db/cardinality"       , ":db.cardinality/many",
              ":db.install/_attribute", ":db.part/db"),
 
 
@@ -94,7 +92,6 @@ object SeattleSchema extends Schema {
              ":db/cardinality"       , ":db.cardinality/one",
              ":db/fulltext"          , true.asInstanceOf[Object],
              ":db/unique"            , ":db.unique/identity",
-             ":db/index"             , true.asInstanceOf[Object],
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),

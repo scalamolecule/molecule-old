@@ -1,9 +1,11 @@
 package molecule.in
 import molecule.ast.query._
+import molecule.dsl.schemaDSL
 import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
+
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -19,13 +21,12 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import molecule.ast.query._
       import molecule.ast.model._
       import molecule.transform.Model2Transaction._
-      import molecule.db.DatomicFacade._
+      import molecule.DatomicFacade._
       import shapeless._
       import scala.collection.JavaConversions._
       import scala.collection.JavaConverters._
       import datomic.Connection
       """
-
   def await_in_x_out_0(inputDsl: c.Expr[NS], InTypes: Type*) = {
     val model = Dsl2Model(c)(inputDsl)
     val query = Model2Query(model)
@@ -73,7 +74,6 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       """
     } else q""
 
-
     expr( q"""
       ..$imports
       new $InputMoleculeTpe[..$InTypes, $A]($model, $query) {
@@ -87,7 +87,6 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         $bindValues2
       }
       """)
-
   }
 
   def await(inputDsl: c.Expr[NS], InTypes: Type*)(OutTypes: Type*) = {
@@ -118,7 +117,7 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
           new $OutputMoleculeTpe[..$OutTypes](model, query1) {
             override def ids: Seq[Long] = entityIds(entityQuery)
             def tpls(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
-            def hls(implicit conn: Connection): Seq[$HListType]        = results(_query, conn).toList.map(data => ${hlist(q"data")})
+            def hls(implicit conn: Connection): Seq[$HListType]     = results(_query, conn).toList.map(data => ${hlist(q"data")})
           }
         }
       """
@@ -132,7 +131,7 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
           new $OutputMoleculeTpe[..$OutTypes](model, query1) {
             override def ids: Seq[Long] = entityIds($entityQuery)
             def tpls(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
-            def hls(implicit conn: Connection): Seq[$HListType]        = results(_query, conn).toList.map(data => ${hlist(q"data")})
+            def hls(implicit conn: Connection): Seq[$HListType]     = results(_query, conn).toList.map(data => ${hlist(q"data")})
           }
         }
         $bindValues2

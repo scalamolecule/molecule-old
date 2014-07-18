@@ -79,22 +79,27 @@ transformations of molecules
 1. `git clone https://github.com/marcgrue/molecule.git`
 2. `sbt compile`
 3. Import into your IDE
-4. Poke around...
+4. Run tests and poke around...
 
 
 ### Dependency in your project
 
-Molecule 0.1.0 for Scala 2.11.1 will soon be available at 
-[Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick%7Emolecule-dsl)
- so that you can
+Molecule 0.1.1 for Scala 2.11.1 is available at 
+[Sonatype](https://oss.sonatype.org/content/repositories/releases/com/marcgrue/molecule_2.11/)
+ so that you can add a dependency in your sbt file to `"com.marcgrue" % "molecule_2.11.1" % "0.1.1"`.
 
-1. Add `"com.marcgrue" % "molecule_2.11.1" % "0.1.0"` to your sbt build file.
-2. Define your domain in a [schema definition file][setup]
-3. `sbt compile`
-4. Import into your IDE
-5. [Setup your database][setup]
-6. [Populate your database][populate] with data
-7. [Make molecule queries][tutorial]
+Since Molecule generates boilerplate code from your definitions it also needs to have the `DslBoilerplate.scala` file in your project folder. Please have a look at how the sbt build file
+ of the Molecule project itself puts things together and simply copy that to your own project:
+
+2. Setup your sbt build file [as in Molecule][moleculesbt]: 
+    - Add library dependency `"com.marcgrue" % "molecule_2.11.1" % "0.1.1"`
+    - List directories where you have your [definition file(s)][setup]
+3. Define your domain schema in a [schema definition file][setup]
+4. `sbt compile`
+5. Import into your IDE
+6. [Setup your database][setup]
+7. [Populate your database][populate] with data
+8. [Make molecule queries][tutorial]
 
 
 ## Resources
@@ -123,6 +128,7 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 [moleculegroup]: https://groups.google.com/forum/#!forum/molecule-dsl
 [pullrequests]: https://github.com/marcgrue/molecule/pulls
 [issues]: https://github.com/marcgrue/molecule/issues
+[moleculesbt]: https://github.com/marcgrue/molecule/blob/master/project/build.scala
 
 [intro]: https://github.com/marcgrue/molecule/wiki/Quick-introduction-to-Datomic-and-Molecule
 [setup]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database

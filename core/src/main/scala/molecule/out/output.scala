@@ -2,7 +2,8 @@ package molecule.out
 import datomic.{Connection => Cnx}
 import molecule.ast.model._
 import molecule.ast.query.Query
-import molecule.dsl.schemaDSL.NS
+import molecule.dsl.schemaDSL
+import schemaDSL.NS
 import shapeless.{::, HNil}
 
 
