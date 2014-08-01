@@ -24,7 +24,8 @@ object query {
   trait Output extends QueryExpr {val tpeS: String}
   case class AggrExpr(fn: String, args: Seq[String], v: Var, tpeS: String) extends Output
 
-  case class KW(ns: String, name: String) extends QueryTerm
+//  case class KW(ns: String, attr: String) extends QueryTerm
+  case class KW(ns: String, attr: String, refNs: String = "") extends QueryTerm
 
   sealed trait QueryValue extends QueryTerm
   case class Var(v: String, tpeS: String = "") extends QueryValue with Output

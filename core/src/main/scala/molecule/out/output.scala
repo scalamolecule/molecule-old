@@ -3,7 +3,7 @@ import datomic.{Connection => Cnx}
 import molecule.ast.model._
 import molecule.ast.query.Query
 import molecule.dsl.schemaDSL
-import schemaDSL.NS
+import molecule.dsl.schemaDSL.NS
 import shapeless.{::, HNil}
 
 
@@ -43,8 +43,8 @@ abstract class OutputMolecule1[A](val _model: Model, val _query: Query) extends 
   def take(n: Int)(implicit conn: Cnx): Seq[A] = get(conn).take(n)
 
   def insert(a: A)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a))
-  def insert(a: A, a2: A, ax: A*)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, Seq(a +: a2 +: ax))
-  def insert(data: Seq[A])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, Seq(data))
+  def insert(a: A, a2: A, ax: A*)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
+  def insert(data: Seq[A])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(Seq(_)))
 }
 
 abstract class OutputMolecule2[A, B](val _model: Model, val _query: Query) extends OutputMolecule {

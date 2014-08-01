@@ -5,7 +5,6 @@ import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
-
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -35,16 +34,16 @@ trait BuildOutputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         ident -> q"${TermName(ident.toString.substring(9))}"
     }).toMap
 
+//    x(1, model0)
     q"""
       ..$imports
       val model = Model($model0.elements.map {
         case atom@Atom(_, _, _, _, value, _) => value match {
           case Eq(Seq(ident)) if ident.toString.startsWith("__ident__") =>
             atom.copy(value = Eq(Seq($identifiers.get(ident.toString).get)))
-          case _ =>
-            atom
+          case _ => atom
         }
-        case ref => ref
+        case other => other
       })
       val query = Model2Query(model)
       val entityQuery = query.copy(find = Find(Seq(Var("ent", "Long"))))

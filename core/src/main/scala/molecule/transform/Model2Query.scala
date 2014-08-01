@@ -14,7 +14,8 @@ object Model2Query extends Debug {
       element match {
         case a@Atom(ns, attr, t, cardinality, value, enumPrefix) => (cardinality, value, enumPrefix) match {
           case (_, NoValue, _)  => q.data(e, a)
-          case (_, EntValue, _) => q.data(e, a).output(e, t)
+          case (_, EntValue, _) => q.output(e, t)
+          //          case (_, EntValue, _) => q.data(e, a).output(e, t)
           case (2, VarValue, _) => q.data(e, a, v).output("distinct", Seq(), v, t)
           case (_, VarValue, _) => q.data(e, a, v).output(v, t)
           case (_, EnumVal, _)  => q.enum(e, a, v).output(v2, t)
@@ -42,36 +43,50 @@ object Model2Query extends Debug {
           case (_, Fulltext(qvs), _)       => q.fulltext(e, a, v, Var(v1)).output(v, t).orRules(v1, a, qvs)
         }
 
-        case Bond(ns1, ns2) => q.ref(e, ns1, ns2, v)
+        case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
+
+        case Group(ref, elements) => q
 
         case unresolved => sys.error("[Model2Query] Unresolved model (we should never get here): " + unresolved)
       }
     }
 
     model.elements.foldLeft((Query(), "ent", "a")) { case ((q1, e1, v1), element) =>
+
       val ns = element match {
         case Atom(ns1, _, _, _, _, _) => ns1
-        case Bond(ns1, _)             => ns1
+        case Bond(ns1, _, _)          => ns1
+        case Group(ref, elements)     => ref.ns
       }
 
-      val (prevNS, prevAttr) = if (q1.where.clauses.isEmpty)
-        ("NoValueYet", "NoValueYet")
+      val (prevNS, prevAttr, prevRefNs) = if (q1.where.clauses.isEmpty)
+        ("NoValueYet", "NoValueYet", "")
       else
         q1.where.clauses.reverse.collectFirst {
-          case DataClause(_, _, KW(kwNS, name), _, _)          => (kwNS, name)
-          case Funct("fulltext", Seq(_, KW(kwNS, name), _), _) => (kwNS, name)
+          case DataClause(_, _, KW(kwNS, attr, refNs), _, _)      => (kwNS, attr, refNs)
+          case Funct("fulltext", Seq(_, KW(kwNS, attr, _), _), _) => (kwNS, attr, "")
         }.getOrElse(sys.error("[Model2Query] Missing NS and Attribute\nmodel: " + model + "\nquery: " + q1.format))
 
       val nextV = (v1.toCharArray.head + 1).toChar.toString
       val (e2, v2) = {
-        if (ns == prevNS)
-          (e1, nextV) // :community/name -> :community/url
-        else if (ns == prevAttr)
-          (v1, nextV) // :community/neighborhood -> :neighborhood/name
-        else if ((prevNS, prevAttr) ==("db", "ident"))
-          (e1, nextV) // :db/ident -> :someNS/someAttr
-        else
-          (e1, v1) // First clause starts with e = "?ent" and v = "?a"
+        if (ns == prevNS) {
+          // Same entity (e1 re-used)
+          // :community/name -> :community/url
+          (e1, nextV)
+        } else if (ns == prevAttr || ns == prevRefNs) {
+          // Referenced entity
+          // :community/neighborhood -> :neighborhood/name
+          // :order/lineItems -> :lineItem/product
+          (v1, nextV)
+        } else if ((prevNS, prevAttr) == ("db", "ident")) {
+          // Previous attribute is an enumerated value
+          // :db/ident -> :someNS/someAttr
+          (e1, nextV)
+        } else {
+          // First clause
+          // e = "?ent" and v = "?a"
+          (e1, v1)
+        }
       }
       // Add new clause(s) to query
       val q2 = resolve(q1, e2, v2, element)

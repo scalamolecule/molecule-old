@@ -2,9 +2,8 @@ package molecule.examples.dayOfDatomic
 
 import datomic.Peer
 import datomic.Util.list
-import molecule.examples.dayOfDatomic.schema.ProductsOrderSchema
+import molecule._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-
 import scala.collection.JavaConversions._
 import scala.language.existentials
 
@@ -45,152 +44,161 @@ class DayOfDatomic extends DayOfAtomicSpec {
 
   "ProductsAndOrders (components)" >> {
 
+    // See: http://blog.datomic.com/2013/06/component-entities.html
+
+    import molecule.examples.dayOfDatomic.dsl.productsOrder._
+    import molecule.examples.dayOfDatomic.schema.ProductsOrderSchema
+
     // Make db
     implicit val conn = load(ProductsOrderSchema.tx)
 
-    //    // Create 2 products
-    //    val List(chocolate, whisky) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-    //
-    //    // Create order with two line items
-    //
-    //    //todo: collapse to one type and use OutputMolecule1 instead??
-    //
-    //        val order = Order.LineItems.product.quantity.price.insert(List(
-    //          List((chocolate, 1, 48.00), (whisky, 2, 38.00))
-    //        ))
-    //
-    //    val order1 = m(Order.LineItems.product.quantity.price ~ OrderSystem.note).insert(List(
-    //      List(
-    //        (chocolate, 1, 48.00, "please send original packaging"),
-    //        (whisky, 2, 38.00, null))
-    //    ))
-    //
-    //    // Find chocolate order
-    //    val chocolateOrderId = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
-    //
-    //    val chocolateOrder = chocolateOrderId.touch
-    //
-    //    chocolateOrder === Order(17592186045457L).LineItems(List(
-    //      LineItem.product(17592186045459L).price(38.00).quantity(2).eid(175921860454562L),
-    //      LineItem.product(17592186045460L).price(48.00).quantity(1).eid(17592186045461L))
-    //    )
-    //
-    //
-    //    val (orderId, List(p1, p2)) = chocolateOrder.values
-    //
-    //    chocolateOrder.values === List(
-    //      17592186045457L,
-    //      List(
-    //        LineItem.product(17592186045457).price(38.00).quantity(2),
-    //        LineItem.product(17592186045458).price(48.00).quantity(1)
-    //      )
-    //    )
+    // Insert 2 products
+    val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
 
-    ok
+    // Model of order with multiple line items
+    // One-to-Many relationship where line items are subcomponents of the order
+    //    val order = m(Order.lineItems(LineItem.product.price.quantity))
+    val order = m(Order * LineItem.product.price.quantity)
+
+    // Make order with two line items and return created entity id
+    val orderId = order insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) last
+
+    // Find id of order with chocolate
+    val orderIdFound = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
+
+    orderId === orderIdFound
+
+    // Touch entity
+    // Get all attributes/values of this entity subcomponent values are recursively retrieved
+    orderId.touch === Map(
+      ":db/id" -> 17592186045423L,
+      ":order/lineItems" -> List(
+        Map(
+          ":db/id" -> 17592186045421L,
+          ":lineItem/product" -> List(Map(":db/id" -> chocolateId, ":product/description" -> "Expensive Chocolate")),
+          ":lineItem/quantity" -> 1,
+          ":lineItem/price" -> 48.0),
+        Map(
+          ":db/id" -> 17592186045422L,
+          ":lineItem/product" -> List(Map(":db/id" -> whiskyId, ":product/description" -> "Cheap Whisky")),
+          ":lineItem/quantity" -> 2,
+          ":lineItem/price" -> 38.0)
+      ))
+
+
+
+
+
   }
 
+  //    val order1 = m(Order.lineItems)
+  //    val order2 = m(Order.LineItems.Product.description("hej"))
+  //    val order = m(Order * LineItem.product.price.quantity)
 
-  //  "Query tour" >> {
-  //    import molecule.examples.dayOfDatomic.dsl.socialNews._
+
   //
-  //    // Make db
-  //    implicit val conn = load(SocialNewsSchema.tx)
+  //    "Query tour" >> {
+  //      import molecule.examples.dayOfDatomic.dsl.socialNews._
+  //      import molecule.examples.dayOfDatomic.schema.SocialNewsSchema
   //
-  //    // Add data -----------------------------------------------
+  //      // Make db
+  //      implicit val conn = load(SocialNewsSchema.tx)
   //
-  //    // Stories
-  //    val List(s1, s2, s3) = Story.title.url.insert(List(
-  //      ("Teach Yourself Programming in Ten Years", "http://norvig.com/21-days.html"),
-  //      ("Clojure Rationale", "http://clojure.org/rationale"),
-  //      ("Beating the Averages", "http://www.paulgraham.com/avg.html")
-  //    ))
+  //      // Add data -----------------------------------------------
   //
-  //    // Users
-  //    val List(stu, ed) = User.firstName.lastName.email.insert(List(
-  //      ("stu", "Halloway", "stuarthalloway@datomic.com"),
-  //      ("ed", "Itor", "editor@example")
-  //    ))
+  //      // Stories
+  //      val List(s1, s2, s3) = Story.title.url.insert(List(
+  //        ("Teach Yourself Programming in Ten Years", "http://norvig.com/21-days.html"),
+  //        ("Clojure Rationale", "http://clojure.org/rationale"),
+  //        ("Beating the Averages", "http://www.paulgraham.com/avg.html")
+  //      ))
   //
-  //    // Created entity ids are simply Long values
-  //    (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
-  //    (stu, ed) ===(17592186045422L, 17592186045423L)
-  //    //
-  //    //
-  //    //    // Each story has one or more threads of comments so that the
-  //    //    // - first comment of a has story as parent
-  //    //    // - subsequent comments has the previous comment as parent
-  //    //    // When retracting a story, all comments will be recursively retracted
-  //    //
-  //    //    // We use a "template molecule" as a model for inserting data
-  //    //    val comment = m(Comment.body.Parent.eid.Author.eid)
-  //    //
-  //    //    // Story 1 comments
-  //    //    val c1 = comment.insert("blah 1", s1, stu).head // get created comment entity id
-  //    //    val c2 = comment.insert("blah 2", c1, ed).head
-  //    //    val c3 = comment.insert("blah 3", c2, ed).head
-  //    //    val c4 = comment.insert("blah 4", c3, stu).head
-  //    //
-  //    //    // Story 2 comments
-  //    //    val c5 = comment.insert("blah 5", s2, ed).head
-  //    //    val c6 = comment.insert("blah 6", c5, stu).head
-  //    //
-  //    //    // Story 3 comments
-  //    //    val c7 = comment.insert("blah 7", s3, ed).head
-  //    //    val c8 = comment.insert("blah 8", c7, stu).head
-  //    //    val c9 = comment.insert("blah 9", c8, stu).head
-  //    //
-  //    //    // Story 2 again - a second thread of comments. This time Stu starts
-  //    //    val c10 = comment.insert("blah 10", s2, stu).head
-  //    //    val c11 = comment.insert("blah 11", c10, ed).head
-  //    //    val c12 = comment.insert("blah 12", c11, stu).head
-  //    //
-  //    //    //    // We use a "template molecule" as a model for inserting data
-  //    //    //    val comment = m(Comment.body.Context.Author)
-  //    //    //
-  //    //    //    // Story 1 comments
-  //    //    //    val c1 = comment.insert("blah 1", s1, stu).head // get created comment entity id
-  //    //    //    val c2 = comment.insert("blah 2", c1, ed).head
-  //    //    //    val c3 = comment.insert("blah 3", c2, ed).head
-  //    //    //    val c4 = comment.insert("blah 4", c3, stu).head
-  //    //    //
-  //    //    //    // Story 2 comments
-  //    //    //    val c5 = comment.insert("blah 5", s2, ed).head
-  //    //    //    val c6 = comment.insert("blah 6", c5, stu).head
-  //    //    //
-  //    //    //    // Story 3 comments
-  //    //    //    val c7 = comment.insert("blah 7", s3, ed).head
-  //    //    //    val c8 = comment.insert("blah 8", c7, stu).head
-  //    //    //    val c9 = comment.insert("blah 9", c8, stu).head
-  //    //    //
-  //    //    //    // Story 2 again - a second thread of comments. This time Stu starts
-  //    //    //    val c10 = comment.insert("blah 10", s2, stu).head
-  //    //    //    val c11 = comment.insert("blah 11", c10, ed).head
-  //    //    //    val c12 = comment.insert("blah 12", c11, stu).head
-  //    //
-  //    //
-  //    //    // Queries -----------------------------------------------
-  //    //
-  //    //    // Find all users
-  //    //    User.firstName.ids === List(ed, stu)
-  //    //
-  //    //    // Finding a specific user
-  //    //    User.email("editor@example").ids.head === ed
-  //    //
-  //    //    // "Find a User's Comments"
-  //    //    // Email value is not returned since it's constant across the result set
-  //    //    // Only eid (for "entity id") of comments are returned in this case:
-  //    //    User.email("editor@example").Comment.eid.get === List(17592186045422L)
-  //    ////    Author.email("editor@example").Comment.eid.get.head === 17592186045422L
-  //    //    // Note how "Author" is like an alias for the User namespace
-  //    //    // That's why we can build `Author.email` since email is in the User namespace
-  //    //
-  //    //    // Since relationships are bi-directional we could also ask the other way around:
-  //    //    // "Find Comments of a User"
-  //    //    Comment.eid.Author.email("editor@example").get.head === 17592186045422L
+  //      // Users
+  //      val List(stu, ed) = User.firstName.lastName.email.insert(List(
+  //        ("stu", "Halloway", "stuarthalloway@datomic.com"),
+  //        ("ed", "Itor", "editor@example")
+  //      ))
+  //
+  //      // Created entity ids are simply Long values
+  //      (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
+  //      (stu, ed) ===(17592186045422L, 17592186045423L)
   //
   //
-  //    ok
-  //  }
+  //          // Each story has one or more threads of comments so that the
+  //          // - first comment of a has story as parent
+  //          // - subsequent comments has the previous comment as parent
+  //          // When retracting a story, all comments will be recursively retracted
+  //
+  //          // We use a "template molecule" as a model for inserting data
+  //          val comment = m(Comment.body.Parent.eid.Author.eid)
+  //
+  //          // Story 1 comments
+  //          val c1 = comment.insert("blah 1", s1, stu).head // get created comment entity id
+  //          val c2 = comment.insert("blah 2", c1, ed).head
+  //          val c3 = comment.insert("blah 3", c2, ed).head
+  //          val c4 = comment.insert("blah 4", c3, stu).head
+  //
+  //          // Story 2 comments
+  //          val c5 = comment.insert("blah 5", s2, ed).head
+  //          val c6 = comment.insert("blah 6", c5, stu).head
+  //
+  //          // Story 3 comments
+  //          val c7 = comment.insert("blah 7", s3, ed).head
+  //          val c8 = comment.insert("blah 8", c7, stu).head
+  //          val c9 = comment.insert("blah 9", c8, stu).head
+  //
+  //          // Story 2 again - a second thread of comments. This time Stu starts
+  //          val c10 = comment.insert("blah 10", s2, stu).head
+  //          val c11 = comment.insert("blah 11", c10, ed).head
+  //          val c12 = comment.insert("blah 12", c11, stu).head
+  //
+  //          //    // We use a "template molecule" as a model for inserting data
+  //          //    val comment = m(Comment.body.Context.Author)
+  //          //
+  //          //    // Story 1 comments
+  //          //    val c1 = comment.insert("blah 1", s1, stu).head // get created comment entity id
+  //          //    val c2 = comment.insert("blah 2", c1, ed).head
+  //          //    val c3 = comment.insert("blah 3", c2, ed).head
+  //          //    val c4 = comment.insert("blah 4", c3, stu).head
+  //          //
+  //          //    // Story 2 comments
+  //          //    val c5 = comment.insert("blah 5", s2, ed).head
+  //          //    val c6 = comment.insert("blah 6", c5, stu).head
+  //          //
+  //          //    // Story 3 comments
+  //          //    val c7 = comment.insert("blah 7", s3, ed).head
+  //          //    val c8 = comment.insert("blah 8", c7, stu).head
+  //          //    val c9 = comment.insert("blah 9", c8, stu).head
+  //          //
+  //          //    // Story 2 again - a second thread of comments. This time Stu starts
+  //          //    val c10 = comment.insert("blah 10", s2, stu).head
+  //          //    val c11 = comment.insert("blah 11", c10, ed).head
+  //          //    val c12 = comment.insert("blah 12", c11, stu).head
+  //
+  //
+  //          // Queries -----------------------------------------------
+  //
+  //          // Find all users
+  //          User.firstName.ids === List(ed, stu)
+  //
+  //          // Finding a specific user
+  //          User.email("editor@example").ids.head === ed
+  //
+  //          // "Find a User's Comments"
+  //          // Email value is not returned since it's constant across the result set
+  //          // Only eid (for "entity id") of comments are returned in this case:
+  //          User.email("editor@example").Comment.eid.get === List(17592186045422L)
+  //      //    Author.email("editor@example").Comment.eid.get.head === 17592186045422L
+  //          // Note how "Author" is like an alias for the User namespace
+  //          // That's why we can build `Author.email` since email is in the User namespace
+  //
+  //          // Since relationships are bi-directional we could also ask the other way around:
+  //          // "Find Comments of a User"
+  //          Comment.eid.Author.email("editor@example").get.head === 17592186045422L
+  //
+  //
+  //      ok
+  //    }
   //
   //
   //  "Social news" >> {
@@ -432,29 +440,67 @@ class DayOfDatomic extends DayOfAtomicSpec {
 }
 
 
+//    lazy val tx = Util.list(
+//      Util.map(":db/id", Peer.tempid(":db.part/user"),
+//        ":order/lineItems", Util.list(
+//          Util.map(":lineItem/product", chocolateId: java.lang.Long,
+//            ":lineItem/price", 48.00.asInstanceOf[Object],
+//            ":lineItem/quantity", 1.asInstanceOf[Object]),
+//          Util.map(":lineItem/product", whiskyId: java.lang.Long,
+//            ":lineItem/price", 38.00.asInstanceOf[Object],
+//            ":lineItem/quantity", 2.asInstanceOf[Object])
+//        )))
 
+//    val id1 = Peer.tempid(":db.part/user")
+//    val id2 = Peer.tempid(":db.part/user")
+//    val id3 = Peer.tempid(":db.part/user")
 
+//    val tx21 = s"""List(
+//            |  List(  :db/add,   $id1,   :lineItem/product      ,   ${chocolateId: java.lang.Long}      )
+//            |  List(  :db/add,   $id1,   :lineItem/price        ,   ${48.00.asInstanceOf[Object]}       )
+//            |  List(  :db/add,   $id1,   :lineItem/quantity     ,   ${1.asInstanceOf[Object]}           )
+//            |
+//            |  List(  :db/add,   $id2,   :lineItem/product      ,   ${whiskyId: java.lang.Long}         )
+//            |  List(  :db/add,   $id2,   :lineItem/price        ,   ${38.00.asInstanceOf[Object]}       )
+//            |  List(  :db/add,   $id2,   :lineItem/quantity     ,   ${2.asInstanceOf[Object]}           )
+//            |
+//            |  List(  :db/add,   $id3,   :order/lineItems       ,   $id1           )
+//            |  List(  :db/add,   $id3,   :order/lineItems       ,   $id2           )
+//            |)""".stripMargin
 
+//    val tx2 = Util.list(
+//      Util.list(":db/add", id1, ":lineItem/product", chocolateId: java.lang.Long),
+//      Util.list(":db/add", id1, ":lineItem/price", 48.00.asInstanceOf[Object]),
+//      Util.list(":db/add", id1, ":lineItem/quantity", 1.asInstanceOf[Object]),
+//      Util.list(":db/add", id2, ":lineItem/product", whiskyId: java.lang.Long),
+//      Util.list(":db/add", id2, ":lineItem/price", 38.00.asInstanceOf[Object]),
+//      Util.list(":db/add", id2, ":lineItem/quantity", 2.asInstanceOf[Object]),
+//      Util.list(":db/add", id3, ":order/lineItems", id1),
+//      Util.list(":db/add", id3, ":order/lineItems", id2)
+//    )
+//    conn.transact(tx2).get()
+//    Map(
+//      :db/id -> 17592186045421,
+//      :lineItem/product -> List(
+//        Map(
+//          :db/id -> 17592186045418,
+//          :product/description -> Expensive Chocolate)),
+//    :lineItem/quantity -> 1, :lineItem/price -> 48.0)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//    orderId.touch === Map(
+//      ":db/id" -> 17592186045421L,
+//      ":order/lineItems" -> List(
+//        Map(
+//          ":db/id" -> 17592186045422L,
+//          ":lineItem/product" -> List(Map(":db/id" -> 17592186045418L, ":product/description" -> "Expensive Chocolate")),
+//          ":lineItem/quantity" -> 1,
+//          ":lineItem/price" -> 48.0),
+//        Map(
+//          ":db/id" -> 17592186045423L,
+//          ":lineItem/product" -> List(Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky")),
+//          ":lineItem/quantity" -> 2,
+//          ":lineItem/price" -> 38.0)
+//      ))
 
 
 

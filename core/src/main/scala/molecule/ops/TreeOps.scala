@@ -8,6 +8,8 @@ import scala.reflect.macros.whitebox.Context
 trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   import c.universe._
 
+  def firstLow(str: Any) = str.toString.head.toLower + str.toString.tail
+
   implicit class richTree(t: Tree) {
     lazy val tpe        = c.typecheck(t).tpe
     lazy val at         = att(t)
@@ -20,10 +22,12 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isNS = tpe <:< typeOf[NS]
     def isD0 = tpe <:< typeOf[Out_0]
     def nsS = nsString(tpe.typeSymbol.owner.owner.name.toString.init)
+    def owner = t.symbol.typeSignature.typeParams.head.name.toString
+    def alias = t.symbol.typeSignature.typeParams.head.name.toString
     def isAttr = tpe <:< typeOf[Attr]
-    def isRef = tpe <:< weakTypeOf[Ref]
-    def isOneRef = tpe <:< weakTypeOf[OneRef]
-    def isManyRef = tpe <:< weakTypeOf[ManyRef]
+    def isRef = tpe <:< weakTypeOf[Ref[_, _]]
+    def isOneRef = tpe <:< weakTypeOf[OneRef[_,_]]
+    def isManyRef = tpe <:< weakTypeOf[ManyRef[_,_]]
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
     def isMany = tpe <:< weakTypeOf[Many[_, _, _]]
@@ -35,6 +39,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   def nsString(ns: String): String = ns.head.toLower + ns.tail
   def nsString(ns: Tree): String = nsString(ns.symbol.name.toString)
   def nsString(ns: Name): String = nsString(ns.decodedName.toString)
+
 
   // Todo more types...
   def tpe(s: String) = s match {
@@ -193,12 +198,23 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
   class att(val sym: Symbol) {
-    val x = debug("TreeOps:att", 2)
+    val x = debug("TreeOps:att", 1)
 
     lazy val attrType = sym match {
       case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Attr] => sym.asMethod.returnType
       case unexpected                                                    =>
+
+        x(0
+        , unexpected
+        , unexpected.typeSignature
+        , unexpected.owner
+        , unexpected.asMethod
+        , unexpected.asMethod.typeParams.head.toString
+        , unexpected.asMethod.typeSignature
+//        , unexpected.asModule
+
+        )
         abortTree(q"$unexpected", s"[TreeOps:attrType] Unexpected attribute symbol")
     }
 
@@ -207,7 +223,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
         val TypeRef(_, _, List(_, _, attrTpe)) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol)
         attrTpe
       }
-      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref] => NoType
+//      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref] => NoType
+      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_,_]] => NoType
       case unexpected                                                   =>
         abortTree(q"$unexpected", s"[TreeOps:tpe] ModelOps.att(sym) can only take an Attr symbol")
     }

@@ -2,11 +2,19 @@ package molecule.ast
 
 object model {
 
-  case class Model(elements: Seq[Element])
+  case class Model(elements: Seq[Element]) //extends Element
 
   trait Element
-  case class Bond(ns1: String, ns2: String) extends Element
+
+  // Basic unit of namespaced data
   case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None) extends Element
+
+  // Relationship to another namespace
+  // If refAttr doesn't match the referenced namespace, add refNs (and refAttr can be an arbitrary name)
+  case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
+
+  // Group of elements treated as one element - allowing recursive sub models
+  case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
   sealed trait Value
   case object NoValue extends Value

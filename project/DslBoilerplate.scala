@@ -89,8 +89,8 @@ object DslBoilerplate {
             case r"manyEnum\((.*)$enums\)" => Seq("enum", attr, "Set[String]", 2, "ManyEnums(ns, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
 
             // Refs
-            case r"one\[(.*)$ref\](.*)$rest"  => extract(rest, Seq("ref", attr, "OneRef", 1, ref))
-            case r"many\[(.*)$ref\](.*)$rest" => extract(rest, Seq("ref", attr, "ManyRef", 2, ref))
+            case r"one\[(.*)$ref\](.*)$rest"  => extract(rest, Seq("OneRef", attr, "Long", 1, ref))
+            case r"many\[(.*)$ref\](.*)$rest" => extract(rest, Seq("ManyRef", attr, "Set[Long]", 2, ref))
 
             // Options
             case r"\.doc\(((\w|\s)*)$msg\)$rest" => extract(rest, elements :+ s"Doc: $msg")
@@ -120,24 +120,21 @@ object DslBoilerplate {
 
   def baseType(tpe: Any): String = tpe.toString match {
     case r"Set\[([\w\.]*)$t\]" => t
-    case r"OneRef"             => "Long"
-    case r"ManyRef"            => "Long"
-    case t: String             => t
+    //    case r"OneRef"             => "Long"
+    //    case r"ManyRef"            => "Long"
+    case t: String => t
   }
 
-  def handleNamespace(srcManaged: File, path: String, domain: String, inArity: Int, outArity: Int, nsDef: (String, Seq[Seq[Any]])) = {
+  def handleNamespace(srcManaged: File, path: String, domain: String, inArity: Int, outArity: Int, nsDef: (String, Seq[Seq[Any]]), nsArities: Map[String, Int]) = {
 
     // Namespace ......................
 
     val Ns = nsDef._1
     val ns = firstLow(Ns)
-    //    val attrDefs = nsDef._2
 
 
     // Attributes .....................
 
-    //    val attrs0 = attrDefs.filter(a => a.head == "attr" || a.head == "enum").map { d =>
-    //      val (cat: String, attr: String, tpe: String, card: Int, defs: List[_]) = (d.head, d.tail.head, d.tail.tail.head, d.tail.tail.tail.head, d.tail.tail.tail.tail)
     val attrs0 = nsDef._2.map { d =>
       val (cat: String, attr: String, tpe: String, card: Int, ext: String, defs: List[_]) = (d(0), d(1), d(2), d(3), d(4), d.drop(5))
       (cat, attr, tpe, baseType(tpe), card, ext, defs)
@@ -154,33 +151,24 @@ object DslBoilerplate {
     val entityIdDef = ("attr", "eid", "Long", "Long", 1, "OneLong(ns, ns2)", List())
 
     val attrs = (entityIdDef +: attrs0).map { case (cat, attr, tpe, baseType, card, ext, defs) =>
-      val cleanType = if (cat == "ref") "Long" else tpe
+      //      val cleanType = if (cat == "ref") "Long" else tpe
+      //      val cleanType = tpe match {
+      //                     case "OneRef"  => "Long"
+      //                     case "ManyRef" => "Seq[Long]"
+      //                     case _         => tpe
+      //                   }
       val attrClean = attr.replace("`", "")
       val padAttr = " " * (longestAttr - attr.length)
-      val padType = " " * (longestType - cleanType.length)
+      //      val padType = " " * (longestType - cleanType.length)
+      val padType = " " * (longestType - tpe.length)
       val padBaseType = " " * (longestBaseType - baseType.length)
       val padAttrClean = " " * (longestAttrClean - attrClean.length)
       (cat, attr, attrClean, tpe, baseType, card, ext, defs.map(_.toString), padAttr, padAttrClean, padType, padBaseType)
     }
 
     val valueAttrs = attrs.filter(a => a._1 == "attr" || a._1 == "enum")
-    val refAttrs = attrs.filter(a => a._1 == "ref")
-
-
-    //    // Refs ...........................
-    //
-    //    val refs0 = attrDefs.filter(_.head == "ref").map { d =>
-    //      val (attr: String, refType: String, ref: String, defs: List[_]) = (d.tail.head, d.tail.tail.head, d.tail.tail.tail.head, d.tail.tail.tail.tail)
-    //      (attr, refType, ref, defs)
-    //    }
-    //    val refs = refs0.map { case (attr, refType, ref, defs) =>
-    //      val padAttr = " " * (longestAttr - attr.length)
-    //      val padType = " " * (longestType - refType.length)
-    //
-    //
-    //      ("ref", attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _)
-    //      (attr.capitalize, refType, ref, defs, padAttr, padType)
-    //    }
+    //    val refAttrs = attrs.filter(a => a._1 == "ref")
+    val refAttrs = attrs.filter(a => a._1 == "OneRef" || a._1 == "ManyRef")
 
 
     // Schema stmts ######################################################################################
@@ -243,9 +231,11 @@ object DslBoilerplate {
 
     val attrClasses = attrs.tail.map { case (cat, attr, _, tpe, baseType, _, ext, defs, padAttr, padAttrClean, _, _) =>
       val (extensions, enumValues) = cat match {
-        case "enum" => (ext, s"private lazy val ${defs.mkString(", ")} = EnumValue")
-        case "ref"  => (tpe, "")
-        case _      => ((ext +: defs).mkString(" with "), "")
+        case "enum"    => (ext, s"private lazy val ${defs.mkString(", ")} = EnumValue")
+        case "OneRef"  => ("OneRef", "")
+        case "ManyRef" => ("ManyRef", "")
+        case _         => ((ext +: defs).mkString(" with "), "")
+        //        case "ref"  => (tpe, "")
       }
       val oldNew = s"def apply(data: oldNew[$baseType]) = ${Ns}_Update()"
       val baseElements = Seq(enumValues, oldNew) map (_.trim) filter (_.nonEmpty) mkString "\n    "
@@ -405,31 +395,48 @@ object DslBoilerplate {
 
             val defaults = if (in + out == 0 && attrs0.nonEmpty) {
               val (_, attr, tpeFirst, _, _, _, _) = attrs0.head
-//              val nameFirst = attr.capitalize
-//              Seq( s"""|
-//                       |  @default
-//                       |  def apply($attr: $tpeFirst) = new $attr(this, new ${Ns}_Out_1[$tpeFirst] {}) with ${Ns}_Out_1[$tpeFirst]
-//                       |  def apply(id: Long) = ${Ns}_Entity()
-//                       |
-//                       |  def update(id: Long) = ${Ns}_Update(Seq(), Seq(id))
-//                       |  def update(ids: Seq[Long]) = ${Ns}_Update(Seq(), ids)
-//                       |""".stripMargin)
-                            Seq( s"""def apply(eid: Long)        = ${Ns}_Entity()
+              Seq( s"""def apply(eid: Long)        = ${Ns}_Entity()
                                   |  def update(eid: Long)       = ${Ns}_Update(Seq(), Seq(eid))
                                   |  def update(eids: Seq[Long]) = ${Ns}_Update(Seq(), eids)
                                   |""".stripMargin)
             } else Seq()
 
             val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
-              val cleanType = if (cat == "ref") "Long" else tpe
-              val nextTypes = (OutTypes :+ cleanType) mkString ", "
+              //              val cleanType = tpe match {
+              //                case "OneRef"  => "Long"
+              //                case "ManyRef" => "Seq[Long]"
+              //                case _         => tpe
+              //              }
+              //              if (cat == "ref") "Long" else tpe
+              //              val cleanType = if (cat == "ref") "Long" else tpe
+              //              val nextTypes = (OutTypes :+ cleanType) mkString ", "
+              val nextTypes = (OutTypes :+ tpe) mkString ", "
               val nextNS = s"${Ns}_Out_${out + 1}[$nextTypes]$padType"
               s"lazy val $attr $padAttr= new $attr $padAttr(this, new $nextNS {}) with $nextNS {}"
             }
 
-            val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (_, attr, attrClean, tpe, refType, _, ref, defs, padAttr, _, padType, _)) =>
-              //            val refCode = refs.foldLeft(Seq("")) { case (acc,  (_, attr, _, refType, ref, _, defs, padAttr, _, padType)) =>
-              acc :+ s"def ${attr.capitalize} = new $tpe with ${ref}_Out_$out$TraitTypes"
+            val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (cat, attr, attrClean, tpe, refType, _, ref, defs, padAttr, _, padType, _)) =>
+              val refNs: String = s"def ${attr.capitalize} = new $cat[$Ns, $ref] with ${ref}_Out_$out$TraitTypes"
+
+              val refs: Seq[String] = if (cat == "ManyRef") {
+
+                // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
+                // Offer max arity equaling the number of attributes in the referenced namespace
+                val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
+                val refAttr = firstLow(ref)
+
+                //                val (named, stars) = refArities.foldLeft(Seq(refNs)) { case (refDefs, typesList) =>
+                val (named, stars) = refTypeLists.map { refTypeList =>
+                  val types = refTypeList.mkString(", ")
+                  val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
+                  val allTypes = if (out == 0) refTypes else TraitTypes.init.tail + ", " + refTypes
+                  val name = s"def $attr[$types]($attr: ${ref}_Out_${refTypeList.size}[$types]) = new ManyRef[$Ns, $ref] with ${Ns}_Out_${out + 1}[$allTypes]"
+                  val star = s"def *[$types]($attr: ${ref}_Out_${refTypeList.size}[$types]) = new ManyRef[$Ns, $ref] with ${Ns}_Out_${out + 1}[$allTypes]"
+                  (name, star)
+                }.unzip
+                refNs +: (named ++ stars)
+              } else Seq(refNs)
+              acc ++ refs
             }.tail
 
             if (out == outArity)
@@ -452,15 +459,38 @@ object DslBoilerplate {
           val InTraits = s"trait ${Ns}_In_${in}_$out[$InOutTypes] extends In_${in}_$out[$InOutTypes]"
 
           val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
-            val cleanType = if (cat == "ref") "Long" else tpe
-            val nextTypes = Seq(InOutTypes, cleanType) mkString ", "
+            //            val cleanType = if (cat == "ref") "Long" else tpe
+            //            val nextTypes = Seq(InOutTypes, cleanType) mkString ", "
+            val nextTypes = Seq(InOutTypes, tpe) mkString ", "
             val nextNS = s"${Ns}_In_${in}_${out + 1}[$nextTypes]$padType"
             s"lazy val $attr $padAttr= new $attr $padAttr(this, new $nextNS {}) with $nextNS {}"
           }
 
-          val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (_, attr, attrClean, tpe, refType, _, ref, defs, padAttr, _, padType, _)) =>
-            //          val refCode = refs.foldLeft(Seq("")) { case (acc,  (_, attr, _, refType, ref, _, defs, padAttr, _, padType)) =>
-            acc :+ s"def ${attr.capitalize} = new $tpe with ${ref}_In_${in}_$out[$InOutTypes]"
+          //          val refCode = refs.foldLeft(Seq("")) { case (acc,  (_, attr, _, refType, ref, _, defs, padAttr, _, padType)) =>
+          val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (cat, attr, attrClean, tpe, refType, _, ref, defs, padAttr, _, padType, _)) =>
+//            acc :+ s"def ${attr.capitalize} = new $cat[$Ns.type, $ref.type] with ${ref}_In_${in}_$out[$InOutTypes]"
+
+            val refNs: String = s"def ${attr.capitalize} = new $cat[$Ns, $ref] with ${ref}_In_${in}_$out[$InOutTypes]"
+
+            val refs: Seq[String] = if (cat == "ManyRef") {
+
+              // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
+              // Offer max arity equaling the number of attributes in the referenced namespace
+              val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
+              val refAttr = firstLow(ref)
+
+              //                val (named, stars) = refArities.foldLeft(Seq(refNs)) { case (refDefs, typesList) =>
+              val (named, stars) = refTypeLists.map { refTypeList =>
+                val types = refTypeList.mkString(", ")
+                val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
+                val allTypes = if (out == 0) (InTypes :+ refTypes).mkString(", ") else InOutTypes + ", " + refTypes
+                val name = s"def $attr[$types]($attr: ${ref}_Out_${refTypeList.size}[$types]) = new ManyRef[$Ns, $ref] with ${Ns}_In_${in}_${out + 1}[$allTypes]"
+                val star = s"def *[$types]($attr: ${ref}_Out_${refTypeList.size}[$types]) = new ManyRef[$Ns, $ref] with ${Ns}_In_${in}_${out + 1}[$allTypes]"
+                (name, star)
+              }.unzip
+              refNs +: (named ++ stars)
+            } else Seq(refNs)
+            acc ++ refs
           }.tail
 
           val inputMethods = if (out > 0 && in < inArity) {
@@ -501,7 +531,8 @@ object DslBoilerplate {
                    |import molecule.in._
                    |import molecule.out._
                    |
-                   |object $Ns extends ${Ns}_Out_0 {
+                   |trait $Ns
+                   |object $Ns extends $Ns with ${Ns}_Out_0 {
                    |  $attrClasses
                    |
                    |  def insert = ${Ns}_Insert()
@@ -627,8 +658,10 @@ object DslBoilerplate {
       definitionFiles.flatMap { definitionFile =>
         val (path, domain, inArity, outArity, nsDefs) = extractNsDefinitions(definitionFile)
 
+        val nsArities = nsDefs.map(ns => ns._1 -> ns._2.size).toMap
+
         // Loop namespaces in each definition file
-        val (schemaStmts, dslFiles) = nsDefs.map(handleNamespace(srcManaged, path, domain, inArity, outArity, _)).unzip
+        val (schemaStmts, dslFiles) = nsDefs.map(handleNamespace(srcManaged, path, domain, inArity, outArity, _, nsArities)).unzip
 
         // Create schema file
         val domainFileName = definitionFile.name.replace("Definition.scala", "")

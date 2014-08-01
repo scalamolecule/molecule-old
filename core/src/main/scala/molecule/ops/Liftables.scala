@@ -7,6 +7,8 @@ import scala.reflect.macros.whitebox.Context
 
 trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   import c.universe._
+  val z = debug("Liftables", 1, 10, true)
+
 
   // Lift allowed base types
   implicit val liftAny = Liftable[Any] {
@@ -26,7 +28,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   implicit val liftVar    = Liftable[Var] { v => q"Var(${v.v}, ${v.tpeS})"}
   implicit val liftVal    = Liftable[Val] { value => q"Val(${value.v}, ${value.tpeS})"}
-  implicit val liftAttrKW = Liftable[KW] { kw => q"KW(${kw.ns}, ${kw.name})"}
+  implicit val liftAttrKW = Liftable[KW] { kw => q"KW(${kw.ns}, ${kw.attr}, ${kw.refNs})"}
   implicit val liftWith   = Liftable[With] { widh => q"With(Seq(..${widh.variables}))"}
 
   implicit val liftQueryValue = Liftable[QueryValue] {
@@ -43,14 +45,14 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftQueryTerm = Liftable[QueryTerm] {
-    case KW(ns, name)   => q"KW($ns, $name)"
-    case Empty          => q"Empty"
-    case Var(sym, tpeS) => q"Var($sym, $tpeS)"
-    case Val(v, tpeS)   => q"Val($v, $tpeS)"
-    case DS(name)       => q"DS($name)"
-    case DS             => q"DS"
-    case ImplDS         => q"ImplDS"
-    case t              => abort("[Liftables:liftQueryTerm] Can't lift query term: " + t)
+    case KW(ns, attr, refNs) => q"KW($ns, $attr, $refNs)"
+    case Empty               => q"Empty"
+    case Var(sym, tpeS)      => q"Var($sym, $tpeS)"
+    case Val(v, tpeS)        => q"Val($v, $tpeS)"
+    case DS(name)            => q"DS($name)"
+    case DS                  => q"DS"
+    case ImplDS              => q"ImplDS"
+    case t                   => abort("[Liftables:liftQueryTerm] Can't lift query term: " + t)
   }
 
   implicit val liftOutput = Liftable[Output] {
@@ -117,12 +119,26 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     }
   }
 
-  implicit val liftAtom = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix})"}
-  implicit val liftBond = Liftable[Bond] { b => q"Bond(${b.ns1}, ${b.ns2})"}
+  implicit val liftAtom  = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix})"}
+  implicit val liftBond  = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
+  implicit val liftGroup = Liftable[Group] { g =>
+    val es = g.elements map { case q"$e" => e}
+    q"Group(${g.ref}, Seq(..$es))"
+  }
+
+  implicit val liftListOfElements = Liftable[Seq[Element]] { elements =>
+    val es = elements map {
+      case a: Atom  => q"$a"
+      case b: Bond  => q"$b"
+      case g: Group => q"$g"
+    }
+    q"Seq(..$es)"
+  }
 
   implicit val liftElement = Liftable[Element] {
     case Atom(ns, name, tpeS, card, value, enumPrefix) => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix)"
-    case Bond(ns1, ns2)                                => q"Bond($ns1, $ns2)"
+    case Bond(ns, refAttr, refNs)                      => q"Bond($ns, $refAttr, $refNs)"
+    case Group(ref, elements)                          => q"Group($ref, $elements)"
   }
 
   implicit val liftModel = Liftable[Model] { model => q"Model(Seq(..${model.elements}))"}

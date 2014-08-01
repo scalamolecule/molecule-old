@@ -30,7 +30,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
   def loadSeattle(version: Int): Connection = {
     implicit val conn = load(SeattleSchema.tx, "seattle" + version)
     // Load Seattle data
-    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region.insert(seattleData)
+    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
     conn
   }
 

@@ -90,7 +90,8 @@ object QueryOps {
       q.copy(where = Where(q.where.clauses :+ Funct(name, ins, outs)))
     }
 
-    def ref(e: String, ns: String, a: String, s: String): Query =
-      q.copy(where = Where(q.where.clauses :+ DataClause(e, KW(ns, a), "String", s)))
+    def ref(e: String, ns: String, refAttr: String, s: String, refNs: String): Query = {
+      q.copy(where = Where(q.where.clauses :+ DataClause(e, KW(ns, refAttr, refNs), "String", s)))
+    }
   }
 }

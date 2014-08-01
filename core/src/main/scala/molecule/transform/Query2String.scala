@@ -9,14 +9,14 @@ case class Query2String(q: Query) {
     case With(variables)              => if (variables.isEmpty) "" else ":with " + (variables map s mkString " ")
     case in@In(_, _, _)               => mkIn(in, false)
     case Where(clauses)               => ":where " + (clauses map p mkString " ")
-    case KW(ns, name)                 => s":$ns/$name"
+    case KW(ns, attr, _)              => s":$ns/$attr"
     case AggrExpr(fn, args, v, tpeS)  => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
     case Var("?", _)                  => "?"
     case Var(v, _)                    => "?" + v
     case Val(v, "Int")                => v.toString
     case Val(v, _)                    => "\"" + v + "\""
     case Dummy(_)                     => "_"
-    case NoVal                     => ""
+    case NoVal                        => ""
     case DS(name)                     => "$" + name
     case DS                           => "$"
     case Empty                        => ""

@@ -6,21 +6,27 @@ import molecule.dsl.schemaDefinition._
 @InOut(3, 8)
 trait ProductsOrderDefinition {
 
-  trait User {
-    val orders = many[Order]
-  }
-
   trait Order {
+    val id        = oneString
     val lineItems = many[LineItem].components
   }
 
   trait LineItem {
-    val quantity = oneInt
-    val price    = oneDouble
     val product  = one[Product]
+    val price    = oneDouble
+    val quantity = oneInt
   }
 
   trait Product {
     val description = oneString.indexed
   }
 }
+
+
+//trait User {
+//  val orders = many[Order]
+//}
+//
+//trait OrderSystem {
+//  val note = oneString
+//}

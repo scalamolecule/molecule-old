@@ -20,10 +20,10 @@ object schemaDSL {
       type NS2 = Ns2
     }
   }
-  trait Ref
-  abstract class OneRef extends Ref
-  abstract class ManyRef extends Ref
-  abstract class Component extends Ref
+
+  trait Ref[Ns1, Ns2]
+  abstract class OneRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
+  abstract class ManyRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
 
   trait Attr {
     type NS

@@ -62,12 +62,12 @@ trait DatomicFacade extends Debug {
 
     //    println(conn)
     //    println(conn.db)
-    //            println(query.format)
-    //            println("---------------- ")
-    //            println(query.pretty)
-    //            println("---------------- ")
-    //            println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
-    //            println("---------------- ")
+    //                println(query.format)
+    //                println("---------------- ")
+    //                println(query.pretty)
+    //                println("---------------- ")
+    //                println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
+    //                println("---------------- ")
 
     val first = if (query.in.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
@@ -89,9 +89,21 @@ trait DatomicFacade extends Debug {
   private[molecule] def insertOne(conn: Connection, model: Model, args: Seq[Any]): Seq[Long] = insertMany(conn, model, Seq(args))
 
   def insertMany(conn: Connection, model: Model, argss: Seq[Seq[Any]]): Seq[Long] = {
-    val tx = Model2Transaction(conn, model, argss)
-    val javaTx = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
-    val txResult = conn.transact(javaTx).get
+//    val tx = Model2Transaction.applyOLD(conn, model, argss)
+//    val javaTx = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
+    val tx1 = Model2Transaction(conn, model, argss)
+    val javaTx1 = tx1.map(_.toJava).asJava
+
+    x(0
+//      , model.elements
+//      , argss
+//      , tx
+//      , tx1
+//      , javaTx
+      , javaTx1
+    )
+//    val txResult = conn.transact(javaTx).get
+    val txResult = conn.transact(javaTx1).get
     val txData = txResult.get(Connection.TX_DATA)
     val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
     val newIds = newDatoms.map(_.e.asInstanceOf[Long]).distinct
@@ -124,3 +136,156 @@ trait DatomicFacade extends Debug {
 }
 
 object DatomicFacade extends DatomicFacade
+
+
+// Borrowed from Datomisca...
+
+case class EntityFacade(val entity: datomic.Entity) extends AnyVal {
+  //case class EntityFacade(val entity: datomic.Entity) extends Debug {
+  //  private val x = debug("EntityFacade", 1, 99, false, 2)
+
+
+  def touch: Map[String, Any] = toMap
+  //  def touch = toTpl
+  //{
+  //      val builder = Map.newBuilder[String, Any]
+  //      val iter = blocking { entity.keySet } .iterator
+  //      while (iter.hasNext) {
+  //        val key = iter.next()
+  //        builder += (key -> Convert.toScala(entity.get(key)))
+  //      }
+  //      builder.result
+  //    }
+
+  //  def contains(keyword: Keyword): Boolean =
+  //    entity.get(keyword) ne null
+  //
+  //  def apply(keyword: Keyword): Any = {
+  //    val o = entity.get(keyword)
+  //    if (o ne null)
+  //      Convert.toScala(o)
+  //    else
+  //      throw new EntityKeyNotFoundException(keyword.toString)
+  //  }
+  //
+  //  def get(keyword: Keyword): Option[Any] = {
+  //    val o = entity.get(keyword)
+  //    if (o ne null)
+  //      Some(Convert.toScala(o))
+  //    else
+  //      None
+  //  }
+  //
+  //  def as[T](keyword: Keyword)(implicit fdat: FromDatomicCast[T]): T = {
+  //    val o = entity.get(keyword)
+  //    if (o ne null)
+  //      fdat.from(o)
+  //    else
+  //      throw new EntityKeyNotFoundException(keyword.toString)
+  //  }
+  //
+  //  def getAs[T](keyword: Keyword)(implicit fdat: FromDatomicCast[T]): Option[T] = {
+  //    val o = entity.get(keyword)
+  //    if (o ne null)
+  //      Some(fdat.from(o))
+  //    else
+  //      None
+  //  }
+
+  //  def keySet: Set[String] = {
+  //    val builder = Set.newBuilder[String]
+  //    val iter = blocking { entity.keySet } .iterator
+  //    while (iter.hasNext) {
+  //      builder += iter.next()
+  //    }
+  //    builder.result
+  //  }
+  //
+  // Todo?
+  //  def toTpl = {
+  //    import shapeless.syntax.std.tuple._
+  //    val tpl1 = Tuple1(":db/id" -> entity.get(":db/id"))
+  //    def add[T <: Product](tpl: T, keys: List[String]): Product = keys match {
+  //      case Nil         => tpl
+  //      case key :: tail => add(tpl :+ (keys.head -> entity.get(key)), tail)
+  //    }
+  //    add(tpl1, entity.keySet.toList)
+  //  }
+
+  def toMap: Map[String, Any] = {
+    //  def toMap = {
+    val builder = Map.newBuilder[String, Any]
+    val iter = entity.keySet.iterator
+
+    //    x(1
+    //    ,entity
+    //    , entity.keySet()
+    //    , entity.touch()
+    //
+    //    )
+
+    // Add id also
+    builder += ":db/id" -> entity.get(":db/id")
+    while (iter.hasNext) {
+      val key = iter.next()
+      builder += (key -> Convert.toScala(entity.get(key)))
+    }
+    builder.result()
+  }
+}
+
+private[molecule] object Convert {
+
+  private[molecule] def toScala(v: Any): Any = v match {
+    // :db.type/string
+    case s: java.lang.String => s
+    // :db.type/boolean
+    case b: java.lang.Boolean => b: Boolean
+    // :db.type/long
+    case l: java.lang.Long => l: Long
+    // attribute id
+    case i: java.lang.Integer => i.toLong: Long
+    // :db.type/float
+    case f: java.lang.Float => f: Float
+    // :db.type/double
+    case d: java.lang.Double => d: Double
+    // :db.type/bigint
+    case bi: java.math.BigInteger => BigInt(bi)
+    // :db.type/bigdec
+    case bd: java.math.BigDecimal => BigDecimal(bd)
+    // :db.type/instant
+    case d: java.util.Date => d
+    // :db.type/uuid
+    case u: java.util.UUID => u
+    // :db.type/uri
+    case u: java.net.URI => u
+    // :db.type/keyword
+    //    case kw: clojure.lang.Keyword => kw
+    // :db.type/bytes
+    case bytes: Array[Byte] => bytes
+    // an entity map
+    //    case e: datomic.Entity => new EntityFacade(e)
+    case e: datomic.Entity => new EntityFacade(e).toMap
+    //    case e: datomic.Entity => new EntityFacade(e).toTpl
+
+    // :db.type/keyword
+    case set: clojure.lang.PersistentHashSet =>
+      set.toList map toScala
+
+    // a collection
+    case coll: java.util.Collection[_] =>
+      new Iterable[Any] {
+        override def iterator = new Iterator[Any] {
+          private val jIter = coll.iterator.asInstanceOf[java.util.Iterator[AnyRef]]
+          override def hasNext = jIter.hasNext
+          override def next() = toScala(jIter.next())
+        }
+        override def isEmpty = coll.isEmpty
+        override def size = coll.size
+        override def toString = coll.toString
+      }
+    // otherwise
+    case v => throw new RuntimeException(v.getClass.toString)
+  }
+
+}

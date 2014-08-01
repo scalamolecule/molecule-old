@@ -1,10 +1,10 @@
 package molecule.util
-import datomic.{Connection, Peer}
+import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
+import molecule.ast.transaction._
 import molecule.DatomicFacade
-import molecule.dsl.schemaDSL
-import schemaDSL._
+import molecule.dsl.schemaDSL._
 import molecule.in.InputMolecule
 import molecule.out.OutputMolecule
 import molecule.transform.{Model2Transaction, Query2String}
@@ -19,7 +19,34 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
 
-  def formatTx(tx: Seq[Seq[Any]]) = {
+  def formatTx(tx: Seq[Statement]) = {
+    val longestAction = tx.map(stmt => stmt.action.length).max
+    val longestAttr = tx.map(stmt => stmt.a.toString.length).max
+    val longestValue = tx.map(stmt => stmt.v.toString.length).max
+
+    // Increment temporary ids in a controlled way so that we can test
+    val ids = tx.foldLeft(Map[String, String]()) { case (ids, stmt) =>
+      val rawId = stmt.e.toString
+      rawId match {
+        case r"#db/id\[:db.part/user -\d{7}\]" =>
+          if (ids.contains(rawId)) ids else ids + (rawId -> ("#db/id[:db.part/user -" + (1000001 + ids.size) + "]"))
+        case other                             => ids + (other.toString -> other.toString)
+      }
+    }
+    val tx2 = tx.map { stmt =>
+      val newId = ids.getOrElse(stmt.e.toString, sys.error("missing stmt id"))
+      val newValue = ids.getOrElse(stmt.v.toString, stmt.v.toString)
+      List(
+        stmt.action + " " * (longestAction - stmt.action.toString.length),
+        newId,
+        stmt.a + " " * (longestAttr - stmt.a.toString.length),
+        newValue + " " * (longestValue - newValue.length)
+      )
+    }
+
+    tx2.map(l => l.mkString("List(  ", ",   ", "  )")).mkString("List(\n  ", "\n  ", "\n)")
+  }
+  def formatTxOLD(tx: Seq[Seq[Any]]) = {
     val longestAction = tx.map(stmt => stmt(0).toString.length).max
     val longestAttr = tx.map(stmt => stmt(2).toString.length).max
     val longestValue = tx.map(stmt => stmt(3).toString.length).max
@@ -118,8 +145,8 @@ trait MoleculeSpec extends Specification with DatomicFacade {
         val (attrs, args) = t.getNonEmptyAttrs(model).unzip
         val rawMolecules = t.chargeMolecules(attrs, Seq(args))
         val molecules = t.groupNamespaces(rawMolecules)
-        val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, updateMolecule.ids)
-        formatTx(tx) === txString
+        val tx = t.upsertTransaction(conn.db, molecules, updateMolecule.ids)
+        formatTxOLD(tx) === txString
       }
     }
 
@@ -128,8 +155,8 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       val (attrs, args) = t.getNonEmptyAttrs(Model(updateMolecule.elements)).unzip
       val rawMolecules = t.chargeMolecules(attrs, Seq(args))
       val molecules = t.groupNamespaces(rawMolecules)
-      val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, updateMolecule.ids)
-      formatTx(tx) === txString
+      val tx = t.upsertTransaction(conn.db, molecules, updateMolecule.ids)
+      formatTxOLD(tx) === txString
     }
   }
 
@@ -142,7 +169,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
         val rawMolecules      = t.chargeMolecules(attrs, Seq(args))
         val molecules         = t.groupNamespaces(rawMolecules)
         val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, ids)
-        formatTx(tx) === txString
+        formatTxOLD(tx) === txString
       }
     }
 
@@ -151,8 +178,8 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       val (attrs, args) = t.getNonEmptyAttrs(Model(insertMolecule.elements)).unzip
       val rawMolecules = t.chargeMolecules(attrs, Seq(args))
       val molecules = t.groupNamespaces(rawMolecules)
-      val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, ids)
-      formatTx(tx) === txString
+      val tx = t.upsertTransaction(conn.db, molecules, ids)
+      formatTxOLD(tx) === txString
     }
   }
 }

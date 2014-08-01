@@ -2,10 +2,10 @@ package molecule
 package examples.seattle
 import java.io.FileReader
 import datomic._
-import molecule.dsl.DbSchema
+//import molecule.dsl.DbSchema
 import molecule.dsl.DbSchema._
 import molecule.examples.seattle.dsl.seattle._
-import molecule.examples.seattle.schema.SeattleSchema
+//import molecule.examples.seattle.schema.SeattleSchema
 import shapeless._
 import scala.language.reflectiveCalls
 
@@ -18,7 +18,7 @@ class SeattleTests extends SeattleSpec {
     val communities = m(Community.name)
 
     // Community entity ids
-    communities.ids.take(3) === List(17592186045518L, 17592186045516L, 17592186045514L)
+    communities.ids.take(3) === List(17592186045789L, 17592186045519L, 17592186045792L)
     communities.size === 150
   }
 
@@ -314,7 +314,7 @@ class SeattleTests extends SeattleSpec {
       .orgtype("personal")
       .category("my", "favorites") // many cardinality allows multiple values
       .Neighborhood.name("myNeighborhood")
-      .District.name("myDistrict").region("nw").save === List(17592186045785L, 17592186045786L, 17592186045787L)
+      .District.name("myDistrict").region("nw").save === List(17592186045890L, 17592186045891L, 17592186045892L)
 
     // Confirm all data is inserted
     Community.name.contains("AAA").url.`type`.orgtype.category.Neighborhood.name.District.name.region.take(1) === List(
@@ -334,20 +334,20 @@ class SeattleTests extends SeattleSpec {
     // Insert data as args matching the attributes of the template
     //    communityTemplate.insert("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "ne") === List(
     communityTemplate.insert("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s") === List(
-      17592186045789L, 17592186045790L, 17592186045791L)
+      17592186045894L, 17592186045895L, 17592186045896L)
 
     // Insert data as HList
     communityTemplate.insert("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil) === List(
-      17592186045793L, 17592186045794L, 17592186045795L)
+      17592186045898L, 17592186045899L, 17592186045900L)
 
 
     // Add multiple molecules..........................
 
     // Data as list of tuples
-    Community.name.url.insert(Seq(("Com A", "A.com"), ("Com B", "B.com"))) === Seq(17592186045797L, 17592186045798L)
+    Community.name.url.insert(Seq(("Com A", "A.com"), ("Com B", "B.com"))) === Seq(17592186045902L, 17592186045903L)
 
     // Data as list of HLists
-    Community.name.url.insert(Seq("Com C" :: "C.com" :: HNil, "Com D" :: "D.com" :: HNil)) === Seq(17592186045800L, 17592186045801L)
+    Community.name.url.insert(Seq("Com C" :: "C.com" :: HNil, "Com D" :: "D.com" :: HNil)) === Seq(17592186045905L, 17592186045906L)
 
     // Confirm that new entities have been inserted
     Community.name.contains("Com").get.sorted === List("Com A", "Com B", "Com C", "Com D")
@@ -369,7 +369,7 @@ class SeattleTests extends SeattleSpec {
     Community.category.get.head.size === 88
 
     // Re-use community template to insert 3 new communities with 3 new neighborhoods
-    communityTemplate.insert(newCommunitiesData) === List(17592186045804L, 17592186045805L, 17592186045807L, 17592186045808L, 17592186045810L, 17592186045811L)
+    communityTemplate.insert(newCommunitiesData) === List(17592186045909L, 17592186045910L, 17592186045912L, 17592186045913L, 17592186045915L, 17592186045916L)
 
     // Data has been added
     Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.tpls === newCommunitiesData

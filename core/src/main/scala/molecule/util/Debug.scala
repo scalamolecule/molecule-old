@@ -3,6 +3,9 @@ import scala.collection.JavaConversions._
 
 trait Debug {
 
+  def hej(clazz: String, threshold: Int, max: Int = 9999, debug: Boolean = false, maxLevel: Int = 99) =
+  new debug(clazz, threshold, max, debug, maxLevel)
+
   case class debug(clazz: String, threshold: Int, max: Int = 9999, debug: Boolean = false, maxLevel: Int = 99) {
 
     def apply(id: Int, params: Any*): Unit = {
@@ -30,7 +33,7 @@ trait Debug {
               }
               indent + s"$a -> " + bb
             }
-            case value                         => indent + value + s" TYPE: " + value.getClass
+            case value                         => indent + value  //+ s" TYPE: " + value.getClass
           }
         }
 

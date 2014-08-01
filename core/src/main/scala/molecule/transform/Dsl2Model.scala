@@ -2,6 +2,7 @@ package molecule.transform
 import molecule.ast.model._
 import molecule.dsl.schemaDSL._
 import molecule.ops.TreeOps
+
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -9,14 +10,34 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
   val x = debug("Dsl2Model", 1, 10, true)
 
+
   def resolve(tree: Tree): Model = modelTreePF.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
 
   val modelTreePF: PartialFunction[Tree, Model] = {
-    case q"TermValue.apply($ns)"                   => resolve(ns)
-    case t@q"$prev.$cur.$op(..$values)"            => traverse(q"$prev", operation(q"$prev.$cur", q"$op", q"Seq(..$values)"))
-    case ref@q"$prev.$cur" if ref.isRef            => traverse(q"$prev", bond(q"$prev", ref))
-    case attr@q"$prev.$cur"                        => traverse(q"$prev", atom(attr))
+    case q"TermValue.apply($ns)"        => resolve(ns)
+    case ent@q"$prev.eid"               => traverse(q"$prev", Atom(ent.ns, "eid", "Long", 1, EntValue))
+    case t@q"$prev.$cur.$op(..$values)" => traverse(q"$prev", operation(q"$prev.$cur", q"$op", q"Seq(..$values)"))
+
+    case ref@q"$prev.$refAttr" if ref.isRef && refAttr.toString.head.isUpper =>
+      val typeArgs = ref.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
+      val ns = firstLow(typeArgs.head.typeSymbol.name.toString)
+      val refAttr = att(ref).toString
+      val refNsRaw = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
+      val refNs = if (refNsRaw == refAttr) "" else refNsRaw
+      traverse(q"$prev", Bond(ns, refAttr, refNs))
+
+    case attr@q"$prev.$cur" => traverse(q"$prev", atom(attr))
+
+    case t@q"$prev.$manyRef[..$types]($subModel)" =>
+      val refAttr: String = manyRef.toString match {
+        // Name of `*` method's first parameter
+        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
+        case methodName => methodName.toString
+      }
+      val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
+      val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
+      traverse(q"$prev", Group(Bond(prev.name, refAttr, refNs), resolve(q"$subModel").elements))
   }
 
   def traverse(prev: Tree, element: Element): Model =
@@ -30,10 +51,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
     if (values.isEmpty) abort(s"[Dsl2Model:operation] Unexpected empty values for attribute `${attr.name}`")
     val value = op.toString() match {
-      case "apply"    => Eq(values)
-      case "$less"    => Lt(values.head)
-      case "contains" => Fulltext(values)
-      case z          => abort(s"[Dsl2Model:operation] Unknown operator '$z'\nattr: $attr \nvalue: $valueTree")
+      case "apply"           => Eq(values)
+      case "$less" /* `<` */ => Lt(values.head)
+      case "contains"        => Fulltext(values)
+      case z                 => abort(s"[Dsl2Model:operation] Unknown operator '$z'\nattr: $attr \nvalue: $valueTree")
     }
     Atom(attr.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
   }
@@ -41,22 +62,24 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def atom(attr: Tree, value: Value = VarValue): Atom = attr match {
     case a if a.isEnum && value == VarValue => Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix))
     case a if a.isValueAttr                 => Atom(a.ns, a.name, a.tpeS, a.card, value)
+    case a if a.isOneRef                    => Atom(a.ns, a.name, "Long", 1, value)
     case unknown                            => abortTree(unknown, "[Dsl2Model:atom] Unknown atom type")
   }
 
-  def bond(prev: Tree, ns2: Tree) = {
-    val ns1 = prev match {
-      case ref if prev.isRef                     => att(ref)
-      case q"$a.$op(..$values)"                  => att(q"$a").ns
-      case t@Select(_, ns) if t.isD0 && !t.isRef => nsString(ns)
-      case other                                 => other.ns
-    }
-    Bond(ns1.toString, att(ns2).toString)
-  }
+  //  def bond(prev: Tree, ns2: Tree) = {
+  //    val ns1 = prev match {
+  //      case ref if prev.isRef                     => att(ref)
+  //      case q"$a.$op(..$values)"                  => att(q"$a").ns
+  //      case t@Select(_, ns) if t.isD0 && !t.isRef => nsString(ns)
+  //      case other                                 => other.ns
+  //    }
+  //    //    Bond(ns1.toString, att(ns2).toString)
+  //    Bond(ns1.toString, ns1.toString, att(ns2).toString, att(ns2).toString)
+  //  }
 
   // Values --------------------------------------------------------------------------
 
-//  def getValues(attr: Tree, value0: Tree): Seq[String] = {
+  //  def getValues(attr: Tree, value0: Tree): Seq[String] = {
   def getValues(attr: Tree, value0: Tree): Seq[Any] = {
     value0 match {
       case q"Seq(?)"                          => Seq("?")

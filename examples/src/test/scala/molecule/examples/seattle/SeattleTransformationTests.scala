@@ -1103,25 +1103,25 @@ class SeattleTransformationTests extends SeattleSpec {
       """List(
         |  List(  :db/add,   #db/id[:db.part/user -1000001],   :district/region       ,   :district.region/s                             )
         |  List(  :db/add,   #db/id[:db.part/user -1000001],   :district/name         ,   Greater Duwamish                               )
-        |  List(  :db/add,   #db/id[:db.part/user -1000002],   :neighborhood/name     ,   DD Georgetown                                  )
         |  List(  :db/add,   #db/id[:db.part/user -1000002],   :neighborhood/district ,   #db/id[:db.part/user -1000001]                 )
+        |  List(  :db/add,   #db/id[:db.part/user -1000002],   :neighborhood/name     ,   DD Georgetown                                  )
+        |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/neighborhood,   #db/id[:db.part/user -1000002]                 )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/category    ,   DD cat 1                                       )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/category    ,   DD cat 2                                       )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/orgtype     ,   :community.orgtype/commercial                  )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/type        ,   :community.type/blog                           )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/url         ,   http://www.blogginggeorgetown.com/             )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/name        ,   DDD Blogging Georgetown                        )
-        |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/neighborhood,   #db/id[:db.part/user -1000002]                 )
         |  List(  :db/add,   #db/id[:db.part/user -1000004],   :district/region       ,   :district.region/w                             )
         |  List(  :db/add,   #db/id[:db.part/user -1000004],   :district/name         ,   Magnolia/Queen Anne                            )
-        |  List(  :db/add,   #db/id[:db.part/user -1000005],   :neighborhood/name     ,   DD Interbay                                    )
         |  List(  :db/add,   #db/id[:db.part/user -1000005],   :neighborhood/district ,   #db/id[:db.part/user -1000004]                 )
+        |  List(  :db/add,   #db/id[:db.part/user -1000005],   :neighborhood/name     ,   DD Interbay                                    )
+        |  List(  :db/add,   #db/id[:db.part/user -1000006],   :community/neighborhood,   #db/id[:db.part/user -1000005]                 )
         |  List(  :db/add,   #db/id[:db.part/user -1000006],   :community/category    ,   DD cat 3                                       )
         |  List(  :db/add,   #db/id[:db.part/user -1000006],   :community/orgtype     ,   :community.orgtype/community                   )
         |  List(  :db/add,   #db/id[:db.part/user -1000006],   :community/type        ,   :community.type/blog                           )
         |  List(  :db/add,   #db/id[:db.part/user -1000006],   :community/url         ,   http://interbayneighborhood.neighborlogs.com/  )
         |  List(  :db/add,   #db/id[:db.part/user -1000006],   :community/name        ,   DDD Interbay District Blog                     )
-        |  List(  :db/add,   #db/id[:db.part/user -1000006],   :community/neighborhood,   #db/id[:db.part/user -1000005]                 )
         |)""".stripMargin
   }
 
@@ -1142,8 +1142,8 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "url", "String", 1, Eq(List("url 2")), None))
       ) -->
       """List(
-        |  List(  :db/add,   17592186045783,   :community/url ,   url 2       )
-        |  List(  :db/add,   17592186045783,   :community/name,   belltown 2  )
+        |  List(  :db/add,   17592186045888,   :community/url ,   url 2       )
+        |  List(  :db/add,   17592186045888,   :community/name,   belltown 2  )
         |)""".stripMargin
 
 
@@ -1155,8 +1155,8 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "category", "Set[String]", 2, Replace(Map("news" -> "Cool news")), None))
       ) -->
       """List(
-        |  List(  :db/retract,   17592186045783,   :community/category,   news       )
-        |  List(  :db/add    ,   17592186045783,   :community/category,   Cool news  )
+        |  List(  :db/retract,   17592186045888,   :community/category,   news       )
+        |  List(  :db/add    ,   17592186045888,   :community/category,   Cool news  )
         |)""".stripMargin
 
 
@@ -1171,10 +1171,10 @@ class SeattleTransformationTests extends SeattleSpec {
           "events" -> "Super cool events")), None))
       ) -->
       """List(
-        |  List(  :db/retract,   17592186045783,   :community/category,   Cool news          )
-        |  List(  :db/add    ,   17592186045783,   :community/category,   Super cool news    )
-        |  List(  :db/retract,   17592186045783,   :community/category,   events             )
-        |  List(  :db/add    ,   17592186045783,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045888,   :community/category,   Cool news          )
+        |  List(  :db/add    ,   17592186045888,   :community/category,   Super cool news    )
+        |  List(  :db/retract,   17592186045888,   :community/category,   events             )
+        |  List(  :db/add    ,   17592186045888,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -1184,7 +1184,7 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "category", "Set[String]", 2, Eq(List("extra category")), None))
       ) -->
       """List(
-        |  List(  :db/add,   17592186045783,   :community/category,   extra category  )
+        |  List(  :db/add,   17592186045888,   :community/category,   extra category  )
         |)""".stripMargin
 
 
@@ -1194,7 +1194,7 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "category", "Set[String]", 2, Remove(List("Super cool events")), None))
       ) -->
       """List(
-        |  List(  :db/retract,   17592186045783,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045888,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -1209,10 +1209,10 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "category", "", 2, Remove(List()), None))
       ) -->
       """List(
-        |  List(  :db/retract,   17592186045783,   :community/category,   events                          )
-        |  List(  :db/retract,   17592186045783,   :community/category,   news                            )
-        |  List(  :db/retract,   17592186045783,   :community/url     ,   http://www.belltownpeople.com/  )
-        |  List(  :db/add    ,   17592186045783,   :community/name    ,   belltown 3                      )
+        |  List(  :db/retract,   17592186045888,   :community/category,   events                          )
+        |  List(  :db/retract,   17592186045888,   :community/category,   news                            )
+        |  List(  :db/retract,   17592186045888,   :community/url     ,   http://www.belltownpeople.com/  )
+        |  List(  :db/add    ,   17592186045888,   :community/name    ,   belltown 3                      )
         |)""".stripMargin
   }
 }
