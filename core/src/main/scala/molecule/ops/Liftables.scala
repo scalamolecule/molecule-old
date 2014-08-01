@@ -2,7 +2,6 @@ package molecule.ops
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.util.MacroHelpers
-
 import scala.reflect.macros.whitebox.Context
 
 trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {

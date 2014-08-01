@@ -151,15 +151,8 @@ object DslBoilerplate {
     val entityIdDef = ("attr", "eid", "Long", "Long", 1, "OneLong(ns, ns2)", List())
 
     val attrs = (entityIdDef +: attrs0).map { case (cat, attr, tpe, baseType, card, ext, defs) =>
-      //      val cleanType = if (cat == "ref") "Long" else tpe
-      //      val cleanType = tpe match {
-      //                     case "OneRef"  => "Long"
-      //                     case "ManyRef" => "Seq[Long]"
-      //                     case _         => tpe
-      //                   }
       val attrClean = attr.replace("`", "")
       val padAttr = " " * (longestAttr - attr.length)
-      //      val padType = " " * (longestType - cleanType.length)
       val padType = " " * (longestType - tpe.length)
       val padBaseType = " " * (longestBaseType - baseType.length)
       val padAttrClean = " " * (longestAttrClean - attrClean.length)
@@ -167,7 +160,6 @@ object DslBoilerplate {
     }
 
     val valueAttrs = attrs.filter(a => a._1 == "attr" || a._1 == "enum")
-    //    val refAttrs = attrs.filter(a => a._1 == "ref")
     val refAttrs = attrs.filter(a => a._1 == "OneRef" || a._1 == "ManyRef")
 
 
@@ -208,7 +200,6 @@ object DslBoilerplate {
       }
 
       val refTxs = {
-        //        refs.map { case ((attr0, refType, ref, defs, _, _)) =>
         refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
           val attr = firstLow(attrClean)
           val required = Seq(
@@ -235,7 +226,6 @@ object DslBoilerplate {
         case "OneRef"  => ("OneRef", "")
         case "ManyRef" => ("ManyRef", "")
         case _         => ((ext +: defs).mkString(" with "), "")
-        //        case "ref"  => (tpe, "")
       }
       val oldNew = s"def apply(data: oldNew[$baseType]) = ${Ns}_Update()"
       val baseElements = Seq(enumValues, oldNew) map (_.trim) filter (_.nonEmpty) mkString "\n    "
@@ -266,9 +256,8 @@ object DslBoilerplate {
        |  }""".stripMargin
     } mkString "\n  "
 
-    //    val insertRefs = refs.map { case (attr, _, ref, defs, padAttr, _) =>
     val insertRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      s"def ${attr.capitalize} = ${ref}_Insert(elements)"
+      s"""def ${attr.capitalize} = ${ref}_Insert(elements :+ Bond("$ns", "$attr", "${firstLow(ref)}"))"""
     } mkString "\n  "
 
     val inserts = Seq(insertAttrs1, insertAttrs2, insertRefs) map (_.trim) filter (_.nonEmpty) mkString "\n\n  "
@@ -302,8 +291,8 @@ object DslBoilerplate {
     } mkString "\n  "
 
     val updateRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      //    val updateRefs = refs.map { case (_, attr, _, refType, ref, _, defs, padAttr, _, padType) =>
-      s"def ${attr.capitalize} = ${ref}_Update(elements)"
+      s"""def ${attr.capitalize} = ${ref}_Update(elements :+ Bond("$ns", "$attr", "${firstLow(ref)}"), ids)"""
+
     } mkString "\n  "
 
     val updates = Seq(updateAttrs1, updateAttrs2, updateRefs) map (_.trim) filter (_.nonEmpty) mkString "\n\n  "
@@ -329,8 +318,8 @@ object DslBoilerplate {
     } mkString "\n  "
 
     val retractRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      //    val retractRefs = refs.map { case  (_, attr, _, refType, ref, _, defs, padAttr, _, padType) =>
-      s"def ${attr.capitalize} = ${ref}_Retract(elements)"
+      s"""def ${attr.capitalize} = ${ref}_Retract(elements :+ Bond("$ns", "$attr", "${firstLow(ref)}"))"""
+
     } mkString "\n  "
 
     val retracts = Seq(retractAttrs1, retractAttrs2, retractRefs) map (_.trim) filter (_.nonEmpty) mkString "\n\n  "
@@ -344,7 +333,6 @@ object DslBoilerplate {
     } mkString "\n  "
 
     val entityRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      //    val entityRefs = refs.map { case  (_, attr, _, refType, ref, _, defs, padAttr, _, padType) =>
       s"def ${attr.capitalize} = ${ref}_Entity(elements)"
     } mkString "\n  "
 
@@ -402,14 +390,6 @@ object DslBoilerplate {
             } else Seq()
 
             val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
-              //              val cleanType = tpe match {
-              //                case "OneRef"  => "Long"
-              //                case "ManyRef" => "Seq[Long]"
-              //                case _         => tpe
-              //              }
-              //              if (cat == "ref") "Long" else tpe
-              //              val cleanType = if (cat == "ref") "Long" else tpe
-              //              val nextTypes = (OutTypes :+ cleanType) mkString ", "
               val nextTypes = (OutTypes :+ tpe) mkString ", "
               val nextNS = s"${Ns}_Out_${out + 1}[$nextTypes]$padType"
               s"lazy val $attr $padAttr= new $attr $padAttr(this, new $nextNS {}) with $nextNS {}"
@@ -425,7 +405,6 @@ object DslBoilerplate {
                 val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
                 val refAttr = firstLow(ref)
 
-                //                val (named, stars) = refArities.foldLeft(Seq(refNs)) { case (refDefs, typesList) =>
                 val (named, stars) = refTypeLists.map { refTypeList =>
                   val types = refTypeList.mkString(", ")
                   val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
@@ -459,16 +438,12 @@ object DslBoilerplate {
           val InTraits = s"trait ${Ns}_In_${in}_$out[$InOutTypes] extends In_${in}_$out[$InOutTypes]"
 
           val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
-            //            val cleanType = if (cat == "ref") "Long" else tpe
-            //            val nextTypes = Seq(InOutTypes, cleanType) mkString ", "
             val nextTypes = Seq(InOutTypes, tpe) mkString ", "
             val nextNS = s"${Ns}_In_${in}_${out + 1}[$nextTypes]$padType"
             s"lazy val $attr $padAttr= new $attr $padAttr(this, new $nextNS {}) with $nextNS {}"
           }
 
-          //          val refCode = refs.foldLeft(Seq("")) { case (acc,  (_, attr, _, refType, ref, _, defs, padAttr, _, padType)) =>
           val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (cat, attr, attrClean, tpe, refType, _, ref, defs, padAttr, _, padType, _)) =>
-//            acc :+ s"def ${attr.capitalize} = new $cat[$Ns.type, $ref.type] with ${ref}_In_${in}_$out[$InOutTypes]"
 
             val refNs: String = s"def ${attr.capitalize} = new $cat[$Ns, $ref] with ${ref}_In_${in}_$out[$InOutTypes]"
 
@@ -478,8 +453,6 @@ object DslBoilerplate {
               // Offer max arity equaling the number of attributes in the referenced namespace
               val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
               val refAttr = firstLow(ref)
-
-              //                val (named, stars) = refArities.foldLeft(Seq(refNs)) { case (refDefs, typesList) =>
               val (named, stars) = refTypeLists.map { refTypeList =>
                 val types = refTypeList.mkString(", ")
                 val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
@@ -631,7 +604,7 @@ object DslBoilerplate {
                    | * Instead, change the molecule definition files and recompile your project with `sbt compile`
                    | */
                    |package $path.schema
-                   |import molecule.ast.Transaction
+                   |import molecule.dsl.Transaction
                    |import datomic.{Util, Peer}
                    |
                    |object ${domain}Schema extends Transaction {

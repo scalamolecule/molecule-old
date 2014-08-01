@@ -2,14 +2,12 @@ package molecule.transform
 import molecule.ast.model._
 import molecule.dsl.schemaDSL._
 import molecule.ops.TreeOps
-
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
   val x = debug("Dsl2Model", 1, 10, true)
-
 
   def resolve(tree: Tree): Model = modelTreePF.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -66,20 +64,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case unknown                            => abortTree(unknown, "[Dsl2Model:atom] Unknown atom type")
   }
 
-  //  def bond(prev: Tree, ns2: Tree) = {
-  //    val ns1 = prev match {
-  //      case ref if prev.isRef                     => att(ref)
-  //      case q"$a.$op(..$values)"                  => att(q"$a").ns
-  //      case t@Select(_, ns) if t.isD0 && !t.isRef => nsString(ns)
-  //      case other                                 => other.ns
-  //    }
-  //    //    Bond(ns1.toString, att(ns2).toString)
-  //    Bond(ns1.toString, ns1.toString, att(ns2).toString, att(ns2).toString)
-  //  }
-
   // Values --------------------------------------------------------------------------
 
-  //  def getValues(attr: Tree, value0: Tree): Seq[String] = {
   def getValues(attr: Tree, value0: Tree): Seq[Any] = {
     value0 match {
       case q"Seq(?)"                          => Seq("?")

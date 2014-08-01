@@ -5,7 +5,6 @@ import molecule.ast.query._
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.Debug
-
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.language.existentials
@@ -83,50 +82,14 @@ trait DatomicFacade extends Debug {
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
-
-  // Manipulate data ==================================================================
-
-  private[molecule] def insertOne(conn: Connection, model: Model, args: Seq[Any]): Seq[Long] = insertMany(conn, model, Seq(args))
-
-  def insertMany(conn: Connection, model: Model, argss: Seq[Seq[Any]]): Seq[Long] = {
-//    val tx = Model2Transaction.applyOLD(conn, model, argss)
-//    val javaTx = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
-    val tx1 = Model2Transaction(conn, model, argss)
-    val javaTx1 = tx1.map(_.toJava).asJava
-
+  private[molecule] def upsert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): Seq[Long] = {
+    val javaTx = Model2Transaction(conn, model, dataRows, ids).javaTx
     x(0
-//      , model.elements
-//      , argss
-//      , tx
-//      , tx1
-//      , javaTx
-      , javaTx1
-    )
-//    val txResult = conn.transact(javaTx).get
-    val txResult = conn.transact(javaTx1).get
-    val txData = txResult.get(Connection.TX_DATA)
-    val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
-    val newIds = newDatoms.map(_.e.asInstanceOf[Long]).distinct
-    newIds
-  }
-
-  def upsertMolecule(conn: Connection, model: Model, ids: Seq[Long] = Seq()): Seq[Long] = {
-    val t = Model2Transaction
-    val (attrs, args) = t.getNonEmptyAttrs(model).unzip
-    val rawMolecules = t.chargeMolecules(attrs, Seq(args))
-    val molecules = t.groupNamespaces(rawMolecules)
-    val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, ids)
-    val javaTx: java.util.List[_] = tx.map(stmt => Util.list(stmt.map(_.asInstanceOf[Object]): _*)).asJava
-
-    x(0
-      , attrs
-      , args
-      , rawMolecules
-      , molecules
-      , tx
+      , model.elements
+      , dataRows
+      , ids
       , javaTx
     )
-
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)
     val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
@@ -138,91 +101,16 @@ trait DatomicFacade extends Debug {
 object DatomicFacade extends DatomicFacade
 
 
-// Borrowed from Datomisca...
+// From Datomisca...
 
-case class EntityFacade(val entity: datomic.Entity) extends AnyVal {
-  //case class EntityFacade(val entity: datomic.Entity) extends Debug {
-  //  private val x = debug("EntityFacade", 1, 99, false, 2)
-
+case class EntityFacade(entity: datomic.Entity) extends AnyVal {
 
   def touch: Map[String, Any] = toMap
-  //  def touch = toTpl
-  //{
-  //      val builder = Map.newBuilder[String, Any]
-  //      val iter = blocking { entity.keySet } .iterator
-  //      while (iter.hasNext) {
-  //        val key = iter.next()
-  //        builder += (key -> Convert.toScala(entity.get(key)))
-  //      }
-  //      builder.result
-  //    }
-
-  //  def contains(keyword: Keyword): Boolean =
-  //    entity.get(keyword) ne null
-  //
-  //  def apply(keyword: Keyword): Any = {
-  //    val o = entity.get(keyword)
-  //    if (o ne null)
-  //      Convert.toScala(o)
-  //    else
-  //      throw new EntityKeyNotFoundException(keyword.toString)
-  //  }
-  //
-  //  def get(keyword: Keyword): Option[Any] = {
-  //    val o = entity.get(keyword)
-  //    if (o ne null)
-  //      Some(Convert.toScala(o))
-  //    else
-  //      None
-  //  }
-  //
-  //  def as[T](keyword: Keyword)(implicit fdat: FromDatomicCast[T]): T = {
-  //    val o = entity.get(keyword)
-  //    if (o ne null)
-  //      fdat.from(o)
-  //    else
-  //      throw new EntityKeyNotFoundException(keyword.toString)
-  //  }
-  //
-  //  def getAs[T](keyword: Keyword)(implicit fdat: FromDatomicCast[T]): Option[T] = {
-  //    val o = entity.get(keyword)
-  //    if (o ne null)
-  //      Some(fdat.from(o))
-  //    else
-  //      None
-  //  }
-
-  //  def keySet: Set[String] = {
-  //    val builder = Set.newBuilder[String]
-  //    val iter = blocking { entity.keySet } .iterator
-  //    while (iter.hasNext) {
-  //      builder += iter.next()
-  //    }
-  //    builder.result
-  //  }
-  //
-  // Todo?
-  //  def toTpl = {
-  //    import shapeless.syntax.std.tuple._
-  //    val tpl1 = Tuple1(":db/id" -> entity.get(":db/id"))
-  //    def add[T <: Product](tpl: T, keys: List[String]): Product = keys match {
-  //      case Nil         => tpl
-  //      case key :: tail => add(tpl :+ (keys.head -> entity.get(key)), tail)
-  //    }
-  //    add(tpl1, entity.keySet.toList)
-  //  }
 
   def toMap: Map[String, Any] = {
     //  def toMap = {
     val builder = Map.newBuilder[String, Any]
     val iter = entity.keySet.iterator
-
-    //    x(1
-    //    ,entity
-    //    , entity.keySet()
-    //    , entity.touch()
-    //
-    //    )
 
     // Add id also
     builder += ":db/id" -> entity.get(":db/id")
@@ -260,13 +148,11 @@ private[molecule] object Convert {
     // :db.type/uri
     case u: java.net.URI => u
     // :db.type/keyword
-    //    case kw: clojure.lang.Keyword => kw
+    case kw: clojure.lang.Keyword => kw.toString // Molecule doesn't work with Clojure Keywords
     // :db.type/bytes
     case bytes: Array[Byte] => bytes
     // an entity map
-    //    case e: datomic.Entity => new EntityFacade(e)
     case e: datomic.Entity => new EntityFacade(e).toMap
-    //    case e: datomic.Entity => new EntityFacade(e).toTpl
 
     // :db.type/keyword
     case set: clojure.lang.PersistentHashSet =>
@@ -285,7 +171,7 @@ private[molecule] object Convert {
         override def toString = coll.toString
       }
     // otherwise
-    case v => throw new RuntimeException(v.getClass.toString)
+    case v => throw new RuntimeException("[DatomicFacade:Convert:toScala] Unexpected Datalog type to convert: " + v.getClass.toString)
   }
 
 }

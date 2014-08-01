@@ -1,12 +1,10 @@
 package molecule
 package examples.seattle
-import scala.language.reflectiveCalls
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.dsl.DbSchema
-import DbSchema._
+import molecule.dsl.DbSchema._
 import molecule.examples.seattle.dsl.seattle._
-import molecule.examples.seattle.schema.SeattleSchema
+import scala.language.reflectiveCalls
 
 
 class SeattleTransformationTests extends SeattleSpec {
@@ -1054,7 +1052,9 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "type", "String", 1, Eq(List("twitter")), Some(":community.type/")),
         Atom("community", "orgtype", "String", 1, Eq(List("personal")), Some(":community.orgtype/")),
         Atom("community", "category", "Set[String]", 2, Eq(List("my", "favorites")), None),
+        Bond("community", "neighborhood", "neighborhood"),
         Atom("neighborhood", "name", "String", 1, Eq(List("myNeighborhood")), None),
+        Bond("neighborhood", "district", "district"),
         Atom("district", "name", "String", 1, Eq(List("myDistrict")), None),
         Atom("district", "region", "String", 1, Eq(List("nw")), Some(":district.region/")))
       ) -->
@@ -1068,15 +1068,15 @@ class SeattleTransformationTests extends SeattleSpec {
       """List(
         |  List(  :db/add,   #db/id[:db.part/user -1000001],   :district/region       ,   :district.region/nw             )
         |  List(  :db/add,   #db/id[:db.part/user -1000001],   :district/name         ,   myDistrict                      )
-        |  List(  :db/add,   #db/id[:db.part/user -1000002],   :neighborhood/name     ,   myNeighborhood                  )
         |  List(  :db/add,   #db/id[:db.part/user -1000002],   :neighborhood/district ,   #db/id[:db.part/user -1000001]  )
+        |  List(  :db/add,   #db/id[:db.part/user -1000002],   :neighborhood/name     ,   myNeighborhood                  )
+        |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/neighborhood,   #db/id[:db.part/user -1000002]  )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/category    ,   my                              )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/category    ,   favorites                       )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/orgtype     ,   :community.orgtype/personal     )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/type        ,   :community.type/twitter         )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/url         ,   myUrl                           )
         |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/name        ,   AAA                             )
-        |  List(  :db/add,   #db/id[:db.part/user -1000003],   :community/neighborhood,   #db/id[:db.part/user -1000002]  )
         |)""".stripMargin
 
 

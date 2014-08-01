@@ -2,7 +2,6 @@ package molecule.ops
 import molecule.ast.query._
 import molecule.dsl.schemaDSL._
 import molecule.out.Out_0
-
 import scala.reflect.macros.whitebox.Context
 
 trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
@@ -26,8 +25,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
     def isAttr = tpe <:< typeOf[Attr]
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
-    def isOneRef = tpe <:< weakTypeOf[OneRef[_,_]]
-    def isManyRef = tpe <:< weakTypeOf[ManyRef[_,_]]
+    def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
+    def isManyRef = tpe <:< weakTypeOf[ManyRef[_, _]]
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
     def isMany = tpe <:< weakTypeOf[Many[_, _, _]]
@@ -204,28 +203,16 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
       case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Attr] => sym.asMethod.returnType
       case unexpected                                                    =>
-
-        x(0
-        , unexpected
-        , unexpected.typeSignature
-        , unexpected.owner
-        , unexpected.asMethod
-        , unexpected.asMethod.typeParams.head.toString
-        , unexpected.asMethod.typeSignature
-//        , unexpected.asModule
-
-        )
         abortTree(q"$unexpected", s"[TreeOps:attrType] Unexpected attribute symbol")
     }
 
     lazy val tpe = sym match {
-      case t: TermSymbol if t.isLazy && t.isPublic                      => {
+      case t: TermSymbol if t.isLazy && t.isPublic                            => {
         val TypeRef(_, _, List(_, _, attrTpe)) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol)
         attrTpe
       }
-//      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref] => NoType
-      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_,_]] => NoType
-      case unexpected                                                   =>
+      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]] => NoType
+      case unexpected                                                         =>
         abortTree(q"$unexpected", s"[TreeOps:tpe] ModelOps.att(sym) can only take an Attr symbol")
     }
 
@@ -254,7 +241,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     // todo: if (nestedNS.isDefined) s":$ns.$nestedNS/$name" else s":$ns/$name"
     def enumPrefix = ns.enums.size match {
       case 0 => ""
-      //      case 1 => s":$name/"
       case _ => s":$ns.$name/"
     }
   }

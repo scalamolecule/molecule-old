@@ -1,78 +1,98 @@
 package molecule.transform
-import datomic.{Connection, Database, Peer}
+import datomic.{Connection, Peer}
 import molecule.DatomicFacade
 import molecule.ast.model._
 import molecule.ast.transaction._
 import molecule.util.Debug
+import scala.collection.JavaConverters._
 
-object Model2Transaction extends Debug with DatomicFacade {
-  val y = debug("Model2Transaction", 1, 99, false, 2)
+case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()) extends Debug with DatomicFacade {
+  val y = debug("Model2Transaction", 7, 99, false, 2)
 
-  def apply(conn: Connection, model: Model, dataRows: Seq[Seq[Any]]): Seq[Statement] = dataRows flatMap { dataRow =>
-    mergeDataRow(dataRow, model.elements)
+  def javaTx = tx.map(_.toJava).asJava
+
+  def tx: Seq[Statement] = {
+    if (dataRows.nonEmpty && ids.nonEmpty) assert(dataRows.size == ids.size)
+    if (dataRows.isEmpty) {
+      if (ids.isEmpty)
+        mergeDataWithElements(model.elements)
+      else if (ids.size == 1)
+        mergeDataWithElements(model.elements, Seq(), ids.head)
+      else
+        sys.error("[Model2Transaction:tx] Unexpected ids: " + ids)
+    } else {
+      dataRows.zipAll(ids, Seq(Seq(Seq[Any]())), 0L) flatMap { case (dataRow, eid) =>
+        mergeDataWithElements(model.elements, dataRow, eid)
+      }
+    }
   }
 
-  def mergeDataRow(dataRow: Seq[Any], elements: Seq[Element]) = {
-    var n = dataRow.size
-
+  def mergeDataWithElements(elements: Seq[Element], dataRow: Seq[Any] = Seq(), eid: Long = 0L): Seq[Statement] = {
     // Start with last element of molecule and go backwards (to be able to reference nested entities)
-    val (newStmts1, _, _) = elements.foldRight((Seq[Statement](), "": Object, "")) { case (element, (stmts, prevId, prevNs)) =>
-      val data = if (element.isInstanceOf[Bond]) 0 else {n -= 1; dataRow(n)}
+    var n = dataRow.size
+    val (newStmts, _, _) = elements.foldRight((Seq[Statement](), "": Object, "")) { case (element, (stmts, prevId, prevNs)) =>
+      val data = if (element.isInstanceOf[Bond] || dataRow.isEmpty) 0 else {n -= 1; dataRow(n)}
 
       if (data == null)
-        // When data is null, no fact is asserted (stmts is passed on unchanged)
+      // When data is null, no fact is asserted (stmts passed unchanged)
         (stmts, null, null)
       else {
-        val (newStmts, id, _) = mkStatements(stmts, element, data, prevId, prevNs)
-        (newStmts, id, getNs(element))
+        val (newStmts0, curId) = mkStatements(stmts, element, data, eid, prevId, prevNs)
+        (newStmts0, curId, curNs(element))
       }
     }
-    newStmts1
+    newStmts
   }
 
-  def mkStatements(stmts: Seq[Statement], element: Element, data: Any, prevId: Object, prevNs: String): (Seq[Statement], Object, String) = {
-    val id = if (getNs(element) != prevNs) tempId() else prevId
+  def mkStatements(stmts: Seq[Statement], element: Element, data: Any, eid0: Long, prevId: Object, prevNs: String): (Seq[Statement], Object) = {
+    val eid = if (curNs(element) == prevNs) prevId else if (eid0 > 0L) eid0.asInstanceOf[Object] else tempId()
 
-    def add(ns: String, attr: String, prefixString: String = "") = {
-      def prefix(value: Any) = if (prefixString.toString.nonEmpty) prefixString.toString + value else value
-      data match {
-        case values: Set[_] => values.map(value => Add(id, s":$ns/$attr", prefix(value)))
-        case value          => Seq(Add(id, s":$ns/$attr", prefix(value)))
+    def add(ns: String, attr: String, prefix: Option[String] = None, arg: Option[Any] = None): Seq[Statement] = {
+      def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
+
+      // Argument to Atom takes precedence over external data
+      arg.getOrElse(data) match {
+        case Replace(oldNew)            => oldNew.toSeq.flatMap { case (oldValue, newValue) =>
+            Seq(Retract(eid, s":$ns/$attr", p(oldValue)), Add(eid, s":$ns/$attr", p(newValue)))
+          }
+        case Remove(Seq())              => getValues(conn.db, eid, ns, attr).toSeq.map(v => Retract(eid, s":$ns/$attr", p(v)))
+        case Remove(removeValues)       => removeValues.map(v => Retract(eid, s":$ns/$attr", p(v)))
+        case vs: Set[_]                 => vs.toSeq.map(v => Add(eid, s":$ns/$attr", p(v)))
+        case vs: List[_] if vs.size > 1 => vs.map(v => Add(eid, s":$ns/$attr", p(v)))
+        case v :: Nil                   => Seq(Add(eid, s":$ns/$attr", p(v)))
+        case v                          => Seq(Add(eid, s":$ns/$attr", p(v)))
       }
     }
 
-    val (newStmts, ns1) = element match {
-      case Atom(ns, attr, tpe, card, VarValue, _)               => (stmts ++ add(ns, attr), ns)
-      case Atom(ns, attr, tpe, card, EnumVal, Some(enumPrefix)) => (stmts ++ add(ns, attr, enumPrefix), ns)
-      case Bond(ns, refAttr, refNs)                             => (stmts :+ Add(id, s":$ns/$refAttr", prevId), ns)
+    val newStmts = element match {
+      case Atom(ns, attr, tpe, card, VarValue, _)                => stmts ++ add(ns, attr)
+      case Atom(ns, attr, tpe, card, EnumVal, prefix)            => stmts ++ add(ns, attr, prefix)
+      case Atom(ns, attr, tpe, card, Eq(values), prefix)         => stmts ++ add(ns, attr, prefix, Some(values))
+      case Atom(ns, attr, tpe, card, replace@Replace(_), prefix) => stmts ++ add(ns, attr, prefix, Some(replace))
+      case Atom(ns, attr, tpe, card, remove@Remove(_), prefix)   => stmts ++ add(ns, attr, prefix, Some(remove))
 
-      //            case Atom(ns, attr, tpe, card, Eq(values), prefix)         => ((ns, attr, card, prefix.getOrElse("")), values)
-      //            case Atom(ns, attr, tpe, card, replace@Replace(_), prefix) => ((ns, attr, card, prefix.getOrElse("")), Seq(replace))
-      //            case Atom(ns, attr, tpe, card, remove@Remove(_), prefix)   => ((ns, attr, card, prefix.getOrElse("")), Seq(remove))
+      case Bond(ns, refAttr, refNs) => stmts :+ Add(eid, s":$ns/$refAttr", prevId)
 
       case Group(Bond(ns, refAttr, refNs), nestedElements) => {
         val nestedDataRows = nestedData(nestedElements, data)
 
         // Loop nested rows of data
-        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) { case ((elementStmts1, ids), nestedDataRow) =>
-
+        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) { case ((elementStmts1, nestedIds), nestedDataRow) =>
           // Recursively create nested elements
-          val rowStmts = mergeDataRow(nestedDataRow, nestedElements)
+          val rowStmts = mergeDataWithElements(nestedElements, nestedDataRow)
           val lastId = rowStmts.last.e
-
-          (elementStmts1 ++ rowStmts, ids + lastId)
+          (elementStmts1 ++ rowStmts, nestedIds + lastId)
         }
 
         // Add references to nested entities
-        val refStmts = elementIds.map(Add(id, s":$ns/$refAttr", _))
-        (elementStmts ++ refStmts, ns)
+        val refStmts = elementIds.map(Add(eid, s":$ns/$refAttr", _))
+        elementStmts ++ refStmts
       }
 
-      case unexpected => sys.error("[Model2Transaction:apply] Unexpected molecule element: " + unexpected)
+      case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
     }
-    (newStmts, id, ns1)
+    (newStmts, eid)
   }
-
 
   def nestedData(elements: Seq[Element], data0: Any) = {
     val (dataArity, data) = data0 match {
@@ -80,9 +100,9 @@ object Model2Transaction extends Debug with DatomicFacade {
         case p: Product => (p.productArity, d)
         case l: Seq[_]  => (l.size, d)
       }
-      case unexpected => sys.error("[Model2Transaction:dataGroup] Unexpected data: " + unexpected)
+      case unexpected => sys.error("[Model2Transaction:nestedData] Unexpected data: " + unexpected)
     }
-    assert(dataArity == elements.size, s"[Model2Transaction:dataGroup] Arity of attributes and values should match. Found: \n" +
+    assert(dataArity == elements.size, s"[Model2Transaction:nestedData] Arity of attributes and values should match. Found: \n" +
       s"Elements (arity ${elements.size}): " + elements.mkString("\n  ", "\n  ", "\n") +
       s"Data (arity $dataArity): " + data.mkString("\n  ", "\n  ", "\n"))
 
@@ -115,123 +135,11 @@ object Model2Transaction extends Debug with DatomicFacade {
         sys.error("[Model2Transaction:mkStatements] Unexpected nested data: " + unexpected)
     }
   }
-
   def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
-  def getNs(e: Element) = e match {
+  def curNs(e: Element) = e match {
     case Atom(ns, _, _, _, _, _)  => ns
     case Bond(ns, _, _)           => ns
     case Group(Bond(ns, _, _), _) => ns
-    case unexpected               => sys.error("[Model2Transaction:getNs] Unexpected element: " + unexpected)
-  }
-
-
-
-
-
-  def applyOLD(conn: Connection, model: Model, argss: Seq[Seq[Any]]): Seq[Seq[Any]] = {
-    val attrs = getEmptyAttrs(model)
-    val rawMolecules = chargeMolecules(attrs, argss)
-    val molecules = groupNamespaces(rawMolecules)
-    upsertTransaction(conn.db, molecules)
-  }
-
-  def getEmptyAttrs(model: Model): Seq[(String, String, Int, String)] = model.elements.collect {
-    case Atom(ns, n, tpe, card, VarValue, _)               => (ns, n, card, "")
-    case Atom(ns, n, tpe, card, EnumVal, Some(enumPrefix)) => (ns, n, card, enumPrefix)
-    case Group(Bond(ns, refAttr, refNs), elements)         => (ns, refAttr, 2, "")
-  }
-
-  def getNonEmptyAttrs(model: Model): Seq[((String, String, Int, String), Seq[Any])] = model.elements.collect {
-    case Atom(ns, attr, tpe, card, Eq(values), prefix)         => ((ns, attr, card, prefix.getOrElse("")), values)
-    case Atom(ns, attr, tpe, card, replace@Replace(_), prefix) => ((ns, attr, card, prefix.getOrElse("")), Seq(replace))
-    case Atom(ns, attr, tpe, card, remove@Remove(_), prefix)   => ((ns, attr, card, prefix.getOrElse("")), Seq(remove))
-  }
-
-  def chargeMolecules(attrs: Seq[(String, String, Int, String)], argss: Seq[Seq[Any]]): Seq[Seq[Seq[Any]]] = {
-    //    assert(attrs.size == argss.head.size, s"Arity of attributes and values should match. Found:\n" +
-    //      attrs.size + " attributes     : " +
-    //      attrs.map(a => ":" + a._1 + "/" + a._2).mkString(", ") + "\n" +
-    //      argss.head.size + "-arity of values: " + argss +
-    //      "\nMolecule should prevent us from getting here. Please file a bug!\n----------------------")
-
-    argss.map { args =>
-      // Process molecule attributes from last to first (insert related namespaces first)
-      attrs.zip(args).reverse.flatMap { data =>
-        val (at, values) = (data._1, data._2)
-        val (ns, attr, cardinality, enumPrefix) = (at._1, at._2, at._3, at._4)
-        if (values == null) {
-          // No fact added when value is null
-          None
-        } else {
-
-          Some(Seq(ns, attr, cardinality, enumPrefix, values))
-        }
-      }
-    }
-  }
-
-  def groupNamespaces(rawMolecules: Seq[Seq[Seq[Any]]]): Seq[Seq[Seq[Seq[Any]]]] = {
-    rawMolecules.map { rawMolecule =>
-      val (molecule, _) = rawMolecule.foldLeft((Seq(Seq(Seq[Any]())), "": Any)) {
-        case ((elements, prevNS), attrData) =>
-          val curNS = attrData.head
-          if (curNS != prevNS)
-            (elements :+ Seq(attrData), curNS)
-          else
-            (elements.init :+ (elements.last :+ attrData), curNS)
-      }
-      molecule.tail // Skip initial empty head
-    }
-  }
-
-  def upsertTransaction(db: Database, molecules: Seq[Seq[Seq[Seq[Any]]]], ids: Seq[Long] = Seq()): Seq[Seq[Any]] = {
-    molecules.zipAll(ids, Seq(Seq(Seq[Any]())), 0L).flatMap { case (molecule, id0) =>
-      val (moleculeStmts: Seq[Seq[Any]], _, _) = molecule.foldLeft((Seq[Seq[Any]](), "": Any, "": Any)) {
-        case ((stmts, prevNS, prevId), namespace) => {
-          val firstAttr = namespace.head
-          val ns = firstAttr.head
-          val id = if (id0 > 0L) id0 else Peer.tempid(":db.part/user")
-
-          val namespaceStmts: Seq[Seq[Any]] = namespace.foldLeft(Seq[Seq[Any]]()) { case (attrStmts, atom) =>
-            val (attr, prefix, values) = (atom(1), atom(3), atom(4))
-            def p(value: Any) = if (prefix.toString.nonEmpty) prefix.toString + value else value
-
-            values match {
-              case Seq(Replace(oldNew))       => oldNew.foldLeft(attrStmts) { case (acc, (oldValue, newValue)) =>
-                acc :+ Seq(":db/retract", id, s":$ns/$attr", p(oldValue)) :+ Seq(":db/add", id, s":$ns/$attr", p(newValue))
-              }
-              case Seq(Remove(Seq()))         => getValues(db, id, ns, attr).foldLeft(attrStmts) { case (acc, removeValue) =>
-                acc :+ Seq(":db/retract", id, s":$ns/$attr", p(removeValue))
-              }
-              case Seq(Remove(removeValues))  => removeValues.foldLeft(attrStmts) { case (acc, removeValue) =>
-                acc :+ Seq(":db/retract", id, s":$ns/$attr", p(removeValue))
-              }
-              case set: Set[_]                =>
-                //                y(21, set)
-                attrStmts ++ set.map(v => Seq(":db/add", id, s":$ns/$attr", p(v)))
-              case vs: List[_] if vs.size > 1 =>
-                //                y(22, vs)
-                attrStmts ++ vs.map(v => Seq(":db/add", id, s":$ns/$attr", p(v)))
-              case value :: Nil               =>
-                //                y(23, value)
-                attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(value))
-              case value                      =>
-                //                y(24, value)
-                attrStmts :+ Seq(":db/add", id, s":$ns/$attr", p(value))
-            }
-          }
-
-          if (stmts.size == 0) {
-            // First namespace
-            (stmts ++ namespaceStmts, ns, id)
-          } else {
-            // Reference namespaces
-            val bondToPreviousNamespace = Seq(":db/add", id, s":$ns/$prevNS", prevId)
-            (stmts ++ namespaceStmts :+ bondToPreviousNamespace, ns, id)
-          }
-        }
-      }
-      moleculeStmts
-    }
+    case unexpected               => sys.error("[Model2Transaction:curNs] Unexpected element: " + unexpected)
   }
 }

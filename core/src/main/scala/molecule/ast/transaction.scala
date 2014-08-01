@@ -1,12 +1,7 @@
 package molecule.ast
 import datomic.Util
 
-
 object transaction {
-
-  //  case class tx(rows: Seq[Row])
-
-//  case class tx(stmts: Seq[Statement])
 
   sealed trait Statement {
     val action: String

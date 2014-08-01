@@ -29,7 +29,6 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
 
   def loadSeattle(version: Int): Connection = {
     implicit val conn = load(SeattleSchema.tx, "seattle" + version)
-    // Load Seattle data
     Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
     conn
   }
@@ -60,7 +59,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     ("Beacon Hill Burglaries", "http://maps.google.com/maps/ms?ie=UTF8&hl=en&msa=0&msid=107398592337461190820.000449fcf97ff8bfbe281&z=14or", "email_list", "community", Set("criminal activity"), "Beacon Hill", "Greater Duwamish", "s"),
     ("Beacon Hill Community Site", "http://beaconhillcommunity.wetpaint.com/", "wiki", "commercial", Set("community concerns", "announcements", "news"), "Beacon Hill", "Greater Duwamish", "s"),
 
-    // Manually added:
+    // Manually added (two missing values)
     ("BikeWorks!", "http://www.bikeworks.org/", "website", null, null, "Columbia City", "Southeast", "se"),
 
     ("Blogging Georgetown", "http://www.blogginggeorgetown.com/", "blog", "commercial", Set("911 blotter", "news", "events"), "Georgetown", "Greater Duwamish", "s"),
@@ -92,7 +91,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     ("Discover SLU", "http://www.twitter.com/southlakeunion", "twitter", "commercial", Set("shopping", "news", "events", "dining"), "South Lake Union", "Lake Union", "w"),
     ("Downtown Dispatch", "http://downtowndispatch.com/", "blog", "commercial", Set("news and events"), "Downtown", "Downtown", "w"),
 
-    // Manually added:
+    // Manually added (two missing values)
     ("Downtown Seattle Association", "http://www.downtownseattle.com/", "website", null, Set("business association"), "Downtown", "Downtown", null),
 
     ("East Ballard Community Association Blog", "http://eastballard.wordpress.com/", "blog", "community", Set("community association", "news", "events", "meeting"), "Ballard", "Ballard", "nw"),
@@ -175,7 +174,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     ("Magnolia Voice", "http://www.magnoliavoice.com/", "blog", "commercial", Set("criminal activity", "news", "events", "food"), "Magnolia", "Magnolia/Queen Anne", "w"),
     ("Magnolia is Really Part of Seattle", "http://sleeplessinmagnolia.ning.com/", "wiki", "community", Set("planning issues"), "Magnolia", "Magnolia/Queen Anne", "w"),
 
-    // Manually added
+    // Manually added (two missing values)
     ("Magnuson Community Garden", "http://cityofseattle.net/MAGNUSONGARDEN", "website", null, Set("garden"), "Laurelhurst", "Northeast", null),
 
     ("Magnuson Environmental Stewardship Alliance", "http://mesaseattle.org/", "website", "community", Set("park issues"), "Laurelhurst", "Northeast", "ne"),
@@ -187,7 +186,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     ("Miller Park Neighborhood Association", "http://millerparkseattle.blogspot.com/", "blog", "community", Set("neighborhood association; news", "events"), "Miller Park", "East", "e"),
     ("Morgan Junction Community Association", "http://morganjunction.org/", "website", "community", Set("community association"), "Morgan Junction", "Southwest", "sw"),
 
-    // Manually added
+    // Manually added (two missing values)
     ("Mount Baker Community Club", "http://groups.yahoo.com/group/MBCCCommunityNotices/", "email_list", null, Set("community club"), "Mount Baker", "Southeast", null),
 
     ("Mount Baker Neighborhood ", "http://www.mountbaker.org/index.php", "website", "community", Set("community group"), "Mount Baker", "Southeast", "se"),

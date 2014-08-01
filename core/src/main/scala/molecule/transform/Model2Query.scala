@@ -15,7 +15,6 @@ object Model2Query extends Debug {
         case a@Atom(ns, attr, t, cardinality, value, enumPrefix) => (cardinality, value, enumPrefix) match {
           case (_, NoValue, _)  => q.data(e, a)
           case (_, EntValue, _) => q.output(e, t)
-          //          case (_, EntValue, _) => q.data(e, a).output(e, t)
           case (2, VarValue, _) => q.data(e, a, v).output("distinct", Seq(), v, t)
           case (_, VarValue, _) => q.data(e, a, v).output(v, t)
           case (_, EnumVal, _)  => q.enum(e, a, v).output(v2, t)
@@ -45,7 +44,7 @@ object Model2Query extends Debug {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Group(ref, elements) => q
+        case Group(ref, elements) => ???
 
         case unresolved => sys.error("[Model2Query] Unresolved model (we should never get here): " + unresolved)
       }

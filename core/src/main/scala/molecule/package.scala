@@ -2,7 +2,6 @@ import datomic._
 import molecule.ast.model._
 import molecule.in._
 import molecule.out._
-
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 
@@ -124,7 +123,6 @@ package object molecule {
 
   // Entity api
   implicit def long2Entity(id: Long)(implicit conn: Connection) = EntityFacade(conn.db.entity(id))
-  //  implicit def long2Entity(id: Long)(implicit db: Database) =  EntityFacade(db.entity(id))
 
   // Markers
   object ?

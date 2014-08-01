@@ -2,10 +2,8 @@ package molecule
 package examples.seattle
 import java.io.FileReader
 import datomic._
-//import molecule.dsl.DbSchema
 import molecule.dsl.DbSchema._
 import molecule.examples.seattle.dsl.seattle._
-//import molecule.examples.seattle.schema.SeattleSchema
 import shapeless._
 import scala.language.reflectiveCalls
 
@@ -435,5 +433,7 @@ class SeattleTests extends SeattleSpec {
 
     // ..but we still have a belltown with a name and type
     Community.name("belltown 3").name.`type`.hls === List("belltown 3" :: "blog" :: HNil)
+
+    // todo: retract!
   }
 }

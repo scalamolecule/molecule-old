@@ -105,10 +105,10 @@ object schemaDSL {
 
   //  trait Mandatory
   abstract class Insert(val elements: Seq[Element]) extends DatomicFacade {
-    def save(implicit conn: Connection): Seq[Long] = upsertMolecule(conn, Model(elements))
+    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements))
   }
   abstract class Update(val elements: Seq[Element], val ids: Seq[Long]) extends DatomicFacade {
-    def save(implicit conn: Connection): Seq[Long] = upsertMolecule(conn, Model(elements), ids)
+    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements), Seq(), ids)
   }
   abstract class Retract(elements: Seq[Element]) extends DatomicFacade
   abstract class Entity(elements: Seq[Element]) extends DatomicFacade

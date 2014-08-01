@@ -46,33 +46,6 @@ trait MoleculeSpec extends Specification with DatomicFacade {
 
     tx2.map(l => l.mkString("List(  ", ",   ", "  )")).mkString("List(\n  ", "\n  ", "\n)")
   }
-  def formatTxOLD(tx: Seq[Seq[Any]]) = {
-    val longestAction = tx.map(stmt => stmt(0).toString.length).max
-    val longestAttr = tx.map(stmt => stmt(2).toString.length).max
-    val longestValue = tx.map(stmt => stmt(3).toString.length).max
-
-    // Increment temporary ids in a controlled way so that we can test
-    val ids = tx.foldLeft(Map[String, String]()) { case (ids, stmt) =>
-      val rawId = stmt(1).toString
-      rawId match {
-        case r"#db/id\[:db.part/user -\d{7}\]" =>
-          if (ids.contains(rawId)) ids else ids + (rawId -> ("#db/id[:db.part/user -" + (1000001 + ids.size) + "]"))
-        case other                             => ids + (other.toString -> other.toString)
-      }
-    }
-    val tx2 = tx.map { stmt =>
-      val newId = ids.getOrElse(stmt(1).toString, sys.error("missing stmt id"))
-      val newValue = ids.getOrElse(stmt(3).toString, stmt(3).toString)
-      List(
-        stmt(0) + " " * (longestAction - stmt(0).toString.length),
-        newId,
-        stmt(2) + " " * (longestAttr - stmt(2).toString.length),
-        newValue + " " * (longestValue - newValue.length)
-      )
-    }
-
-    tx2.map(l => l.mkString("List(  ", ",   ", "  )")).mkString("List(\n  ", "\n  ", "\n)")
-  }
 
   def formatInputs(query: Query) = {
     val rules = if (query.in.rules.isEmpty) ""
@@ -103,7 +76,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       // Input molecule + insert data
       def -->(data: Seq[Seq[Any]]) = new {
         def -->(txString: String) = {
-          val tx = Model2Transaction(conn, model, data)
+          val tx = Model2Transaction(conn, model, data).tx
           formatTx(tx) === txString
         }
       }
@@ -115,7 +88,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
 
     def -->(data: Seq[Seq[Any]]) = new {
       def -->(txString: String) = {
-        val tx = Model2Transaction(conn, molecule._model, data)
+        val tx = Model2Transaction(conn, molecule._model, data).tx
         formatTx(tx) === txString
       }
     }
@@ -141,22 +114,15 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     def -->(model: Model) = new {
       Model(updateMolecule.elements) === model
       def -->(txString: String) = {
-        val t = Model2Transaction
-        val (attrs, args) = t.getNonEmptyAttrs(model).unzip
-        val rawMolecules = t.chargeMolecules(attrs, Seq(args))
-        val molecules = t.groupNamespaces(rawMolecules)
-        val tx = t.upsertTransaction(conn.db, molecules, updateMolecule.ids)
-        formatTxOLD(tx) === txString
+        val tx = Model2Transaction(conn, model, Seq(), updateMolecule.ids).tx
+        formatTx(tx) === txString
       }
     }
 
     def -->(txString: String) = {
       val t = Model2Transaction
-      val (attrs, args) = t.getNonEmptyAttrs(Model(updateMolecule.elements)).unzip
-      val rawMolecules = t.chargeMolecules(attrs, Seq(args))
-      val molecules = t.groupNamespaces(rawMolecules)
-      val tx = t.upsertTransaction(conn.db, molecules, updateMolecule.ids)
-      formatTxOLD(tx) === txString
+      val tx = Model2Transaction(conn, Model(updateMolecule.elements), Seq(), updateMolecule.ids).tx
+      formatTx(tx) === txString
     }
   }
 
@@ -164,22 +130,15 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     def -->(model: Model) = new {
       Model(insertMolecule.elements) === model
       def -->(txString: String) = new {
-        val t                 = Model2Transaction
-        val (attrs, args)     = t.getNonEmptyAttrs(model).unzip
-        val rawMolecules      = t.chargeMolecules(attrs, Seq(args))
-        val molecules         = t.groupNamespaces(rawMolecules)
-        val tx: Seq[Seq[Any]] = t.upsertTransaction(conn.db, molecules, ids)
-        formatTxOLD(tx) === txString
+        val tx = Model2Transaction(conn, model, Seq(), ids).tx
+        formatTx(tx) === txString
       }
     }
 
     def -->(txString: String) = {
       val t = Model2Transaction
-      val (attrs, args) = t.getNonEmptyAttrs(Model(insertMolecule.elements)).unzip
-      val rawMolecules = t.chargeMolecules(attrs, Seq(args))
-      val molecules = t.groupNamespaces(rawMolecules)
-      val tx = t.upsertTransaction(conn.db, molecules, ids)
-      formatTxOLD(tx) === txString
+      val tx = Model2Transaction(conn, Model(insertMolecule.elements), Seq(), ids).tx
+      formatTx(tx) === txString
     }
   }
 }

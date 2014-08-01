@@ -33,8 +33,6 @@ trait BuildOutputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
         ident -> q"${TermName(ident.toString.substring(9))}"
     }).toMap
-
-//    x(1, model0)
     q"""
       ..$imports
       val model = Model($model0.elements.map {

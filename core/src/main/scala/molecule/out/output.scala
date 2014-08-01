@@ -2,7 +2,6 @@ package molecule.out
 import datomic.{Connection => Cnx}
 import molecule.ast.model._
 import molecule.ast.query.Query
-import molecule.dsl.schemaDSL
 import molecule.dsl.schemaDSL.NS
 import shapeless.{::, HNil}
 
@@ -42,9 +41,9 @@ abstract class OutputMolecule1[A](val _model: Model, val _query: Query) extends 
   def get(implicit conn: Cnx): Seq[A]
   def take(n: Int)(implicit conn: Cnx): Seq[A] = get(conn).take(n)
 
-  def insert(a: A)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a))
-  def insert(a: A, a2: A, ax: A*)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
-  def insert(data: Seq[A])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(Seq(_)))
+  def insert(a: A)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a)))
+  def insert(a: A, a2: A, ax: A*)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
+  def insert(data: Seq[A])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(Seq(_)))
 }
 
 abstract class OutputMolecule2[A, B](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -55,10 +54,10 @@ abstract class OutputMolecule2[A, B](val _model: Model, val _query: Query) exten
   def hls(implicit conn: Cnx): Seq[A :: B :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b))
-  def insert(data: A :: B :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2)))
-  def insert(data: Seq[A :: B :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b)))
+  def insert(data: A :: B :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2)))
+  def insert(data: Seq[A :: B :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule3[A, B, C](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -69,10 +68,10 @@ abstract class OutputMolecule3[A, B, C](val _model: Model, val _query: Query) ex
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c))
-  def insert(data: A :: B :: C :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3)))
-  def insert(data: Seq[A :: B :: C :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c)))
+  def insert(data: A :: B :: C :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3)))
+  def insert(data: Seq[A :: B :: C :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule4[A, B, C, D](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -83,10 +82,10 @@ abstract class OutputMolecule4[A, B, C, D](val _model: Model, val _query: Query)
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d))
-  def insert(data: A :: B :: C :: D :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4)))
-  def insert(data: Seq[A :: B :: C :: D :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d)))
+  def insert(data: A :: B :: C :: D :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4)))
+  def insert(data: Seq[A :: B :: C :: D :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule5[A, B, C, D, E](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -97,10 +96,10 @@ abstract class OutputMolecule5[A, B, C, D, E](val _model: Model, val _query: Que
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e))
-  def insert(data: A :: B :: C :: D :: E :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e)))
+  def insert(data: A :: B :: C :: D :: E :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule6[A, B, C, D, E, F](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -111,10 +110,10 @@ abstract class OutputMolecule6[A, B, C, D, E, F](val _model: Model, val _query: 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f))
-  def insert(data: A :: B :: C :: D :: E :: F :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f)))
+  def insert(data: A :: B :: C :: D :: E :: F :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule7[A, B, C, D, E, F, G](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -125,10 +124,10 @@ abstract class OutputMolecule7[A, B, C, D, E, F, G](val _model: Model, val _quer
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule8[A, B, C, D, E, F, G, H](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -139,10 +138,10 @@ abstract class OutputMolecule8[A, B, C, D, E, F, G, H](val _model: Model, val _q
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -153,10 +152,10 @@ abstract class OutputMolecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule10[A, B, C, D, E, F, G, H, I, J](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -167,10 +166,10 @@ abstract class OutputMolecule10[A, B, C, D, E, F, G, H, I, J](val _model: Model,
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule11[A, B, C, D, E, F, G, H, I, J, K](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -181,10 +180,10 @@ abstract class OutputMolecule11[A, B, C, D, E, F, G, H, I, J, K](val _model: Mod
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -195,10 +194,10 @@ abstract class OutputMolecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model: 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -209,10 +208,10 @@ abstract class OutputMolecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _mode
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -223,10 +222,10 @@ abstract class OutputMolecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _m
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -237,10 +236,10 @@ abstract class OutputMolecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -251,10 +250,10 @@ abstract class OutputMolecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -265,10 +264,10 @@ abstract class OutputMolecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -279,10 +278,10 @@ abstract class OutputMolecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -293,10 +292,10 @@ abstract class OutputMolecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -307,10 +306,10 @@ abstract class OutputMolecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -321,10 +320,10 @@ abstract class OutputMolecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
 abstract class OutputMolecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val _model: Model, val _query: Query) extends OutputMolecule {
@@ -335,8 +334,8 @@ abstract class OutputMolecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, 
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil] = hls.take(n)
 
-  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v))
-  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil)(implicit conn: Cnx): Seq[Long] = insertOne(conn, _model, data.toList)
-  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
-  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil])(implicit conn: Cnx): Seq[Long] = insertMany(conn, _model, data.map(_.toList))
+  def insert(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
+  def insert(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
+  def insert(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
+  def insert(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
