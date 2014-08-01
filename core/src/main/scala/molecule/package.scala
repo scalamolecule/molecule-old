@@ -122,7 +122,7 @@ package object molecule {
   implicit def tuple2Model[A, B](tpl: (A, B)) = TermValue(tpl)
 
   // Entity api
-  implicit def long2Entity(id: Long)(implicit conn: Connection) = EntityFacade(conn.db.entity(id))
+  implicit def long2Entity(id: Long)(implicit conn: Connection) =  EntityFacade(conn.db.entity(id), conn, id.asInstanceOf[Object])
 
   // Markers
   object ?

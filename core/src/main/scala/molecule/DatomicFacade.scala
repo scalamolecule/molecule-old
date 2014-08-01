@@ -103,9 +103,11 @@ object DatomicFacade extends DatomicFacade
 
 // From Datomisca...
 
-case class EntityFacade(entity: datomic.Entity) extends AnyVal {
+case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
   def touch: Map[String, Any] = toMap
+
+  def retract = conn.transact(Util.list(Util.list(":db.fn/retractEntity", id))).get()
 
   def toMap: Map[String, Any] = {
     //  def toMap = {
@@ -116,13 +118,10 @@ case class EntityFacade(entity: datomic.Entity) extends AnyVal {
     builder += ":db/id" -> entity.get(":db/id")
     while (iter.hasNext) {
       val key = iter.next()
-      builder += (key -> Convert.toScala(entity.get(key)))
+      builder += (key -> toScala(entity.get(key)))
     }
     builder.result()
   }
-}
-
-private[molecule] object Convert {
 
   private[molecule] def toScala(v: Any): Any = v match {
     // :db.type/string
@@ -148,11 +147,11 @@ private[molecule] object Convert {
     // :db.type/uri
     case u: java.net.URI => u
     // :db.type/keyword
-    case kw: clojure.lang.Keyword => kw.toString // Molecule doesn't work with Clojure Keywords
+    case kw: clojure.lang.Keyword => kw.toString // Clojure Keywords not used in Molecule
     // :db.type/bytes
     case bytes: Array[Byte] => bytes
     // an entity map
-    case e: datomic.Entity => new EntityFacade(e).toMap
+    case e: datomic.Entity => new EntityFacade(e, conn, e.get(":db/id")).toMap
 
     // :db.type/keyword
     case set: clojure.lang.PersistentHashSet =>
@@ -173,5 +172,5 @@ private[molecule] object Convert {
     // otherwise
     case v => throw new RuntimeException("[DatomicFacade:Convert:toScala] Unexpected Datalog type to convert: " + v.getClass.toString)
   }
-
 }
+

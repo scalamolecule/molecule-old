@@ -1,8 +1,7 @@
-package molecule.examples.dayOfDatomic
-
+package molecule
+package examples.dayOfDatomic
 import datomic.Peer
 import datomic.Util.list
-import molecule._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
 import scala.collection.JavaConversions._
 import scala.language.existentials
@@ -42,7 +41,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
   }
 
 
-  "ProductsAndOrders (components)" >> {
+  "ProductsAndOrders (components + one-to-many)" >> {
 
     // See: http://blog.datomic.com/2013/06/component-entities.html
 
@@ -55,13 +54,24 @@ class DayOfDatomic extends DayOfAtomicSpec {
     // Insert 2 products
     val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
 
+    chocolateId.touch === Map(":db/id" -> 17592186045418L, ":product/description" -> "Expensive Chocolate")
+    whiskyId.touch === Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky")
+
+
     // Model of order with multiple line items
     // One-to-Many relationship where line items are subcomponents of the order
-    //    val order = m(Order.lineItems(LineItem.product.price.quantity))
     val order = m(Order * LineItem.product.price.quantity)
+
+    // Alternatively we can use this notation
+    // Useful when having several varying aliases pointing to the same namespace
+    //    val order = m(Order.lineItems(LineItem.product.price.quantity))
 
     // Make order with two line items and return created entity id
     val orderId = order insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) last
+
+
+    chocolateId.touch === Map(":db/id" -> 17592186045418L, ":product/description" -> "Expensive Chocolate")
+    whiskyId.touch === Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky")
 
     // Find id of order with chocolate
     val orderIdFound = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
@@ -85,19 +95,17 @@ class DayOfDatomic extends DayOfAtomicSpec {
           ":lineItem/price" -> 38.0)
       ))
 
+    // Retract entity - all subcomponents/lineItems are retracted
+    orderId.retract
 
+    // All lineItems are gone
+    Order.LineItems.ids.size === 0
 
-
-
-
+    // The products are still there
+    Product.description("Expensive Chocolate", "Cheap Whisky").ids === List(chocolateId, whiskyId)
   }
 
-  //    val order1 = m(Order.lineItems)
-  //    val order2 = m(Order.LineItems.Product.description("hej"))
-  //    val order = m(Order * LineItem.product.price.quantity)
 
-
-  //
   //    "Query tour" >> {
   //      import molecule.examples.dayOfDatomic.dsl.socialNews._
   //      import molecule.examples.dayOfDatomic.schema.SocialNewsSchema
@@ -439,87 +447,3 @@ class DayOfDatomic extends DayOfAtomicSpec {
   //
   //  }
 }
-
-
-//    lazy val tx = Util.list(
-//      Util.map(":db/id", Peer.tempid(":db.part/user"),
-//        ":order/lineItems", Util.list(
-//          Util.map(":lineItem/product", chocolateId: java.lang.Long,
-//            ":lineItem/price", 48.00.asInstanceOf[Object],
-//            ":lineItem/quantity", 1.asInstanceOf[Object]),
-//          Util.map(":lineItem/product", whiskyId: java.lang.Long,
-//            ":lineItem/price", 38.00.asInstanceOf[Object],
-//            ":lineItem/quantity", 2.asInstanceOf[Object])
-//        )))
-
-//    val id1 = Peer.tempid(":db.part/user")
-//    val id2 = Peer.tempid(":db.part/user")
-//    val id3 = Peer.tempid(":db.part/user")
-
-//    val tx21 = s"""List(
-//            |  List(  :db/add,   $id1,   :lineItem/product      ,   ${chocolateId: java.lang.Long}      )
-//            |  List(  :db/add,   $id1,   :lineItem/price        ,   ${48.00.asInstanceOf[Object]}       )
-//            |  List(  :db/add,   $id1,   :lineItem/quantity     ,   ${1.asInstanceOf[Object]}           )
-//            |
-//            |  List(  :db/add,   $id2,   :lineItem/product      ,   ${whiskyId: java.lang.Long}         )
-//            |  List(  :db/add,   $id2,   :lineItem/price        ,   ${38.00.asInstanceOf[Object]}       )
-//            |  List(  :db/add,   $id2,   :lineItem/quantity     ,   ${2.asInstanceOf[Object]}           )
-//            |
-//            |  List(  :db/add,   $id3,   :order/lineItems       ,   $id1           )
-//            |  List(  :db/add,   $id3,   :order/lineItems       ,   $id2           )
-//            |)""".stripMargin
-
-//    val tx2 = Util.list(
-//      Util.list(":db/add", id1, ":lineItem/product", chocolateId: java.lang.Long),
-//      Util.list(":db/add", id1, ":lineItem/price", 48.00.asInstanceOf[Object]),
-//      Util.list(":db/add", id1, ":lineItem/quantity", 1.asInstanceOf[Object]),
-//      Util.list(":db/add", id2, ":lineItem/product", whiskyId: java.lang.Long),
-//      Util.list(":db/add", id2, ":lineItem/price", 38.00.asInstanceOf[Object]),
-//      Util.list(":db/add", id2, ":lineItem/quantity", 2.asInstanceOf[Object]),
-//      Util.list(":db/add", id3, ":order/lineItems", id1),
-//      Util.list(":db/add", id3, ":order/lineItems", id2)
-//    )
-//    conn.transact(tx2).get()
-//    Map(
-//      :db/id -> 17592186045421,
-//      :lineItem/product -> List(
-//        Map(
-//          :db/id -> 17592186045418,
-//          :product/description -> Expensive Chocolate)),
-//    :lineItem/quantity -> 1, :lineItem/price -> 48.0)
-
-//    orderId.touch === Map(
-//      ":db/id" -> 17592186045421L,
-//      ":order/lineItems" -> List(
-//        Map(
-//          ":db/id" -> 17592186045422L,
-//          ":lineItem/product" -> List(Map(":db/id" -> 17592186045418L, ":product/description" -> "Expensive Chocolate")),
-//          ":lineItem/quantity" -> 1,
-//          ":lineItem/price" -> 48.0),
-//        Map(
-//          ":db/id" -> 17592186045423L,
-//          ":lineItem/product" -> List(Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky")),
-//          ":lineItem/quantity" -> 2,
-//          ":lineItem/price" -> 38.0)
-//      ))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

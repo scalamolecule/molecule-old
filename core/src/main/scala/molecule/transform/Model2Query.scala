@@ -44,7 +44,7 @@ object Model2Query extends Debug {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Group(ref, elements) => ???
+        case Group(ref, elements) => q
 
         case unresolved => sys.error("[Model2Query] Unresolved model (we should never get here): " + unresolved)
       }
