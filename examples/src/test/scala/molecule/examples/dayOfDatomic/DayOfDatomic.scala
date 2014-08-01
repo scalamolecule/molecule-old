@@ -54,24 +54,16 @@ class DayOfDatomic extends DayOfAtomicSpec {
     // Insert 2 products
     val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
 
-    chocolateId.touch === Map(":db/id" -> 17592186045418L, ":product/description" -> "Expensive Chocolate")
-    whiskyId.touch === Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky")
-
-
     // Model of order with multiple line items
     // One-to-Many relationship where line items are subcomponents of the order
     val order = m(Order * LineItem.product.price.quantity)
 
-    // Alternatively we can use this notation
-    // Useful when having several varying aliases pointing to the same namespace
+    // Alternatively we can use the following notation - useful when having several varying
+    // aliases pointing to the same namespace:
     //    val order = m(Order.lineItems(LineItem.product.price.quantity))
 
     // Make order with two line items and return created entity id
     val orderId = order insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) last
-
-
-    chocolateId.touch === Map(":db/id" -> 17592186045418L, ":product/description" -> "Expensive Chocolate")
-    whiskyId.touch === Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky")
 
     // Find id of order with chocolate
     val orderIdFound = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
@@ -102,7 +94,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
     Order.LineItems.ids.size === 0
 
     // The products are still there
-    Product.description("Expensive Chocolate", "Cheap Whisky").ids === List(chocolateId, whiskyId)
+    Product.description("Expensive Chocolate" or "Cheap Whisky").ids === List(chocolateId, whiskyId)
   }
 
 
