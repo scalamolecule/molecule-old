@@ -434,6 +434,16 @@ class SeattleTests extends SeattleSpec {
     // ..but we still have a belltown with a name and type
     Community.name("belltown 3").name.`type`.hls === List("belltown 3" :: "blog" :: HNil)
 
-    // todo: retract!
+
+    // Retract entities ...................................
+
+    // Belltown exists
+    Community.name("belltown 3").size === 1
+
+    // Simply use an entity id and retract it!
+    belltownId.retract
+
+    // Belltown is gone
+    Community.name("belltown 3").size === 0
   }
 }

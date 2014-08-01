@@ -71,7 +71,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
     orderId === orderIdFound
 
     // Touch entity
-    // Get all attributes/values of this entity subcomponent values are recursively retrieved
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
     orderId.touch === Map(
       ":db/id" -> 17592186045423L,
       ":order/lineItems" -> List(
