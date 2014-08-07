@@ -76,7 +76,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       // Input molecule + insert data
       def -->(data: Seq[Seq[Any]]) = new {
         def -->(txString: String) = {
-          val tx = Model2Transaction(conn, model, data).tx
+          val (tx, _) = Model2Transaction(conn, model, data).tx
           formatTx(tx) === txString
         }
       }
@@ -88,7 +88,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
 
     def -->(data: Seq[Seq[Any]]) = new {
       def -->(txString: String) = {
-        val tx = Model2Transaction(conn, molecule._model, data).tx
+        val (tx, _) = Model2Transaction(conn, molecule._model, data).tx
         formatTx(tx) === txString
       }
     }
@@ -114,14 +114,14 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     def -->(model: Model) = new {
       Model(updateMolecule.elements) === model
       def -->(txString: String) = {
-        val tx = Model2Transaction(conn, model, Seq(), updateMolecule.ids).tx
+        val (tx, _) = Model2Transaction(conn, model, Seq(), updateMolecule.ids).tx
         formatTx(tx) === txString
       }
     }
 
     def -->(txString: String) = {
       val t = Model2Transaction
-      val tx = Model2Transaction(conn, Model(updateMolecule.elements), Seq(), updateMolecule.ids).tx
+      val (tx, _) = Model2Transaction(conn, Model(updateMolecule.elements), Seq(), updateMolecule.ids).tx
       formatTx(tx) === txString
     }
   }
@@ -130,14 +130,14 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     def -->(model: Model) = new {
       Model(insertMolecule.elements) === model
       def -->(txString: String) = new {
-        val tx = Model2Transaction(conn, model, Seq(), ids).tx
+        val (tx, _) = Model2Transaction(conn, model, Seq(), ids).tx
         formatTx(tx) === txString
       }
     }
 
     def -->(txString: String) = {
       val t = Model2Transaction
-      val tx = Model2Transaction(conn, Model(insertMolecule.elements), Seq(), ids).tx
+      val (tx, _) = Model2Transaction(conn, Model(insertMolecule.elements), Seq(), ids).tx
       formatTx(tx) === txString
     }
   }

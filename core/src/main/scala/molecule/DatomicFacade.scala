@@ -1,5 +1,6 @@
 package molecule
 import datomic._
+import datomic.db.Db
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ops.QueryOps._
@@ -61,18 +62,18 @@ trait DatomicFacade extends Debug {
 
     //    println(conn)
     //    println(conn.db)
-    //                println(query.format)
-    //                println("---------------- ")
-    //                println(query.pretty)
-    //                println("---------------- ")
-    //                println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
-    //                println("---------------- ")
+    //    println(query.format)
+    //    println("---------------- ")
+    //    println(query.pretty)
+    //    println("---------------- ")
+    //    println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
+    //    println("---------------- ")
 
     val first = if (query.in.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
-    //            println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
-    //            println("###########################################################################################\n")
+    //    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
+    //    println("###########################################################################################\n")
 
     Peer.q(query.toMap, allInputs: _*)
   }
@@ -83,19 +84,38 @@ trait DatomicFacade extends Debug {
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
   private[molecule] def upsert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): Seq[Long] = {
-    val javaTx = Model2Transaction(conn, model, dataRows, ids).javaTx
-    x(0
-      , model.elements
-      , dataRows
-      , ids
-      , javaTx
-    )
+    val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)
+
+    // We omit the first transaction datom
     val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
     val newIds = newDatoms.map(_.e.asInstanceOf[Long]).distinct
+
+    // Alternatively we can resolve fro the temp ids - but we don't get all, hmm...
+    val txTtempIds = txResult.get(Connection.TEMPIDS)
+    val dbAfter = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
+    val insertedIds = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
+
+    x(0
+      //      , model.elements
+      //      , javaTx
+      , txResult
+      //      , tempIds
+      //      , txTtempIds
+      , insertedIds
+      //    , txData
+      //    ,newDatoms.sortBy(_.e.asInstanceOf[Long])
+      //    , newDatoms.map(_.e.asInstanceOf[Long]).sorted
+      , newIds
+    )
+
     newIds
   }
+
+
+  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+
 }
 
 object DatomicFacade extends DatomicFacade

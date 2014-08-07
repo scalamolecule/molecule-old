@@ -9,6 +9,10 @@ object schemaDefinition {
 
   // Todo: Use phantom types to build valid combinations (checkout how Rogue does it)
 
+
+  // Entity that can be attached as a subcombonent to another entity
+  trait Node
+
   private[molecule] sealed trait anyAttr {
     def doc(s: String) = this
     lazy val indexed   = this
@@ -69,7 +73,7 @@ object schemaDefinition {
   // Ref
   object one {
     def apply[NS1] = this
-    lazy val component   = this
+    lazy val component = this
   }
 
   object many {

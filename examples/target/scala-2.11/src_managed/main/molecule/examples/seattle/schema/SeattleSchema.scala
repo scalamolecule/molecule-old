@@ -12,7 +12,7 @@ object SeattleSchema extends Transaction {
 
   lazy val tx = Util.list(
 
-    // Community ----------------------------------------------------------
+    // Community --------------------------------------------------------
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
              ":db/ident"             , ":community/name",
@@ -67,7 +67,7 @@ object SeattleSchema extends Transaction {
              ":db.install/_attribute", ":db.part/db"),
 
 
-    // Neighborhood ----------------------------------------------------------
+    // Neighborhood -----------------------------------------------------
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
              ":db/ident"             , ":neighborhood/name",
@@ -84,7 +84,7 @@ object SeattleSchema extends Transaction {
              ":db.install/_attribute", ":db.part/db"),
 
 
-    // District ----------------------------------------------------------
+    // District ---------------------------------------------------------
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
              ":db/ident"             , ":district/name",

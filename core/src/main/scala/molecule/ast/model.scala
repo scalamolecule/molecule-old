@@ -2,7 +2,11 @@ package molecule.ast
 
 object model {
 
-  case class Model(elements: Seq[Element]) //extends Element
+  case class Model(elements: Seq[Element]) {
+    // Convenience methods
+    def +:(e: Element) = Model(e +: elements)
+    def :+(e: Element) = Model(elements :+ e)
+  }
 
   trait Element
 
@@ -12,6 +16,8 @@ object model {
   // Relationship to another namespace
   // If refAttr doesn't match the referenced namespace, add refNs (and refAttr can be an arbitrary name)
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
+
+  case class Node(ns: String, parentId: Long) extends Element
 
   // Group of elements treated as one element - allowing recursive sub models
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
@@ -55,6 +61,16 @@ object model {
   case class And3[T1, T2, T3](e1: Exp1[T1], e2: Exp1[T2], e3: Exp1[T3]) extends Exp3[T1, T2, T3]
 
 
+  // Convenience methods .........................
+
+  def curNs(e: Element) = e match {
+    case Atom(ns, _, _, _, _, _)  => ns
+    case Bond(ns, _, _)           => ns
+    case Node(ns, _)              => ns
+    case Group(Bond(ns, _, _), _) => ns
+    case unexpected               => sys.error("[model:curNs] Unexpected element: " + unexpected)
+  }
+
 
   // From sqltyped...
 
@@ -84,3 +100,4 @@ object model {
   //  case object Between extends Operator3
   //  case object NotBetween extends Operator3
 }
+

@@ -128,5 +128,6 @@ package object molecule {
   object ?
   object ?!
   object maybe
+  object count
   case class oldNew[T](from: T, to: T)
 }

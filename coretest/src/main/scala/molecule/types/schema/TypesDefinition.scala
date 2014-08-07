@@ -4,6 +4,10 @@ import molecule.dsl.schemaDefinition._
 @InOut(0, 22)
 trait TypesDefinition {
 
+  trait Person {
+    val name = oneString
+  }
+
   trait One {
     val str    = oneString
     val int    = oneInt
@@ -15,7 +19,7 @@ trait TypesDefinition {
     val uuid   = oneUUID
     val uri    = oneURI
     val enum   = oneEnum('enum1, 'enum2)
-    //  val ref    = one[NS2]
+    val person = one[Person]
   }
 
   trait Many {
@@ -28,6 +32,6 @@ trait TypesDefinition {
     val uuidM   = manyUUID
     val uriM    = manyURI
     val enumM   = manyEnum('enum1, 'enum2)
-    //  val ref    = many[NS2]
+    val persons = many[Person]
   }
 }

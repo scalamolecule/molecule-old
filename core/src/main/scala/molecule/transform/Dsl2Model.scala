@@ -68,12 +68,13 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   def getValues(attr: Tree, value0: Tree): Seq[Any] = {
     value0 match {
-      case q"Seq(?)"                          => Seq("?")
-      case q"Seq(?!)"                         => Seq("?!")
-      case q"Seq(molecule.this.`package`.?)"  => Seq("?")
-      case q"Seq(molecule.this.`package`.?!)" => Seq("?!")
-      case q"Seq(..$values)"                  => values.flatMap(v => resolveValues(v, att(q"$attr")))
-      case value                              => resolveValues(value, att(q"$attr"))
+      case q"Seq(?)"                             => Seq("?")
+      case q"Seq(?!)"                            => Seq("?!")
+      case q"Seq(molecule.this.`package`.?)"     => Seq("?")
+      case q"Seq(molecule.this.`package`.?!)"    => Seq("?!")
+      case q"Seq(molecule.this.`package`.count)" => Seq("count")
+      case q"Seq(..$values)"                     => values.flatMap(v => resolveValues(v, att(q"$attr")))
+      case value                                 => resolveValues(value, att(q"$attr"))
     }
   }
 

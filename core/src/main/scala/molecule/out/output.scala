@@ -1,5 +1,7 @@
 package molecule.out
+import java.util.{Date => jDate}
 import datomic.{Connection => Cnx}
+import molecule.DatomicFacade
 import molecule.ast.model._
 import molecule.ast.query.Query
 import molecule.dsl.schemaDSL.NS
@@ -34,6 +36,36 @@ trait Out_22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] e
 
 
 // Output molecules
+trait OutputMolecule extends DatomicFacade {
+  val _model: Model
+  val _query: Query
+
+  override def toString: String = _query.toList
+  def p = _query.pretty
+  def ids: Seq[Long]
+  def size: Int = ids.size
+
+  // Kind of a hack...?
+  def asOf(date: jDate) = { dbOp = AsOf(date); this }
+  def since(date: jDate) = { dbOp = Since(date); this }
+  def imagine(tx: java.util.List[Object]) = { dbOp = Imagine(tx); this }
+
+  protected case class nodeActions(conn: Cnx, _model: Model, data: Seq[Seq[Any]]) {
+    // Maybe misleading to think of child/parent since associations are multidirectional...
+    def childOf (parentId: Long): Long = {
+      val currentNs = curNs(_model.elements.head)
+      upsert(conn, _model :+ Node(currentNs, parentId), data).last
+    }
+
+    // Using this one as it makes no presumptions of direction of the relationship
+    def -- (parentId: Long): Long = childOf(parentId)
+
+    // Allows reversed notation:
+    // parentId +: Comment(stu, "blah 1")
+    // Not so intuitive though that it's the new child id that is returned...
+    def +: (parentId: Long): Long = childOf(parentId)
+  }
+}
 
 abstract class OutputMolecule0(val _model: Model, val _query: Query) extends OutputMolecule
 
@@ -54,9 +86,16 @@ abstract class OutputMolecule2[A, B](val _model: Model, val _query: Query) exten
   def hls(implicit conn: Cnx): Seq[A :: B :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: HNil] = hls.take(n)
 
+  object node {
+    def apply(a: A, b: B)(implicit conn: Cnx) = nodeActions(conn, _model, Seq(Seq(a, b)))
+    def apply(data: A :: B :: HNil)(implicit conn: Cnx) = nodeActions(conn, _model, Seq(data.toList))
+    def apply(data: Seq[(A, B)], hack: Int = 42)(implicit conn: Cnx) = nodeActions(conn, _model, data.map(d => Seq(d._1, d._2)))
+    def apply(data: Seq[A :: B :: HNil])(implicit conn: Cnx) = nodeActions(conn, _model, data.map(_.toList))
+  }
+
   def insert(a: A, b: B)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a, b)))
   def insert(data: A :: B :: HNil)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(data.toList))
-  def insert(data: Seq[(A, B)], overloadHack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2)))
+  def insert(data: Seq[(A, B)], hack: Int = 42)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(d => Seq(d._1, d._2)))
   def insert(data: Seq[A :: B :: HNil])(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(_.toList))
 }
 
@@ -64,7 +103,6 @@ abstract class OutputMolecule3[A, B, C](val _model: Model, val _query: Query) ex
   def tpls(implicit conn: Cnx): Seq[(A, B, C)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C)] = tpls(conn).take(n)
-
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: HNil] = hls.take(n)
 
@@ -78,7 +116,6 @@ abstract class OutputMolecule4[A, B, C, D](val _model: Model, val _query: Query)
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D)] = tpls(conn).take(n)
-
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: HNil] = hls.take(n)
 
@@ -92,7 +129,6 @@ abstract class OutputMolecule5[A, B, C, D, E](val _model: Model, val _query: Que
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E)] = tpls(conn).take(n)
-
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: HNil] = hls.take(n)
 
@@ -106,7 +142,6 @@ abstract class OutputMolecule6[A, B, C, D, E, F](val _model: Model, val _query: 
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F)] = tpls(conn).take(n)
-
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: HNil] = hls.take(n)
 
@@ -120,7 +155,6 @@ abstract class OutputMolecule7[A, B, C, D, E, F, G](val _model: Model, val _quer
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G)] = tpls(conn).take(n)
-
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: HNil] = hls.take(n)
 
@@ -134,7 +168,6 @@ abstract class OutputMolecule8[A, B, C, D, E, F, G, H](val _model: Model, val _q
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H)] = tpls(conn).take(n)
-
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hls.take(n)
 
@@ -148,7 +181,6 @@ abstract class OutputMolecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val
   def tpls(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)]
   def tpl(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)] = tpls(conn).take(n)
   def take(n: Int)(implicit conn: Cnx): Seq[(A, B, C, D, E, F, G, H, I)] = tpls(conn).take(n)
-
   def hls(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil]
   def hl(n: Int)(implicit conn: Cnx): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil] = hls.take(n)
 

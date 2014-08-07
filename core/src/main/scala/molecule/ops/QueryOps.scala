@@ -86,12 +86,10 @@ object QueryOps {
       q.copy(in = newIn, where = newWhere)
     }
 
-    def func(name: String, ins: Seq[QueryTerm], outs: Binding = NoBinding): Query = {
+    def func(name: String, ins: Seq[QueryTerm], outs: Binding = NoBinding): Query =
       q.copy(where = Where(q.where.clauses :+ Funct(name, ins, outs)))
-    }
 
-    def ref(e: String, ns: String, refAttr: String, s: String, refNs: String): Query = {
+    def ref(e: String, ns: String, refAttr: String, s: String, refNs: String): Query =
       q.copy(where = Where(q.where.clauses :+ DataClause(e, KW(ns, refAttr, refNs), "String", s)))
-    }
   }
 }

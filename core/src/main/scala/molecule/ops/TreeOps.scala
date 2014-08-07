@@ -3,6 +3,7 @@ import molecule.ast.query._
 import molecule.dsl.schemaDSL._
 import molecule.out.Out_0
 import scala.reflect.macros.whitebox.Context
+import scala.language.existentials
 
 trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   import c.universe._
@@ -46,7 +47,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     case "Int"    => tq"Int"
     case unknown  => abort(s"[TreeOps:tpe] Unknown type: $unknown")
   }
-
 
   def inputMolecule_i_o(inArity: Int, outArity: Int) = (inArity, outArity) match {
     case (1, 0)  => tq"InputMolecule_1_0"
@@ -207,8 +207,14 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
 
     lazy val tpe = sym match {
+      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
+        typeOf[Long]
+      }
+      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _, _]] => {
+        typeOf[Long]
+      }
       case t: TermSymbol if t.isLazy && t.isPublic                            => {
-        val TypeRef(_, _, List(_, _, attrTpe)) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol)
+        val List(_, _, attrTpe) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol).typeArgs
         attrTpe
       }
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]] => NoType

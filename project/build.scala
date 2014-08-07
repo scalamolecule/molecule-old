@@ -67,14 +67,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     organization := "com.marcgrue",
     version := "0.1.2",
     scalaVersion := "2.11.1",
-    scalacOptions := Seq(
-      "-feature",
-//      "-language:higherKinds",
-      "-language:implicitConversions"),
-//      "-Xfatal-warnings",
-//      "-deprecation",
-//      "-unchecked"),
-
+    scalacOptions := Seq("-feature", "-language:implicitConversions"),
     resolvers ++= Seq(
       Resolver.sonatypeRepo("releases"),
       Resolver.sonatypeRepo("snapshots"),
