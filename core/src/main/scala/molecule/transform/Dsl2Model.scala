@@ -46,14 +46,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       traverse(q"$prev", Group(Bond(prev.name, refAttr, refNs), resolve(q"$subModel").elements))
   }
 
-
-
   def atomOp(attr: Tree, op: Tree, values0: Tree) = {
     val values = getValues(attr, values0)
     val modelValue = op.toString() match {
       case "apply"    => values match {
         case Fn(name)     => Fn(name)
-//        case EntValue     => EntValue
         case vs: Seq[_]   => Eq(vs)
         case qm: ?.type   => Qm
         case qmr: ?!.type => QmR

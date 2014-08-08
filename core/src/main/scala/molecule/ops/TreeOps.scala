@@ -1,7 +1,7 @@
 package molecule.ops
 import molecule.ast.query._
 import molecule.dsl.schemaDSL._
-import molecule.out.Out_0
+import molecule.out.Molecule_0
 import scala.reflect.macros.whitebox.Context
 import scala.language.existentials
 
@@ -20,7 +20,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     lazy val enumPrefix = at.enumPrefix
     def isPartition = tpe <:< typeOf[Partition]
     def isNS = tpe <:< typeOf[NS]
-    def isD0 = tpe <:< typeOf[Out_0]
+    def isD0 = tpe <:< typeOf[Molecule_0]
     def nsS = nsString(tpe.typeSymbol.owner.owner.name.toString.init)
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
@@ -124,29 +124,54 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     case (i, o) => abort(s"[TreeOps:inputMolecule_i_o] Unsupported arity combination: $i in, $o out")
   }
 
-  def outputMolecule_o(outArity: Int) = outArity match {
-    case 2  => tq"OutputMolecule2"
-    case 3  => tq"OutputMolecule3"
-    case 4  => tq"OutputMolecule4"
-    case 5  => tq"OutputMolecule5"
-    case 6  => tq"OutputMolecule6"
-    case 7  => tq"OutputMolecule7"
-    case 8  => tq"OutputMolecule8"
-    case 9  => tq"OutputMolecule9"
-    case 10 => tq"OutputMolecule10"
-    case 11 => tq"OutputMolecule11"
-    case 12 => tq"OutputMolecule12"
-    case 13 => tq"OutputMolecule13"
-    case 14 => tq"OutputMolecule14"
-    case 15 => tq"OutputMolecule15"
-    case 16 => tq"OutputMolecule16"
-    case 17 => tq"OutputMolecule17"
-    case 18 => tq"OutputMolecule18"
-    case 19 => tq"OutputMolecule19"
-    case 20 => tq"OutputMolecule20"
-    case 21 => tq"OutputMolecule21"
-    case 22 => tq"OutputMolecule22"
-    case o  => abort(s"[TreeOps:dataX] Unsupported arity for OutputMoleculeX: $o")
+  def molecule_o(outArity: Int) = outArity match {
+    case 2  => tq"Molecule2"
+    case 3  => tq"Molecule3"
+    case 4  => tq"Molecule4"
+    case 5  => tq"Molecule5"
+    case 6  => tq"Molecule6"
+    case 7  => tq"Molecule7"
+    case 8  => tq"Molecule8"
+    case 9  => tq"Molecule9"
+    case 10 => tq"Molecule10"
+    case 11 => tq"Molecule11"
+    case 12 => tq"Molecule12"
+    case 13 => tq"Molecule13"
+    case 14 => tq"Molecule14"
+    case 15 => tq"Molecule15"
+    case 16 => tq"Molecule16"
+    case 17 => tq"Molecule17"
+    case 18 => tq"Molecule18"
+    case 19 => tq"Molecule19"
+    case 20 => tq"Molecule20"
+    case 21 => tq"Molecule21"
+    case 22 => tq"Molecule22"
+    case o  => abort(s"[TreeOps:molecule_o] Unsupported arity for MoleculeX: $o")
+  }
+
+  def nodeMolecule_o(outArity: Int) = outArity match {
+    case 2  => tq"NodeMolecule2"
+    case 3  => tq"NodeMolecule3"
+    case 4  => tq"NodeMolecule4"
+    case 5  => tq"NodeMolecule5"
+    case 6  => tq"NodeMolecule6"
+    case 7  => tq"NodeMolecule7"
+    case 8  => tq"NodeMolecule8"
+    case 9  => tq"NodeMolecule9"
+    case 10 => tq"NodeMolecule10"
+    case 11 => tq"NodeMolecule11"
+    case 12 => tq"NodeMolecule12"
+    case 13 => tq"NodeMolecule13"
+    case 14 => tq"NodeMolecule14"
+    case 15 => tq"NodeMolecule15"
+    case 16 => tq"NodeMolecule16"
+    case 17 => tq"NodeMolecule17"
+    case 18 => tq"NodeMolecule18"
+    case 19 => tq"NodeMolecule19"
+    case 20 => tq"NodeMolecule20"
+    case 21 => tq"NodeMolecule21"
+    case 22 => tq"NodeMolecule22"
+    case o  => abort(s"[TreeOps:nodeMolecule_o] Unsupported arity for NodeMoleculeX: $o")
   }
 
   def namespaceSymbol(tree: Tree) = {

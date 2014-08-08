@@ -33,9 +33,9 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..$imports
       new $InputMoleculeTpe[..$InTypes]($model, $query) {
-        def apply(values: $InputTypes)(implicit conn: Connection): OutputMolecule0 = {
+        def apply(values: $InputTypes)(implicit conn: Connection): Molecule0 = {
           val (query1, entityQuery) = bindValues(values)
-          new OutputMolecule0(model, query1) {
+          new Molecule0(model, query1) {
             def ids: Seq[Long] = entityIds(entityQuery)(conn)
           }
         }
@@ -62,9 +62,9 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         (inTerm, q"$inTerm: $InType")
       }.unzip
       q"""
-        def apply(..$inParams)(implicit conn: Connection): OutputMolecule1[$A] = {
+        def apply(..$inParams)(implicit conn: Connection): Molecule1[$A] = {
           val (query1, entityQuery) = bindValues2(..$inTerms)
-          new OutputMolecule1[$A](model, query1) {
+          new Molecule1[$A](model, query1) {
             def ids: Seq[Long] = entityIds(entityQuery)
             def get(implicit conn: Connection): Seq[$A] = results(_query, conn).toList.map(data => ${cast(q"data")})
           }
@@ -75,9 +75,9 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..$imports
       new $InputMoleculeTpe[..$InTypes, $A]($model, $query) {
-        def apply(values: $InputTypes)(implicit conn: Connection): OutputMolecule1[$A] = {
+        def apply(values: $InputTypes)(implicit conn: Connection): Molecule1[$A] = {
           val (query1, entityQuery) = bindValues(values)
-          new OutputMolecule1[$A](model, query1) {
+          new Molecule1[$A](model, query1) {
             def ids: Seq[Long] = entityIds(entityQuery)(conn)
             def get(implicit conn: Connection): Seq[$A] = results(_query, conn).toList.map(data => ${cast(q"data")})
           }
@@ -92,7 +92,7 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     val query = Model2Query(model)
     val entityQuery = query.copy(find = Find(Seq(Var("ent", "Long"))))
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
-    val OutputMoleculeTpe = outputMolecule_o(OutTypes.size)
+    val MoleculeTpe = molecule_o(OutTypes.size)
     val tplValues = (data: Tree) => OutTypes.zipWithIndex.map {
       case (t, i) if t <:< typeOf[Set[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
       case (t, i)                         => q"$data.get($i).asInstanceOf[$t]"
@@ -110,9 +110,9 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         (inTerm, q"$inTerm: $inType")
       }.unzip
       q"""
-        def apply(..$inParams)(implicit conn: Connection): $OutputMoleculeTpe[..$OutTypes] = {
+        def apply(..$inParams)(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
           val (query1, entityQuery) = bindValues2(..$inTerms)
-          new $OutputMoleculeTpe[..$OutTypes](model, query1) {
+          new $MoleculeTpe[..$OutTypes](model, query1) {
             override def ids: Seq[Long] = entityIds(entityQuery)
             def tpls(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
             def hls(implicit conn: Connection): Seq[$HListType]     = results(_query, conn).toList.map(data => ${hlist(q"data")})
@@ -124,9 +124,9 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..$imports
       new $InputMoleculeTpe[..$InTypes, ..$OutTypes]($model, $query) {
-        def apply(values: Seq[(..$InTypes)])(implicit conn: Connection): $OutputMoleculeTpe[..$OutTypes] = {
+        def apply(values: Seq[(..$InTypes)])(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
           val (query1, entityQuery) = bindValues(values)
-          new $OutputMoleculeTpe[..$OutTypes](model, query1) {
+          new $MoleculeTpe[..$OutTypes](model, query1) {
             override def ids: Seq[Long] = entityIds($entityQuery)
             def tpls(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
             def hls(implicit conn: Connection): Seq[$HListType]     = results(_query, conn).toList.map(data => ${hlist(q"data")})

@@ -29,6 +29,13 @@ object schemaDefinition {
     lazy val fullTextSearch = this
   }
 
+  // Todo: Specialized attributes with constraints
+  object oneEmail extends anyAttr {
+    lazy val fullTextSearch = this
+    lazy val uniqueValue    = this
+    lazy val uniqueIdentity = this
+  }
+
   // Int
   object oneInt extends anyAttr
   object manyInt extends anyAttr

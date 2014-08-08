@@ -17,7 +17,7 @@ object model {
   // If refAttr doesn't match the referenced namespace, add refNs (and refAttr can be an arbitrary name)
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
 
-  case class Node(ns: String, parentId: Long) extends Element
+  case class Node(ns: String, otherEid: Long) extends Element
 
   // Group of elements treated as one element - allowing recursive sub models
   case class Group(ref: Bond, elements: Seq[Element]) extends Element

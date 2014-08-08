@@ -63,15 +63,15 @@ trait DatomicFacade extends Debug {
     //    println(conn)
     //    println(conn.db)
 //        println(query.format)
-//        println("---------------- ")
+//        println("##############################################################################")
 //        println(query.pretty)
-//        println("---------------- ")
+//        println("------------------------------------------------ ")
 //        println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
-//        println("---------------- ")
 
     val first = if (query.in.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
+//        println("------------------------------------------------ ")
 //        println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
 //        println("###########################################################################################\n")
 
@@ -83,7 +83,7 @@ trait DatomicFacade extends Debug {
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
-  private[molecule] def upsert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): Seq[Long] = {
+  protected[molecule] def upsert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): Seq[Long] = {
     val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
     val txResult = conn.transact(javaTx).get
     val txData = txResult.get(Connection.TX_DATA)

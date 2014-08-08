@@ -11,105 +11,103 @@ import scala.language.existentials
 
 class DayOfDatomic extends DayOfAtomicSpec {
 
-//  "Hello World" >> {
-//
-//    // Transaction input is data
-//    val tempid = Peer.tempid(":db.part/user")
-//    val txData = list(list(
-//      ":db/add", tempid,
-//      ":db/doc", "Hello world"))
-//    val conn = load(txData, "hello-world")
-//
-//    // Transaction result is data
-//    val txresult = conn.transact(txData)
-//    txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
-//
-//    // Database is a value
-//    val dbValue = conn.db()
-//
-//    // Query input is data
-//    val qresult = Peer.q( """[:find ?e :where [?e :db/doc "Hello world"]]""", dbValue)
-//
-//    // Query result is data
-//    val id = qresult.toList.head.head
-//
-//    // Entity is a navigable view over data
-//    dbValue.entity(id).get(":db/id") === 17592186045417L
-//
-//    // Schema itself is data
-//    dbValue.entity(":db/doc").get(":db/id") === 62
-//  }
-//
-//
-//  "ProductsAndOrders (nested data)" >> {
-//
-//    // See: http://blog.datomic.com/2013/06/component-entities.html
-//
-//    // Make db
-//    implicit val conn = load(ProductsOrderSchema.tx, "Orders")
-//
-//    // Insert 2 products
-//    val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-//
-//
-//    // Insert nested data .................................
-//
-//    // Model of order with multiple line items
-//    // One-to-Many relationship where line items are subcomponents of the order
-//    val order0 = m(Order * LineItem.product)
-//    val order = m(Order * LineItem.product.price.quantity)
-//
-//    // Make order with two line items and return created entity id
-//    val orderId = order insert List(
-//      (chocolateId, 48.00, 1),
-//      (whiskyId, 38.00, 2)
-//    ) last
-//
-//    // Alternatively we can use the following notation - useful when having several varying
-//    // aliases pointing to the same namespace:
-//    //    val order = m(Order.lineItems(LineItem.product.price.quantity))
-//
-//
-//    // Find id of order with chocolate
-//    val orderIdFound = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
-//    orderIdFound === orderId
-//
-//
-//    // Touch entity ................................
-//
-//    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-//    orderId.touch === Map(
-//      ":db/id" -> 17592186045423L,
-//      ":order/lineItems" -> List(
-//        Map(
-//          ":db/id" -> 17592186045421L,
-//          ":lineItem/product" -> List(Map(":db/id" -> chocolateId, ":product/description" -> "Expensive Chocolate")),
-//          ":lineItem/quantity" -> 1,
-//          ":lineItem/price" -> 48.0),
-//        Map(
-//          ":db/id" -> 17592186045422L,
-//          ":lineItem/product" -> List(Map(":db/id" -> whiskyId, ":product/description" -> "Cheap Whisky")),
-//          ":lineItem/quantity" -> 2,
-//          ":lineItem/price" -> 38.0)
-//      ))
-//
-//    // Retract nested data ............................
-//
-//    // Retract entity - all subcomponents/lineItems are retracted
-//    orderId.retract
-//
-//    // The products are still there
-//    Product.description("Expensive Chocolate" or "Cheap Whisky").ids === List(chocolateId, whiskyId)
-//  }
+  "Hello World" >> {
+
+    // Transaction input is data
+    val tempid = Peer.tempid(":db.part/user")
+    val txData = list(list(
+      ":db/add", tempid,
+      ":db/doc", "Hello world"))
+    val conn = load(txData, "hello-world")
+
+    // Transaction result is data
+    val txresult = conn.transact(txData)
+    txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
+
+    // Database is a value
+    val dbValue = conn.db()
+
+    // Query input is data
+    val qresult = Peer.q( """[:find ?e :where [?e :db/doc "Hello world"]]""", dbValue)
+
+    // Query result is data
+    val id = qresult.toList.head.head
+
+    // Entity is a navigable view over data
+    dbValue.entity(id).get(":db/id") === 17592186045417L
+
+    // Schema itself is data
+    dbValue.entity(":db/doc").get(":db/id") === 62
+  }
+
+
+  "ProductsAndOrders (nested data)" >> {
+
+    // See: http://blog.datomic.com/2013/06/component-entities.html
+
+    // Make db
+    implicit val conn = load(ProductsOrderSchema.tx, "Orders")
+
+    // Insert 2 products
+    val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
+
+
+    // Insert nested data .................................
+
+    // Model of order with multiple line items
+    // One-to-Many relationship where line items are subcomponents of the order
+    val order0 = m(Order * LineItem.product)
+    val order = m(Order * LineItem.product.price.quantity)
+
+    // Make order with two line items and return created entity id
+    val orderId = order insert List(
+      (chocolateId, 48.00, 1),
+      (whiskyId, 38.00, 2)
+    ) last
+
+    // Alternatively we can use the following notation - useful when having several varying
+    // aliases pointing to the same namespace:
+    //    val order = m(Order.lineItems(LineItem.product.price.quantity))
+
+
+    // Find id of order with chocolate
+    val orderIdFound = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
+    orderIdFound === orderId
+
+
+    // Touch entity ................................
+
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+    orderId.touch === Map(
+      ":db/id" -> 17592186045423L,
+      ":order/lineItems" -> List(
+        Map(
+          ":db/id" -> 17592186045421L,
+          ":lineItem/product" -> List(Map(":db/id" -> chocolateId, ":product/description" -> "Expensive Chocolate")),
+          ":lineItem/quantity" -> 1,
+          ":lineItem/price" -> 48.0),
+        Map(
+          ":db/id" -> 17592186045422L,
+          ":lineItem/product" -> List(Map(":db/id" -> whiskyId, ":product/description" -> "Cheap Whisky")),
+          ":lineItem/quantity" -> 2,
+          ":lineItem/price" -> 38.0)
+      ))
+
+    // Retract nested data ............................
+
+    // Retract entity - all subcomponents/lineItems are retracted
+    orderId.retract
+
+    // The products are still there
+    Product.description("Expensive Chocolate" or "Cheap Whisky").ids === List(chocolateId, whiskyId)
+  }
 
 
   "Query tour (trees)" >> {
 
     // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
 
-    // Add data ...................................
-
-    // 1. Make db
+    // 1-2. Make db
     implicit val conn = load(SocialNewsSchema.tx, "SocialNews")
 
     // Add Stories
@@ -129,49 +127,47 @@ class DayOfDatomic extends DayOfAtomicSpec {
     (s1, s2, s3) === (17592186045418L, 17592186045419L, 17592186045420L)
     (stu, ed) === (17592186045422L, 17592186045423L)
 
+    // 3. Finding All Users
+    User.firstName.ids === List(stu, ed)
 
-    // A first query ..............................
-
-//    // 3. Finding All Users
-//    User.firstName.ids === List(stu, ed)
-//
-//    // 4. Finding a specific user
-//    User.email("editor@example").ids.head === ed
+    // 4. Finding a specific user
+    User.email("editor@example").ids.head === ed
 
 
     // Add comments ..............................
 
     // Users can Comment on a Story and on other Comments so we treat Comments as Nodes of a Tree
-    val comment = Comment.author.text node
 
     // Stu's first Comment to Story 1
-    // The `--` method inserts the new Comment as a subcomponent/child Node of Story 1
-    // This way we can create trees/graphs
-    val c1 = comment(stu, "blah 1") -- s1
+    // Here we insert the data "manually", attribute by attribute and then associate the Comment to the Story
+    val c1 = Comment.author(stu).text("blah 1") insertAndConnectTo s1
+
+    // Use an insertNode as a template to ease inserting multiple nodes...
+    val comment = Comment.author.text insertNode
 
     // Ed's Comment to Stu's first Comment
-    // The `--` method now inserts the new Comment as a subcomponent of Comment 1
-    val c2 = comment(ed, "blahh 2") -- c1
+    // (Associated entity id `c1` is supplied in second parameter list
+    val c2 = comment(ed, "blahh 2")(c1)
 
     // Etc...
-    val c3 = comment(stu, "blah 3") -- c2
-    val c4 = comment(ed, "blahh 4") -- c3
+    val c3 = comment(stu, "blah 3")(c2)
+    val c4 = comment(ed, "blahh 4")(c3)
 
 
     // Story 2 comments
-    val c5 = comment(ed, "blahh 5") -- s2
-    val c6 = comment(stu, "blah 6") -- c5
+    val c5 = comment(ed, "blahh 5")(s2)
+    val c6 = comment(stu, "blah 6")(c5)
 
     // Story 3 comments
-    val c7 = comment(ed, "blahh 7") -- s3
-    val c8 = comment(stu, "blah 8") -- c7
+    val c7 = comment(ed, "blahh 7")(s3)
+    val c8 = comment(stu, "blah 8")(c7)
     // Stu comments on his own comment
-    val c9 = comment(stu, "blah 9") -- c8
+    val c9 = comment(stu, "blah 9")(c8)
 
     // Story 2 again - a second thread of comments. This time Stu starts
-    val c10 = comment(stu, "blah 10") -- s2
-    val c11 = comment(ed, "blahh 11") -- c10
-    val c12 = comment(stu, "blah 12") -- c11
+    val c10 = comment(stu, "blah 10")(s2)
+    val c11 = comment(ed, "blahh 11")(c10)
+    val c12 = comment(stu, "blah 12")(c11)
 
     // New Comment ids (a second entity is created for each association)
     List(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) === List(
@@ -179,25 +175,30 @@ class DayOfDatomic extends DayOfAtomicSpec {
       17592186045437L, 17592186045439L, 17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L
     )
 
-    // A database join ..............................
-
     // 5. Find Ed and Stu's comments:
     Comment.eid.Author.email("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
     Comment.eid.Author.email("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
 
+    // 6. Returning an Aggregate of Comments of some author
+    Comment.eid(count).Author.email("editor@example").get.head === 5
 
-    // Aggregates ..............................
-
-    // 6. Returning an Aggregate
-    m(Comment.eid.text(count).Author.email("editor@example")).tpls.head === 5
-
-    // Or we could get the size of the (un-aggregated) result set
+    // Or we could read the size of the (un-aggregated) result set of Comment entity ids
     Comment.eid.Author.email("editor@example").size === 5
 
+    // 7. Multiple joins
+    /* Finding comments about other people
+
+    Since Comments are defined as Nodes they can associate with any entity. We can query
+    for those associations with the `--` method
 
 
-    // More to come...
-    ok
+
+     */
+//    (Comment.author -- User.email).size === 0
+//    (User.email -- Comment.author).size === 0
+
+
+
   }
 
 

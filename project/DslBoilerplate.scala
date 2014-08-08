@@ -472,7 +472,8 @@ object DslBoilerplate {
             else
               (imp ++ defaults ++ attrCode ++ refCode ++ inputMethods).mkString("{\n  ", "\n  ", "\n}\n")
           }
-          Some(s"trait ${Ns1}_Out_$out$TraitTypes extends Out_$out$TraitTypes $outBody")
+          val Node = if (internalAttrs.isEmpty) "" else "Node"
+          Some(s"trait ${Ns1}_Out_$out$TraitTypes extends ${Node}Molecule_$out$TraitTypes $outBody")
 
         } else {
 

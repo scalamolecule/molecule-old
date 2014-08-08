@@ -314,6 +314,15 @@ class SeattleTests extends SeattleSpec {
       .Neighborhood.name("myNeighborhood")
       .District.name("myDistrict").region("nw").save === List(17592186045890L, 17592186045891L, 17592186045892L)
 
+//    Community
+//      .name("AAA")
+//      .url("myUrl")
+//      .`type`("twitter")
+//      .orgtype("personal")
+//      .category("my", "favorites") // many cardinality allows multiple values
+//      .Neighborhood.name("myNeighborhood")
+//      .District.name("myDistrict").region("nw").insert === List(17592186045890L, 17592186045891L, 17592186045892L)
+
     // Confirm all data is inserted
     Community.name.contains("AAA").url.`type`.orgtype.category.Neighborhood.name.District.name.region.take(1) === List(
       ("AAA", "myUrl", "twitter", "personal", Set("my", "favorites"), "myNeighborhood", "myDistrict", "nw"))
@@ -327,15 +336,18 @@ class SeattleTests extends SeattleSpec {
     // This approach is useful to insert larger data sets or if want to make several similar inserts
 
     // Define a template molecule (all attributes of the tutorial schema!)
-    val communityTemplate = m(Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region)
+//    val communityTemplate = m(Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region)
+    val insertCommunity = Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert
 
     // Insert data as args matching the attributes of the template
     //    communityTemplate.insert("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "ne") === List(
-    communityTemplate.insert("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s") === List(
+    insertCommunity("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s") === List(
+//    communityTemplate.insert("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s") === List(
       17592186045894L, 17592186045895L, 17592186045896L)
 
     // Insert data as HList
-    communityTemplate.insert("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil) === List(
+    insertCommunity("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil) === List(
+//    communityTemplate.insert("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil) === List(
       17592186045898L, 17592186045899L, 17592186045900L)
 
 
@@ -367,7 +379,8 @@ class SeattleTests extends SeattleSpec {
     Community.category.get.head.size === 88
 
     // Re-use community template to insert 3 new communities with 3 new neighborhoods
-    communityTemplate.insert(newCommunitiesData) === List(17592186045909L, 17592186045910L, 17592186045912L, 17592186045913L, 17592186045915L, 17592186045916L)
+    insertCommunity(newCommunitiesData) === List(17592186045909L, 17592186045910L, 17592186045912L, 17592186045913L, 17592186045915L, 17592186045916L)
+//    communityTemplate.insert(newCommunitiesData) === List(17592186045909L, 17592186045910L, 17592186045912L, 17592186045913L, 17592186045915L, 17592186045916L)
 
     // Data has been added
     Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.tpls === newCommunitiesData
