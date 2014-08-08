@@ -209,7 +209,7 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?)) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")))
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")))
       ) -->
       Query(
         Find(List(
@@ -230,7 +230,7 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?)).apply("twitter") -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")))
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")))
       ) -->
       Query(
         Find(List(
@@ -260,7 +260,7 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?!)) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?!")), Some(":community.type/")))
+        Atom("community", "type", "String", 1, QmR, Some(":community.type/")))
       ) -->
       Query(
         Find(List(
@@ -286,7 +286,7 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?!)).apply("twitter") -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?!")), Some(":community.type/")))
+        Atom("community", "type", "String", 1, QmR, Some(":community.type/")))
       ) -->
       Query(
         Find(List(
@@ -323,7 +323,7 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?!)).apply("facebook_page" or "twitter") -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?!")), Some(":community.type/")))
+        Atom("community", "type", "String", 1, QmR, Some(":community.type/")))
       ) -->
       Query(
         Find(List(
@@ -361,7 +361,7 @@ class SeattleTransformationTests extends SeattleSpec {
       //    m(Community.name.`type`(?!)).apply(List("facebook_page", "twitter")) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?!")), Some(":community.type/")))
+        Atom("community", "type", "String", 1, QmR, Some(":community.type/")))
       ) -->
       Query(
         Find(List(
@@ -399,8 +399,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?).orgtype(?)) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")),
-        Atom("community", "orgtype", "String", 1, Eq(List("?")), Some(":community.orgtype/")))
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")),
+        Atom("community", "orgtype", "String", 1, Qm, Some(":community.orgtype/")))
       ) -->
       Query(
         Find(List(
@@ -431,8 +431,8 @@ class SeattleTransformationTests extends SeattleSpec {
       //    m(Community.name.`type`(?).orgtype(?)).apply(List(("email_list", "community"))) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")),
-        Atom("community", "orgtype", "String", 1, Eq(List("?")), Some(":community.orgtype/")))
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")),
+        Atom("community", "orgtype", "String", 1, Qm, Some(":community.orgtype/")))
       ) -->
       Query(
         Find(List(
@@ -471,8 +471,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?!).orgtype(?!)) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?!")), Some(":community.type/")),
-        Atom("community", "orgtype", "String", 1, Eq(List("?!")), Some(":community.orgtype/")))
+        Atom("community", "type", "String", 1, QmR, Some(":community.type/")),
+        Atom("community", "orgtype", "String", 1, QmR, Some(":community.orgtype/")))
       ) -->
       Query(
         Find(List(
@@ -516,8 +516,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?!).orgtype(?!)).apply(Seq(("email_list", "community"), ("website", "commercial"))) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?!")), Some(":community.type/")),
-        Atom("community", "orgtype", "String", 1, Eq(List("?!")), Some(":community.orgtype/")))
+        Atom("community", "type", "String", 1, QmR, Some(":community.type/")),
+        Atom("community", "orgtype", "String", 1, QmR, Some(":community.orgtype/")))
       ) -->
       Query(
         Find(List(
@@ -587,7 +587,7 @@ class SeattleTransformationTests extends SeattleSpec {
 
     m(Community.name < ?) -->
       Model(List(
-        Atom("community", "name", "String", 1, Lt("?")))
+        Atom("community", "name", "String", 1, Lt(Qm)))
       ) -->
       Query(
         Find(List(
@@ -608,7 +608,7 @@ class SeattleTransformationTests extends SeattleSpec {
 
     m(Community.name < ?).apply("C") -->
       Model(List(
-        Atom("community", "name", "String", 1, Lt("?")))
+        Atom("community", "name", "String", 1, Lt(Qm)))
       ) -->
       Query(
         Find(List(
@@ -656,7 +656,7 @@ class SeattleTransformationTests extends SeattleSpec {
 
     m(Community.name contains ?) -->
       Model(List(
-        Atom("community", "name", "String", 1, Fulltext(List("?"))))
+        Atom("community", "name", "String", 1, Fulltext(Seq(Qm))))
       ) -->
       Query(
         Find(List(
@@ -676,7 +676,7 @@ class SeattleTransformationTests extends SeattleSpec {
 
     m(Community.name contains ?).apply("Wallingford") -->
       Model(List(
-        Atom("community", "name", "String", 1, Fulltext(List("?"))))
+        Atom("community", "name", "String", 1, Fulltext(List(Qm))))
       ) -->
       Query(
         Find(List(
@@ -729,8 +729,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?).category contains ?) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")),
-        Atom("community", "category", "Set[String]", 2, Fulltext(List("?")), None))
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")),
+        Atom("community", "category", "Set[String]", 2, Fulltext(List(Qm)), None))
       ) -->
       Query(
         Find(List(
@@ -757,8 +757,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?).category contains ?).apply("website", Set("food")) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")),
-        Atom("community", "category", "Set[String]", 2, Fulltext(List("?")), None))
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")),
+        Atom("community", "category", "Set[String]", 2, Fulltext(List(Qm)), None))
       ) -->
       Query(
         Find(List(
@@ -922,10 +922,10 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.`type`(?).Neighborhood.District.region(?)) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")),
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")),
         Bond("community", "neighborhood"),
         Bond("neighborhood", "district"),
-        Atom("district", "region", "String", 1, Eq(List("?")), Some(":district.region/")))
+        Atom("district", "region", "String", 1, Qm, Some(":district.region/")))
       ) -->
       Query(
         Find(List(
@@ -957,10 +957,10 @@ class SeattleTransformationTests extends SeattleSpec {
     ) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Atom("community", "type", "String", 1, Eq(List("?")), Some(":community.type/")),
+        Atom("community", "type", "String", 1, Qm, Some(":community.type/")),
         Bond("community", "neighborhood"),
         Bond("neighborhood", "district"),
-        Atom("district", "region", "String", 1, Eq(List("?")), Some(":district.region/")))
+        Atom("district", "region", "String", 1, Qm, Some(":district.region/")))
       ) -->
       Query(
         Find(List(

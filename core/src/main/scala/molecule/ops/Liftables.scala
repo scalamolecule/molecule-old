@@ -1,4 +1,5 @@
-package molecule.ops
+package molecule
+package ops
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.util.MacroHelpers
@@ -20,6 +21,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case date: java.util.Date => q"new Date(${date.getTime})"
     case uuid: java.util.UUID => q"java.util.UUID.fromString(${uuid.toString})"
     case uri: java.net.URI    => q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
+    case qm: Qm.type          => q"Qm"
+    case qmr: QmR.type        => q"${"QmR"}"
     case other                => abort("[Liftables:liftAny] Can't lift unexpected base type: " + other.getClass)
   }
 
@@ -98,13 +101,17 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   // Liftables for Model --------------------------------------------------------------
 
   implicit val liftTerm = Liftable[Value] {
-    case NoValue          => q"NoValue"
-    case Blank            => q"Blank"
-    case EntValue         => q"EntValue"
-    case VarValue         => q"VarValue"
-    case EnumVal          => q"EnumVal"
-    case Eq(values)       => q"Eq(Seq(..$values))"
-    case Lt(value)        => q"Lt($value)"
+    case NoValue    => q"NoValue"
+    case Blank      => q"Blank"
+    case EntValue   => q"EntValue"
+    case VarValue   => q"VarValue"
+    case EnumVal    => q"EnumVal"
+    case Eq(values) => q"Eq(Seq(..$values))"
+    case Lt(value)  => q"Lt($value)"
+    case Fn(value)  => q"Fn($value)"
+    case Qm         => q"Qm"
+    case QmR        => q"QmR"
+    //    case Contains(value)  => q"Contains($value)"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
     case Replace(values)  => {
       val v2 = values.map(v => (v._1, v._2) match {

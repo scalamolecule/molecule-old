@@ -62,18 +62,18 @@ trait DatomicFacade extends Debug {
 
     //    println(conn)
     //    println(conn.db)
-    //    println(query.format)
-    //    println("---------------- ")
-    //    println(query.pretty)
-    //    println("---------------- ")
-    //    println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
-    //    println("---------------- ")
+//        println(query.format)
+//        println("---------------- ")
+//        println(query.pretty)
+//        println("---------------- ")
+//        println("RULES: " + (if (query.in.rules.isEmpty) "none" else query.in.rules map p mkString ("[\n ", "\n ", "\n]")))
+//        println("---------------- ")
 
     val first = if (query.in.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
-    //    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
-    //    println("###########################################################################################\n")
+//        println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
+//        println("###########################################################################################\n")
 
     Peer.q(query.toMap, allInputs: _*)
   }

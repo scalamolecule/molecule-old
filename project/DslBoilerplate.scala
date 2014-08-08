@@ -410,13 +410,16 @@ object DslBoilerplate {
             val nextOutTypes = OutTypes.mkString(", ")
             val nextOut = s"${Ns1}_Out_$out[$nextOutTypes] {}"
 
+            val nextOutIntTypes = (OutTypes.init :+ "Int").mkString(", ")
+            val nextOutInt = s"${Ns1}_Out_$out[$nextOutIntTypes] {}"
+
             Seq( s"""
                        |  def apply(in: ?.type)    = new $curIn
                        |  def apply(in: ?!.type)   = new $nextIn
                        |  def <(in: ?.type)        = new $nextIn
                        |  def contains(in: ?.type) = new $nextIn
                        |  def apply(m: maybe.type) = new $nextOut
-                       |  def apply(c: count.type) = new $nextOut
+                       |  def apply(c: count.type) = new $nextOutInt
                        |  """.stripMargin.trim)
           } else Seq()
 

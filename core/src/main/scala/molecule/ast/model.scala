@@ -33,6 +33,11 @@ object model {
   case class Eq(values: Seq[Any]) extends Value
   case class Lt(value: Any) extends Value
   case class Fulltext(search: Seq[Any]) extends Value
+  case class Fn(name: String) extends Value
+
+  case object Qm extends Value
+  case object QmR extends Value
+//  case class Contains(s: String) extends Value
 
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value

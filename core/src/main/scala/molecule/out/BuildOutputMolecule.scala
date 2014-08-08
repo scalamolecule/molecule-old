@@ -8,7 +8,6 @@ import molecule.transform._
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
-
 trait BuildOutputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
   val x = debug("BuildMolecule", 1, 60, false)
@@ -33,6 +32,9 @@ trait BuildOutputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
         ident -> q"${TermName(ident.toString.substring(9))}"
     }).toMap
+
+//    x(12, model0)
+
     q"""
       ..$imports
       val model = Model($model0.elements.map {

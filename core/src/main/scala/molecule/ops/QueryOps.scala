@@ -41,8 +41,8 @@ object QueryOps {
     def data(e: String, ns: String, a: String, t: String): Query =
       q.copy(where = Where(q.where.clauses :+ DataClause(ImplDS, Var(e, t), KW(ns, a), NoVal, Empty)))
 
-    def data(e: String, ns: String, a: String, t: String, qvs: String): Query =
-      q.copy(where = Where(q.where.clauses :+ DataClause(e, KW(ns, a), t, qvs)))
+    def data(e: String, ns: String, a: String, t: String, v: String): Query =
+      q.copy(where = Where(q.where.clauses :+ DataClause(e, KW(ns, a), t, v)))
 
     def data(e: String, a: Atom, qv: Val): Query =
       q.copy(where = Where(q.where.clauses :+ DataClause(e, KW(a.ns, a.name), a.tpeS, qv)))

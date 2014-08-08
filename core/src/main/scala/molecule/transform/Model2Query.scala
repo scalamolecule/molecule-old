@@ -1,4 +1,5 @@
-package molecule.transform
+package molecule
+package transform
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ops.QueryOps._
@@ -19,24 +20,30 @@ object Model2Query extends Debug {
           case (_, VarValue, _) => q.data(e, a, v).output(v, t)
           case (_, EnumVal, _)  => q.enum(e, a, v).output(v2, t)
 
-          // Equals
-          case (_, Eq(Seq("?")), p@Some(_))             => q.enum(e, a, v, 0).input(v, a, p, e)
-          case (_, Eq(Seq("?!")), p@Some(_))            => q.enum(e, a, v).input(v, a, p).output(v2, t)
-          case (_, Eq(Seq("?")), _)                     => q.data(e, a, v).input(v, a)
-          case (2, Eq(Seq("?!")), _)                    => q.data(e, a, v).input(v, a).output("distinct", Seq(), v, t)
-          case (_, Eq(Seq("?!")), _)                    => q.data(e, a, v).input(v, a).output(v, t)
+          // Input
+          case (_, Qm, p@Some(_))  => q.enum(e, a, v, 0).input(v, a, p, e)
+          case (_, QmR, p@Some(_)) => q.enum(e, a, v).input(v, a, p).output(v2, t)
+          case (_, Qm, _)          => q.data(e, a, v).input(v, a)
+          case (2, QmR, _)         => q.data(e, a, v).input(v, a).output("distinct", Seq(), v, t)
+          case (_, QmR, _)         => q.data(e, a, v).input(v, a).output(v, t)
+
+          // Values
           case (_, Eq(ss), Some(prefix)) if ss.size > 1 => q.orRules(e, a, ss.map(prefix + _))
           case (_, Eq(ss), _) if ss.size > 1            => q.orRules(e, a, ss)
           case (_, Eq(s :: Nil), Some(prefix))          => q.data(e, a, Val(prefix + s))
           case (_, Eq(s :: Nil), _)                     => q.data(e, a, Val(s))
 
           // Compare
-          case (_, Lt("?"), _) => q.compare("<", e, a, v, Var(v1), v2).input(v1, a)
-          case (_, Lt(st), _)  => q.compare("<", e, a, v, Val(st), v1)
+          case (_, Lt(Qm), _)  => q.compare("<", e, a, v, Var(v1), v2).input(v1, a)
+          case (_, Lt(arg), _) => q.compare("<", e, a, v, Val(arg), v1)
+
+          // Functions
+          case (_, Fn("count"), _) => q.data(e, a, v).output("count", Seq(), e, "Int")
+//          case (_, Fn("count"), _) => q.output("count", Seq(), e, "Int")
 
           // Fulltext search
-          case (2, Fulltext(Seq("?")), _)  => q.fulltext(e, a, v, Var(v1)).output("distinct", Seq(), v, t).input(v1, a)
-          case (_, Fulltext(Seq("?")), _)  => q.fulltext(e, a, v, Var(v1)).output(v, t).input(v1, a)
+          case (2, Fulltext(Seq(Qm)), _)   => q.fulltext(e, a, v, Var(v1)).output("distinct", Seq(), v, t).input(v1, a)
+          case (_, Fulltext(Seq(Qm)), _)   => q.fulltext(e, a, v, Var(v1)).output(v, t).input(v1, a)
           case (2, Fulltext(qv :: Nil), _) => q.fulltext(e, a, v, Val(qv)).output("distinct", Seq(), v, t)
           case (_, Fulltext(qv :: Nil), _) => q.fulltext(e, a, v, Val(qv)).output(v, t)
           case (_, Fulltext(qvs), _)       => q.fulltext(e, a, v, Var(v1)).output(v, t).orRules(v1, a, qvs)
@@ -44,7 +51,7 @@ object Model2Query extends Debug {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-//        case Node(parent, ns) => q.ref(parent, ns, refAttr, child, refNs)
+        //        case Node(parent, ns) => q.ref(parent, ns, refAttr, child, refNs)
 
         case Group(ref, elements) => q
 
