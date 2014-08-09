@@ -1,6 +1,5 @@
 package molecule
 package examples.seattle
-import molecule.dsl.DbSchema
 import molecule.dsl.DbSchema._
 import molecule.examples.seattle.dsl.seattle._
 import scala.language.reflectiveCalls
@@ -466,7 +465,7 @@ class SeattleQueryTests extends SeattleSpec {
     /** Insert data into molecule and save ***********************************************/
 
     testInsertMolecule(
-      Community.insert
+      Community
         .name("AAA")
         .url("myUrl")
         .`type`("twitter")
@@ -535,13 +534,15 @@ class SeattleQueryTests extends SeattleSpec {
 
     implicit val conn = loadSeattle(4)
 
-    val belltownId = Community.name("belltown").ids.head
+    val belltownId: Long = Community.name("belltown").ids.head
 
 
     // One-cardinality attributes ..............................
 
     // Assert new value
-    Community.update(belltownId).name("belltown 2").url("url 2") -->
+    testUpdateMolecule(
+      Community.name("belltown 2").url("url 2")
+    ) --> belltownId -->
       """List(
         |  List(  :db/add,   17592186045888,   :community/url ,   url 2       )
         |  List(  :db/add,   17592186045888,   :community/name,   belltown 2  )
@@ -551,7 +552,9 @@ class SeattleQueryTests extends SeattleSpec {
     // Many-cardinality attributes ............................
 
     // Retract current value + assert new value
-    Community.update(belltownId).category("news" -> "Cool news") -->
+    testUpdateMolecule(
+      Community.category("news" -> "Cool news")
+    ) --> belltownId -->
       """List(
         |  List(  :db/retract,   17592186045888,   :community/category,   news       )
         |  List(  :db/add    ,   17592186045888,   :community/category,   Cool news  )
@@ -559,10 +562,12 @@ class SeattleQueryTests extends SeattleSpec {
 
 
     // Update multiple categories
-    Community.update(belltownId).category(
-      "Cool news" -> "Super cool news",
-      "events" -> "Super cool events"
-    ) -->
+    testUpdateMolecule(
+      Community.category(
+        "Cool news" -> "Super cool news",
+        "events" -> "Super cool events"
+      )
+    ) --> belltownId -->
       """List(
         |  List(  :db/retract,   17592186045888,   :community/category,   Cool news          )
         |  List(  :db/add    ,   17592186045888,   :community/category,   Super cool news    )
@@ -572,14 +577,18 @@ class SeattleQueryTests extends SeattleSpec {
 
 
     // Add a category
-    Community.update(belltownId).category.add("extra category") -->
+    testUpdateMolecule(
+      Community.category.add("extra category")
+    ) --> belltownId -->
       """List(
         |  List(  :db/add,   17592186045888,   :community/category,   extra category  )
         |)""".stripMargin
 
 
     // Remove a category
-    Community.update(belltownId).category.remove("Super cool events") -->
+    testUpdateMolecule(
+      Community.category.remove("Super cool events")
+    ) --> belltownId -->
       """List(
         |  List(  :db/retract,   17592186045888,   :community/category,   Super cool events  )
         |)""".stripMargin
@@ -589,7 +598,9 @@ class SeattleQueryTests extends SeattleSpec {
 
     // Applying nothing (empty parenthesises) finds and retract all values of an attribute
     // Note how the name is updated at the same time
-    Community.update(belltownId).name("belltown 3").url().category() -->
+    testUpdateMolecule(
+      Community.name("belltown 3").url().category()
+    ) --> belltownId -->
       """List(
         |  List(  :db/retract,   17592186045888,   :community/category,   events                          )
         |  List(  :db/retract,   17592186045888,   :community/category,   news                            )

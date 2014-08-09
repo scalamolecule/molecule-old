@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = debug("Dsl2Model", 1, 10, true)
+  val x = debug("Dsl2Model", 1, 10, false)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -47,23 +47,31 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   }
 
   def atomOp(attr: Tree, op: Tree, values0: Tree) = {
+    def errValue(v: Any) = abort(s"[Dsl2Model:atomOp] Unexpected resolved value for `${attr.name}.$op`: $v")
+    //    x(1, values0, getValues(attr, values0))
+
     val values = getValues(attr, values0)
     val modelValue = op.toString() match {
       case "apply"    => values match {
-        case Fn(name)     => Fn(name)
-        case vs: Seq[_]   => Eq(vs)
-        case qm: ?.type   => Qm
-        case qmr: ?!.type => QmR
+        case resolved: Value => resolved
+        case vs: Seq[_]      => if(vs.isEmpty) Remove(Seq()) else Eq(vs)
+        case other           => errValue(other)
       }
       case "$less"    => values match {
-        case qm: ?.type => Lt(Qm)
-        case vs: Seq[_] => Lt(vs.head)
+        case qm: Qm.type => Lt(Qm)
+        case vs: Seq[_]  => Lt(vs.head)
       }
       case "contains" => values match {
-        case qm: ?.type => Fulltext(Seq(Qm))
-        case vs: Seq[_] => Fulltext(vs)
+        case qm: Qm.type => Fulltext(Seq(Qm))
+        case vs: Seq[_]  => Fulltext(vs)
       }
-      case unexpected => abort(s"[Dsl2Model:operation] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
+      case "add"      => values match {
+        case vs: Seq[_] => Eq(vs)
+      }
+      case "remove"      => values match {
+        case vs: Seq[_] => Remove(vs)
+      }
+      case unexpected => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
     }
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
     Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
@@ -79,44 +87,49 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   // Values --------------------------------------------------------------------------
 
-  val pkg   = q"molecule.this.`package`"
-  val ident = "__ident__"
-
   def getValues(attr: Tree, values: Tree): Any = values match {
-    case q"Seq($pkg.?)"     => ?
-    case q"Seq($pkg.?!)"    => ?!
+    case q"Seq($pkg.?)"     => Qm
+    case q"Seq($pkg.?!)"    => QmR
     case q"Seq($pkg.count)" => Fn("count")
-    case q"Seq(..$vs)"      => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+    case q"Seq(..$vs)"      =>
+//      if (vs.isEmpty) abort(s"[Dsl2Model:getValues] Unexpected empty values for attribute `${attr.name}`")
+      vs match {
+        case tpls if tpls.nonEmpty && tpls.head.tpe <:< weakTypeOf[Tuple2[_, _]] =>
+          val oldNew: Map[Any, Any] = tpls.map {
+            case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
+          }.toMap
+          Replace(oldNew)
+
+        case other => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+      }
     case v                  => resolveValues(v, att(q"$attr"))
   }
 
   def extract(t: Tree) = t match {
     case Constant(v: String)          => v
     case Literal(Constant(v: String)) => v
-    case Ident(TermName(v: String))   => ident + v
+    case Ident(TermName(v: String))   => "__ident__" + v
     case v                            => v
   }
 
   def resolveValues(tree: Tree, at: att) = {
-    val emptyErr = s"[Dsl2Model:resolveValues] Unexpected empty values for attribute `${at.name}`"
-
     def validateStaticEnums(value: Any) = {
       if (at.isEnum
         && value != "?"
-        && !value.toString.startsWith(ident)
+        && !value.toString.startsWith("__ident__")
         && !at.enumValues.contains(value.toString)
-      ) abort(s"[Dsl2Model:resolveValues] '$value' is not among available enum values of attribute ${at.kwS}:\n  " +
+      ) abort(s"[Dsl2Model:validateStaticEnums] '$value' is not among available enum values of attribute ${at.kwS}:\n  " +
         at.enumValues.sorted.mkString("\n  "))
       value
     }
     def resolve(tree: Tree, values: Seq[Tree] = Seq()): Seq[Tree] = tree match {
       case q"$a.or($b)"             => resolve(b, resolve(a, values))
       case q"${_}.string2Model($v)" => values :+ v
-      case Apply(_, vs) /* Set */   => if (vs.isEmpty) abort(emptyErr) else vs.flatMap(vs ++ resolve(_))
+      case Apply(_, vs)             => values ++ vs.flatMap(resolve(_))
       case v                        => values :+ v
     }
     val values = resolve(tree) map extract map validateStaticEnums
-    if (values.isEmpty) abort(emptyErr)
+    if (values.isEmpty) abort(s"[Dsl2Model:resolveValues] Unexpected empty values for attribute `${at.name}`")
     values
   }
 }

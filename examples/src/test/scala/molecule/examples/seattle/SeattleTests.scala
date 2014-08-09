@@ -23,6 +23,7 @@ class SeattleTests extends SeattleSpec {
   // Todo: Getting an entity's attribute values
   // (have focused on queries only for now)
 
+
   "Querying _for_ attribute values" >> {
 
     // When querying directly we can omit the implicit `m` method to create the molecule:
@@ -189,6 +190,7 @@ class SeattleTests extends SeattleSpec {
 
 
   "Invoking functions in queries" >> {
+
     val beforeC = List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
 
     m(Community.name < "C").take(3) === beforeC
@@ -295,33 +297,15 @@ class SeattleTests extends SeattleSpec {
 
     implicit val conn = loadSeattle(3)
 
-    /* To insert data we have 2 options:
-       1. Build a molecule with data and insert.
-       2. Use molecule template to insert matching data (like a parameterized insert). */
-
-
-    /** Insert data into molecule and save ***********************************************/
-
-    // This approach is useful to insert data "manually", having data close to the attribute
-
-    // Build a new community in a new neighborhood in a new district and insert. Created entity ids are returned.
-    Community.insert
+    // Add Community with Neighborhood and Region
+    Community
       .name("AAA")
       .url("myUrl")
       .`type`("twitter")
       .orgtype("personal")
       .category("my", "favorites") // many cardinality allows multiple values
       .Neighborhood.name("myNeighborhood")
-      .District.name("myDistrict").region("nw").save === List(17592186045890L, 17592186045891L, 17592186045892L)
-
-//    Community
-//      .name("AAA")
-//      .url("myUrl")
-//      .`type`("twitter")
-//      .orgtype("personal")
-//      .category("my", "favorites") // many cardinality allows multiple values
-//      .Neighborhood.name("myNeighborhood")
-//      .District.name("myDistrict").region("nw").insert === List(17592186045890L, 17592186045891L, 17592186045892L)
+      .District.name("myDistrict").region("nw").insert === List(17592186045890L, 17592186045891L, 17592186045892L)
 
     // Confirm all data is inserted
     Community.name.contains("AAA").url.`type`.orgtype.category.Neighborhood.name.District.name.region.take(1) === List(
@@ -330,24 +314,17 @@ class SeattleTests extends SeattleSpec {
     // Now we have one more community
     Community.name.size === 151
 
+    // We can also insert data in two steps:
 
-    /** Use molecule as template to insert matching data sets ********************************************/
-
-    // This approach is useful to insert larger data sets or if want to make several similar inserts
-
-    // Define a template molecule (all attributes of the tutorial schema!)
-//    val communityTemplate = m(Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region)
+    // 1. Define an "InsertMolecule" (can be re-used!)
     val insertCommunity = Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert
 
-    // Insert data as args matching the attributes of the template
-    //    communityTemplate.insert("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "ne") === List(
+    // 2. Apply data to the InsertMolecule
     insertCommunity("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s") === List(
-//    communityTemplate.insert("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s") === List(
       17592186045894L, 17592186045895L, 17592186045896L)
 
     // Insert data as HList
     insertCommunity("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil) === List(
-//    communityTemplate.insert("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil) === List(
       17592186045898L, 17592186045899L, 17592186045900L)
 
 
@@ -373,14 +350,13 @@ class SeattleTests extends SeattleSpec {
       ("DDD Interbay District Blog", "http://interbayneighborhood.neighborlogs.com/", "blog", "community", Set("DD cat 3"), "DD Interbay", "Magnolia/Queen Anne", "w"),
       ("DDD KOMO Communities - West Seattle", "http://westseattle.komonews.com", "blog", "commercial", Set("DD cat 4"), "DD West Seattle", "Southwest", "sw")
     )
-    // (We could have entered all data of the Seattle sample application in 150 lines of raw data like those lines above)
+    // (This is how we have entered the data of the Seattle sample application - see SeattleSpec that this test class extends)
 
     // Categories before insert (one Set with distinct values)
     Community.category.get.head.size === 88
 
-    // Re-use community template to insert 3 new communities with 3 new neighborhoods
+    // Re-use insert molecule to insert 3 new communities with 3 new neighborhoods
     insertCommunity(newCommunitiesData) === List(17592186045909L, 17592186045910L, 17592186045912L, 17592186045913L, 17592186045915L, 17592186045916L)
-//    communityTemplate.insert(newCommunitiesData) === List(17592186045909L, 17592186045910L, 17592186045912L, 17592186045913L, 17592186045915L, 17592186045916L)
 
     // Data has been added
     Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.tpls === newCommunitiesData
@@ -395,14 +371,13 @@ class SeattleTests extends SeattleSpec {
 
     implicit val conn = loadSeattle(4)
 
-
     // One-cardinality attributes..........................
 
     // Finding the Belltown community entity id (or we could have got it along user input etc...)
     val belltownId = Community.name("belltown").ids.head
 
     // Replace some belltown attributes
-    Community.update(belltownId).name("belltown 2").url("url 2").save
+    Community.name("belltown 2").url("url 2").update(belltownId)
 
     // Find belltown by its updated name and confirm that the url is also updated
     Community.name("belltown 2").url.get === List("url 2")
@@ -414,21 +389,21 @@ class SeattleTests extends SeattleSpec {
     Community.name("belltown 2").category.get.head === Set("news", "events")
 
     // Tell which value to update
-    Community.update(belltownId).category("news" -> "Cool news").save
+    Community.category("news" -> "Cool news").update(belltownId)
     Community.name("belltown 2").category.get.head === Set("Cool news", "events")
 
     // Or update multiple values in one go...
-    Community.update(belltownId).category(
+    Community.category(
       "Cool news" -> "Super cool news",
-      "events" -> "Super cool events").save
+      "events" -> "Super cool events").update(belltownId)
     Community.name("belltown 2").category.get.head === Set("Super cool news", "Super cool events")
 
     // Add value
-    Community.update(belltownId).category.add("extra category").save
+    Community.category.add("extra category").update(belltownId)
     Community.name("belltown 2").category.get.head === Set("Super cool news", "Super cool events", "extra category")
 
     // Remove value
-    Community.update(belltownId).category.remove("Super cool events").save
+    Community.category.remove("Super cool events").update(belltownId)
     Community.name("belltown 2").category.get.head === Set("Super cool news", "extra category")
 
 
@@ -439,7 +414,7 @@ class SeattleTests extends SeattleSpec {
       "belltown 2" :: "blog" :: "url 2" :: Set("Super cool news", "extra category") :: HNil)
 
     // Applying nothing (empty parenthesises) finds and retract all values of an attribute
-    Community.update(belltownId).name("belltown 3").url().category().save
+    Community.name("belltown 3").url().category().update(belltownId)
 
     // Belltown has no longer a url or any categories
     Community.name("belltown 3").name.`type`.url.category.hls === List()

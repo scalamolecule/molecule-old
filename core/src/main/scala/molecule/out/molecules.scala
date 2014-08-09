@@ -8,7 +8,7 @@ import molecule.dsl.schemaDSL.NS
 import shapeless.{::, HNil}
 
 
-// Molecule arities
+// Molecule markers
 
 trait Molecule_0 extends NS
 trait Molecule_1[A] extends NS
@@ -35,7 +35,7 @@ trait Molecule_21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]
 trait Molecule_22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] extends NS
 
 
-// Molecule interfaces
+// Molecule base classes
 
 trait Molecule extends DatomicFacade {
    val _model: Model
@@ -53,8 +53,8 @@ trait Molecule extends DatomicFacade {
 }
 
 abstract class Molecule0(val _model: Model, val _query: Query) extends Molecule {
-//  def save2
-  def insert(implicit conn: Cnx): Seq[Long] = upsert(conn, _model)
+  def insert                (implicit conn: Cnx): Seq[Long] = upsert(conn, _model)
+  def update(updateId: Long)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(), Seq(updateId))
 }
 
 abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecule {

@@ -1037,7 +1037,7 @@ class SeattleTransformationTests extends SeattleSpec {
     /** Insert data into molecule and save ***********************************************/
 
     testInsertMolecule(
-      Community.insert
+      Community
         .name("AAA")
         .url("myUrl")
         .`type`("twitter")
@@ -1052,9 +1052,9 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "type", "String", 1, Eq(List("twitter")), Some(":community.type/")),
         Atom("community", "orgtype", "String", 1, Eq(List("personal")), Some(":community.orgtype/")),
         Atom("community", "category", "Set[String]", 2, Eq(List("my", "favorites")), None),
-        Bond("community", "neighborhood", "neighborhood"),
+        Bond("community", "neighborhood", ""),
         Atom("neighborhood", "name", "String", 1, Eq(List("myNeighborhood")), None),
-        Bond("neighborhood", "district", "district"),
+        Bond("neighborhood", "district", ""),
         Atom("district", "name", "String", 1, Eq(List("myDistrict")), None),
         Atom("district", "region", "String", 1, Eq(List("nw")), Some(":district.region/")))
       ) -->
@@ -1136,7 +1136,9 @@ class SeattleTransformationTests extends SeattleSpec {
     // One-cardinality attributes ..............................
 
     // Assert new value
-    Community.update(belltownId).name("belltown 2").url("url 2") -->
+    testUpdateMolecule(
+      Community.name("belltown 2").url("url 2")
+    ) --> belltownId -->
       Model(List(
         Atom("community", "name", "String", 1, Eq(List("belltown 2")), None),
         Atom("community", "url", "String", 1, Eq(List("url 2")), None))
@@ -1150,7 +1152,9 @@ class SeattleTransformationTests extends SeattleSpec {
     // Many-cardinality attributes ............................
 
     // Retract current value + assert new value
-    Community.update(belltownId).category("news" -> "Cool news") -->
+    testUpdateMolecule(
+      Community.category("news" -> "Cool news")
+    ) --> belltownId -->
       Model(List(
         Atom("community", "category", "Set[String]", 2, Replace(Map("news" -> "Cool news")), None))
       ) -->
@@ -1161,10 +1165,12 @@ class SeattleTransformationTests extends SeattleSpec {
 
 
     // Update multiple categories
-    Community.update(belltownId).category(
-      "Cool news" -> "Super cool news",
-      "events" -> "Super cool events"
-    ) -->
+    testUpdateMolecule(
+      Community.category(
+        "Cool news" -> "Super cool news",
+        "events" -> "Super cool events"
+      )
+    ) --> belltownId -->
       Model(List(
         Atom("community", "category", "Set[String]", 2, Replace(Map(
           "Cool news" -> "Super cool news",
@@ -1179,7 +1185,9 @@ class SeattleTransformationTests extends SeattleSpec {
 
 
     // Add a category
-    Community.update(belltownId).category.add("extra category") -->
+    testUpdateMolecule(
+      Community.category.add("extra category")
+    ) --> belltownId -->
       Model(List(
         Atom("community", "category", "Set[String]", 2, Eq(List("extra category")), None))
       ) -->
@@ -1189,7 +1197,9 @@ class SeattleTransformationTests extends SeattleSpec {
 
 
     // Remove a category
-    Community.update(belltownId).category.remove("Super cool events") -->
+    testUpdateMolecule(
+      Community.category.remove("Super cool events")
+    ) --> belltownId -->
       Model(List(
         Atom("community", "category", "Set[String]", 2, Remove(List("Super cool events")), None))
       ) -->
@@ -1202,11 +1212,13 @@ class SeattleTransformationTests extends SeattleSpec {
 
     // Applying nothing (empty parenthesises) finds and retract all values of an attribute
     // Note how the name is updated at the same time
-    Community.update(belltownId).name("belltown 3").url().category() -->
+    testUpdateMolecule(
+      Community.name("belltown 3").url().category()
+    ) --> belltownId -->
       Model(List(
         Atom("community", "name", "String", 1, Eq(List("belltown 3")), None),
-        Atom("community", "url", "", 1, Remove(List()), None),
-        Atom("community", "category", "", 2, Remove(List()), None))
+        Atom("community", "url", "String", 1, Remove(List()), None),
+        Atom("community", "category", "Set[String]", 2, Remove(List()), None))
       ) -->
       """List(
         |  List(  :db/retract,   17592186045888,   :community/category,   events                          )

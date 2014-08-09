@@ -63,31 +63,31 @@ object DslBoilerplate {
           def extract(str: String, elements: Seq[Any] = Seq()): Seq[Any] = str match {
 
             // One
-            case r"oneString(.*)$rest"  => extract(rest, Seq("attr", attr, "String", 1, "OneString(ns1, ns2)"))
-            case r"oneByte(.*)$rest"    => extract(rest, Seq("attr", attr, "Byte", 1, "OneByte(ns1, ns2)"))
-            case r"oneShort(.*)$rest"   => extract(rest, Seq("attr", attr, "Short", 1, "OneShort(ns1, ns2)"))
-            case r"oneInt(.*)$rest"     => extract(rest, Seq("attr", attr, "Int", 1, "OneInt(ns1, ns2)"))
-            case r"oneLong(.*)$rest"    => extract(rest, Seq("attr", attr, "Long", 1, "OneLong(ns1, ns2)"))
-            case r"oneFloat(.*)$rest"   => extract(rest, Seq("attr", attr, "Float", 1, "OneFloat(ns1, ns2)"))
-            case r"oneDouble(.*)$rest"  => extract(rest, Seq("attr", attr, "Double", 1, "OneDouble(ns1, ns2)"))
-            case r"oneBoolean(.*)$rest" => extract(rest, Seq("attr", attr, "Boolean", 1, "OneBoolean(ns1, ns2)"))
-            case r"oneDate(.*)$rest"    => extract(rest, Seq("attr", attr, "java.util.Date", 1, "OneDate(ns1, ns2)"))
-            case r"oneUUID(.*)$rest"    => extract(rest, Seq("attr", attr, "java.util.UUID", 1, "OneUUID(ns1, ns2)"))
-            case r"oneURI(.*)$rest"     => extract(rest, Seq("attr", attr, "java.net.URI", 1, "OneURI(ns1, ns2)"))
+            case r"oneString(.*)$rest"  => extract(rest, Seq("attr", attr, "String", 1, "OneString"))
+            case r"oneByte(.*)$rest"    => extract(rest, Seq("attr", attr, "Byte", 1, "OneByte"))
+            case r"oneShort(.*)$rest"   => extract(rest, Seq("attr", attr, "Short", 1, "OneShort"))
+            case r"oneInt(.*)$rest"     => extract(rest, Seq("attr", attr, "Int", 1, "OneInt"))
+            case r"oneLong(.*)$rest"    => extract(rest, Seq("attr", attr, "Long", 1, "OneLong"))
+            case r"oneFloat(.*)$rest"   => extract(rest, Seq("attr", attr, "Float", 1, "OneFloat"))
+            case r"oneDouble(.*)$rest"  => extract(rest, Seq("attr", attr, "Double", 1, "OneDouble"))
+            case r"oneBoolean(.*)$rest" => extract(rest, Seq("attr", attr, "Boolean", 1, "OneBoolean"))
+            case r"oneDate(.*)$rest"    => extract(rest, Seq("attr", attr, "java.util.Date", 1, "OneDate"))
+            case r"oneUUID(.*)$rest"    => extract(rest, Seq("attr", attr, "java.util.UUID", 1, "OneUUID"))
+            case r"oneURI(.*)$rest"     => extract(rest, Seq("attr", attr, "java.net.URI", 1, "OneURI"))
 
             // Many
-            case r"manyString(.*)$rest" => extract(rest, Seq("attr", attr, "Set[String]", 2, "ManyString(ns1, ns2)"))
-            case r"manyInt(.*)$rest"    => extract(rest, Seq("attr", attr, "Set[Int]", 2, "ManyInt(ns1, ns2)"))
-            case r"manyLong(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[Long]", 2, "ManyLong(ns1, ns2)"))
-            case r"manyFloat(.*)$rest"  => extract(rest, Seq("attr", attr, "Set[Float]", 2, "ManyFloat(ns1, ns2)"))
-            case r"manyDouble(.*)$rest" => extract(rest, Seq("attr", attr, "Set[Double]", 2, "ManyDouble(ns1, ns2)"))
-            case r"manyDate(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[java.util.Date]", 2, "ManyDate(ns1, ns2)"))
-            case r"manyUUID(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[java.util.UUID]", 2, "ManyUUID(ns1, ns2)"))
-            case r"manyURI(.*)$rest"    => extract(rest, Seq("attr", attr, "Set[java.net.URI]", 2, "ManyURI(ns1, ns2)"))
+            case r"manyString(.*)$rest" => extract(rest, Seq("attr", attr, "Set[String]", 2, "ManyString"))
+            case r"manyInt(.*)$rest"    => extract(rest, Seq("attr", attr, "Set[Int]", 2, "ManyInt"))
+            case r"manyLong(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[Long]", 2, "ManyLong"))
+            case r"manyFloat(.*)$rest"  => extract(rest, Seq("attr", attr, "Set[Float]", 2, "ManyFloat"))
+            case r"manyDouble(.*)$rest" => extract(rest, Seq("attr", attr, "Set[Double]", 2, "ManyDouble"))
+            case r"manyDate(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[java.util.Date]", 2, "ManyDate"))
+            case r"manyUUID(.*)$rest"   => extract(rest, Seq("attr", attr, "Set[java.util.UUID]", 2, "ManyUUID"))
+            case r"manyURI(.*)$rest"    => extract(rest, Seq("attr", attr, "Set[java.net.URI]", 2, "ManyURI"))
 
             // Enums
-            case r"oneEnum\((.*)$enums\)"  => Seq("enum", attr, "String", 1, "OneEnum(ns1, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
-            case r"manyEnum\((.*)$enums\)" => Seq("enum", attr, "Set[String]", 2, "ManyEnums(ns1, ns2)") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
+            case r"oneEnum\((.*)$enums\)"  => Seq("enum", attr, "String", 1, "OneEnum") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
+            case r"manyEnum\((.*)$enums\)" => Seq("enum", attr, "Set[String]", 2, "ManyEnums") ++ enums.replaceAll("'", "").split(",").toList.map(_.trim)
 
             // Refs
             case r"one\[(.*)$ref\](.*)$rest"  => extract(rest, Seq("OneRef", attr, "Long", 1, ref))
@@ -247,136 +247,26 @@ object DslBoilerplate {
 
     // NS =======================================================================================
 
-    val attrClasses = attrs.tail.map { case (cat, attr, _, tpe, baseType, _, ext, defs, padAttr, padAttrClean, _, _) =>
+    // I know, I know, this is clumsy
+    val attrs2 = attrs.tail.map {
+      case ("OneRef", b, c, d, e, f, g, h, i, j, k, l)  => ("OneRef", b, c, d, e, f, g, h, i, j, k, l, "OneRefAttr")
+      case ("ManyRef", b, c, d, e, f, g, h, i, j, k, l) => ("ManyRef", b, c, d, e, f, g, h, i, j, k, l, "ManyRefAttr")
+      case (a, b, c, d, e, f, g, h, i, j, k, l)         => (a, b, c, d, e, f, g, h, i, j, k, l, g)
+    }
+    val longestSchemaType = attrs2.map(_._13.length).max
+    val attrClasses = attrs2.map { case (cat, attr, _, tpe, baseType, _, ext, defs, padAttr, padAttrClean, _, _, ext2) =>
+      val pad = " " * (longestSchemaType - ext2.length)
+      val ext3 = ext2 + pad + " (ns1, ns2)"
+
       val (extensions, enumValues) = cat match {
-        case "enum"    => (ext, s"private lazy val ${defs.mkString(", ")} = EnumValue")
-        case "OneRef"  => ("OneRefAttr(ns1, ns2)", "")
-        case "ManyRef" => ("ManyRefAttr(ns1, ns2)", "")
-        case _         => ((ext +: defs).mkString(" with "), "")
+//        case "enum"    => (ext3, s"{\n    private lazy val ${defs.mkString(", ")} = EnumValue\n  }")
+        case "enum"    => (ext3, s"{ private lazy val ${defs.mkString(", ")} = EnumValue }")
+        case "OneRef"  => (ext3, "")
+        case "ManyRef" => (ext3, "")
+        case _         => ((ext3 +: defs).mkString(" with "), "")
       }
-      val oldNew = s"def apply(data: oldNew[$baseType]) = ${Ns1}_Update()"
-      val baseElements = Seq(enumValues, oldNew) map (_.trim) filter (_.nonEmpty) mkString "\n    "
-      s"""class $attr[Ns1, Ns2](ns1: Ns1, ns2: Ns2) extends $extensions {
-       |    $baseElements
-       |  }
-       |""".stripMargin
+      s"class $attr $padAttr[Ns1, Ns2](ns1: Ns1, ns2: Ns2) extends $extensions $enumValues"
     }.mkString("\n  ").trim
-
-
-
-    // NS_Insert =======================================================================================
-
-    val insertAttrs1 = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, _, padBaseType) =>
-      val enumPrefix = if (cat == "enum") s""", Some(":$ns1.$attrClean/")""" else ""
-      if (card == 1)
-        s"""lazy val $attr $padAttr= (data: $baseType$padBaseType) => _insert(Seq(data), $card, "$attrClean"$padAttrClean, "$tpe"$padBaseType$enumPrefix)"""
-      else
-        s"lazy val $attr $padAttr= ${attr.replace("`", "")}_"
-    } mkString "\n  "
-
-    val insertAttrs2 = attrs.filter(_._6 == 2).map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, _) =>
-      val pad = " " * (baseType.length - 2)
-      val enumPrefix = if (cat == "enum") s""", Some(":$ns1.$attrClean/")""" else ""
-      s"""private[$domain] object ${attrClean}_ {
-       |    def apply(h: $baseType, t: $baseType*) = _insert(h +: t.toList, $card, "$attrClean"$padAttrClean, "$tpe"$enumPrefix)
-       |    def apply(data: Seq[$baseType])$pad = _insert(data,          $card, "$attrClean"$padAttrClean, "$tpe"$enumPrefix)
-       |  }""".stripMargin
-    } mkString "\n  "
-
-    val insertRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      s"""def ${attr.capitalize} = ${ref}_Insert(elements :+ Bond("$ns1", "$attr", "${firstLow(ref)}"))"""
-    } mkString "\n  "
-
-    val treeMethods = if (internalAttrs.isEmpty) ""
-    else
-      s"""
-         |  // Node methods
-         |  def attachedTo(id: Long)(implicit conn: Connection): Long = upsert(conn, Model(elements)).head
-         |  def <--(id: Long)(implicit conn: Connection): Long = upsert(conn, Model(elements)).head
-         |  def +: (id: Long)(implicit conn: Connection): Long = {
-         |    // todo add id...
-         |    upsert(conn, Model(elements)).head
-         |  }
-       """.stripMargin
-
-    val inserts = Seq(insertAttrs1, insertAttrs2, insertRefs, treeMethods) map (_.trim) filter (_.nonEmpty) mkString "\n\n  "
-
-
-
-    // NS_Update =======================================================================================
-
-    val updateAttrs1 = valueAttrs.map { case (_, attr, attrClean, _, _, _, _, _, padAttr, padAttrClean, _, _) =>
-      s"lazy val $attr $padAttr= ${attrClean}_"
-    } mkString "\n  "
-
-    val updateAttrs2 = valueAttrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
-      val enumPrefix = if (cat == "enum") s""", Some(":$ns1.$attrClean/")""" else ""
-      if (card == 1) {
-        val pad = " " * longestBaseType
-        s"""private[$domain] object ${attrClean}_ {
-         |    def apply(data: $baseType) $padBaseType= _assertNewFact(Seq(data), $card, "$attrClean", "$tpe"$enumPrefix)
-         |    def apply()$pad       = _retract(                 $card, "$attrClean")
-         |  }""".stripMargin
-      } else {
-        val pad3 = " " * (baseType.length * 3)
-        val pad4 = " " * (baseType.length * 4)
-        s"""private[$domain] object ${attrClean}_ {
-         |    def apply(h: ($baseType, $baseType), t: ($baseType, $baseType)*) = _swap(h +: t.toList            , "$attrClean", "$tpe"$enumPrefix)
-         |    def remove(values: $baseType*) $pad3       = _removeElements(Seq(values: _*), "$attrClean", "$tpe"$enumPrefix)
-         |    def add(data: $baseType) $pad3             = _assertNewFact(Seq(data),     2, "$attrClean", "$tpe"$enumPrefix)
-         |    def apply() $pad4                 = _retract(                     $card, "$attrClean")
-         |  }""".stripMargin
-      }
-    } mkString "\n  "
-
-    val updateRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      s"""def ${attr.capitalize} = ${ref}_Update(elements :+ Bond("$ns1", "$attr", "${firstLow(ref)}"), ids)"""
-
-    } mkString "\n  "
-
-    val updates = Seq(updateAttrs1, updateAttrs2, updateRefs) map (_.trim) filter (_.nonEmpty) mkString "\n\n  "
-
-
-
-    // NS_Retract =======================================================================================
-
-    val retractAttrs1 = valueAttrs.map { case (_, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, _, padBaseType) =>
-      if (card == 1)
-        s"""lazy val $attr $padAttr= _retract($card, "$attrClean"$padAttrClean, "$tpe"$padBaseType)"""
-      else
-        s"lazy val $attr $padAttr= ${attrClean}_"
-    } mkString "\n  "
-
-    val retractAttrs2 = valueAttrs.filter(_._6 == 2).map { case (_, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
-      val pad = " " * (baseType.length - 2)
-      s"""private[$domain] object ${attrClean}_ {
-       |    def apply() $padBaseType                     = _retract($card, "$attrClean", "$tpe")
-       |    def apply(h: $baseType, t: $baseType*) = _retract($card, "$attrClean", "$tpe")
-       |    def apply(data: Seq[$baseType]) $pad= _retract($card, "$attrClean", "$tpe")
-       |  }""".stripMargin
-    } mkString "\n  "
-
-    val retractRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      s"""def ${attr.capitalize} = ${ref}_Retract(elements :+ Bond("$ns1", "$attr", "${firstLow(ref)}"))"""
-
-    } mkString "\n  "
-
-    val retracts = Seq(retractAttrs1, retractAttrs2, retractRefs) map (_.trim) filter (_.nonEmpty) mkString "\n\n  "
-
-
-
-    // NS_Entity =======================================================================================
-
-    val entities1 = valueAttrs.map { case (_, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, _, padBaseType) =>
-      s"""lazy val $attr $padAttr= _get($card, "$attrClean"$padAttrClean, "$tpe"$padBaseType)"""
-    } mkString "\n  "
-
-    val entityRefs = refAttrs.map { case (_, attr, attrClean, _, refType, _, ref, defs, padAttr, _, padType, _) =>
-      s"def ${attr.capitalize} = ${ref}_Entity(elements)"
-    } mkString "\n  "
-
-    val entities = Seq(entities1, entityRefs) map (_.trim) filter (_.nonEmpty) mkString "\n\n  "
-
 
 
     // Arity classes ######################################################################################
@@ -393,7 +283,7 @@ object DslBoilerplate {
 
         if (in == 0) {
 
-          // Out_o ================================================================================================
+          // Molecule_x ================================================================================================
 
           val TraitTypes = if (out == 0) "" else s"[${OutTypes mkString ", "}]"
 
@@ -401,17 +291,17 @@ object DslBoilerplate {
             val newInTypes = if (OutTypes.isEmpty) InTypes else InTypes :+ OutTypes.last
 
             val curTypes = (if (OutTypes.isEmpty) newInTypes else newInTypes ++ OutTypes.init).mkString(", ")
-            val curOut = s"${Ns1}_Out_${out - 1}[$curTypes] {}"
+            val curOut = s"${Ns1}_${out - 1}[$curTypes] {}"
             val curIn = s"${Ns1}_In_${in + 1}_${out - 1}[$curTypes] {}"
 
             val nextInTypes = (newInTypes ++ OutTypes).mkString(", ")
             val nextIn = s"${Ns1}_In_${in + 1}_$out[$nextInTypes] {}"
 
             val nextOutTypes = OutTypes.mkString(", ")
-            val nextOut = s"${Ns1}_Out_$out[$nextOutTypes] {}"
+            val nextOut = s"${Ns1}_$out[$nextOutTypes] {}"
 
             val nextOutIntTypes = (OutTypes.init :+ "Int").mkString(", ")
-            val nextOutInt = s"${Ns1}_Out_$out[$nextOutIntTypes] {}"
+            val nextOutInt = s"${Ns1}_$out[$nextOutIntTypes] {}"
 
             Seq( s"""
                        |  def apply(in: ?.type)    = new $curIn
@@ -427,15 +317,12 @@ object DslBoilerplate {
 
             val defaults = if (in + out == 0 && attrs1.nonEmpty) {
               val (_, attr, tpeFirst, _, _, _, _) = attrs1.head
-              Seq( s"""def apply(eid: Long)        = this
-                    |  def update(eid: Long)       = ${Ns1}_Update(Seq(), Seq(eid))
-                    |  def update(eids: Seq[Long]) = ${Ns1}_Update(Seq(), eids)
-                    |""".stripMargin)
+              Seq("def apply(eid: Long) = this")
             } else Seq()
 
             val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
               val nextTypes = (OutTypes :+ tpe) mkString ", "
-              val nextNS = s"${Ns1}_Out_${out + 1}[$nextTypes]$padType"
+              val nextNS = s"${Ns1}_${out + 1}[$nextTypes]$padType"
               s"lazy val $attr $padAttr= new $attr $padAttr(this, new $nextNS {}) with $nextNS {}"
             }
 
@@ -446,8 +333,8 @@ object DslBoilerplate {
                 // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
                 val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
                 val maxPad = refTypeLists.last.length * 4 - 2
-                val refPad = " " * (s" []($attr: ${ref}_Out_X[])".length + maxPad * 2)
-                val refNs: String = s"def ${attr.capitalize}$refPad= new $cat[$Ns1, $ref] with ${ref}_Out_$out$TraitTypes"
+                val refPad = " " * (s" []($attr: ${ref}_X[])".length + maxPad * 2)
+                val refNs: String = s"def ${attr.capitalize}$refPad= new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes"
 
                 val (named, stars) = refTypeLists.map { refTypeList =>
                   val types = refTypeList.mkString(", ")
@@ -455,14 +342,14 @@ object DslBoilerplate {
                   val padStar = pad + (" " * (attr.length - 1))
                   val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
                   val allTypes = if (out == 0) refTypes else TraitTypes.init.tail + ", " + refTypes
-                  val name = s"def $attr[$types]$pad($attr: ${ref}_Out_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_Out_${out + 1}[$allTypes]"
-                  val star = s"def *[$types]$padStar($attr: ${ref}_Out_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_Out_${out + 1}[$allTypes]"
+                  val name = s"def $attr[$types]$pad($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
+                  val star = s"def *[$types]$padStar($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
                   (name, star)
                 }.unzip
                 refNs +: (named ++ stars)
               } else {
                 // Link to referenced cardinality-one namespace
-                Seq(s"def ${attr.capitalize} = new $cat[$Ns1, $ref] with ${ref}_Out_$out$TraitTypes")
+                Seq(s"def ${attr.capitalize} = new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes")
               }
               acc ++ refs
             }.tail
@@ -473,7 +360,7 @@ object DslBoilerplate {
               (imp ++ defaults ++ attrCode ++ refCode ++ inputMethods).mkString("{\n  ", "\n  ", "\n}\n")
           }
           val Node = if (internalAttrs.isEmpty) "" else "Node"
-          Some(s"trait ${Ns1}_Out_$out$TraitTypes extends ${Node}Molecule_$out$TraitTypes $outBody")
+          Some(s"trait ${Ns1}_$out$TraitTypes extends ${Node}Molecule_$out$TraitTypes $outBody")
 
         } else {
 
@@ -498,7 +385,7 @@ object DslBoilerplate {
               // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
               val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
               val maxPad = refTypeLists.last.length * 4 - 2
-              val refPad = " " * (s" []($attr: ${ref}_Out_X[])".length + maxPad * 2)
+              val refPad = " " * (s" []($attr: ${ref}_X[])".length + maxPad * 2)
               val refNs: String = s"def ${attr.capitalize}$refPad = new $cat[$Ns1, $ref] with ${ref}_In_${in}_$out[$InOutTypes]"
 
               val (named, stars) = refTypeLists.map { refTypeList =>
@@ -507,8 +394,8 @@ object DslBoilerplate {
                 val padStar = pad + (" " * (attr.length - 1))
                 val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
                 val allTypes = if (out == 0) (InTypes :+ refTypes).mkString(", ") else InOutTypes + ", " + refTypes
-                val name = s"def $attr[$types]$pad($attr: ${ref}_Out_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
-                val star = s"def *[$types]$padStar($attr: ${ref}_Out_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
+                val name = s"def $attr[$types]$pad($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
+                val star = s"def *[$types]$padStar($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
                 (name, star)
               }.unzip
               refNs +: (named ++ stars)
@@ -554,56 +441,18 @@ object DslBoilerplate {
                    | */
                    |package $path.dsl.$domain
                    |import molecule._
-                   |import molecule.ast.model._
                    |import molecule.dsl.schemaDSL._
                    |import molecule.in._
                    |import molecule.out._$connImport
                    |
                    |
-                   |/********* $domainNs ${"*" * (60 - domainNs.length)}/
-                   |
                    |trait $Ns1
-                   |object $Ns1 extends $Ns1 with ${Ns1}_Out_0 {
+                   |
+                   |object $Ns1 extends $Ns1 with ${Ns1}_0 {
                    |  $attrClasses
-                   |
-                   |  def insert = ${Ns1}_Insert()
                    |}
                    |
-                   |/********* Runtime manipulation molecules ******************************/
-                   |
-                   |case class ${Ns1}_Insert(override val elements: Seq[Element] = Seq()) extends Insert(elements) {
-                   |  $inserts
-                   |
-                   |  private def _insert(data: Seq[Any], card: Int, attr: String, tpe: String, enumPrefix: Option[String] = None) =
-                   |    ${Ns1}_Insert(elements :+ Atom("$ns1", attr, tpe, card, Eq(data), enumPrefix))
-                   |}
-                   |
-                   |case class ${Ns1}_Update(override val elements: Seq[Element] = Seq(), override val ids: Seq[Long] = Seq()) extends Update(elements, ids) {
-                   |  $updates
-                   |
-                   |  private def _assertNewFact(data: Seq[Any], card: Int, attr: String, tpe: String, enumPrefix: Option[String] = None) =
-                   |    ${Ns1}_Update(elements :+ Atom("$ns1", attr, tpe, card, Eq(data), enumPrefix), ids)
-                   |
-                   |  private def _swap(oldNew: Seq[(Any, Any)], attr: String, tpe: String, enumPrefix: Option[String] = None) =
-                   |    ${Ns1}_Update(elements :+ Atom("$ns1", attr, tpe, 2, Replace(oldNew.toMap), enumPrefix), ids)
-                   |
-                   |  private def _removeElements(values: Seq[Any], attr: String, tpe: String, enumPrefix: Option[String] = None) =
-                   |    ${Ns1}_Update(elements :+ Atom("$ns1", attr, tpe, 2, Remove(values), enumPrefix), ids)
-                   |
-                   |  private def _retract(card: Int, attr: String) =
-                   |    ${Ns1}_Update(elements :+ Atom("$ns1", attr, "", card, Remove(Seq())), ids)
-                   |}
-                   |
-                   |case class ${Ns1}_Retract(elements: Seq[Element] = Seq()) extends Retract(elements) {
-                   |  $retracts
-                   |
-                   |  private def _retract(card: Int, attr: String, tpe: String, data: Seq[Any] = Seq()) =
-                   |    ${Ns1}_Retract(elements :+ Atom("$ns1", attr, tpe, card, Eq(data)))
-                   |}
-                   |
-                   |/********* Output molecules ********************************************/
-                   |
-                   | $boilerplateClasses
+                   |$boilerplateClasses
                   """.stripMargin
 
     val dslFile: File = path.split('.').toList.foldLeft(srcManaged)((file, pkg) => file / pkg) / "dsl" / domain / s"$Ns1.scala"

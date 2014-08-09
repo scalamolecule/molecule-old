@@ -1,5 +1,7 @@
 package molecule
 package ops
+import java.net.URI
+import java.util.{UUID, Date => jDate}
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.util.MacroHelpers
@@ -10,21 +12,41 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   val z = debug("Liftables", 1, 10, true)
 
 
-  // Lift allowed base types
+  // General liftables --------------------------------------------------------------
+
+  def mkDate(date: jDate) = q"new Date(${date.getTime})"
+  def mkUUID(uuid: UUID) = q"java.util.UUID.fromString(${uuid.toString})"
+  def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
+
   implicit val liftAny = Liftable[Any] {
-    case s: String            => q"$s"
-    case i: Int               => q"$i"
-    case l: Long              => q"$l"
-    case f: Float             => q"$f"
-    case d: Double            => q"$d"
-    case b: Boolean           => q"$b"
-    case date: java.util.Date => q"new Date(${date.getTime})"
-    case uuid: java.util.UUID => q"java.util.UUID.fromString(${uuid.toString})"
-    case uri: java.net.URI    => q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
-    case qm: Qm.type          => q"Qm"
-    case qmr: QmR.type        => q"${"QmR"}"
-    case other                => abort("[Liftables:liftAny] Can't lift unexpected base type: " + other.getClass)
+    case s: String     => q"$s"
+    case i: Int        => q"$i"
+    case l: Long       => q"$l"
+    case f: Float      => q"$f"
+    case d: Double     => q"$d"
+    case b: Boolean    => q"$b"
+    case date: jDate   => mkDate(date)
+    case uuid: UUID    => mkUUID(uuid)
+    case uri: URI      => mkURI(uri)
+    case qm: Qm.type   => q"Qm"
+    case qmr: QmR.type => q"QmR"
+    case other         => abort("[Liftables:liftAny] Can't lift unexpected base type: " + other.getClass)
   }
+
+  implicit val liftTuple2 = Liftable[Product] {
+    case (k, v) => (k, v) match {
+      case (k: String, v: String) => q"($k, $v)"
+      case (k: Int, v: Int)       => q"($k, $v)"
+      case (k: Long, v: Long)     => q"($k, $v)"
+      case (k: Float, v: Float)   => q"($k, $v)"
+      case (k: Double, v: Double) => q"($k, $v)"
+      case (k: jDate, v: jDate)   => q"(${mkDate(k)}, ${mkDate(v)})"
+      case (k: UUID, v: UUID)     => q"(${mkUUID(k)}, ${mkUUID(v)})"
+      case (k: URI, v: URI)       => q"(${mkURI(k)}, ${mkURI(v)})"
+    }
+    case other  => abort("[Liftables:liftTuple2] Can't lift unexpected product type: " + other.getClass)
+  }
+
 
   // Liftables for Query --------------------------------------------------------------
 
@@ -98,31 +120,23 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     q"import molecule.ast.query._; Query(${q.find}, ${q.widh}, ${q.in}, ${q.where})"
   }
 
+
   // Liftables for Model --------------------------------------------------------------
 
   implicit val liftTerm = Liftable[Value] {
-    case NoValue    => q"NoValue"
-    case Blank      => q"Blank"
-    case EntValue   => q"EntValue"
-    case VarValue   => q"VarValue"
-    case EnumVal    => q"EnumVal"
-    case Eq(values) => q"Eq(Seq(..$values))"
-    case Lt(value)  => q"Lt($value)"
-    case Fn(value)  => q"Fn($value)"
-    case Qm         => q"Qm"
-    case QmR        => q"QmR"
-    //    case Contains(value)  => q"Contains($value)"
+    case NoValue          => q"NoValue"
+    case Blank            => q"Blank"
+    case EntValue         => q"EntValue"
+    case VarValue         => q"VarValue"
+    case EnumVal          => q"EnumVal"
+    case Eq(values)       => q"Eq(Seq(..$values))"
+    case Lt(value)        => q"Lt($value)"
+    case Fn(value)        => q"Fn($value)"
+    case Qm               => q"Qm"
+    case QmR              => q"QmR"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
-    case Replace(values)  => {
-      val v2 = values.map(v => (v._1, v._2) match {
-        case (q"$a", q"$b") => a -> b
-      }).toMap
-      q"Replace($v2)"
-    }
-    case Remove(values)   => {
-      val v2 = values match {case q"$a" => a}
-      q"Remove(Seq(..$v2))"
-    }
+    case Replace(values)  => q"Replace($values)"
+    case Remove(values)   => q"Remove(Seq(..$values))"
   }
 
   implicit val liftAtom  = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix})"}
