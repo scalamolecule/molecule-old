@@ -10,8 +10,12 @@ object schemaDefinition {
   // Todo: Use phantom types to build valid combinations (checkout how Rogue does it)
 
 
-  // Entity that can be attached as a subcombonent to another entity
-  trait Node
+  // Entity that can be attached as a subcomponent to another entity
+  trait SubComponent
+  trait SubComponentOf2[A, B] extends SubComponent
+  trait SubComponentOf3[A, B, C] extends SubComponent
+  trait SubComponentOf4[A, B, C, D] extends SubComponent
+  // etc...
 
   private[molecule] sealed trait anyAttr {
     def doc(s: String) = this

@@ -17,7 +17,7 @@ object model {
   // If refAttr doesn't match the referenced namespace, add refNs (and refAttr can be an arbitrary name)
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
 
-  case class Node(ns: String, otherEid: Long) extends Element
+  case class SubComponent(ns: String, parentEid: Long) extends Element
 
   // Group of elements treated as one element - allowing recursive sub models
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
@@ -70,7 +70,7 @@ object model {
   def curNs(e: Element) = e match {
     case Atom(ns, _, _, _, _, _)  => ns
     case Bond(ns, _, _)           => ns
-    case Node(ns, _)              => ns
+    case SubComponent(ns, _)              => ns
     case Group(Bond(ns, _, _), _) => ns
     case unexpected               => sys.error("[model:curNs] Unexpected element: " + unexpected)
   }

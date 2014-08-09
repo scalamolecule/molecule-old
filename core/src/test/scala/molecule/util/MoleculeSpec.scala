@@ -4,7 +4,6 @@ import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ast.transaction._
 import molecule.DatomicFacade
-import molecule.dsl.schemaDSL._
 import molecule.in.InputMolecule
 import molecule.out._
 import molecule.transform.{Model2Transaction, Query2String}
@@ -144,42 +143,4 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       formatTx(tx) === txString
     }
   }
-
-
-
-
-
-//  def testInsertMoleculeXXX(insertMolecule: Insert, ids: Seq[Long] = Seq())(implicit conn: Connection) = new {
-//    def -->(model: Model) = new {
-//      Model(insertMolecule.elements) === model
-//      def -->(txString: String) = new {
-//        val (tx, _) = Model2Transaction(conn, model, Seq(), ids).tx
-//        formatTx(tx) === txString
-//      }
-//    }
-//
-//    def -->(txString: String) = {
-//      val t = Model2Transaction
-//      val (tx, _) = Model2Transaction(conn, Model(insertMolecule.elements), Seq(), ids).tx
-//      formatTx(tx) === txString
-//    }
-//  }
-//
-//
-//
-//  implicit class updateDsl2model2txStringXXX(updateMolecule: Update)(implicit conn: Connection) {
-//    def -->(model: Model) = new {
-//      Model(updateMolecule.elements) === model
-//      def -->(txString: String) = {
-//        val (tx, _) = Model2Transaction(conn, model, Seq(), updateMolecule.ids).tx
-//        formatTx(tx) === txString
-//      }
-//    }
-//
-//    def -->(txString: String) = {
-//      val t = Model2Transaction
-//      val (tx, _) = Model2Transaction(conn, Model(updateMolecule.elements), Seq(), updateMolecule.ids).tx
-//      formatTx(tx) === txString
-//    }
-//  }
 }

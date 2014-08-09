@@ -50,7 +50,7 @@ object Model2Query extends Debug {
             case (_, Fulltext(qv :: Nil), _) => q.fulltext(e, a, v, Val(qv)).output(v, t)
             case (_, Fulltext(qvs), _)       => q.fulltext(e, a, v, Var(v1)).output(v, t).orRules(v1, a, qvs)
 
-            // Manipulation operatins are only processed in Model2Transaction, so here we just pass on an un-modified Query object
+            // Manipulation operations are only processed in Model2Transaction, so here we just pass on an un-modified Query object
             case (_, Replace(_), _) => q
             case (_, Remove(_), _)  => q
           }

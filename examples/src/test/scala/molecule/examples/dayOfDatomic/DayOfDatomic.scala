@@ -143,7 +143,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
     val c1 = Comment.author(stu).text("blah 1") insertAndConnectTo s1
 
     // Use an insertNode as a template to ease inserting multiple nodes...
-    val comment = Comment.author.text insertNode
+    val comment = Comment.author.text insertSub
 
     // Ed's Comment to Stu's first Comment
     // (Associated entity id `c1` is supplied in second parameter list
@@ -186,18 +186,28 @@ class DayOfDatomic extends DayOfAtomicSpec {
     Comment.eid.Author.email("editor@example").size === 5
 
     // 7. Multiple joins
-    /* Finding comments about other people
+    /*
 
-    Since Comments are defined as Nodes they can associate with any entity. We can query
-    for those associations with the `--` method
+    Since Comments are defined as Nodes they can join with any entity.
+    We can query for those associations with the `--` method.
+
+    On the other hand we don't expect to be able to ask the
 
 
-
+Finding comments about other people
      */
+
+//    Comment.author.--(User.email).size === 0
+
+//    (Comment.author -- Story.title.url).size === 0
+//    (Comment.author -- Story.title).size === 0
+//    (Comment.author -- Comment.text).size === 0
 //    (Comment.author -- User.email).size === 0
+
+//    (Story.title -- Comment.author).size === 0
+//
+//    // Note that since we
 //    (User.email -- Comment.author).size === 0
-
-
 
   }
 

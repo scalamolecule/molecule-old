@@ -11,7 +11,7 @@ trait SocialNewsDefinition {
     val url   = oneString.uniqueIdentity
   }
 
-  trait Comment extends Node {
+  trait Comment extends SubComponentOf2[Story, Comment]   {
     val author = one[User]
     val text   = oneString
   }

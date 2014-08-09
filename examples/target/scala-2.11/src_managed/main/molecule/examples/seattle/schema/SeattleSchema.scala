@@ -35,12 +35,6 @@ object SeattleSchema extends Transaction {
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
-             ":db/ident"             , ":community/ints",
-             ":db/valueType"         , ":db.type/long",
-             ":db/cardinality"       , ":db.cardinality/many",
-             ":db.install/_attribute", ":db.part/db"),
-
-    Util.map(":db/id"                , Peer.tempid(":db.part/db"),
              ":db/ident"             , ":community/orgtype",
              ":db/valueType"         , ":db.type/ref",
              ":db/cardinality"       , ":db.cardinality/one",

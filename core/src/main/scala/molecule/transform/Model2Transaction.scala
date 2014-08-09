@@ -44,7 +44,7 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
     var n = dataRow.size
     val ((newStmts, tempIds), _, _) = elements.foldRight(((Seq[Statement](), Seq[Object]()), "": Object, "")) {
       case (element, ((stmts, tempIds), prevId, prevNs)) => {
-        val data = if (element.isInstanceOf[Bond] || element.isInstanceOf[Node] || dataRow.isEmpty)
+        val data = if (element.isInstanceOf[Bond] || element.isInstanceOf[SubComponent] || dataRow.isEmpty)
           0
         else {
           n -= 1
@@ -93,7 +93,7 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
 
       case Bond(ns, refAttr, refNs) => stmts :+ Add(eid, s":$ns/$refAttr", prevId)
 
-      case Node(ns, otherEid) => stmts :+ Add(otherEid.asInstanceOf[Object], s":$ns/tree_", eid)
+      case SubComponent(ns, parentEid) => stmts :+ Add(parentEid.asInstanceOf[Object], s":$ns/sub_", eid)
 
       case Group(Bond(ns, refAttr, refNs), nestedElements) => {
         val nestedDataRows = nestedData(nestedElements, arg)

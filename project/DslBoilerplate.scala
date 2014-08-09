@@ -50,14 +50,14 @@ object DslBoilerplate {
     // Collect namespace definitions
     val nsDefs: Seq[(String, Seq[Seq[Any]])] = raw.foldLeft(Seq[(String, Seq[Seq[Any]])]()) {
       case (acc, l) => l match {
-        case r"\/\/.*" /* comments allowed */               => acc
-        case r"package (.*)$path\.[\w]*"                    => acc
-        case "import molecule.dsl.schemaDefinition._"       => acc
-        case r"@InOut\(\d, \d+\)"                           => acc
-        case r"trait (.*)${name}Definition \{"              => acc
-        case r"trait (\w*)$ns extends (\w*)$nsExtra \{"     => acc :+ (ns -> Seq(Seq(nsExtra)))
-        case r"trait (\w*)$ns \{"                           => acc :+ (ns -> Seq())
-        case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$s" => {
+        case r"\/\/.*" /* comments allowed */                                         => acc
+        case r"package (.*)$path\.[\w]*"                                              => acc
+        case "import molecule.dsl.schemaDefinition._"                                 => acc
+        case r"@InOut\(\d, \d+\)"                                                     => acc
+        case r"trait (.*)${name}Definition \{"                                        => acc
+        case r"trait (\w*)$ns\s*extends\s*SubComponentOf2\[(\w*)$a,\s*(\w*)$b\]\s*\{" => acc :+ (ns -> Seq(Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent", Seq(a, b))))
+        case r"trait (\w*)$ns \{"                                                     => acc :+ (ns -> Seq())
+        case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$s"                           => {
           val attr = q1 + a + q2
 
           def extract(str: String, elements: Seq[Any] = Seq()): Seq[Any] = str match {
@@ -110,19 +110,22 @@ object DslBoilerplate {
           val prevAttrs = acc.last._2
           val attrDef = extract(s)
 
-          val updatedAttrs = if (prevAttrs.nonEmpty && prevAttrs.head.nonEmpty && prevAttrs.head.size == 1) {
-            val extraAttr = prevAttrs.head.head match {
-              case "Node"     => Seq("ManyRef", "tree_", "Set[Long]", 2, "PARENT", "IsComponent")
-              case unexpected => sys.error(s"Unexpected namespace extension in ${defFile.getName}:" + unexpected)
-            }
-            prevAttrs.tail ++ Seq(extraAttr, attrDef)
-          } else {
+          val updatedAttrs =
+//            if (prevAttrs.nonEmpty && prevAttrs.head.nonEmpty && prevAttrs.head.size == 1) {
+//            val extraAttr = prevAttrs.head.head match {
+//              //              case "Sub"                                 => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent")
+////              case r"SubComponentOf2\[(\w+)$a, (\w+)$b\]" => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent", Seq(a, b))
+//              case unexpected                             => sys.error(s"Unexpected namespace extension in ${defFile.getName}:" + unexpected)
+//            }
+//            prevAttrs.tail ++ Seq(extraAttr, attrDef)
+//          } else {
+//            prevAttrs :+ attrDef
+//          }
             prevAttrs :+ attrDef
-          }
           acc.init :+ (ns -> updatedAttrs)
         }
-        case "}"                                            => acc
-        case unexpected                                     => sys.error(s"Unexpected code in ${defFile.getName}:\n" + unexpected)
+        case "}"                                                                      => acc
+        case unexpected                                                               => sys.error(s"Unexpected code in ${defFile.getName}:\n" + unexpected)
       }
     }
     (path, domain, inArity, outArity, nsDefs)
@@ -147,7 +150,7 @@ object DslBoilerplate {
       val (cat: String, attr: String, tpe: String, card: Int, ext: String, defs: List[_]) = (d(0), d(1), d(2), d(3), d(4), d.drop(5))
       (cat, attr, tpe, baseType(tpe), card, ext, defs)
     }
-    val attrs1 = attrs0.filter(a => a._2 != "tree_")
+    val attrs1 = attrs0.filter(a => a._2 != "sub_")
 
     val (longestAttr, longestAttrClean, longestType, longestBaseType) = if (attrs1.isEmpty)
       (3, 3, 4, 4) // eid: Long
@@ -168,9 +171,9 @@ object DslBoilerplate {
       (cat, attr, attrClean, tpe, baseType, card, ext, defs.map(_.toString), padAttr, padAttrClean, padType, padBaseType)
     }
 
-    val internalAttrs = attrs0.filter(a => a._2 == "tree_")
+    val internalAttrs = attrs0.filter(a => a._2 == "sub_")
     val valueAttrs = attrs.filter(a => a._1 == "attr" || a._1 == "enum")
-    val refAttrs = attrs.filter(a => (a._1 == "OneRef" || a._1 == "ManyRef") && a._2 != "tree_")
+    val refAttrs = attrs.filter(a => (a._1 == "OneRef" || a._1 == "ManyRef") && a._2 != "sub_")
 
 
     // Schema stmts ######################################################################################
@@ -259,7 +262,7 @@ object DslBoilerplate {
       val ext3 = ext2 + pad + " (ns1, ns2)"
 
       val (extensions, enumValues) = cat match {
-//        case "enum"    => (ext3, s"{\n    private lazy val ${defs.mkString(", ")} = EnumValue\n  }")
+        //        case "enum"    => (ext3, s"{\n    private lazy val ${defs.mkString(", ")} = EnumValue\n  }")
         case "enum"    => (ext3, s"{ private lazy val ${defs.mkString(", ")} = EnumValue }")
         case "OneRef"  => (ext3, "")
         case "ManyRef" => (ext3, "")
@@ -359,8 +362,8 @@ object DslBoilerplate {
             else
               (imp ++ defaults ++ attrCode ++ refCode ++ inputMethods).mkString("{\n  ", "\n  ", "\n}\n")
           }
-          val Node = if (internalAttrs.isEmpty) "" else "Node"
-          Some(s"trait ${Ns1}_$out$TraitTypes extends ${Node}Molecule_$out$TraitTypes $outBody")
+          val Sub = if (internalAttrs.isEmpty) "" else "Sub"
+          Some(s"trait ${Ns1}_$out$TraitTypes extends $Ns1 with ${Sub}Molecule_$out$TraitTypes $outBody")
 
         } else {
 
@@ -426,12 +429,12 @@ object DslBoilerplate {
           else
             (imp ++ attrCode ++ refCode ++ inputMethods).mkString("{\n  ", "\n  ", "\n}\n")
 
-          Some(s"$header trait ${Ns1}_In_${in}_$out[$InOutTypes] extends In_${in}_$out[$InOutTypes] $traitBody")
+          Some(s"$header trait ${Ns1}_In_${in}_$out[$InOutTypes] extends $Ns1 with In_${in}_$out[$InOutTypes] $traitBody")
         }
       }
     }.mkString("\n").trim
 
-    val domainNs = domain.capitalize + " : " + Ns1 + (if (internalAttrs.isEmpty) "" else " (Node implementation)")
+    val domainNs = domain.capitalize + " : " + Ns1 + (if (internalAttrs.isEmpty) "" else " (Sub implementation)")
     val connImport = if (internalAttrs.nonEmpty) "\nimport datomic.Connection" else ""
     val body = s"""|/*
                    | * AUTO-GENERATED CODE - DO NOT CHANGE!
@@ -463,21 +466,21 @@ object DslBoilerplate {
   def mkSchema(srcManaged: File, path: String, domain: String, schemaStmts: Seq[(String, Seq[Seq[(String, String)]])]) = {
     val keyValues = for {
       (ns, nsStmts) <- schemaStmts
-      node = if (nsStmts.count(_.count(_._2.endsWith("tree_")) > 0) > 0) " (Node)" else ""
+      sub = if (nsStmts.count(_.count(_._2.endsWith("sub_")) > 0) > 0) " (Sub)" else ""
       attrStmts <- nsStmts
       (key, value) <- attrStmts
-    } yield (ns, key, value, node)
+    } yield (ns, key, value, sub)
 
-    val (_, _, stmtString) = keyValues.foldLeft(("", "", "")) { case ((ns1, key1, acc), (ns, key, value, node)) =>
-      val line = "-" * (65 - (ns.length + node.length))
+    val (_, _, stmtString) = keyValues.foldLeft(("", "", "")) { case ((ns1, key1, acc), (ns, key, value, sub)) =>
+      val line = "-" * (65 - (ns.length + sub.length))
       key match {
-        case "<id>" if ns1 == ""      => (ns, key, acc + s"""|// $ns$node $line
+        case "<id>" if ns1 == ""      => (ns, key, acc + s"""|// $ns$sub $line
                                                              |
                                                              |    Util.map(":db/id"                , Peer.tempid(":db.part/db")""".stripMargin)
         case "<id>" if ns1 != ns      => (ns, key, acc + s"""|),
                                                              |
                                                              |
-                                                             |    // $ns$node $line
+                                                             |    // $ns$sub $line
                                                              |
                                                              |    Util.map(":db/id"                , Peer.tempid(":db.part/db")""".stripMargin)
         case "<id>"                   => (ns1, key, acc + s"""),\n\n    Util.map(":db/id"                , Peer.tempid(":db.part/db")""".stripMargin)
