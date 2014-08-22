@@ -8,8 +8,8 @@ import molecule.dsl.schemaDefinition._
 trait ProductsOrderDefinition {
 
   trait Order {
-    val id        = oneString
-    val lineItems = many[LineItem].components
+//    val id        = oneString
+    val lineItems = many[LineItem].subComponents
   }
 
   trait LineItem {

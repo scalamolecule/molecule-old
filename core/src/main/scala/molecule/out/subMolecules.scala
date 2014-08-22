@@ -47,14 +47,13 @@ trait SubMolecule {
 //    upsert(conn, model :+ Sub(currentNs, parentEid)).last
 //  }
 
-//  def --(other: Molecule): Molecule = ???
 }
 
 abstract class SubMolecule0(_model: Model, _query: Query) extends Molecule0(_model, _query) with SubMolecule {
 }
 
 abstract class SubMolecule1[A](_model: Model, _query: Query) extends Molecule1[A](_model, _query) with SubMolecule {
-  object insertSub {
+  object insert {
     def apply(a: A)               (parentEid: Long)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a)))
     def apply(a: A, a2: A, ax: A*)(parentEid: Long)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
     def apply(data: Seq[A])       (parentEid: Long)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(Seq(_)))

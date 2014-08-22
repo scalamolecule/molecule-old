@@ -35,15 +35,16 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case eid@q"$prev.eid"   => traverse(q"$prev", Atom(eid.ns, "eid", "Long", 1, EntValue))
     case attr@q"$prev.$cur" => traverse(q"$prev", atom(attr))
 
+//    case t@q"$prev.$manyRef[..$types]($subModel)" =>
     case t@q"$prev.$manyRef[..$types]($subModel)" =>
-      val refAttr: String = manyRef.toString match {
-        // Name of `*` method's first parameter
-        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
-        case methodName => methodName.toString
-      }
+//      val refAttr: String = manyRef.toString match {
+//        // Name of `*` method's first parameter
+//        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
+//        case methodName => methodName.toString
+//      }
       val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
       val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
-      traverse(q"$prev", Group(Bond(prev.name, refAttr, refNs), resolve(q"$subModel").elements))
+      traverse(q"$prev", Group(Bond(prev.name, manyRef, refNs), resolve(q"$subModel").elements))
   }
 
   def atomOp(attr: Tree, op: Tree, values0: Tree) = {

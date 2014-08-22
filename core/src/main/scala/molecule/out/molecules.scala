@@ -1,5 +1,5 @@
 package molecule.out
-import java.util.{Date => jDate}
+import java.util.{Date, List => jList}
 import datomic.{Connection => Cnx}
 import molecule.DatomicFacade
 import molecule.ast.model._
@@ -41,15 +41,37 @@ trait Molecule extends DatomicFacade {
    val _model: Model
    val _query: Query
 
+
+
   override def toString: String = _query.toList
-  def p = _query.pretty
+//  def p = _query.pretty
   def ids: Seq[Long]
   def size: Int = ids.size
 
+
+  def apply(other: Molecule): Molecule = ???
+
+
+//    // No further attributes after querying transaction functions
+//    lazy val tx        = new Molecule_1[Long] {}
+//    lazy val t         = new Molecule_1[Long] {}
+//    lazy val txInstant = new Molecule_1[Date] {}
+
+
+  protected type lObj = java.util.List[Object]
+  protected def asOf[M <: Molecule](d: Date, thisMolecule: M) = { dbOp = AsOf(txDate(d)); thisMolecule }
+  protected def asOf[M <: Molecule](l: Long, thisMolecule: M) = { dbOp = AsOf(txLong(l)); thisMolecule }
+  protected def asOf[M <: Molecule](t: lObj, thisMolecule: M) = { dbOp = AsOf(txlObj(t)); thisMolecule }
+
   // Kind of a hack...?
-  def asOf(date: jDate) = { dbOp = AsOf(date); this }
-  def since(date: jDate) = { dbOp = Since(date); this }
-  def imagine(tx: java.util.List[Object]) = { dbOp = Imagine(tx); this }
+//  def asOf(date: Date) = { dbOp = AsOf(date); this }
+
+//  def asOf(date: Date) = { dbOp = AsOf(txDate(date)); this }
+//  def asOf(t: Long) = { dbOp = AsOf(txLong(t)); this }
+//  def asOf(tx: jList[Object]) = { dbOp = AsOf(txTx(tx)); this }
+
+  def since(date: Date) = { dbOp = Since(date); this }
+  def imagine(tx: lObj) = { dbOp = Imagine(tx); this }
 }
 
 abstract class Molecule0(val _model: Model, val _query: Query) extends Molecule {
@@ -60,11 +82,15 @@ abstract class Molecule0(val _model: Model, val _query: Query) extends Molecule 
 abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecule {
   def get         (implicit conn: Cnx): Seq[A]
   def take(n: Int)(implicit conn: Cnx): Seq[A] = get(conn).take(n)
+  def first       (implicit conn: Cnx): A      = get(conn).head
   object insert {
     def apply(a: A)               (implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(Seq(a)))
     def apply(a: A, a2: A, ax: A*)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
     def apply(data: Seq[A])       (implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(Seq(_)))
   }
+  def asOf(d: Date) = asOf(d, this)
+  def asOf(l: Long) = asOf(l, this)
+  def asOf(t: lObj) = asOf(t, this)
 }
 
 abstract class Molecule2[A, B](val _model: Model, val _query: Query) extends Molecule {

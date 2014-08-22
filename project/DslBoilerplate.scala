@@ -99,8 +99,8 @@ object DslBoilerplate {
             case r"\.uniqueValue(.*)$rest"       => extract(rest, elements :+ "UniqueValue")
             case r"\.uniqueIdentity(.*)$rest"    => extract(rest, elements :+ "UniqueIdentity")
             case r"\.indexed(.*)$rest"           => extract(rest, elements :+ "Indexed")
-            case r"\.components(.*)$rest"        => extract(rest, elements :+ "IsComponent")
-            case r"\.component(.*)$rest"         => extract(rest, elements :+ "IsComponent")
+            case r"\.subComponents(.*)$rest"     => extract(rest, elements :+ "IsComponent")
+            case r"\.subComponent(.*)$rest"      => extract(rest, elements :+ "IsComponent")
             case r"\.noHistory(.*)$rest"         => extract(rest, elements :+ "NoHistory")
 
             case ""         => elements
@@ -111,16 +111,16 @@ object DslBoilerplate {
           val attrDef = extract(s)
 
           val updatedAttrs =
-//            if (prevAttrs.nonEmpty && prevAttrs.head.nonEmpty && prevAttrs.head.size == 1) {
-//            val extraAttr = prevAttrs.head.head match {
-//              //              case "Sub"                                 => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent")
-////              case r"SubComponentOf2\[(\w+)$a, (\w+)$b\]" => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent", Seq(a, b))
-//              case unexpected                             => sys.error(s"Unexpected namespace extension in ${defFile.getName}:" + unexpected)
-//            }
-//            prevAttrs.tail ++ Seq(extraAttr, attrDef)
-//          } else {
-//            prevAttrs :+ attrDef
-//          }
+          //            if (prevAttrs.nonEmpty && prevAttrs.head.nonEmpty && prevAttrs.head.size == 1) {
+          //            val extraAttr = prevAttrs.head.head match {
+          //              //              case "Sub"                                 => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent")
+          ////              case r"SubComponentOf2\[(\w+)$a, (\w+)$b\]" => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent", Seq(a, b))
+          //              case unexpected                             => sys.error(s"Unexpected namespace extension in ${defFile.getName}:" + unexpected)
+          //            }
+          //            prevAttrs.tail ++ Seq(extraAttr, attrDef)
+          //          } else {
+          //            prevAttrs :+ attrDef
+          //          }
             prevAttrs :+ attrDef
           acc.init :+ (ns -> updatedAttrs)
         }
@@ -320,7 +320,9 @@ object DslBoilerplate {
 
             val defaults = if (in + out == 0 && attrs1.nonEmpty) {
               val (_, attr, tpeFirst, _, _, _, _) = attrs1.head
-              Seq("def apply(eid: Long) = this")
+//              Seq("def apply(eid: Long) = this")
+              Seq( s"""|  def apply(eid: Long)     = this
+                       |  def apply(c: count.type) = new ${Ns1}_1[Int] {}""".stripMargin.trim)
             } else Seq()
 
             val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
@@ -339,17 +341,20 @@ object DslBoilerplate {
                 val refPad = " " * (s" []($attr: ${ref}_X[])".length + maxPad * 2)
                 val refNs: String = s"def ${attr.capitalize}$refPad= new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes"
 
-                val (named, stars) = refTypeLists.map { refTypeList =>
+                //                val (named, stars) = refTypeLists.map { refTypeList =>
+                val named = refTypeLists.map { refTypeList =>
                   val types = refTypeList.mkString(", ")
                   val pad = " " * (maxPad - types.length)
                   val padStar = pad + (" " * (attr.length - 1))
                   val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
                   val allTypes = if (out == 0) refTypes else TraitTypes.init.tail + ", " + refTypes
                   val name = s"def $attr[$types]$pad($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
-                  val star = s"def *[$types]$padStar($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
-                  (name, star)
-                }.unzip
-                refNs +: (named ++ stars)
+                  //                  val star = s"def *[$types]$padStar($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
+                  //                  (name, star)
+                  name
+                } //.unzip
+                //                refNs +: (named ++ stars)
+                refNs +: named
               } else {
                 // Link to referenced cardinality-one namespace
                 Seq(s"def ${attr.capitalize} = new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes")
@@ -391,7 +396,8 @@ object DslBoilerplate {
               val refPad = " " * (s" []($attr: ${ref}_X[])".length + maxPad * 2)
               val refNs: String = s"def ${attr.capitalize}$refPad = new $cat[$Ns1, $ref] with ${ref}_In_${in}_$out[$InOutTypes]"
 
-              val (named, stars) = refTypeLists.map { refTypeList =>
+              //              val (named, stars) = refTypeLists.map { refTypeList =>
+              val named = refTypeLists.map { refTypeList =>
                 val types = refTypeList.mkString(", ")
                 val pad = " " * (maxPad - types.length - 2)
                 val padStar = pad + (" " * (attr.length - 1))
@@ -399,9 +405,11 @@ object DslBoilerplate {
                 val allTypes = if (out == 0) (InTypes :+ refTypes).mkString(", ") else InOutTypes + ", " + refTypes
                 val name = s"def $attr[$types]$pad($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
                 val star = s"def *[$types]$padStar($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
-                (name, star)
-              }.unzip
-              refNs +: (named ++ stars)
+                //                (name, star)
+                name
+              } //.unzip
+              //              refNs +: (named ++ stars)
+              refNs +: named
             } else {
               // Link to referenced cardinality-one namespace
               Seq(s"def ${attr.capitalize} = new $cat[$Ns1, $ref] with ${ref}_In_${in}_$out[$InOutTypes]")

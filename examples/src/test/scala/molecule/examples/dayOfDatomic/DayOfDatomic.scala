@@ -54,21 +54,23 @@ class DayOfDatomic extends DayOfAtomicSpec {
 
     // Insert nested data .................................
 
-    // Model of order with multiple line items
-    // One-to-Many relationship where line items are subcomponents of the order
-    val order0 = m(Order * LineItem.product)
-    val order = m(Order * LineItem.product.price.quantity)
+    // Model of Order with multiple LineItems
+    // 3 LineItem attributes are treated as one Tuple3 of data
+    val order = m(Order.lineItems(LineItem.product.price.quantity))
+
+
+    val order2 = Order
 
     // Make order with two line items and return created entity id
-    val orderId = order insert List(
-      (chocolateId, 48.00, 1),
-      (whiskyId, 38.00, 2)
-    ) last
+    val orderId = order insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) last
 
-    // Alternatively we can use the following notation - useful when having several varying
-    // aliases pointing to the same namespace:
-    //    val order = m(Order.lineItems(LineItem.product.price.quantity))
-
+    //    val orderId1 = order1.insert List (
+    //      (chocolateId, 48.00, 1),
+    //      (whiskyId, 38.00, 2)
+    //      ) last
+    //      Order.id("id1").LineItems.product.price.quantity.insert
+    //
+    //    Order.LineItems.product.price.quantity.insert
 
     // Find id of order with chocolate
     val orderIdFound = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
@@ -103,7 +105,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
   }
 
 
-  "Query tour (trees)" >> {
+  "Query tour" >> {
 
     // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
 
@@ -127,7 +129,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
     (s1, s2, s3) === (17592186045418L, 17592186045419L, 17592186045420L)
     (stu, ed) === (17592186045422L, 17592186045423L)
 
-    // 3. Finding All Users
+    // 3. Finding All Users with a first name
     User.firstName.ids === List(stu, ed)
 
     // 4. Finding a specific user
@@ -136,38 +138,41 @@ class DayOfDatomic extends DayOfAtomicSpec {
 
     // Add comments ..............................
 
-    // Users can Comment on a Story and on other Comments so we treat Comments as Nodes of a Tree
+    // Users can:
 
-    // Stu's first Comment to Story 1
-    // Here we insert the data "manually", attribute by attribute and then associate the Comment to the Story
-    val c1 = Comment.author(stu).text("blah 1") insertAndConnectTo s1
+    // 1. Comment on a Story
+    val storyComment = Story.eid.Comments.author.text insert
 
-    // Use an insertNode as a template to ease inserting multiple nodes...
-    val comment = Comment.author.text insertSub
+    // 2. Comment on a Comment
+    val subComment = Comment._parent.author.text insert
+
+    // Sub-comments form hierarchical trees of Comment nodes having the
+    // previous comment as parent and the initial Story Comment as root
+
+    // Insert Stu's first comment to story 1 and return the id of this comment
+    val c1 = storyComment(s1, stu, "blah 1") head
 
     // Ed's Comment to Stu's first Comment
-    // (Associated entity id `c1` is supplied in second parameter list
-    val c2 = comment(ed, "blahh 2")(c1)
+    val c2 = subComment(c1, ed, "blah 2") head
 
-    // Etc...
-    val c3 = comment(stu, "blah 3")(c2)
-    val c4 = comment(ed, "blahh 4")(c3)
-
+    // More sub-comments
+    val c3 = subComment(c2, stu, "blah 3") head
+    val c4 = subComment(c3, ed, "blah 4") head
 
     // Story 2 comments
-    val c5 = comment(ed, "blahh 5")(s2)
-    val c6 = comment(stu, "blah 6")(c5)
+    val c5 = storyComment(s2, ed, "blah 5") head
+    val c6 = subComment(c5, stu, "blah 6") head
 
     // Story 3 comments
-    val c7 = comment(ed, "blahh 7")(s3)
-    val c8 = comment(stu, "blah 8")(c7)
+    val c7 = storyComment(s3, ed, "blah 7") head
+    val c8 = subComment(c7, stu, "blah 8") head
     // Stu comments on his own comment
-    val c9 = comment(stu, "blah 9")(c8)
+    val c9 = subComment(c8, stu, "blah 9") head
 
     // Story 2 again - a second thread of comments. This time Stu starts
-    val c10 = comment(stu, "blah 10")(s2)
-    val c11 = comment(ed, "blahh 11")(c10)
-    val c12 = comment(stu, "blah 12")(c11)
+    val c10 = storyComment(s2, stu, "blah 10") head
+    val c11 = subComment(c10, ed, "blah 11") head
+    val c12 = subComment(c11, stu, "blah 12") head
 
     // New Comment ids (a second entity is created for each association)
     List(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) === List(
@@ -175,39 +180,123 @@ class DayOfDatomic extends DayOfAtomicSpec {
       17592186045437L, 17592186045439L, 17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L
     )
 
-    // 5. Find Ed and Stu's comments:
+    // 5. Finding a User's Comments
+    // Semantically we can take two approaches:
+    // a) "Comments of Ed"
+    //    sql-style: "find Comment where email = "editor@example"
     Comment.eid.Author.email("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
-    Comment.eid.Author.email("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
+    // b) "Ed's Comments"
+    //    Using a "back-reference" from user to the comments he/she wrote
+    User.email("editor@example")._Comments.eid.get.sorted === List(c2, c4, c5, c7, c11)
 
-    // 6. Returning an Aggregate of Comments of some author
-    Comment.eid(count).Author.email("editor@example").get.head === 5
+
+    // 6. Returning an Aggregate of Comments of some Author
+    Comment(count).Author.email("editor@example").get.head === 5
+    User.email("editor@example")._Comments.eid.size === 5
 
     // Or we could read the size of the (un-aggregated) result set of Comment entity ids
     Comment.eid.Author.email("editor@example").size === 5
-
-    // 7. Multiple joins
-    /*
-
-    Since Comments are defined as Nodes they can join with any entity.
-    We can query for those associations with the `--` method.
-
-    On the other hand we don't expect to be able to ask the
+    Comment.Author.email("editor@example").size === 5
 
 
-Finding comments about other people
-     */
+    // 7. Have people commented on other people? (Multiple joins)
 
-//    Comment.author.--(User.email).size === 0
+    // Imagine we accidentally supplied a user-id (`ed`) as a parent id to our storyComment insert molecule:
+    val c13 = storyComment(ed, stu, "blah 13") head
 
-//    (Comment.author -- Story.title.url).size === 0
-//    (Comment.author -- Story.title).size === 0
-//    (Comment.author -- Comment.text).size === 0
-//    (Comment.author -- User.email).size === 0
+    // We don't want Comment on Users, so let's see if we got some by mistake:
 
-//    (Story.title -- Comment.author).size === 0
-//
-//    // Note that since we
-//    (User.email -- Comment.author).size === 0
+    // Find Comments to supposed Stories (but Users in reality)
+    // `User.email` used to find entities with a User.email attribute (== User entities)
+    Comment.text._Story(User.email)
+    // Any Sub-Comments accidentally about Users?
+    Comment.text._parent(User.email)
+
+
+    // Schema-aware joins .........................
+
+    // 8. A Schema Query
+    Comment.Parent.attr.get === List(
+      ":story/title",
+      ":story/url",
+      ":comment/text",
+      ":comment/author",
+      ":comment/tree_"
+    )
+
+    Comment.Parent.ns.get === List(
+      ":story",
+      ":comment"
+    )
+
+
+    // Entities ...................................
+
+    // 9-11. Finding an entity ID - An implicit Entity
+    // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
+    val editor = User.eid.email("editor@example.com").get.head
+
+    // 12. Requesting an Attribute value
+    editor(":user/firstName") === Some("Edward")
+    // this one ??
+    User(editor).firstName.first === "Edward"
+
+    // 13. Touching an entity
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+    editor.touch === Map(
+      ":db/id" -> 17592186045423L,
+      ":user/firstName" -> "Edward",
+      ":user/lastName" -> "Itor",
+      ":user/email" -> "editor@example.com"
+    )
+
+    // 14. Navigating backwards
+    // The editors comments (Comments pointing to the Editor entity)
+    editor(":comment/_author") === List(c2, c4, c5, c7, c11)
+
+    // .. almost same as: (here, only matching data is returned)
+    Comment.eid.author(editor).get === List(c2, c4, c5, c7, c11)
+    // Or navigating the relationship in the opposite direction
+    User(editor)._Comments.eid.get === List(c2, c4, c5, c7, c11)
+
+
+    // 15. Navigating Deeper
+    // The editors comments' comments
+    editor(":comment/_author")(":comment/tree_") === List(c6, c8, c12)
+
+    Comment.author(editor).Comment.eid.get === List(c6, c8, c12)
+
+    User(editor)._Comments.Comment.eid.get === List(c6, c8, c12)
+
+
+    // Time travel ....................................
+
+    // 16. Querying for a Transaction
+    val tx = User(ed).firstName_.tx
+
+    // 17. Converting Transacting to T
+    val t = Peer.toT(tx)
+
+    // Query for relative system time
+    User(ed).firstName_.t === t
+
+    // 18. Getting Tx Instant
+    val txInstant = User(ed).firstName_.txInstant.get.last
+
+    // 19. Going back in Time
+    User(ed).firstName.asOf(t - 1).get.head === "Ed"
+
+
+    // Auditing .......................................
+
+
+
+
+
+
+    Orchestra.name("GSO").Musicians.name
+
+    Musician.name.playsIn(Orchestra.name("GSO")).plays(Instruments.Strings.DoubleBass)
 
   }
 
@@ -449,3 +538,4 @@ Finding comments about other people
   //
   //  }
 }
+

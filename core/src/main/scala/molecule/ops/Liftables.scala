@@ -1,7 +1,7 @@
 package molecule
 package ops
 import java.net.URI
-import java.util.{UUID, Date => jDate}
+import java.util.{Date, UUID}
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.util.MacroHelpers
@@ -14,7 +14,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   // General liftables --------------------------------------------------------------
 
-  def mkDate(date: jDate) = q"new Date(${date.getTime})"
+  def mkDate(date: Date) = q"new Date(${date.getTime})"
   def mkUUID(uuid: UUID) = q"java.util.UUID.fromString(${uuid.toString})"
   def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
@@ -25,7 +25,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case f: Float      => q"$f"
     case d: Double     => q"$d"
     case b: Boolean    => q"$b"
-    case date: jDate   => mkDate(date)
+    case date: Date    => mkDate(date)
     case uuid: UUID    => mkUUID(uuid)
     case uri: URI      => mkURI(uri)
     case qm: Qm.type   => q"Qm"
@@ -40,7 +40,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
       case (k: Long, v: Long)     => q"($k, $v)"
       case (k: Float, v: Float)   => q"($k, $v)"
       case (k: Double, v: Double) => q"($k, $v)"
-      case (k: jDate, v: jDate)   => q"(${mkDate(k)}, ${mkDate(v)})"
+      case (k: Date, v: Date)     => q"(${mkDate(k)}, ${mkDate(v)})"
       case (k: UUID, v: UUID)     => q"(${mkUUID(k)}, ${mkUUID(v)})"
       case (k: URI, v: URI)       => q"(${mkURI(k)}, ${mkURI(v)})"
     }

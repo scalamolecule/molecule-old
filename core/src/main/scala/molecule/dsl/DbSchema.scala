@@ -10,7 +10,7 @@ object DbSchema {
 
   trait Db_0 extends Molecule_0 {
     import molecule.dsl.DbSchema.Db._
-    lazy val txInstant = new txInstant(this, new Db_1[java.util.Date] {}) with Db_1[java.util.Date]
+//    lazy val txInstant = new txInstant(this, new Db_1[java.util.Date] {}) with Db_1[java.util.Date]
   }
 
   trait Db_1[T1] extends Molecule_1[T1]
