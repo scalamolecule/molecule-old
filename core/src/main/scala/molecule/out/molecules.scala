@@ -59,9 +59,9 @@ trait Molecule extends DatomicFacade {
 
 
   protected type lObj = java.util.List[Object]
-  protected def asOf[M <: Molecule](d: Date, thisMolecule: M) = { dbOp = AsOf(txDate(d)); thisMolecule }
-  protected def asOf[M <: Molecule](l: Long, thisMolecule: M) = { dbOp = AsOf(txLong(l)); thisMolecule }
-  protected def asOf[M <: Molecule](t: lObj, thisMolecule: M) = { dbOp = AsOf(txlObj(t)); thisMolecule }
+  protected def asOf_[M <: Molecule](d: Date, thisMolecule: M) = { dbOp = AsOf(txDate(d)); thisMolecule }
+  protected def asOf_[M <: Molecule](l: Long, thisMolecule: M) = { dbOp = AsOf(txLong(l)); thisMolecule }
+  protected def asOf_[M <: Molecule](t: lObj, thisMolecule: M) = { dbOp = AsOf(txlObj(t)); thisMolecule }
 
   // Kind of a hack...?
 //  def asOf(date: Date) = { dbOp = AsOf(date); this }
@@ -72,11 +72,15 @@ trait Molecule extends DatomicFacade {
 
   def since(date: Date) = { dbOp = Since(date); this }
   def imagine(tx: lObj) = { dbOp = Imagine(tx); this }
+
+
+  def insert                (implicit conn: Cnx): Seq[Long] = upsert(conn, _model)
+  def update(updateId: Long)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(), Seq(updateId))
 }
 
 abstract class Molecule0(val _model: Model, val _query: Query) extends Molecule {
-  def insert                (implicit conn: Cnx): Seq[Long] = upsert(conn, _model)
-  def update(updateId: Long)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(), Seq(updateId))
+//  def insert                (implicit conn: Cnx): Seq[Long] = upsert(conn, _model)
+//  def update(updateId: Long)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, Seq(), Seq(updateId))
 }
 
 abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecule {
@@ -88,9 +92,9 @@ abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecu
     def apply(a: A, a2: A, ax: A*)(implicit conn: Cnx): Seq[Long] = upsert(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
     def apply(data: Seq[A])       (implicit conn: Cnx): Seq[Long] = upsert(conn, _model, data.map(Seq(_)))
   }
-  def asOf(d: Date) = asOf(d, this)
-  def asOf(l: Long) = asOf(l, this)
-  def asOf(t: lObj) = asOf(t, this)
+  def asOf(d: Date) = asOf_(d, this)
+  def asOf(l: Long) = asOf_(l, this)
+  def asOf(t: lObj) = asOf_(t, this)
 }
 
 abstract class Molecule2[A, B](val _model: Model, val _query: Query) extends Molecule {

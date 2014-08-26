@@ -18,7 +18,6 @@ object SeattleSchema extends Transaction {
              ":db/ident"             , ":community/name",
              ":db/valueType"         , ":db.type/string",
              ":db/cardinality"       , ":db.cardinality/one",
-             ":db/fulltext"          , true.asInstanceOf[Object],
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
@@ -31,7 +30,6 @@ object SeattleSchema extends Transaction {
              ":db/ident"             , ":community/category",
              ":db/valueType"         , ":db.type/string",
              ":db/cardinality"       , ":db.cardinality/many",
-             ":db/fulltext"          , true.asInstanceOf[Object],
              ":db.install/_attribute", ":db.part/db"),
 
     Util.map(":db/id"                , Peer.tempid(":db.part/db"),
@@ -73,7 +71,6 @@ object SeattleSchema extends Transaction {
              ":db/ident"             , ":neighborhood/name",
              ":db/valueType"         , ":db.type/string",
              ":db/cardinality"       , ":db.cardinality/one",
-             ":db/fulltext"          , true.asInstanceOf[Object],
              ":db/unique"            , ":db.unique/identity",
              ":db.install/_attribute", ":db.part/db"),
 
@@ -90,7 +87,6 @@ object SeattleSchema extends Transaction {
              ":db/ident"             , ":district/name",
              ":db/valueType"         , ":db.type/string",
              ":db/cardinality"       , ":db.cardinality/one",
-             ":db/fulltext"          , true.asInstanceOf[Object],
              ":db/unique"            , ":db.unique/identity",
              ":db.install/_attribute", ":db.part/db"),
 

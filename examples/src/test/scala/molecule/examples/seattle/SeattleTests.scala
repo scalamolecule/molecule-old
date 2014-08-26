@@ -63,7 +63,7 @@ class SeattleTests extends SeattleSpec {
       "Discover SLU", "Fremont Universe", "Columbia Citizens")
 
     // Retrieving values of many-attributes like `category`
-    Community.name("belltown").category.take(1) === List(Set("events", "news"))
+    Community.name.apply("belltown"). category.take(1) === List(Set("events", "news"))
 
     // Querying by many-attributes like `category`
     // Multiple values have OR-semantics
@@ -194,7 +194,7 @@ class SeattleTests extends SeattleSpec {
     val beforeC = List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
 
     m(Community.name < "C").take(3) === beforeC
-    Community.name.<("C").take(3) === beforeC
+    Community.name.<("C"). take(3) === beforeC
 
     val communitiesBefore = m(Community.name < ?)
     communitiesBefore("C").take(3) === beforeC
@@ -238,7 +238,7 @@ class SeattleTests extends SeattleSpec {
       "MyWallingford",
       "Fauntleroy Community Association")
 
-    Community.name.`type`("twitter" or "facebook_page").Neighborhood.District.region("sw" or "s" or "se").get === southernSocialMedia
+    Community.name.`type`("twitter" or "facebook_page").Neighborhood.District.region("sw" or "s" or "se").tpls === southernSocialMedia
 
     // Parameterized
     val typeAndRegion = m(Community.name.`type`(?).Neighborhood.District.region(?))
@@ -380,37 +380,38 @@ class SeattleTests extends SeattleSpec {
     Community.name("belltown 2").url("url 2").update(belltownId)
 
     // Find belltown by its updated name and confirm that the url is also updated
-    Community.name("belltown 2").url.get === List("url 2")
+    Community.name_("belltown 2").url.get === List("url 2")
 
 
     // Many-cardinality attributes..........................
 
     // Categories before
-    Community.name("belltown 2").category.get.head === Set("news", "events")
+    Community.name_("belltown 2").category.get.head === Set("news", "events")
 
     // Tell which value to update
     Community.category("news" -> "Cool news").update(belltownId)
-    Community.name("belltown 2").category.get.head === Set("Cool news", "events")
+    Community.name_("belltown 2").category.get.head === Set("Cool news", "events")
 
     // Or update multiple values in one go...
     Community.category(
       "Cool news" -> "Super cool news",
       "events" -> "Super cool events").update(belltownId)
-    Community.name("belltown 2").category.get.head === Set("Super cool news", "Super cool events")
+    Community.name_("belltown 2").category.get.head === Set("Super cool news", "Super cool events")
 
     // Add value
     Community.category.add("extra category").update(belltownId)
-    Community.name("belltown 2").category.get.head === Set("Super cool news", "Super cool events", "extra category")
+    Community.name_("belltown 2").category.get.head === Set("Super cool news", "Super cool events", "extra category")
 
     // Remove value
     Community.category.remove("Super cool events").update(belltownId)
-    Community.name("belltown 2").category.get.head === Set("Super cool news", "extra category")
+    Community.name_("belltown 2").category.get.head === Set("Super cool news", "extra category")
 
 
     // Mixing updates and deletes..........................
 
     // Values before
-    Community.name("belltown 2").name.`type`.url.category.hls === List(
+//    Community.name("belltown 2").name.`type`.url.category.hls === List(
+    Community.name("belltown 2").`type`.url.category.hls === List(
       "belltown 2" :: "blog" :: "url 2" :: Set("Super cool news", "extra category") :: HNil)
 
     // Applying nothing (empty parenthesises) finds and retract all values of an attribute

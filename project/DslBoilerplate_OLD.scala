@@ -2,7 +2,7 @@ import sbt._
 
 // Generate molecule dsl from definition files
 
-object DslBoilerplate {
+object DslBoilerplate_OLD {
 
   implicit class Regex(sc: StringContext) {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
@@ -50,16 +50,15 @@ object DslBoilerplate {
     // Collect namespace definitions
     val nsDefs: Seq[(String, Seq[Seq[Any]])] = raw.foldLeft(Seq[(String, Seq[Seq[Any]])]()) {
       case (acc, l) => l match {
-        case r"\/\/.*" /* comments allowed */               => acc
-        case r"package (.*)$path\.[\w]*"                    => acc
-        case "import molecule.dsl.schemaDefinition._"       => acc
-        case r"@InOut\(\d, \d+\)"                           => acc
-        case r"trait (.*)${name}Definition \{"              => acc
-        case r"trait (\w*)$ns\s*extends\s*Tree\s*\{"        => acc :+ (ns -> Seq(Seq("ManyRef", "tree_", "Set[Long]", 2, ns, "IsComponent")))
-        case r"trait (\w*)$ns \{"                           => acc :+ (ns -> Seq())
-        case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$s" => {
+        case r"\/\/.*" /* comments allowed */                                         => acc
+        case r"package (.*)$path\.[\w]*"                                              => acc
+        case "import molecule.dsl.schemaDefinition._"                                 => acc
+        case r"@InOut\(\d, \d+\)"                                                     => acc
+        case r"trait (.*)${name}Definition \{"                                        => acc
+        case r"trait (\w*)$ns\s*extends\s*SubComponentOf2\[(\w*)$a,\s*(\w*)$b\]\s*\{" => acc :+ (ns -> Seq(Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent", Seq(a, b))))
+        case r"trait (\w*)$ns \{"                                                     => acc :+ (ns -> Seq())
+        case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$s"                           => {
           val attr = q1 + a + q2
-          //        case r"trait (\w*)$ns\s*extends\s*SubComponentOf2\[(\w*)$a,\s*(\w*)$b\]\s*\{" => acc :+ (ns -> Seq(Seq("ManyRef", "tree_", "Set[Long]", 2, "PARENT", "IsComponent", Seq(a, b))))
 
           def extract(str: String, elements: Seq[Any] = Seq()): Seq[Any] = str match {
 
@@ -96,7 +95,7 @@ object DslBoilerplate {
 
             // Options
             case r"\.doc\(((\w|\s)*)$msg\)$rest" => extract(rest, elements :+ s"Doc: $msg")
-            case r"\.fullTextSearch(.*)$rest"    => extract(rest, elements :+ "FulltextSearch[Ns]")
+            case r"\.fullTextSearch(.*)$rest"    => extract(rest, elements :+ "FulltextSearch")
             case r"\.uniqueValue(.*)$rest"       => extract(rest, elements :+ "UniqueValue")
             case r"\.uniqueIdentity(.*)$rest"    => extract(rest, elements :+ "UniqueIdentity")
             case r"\.indexed(.*)$rest"           => extract(rest, elements :+ "Indexed")
@@ -110,32 +109,31 @@ object DslBoilerplate {
           val ns = acc.last._1
           val prevAttrs = acc.last._2
           val attrDef = extract(s)
-          acc.init :+ (ns -> (prevAttrs :+ attrDef))
+
+          val updatedAttrs =
+          //            if (prevAttrs.nonEmpty && prevAttrs.head.nonEmpty && prevAttrs.head.size == 1) {
+          //            val extraAttr = prevAttrs.head.head match {
+          //              //              case "Sub"                                 => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent")
+          ////              case r"SubComponentOf2\[(\w+)$a, (\w+)$b\]" => Seq("ManyRef", "sub_", "Set[Long]", 2, "PARENT", "IsComponent", Seq(a, b))
+          //              case unexpected                             => sys.error(s"Unexpected namespace extension in ${defFile.getName}:" + unexpected)
+          //            }
+          //            prevAttrs.tail ++ Seq(extraAttr, attrDef)
+          //          } else {
+          //            prevAttrs :+ attrDef
+          //          }
+            prevAttrs :+ attrDef
+          acc.init :+ (ns -> updatedAttrs)
         }
-        case "}"                                            => acc
-        case unexpected                                     => sys.error(s"Unexpected code in ${defFile.getName}:\n" + unexpected)
+        case "}"                                                                      => acc
+        case unexpected                                                               => sys.error(s"Unexpected code in ${defFile.getName}:\n" + unexpected)
       }
     }
     (path, domain, inArity, outArity, nsDefs)
   }
 
-  def collectBackRefs(ns: String, otherNsDefs: Seq[(String, Seq[Seq[Any]])]) = {
-    otherNsDefs.foldLeft(Seq[Seq[Any]]()) { case (backRefs, (otherNs, otherAttrs)) =>
-      otherAttrs.foldLeft(backRefs) { case (backRefs2, otherAttr) =>
-        val (cat, refAttr, card, refNs) = (otherAttr(0).toString, otherAttr(1).toString, otherAttr(3), otherAttr(4).toString)
-        if ((cat == "OneRef" || cat == "ManyRef") && refNs == ns)
-          backRefs2 :+ Seq(s"BackRef", refAttr, "Set[Long]", card, otherNs)
-        else
-          backRefs2
-      }
-    }
-  }
-
-  def addBackReferences(nsDefs: Seq[(String, Seq[Seq[Any]])]) = nsDefs.foldLeft(Seq[(String, Seq[Seq[Any]])]()) { case (nsDef2, nsDef) =>
-    val (ns, attrs) = nsDef
-    val otherNsDefs = nsDefs.filter(_._1 != ns)
-    val backRefs: Seq[Seq[Any]] = collectBackRefs(ns, otherNsDefs)
-    nsDef2 :+ (ns -> (attrs ++ backRefs))
+  def baseType(tpe: Any): String = tpe.toString match {
+    case r"Set\[([\w\.]*)$t\]" => t
+    case t: String             => t
   }
 
   def handleNamespace(srcManaged: File, path: String, domain: String, inArity: Int, outArity: Int, nsDef: (String, Seq[Seq[Any]]), nsArities: Map[String, Int]) = {
@@ -150,13 +148,9 @@ object DslBoilerplate {
 
     val attrs0 = nsDef._2.map { d =>
       val (cat: String, attr: String, tpe: String, card: Int, ext: String, defs: List[_]) = (d(0), d(1), d(2), d(3), d(4), d.drop(5))
-      val baseType = tpe.toString match {
-        case r"Set\[([\w\.]*)$t\]" => t
-        case t: String             => t
-      }
-      (cat, attr, tpe, baseType, card, ext, defs)
+      (cat, attr, tpe, baseType(tpe), card, ext, defs)
     }
-    val attrs1 = attrs0.filter(a => a._2 != "tree_" && a._1 != "BackRef")
+    val attrs1 = attrs0.filter(a => a._2 != "sub_")
 
     val (longestAttr, longestAttrClean, longestType, longestBaseType) = if (attrs1.isEmpty)
       (3, 3, 4, 4) // eid: Long
@@ -177,10 +171,9 @@ object DslBoilerplate {
       (cat, attr, attrClean, tpe, baseType, card, ext, defs.map(_.toString), padAttr, padAttrClean, padType, padBaseType)
     }
 
-    val treeAttrs = attrs0.filter(a => a._2 == "tree_")
+    val internalAttrs = attrs0.filter(a => a._2 == "sub_")
     val valueAttrs = attrs.filter(a => a._1 == "attr" || a._1 == "enum")
-    val refAttrs = attrs.filter(a => (a._1 == "OneRef" || a._1 == "ManyRef") && a._2 != "tree_")
-    val backRefAttrs = attrs0.filter(a => a._1 == "BackRef")
+    val refAttrs = attrs.filter(a => (a._1 == "OneRef" || a._1 == "ManyRef") && a._2 != "sub_")
 
 
     // Schema stmts ######################################################################################
@@ -198,7 +191,7 @@ object DslBoilerplate {
     val schemaStmts: (String, Seq[Seq[(String, String)]]) = {
       val installStmt = ":db.install/_attribute" -> ":db.part/db"
 
-      val internalStmts = treeAttrs.map {
+      val internalStmts = internalAttrs.map {
         case (cat, attr, _, baseType, card, ref, defs) => {
           val valueType = cat match {
             case "ManyRef"  => "ref"
@@ -266,15 +259,16 @@ object DslBoilerplate {
     val longestSchemaType = attrs2.map(_._13.length).max
     val attrClasses = attrs2.map { case (cat, attr, _, tpe, baseType, _, ext, defs, padAttr, padAttrClean, _, _, ext2) =>
       val pad = " " * (longestSchemaType - ext2.length)
-      val ext3 = ext2 + pad + s"[Ns]"
+      val ext3 = ext2 + pad + " (ns1, ns2)"
 
       val (extensions, enumValues) = cat match {
-        case "enum"    => (ext3, s"private lazy val ${defs.mkString(", ")} = EnumValue")
+        //        case "enum"    => (ext3, s"{\n    private lazy val ${defs.mkString(", ")} = EnumValue\n  }")
+        case "enum"    => (ext3, s"{ private lazy val ${defs.mkString(", ")} = EnumValue }")
         case "OneRef"  => (ext3, "")
         case "ManyRef" => (ext3, "")
         case _         => ((ext3 +: defs).mkString(" with "), "")
       }
-      s"class $attr$padAttr[Ns] extends $extensions { self: Ns => $enumValues }"
+      s"class $attr $padAttr[Ns1, Ns2](ns1: Ns1, ns2: Ns2) extends $extensions $enumValues"
     }.mkString("\n  ").trim
 
 
@@ -298,77 +292,68 @@ object DslBoilerplate {
 
           val inputMethods = if (out > 0 && in < inArity) {
             val newInTypes = if (OutTypes.isEmpty) InTypes else InTypes :+ OutTypes.last
+
             val curTypes = (if (OutTypes.isEmpty) newInTypes else newInTypes ++ OutTypes.init).mkString(", ")
+            val curOut = s"${Ns1}_${out - 1}[$curTypes] {}"
             val curIn = s"${Ns1}_In_${in + 1}_${out - 1}[$curTypes] {}"
+
             val nextInTypes = (newInTypes ++ OutTypes).mkString(", ")
             val nextIn = s"${Ns1}_In_${in + 1}_$out[$nextInTypes] {}"
-            Seq( s"""
-               |  def apply(in: ?.type)    = new $curIn
-               |  def apply(in: ?!.type)   = new $nextIn
-               |  def <(in: ?.type)        = new $nextIn
-               |  def contains(in: ?.type) = new $nextIn
-               |  """.stripMargin.trim)
-          } else Seq()
 
-          val extraMethods = if (out > 0) {
             val nextOutTypes = OutTypes.mkString(", ")
             val nextOut = s"${Ns1}_$out[$nextOutTypes] {}"
+
             val nextOutIntTypes = (OutTypes.init :+ "Int").mkString(", ")
             val nextOutInt = s"${Ns1}_$out[$nextOutIntTypes] {}"
+
             Seq( s"""
-               |  def apply(m: maybe.type) = new $nextOut
-               |  def apply(c: count.type) = new $nextOutInt
-               |  """.stripMargin.trim)
+                       |  def apply(in: ?.type)    = new $curIn
+                       |  def apply(in: ?!.type)   = new $nextIn
+                       |  def <(in: ?.type)        = new $nextIn
+                       |  def contains(in: ?.type) = new $nextIn
+                       |  def apply(m: maybe.type) = new $nextOut
+                       |  def apply(c: count.type) = new $nextOutInt
+                       |  """.stripMargin.trim)
           } else Seq()
 
           val outBody = {
 
             val defaults = if (in + out == 0 && attrs1.nonEmpty) {
               val (_, attr, tpeFirst, _, _, _, _) = attrs1.head
-              //              Seq("def apply(eid: Long) = this")
-              //              Seq( s"""|  def apply(eid: Long)     = this
-              Seq( s"""|  def apply(eid: Long)     = new ${Ns1}_0 {}
+//              Seq("def apply(eid: Long) = this")
+              Seq( s"""|  def apply(eid: Long)     = this
                        |  def apply(c: count.type) = new ${Ns1}_1[Int] {}""".stripMargin.trim)
-              //              Seq()
             } else Seq()
 
-            val (attrCode, attrCode_) = attrs.map { case (cat, attr, attrClean, tpe, _, _, defs, _, padAttr, padAttrClean, padType, _) =>
+            val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
               val nextTypes = (OutTypes :+ tpe) mkString ", "
-              val nextNS = s"${Ns1}_${out + 1}[$nextTypes]"
-              val thisTypes = OutTypes mkString ", "
-              val thisNS = if (out == 0) s"${Ns1}_0" else s"${Ns1}_$out[$thisTypes]"
-              (s"lazy val $attr  $padAttr= new $attr$padAttr[$nextNS]$padType with $nextNS",
-                s"lazy val ${attrClean}_ $padAttrClean= new $attr$padAttr[$thisNS] with $thisNS")
-            }.unzip
-
-            val treeCode = treeAttrs.flatMap { case x =>
-              val nextTypes = (OutTypes :+ "Long") mkString ", "
-              val nextNS = s"${Ns1}_${out + 1}[$nextTypes]"
-              val thisTypes = OutTypes mkString ", "
-              val thisNS = if (out == 0) s"${Ns1}_0" else s"${Ns1}_$out[$thisTypes]"
-              Seq(
-                s"lazy val _parent  = new _parent[$nextNS] with $nextNS",
-                s"lazy val _parent_ = new _parent[$thisNS] with $thisNS"
-              )
+              val nextNS = s"${Ns1}_${out + 1}[$nextTypes]$padType"
+              s"lazy val $attr $padAttr= new $attr $padAttr(this, new $nextNS {}) with $nextNS {}"
             }
 
-            val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (cat, attr, _, _, _, _, ref, _, _, _, _, _)) =>
+            val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (cat, attr, attrClean, tpe, refType, _, ref, defs, padAttr, _, padType, _)) =>
               val refs: Seq[String] = if (cat == "ManyRef") {
                 // Nested entities
                 // Offer max arity equaling the number of attributes in the referenced namespace
                 // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
                 val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
                 val maxPad = refTypeLists.last.length * 4 - 2
-                val refPad = " " * (s" []($ref: ${ref}_X[])".length + maxPad * 2)
+                val refPad = " " * (s" []($attr: ${ref}_X[])".length + maxPad * 2)
                 val refNs: String = s"def ${attr.capitalize}$refPad= new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes"
+
+                //                val (named, stars) = refTypeLists.map { refTypeList =>
                 val named = refTypeLists.map { refTypeList =>
                   val types = refTypeList.mkString(", ")
                   val pad = " " * (maxPad - types.length)
+                  val padStar = pad + (" " * (attr.length - 1))
                   val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
                   val allTypes = if (out == 0) refTypes else TraitTypes.init.tail + ", " + refTypes
-                  val name = s"def $attr[$types]$pad(${firstLow(ref)}: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
+                  val name = s"def $attr[$types]$pad($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
+                  //                  val star = s"def *[$types]$padStar($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
+                  //                  (name, star)
                   name
-                }
+                } //.unzip
+                //                refNs +: (named ++ stars)
                 refNs +: named
               } else {
                 // Link to referenced cardinality-one namespace
@@ -377,37 +362,13 @@ object DslBoilerplate {
               acc ++ refs
             }.tail
 
-            val backRefCode = backRefAttrs.foldLeft(Seq("")) { case (acc, (cat, backAttr, _, baseType, card, backRef, _)) =>
-              val backRefs: Seq[String] = {
-                // Nested entities
-                // Offer max arity equaling the number of attributes in the referenced namespace
-                // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
-                val backRefTypeLists: Seq[Seq[String]] = (1 to nsArities.get(backRef).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
-                val maxPad = backRefTypeLists.last.length * 4 - 2
-                val backRefPad = " " * (s" []($backRef: ${backRef}_X[])".length + maxPad * 2 - backRef.size)
-                val backRefNs: String = s"\n  def _${backAttr.capitalize}$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${backRef}_$out$TraitTypes"
-                val nextBackRefTypes = (OutTypes :+ "Set[Long]") mkString ", "
-                val backRefIds: String = s"def _$backAttr$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$nextBackRefTypes]"
-                val named = backRefTypeLists.map { backRefTypeList =>
-                  val types = backRefTypeList.mkString(", ")
-                  val pad = " " * (maxPad - types.length)
-                  val backRefTypes = if (backRefTypeList.size == 1) s"Seq[${backRefTypeList.head}]" else s"Seq[(${backRefTypeList.mkString(", ")})]"
-                  val allTypes = if (out == 0) backRefTypes else TraitTypes.init.tail + ", " + backRefTypes
-                  val name = s"def _$backAttr[$types]$pad(${firstLow(backRef)}: ${backRef}_${backRefTypeList.size}[$types])$pad = new BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$allTypes]"
-                  name
-                }
-                backRefNs +: backRefIds +: named
-              }
-              acc ++ backRefs
-            }.tail
-
             if (out == outArity)
               "\n\n"
             else
-              (imp ++ defaults ++ attrCode ++ attrCode_ ++ treeCode ++ refCode ++ inputMethods ++ extraMethods ++ backRefCode).mkString("{\n  ", "\n  ", "\n}\n")
+              (imp ++ defaults ++ attrCode ++ refCode ++ inputMethods).mkString("{\n  ", "\n  ", "\n}\n")
           }
-          val Tree = if (treeAttrs.isEmpty) "" else " with Tree"
-          Some(s"trait ${Ns1}_$out$TraitTypes extends $Ns1 with Molecule_$out$TraitTypes$Tree $outBody")
+          val Sub = if (internalAttrs.isEmpty) "" else "Sub"
+          Some(s"trait ${Ns1}_$out$TraitTypes extends $Ns1 with ${Sub}Molecule_$out$TraitTypes $outBody")
 
         } else {
 
@@ -419,12 +380,11 @@ object DslBoilerplate {
           val header = if (in > 0 && out == 0) s"/********* Input molecules awaiting $in input$s *******************************/\n\n" else ""
 
 
-          val (attrCode, attrCode_) = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
-            val nextNS = s"${Ns1}_In_${in}_${out + 1}[$InOutTypes, $tpe]"
-            val thisNS = s"${Ns1}_In_${in}_$out[$InOutTypes]"
-            (s"lazy val $attr  $padAttr= new $attr$padAttr[$nextNS]$padType with $nextNS",
-              s"lazy val ${attrClean}_ $padAttrClean= new $attr$padAttr[$thisNS] with $thisNS")
-          }.unzip
+          val attrCode = attrs.map { case (cat, attr, attrClean, tpe, baseType, card, _, _, padAttr, padAttrClean, padType, padBaseType) =>
+            val nextTypes = Seq(InOutTypes, tpe) mkString ", "
+            val nextNS = s"${Ns1}_In_${in}_${out + 1}[$nextTypes]$padType"
+            s"lazy val $attr $padAttr= new $attr $padAttr(this, new $nextNS {}) with $nextNS {}"
+          }
 
           val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (cat, attr, attrClean, tpe, refType, _, ref, defs, padAttr, _, padType, _)) =>
             val refs: Seq[String] = if (cat == "ManyRef") {
@@ -433,16 +393,22 @@ object DslBoilerplate {
               // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
               val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
               val maxPad = refTypeLists.last.length * 4 - 2
-              val refPad = " " * (s" []($ref: ${ref}_X[])".length + maxPad * 2)
+              val refPad = " " * (s" []($attr: ${ref}_X[])".length + maxPad * 2)
               val refNs: String = s"def ${attr.capitalize}$refPad = new $cat[$Ns1, $ref] with ${ref}_In_${in}_$out[$InOutTypes]"
+
+              //              val (named, stars) = refTypeLists.map { refTypeList =>
               val named = refTypeLists.map { refTypeList =>
                 val types = refTypeList.mkString(", ")
                 val pad = " " * (maxPad - types.length - 2)
+                val padStar = pad + (" " * (attr.length - 1))
                 val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
                 val allTypes = if (out == 0) (InTypes :+ refTypes).mkString(", ") else InOutTypes + ", " + refTypes
-                val name = s"def $attr[$types]$pad(${firstLow(ref)}: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
+                val name = s"def $attr[$types]$pad($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
+                val star = s"def *[$types]$padStar($attr: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
+                //                (name, star)
                 name
-              }
+              } //.unzip
+              //              refNs +: (named ++ stars)
               refNs +: named
             } else {
               // Link to referenced cardinality-one namespace
@@ -451,63 +417,33 @@ object DslBoilerplate {
             acc ++ refs
           }.tail
 
-          val backRefCode = backRefAttrs.foldLeft(Seq("")) { case (acc, (cat, backAttr, _, baseType, card, backRef, _)) =>
-            val backRefs: Seq[String] = {
-              // Nested entities
-              // Offer max arity equaling the number of attributes in the referenced namespace
-              // List(List(T1), List(T1, T2), List(T1, T2, T3), etc.. )
-              val backRefTypeLists: Seq[Seq[String]] = (1 to nsArities.get(backRef).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
-              val maxPad = backRefTypeLists.last.length * 4 - 2
-              val backRefPad = " " * (s" []($backRef: ${backRef}_X[])".length + maxPad * 2 - backRef.size)
-              val backRefNs: String = s"\n  def _${backAttr.capitalize}$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${backRef}_In_${in}_$out[$InOutTypes]"
-              val nextBackRefTypes = (InTypes ++ OutTypes :+ "Set[Long]") mkString ", "
-              val backRefIds: String = s"def _$backAttr$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${Ns1}_In_${in}_${out + 1}[$nextBackRefTypes]"
-              val named = backRefTypeLists.map { backRefTypeList =>
-                val types = backRefTypeList.mkString(", ")
-                val pad = " " * (maxPad - types.length)
-                val backRefTypes = if (backRefTypeList.size == 1) s"Seq[${backRefTypeList.head}]" else s"Seq[(${backRefTypeList.mkString(", ")})]"
-                val allTypes = if (out == 0) (InTypes :+ backRefTypes).mkString(", ") else InOutTypes + ", " + backRefTypes
-                val name = s"def _$backAttr[$types]$pad(${firstLow(backRef)}: ${backRef}_${backRefTypeList.size}[$types])$pad = new BackRef[$backRef, $Ns1] with ${Ns1}_In_${in}_${out + 1}[$allTypes]"
-                name
-              }
-              backRefNs +: backRefIds +: named
-            }
-            acc ++ backRefs
-          }.tail
-
           val inputMethods = if (out > 0 && in < inArity) {
             val newInTypes = if (OutTypes.isEmpty) InTypes else InTypes :+ OutTypes.last
-            val curTypes = (if (OutTypes.isEmpty) newInTypes else newInTypes ++ OutTypes.init).mkString(", ")
-            val curInOut = s"${Ns1}_In_${in + 1}_${out - 1}[$curTypes] {}"
-            val nextTypes = (newInTypes ++ OutTypes).mkString(", ")
-            val nextInOut = s"${Ns1}_In_${in + 1}_$out[$nextTypes] {}"
-            Seq( s"""def apply(in: ?.type)    = new $curInOut
-                  |  def apply(in: ?!.type)   = new $nextInOut
-                  |  def <(in: ?.type)        = new $nextInOut
-                  |  def contains(in: ?.type) = new $nextInOut""".stripMargin)
-          } else Seq()
 
-          val extraMethods = if (out > 0) {
-            val nextOutTypes = (InTypes ++ OutTypes).mkString(", ")
-            val nextOut = s"${Ns1}_In_${in}_$out[$nextOutTypes] {}"
-            val nextOutIntTypes = (InTypes ++ OutTypes.init :+ "Int").mkString(", ")
-            val nextOutInt = s"${Ns1}_In_${in}_$out[$nextOutIntTypes] {}"
-            Seq( s"""def apply(m: maybe.type) = new $nextOut
-                  |  def apply(c: count.type) = new $nextOutInt""".stripMargin)
+            val curTypes = (if (OutTypes.isEmpty) newInTypes else newInTypes ++ OutTypes.init).mkString(", ")
+            val curNS = s"${Ns1}_In_${in + 1}_${out - 1}[$curTypes] {}"
+
+            val nextTypes = (newInTypes ++ OutTypes).mkString(", ")
+            val nextNS = s"${Ns1}_In_${in + 1}_$out[$nextTypes] {}"
+
+            Seq( s"""def apply(in: ?.type)    = new $curNS
+                  |  def apply(in: ?!.type)   = new $nextNS
+                  |  def <(in: ?.type)        = new $nextNS
+                  |  def contains(in: ?.type) = new $nextNS""".stripMargin)
           } else Seq()
 
           val traitBody = if (out == outArity)
             "\n\n"
           else
-            (imp ++ attrCode ++ attrCode_ ++ refCode ++ inputMethods ++ extraMethods ++ backRefCode).mkString("{\n  ", "\n  ", "\n}\n")
+            (imp ++ attrCode ++ refCode ++ inputMethods).mkString("{\n  ", "\n  ", "\n}\n")
 
           Some(s"$header trait ${Ns1}_In_${in}_$out[$InOutTypes] extends $Ns1 with In_${in}_$out[$InOutTypes] $traitBody")
         }
       }
     }.mkString("\n").trim
 
-    //    val domainNs = domain.capitalize + " : " + Ns1 + (if (internalAttrs.isEmpty) "" else " (Sub implementation)")
-    val connImport = if (treeAttrs.nonEmpty) "\nimport datomic.Connection" else ""
+    val domainNs = domain.capitalize + " : " + Ns1 + (if (internalAttrs.isEmpty) "" else " (Sub implementation)")
+    val connImport = if (internalAttrs.nonEmpty) "\nimport datomic.Connection" else ""
     val body = s"""|/*
                    | * AUTO-GENERATED CODE - DO NOT CHANGE!
                    | *
@@ -538,7 +474,7 @@ object DslBoilerplate {
   def mkSchema(srcManaged: File, path: String, domain: String, schemaStmts: Seq[(String, Seq[Seq[(String, String)]])]) = {
     val keyValues = for {
       (ns, nsStmts) <- schemaStmts
-      sub = if (nsStmts.count(_.count(_._2.endsWith("tree_")) > 0) > 0) " (Tree)" else ""
+      sub = if (nsStmts.count(_.count(_._2.endsWith("sub_")) > 0) > 0) " (Sub)" else ""
       attrStmts <- nsStmts
       (key, value) <- attrStmts
     } yield (ns, key, value, sub)
@@ -605,19 +541,13 @@ object DslBoilerplate {
       val definitionFiles = IO.listFiles(new File(domainDir) / "schema").filter(f => f.isFile && f.name.endsWith("Definition.scala"))
       assert(definitionFiles.size > 0, "Found no definition files in path: " + domainDir)
 
-      var p = ""
-
       // Loop definition files in each domain directory
-      val xx = definitionFiles.flatMap { definitionFile =>
+      definitionFiles.flatMap { definitionFile =>
         val (path, domain, inArity, outArity, nsDefs) = extractNsDefinitions(definitionFile)
-        val nsArities = nsDefs.map(ns => ns._1 -> (ns._2.size + 1 - ns._2.map(attr => if (attr(1) == "tree_") 1 else 0).sum)).toMap
-        val nsDefs2 = addBackReferences(nsDefs)
-
-        p += s"\n------- $domain -------"
-        nsDefs2.foreach { case (ns, nsDef) => p += nsDef.mkString(s"\n$ns\n - ", "\n - ", "")}
+        val nsArities = nsDefs.map(ns => ns._1 -> ns._2.size).toMap
 
         // Loop namespaces in each definition file
-        val (schemaStmts, dslFiles) = nsDefs2.map(handleNamespace(srcManaged, path, domain, inArity, outArity, _, nsArities)).unzip
+        val (schemaStmts, dslFiles) = nsDefs.map(handleNamespace(srcManaged, path, domain, inArity, outArity, _, nsArities)).unzip
 
         // Create schema file
         val domainFileName = definitionFile.name.replace("Definition.scala", "")
@@ -625,10 +555,6 @@ object DslBoilerplate {
 
         dslFiles :+ schemaFile
       }
-
-      println(p)
-
-      xx
     }
   }
 }

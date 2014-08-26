@@ -7,15 +7,21 @@ import datomic.Connection
 import molecule.DatomicFacade
 import molecule.ast.model._
 import molecule.out.Molecule_1
+import molecule.out.Molecule
 
 object schemaDSL {
 
   // todo
   trait Partition
 
+  trait Tree {
+    class _parent[Ns] extends OneLong[Ns] {self: Ns =>}
+  }
+
   trait NS {
     // Entity id (internal Datomic id)
-    class eid[Ns1, Ns2](ns1: Ns1, ns2: Ns2) extends OneLong(ns1, ns2)
+//    class eid(ns: Ns) extends OneLong(ns)
+    class eid[Ns] extends OneLong[Ns] {self: Ns =>}
 
 //    // No further attributes after querying transaction functions
     lazy val tx        = new Molecule_1[Long] {}
@@ -26,87 +32,87 @@ object schemaDSL {
   trait Ref[Ns1, Ns2]
   trait OneRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
   trait ManyRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
+  trait BackRef[BackRefNS, ThisNs] extends Ref[BackRefNS, ThisNs]
 
-  trait Attr {
-    type NS1
-    type NS2
-    val ns1: NS1
-    val ns2: NS2
-  }
+  trait Attr
 
-  trait RefAttr[Ns1, Ns2, T] extends Attr {
-    type NS1 = Ns1
-    type NS2 = Ns2
+  trait RefAttr[Ns1, T] extends Attr {
   }
-  abstract class OneRefAttr[Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends RefAttr[Ns1, Ns2, Long] with OneRef[Ns1, Ns2] {
-    def apply(value: Long): NS1 = ns1
+  trait OneRefAttr[Ns] extends RefAttr[Ns,  Long] {self: Ns =>
+//    def apply(value: Long) = self
   }
-  abstract class ManyRefAttr[Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends RefAttr[Ns1, Ns2, Long] with ManyRef[Ns1, Ns2] {
-    def apply(value: Long): NS1 = ns1
+  trait ManyRefAttr[Ns] extends RefAttr[Ns,  Long] {self: Ns =>
+//    def apply(value: Long) = self
   }
 
-  sealed trait ValueAttr[Ns1, Ns2, T] extends Attr {
-    type NS1 = Ns1
-    type NS2 = Ns2
+  sealed trait ValueAttr[Ns, T] extends Attr {self: Ns =>
+//  sealed trait ValueAttr[T] extends Attr {self =>
+//    type NS = Ns
 
     // Unchanged arity
-    def apply(expr: Exp1[T]): NS1 = ns1
-    def find(expr: Exp1[T]): NS1 = ns1
-//    def apply(anyValue: Any => Any) = ns1
+    def apply(expr: Exp1[T]) = self
+//    def find(expr: Exp1[T]) = self
+//    def apply(anyValue: Any => Any) = self
 
     // Increase arity
-    def ! (value: T*): NS2 = ns2
-    def ! (value: Exp1[T]): NS2 = ns2
-    def maybe = ns2
-    def < (value: T): NS2 = ns2
-    def eq(value: T): NS2 = ns2
-    def contains(value: T): NS2 = ns2
-
+    def ! (value: T*) = self
+    def ! (value: Exp1[T]) = self
+    def maybe = self
+    def < (value: T) = self
+    def eq(value: T) = self
+//    def contains(value: T) = self
   }
 
 
   // One-cardinality
-  trait One[Ns1, Ns2, T] extends ValueAttr[Ns1, Ns2, T] {
-    //    def apply(values: T*): NS1 = ns1
-    def apply(one: T, more: T*): NS1 = ns1
-    def apply(): NS1 = ns1
-    def apply(values: Seq[T]): NS1 = ns1
+//  trait One[T] extends ValueAttr[T] { self: M =>
+//  trait One[Ns, T]  { self: NS =>
+//  trait One[Ns <: NS, T]  { self: Ns =>
+  trait One[Ns, T] extends ValueAttr[Ns, T] { self: Ns =>
+//  trait One[Ns, T]  { self: Ns =>
+
+//    def apply(expr: Exp1[T]) = self
+
+
+    //    def apply(values: T*) = self
+//    def apply(one: T, more: T*) = self
+    def apply() = self
+    def apply(values: Seq[T]) = self
   }
-  abstract class OneString [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, String]
-  abstract class OneInt    [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, Int]
-  abstract class OneLong   [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, Long]
-  abstract class OneFloat  [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, Float]
-  abstract class OneDouble [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, Double]
-  abstract class OneBoolean[Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, Boolean]
-  abstract class OneDate   [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, Date]
-  abstract class OneUUID   [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, UUID]
-  abstract class OneURI    [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, URI]
+  trait OneString  [Ns] extends One[Ns, String]  {self: Ns =>}
+  trait OneInt     [Ns] extends One[Ns, Int]     {self: Ns =>}
+  trait OneLong    [Ns] extends One[Ns, Long]    {self: Ns =>}
+  trait OneFloat   [Ns] extends One[Ns, Float]   {self: Ns =>}
+  trait OneDouble  [Ns] extends One[Ns, Double]  {self: Ns =>}
+  trait OneBoolean [Ns] extends One[Ns, Boolean] {self: Ns =>}
+  trait OneDate    [Ns] extends One[Ns, Date]    {self: Ns =>}
+  trait OneUUID    [Ns] extends One[Ns, UUID]    {self: Ns =>}
+  trait OneURI     [Ns] extends One[Ns, URI]     {self: Ns =>}
 
   // Many-cardinality
-  //  trait Many[Ns1, Ns2, S, T] extends ValueAttr[Ns1, Ns2, S] {
-  trait Many[Ns1, Ns2, S, T] extends ValueAttr[Ns1, Ns2, T] {
-    //    def apply(value: T*): NS1 = ns1
-    def apply(one: T, more: T*): NS1 = ns1
-    def apply(): NS1 = ns1
-    def apply(values: Seq[T]): NS1 = ns1
-    def apply(oldNew: (T, T), oldNewMore: (T, T)*): NS1 = ns1
-    //    def apply(h: Seq[(T, T)]): NS1 = ns1
-    def add(value: T): NS1 = ns1
-    def remove(values: T*): NS1 = ns1
+  trait Many[Ns, S, T] extends ValueAttr[Ns, T] { self: Ns =>
+    //    def apply(value: T*) = self
+    def apply(one: T, more: T*) = self
+    def apply() = self
+//    def apply(values: Seq[T]) = self
+    def apply(oldNew: (T, T), oldNewMore: (T, T)*) = self
+    //    def apply(h: Seq[(T, T)]) = self
+    def add(value: T) = self
+    def remove(values: T*) = self
   }
-  abstract class ManyString[Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[String], String]
-  abstract class ManyInt   [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[Int], Int]
-  abstract class ManyLong  [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[Long], Long]
-  abstract class ManyFloat [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[Float], Float]
-  abstract class ManyDouble[Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[Double], Double]
-  abstract class ManyDate  [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[Date], Date]
-  abstract class ManyUUID  [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[UUID], UUID]
-  abstract class ManyURI   [Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, Set[URI], URI]
+  trait ManyString [Ns] extends Many[Ns, Set[String], String] {self: Ns =>}
+  trait ManyInt    [Ns] extends Many[Ns, Set[Int], Int]       {self: Ns =>}
+  trait ManyLong   [Ns] extends Many[Ns, Set[Long], Long]     {self: Ns =>}
+  trait ManyFloat  [Ns] extends Many[Ns, Set[Float], Float]   {self: Ns =>}
+  trait ManyDouble [Ns] extends Many[Ns, Set[Double], Double] {self: Ns =>}
+  trait ManyDate   [Ns] extends Many[Ns, Set[Date], Date]     {self: Ns =>}
+  trait ManyUUID   [Ns] extends Many[Ns, Set[UUID], UUID]     {self: Ns =>}
+  trait ManyURI    [Ns] extends Many[Ns, Set[URI], URI]       {self: Ns =>}
 
   // Enums
   trait Enum
-  abstract class OneEnum[Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends One[Ns1, Ns2, String] with Enum
-  abstract class ManyEnums[Ns1, Ns2](val ns1: Ns1, val ns2: Ns2) extends Many[Ns1, Ns2, String, String] with Enum
+  trait OneEnum  [Ns] extends One [Ns, String]         with Enum {self: Ns =>}
+  trait ManyEnums[Ns] extends Many[Ns, String, String] with Enum {self: Ns =>}
   object EnumValue
 
   // Attribute options
@@ -114,10 +120,14 @@ object schemaDSL {
   trait UniqueValue
   trait UniqueIdentity
   trait Indexed
-  trait FulltextSearch {
-    self: Attr =>
-    def contains(that: String): NS2 = ns2
+  trait FulltextSearch[Ns] {
+    self: Ns =>
+    def contains(that: String) = self
   }
+//  trait FulltextSearch {
+//    self: Attr =>
+//    def contains(that: String) = self
+//  }
   trait IsComponent
   trait NoHistory
 

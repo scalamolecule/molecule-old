@@ -5,7 +5,9 @@ import molecule.out.{Molecule_0, Molecule_1}
 object DbSchema {
 
   object Db extends Db_0 {
-    class txInstant[NS, NS2](ns: NS, ns2: NS2) extends OneLong(ns, ns2)
+//    class txInstant[NS, NS2](ns: NS, ns2: NS2) extends OneLong(ns, ns2)
+//    class txInstant[NS, NS2](ns: NS, ns2: NS2) extends OneLong
+    class txInstant[NS, NS2](ns: NS, ns2: NS2) extends OneLong[NS]  {self: NS =>}
   }
 
   trait Db_0 extends Molecule_0 {

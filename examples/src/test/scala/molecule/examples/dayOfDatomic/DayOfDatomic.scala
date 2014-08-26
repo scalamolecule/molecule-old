@@ -73,7 +73,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
     //    Order.LineItems.product.price.quantity.insert
 
     // Find id of order with chocolate
-    val orderIdFound = Order.eid.LineItems.Product.description("Expensive Chocolate").get.head
+    val orderIdFound = Order.eid.LineItems.Product.description_("Expensive Chocolate").get.head
     orderIdFound === orderId
 
 
@@ -184,15 +184,33 @@ class DayOfDatomic extends DayOfAtomicSpec {
     // Semantically we can take two approaches:
     // a) "Comments of Ed"
     //    sql-style: "find Comment where email = "editor@example"
-    Comment.eid.Author.email("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+    Comment.eid.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
     // b) "Ed's Comments"
     //    Using a "back-reference" from user to the comments he/she wrote
-    User.email("editor@example")._Comments.eid.get.sorted === List(c2, c4, c5, c7, c11)
+    User.email_("editor@example")._AuthorComment.eid.get.sorted === List(c2, c4, c5, c7, c11)
+
+    User.email_("editor@example")._authorComment.get.sorted === List(c2, c4, c5, c7, c11)
+
+    User.email_("editor@example").firstName._authorComment.tpls.head === List(
+      ("Ed", Set(c2, c4, c5, c7, c11))
+    )
+
+    m(User.email_("editor@example").firstName._AuthorComment.eid.text).tpls === List(
+      ("Ed", c2, "blah 2"),
+      ("Ed", c4, "blah 4"),
+      ("Ed", c5, "blah 5"),
+      ("Ed", c7, "blah 7"),
+      ("Ed", c11, "blah 11")
+    )
+
+    User.email_("editor@example").firstName._author(Comment.eid.text.author).tpls.head === List(
+      ("Ed", List((c2, "blah 2"), (c4, "blah 4"), (c5, "blah 5"), (c7, "blah 7"), (c11, "blah 11")))
+    )
 
 
     // 6. Returning an Aggregate of Comments of some Author
-    Comment(count).Author.email("editor@example").get.head === 5
-    User.email("editor@example")._Comments.eid.size === 5
+    Comment(count).Author.email_("editor@example").get.head === 5
+    User.email_("editor@example")._authorComment.size === 5
 
     // Or we could read the size of the (un-aggregated) result set of Comment entity ids
     Comment.eid.Author.email("editor@example").size === 5
@@ -293,10 +311,10 @@ class DayOfDatomic extends DayOfAtomicSpec {
 
 
 
-
-    Orchestra.name("GSO").Musicians.name
-
-    Musician.name.playsIn(Orchestra.name("GSO")).plays(Instruments.Strings.DoubleBass)
+//
+//    Orchestra.name("GSO").Musicians.name
+//
+//    Musician.name.playsIn(Orchestra.name("GSO")).plays(Instruments.Strings.DoubleBass)
 
   }
 

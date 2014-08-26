@@ -44,7 +44,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 //      }
       val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
       val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
-      traverse(q"$prev", Group(Bond(prev.name, manyRef, refNs), resolve(q"$subModel").elements))
+      traverse(q"$prev", Group(Bond(prev.name.toString, manyRef.toString, refNs), resolve(q"$subModel").elements))
   }
 
   def atomOp(attr: Tree, op: Tree, values0: Tree) = {
