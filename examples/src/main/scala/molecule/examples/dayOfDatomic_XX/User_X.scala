@@ -17,66 +17,6 @@
 //
 //
 //trait User
-//trait User_0 extends User with Molecule_0 {
-//  import User._
-//  def apply(eid: Long)     = new User_0 {}
-//  def apply(c: count.type) = new User_1[Int] {}
-//  lazy val eid           = new eid         [User_1[Long]]      with User_1[Long]
-//  lazy val firstName     = new firstName   [User_1[String]]    with User_1[String]
-//  lazy val lastName      = new lastName    [User_1[String]]    with User_1[String]
-//  lazy val email         = new email       [User_1[String]]    with User_1[String]
-//  lazy val passwordHash  = new passwordHash[User_1[String]]    with User_1[String]
-//  lazy val upVotes       = new upVotes     [User_1[Set[Long]]] with User_1[Set[Long]]
-//  lazy val eid_          = new eid         [User_0] with User_0
-//  lazy val firstName_    = new firstName   [User_0] with User_0
-//  lazy val lastName_     = new lastName    [User_0] with User_0
-//  lazy val email_        = new email       [User_0] with User_0
-//  lazy val passwordHash_ = new passwordHash[User_0] with User_0
-//  lazy val upVotes_      = new upVotes     [User_0] with User_0
-//  def UpVotes                                                   = new ManyRef[User, Story] with Story_0
-//  def upVotes[T1]            (upVotes: Story_1[T1])             = new ManyRef[User, Story] with User_1[Seq[T1]]
-//  def upVotes[T1, T2]        (upVotes: Story_2[T1, T2])         = new ManyRef[User, Story] with User_1[Seq[(T1, T2)]]
-//  def upVotes[T1, T2, T3]    (upVotes: Story_3[T1, T2, T3])     = new ManyRef[User, Story] with User_1[Seq[(T1, T2, T3)]]
-//  def upVotes[T1, T2, T3, T4](upVotes: Story_4[T1, T2, T3, T4]) = new ManyRef[User, Story] with User_1[Seq[(T1, T2, T3, T4)]]
-//
-//  def _AuthorComment = new Comment_0 {}
-//  def _authorComment = new Comment_1[Set[Long]] {}
-//  def _author[T1]            (comments: Comment_1[T1])             = new ManyRef[Story, Comment] with Story_1[Seq[T1]]
-//  def _author[T1, T2]        (comments: Comment_2[T1, T2])         = new ManyRef[Story, Comment] with Story_1[Seq[(T1, T2)]]
-//  def _author[T1, T2, T3]    (comments: Comment_3[T1, T2, T3])     = new ManyRef[Story, Comment] with Story_1[Seq[(T1, T2, T3)]]
-//  def _author[T1, T2, T3, T4](comments: Comment_4[T1, T2, T3, T4]) = new ManyRef[Story, Comment] with Story_1[Seq[(T1, T2, T3, T4)]]
-//}
-//
-//trait User_1[A] extends User with Molecule_1[A] {
-//  import User._
-//  lazy val eid           = new eid         [User_2[A, Long]]      with User_2[A, Long]
-//  lazy val firstName     = new firstName   [User_2[A, String]]    with User_2[A, String]
-//  lazy val lastName      = new lastName    [User_2[A, String]]    with User_2[A, String]
-//  lazy val email         = new email       [User_2[A, String]]    with User_2[A, String]
-//  lazy val passwordHash  = new passwordHash[User_2[A, String]]    with User_2[A, String]
-//  lazy val upVotes       = new upVotes     [User_2[A, Set[Long]]] with User_2[A, Set[Long]]
-//  lazy val eid_          = new eid         [User_1[A]] with User_1[A]
-//  lazy val firstName_    = new firstName   [User_1[A]] with User_1[A]
-//  lazy val lastName_     = new lastName    [User_1[A]] with User_1[A]
-//  lazy val email_        = new email       [User_1[A]] with User_1[A]
-//  lazy val passwordHash_ = new passwordHash[User_1[A]] with User_1[A]
-//  lazy val upVotes_      = new upVotes     [User_1[A]] with User_1[A]
-//  def UpVotes                                                   = new ManyRef[User, Story] with Story_1[A]
-//  def upVotes[T1]            (upVotes: Story_1[T1])             = new ManyRef[User, Story] with User_2[A, Seq[T1]]
-//  def upVotes[T1, T2]        (upVotes: Story_2[T1, T2])         = new ManyRef[User, Story] with User_2[A, Seq[(T1, T2)]]
-//  def upVotes[T1, T2, T3]    (upVotes: Story_3[T1, T2, T3])     = new ManyRef[User, Story] with User_2[A, Seq[(T1, T2, T3)]]
-//  def upVotes[T1, T2, T3, T4](upVotes: Story_4[T1, T2, T3, T4]) = new ManyRef[User, Story] with User_2[A, Seq[(T1, T2, T3, T4)]]
-//  def apply(m: maybe.type) = new User_1[A] {}
-//  def apply(c: count.type) = new User_1[Int] {}
-//
-//  def _AuthorComment = new Comment_1[Set[Long]] {}
-//  def _authorComment = new Comment_2[A, Set[Long]] {}
-//  def _author[T1]            (comments: Comment_1[T1])             = new ManyRef[Story, Comment] with Story_2[A, Seq[T1]]
-//  def _author[T1, T2]        (comments: Comment_2[T1, T2])         = new ManyRef[Story, Comment] with Story_2[A, Seq[(T1, T2)]]
-//  def _author[T1, T2, T3]    (comments: Comment_3[T1, T2, T3])     = new ManyRef[Story, Comment] with Story_2[A, Seq[(T1, T2, T3)]]
-//  def _author[T1, T2, T3, T4](comments: Comment_4[T1, T2, T3, T4]) = new ManyRef[Story, Comment] with Story_2[A, Seq[(T1, T2, T3, T4)]]
-//}
-//
 //object User extends User with User_0 {
 //  class firstName    [Ns](ns: Ns) extends OneString   (ns) with Indexed
 ////  class firstName    [Ns1, Ns2](ns1: Ns1, ns2: Ns2) extends OneString   (ns1, ns2) with Indexed

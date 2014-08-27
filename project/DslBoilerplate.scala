@@ -168,7 +168,8 @@ object DslBoilerplate {
 
     val entityIdDef = ("attr", "eid", "Long", "Long", 1, "OneLong(ns1, ns2)", List())
 
-    val attrs = (entityIdDef +: attrs1).map { case (cat, attr, tpe, baseType, card, ext, defs) =>
+    //    val attrs = (entityIdDef +: attrs1).map { case (cat, attr, tpe, baseType, card, ext, defs) =>
+    val attrs = attrs1.map { case (cat, attr, tpe, baseType, card, ext, defs) =>
       val attrClean = attr.replace("`", "")
       val padAttr = " " * (longestAttr - attr.length)
       val padType = " " * (longestType - tpe.length)
@@ -214,7 +215,8 @@ object DslBoilerplate {
         }
       }
 
-      val attrStmts = valueAttrs.tail.map { case (cat, attr0, attrClean, tpe, baseType, card, ext, defs, _, _, _, _) =>
+      //      val attrStmts = valueAttrs.tail.map { case (cat, attr0, attrClean, tpe, baseType, card, ext, defs, _, _, _, _) =>
+      val attrStmts = valueAttrs.map { case (cat, attr0, attrClean, tpe, baseType, card, ext, defs, _, _, _, _) =>
         val attr = attr0.replace("`", "")
         val valueType = if (cat == "enum") "ref"
         else baseType match {
@@ -258,12 +260,20 @@ object DslBoilerplate {
     // NS =======================================================================================
 
     // I know, I know, this is clumsy
-    val attrs2 = attrs.tail.map {
+    //    val attrs2 = attrs.tail.map {
+    val attrs2 = attrs.map {
       case ("OneRef", b, c, d, e, f, g, h, i, j, k, l)  => ("OneRef", b, c, d, e, f, g, h, i, j, k, l, "OneRefAttr")
       case ("ManyRef", b, c, d, e, f, g, h, i, j, k, l) => ("ManyRef", b, c, d, e, f, g, h, i, j, k, l, "ManyRefAttr")
       case (a, b, c, d, e, f, g, h, i, j, k, l)         => (a, b, c, d, e, f, g, h, i, j, k, l, g)
     }
     val longestSchemaType = attrs2.map(_._13.length).max
+
+    val genericClasses = Seq(
+      s"class eid [Ns] extends OneLong   [Ns] {self: Ns =>}",
+      s"class attr[Ns] extends ManyString[Ns] {self: Ns =>}",
+      s"class ns  [Ns] extends ManyString[Ns] {self: Ns =>}"
+    ).mkString("\n  ").trim
+
     val attrClasses = attrs2.map { case (cat, attr, _, tpe, baseType, _, ext, defs, padAttr, padAttrClean, _, _, ext2) =>
       val pad = " " * (longestSchemaType - ext2.length)
       val ext3 = ext2 + pad + s"[Ns]"
@@ -282,7 +292,8 @@ object DslBoilerplate {
 
     val inRange = 0 to inArity
     val outRange = 0 to outArity
-    val imp = if (attrs.size == 1) Seq() else Seq(s"import $Ns1._")
+    //    val imp = if (attrs.size == 1) Seq() else Seq(s"import $Ns1._")
+    val imp = if (attrs.isEmpty) Seq() else Seq(s"import $Ns1._")
 
     val boilerplateClasses = inRange.flatMap { in =>
       outRange.flatMap { out =>
@@ -299,37 +310,50 @@ object DslBoilerplate {
           val inputMethods = if (out > 0 && in < inArity) {
             val newInTypes = if (OutTypes.isEmpty) InTypes else InTypes :+ OutTypes.last
             val curTypes = (if (OutTypes.isEmpty) newInTypes else newInTypes ++ OutTypes.init).mkString(", ")
-            val curIn = s"${Ns1}_In_${in + 1}_${out - 1}[$curTypes] {}"
+//            val curIn = s"${Ns1}_In_${in + 1}_${out - 1}[$curTypes] {}"
+            val curIn = s"${Ns1}_In_${in + 1}_${out - 1}[$curTypes]"
             val nextInTypes = (newInTypes ++ OutTypes).mkString(", ")
-            val nextIn = s"${Ns1}_In_${in + 1}_$out[$nextInTypes] {}"
+//            val nextIn = s"${Ns1}_In_${in + 1}_$out[$nextInTypes] {}"
+            val nextIn = s"${Ns1}_In_${in + 1}_$out[$nextInTypes]"
+//            Seq( s"""
+//               |  def apply(in: ?.type)    = new $curIn
+//               |  def apply(in: ?!.type)   = new $nextIn
+//               |  def <(in: ?.type)        = new $nextIn
+//               |  def contains(in: ?.type) = new $nextIn
+//               |  """.stripMargin.trim)
             Seq( s"""
-               |  def apply(in: ?.type)    = new $curIn
-               |  def apply(in: ?!.type)   = new $nextIn
-               |  def <(in: ?.type)        = new $nextIn
-               |  def contains(in: ?.type) = new $nextIn
+               |  def apply(in: ?.type)    : $curIn = ???
+               |  def apply(in: ?!.type)   : $nextIn = ???
+               |  def <(in: ?.type)        : $nextIn = ???
+               |  def contains(in: ?.type) : $nextIn = ???
                |  """.stripMargin.trim)
           } else Seq()
 
           val extraMethods = if (out > 0) {
             val nextOutTypes = OutTypes.mkString(", ")
-            val nextOut = s"${Ns1}_$out[$nextOutTypes] {}"
+//            val nextOut = s"${Ns1}_$out[$nextOutTypes] {}"
+            val nextOut = s"${Ns1}_$out[$nextOutTypes]"
             val nextOutIntTypes = (OutTypes.init :+ "Int").mkString(", ")
-            val nextOutInt = s"${Ns1}_$out[$nextOutIntTypes] {}"
+//            val nextOutInt = s"${Ns1}_$out[$nextOutIntTypes] {}"
+            val nextOutInt = s"${Ns1}_$out[$nextOutIntTypes]"
+//            Seq( s"""
+//               |  def apply(m: maybe.type) = new $nextOut
+//               |  def apply(c: count.type) = new $nextOutInt
+//               |  """.stripMargin.trim)
             Seq( s"""
-               |  def apply(m: maybe.type) = new $nextOut
-               |  def apply(c: count.type) = new $nextOutInt
+               |  def apply(m: maybe.type) : $nextOut   = ???
+               |  def apply(c: count.type) : $nextOutInt = ???
                |  """.stripMargin.trim)
           } else Seq()
 
           val outBody = {
 
-            val defaults = if (in + out == 0 && attrs1.nonEmpty) {
+            val nsApply = if (in + out == 0 && attrs1.nonEmpty) {
               val (_, attr, tpeFirst, _, _, _, _) = attrs1.head
-              //              Seq("def apply(eid: Long) = this")
-              //              Seq( s"""|  def apply(eid: Long)     = this
-              Seq( s"""|  def apply(eid: Long)     = new ${Ns1}_0 {}
-                       |  def apply(c: count.type) = new ${Ns1}_1[Int] {}""".stripMargin.trim)
-              //              Seq()
+//              Seq( s"""|  def apply(eid: Long)     = new ${Ns1}_0 {}
+//                       |  def apply(c: count.type) = new ${Ns1}_1[Int] {}""".stripMargin.trim)
+              Seq( s"""|  def apply(eid: Long)     : ${Ns1}_0      = ???
+                       |  def apply(c: count.type) : ${Ns1}_1[Int] = ???""".stripMargin.trim)
             } else Seq()
 
             val (attrCode, attrCode_) = attrs.map { case (cat, attr, attrClean, tpe, _, _, defs, _, padAttr, padAttrClean, padType, _) =>
@@ -337,21 +361,72 @@ object DslBoilerplate {
               val nextNS = s"${Ns1}_${out + 1}[$nextTypes]"
               val thisTypes = OutTypes mkString ", "
               val thisNS = if (out == 0) s"${Ns1}_0" else s"${Ns1}_$out[$thisTypes]"
-              (s"lazy val $attr  $padAttr= new $attr$padAttr[$nextNS]$padType with $nextNS",
-                s"lazy val ${attrClean}_ $padAttrClean= new $attr$padAttr[$thisNS] with $thisNS")
+//              (s"lazy val $attr  $padAttr= new $attr$padAttr[$nextNS]$padType with $nextNS",
+//                s"lazy val ${attrClean}_ $padAttrClean= new $attr$padAttr[$thisNS] with $thisNS")
+              (s"val $attr  $padAttr: $attr$padAttr[$nextNS]$padType with $nextNS$padType = ???",
+                s"val ${attrClean}_ $padAttrClean: $attr$padAttr[$thisNS] with $thisNS = ???")
             }.unzip
 
-            val treeCode = treeAttrs.flatMap { case x =>
-              val nextTypes = (OutTypes :+ "Long") mkString ", "
-              val nextNS = s"${Ns1}_${out + 1}[$nextTypes]"
-              val thisTypes = OutTypes mkString ", "
-              val thisNS = if (out == 0) s"${Ns1}_0" else s"${Ns1}_$out[$thisTypes]"
-              Seq(
-                s"lazy val _parent  = new _parent[$nextNS] with $nextNS",
-                s"lazy val _parent_ = new _parent[$thisNS] with $thisNS"
+            val genericCode = {
+              def nextNS(tpe: String) = s"${Ns1}_${out + 1}[${(OutTypes :+ tpe) mkString ", "}]"
+              val thisNS = if (out == 0) s"${Ns1}_0" else s"${Ns1}_$out[${OutTypes mkString ", "}]"
+
+//                            val nextAttrs = Seq(
+//                              //                "// Generic",
+//                              "",
+//                              s"lazy val eid   = new eid [${nextNS("Seq[Long]")}]   with ${nextNS("Seq[Long]")}",
+//                              s"lazy val attr  = new attr[${nextNS("Seq[String]")}] with ${nextNS("Seq[String]")}",
+//                              s"lazy val ns    = new ns  [${nextNS("Seq[String]")}] with ${nextNS("Seq[String]")}"
+//                            )
+//                            val thisAttrs = Seq(
+//                              s"lazy val eid_  = new eid [$thisNS] with $thisNS",
+////                              s"lazy val attr_ = new attr[$thisNS] with $thisNS",
+//                              s"lazy val xattr_ = new attr[$thisNS] with $thisNS",
+//                              s"lazy val ns_   = new ns  [$thisNS] with $thisNS "
+//                            )
+//                            val treeCode = if (treeAttrs.nonEmpty) Seq(
+//                              //                "// Tree",
+//                              "",
+//                              s"lazy val _parent  = new _parent[${nextNS("Long")}] with ${nextNS("Long")}",
+//                              s"lazy val _parent_ = new _parent[$thisNS] with $thisNS")
+//                            else Seq()
+
+//              def _ = ???
+
+              val nextAttrs = Seq(
+                "",
+                s"val eid   : eid [${nextNS("Long")}]   with ${nextNS("Long")}   = ???",
+                s"val attr  : attr[${nextNS("String")}] with ${nextNS("String")} = ???",
+                s"val ns    : ns  [${nextNS("String")}] with ${nextNS("String")} = ???"
               )
+              val thisAttrs = Seq(
+                s"val eid_  : eid [$thisNS] with $thisNS = ???",
+                s"val attr_ : attr[$thisNS] with $thisNS = ???",
+                s"val ns_   : ns  [$thisNS] with $thisNS = ???"
+              )
+              val treeCode = if (treeAttrs.nonEmpty) Seq(
+                "",
+                s"val _parent  : _parent[${nextNS("Long")}] with ${nextNS("Long")} = ???",
+                s"val _parent_ : _parent[$thisNS] with $thisNS = ???")
+              else Seq()
+
+              nextAttrs ++ thisAttrs ++ treeCode
+              //              treeCode
+              //              Seq()
             }
 
+            //            val treeCode = treeAttrs.flatMap { case x =>
+            //              val nextTypes = (OutTypes :+ "Long") mkString ", "
+            //              val nextNS = s"${Ns1}_${out + 1}[$nextTypes]"
+            //              val thisTypes = OutTypes mkString ", "
+            //              val thisNS = if (out == 0) s"${Ns1}_0" else s"${Ns1}_$out[$thisTypes]"
+            //              Seq(
+            //                s"lazy val _parent  = new _parent[$nextNS] with $nextNS",
+            //                s"lazy val _parent_ = new _parent[$thisNS] with $thisNS"
+            //              )
+            //            }
+
+            //            val refCode = refAttrs.foldLeft(Seq("// Ref")) { case (acc, (cat, attr, _, _, _, _, ref, _, _, _, _, _)) =>
             val refCode = refAttrs.foldLeft(Seq("")) { case (acc, (cat, attr, _, _, _, _, ref, _, _, _, _, _)) =>
               val refs: Seq[String] = if (cat == "ManyRef") {
                 // Nested entities
@@ -360,23 +435,27 @@ object DslBoilerplate {
                 val refTypeLists: Seq[Seq[String]] = (1 to nsArities.get(ref).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
                 val maxPad = refTypeLists.last.length * 4 - 2
                 val refPad = " " * (s" []($ref: ${ref}_X[])".length + maxPad * 2)
-                val refNs: String = s"def ${attr.capitalize}$refPad= new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes"
+//                val refNs: String = s"def ${attr.capitalize}$refPad= new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes"
+                val refNs: String = s"def ${attr.capitalize}$refPad: $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes = ???"
                 val named = refTypeLists.map { refTypeList =>
                   val types = refTypeList.mkString(", ")
                   val pad = " " * (maxPad - types.length)
                   val refTypes = if (refTypeList.size == 1) s"Seq[${refTypeList.head}]" else s"Seq[(${refTypeList.mkString(", ")})]"
                   val allTypes = if (out == 0) refTypes else TraitTypes.init.tail + ", " + refTypes
-                  val name = s"def $attr[$types]$pad(${firstLow(ref)}: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
+//                  val name = s"def $attr[$types]$pad(${firstLow(ref)}: ${ref}_${refTypeList.size}[$types])$pad = new ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes]"
+                  val name = s"def $attr[$types]$pad(${firstLow(ref)}: ${ref}_${refTypeList.size}[$types])$pad : ManyRef[$Ns1, $ref] with ${Ns1}_${out + 1}[$allTypes] = ???"
                   name
                 }
                 refNs +: named
               } else {
                 // Link to referenced cardinality-one namespace
-                Seq(s"def ${attr.capitalize} = new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes")
+//                Seq(s"def ${attr.capitalize} = new $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes")
+                Seq(s"def ${attr.capitalize} : $cat[$Ns1, $ref] with ${ref}_$out$TraitTypes = ???")
               }
               acc ++ refs
-            }.tail
+            } //.tail
 
+            //            val backRefCode = backRefAttrs.foldLeft(Seq("// Back-Ref")) { case (acc, (cat, backAttr, _, baseType, card, backRef, _)) =>
             val backRefCode = backRefAttrs.foldLeft(Seq("")) { case (acc, (cat, backAttr, _, baseType, card, backRef, _)) =>
               val backRefs: Seq[String] = {
                 // Nested entities
@@ -385,18 +464,21 @@ object DslBoilerplate {
                 val backRefTypeLists: Seq[Seq[String]] = (1 to nsArities.get(backRef).get).scanLeft(Seq[String]()) { case (types, i) => types :+ ("T" + i)}.tail
                 val maxPad = backRefTypeLists.last.length * 4 - 2
                 val backRefPad = " " * (s" []($backRef: ${backRef}_X[])".length + maxPad * 2 - backRef.size)
-                val backRefNs: String = s"\n  def _${backAttr.capitalize}$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${backRef}_$out$TraitTypes"
+//                val backRefNs: String = s"\n  def _${backAttr.capitalize}$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${backRef}_$out$TraitTypes"
+                val backRefNs: String = s"\n  def _${backAttr.capitalize}$backRef$backRefPad: BackRef[$backRef, $Ns1] with ${backRef}_$out$TraitTypes = ???"
                 val nextBackRefTypes = (OutTypes :+ "Set[Long]") mkString ", "
-                val backRefIds: String = s"def _$backAttr$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$nextBackRefTypes]"
-                val named = backRefTypeLists.map { backRefTypeList =>
+//                val backRefIds: String = s"def _$backAttr$backRef$backRefPad= new BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$nextBackRefTypes]"
+                val backRefIds: String = s"def _$backAttr$backRef$backRefPad: BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$nextBackRefTypes] = ???"
+                val backRefGroup = backRefTypeLists.map { backRefTypeList =>
                   val types = backRefTypeList.mkString(", ")
                   val pad = " " * (maxPad - types.length)
                   val backRefTypes = if (backRefTypeList.size == 1) s"Seq[${backRefTypeList.head}]" else s"Seq[(${backRefTypeList.mkString(", ")})]"
                   val allTypes = if (out == 0) backRefTypes else TraitTypes.init.tail + ", " + backRefTypes
-                  val name = s"def _$backAttr[$types]$pad(${firstLow(backRef)}: ${backRef}_${backRefTypeList.size}[$types])$pad = new BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$allTypes]"
+//                  val name = s"def _$backAttr[$types]$pad(${firstLow(backRef)}: ${backRef}_${backRefTypeList.size}[$types])$pad = new BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$allTypes]"
+                  val name = s"def _$backAttr[$types]$pad(${firstLow(backRef)}: ${backRef}_${backRefTypeList.size}[$types])$pad : BackRef[$backRef, $Ns1] with ${Ns1}_${out + 1}[$allTypes] = ???"
                   name
                 }
-                backRefNs +: backRefIds +: named
+                backRefNs +: backRefIds +: backRefGroup
               }
               acc ++ backRefs
             }.tail
@@ -404,7 +486,8 @@ object DslBoilerplate {
             if (out == outArity)
               "\n\n"
             else
-              (imp ++ defaults ++ attrCode ++ attrCode_ ++ treeCode ++ refCode ++ inputMethods ++ extraMethods ++ backRefCode).mkString("{\n  ", "\n  ", "\n}\n")
+            //              (imp ++ nsApply ++ attrCode ++ attrCode_ ++ treeCode ++ refCode ++ inputMethods ++ extraMethods ++ backRefCode).mkString("{\n  ", "\n  ", "\n}\n")
+              (imp ++ nsApply ++ attrCode ++ attrCode_ ++ genericCode ++ refCode ++ inputMethods ++ extraMethods ++ backRefCode).mkString("{\n  ", "\n  ", "\n}\n")
           }
           val Tree = if (treeAttrs.isEmpty) "" else " with Tree"
           Some(s"trait ${Ns1}_$out$TraitTypes extends $Ns1 with Molecule_$out$TraitTypes$Tree $outBody")
@@ -507,7 +590,8 @@ object DslBoilerplate {
     }.mkString("\n").trim
 
     //    val domainNs = domain.capitalize + " : " + Ns1 + (if (internalAttrs.isEmpty) "" else " (Sub implementation)")
-    val connImport = if (treeAttrs.nonEmpty) "\nimport datomic.Connection" else ""
+    //    val connImport = if (treeAttrs.nonEmpty) "\nimport datomic.Connection" else ""
+    val inImport = if (inArity > 0) "\nimport molecule.in._" else ""
     val body = s"""|/*
                    | * AUTO-GENERATED CODE - DO NOT CHANGE!
                    | *
@@ -516,15 +600,16 @@ object DslBoilerplate {
                    | */
                    |package $path.dsl.$domain
                    |import molecule._
-                   |import molecule.dsl.schemaDSL._
-                   |import molecule.in._
-                   |import molecule.out._$connImport
+                   |import molecule.dsl.schemaDSL._$inImport
+                   |import molecule.out._
                    |
                    |
                    |trait $Ns1
                    |
                    |object $Ns1 extends $Ns1 with ${Ns1}_0 {
                    |  $attrClasses
+                   |
+                   |  $genericClasses
                    |}
                    |
                    |$boilerplateClasses
@@ -626,7 +711,7 @@ object DslBoilerplate {
         dslFiles :+ schemaFile
       }
 
-      println(p)
+      //      println(p)
 
       xx
     }

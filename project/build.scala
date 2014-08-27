@@ -42,7 +42,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-        "demo/src/main/scala/demo"
+//        "demo/src/main/scala/demo"
       ),
       publish :=(),
       publishLocal :=()
@@ -55,8 +55,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-        "examples/src/main/scala/molecule/examples/dayOfDatomic",
-        "examples/src/main/scala/molecule/examples/seattle"
+        "examples/src/main/scala/molecule/examples/dayOfDatomic"
+//        "examples/src/main/scala/molecule/examples/seattle"
       ),
       publish :=(),
       publishLocal :=()
@@ -79,7 +79,81 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       "com.datomic" % "datomic-free" % "0.9.4766.11",
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.specs2" %% "specs2" % "2.3.11" % "test"
-    )
+    ),
+    fork := true,
+//    javaOptions in run += "-Xmx8G -Xgcpolicy:gencon -XX:MaxPermSize=2000m -Xms1000m -Xmn100m -Xverbose:settings"
+//    javaOptions in run += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn10m -verbosegc -XX:+PrintGCDetails"
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn5m -verbosegc -XX:+PrintGCDetails" // 60s
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn50m -verbosegc -XX:+PrintGCDetails" // 84s
+//    javaOptions += "-Xmx8G -Xgcpolicy:gencon -XX:MaxPermSize=2000m -Xms1000m -Xmn5m -verbosegc -XX:+PrintGCDetails" // 83s
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn5m -verbosegc -XX:+PrintGCDetails" // 81
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn2m" // 86s
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn2m" // + fork 62s
+//    javaOptions in run += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn2m" //  62s
+//    javaOptions in run += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn2m" //  + "in run" 98s !
+//    javaOptions in compile += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn2m" // + "in compile" 81
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn2m" // - "in compile" 66
+  // --------------------
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn2m" // 30s
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn5m" // 24s
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn10m" // 24s
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=1000m -Xms500m -Xmn10m" // 24s
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=4000m -Xms500m -Xmn10m" // 34s
+//    javaOptions += "-Xmx8G -XX:MaxPermSize=4000m -Xms500m -Xmn10m" // 24s
+//    javaOptions += "-Xmx8G -XX:MaxPermSize=2000m -Xms500m -Xmn10m" // 28s
+//    javaOptions += "-Xmx8G -XX:MaxPermSize=2000m -Xms500m -Xmn5m" // 30s
+//    javaOptions += "-Xmx8G -XX:MaxPermSize=4000m -Xms500m -Xmn5m" // 29s
+//    javaOptions += "-Xmx8G -XX:MaxPermSize=4000m -Xms500m -Xmn10m" // 33s
+//    javaOptions += "-Xmx8G -XX:MaxPermSize=4000m -Xms500m -Xmn5m" // 31
+//    javaOptions += "-Xmx8G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=4000m -Xms500m -Xmn5m" // 33
+//    javaOptions += "-Xmx8G -Xgcpolicy:gencon -XX:MaxPermSize=4000m -Xms500m -Xmn5m" // 38
+//    javaOptions += "-Xmx8G -XX:MaxPermSize=2000m -Xms1000m -Xmn5m" // 28
+//    javaOptions += "-Xmx2G -XX:MaxPermSize=2000m -Xms1000m -Xmn5m" // 36
+//    javaOptions += "-Xmx2G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms1000m -Xmn5m" // 38
+//    javaOptions += "-Xmx10G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms500m -Xmn5m" // 26
+//    javaOptions += "-Xmx10G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=2000m -Xms100m -Xmn10m" // 24
+//    javaOptions += "-Xmx16G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=3000m -Xms100m -Xmn10m" // 24
+//    javaOptions += "-Xmx16G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=3000m -Xms100m -Xmn5m" // 24
+//    javaOptions += "-Xmx16G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=3000m -Xms500m -Xmn5m" // 24
+//    javaOptions += "-Xmx16G -XX:MaxPermSize=3000m -Xms500m -Xmn5m" // 31
+//    javaOptions += "-Xmx16G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=3000m -Xms500m -Xmn5m" // 24
+//    javaOptions += "-Xmx16G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=3000m -Xms500m -Xmn5m" // 24
+//    javaOptions += "-Xmx16G -XX:+UseConcMarkSweepGC -XX:MaxPermSize=3000m -Xms1000m -Xmn5m" // 27
+//    javaOptions += "-Xmx16G -XX:+UseConcMarkSweepGC -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=3000m -Xms500m -Xmn5m" // 24
+//    javaOptions += "-Xmx16G -Xss1M -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 21
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 21
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms3000m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 26
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled", // + cleenKeepFiles 23
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled", // 38
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled", // 33
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 20
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms1000m -Xmn8m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 21
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn8m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 25
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn4m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 23
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 22
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 38 (without fork)
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 37 (without fork)
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // java 1.7, 71s
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 30
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 31
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // java 1.6, 78s
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 23
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 27
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // java 1.8, 68s
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 23
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 27
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 21s
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 24
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 22
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 35s `= new
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 31
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 29 `: eid
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 34
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 21
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 39 + cleanKF
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled", // 28
+    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 22
+//    cleanKeepFiles ++= Seq("resolution-cache", "streams").map(target.value / _)
   )
 }
 

@@ -15,18 +15,22 @@ object schemaDSL {
   trait Partition
 
   trait Tree {
+    // Parent entity
     class _parent[Ns] extends OneLong[Ns] {self: Ns =>}
   }
 
   trait NS {
     // Entity id (internal Datomic id)
-//    class eid(ns: Ns) extends OneLong(ns)
-    class eid[Ns] extends OneLong[Ns] {self: Ns =>}
+//    class eid[Ns] extends OneLong[Ns] {self: Ns =>}
 
-//    // No further attributes after querying transaction functions
+    // No further attributes after querying transaction functions
     lazy val tx        = new Molecule_1[Long] {}
     lazy val t         = new Molecule_1[Long] {}
     lazy val txInstant = new Molecule_1[Date] {}
+
+    // Schema attributes
+//    class attr[Ns] extends ManyString[Ns] {self: Ns =>}
+//    class ns  [Ns] extends ManyString[Ns] {self: Ns =>}
   }
 
   trait Ref[Ns1, Ns2]
