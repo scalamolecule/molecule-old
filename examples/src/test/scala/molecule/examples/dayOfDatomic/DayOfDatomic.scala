@@ -1,114 +1,113 @@
 package molecule
 package examples.dayOfDatomic
-//import datomic.Peer
-//import datomic.Util.list
-//import molecule.examples.dayOfDatomic.dsl.productsOrder._
+import datomic.Peer
+import datomic.Util.list
+import molecule.examples.dayOfDatomic.dsl.productsOrder._
 import molecule.examples.dayOfDatomic.dsl.socialNews._
-//import molecule.examples.dayOfDatomic.schema.{ProductsOrderSchema, SocialNewsSchema}
-import molecule.examples.dayOfDatomic.schema.{SocialNewsSchema}
+import molecule.examples.dayOfDatomic.schema.{ProductsOrderSchema, SocialNewsSchema}
+import molecule.examples.dayOfDatomic.schema.SocialNewsSchema
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-import scala.collection.JavaConversions._
 import scala.language.existentials
 
 class DayOfDatomic extends DayOfAtomicSpec {
 
-//  "Hello World" >> {
-//
-//    // Transaction input is data
-//    val tempid = Peer.tempid(":db.part/user")
-//    val txData = list(list(
-//      ":db/add", tempid,
-//      ":db/doc", "Hello world"))
-//    val conn = load(txData, "hello-world")
-//
-//    // Transaction result is data
-//    val txresult = conn.transact(txData)
-//    txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
-//
-//    // Database is a value
-//    val dbValue = conn.db()
-//
-//    // Query input is data
-//    val qresult = Peer.q( """[:find ?e :where [?e :db/doc "Hello world"]]""", dbValue)
-//
-//    // Query result is data
-//    val id = qresult.toList.head.head
-//
-//    // Entity is a navigable view over data
-//    dbValue.entity(id).get(":db/id") === 17592186045417L
-//
-//    // Schema itself is data
-//    dbValue.entity(":db/doc").get(":db/id") === 62
-//  }
-//
-//
-//  "ProductsAndOrders (nested data)" >> {
-//
-//    // See: http://blog.datomic.com/2013/06/component-entities.html
-//
-//    // Make db
-//    implicit val conn = load(ProductsOrderSchema.tx, "Orders")
-//
-//    // Insert 2 products
-//    val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-//
-//
-//    // Insert nested data .................................
-//
-//    // Model of Order with multiple LineItems
-//    // 3 LineItem attributes are treated as one Tuple3 of data
-////    val order = m(Order.lineItems(LineItem.product.price.quantity))
-//    val order = m(Order.LineItems.product.price.quantity)
-////    val order = m(Order.eid.LineItems.product.price.quantity)
-////    val order = m(Order(1L).LineItems.product.price.quantity)
-//
-//
-//    val order2 = Order
-//
-//    // Make order with two line items and return created entity id
-//    val orderId = order insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) last
-////    val orderId = order insert List((1L, chocolateId, 48.00, 1), (1L, whiskyId, 38.00, 2)) last
-////    val orderId = order insert List((1L, chocolateId, 48.00, 1), (1L, whiskyId, 38.00, 2)) last
-//
-//    //    val orderId1 = order1.insert List (
-//    //      (chocolateId, 48.00, 1),
-//    //      (whiskyId, 38.00, 2)
-//    //      ) last
-//    //      Order.id("id1").LineItems.product.price.quantity.insert
-//    //
-//    //    Order.LineItems.product.price.quantity.insert
-//
-//    // Find id of order with chocolate
-//    val orderIdFound = Order.eid.LineItems.Product.description_("Expensive Chocolate").get.head
-//    orderIdFound === orderId
-//
-//
-//    // Touch entity ................................
-//
-//    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-//    orderId.touch === Map(
-//      ":db/id" -> 17592186045423L,
-//      ":order/lineItems" -> List(
-//        Map(
-//          ":db/id" -> 17592186045421L,
-//          ":lineItem/product" -> List(Map(":db/id" -> chocolateId, ":product/description" -> "Expensive Chocolate")),
-//          ":lineItem/quantity" -> 1,
-//          ":lineItem/price" -> 48.0),
-//        Map(
-//          ":db/id" -> 17592186045422L,
-//          ":lineItem/product" -> List(Map(":db/id" -> whiskyId, ":product/description" -> "Cheap Whisky")),
-//          ":lineItem/quantity" -> 2,
-//          ":lineItem/price" -> 38.0)
-//      ))
-//
-//    // Retract nested data ............................
-//
-//    // Retract entity - all subcomponents/lineItems are retracted
-//    orderId.retract
-//
-//    // The products are still there
-//    Product.description("Expensive Chocolate" or "Cheap Whisky").ids === List(chocolateId, whiskyId)
-//  }
+    "Hello World" >> {
+
+      // Transaction input is data
+      val tempid = Peer.tempid(":db.part/user")
+      val txData = list(list(
+        ":db/add", tempid,
+        ":db/doc", "Hello world"))
+      val conn = load(txData, "hello-world")
+
+      // Transaction result is data
+      val txresult = conn.transact(txData)
+      txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
+
+      // Database is a value
+      val dbValue = conn.db()
+
+      // Query input is data
+      val qresult = Peer.q( """[:find ?e :where [?e :db/doc "Hello world"]]""", dbValue)
+
+      // Query result is data
+      val id = qresult.toList.head.head
+
+      // Entity is a navigable view over data
+      dbValue.entity(id).get(":db/id") === 17592186045417L
+
+      // Schema itself is data
+      dbValue.entity(":db/doc").get(":db/id") === 62
+    }
+
+
+    "ProductsAndOrders (nested data)" >> {
+
+      // See: http://blog.datomic.com/2013/06/component-entities.html
+
+      // Make db
+      implicit val conn = load(ProductsOrderSchema.tx, "Orders")
+
+      // Insert 2 products
+      val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky")
+
+
+      // Insert nested data .................................
+
+      // Model of Order with multiple LineItems
+      // 3 LineItem attributes are treated as one Tuple3 of data
+//      val order = m(Order.lineItems(LineItem.product.price.quantity))
+      val order = m(Order.LineItems.product.price.quantity)
+  //    val order = m(Order.eid.LineItems.product.price.quantity)
+  //    val order = m(Order(1L).LineItems.product.price.quantity)
+
+
+      val order2 = Order
+
+      // Make order with two line items and return created entity id
+      val orderId = order insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) last
+  //    val orderId = order insert List((1L, chocolateId, 48.00, 1), (1L, whiskyId, 38.00, 2)) last
+  //    val orderId = order insert List((1L, chocolateId, 48.00, 1), (1L, whiskyId, 38.00, 2)) last
+
+      //    val orderId1 = order1.insert List (
+      //      (chocolateId, 48.00, 1),
+      //      (whiskyId, 38.00, 2)
+      //      ) last
+      //      Order.id("id1").LineItems.product.price.quantity.insert
+      //
+      //    Order.LineItems.product.price.quantity.insert
+
+      // Find id of order with chocolate
+      val orderIdFound = Order.eid.LineItems.Product.description_("Expensive Chocolate").get.head
+      orderIdFound === orderId
+
+
+      // Touch entity ................................
+
+      // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+      orderId.touch === Map(
+        ":db/id" -> 17592186045423L,
+        ":order/lineItems" -> List(
+          Map(
+            ":db/id" -> 17592186045421L,
+            ":lineItem/product" -> List(Map(":db/id" -> chocolateId, ":product/description" -> "Expensive Chocolate")),
+            ":lineItem/quantity" -> 1,
+            ":lineItem/price" -> 48.0),
+          Map(
+            ":db/id" -> 17592186045422L,
+            ":lineItem/product" -> List(Map(":db/id" -> whiskyId, ":product/description" -> "Cheap Whisky")),
+            ":lineItem/quantity" -> 2,
+            ":lineItem/price" -> 38.0)
+        ))
+
+      // Retract nested data ............................
+
+      // Retract entity - all subcomponents/lineItems are retracted
+      orderId.retract
+
+      // The products are still there
+      Product.description("Expensive Chocolate" or "Cheap Whisky").ids === List(chocolateId, whiskyId)
+    }
 
 
   "Query tour" >> {
@@ -150,7 +149,8 @@ class DayOfDatomic extends DayOfAtomicSpec {
     val storyComment = Story.eid.Comments.author.text insert
 
     // 2. Comment on a Comment
-    val subComment = Comment._parent.author.text insert
+//    val subComment = Comment._parentComment.author.text insert
+    val subComment = Comment.eid.Comment.author.text insert
 
     // Sub-comments form hierarchical trees of Comment nodes having the
     // previous comment as parent and the initial Story Comment as root
@@ -185,12 +185,15 @@ class DayOfDatomic extends DayOfAtomicSpec {
       17592186045425L, 17592186045427L, 17592186045429L, 17592186045431L, 17592186045433L, 17592186045435L,
       17592186045437L, 17592186045439L, 17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L
     )
-//
-//    // 5. Finding a User's Comments
+
+    // 5. Finding a User's Comments
+    Comment.eid.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+
+
 //    // Semantically we can take two approaches:
 //    // a) "Comments of Ed"
 //    //    sql-style: "find Comment where email = "editor@example"
-//    Comment.eid.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+//
 //    // b) "Ed's Comments"
 //    //    Using a "back-reference" from user to the comments he/she wrote
 //    User.email_("editor@example")._AuthorComment.eid.get.sorted === List(c2, c4, c5, c7, c11)
@@ -201,133 +204,158 @@ class DayOfDatomic extends DayOfAtomicSpec {
 //      ("Ed", Set(c2, c4, c5, c7, c11))
 //    )
 //
-//    m(User.email_("editor@example").firstName._AuthorComment.eid.text).tpls === List(
+//    User.email_("editor@example").firstName._AuthorComment.eid.text.tpls === List(
 //      ("Ed", c2, "blah 2"),
 //      ("Ed", c4, "blah 4"),
 //      ("Ed", c5, "blah 5"),
 //      ("Ed", c7, "blah 7"),
 //      ("Ed", c11, "blah 11")
 //    )
-//
-//    User.email_("editor@example").firstName.lastName.email._author(Comment.eid.text).tpls.head === List(
+
+    Comment.eid.text.Author.email_("editor@example").firstName.tpls === List(
+      (c2, "blah 2", "Ed"),
+      (c4, "blah 4", "Ed"),
+      (c5, "blah 5", "Ed"),
+      (c7, "blah 7", "Ed"),
+      (c11, "blah 11", "Ed")
+    )
+
+//    User.email_("editor@example").firstName._author(Comment.eid.text).tpls.head === List(
 //      ("Ed", List((c2, "blah 2"), (c4, "blah 4"), (c5, "blah 5"), (c7, "blah 7"), (c11, "blah 11")))
 //    )
-//
-//
-//    // 6. Returning an Aggregate of Comments of some Author
-//    Comment(count).Author.email_("editor@example").get.head === 5
+
+
+    // 6. Returning an Aggregate of Comments of some Author
+    Comment(count).Author.email_("editor@example").get.head === 5
 //    User.email_("editor@example")._authorComment.size === 5
-//
-//    // Or we could read the size of the (un-aggregated) result set of Comment entity ids
-//    Comment.eid.Author.email("editor@example").size === 5
-//    Comment.Author.email("editor@example").size === 5
-//
-//
-//    // 7. Have people commented on other people? (Multiple joins)
-//
-//    // Imagine we accidentally supplied a user-id (`ed`) as a parent id to our storyComment insert molecule:
-//    val c13 = storyComment(ed, stu, "blah 13") head
-//
-//    // We don't want to Comment on Users, so let's see if we got some by mistake:
-//
-//    // Find Comments to supposed Stories (but Users in reality)
-//    // `User.email` used to find entities with a User.email attribute (== User entities)
-//    Comment.text._Story(User.email)
-//
-//    User.email._author(Comment.author)
-//
-//    Comment.eid.Author._AuthorComment
-//
-//
-//    Comment.text._Story(User.email)
-//    // Any Sub-Comments accidentally about Users?
-//    Comment.text._parent(User.email)
-//
-//
-//    // Schema-aware joins .........................
-//
-//    // 8. A Schema Query
-//    Comment.Parent.attr.get === List(
+
+    // Or we could read the size of the (un-aggregated) result set of Comment entity ids
+    Comment.eid.Author.email("editor@example").size === 5
+    Comment.Author.email("editor@example").size === 5
+
+
+    // 7. Have people commented on other people? (Multiple joins)
+
+    // Molecule - or any database system - won't prevent us from programmatically inserting an
+    // id for for an unintentional entity. We could for instance have referenced the id of Ed
+    // by mistake instead of supplying an id of a story:
+    val unintentionalComment = storyComment(ed, stu, "blah 13") head
+
+    // With Molecule you can express the intentions of your domain with the words of your
+    // domain so that such unintentional mistakes are more unlikely to happen. Our
+    // definition of our insert molecule `storyComment` clearly expects a Story id.
+
+    // If one need to find out if our database has been polluted with unintentional
+    // references one would have to explore this with Datalog queries since Molecule only
+    // supports the intentional query combinations.
+
+
+    // Schema-aware joins .........................
+
+    // 8. A Schema Query
+
+    // Attributes of stories having comments
+    Story.attr.Comments.text_.get === List(
+      ":story/title",
+      ":story/url"
+    )
+
+    // Attributes of comments having a sub-comment
+    Comment.attr.Comment.text_.get === List(
+      //    Comment._ParentComment.attr.get === List(
+      ":comment/text",
+      ":comment/author",
+      ":comment/tree_"
+    )
+
+//    Comment._ParentComment.attr.get === List(
+//         ":comment/text",
+//         ":comment/author",
+//         ":comment/tree_"
+//       )
+//    Comment._CommentsStory.attr.get === List(
 //      ":story/title",
-//      ":story/url",
-//      ":comment/text",
-//      ":comment/author",
-//      ":comment/tree_"
+//      ":story/url"
 //    )
-//
-//    Comment.Parent.ns.get === List(
+//    Comment._CommentsStory.ns.get === List(
 //      ":story",
 //      ":comment"
 //    )
-//
-//
-//    // Entities ...................................
-//
-//    // 9-11. Finding an entity ID - An implicit Entity
-//    // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
-//    val editor = User.eid.email("editor@example.com").get.head
-//
-//    // 12. Requesting an Attribute value
-//    editor(":user/firstName") === Some("Edward")
-//    // this one ??
-//    User(editor).firstName.first === "Edward"
-//
-//    // 13. Touching an entity
-//    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-//    editor.touch === Map(
-//      ":db/id" -> 17592186045423L,
-//      ":user/firstName" -> "Edward",
-//      ":user/lastName" -> "Itor",
-//      ":user/email" -> "editor@example.com"
-//    )
-//
-//    // 14. Navigating backwards
-//    // The editors comments (Comments pointing to the Editor entity)
-//    editor(":comment/_author") === List(c2, c4, c5, c7, c11)
-//
-//    // .. almost same as: (here, only matching data is returned)
-//    Comment.eid.author(editor).get === List(c2, c4, c5, c7, c11)
+
+
+    // Entities ...................................
+
+    // 9-11. Finding an entity ID - An implicit Entity
+    // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
+    val editor = User.eid.email_("editor@example.com").get.head
+
+    // 12. Requesting an Attribute value
+    editor(":user/firstName") === Some("Edward")
+    // this one ??
+    User(editor).firstName.first === "Edward"
+
+    // 13. Touching an entity
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+    editor.touch === Map(
+      ":db/id" -> 17592186045423L,
+      ":user/firstName" -> "Edward",
+      ":user/lastName" -> "Itor",
+      ":user/email" -> "editor@example.com"
+    )
+
+    // 14. Navigating backwards
+    // The editors comments (Comments pointing to the Editor entity)
+    editor(":comment/_author") === List(c2, c4, c5, c7, c11)
+
+    // .. almost same as: (here, only matching data is returned)
+    // Comments of editor
+    Comment.eid.author_(editor).get === List(c2, c4, c5, c7, c11)
+
 //    // Or navigating the relationship in the opposite direction
-//    User(editor)._Comments.eid.get === List(c2, c4, c5, c7, c11)
-//
-//
-//    // 15. Navigating Deeper
-//    // The editors comments' comments
-//    editor(":comment/_author")(":comment/tree_") === List(c6, c8, c12)
-//
-//    Comment.author(editor).Comment.eid.get === List(c6, c8, c12)
-//
-//    User(editor)._Comments.Comment.eid.get === List(c6, c8, c12)
-//
-//
-//    // Time travel ....................................
-//
-//    // 16. Querying for a Transaction
-//    val tx = User(ed).firstName_.tx
-//
-//    // 17. Converting Transacting to T
-//    val t = Peer.toT(tx)
-//
-//    // Query for relative system time
-//    User(ed).firstName_.t === t
-//
-//    // 18. Getting Tx Instant
-//    val txInstant = User(ed).firstName_.txInstant.get.last
-//
-//    // 19. Going back in Time
-//    User(ed).firstName.asOf(t - 1).get.head === "Ed"
-//
-//
-//    // Auditing .......................................
-//
+//    // Editors comments (being author of a comment)
+//    User(editor)._authorComment.get === List(c2, c4, c5, c7, c11)
 
 
+    // 15. Navigating Deeper
+    // The editors comments' comments
+    editor(":comment/_author")(":comment/tree_") === List(c6, c8, c12)
+    Comment.author_(editor).Comment.eid.get === List(c6, c8, c12)
+
+//    // Comments to comments of editor
+//    Comment.eid._ParentComment.author_(editor).get === List(c6, c8, c12)
+
+    // Comments that Editor commented on
+    Comment.eid.Comment.author_(editor).get === List(c6, c8, c12)
+
+//    // Editors comments comments
+//    User(editor)._AuthorComment.eid.get === List(c6, c8, c12)
+//    User(editor)._AuthorComment.childComments.get === List(c6, c8, c12)
 
 
-//
-//    Orchestra.name("GSO").Musicians.name
-//
-//    Musician.name.playsIn(Orchestra.name("GSO")).plays(Instruments.Strings.DoubleBass)
+    // Time travel ....................................
+
+    // 16. Querying for a Transaction
+    val tx = User(ed).firstName_.tx
+
+    // 17. Converting Transacting to T
+    val t = Peer.toT(tx)
+
+    // Query for relative system time
+    User(ed).firstName_.t === t
+
+    // 18. Getting Tx Instant
+    val txInstant = User(ed).firstName_.txInstant.get.last
+
+    // 19. Going back in Time
+    User(ed).firstName.asOf(t - 1).get.head === "Ed"
+
+
+    // Auditing .......................................
+
+
+    //    Orchestra.name("GSO").Musicians.name
+    //
+    //    Musician.name.playsIn(Orchestra.name("GSO")).plays(Instruments.Strings.DoubleBass)
 
   }
 

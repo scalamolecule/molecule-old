@@ -13,8 +13,8 @@ trait SocialNewsDefinition {
   }
 
   trait Comment extends Tree {
-    val author   = one[User]
-    val text     = oneString
+    val author = one[User]
+    val text   = oneString
   }
 
   trait User {

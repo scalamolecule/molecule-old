@@ -146,27 +146,27 @@ package object molecule {
 
 
   // Attribute expressions
-  implicit def string2Model(v: String) = TermValue(v)
-  implicit def int2Model(v: Int) = TermValue(v)
-//  implicit def long2Model(v: Long) = TermValue(v)
-//  implicit def float2Model(v: Float) = TermValue(v)
-//  implicit def double2Model(v: Double) = TermValue(v)
-//  implicit def boolean2Model(v: Boolean) = TermValue(v)
-//  implicit def date2Model(v: Date) = TermValue(v)
-//  implicit def uuid2Model(v: UUID) = TermValue(v)
-//  implicit def uri2Model(v: URI) = TermValue(v)
-//
-//  implicit def contains2Model[T](c: contains[T]) = TermValue(c.value)
-//
-//  implicit def stringSet2Model(set: Set[String]) = TermValue(set)
-//  implicit def intSet2Model(set: Set[Int]) = TermValue(set)
-//  implicit def longSet2Model(set: Set[Long]) = TermValue(set)
-//  implicit def floatSet2Model(set: Set[Float]) = TermValue(set)
-//  implicit def doubleSet2Model(set: Set[Double]) = TermValue(set)
-//  implicit def booleanSet2Model(set: Set[Boolean]) = TermValue(set)
-//  implicit def dateSet2Model(set: Set[Date]) = TermValue(set)
-//  implicit def uuidSet2Model(set: Set[UUID]) = TermValue(set)
-//  implicit def uriSet2Model(set: Set[URI]) = TermValue(set)
+  implicit def string2Model (v: String)  = TermValue(v)
+  implicit def int2Model    (v: Int)     = TermValue(v)
+  implicit def long2Model   (v: Long)    = TermValue(v)
+  implicit def float2Model  (v: Float)   = TermValue(v)
+  implicit def double2Model (v: Double)  = TermValue(v)
+  implicit def boolean2Model(v: Boolean) = TermValue(v)
+  implicit def date2Model   (v: Date)    = TermValue(v)
+  implicit def uuid2Model   (v: UUID)    = TermValue(v)
+  implicit def uri2Model    (v: URI)     = TermValue(v)
+
+  implicit def stringSet2Model (set: Set[String])  = TermValue(set)
+  implicit def intSet2Model    (set: Set[Int])     = TermValue(set)
+  implicit def longSet2Model   (set: Set[Long])    = TermValue(set)
+  implicit def floatSet2Model  (set: Set[Float])   = TermValue(set)
+  implicit def doubleSet2Model (set: Set[Double])  = TermValue(set)
+  implicit def booleanSet2Model(set: Set[Boolean]) = TermValue(set)
+  implicit def dateSet2Model   (set: Set[Date])    = TermValue(set)
+  implicit def uuidSet2Model   (set: Set[UUID])    = TermValue(set)
+  implicit def uriSet2Model    (set: Set[URI])     = TermValue(set)
+
+  implicit def contains2Model[T](c: contains[T]) = TermValue(c.value)
 
   implicit def tuple2Model[A, B](tpl: (A, B)) = TermValue(tpl)
 

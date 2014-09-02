@@ -55,8 +55,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-        "examples/src/main/scala/molecule/examples/dayOfDatomic"
-//        "examples/src/main/scala/molecule/examples/seattle"
+        "examples/src/main/scala/molecule/examples/dayOfDatomic",
+        "examples/src/main/scala/molecule/examples/seattle"
       ),
       publish :=(),
       publishLocal :=()

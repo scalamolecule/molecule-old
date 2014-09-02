@@ -37,16 +37,16 @@ object schemaDSL {
   trait OneRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
   trait ManyRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
   trait BackRef[BackRefNS, ThisNs] extends Ref[BackRefNS, ThisNs]
+  trait ChildRef[Ns1] extends Ref[Ns1, Ns1]
 
   trait Attr
 
-  trait RefAttr[Ns1, T] extends Attr {
-  }
+  trait RefAttr[Ns1, T] extends Attr
   trait OneRefAttr[Ns] extends RefAttr[Ns,  Long] {self: Ns =>
-//    def apply(value: Long) = self
+    def apply(value: Long) = self
   }
   trait ManyRefAttr[Ns] extends RefAttr[Ns,  Long] {self: Ns =>
-//    def apply(value: Long) = self
+    def apply(value: Long) = self
   }
 
   sealed trait ValueAttr[Ns, T] extends Attr {self: Ns =>

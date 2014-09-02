@@ -128,7 +128,7 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
   def retract = conn.transact(Util.list(Util.list(":db.fn/retractEntity", id))).get()
 
-  def apply(attr: String) = 42
+  def apply(attr: String) = 42 // macro?
   def --: (attr: String) = this
 
   def toMap: Map[String, Any] = {
