@@ -10,12 +10,15 @@ object schemaDefinition {
   // Todo: Use phantom types to build valid combinations (checkout how Rogue does it)
 
 
-  trait PropertyEdge[From, To]
-  trait SubComponentOf2[From, To]
+//  trait PropertyEdge[From, To]
+//  trait SubComponentOf2[From, To]
 
   // Adjacency List Model
   // See https://github.com/tinkerpop/gremlin/wiki/Tree-Pattern
   trait Tree
+
+  // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
+  trait HyperEdge
 
 
   private[molecule] sealed trait scalarAttr {
@@ -93,11 +96,22 @@ object schemaDefinition {
     def apply[NS] = this
     lazy val subComponent = this
     lazy val tree = this
+    def ~(other: one.type) = this
+    def ~(other: many.type) = this
   }
   object many {
     def apply[NS1] = this
+//    def apply[NS1, NS2] = this
     lazy val subComponents = this
     lazy val trees = this
+    def withOptional(other: many.type) = this
+    def ~(other: one.type) = this
+    def ~(other: many.type) = this
+  }
+
+  // Hyper edge
+  object hyper {
+    def apply[NS, NS2] = this
   }
 }
 

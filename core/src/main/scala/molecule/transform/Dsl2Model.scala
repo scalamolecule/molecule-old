@@ -21,7 +21,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   val dslStructure: PartialFunction[Tree, Model] = {
     case q"TermValue.apply($ns)" => resolve(ns)
-    //        case t@q"$prev.eid.$op(..$values)"  => traverse(q"$prev", atomOp(q"$prev.eid", q"$op", q"Seq(..$values)"))
+    //        case t@q"$prev.e.$op(..$values)"  => traverse(q"$prev", atomOp(q"$prev.e", q"$op", q"Seq(..$values)"))
     case t@q"$prev.$cur.$op(..$values)" => traverse(q"$prev", atomOp(q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
     case ref@q"$prev.$refAttr" if ref.isRef && refAttr.toString.head.isUpper =>
@@ -32,19 +32,19 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val refNs = if (refNsRaw == refAttr) "" else refNsRaw
       traverse(q"$prev", Bond(ns, refAttr, refNs))
 
-    case eid@q"$prev.eid"   => traverse(q"$prev", Atom(eid.ns, "eid", "Long", 1, EntValue))
+    case e@q"$prev.e"   => traverse(q"$prev", Atom(e.ns, "e", "Long", 1, EntValue))
     case attr@q"$prev.$cur" => traverse(q"$prev", atom(attr))
 
+////    case t@q"$prev.$manyRef[..$types]($subModel)" =>
 //    case t@q"$prev.$manyRef[..$types]($subModel)" =>
-    case t@q"$prev.$manyRef[..$types]($subModel)" =>
-//      val refAttr: String = manyRef.toString match {
-//        // Name of `*` method's first parameter
-//        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
-//        case methodName => methodName.toString
-//      }
-      val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
-      val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
-      traverse(q"$prev", Group(Bond(prev.name.toString, manyRef.toString, refNs), resolve(q"$subModel").elements))
+////      val refAttr: String = manyRef.toString match {
+////        // Name of `*` method's first parameter
+////        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
+////        case methodName => methodName.toString
+////      }
+//      val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
+//      val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
+//      traverse(q"$prev", Group(Bond(prev.name.toString, manyRef.toString, refNs), resolve(q"$subModel").elements))
   }
 
   def atomOp(attr: Tree, op: Tree, values0: Tree) = {

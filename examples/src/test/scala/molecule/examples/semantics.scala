@@ -44,7 +44,7 @@
 //    // Users can:
 //
 //    // 1. Comment on a Story
-//    val storyComment = Story.eid.Comments.author.text insert
+//    val storyComment = Story.e.Comments.author.text insert
 //
 //    // 2. Comment on a Comment
 //    val subComment = Comment._parent.author.text insert
@@ -86,16 +86,16 @@
 //    // 5. Finding a User's Comments
 //    // Semantically we can take two approaches:
 //    // a) "Comments of Ed" (sql-style: "find Comment where email = "editor@example")
-//    Comment.eid.Author.email("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+//    Comment.e.Author.email("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
 //    // b) "Ed's Comments"
-//    User.email("editor@example")._Comments.eid.get.sorted === List(c2, c4, c5, c7, c11)
+//    User.email("editor@example")._Comments.e.get.sorted === List(c2, c4, c5, c7, c11)
 //
 //    // Mumbo-jumbo
 //    // Comments of Author and his comments (the same!)
-//    Comment.eid.Author.email("editor@example")._Comments.eid.get.sorted === List(c2, c4, c5, c7, c11)
+//    Comment.e.Author.email("editor@example")._Comments.e.get.sorted === List(c2, c4, c5, c7, c11)
 //
 //    // Users Comments Author's (the same!)
-//    User.email("editor@example")._Comments.Author.eid.get.sorted === List(c2, c4, c5, c7, c11)
+//    User.email("editor@example")._Comments.Author.e.get.sorted === List(c2, c4, c5, c7, c11)
 //
 //
 //
@@ -103,11 +103,11 @@
 //    Comment(count).Author.email("editor@example").get.head === 5
 //    Comment.Author.email("editor@example").size === 5
 //
-//    User.email("editor@example")._Comments.eid.size === 5
+//    User.email("editor@example")._Comments.e.size === 5
 //
 //
 //    // Or we could read the size of the (un-aggregated) result set of Comment entity ids
-//    Comment.eid.Author.email("editor@example").size === 5
+//    Comment.e.Author.email("editor@example").size === 5
 //
 //
 //    // 7. Have people commented on other people? (Multiple joins)
@@ -195,8 +195,8 @@
 //    // Shift to Comment namespace
 //    Story.Comments
 //    Story.Comments.apply(c1)
-//    Story.Comments.eid.apply(c1)
-//    Story.Comments.eid.apply(c1, c2)
+//    Story.Comments.e.apply(c1)
+//    Story.Comments.e.apply(c1, c2)
 //
 //
 //    // Trees
@@ -223,7 +223,7 @@
 //
 //    // Comments by Ed
 //    // Note how we stay in the Comment namespace
-//    Comment.author(ed).eid === List(c2, c4, c5, c7, c11)
+//    Comment.author(ed).e === List(c2, c4, c5, c7, c11)
 //    Comment.author(ed).text === List("blah 2", "blah 4", "blah 5", "blah 7", "blah 11")
 //    Comment.author(ed).text.contains("7") === List("blah 7")
 //
@@ -234,41 +234,41 @@
 //    // Double constraints might collide
 //    // A comment only has one author, so constraining `author` doesn't make sense...
 //    // Comment 1 by Ed - doesn't exist! Stu wrote the first comment
-//    Comment(c1).eid.author(ed) === List()
-//    Comment(c1).eid.author(stu) === List(c1)
+//    Comment(c1).e.author(ed) === List()
+//    Comment(c1).e.author(stu) === List(c1)
 //
 //
 //    /** Shift to next namespace ***************************************************************/
 //
 //    // All Authors (Users who wrote a Comment)
-//    Comment.Author.eid === List(stu, ed)
+//    Comment.Author.e === List(stu, ed)
 //
 //    // Same result as
 //    Comment.author === List(stu, ed)
 //
 //    // Without the Comment prefix to Author, we would get all Users (also those who didn't comment):
-//    User.eid === List(stu, ed, marc)
+//    User.e === List(stu, ed, marc)
 //
 //    // Comments of Author with firstName "stu"
-//    Comment.eid.Author.firstName("stu") === List(c1, c3, c6, c8, c9, c10, c12)
+//    Comment.e.Author.firstName("stu") === List(c1, c3, c6, c8, c9, c10, c12)
 //
 //
 //    /** Back-references ***************************************************************/
 //
 //    // Ed's comments
-//    User(ed)._Comments.eid.get.sorted === List(c2, c4, c5, c7, c11)
+//    User(ed)._Comments.e.get.sorted === List(c2, c4, c5, c7, c11)
 //
 //    // Author who wrote "7" in a Comment
-//    Comment.text.contains("7").Author.eid.tpls.sorted === List(ed)
+//    Comment.text.contains("7").Author.e.tpls.sorted === List(ed)
 //
 //    // All Comments of Author who wrote "7" in a Comment
-//    Comment.text.contains("7").Author._Comments.eid.tpls.sorted === List(c2, c4, c5, c7, c11)
+//    Comment.text.contains("7").Author._Comments.e.tpls.sorted === List(c2, c4, c5, c7, c11)
 //
 //
 //
 //
 //    // Other Comments of Author who wrote "7" in a Comment
-//    Comment.text_(contains("7")).Author._Comments.eid.text_.!(contains("7")).get.sorted === List(c2, c4, c5, c11)
+//    Comment.text_(contains("7")).Author._Comments.e.text_.!(contains("7")).get.sorted === List(c2, c4, c5, c11)
 //
 //
 //    Comment.Author(ed) === List(c2, c4, c5, c7, c11)
@@ -339,14 +339,14 @@
 //
 //
 //
-//    (User.eid ~ Comment.Author.eid).size === 0
+//    (User.e ~ Comment.Author.e).size === 0
 //
-//    Comment.eid._parent(User.email).author.size === 0
+//    Comment.e._parent(User.email).author.size === 0
 //
 //
-//    Comment.eid._parent(User.email("lkjlj")).author.size === 0
+//    Comment.e._parent(User.email("lkjlj")).author.size === 0
 //
-//    Comment.eid._parent(User.email).author.size === 0
+//    Comment.e._parent(User.email).author.size === 0
 //
 //    // Schema-aware joins .........................
 //
@@ -369,7 +369,7 @@
 //
 //    // 9-11. Finding an entity ID - An implicit Entity
 //    // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
-//    val editor = User.eid.email("editor@example.com").get.head
+//    val editor = User.e.email("editor@example.com").get.head
 //
 //    // 12. Requesting an Attribute value
 //    editor(":user/firstName") === Some("Edward")
@@ -390,19 +390,19 @@
 //    editor(":comment/_author") === List(c2, c4, c5, c7, c11)
 //
 //    // .. almost same as: (here, only matching data is returned)
-//    Comment.eid.Author(editor).get === List(c2, c4, c5, c7, c11)
+//    Comment.e.Author(editor).get === List(c2, c4, c5, c7, c11)
 //
 //
 //    // 15. Navigating Deeper
 //    // The editors coments' comments
 //    editor(":comment/_author")(":comments") === List(c6, c8, c12)
 //
-//    Comment.author(editor).Comment.eid.get === List(c6, c8, c12)
+//    Comment.author(editor).Comment.e.get === List(c6, c8, c12)
 //
 //
 //
 //
-//    Comment.author(editor)._Comment.eid.get === List(c6, c8, c12)
+//    Comment.author(editor)._Comment.e.get === List(c6, c8, c12)
 //
 //
 //

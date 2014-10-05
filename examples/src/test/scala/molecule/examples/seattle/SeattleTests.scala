@@ -2,8 +2,9 @@ package molecule
 package examples.seattle
 import java.io.FileReader
 import datomic._
-import molecule.dsl.DbSchema._
+import molecule.dsl._
 import molecule.examples.seattle.dsl.seattle._
+import molecule.schemas.Db
 import shapeless._
 import scala.language.reflectiveCalls
 
@@ -97,7 +98,8 @@ class SeattleTests extends SeattleSpec {
     // Single input value for an attribute ------------------------
 
     // Community input molecule awaiting some type value
-    val communitiesOfType = m(Community.name.`type`(?))
+    // Adding an underscore means that we don't want to return that value (will be the same for all result sets...)
+    val communitiesOfType = m(Community.name.type_(?))
 
     // Re-use input molecules to create new molecules with different community types
     val twitterCommunities = communitiesOfType("twitter")
@@ -107,9 +109,8 @@ class SeattleTests extends SeattleSpec {
     twitterCommunities.take(3) === List("Discover SLU", "Fremont Universe", "Columbia Citizens")
     facebookCommunities.take(3) === List("Discover SLU", "Blogging Georgetown", "Fremont Universe")
 
-    // Add a `!` to the question mark to return the input value too
-    // (with one input we normally don't want this since the value will the same across the result set)
-    val communitiesWithType = m(Community.name.`type`(?!))
+    // If we omit the underscore we can get the type too
+    val communitiesWithType = m(Community.name.`type`(?))
     communitiesWithType("twitter").tpl(3) === List(
       ("Magnolia Voice", "twitter"),
       ("Discover SLU", "twitter"),
@@ -142,7 +143,7 @@ class SeattleTests extends SeattleSpec {
     // Tuple of input values for multiple attributes - logical AND ------------------------
 
     // Communities of some `type` AND some `orgtype`
-    val typeAndOrgtype = m(Community.name.`type`(?).orgtype(?))
+    val typeAndOrgtype = m(Community.name.type_(?).orgtype_(?))
 
     // Finding communities of type "email_list" AND orgtype "community"
     val emailListCommunities = List(
@@ -167,8 +168,8 @@ class SeattleTests extends SeattleSpec {
 
     // Multiple tuples of input values ------------------------
 
-    // Communities of some `type` AND some `orgtype` (include input values!)
-    val typeAndOrgtype2 = m(Community.name.`type`(?!).orgtype(?!))
+    // Communities of some `type` AND some `orgtype` (include input values)
+    val typeAndOrgtype2 = m(Community.name.`type`(?).orgtype(?))
 
     val emailListORcommercialWebsites = List(
       ("Madrona Moms", "email_list", "community"),
@@ -217,7 +218,7 @@ class SeattleTests extends SeattleSpec {
 
     m(Community.name.`type`("website").category contains "food").take(3) === foodWebsites
 
-    val typeAndCategory = m(Community.name.`type`(?).category contains ?)
+    val typeAndCategory = m(Community.name.type_(?).category contains ?)
     typeAndCategory("website", Set("food")).take(3) === foodWebsites
   }
 
@@ -241,7 +242,7 @@ class SeattleTests extends SeattleSpec {
     Community.name.`type`("twitter" or "facebook_page").Neighborhood.District.region("sw" or "s" or "se").tpls === southernSocialMedia
 
     // Parameterized
-    val typeAndRegion = m(Community.name.`type`(?).Neighborhood.District.region(?))
+    val typeAndRegion = m(Community.name.type_(?).Neighborhood.District.region_(?))
 
     typeAndRegion(("twitter" or "facebook_page") and ("sw" or "s" or "se")).get === southernSocialMedia
     // ..same as
@@ -374,10 +375,12 @@ class SeattleTests extends SeattleSpec {
     // One-cardinality attributes..........................
 
     // Finding the Belltown community entity id (or we could have got it along user input etc...)
-    val belltownId = Community.name("belltown").ids.head
+    val belltown = Community.e.name_("belltown").get.head
 
     // Replace some belltown attributes
-    Community.name("belltown 2").url("url 2").update(belltownId)
+    Community.name("belltown 2").url("url 2").update(belltown)
+    // or
+    Community(belltown).name("belltown 2").url("url 2").update
 
     // Find belltown by its updated name and confirm that the url is also updated
     Community.name_("belltown 2").url.get === List("url 2")
@@ -389,21 +392,21 @@ class SeattleTests extends SeattleSpec {
     Community.name_("belltown 2").category.get.head === Set("news", "events")
 
     // Tell which value to update
-    Community.category("news" -> "Cool news").update(belltownId)
+    Community.category("news" -> "Cool news").update(belltown)
     Community.name_("belltown 2").category.get.head === Set("Cool news", "events")
 
     // Or update multiple values in one go...
     Community.category(
       "Cool news" -> "Super cool news",
-      "events" -> "Super cool events").update(belltownId)
+      "events" -> "Super cool events").update(belltown)
     Community.name_("belltown 2").category.get.head === Set("Super cool news", "Super cool events")
 
     // Add value
-    Community.category.add("extra category").update(belltownId)
+    Community.category.add("extra category").update(belltown)
     Community.name_("belltown 2").category.get.head === Set("Super cool news", "Super cool events", "extra category")
 
     // Remove value
-    Community.category.remove("Super cool events").update(belltownId)
+    Community.category.remove("Super cool events").update(belltown)
     Community.name_("belltown 2").category.get.head === Set("Super cool news", "extra category")
 
 
@@ -415,7 +418,7 @@ class SeattleTests extends SeattleSpec {
       "belltown 2" :: "blog" :: "url 2" :: Set("Super cool news", "extra category") :: HNil)
 
     // Applying nothing (empty parenthesises) finds and retract all values of an attribute
-    Community.name("belltown 3").url().category().update(belltownId)
+    Community.name("belltown 3").url().category().update(belltown)
 
     // Belltown has no longer a url or any categories
     Community.name("belltown 3").name.`type`.url.category.hls === List()
@@ -430,7 +433,7 @@ class SeattleTests extends SeattleSpec {
     Community.name("belltown 3").size === 1
 
     // Simply use an entity id and retract it!
-    belltownId.retract
+    belltown.retract
 
     // Belltown is gone
     Community.name("belltown 3").size === 0

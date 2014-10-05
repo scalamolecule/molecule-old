@@ -14,7 +14,7 @@ object Model2Query extends Debug {
 
       element match {
         case a@Atom(ns, attr, t, cardinality, value, enumPrefix) =>
-          val eid = attr == "eid"
+          val eid = attr == "e"
           (cardinality, value, enumPrefix) match {
             case (_, NoValue, _)  => q.data(e, a)
             case (_, EntValue, _) => q.output(e, t)
@@ -57,7 +57,7 @@ object Model2Query extends Debug {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Group(ref, elements) => q
+//        case Group(ref, elements) => q
 
         case unresolved => sys.error("[Model2Query] Unresolved model (we should never get here): " + unresolved)
       }
@@ -68,7 +68,7 @@ object Model2Query extends Debug {
       val ns = element match {
         case Atom(ns1, _, _, _, _, _) => ns1
         case Bond(ns1, _, _)          => ns1
-        case Group(ref, elements)     => ref.ns
+//        case Group(ref, elements)     => ref.ns
       }
 
       val (prevNS, prevAttr, prevRefNs) = if (q1.where.clauses.isEmpty)

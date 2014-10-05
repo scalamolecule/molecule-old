@@ -1,6 +1,6 @@
 //import molecule.{maybe, count}
 //import molecule.dsl.schemaDSL.ManyRef
-//import molecule.dsl.schemaDSL.NS.eid
+//import molecule.dsl.schemaDSL.NS.e
 //import molecule.examples.dayOfDatomic.dsl.socialNews._
 //import molecule.out.{Molecule_1, Molecule_0}
 ///*
@@ -28,8 +28,8 @@
 //
 //trait User_0 extends User with Molecule_0 {
 //  import User._
-//  def apply(eid: Long) = this
-//  lazy val eid          = new eid          (this, new User_1[Long]      {}) with User_1[Long]      {}
+//  def apply(e: Long) = this
+//  lazy val e          = new e          (this, new User_1[Long]      {}) with User_1[Long]      {}
 //  lazy val firstName    = new firstName    (new User_1[String]    {}) with User_1[String]    {}
 //  lazy val firstName_   = new firstName    (this) with User_0    {}
 ////  lazy val firstName    = new firstName    (this, new User_1[String]    {}) with User_1[String]    {}
@@ -51,7 +51,7 @@
 //
 //trait User_1[A] extends User with Molecule_1[A] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_2[A, Long]      {}) with User_2[A, Long]      {}
+//  lazy val e          = new e          (this, new User_2[A, Long]      {}) with User_2[A, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_2[A, String]    {}) with User_2[A, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_2[A, String]    {}) with User_2[A, String]    {}
 //  lazy val email        = new email        (this, new User_2[A, String]    {}) with User_2[A, String]    {}
@@ -71,7 +71,7 @@
 //
 //
 //  def as(s: Symbol) = this
-//  def apply(eid: Long) = this
+//  def apply(e: Long) = this
 //
 //  def ~(a: Any) = new User_0 {}
 //    def <-:(m: Any) = this
@@ -86,7 +86,7 @@
 //
 //trait User_2[A, B] extends User with Molecule_2[A, B] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_3[A, B, Long]      {}) with User_3[A, B, Long]      {}
+//  lazy val e          = new e          (this, new User_3[A, B, Long]      {}) with User_3[A, B, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_3[A, B, String]    {}) with User_3[A, B, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_3[A, B, String]    {}) with User_3[A, B, String]    {}
 //  lazy val email        = new email        (this, new User_3[A, B, String]    {}) with User_3[A, B, String]    {}
@@ -105,7 +105,7 @@
 //
 //trait User_3[A, B, C] extends User with Molecule_3[A, B, C] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_4[A, B, C, Long]      {}) with User_4[A, B, C, Long]      {}
+//  lazy val e          = new e          (this, new User_4[A, B, C, Long]      {}) with User_4[A, B, C, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_4[A, B, C, String]    {}) with User_4[A, B, C, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_4[A, B, C, String]    {}) with User_4[A, B, C, String]    {}
 //  lazy val email        = new email        (this, new User_4[A, B, C, String]    {}) with User_4[A, B, C, String]    {}
@@ -124,7 +124,7 @@
 //
 //trait User_4[A, B, C, D] extends User with Molecule_4[A, B, C, D] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_5[A, B, C, D, Long]      {}) with User_5[A, B, C, D, Long]      {}
+//  lazy val e          = new e          (this, new User_5[A, B, C, D, Long]      {}) with User_5[A, B, C, D, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_5[A, B, C, D, String]    {}) with User_5[A, B, C, D, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_5[A, B, C, D, String]    {}) with User_5[A, B, C, D, String]    {}
 //  lazy val email        = new email        (this, new User_5[A, B, C, D, String]    {}) with User_5[A, B, C, D, String]    {}
@@ -143,7 +143,7 @@
 //
 //trait User_5[A, B, C, D, E] extends User with Molecule_5[A, B, C, D, E] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_6[A, B, C, D, E, Long]      {}) with User_6[A, B, C, D, E, Long]      {}
+//  lazy val e          = new e          (this, new User_6[A, B, C, D, E, Long]      {}) with User_6[A, B, C, D, E, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_6[A, B, C, D, E, String]    {}) with User_6[A, B, C, D, E, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_6[A, B, C, D, E, String]    {}) with User_6[A, B, C, D, E, String]    {}
 //  lazy val email        = new email        (this, new User_6[A, B, C, D, E, String]    {}) with User_6[A, B, C, D, E, String]    {}
@@ -162,7 +162,7 @@
 //
 //trait User_6[A, B, C, D, E, F] extends User with Molecule_6[A, B, C, D, E, F] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_7[A, B, C, D, E, F, Long]      {}) with User_7[A, B, C, D, E, F, Long]      {}
+//  lazy val e          = new e          (this, new User_7[A, B, C, D, E, F, Long]      {}) with User_7[A, B, C, D, E, F, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_7[A, B, C, D, E, F, String]    {}) with User_7[A, B, C, D, E, F, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_7[A, B, C, D, E, F, String]    {}) with User_7[A, B, C, D, E, F, String]    {}
 //  lazy val email        = new email        (this, new User_7[A, B, C, D, E, F, String]    {}) with User_7[A, B, C, D, E, F, String]    {}
@@ -181,7 +181,7 @@
 //
 //trait User_7[A, B, C, D, E, F, G] extends User with Molecule_7[A, B, C, D, E, F, G] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_8[A, B, C, D, E, F, G, Long]      {}) with User_8[A, B, C, D, E, F, G, Long]      {}
+//  lazy val e          = new e          (this, new User_8[A, B, C, D, E, F, G, Long]      {}) with User_8[A, B, C, D, E, F, G, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_8[A, B, C, D, E, F, G, String]    {}) with User_8[A, B, C, D, E, F, G, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_8[A, B, C, D, E, F, G, String]    {}) with User_8[A, B, C, D, E, F, G, String]    {}
 //  lazy val email        = new email        (this, new User_8[A, B, C, D, E, F, G, String]    {}) with User_8[A, B, C, D, E, F, G, String]    {}
@@ -205,7 +205,7 @@
 //
 //trait User_In_1_0[I1] extends User with In_1_0[I1] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_1[I1, Long]      {}) with User_In_1_1[I1, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_1[I1, Long]      {}) with User_In_1_1[I1, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_1[I1, String]    {}) with User_In_1_1[I1, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_1[I1, String]    {}) with User_In_1_1[I1, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_1[I1, String]    {}) with User_In_1_1[I1, String]    {}
@@ -218,7 +218,7 @@
 //
 //trait User_In_1_1[I1, A] extends User with In_1_1[I1, A] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_2[I1, A, Long]      {}) with User_In_1_2[I1, A, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_2[I1, A, Long]      {}) with User_In_1_2[I1, A, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_2[I1, A, String]    {}) with User_In_1_2[I1, A, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_2[I1, A, String]    {}) with User_In_1_2[I1, A, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_2[I1, A, String]    {}) with User_In_1_2[I1, A, String]    {}
@@ -235,7 +235,7 @@
 //
 //trait User_In_1_2[I1, A, B] extends User with In_1_2[I1, A, B] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_3[I1, A, B, Long]      {}) with User_In_1_3[I1, A, B, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_3[I1, A, B, Long]      {}) with User_In_1_3[I1, A, B, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_3[I1, A, B, String]    {}) with User_In_1_3[I1, A, B, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_3[I1, A, B, String]    {}) with User_In_1_3[I1, A, B, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_3[I1, A, B, String]    {}) with User_In_1_3[I1, A, B, String]    {}
@@ -252,7 +252,7 @@
 //
 //trait User_In_1_3[I1, A, B, C] extends User with In_1_3[I1, A, B, C] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_4[I1, A, B, C, Long]      {}) with User_In_1_4[I1, A, B, C, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_4[I1, A, B, C, Long]      {}) with User_In_1_4[I1, A, B, C, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_4[I1, A, B, C, String]    {}) with User_In_1_4[I1, A, B, C, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_4[I1, A, B, C, String]    {}) with User_In_1_4[I1, A, B, C, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_4[I1, A, B, C, String]    {}) with User_In_1_4[I1, A, B, C, String]    {}
@@ -269,7 +269,7 @@
 //
 //trait User_In_1_4[I1, A, B, C, D] extends User with In_1_4[I1, A, B, C, D] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_5[I1, A, B, C, D, Long]      {}) with User_In_1_5[I1, A, B, C, D, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_5[I1, A, B, C, D, Long]      {}) with User_In_1_5[I1, A, B, C, D, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_5[I1, A, B, C, D, String]    {}) with User_In_1_5[I1, A, B, C, D, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_5[I1, A, B, C, D, String]    {}) with User_In_1_5[I1, A, B, C, D, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_5[I1, A, B, C, D, String]    {}) with User_In_1_5[I1, A, B, C, D, String]    {}
@@ -286,7 +286,7 @@
 //
 //trait User_In_1_5[I1, A, B, C, D, E] extends User with In_1_5[I1, A, B, C, D, E] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_6[I1, A, B, C, D, E, Long]      {}) with User_In_1_6[I1, A, B, C, D, E, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_6[I1, A, B, C, D, E, Long]      {}) with User_In_1_6[I1, A, B, C, D, E, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_6[I1, A, B, C, D, E, String]    {}) with User_In_1_6[I1, A, B, C, D, E, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_6[I1, A, B, C, D, E, String]    {}) with User_In_1_6[I1, A, B, C, D, E, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_6[I1, A, B, C, D, E, String]    {}) with User_In_1_6[I1, A, B, C, D, E, String]    {}
@@ -303,7 +303,7 @@
 //
 //trait User_In_1_6[I1, A, B, C, D, E, F] extends User with In_1_6[I1, A, B, C, D, E, F] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_7[I1, A, B, C, D, E, F, Long]      {}) with User_In_1_7[I1, A, B, C, D, E, F, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_7[I1, A, B, C, D, E, F, Long]      {}) with User_In_1_7[I1, A, B, C, D, E, F, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_7[I1, A, B, C, D, E, F, String]    {}) with User_In_1_7[I1, A, B, C, D, E, F, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_7[I1, A, B, C, D, E, F, String]    {}) with User_In_1_7[I1, A, B, C, D, E, F, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_7[I1, A, B, C, D, E, F, String]    {}) with User_In_1_7[I1, A, B, C, D, E, F, String]    {}
@@ -320,7 +320,7 @@
 //
 //trait User_In_1_7[I1, A, B, C, D, E, F, G] extends User with In_1_7[I1, A, B, C, D, E, F, G] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_1_8[I1, A, B, C, D, E, F, G, Long]      {}) with User_In_1_8[I1, A, B, C, D, E, F, G, Long]      {}
+//  lazy val e          = new e          (this, new User_In_1_8[I1, A, B, C, D, E, F, G, Long]      {}) with User_In_1_8[I1, A, B, C, D, E, F, G, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_1_8[I1, A, B, C, D, E, F, G, String]    {}) with User_In_1_8[I1, A, B, C, D, E, F, G, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_1_8[I1, A, B, C, D, E, F, G, String]    {}) with User_In_1_8[I1, A, B, C, D, E, F, G, String]    {}
 //  lazy val email        = new email        (this, new User_In_1_8[I1, A, B, C, D, E, F, G, String]    {}) with User_In_1_8[I1, A, B, C, D, E, F, G, String]    {}
@@ -342,7 +342,7 @@
 //
 //trait User_In_2_0[I1, I2] extends User with In_2_0[I1, I2] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_1[I1, I2, Long]      {}) with User_In_2_1[I1, I2, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_1[I1, I2, Long]      {}) with User_In_2_1[I1, I2, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_1[I1, I2, String]    {}) with User_In_2_1[I1, I2, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_1[I1, I2, String]    {}) with User_In_2_1[I1, I2, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_1[I1, I2, String]    {}) with User_In_2_1[I1, I2, String]    {}
@@ -355,7 +355,7 @@
 //
 //trait User_In_2_1[I1, I2, A] extends User with In_2_1[I1, I2, A] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_2[I1, I2, A, Long]      {}) with User_In_2_2[I1, I2, A, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_2[I1, I2, A, Long]      {}) with User_In_2_2[I1, I2, A, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_2[I1, I2, A, String]    {}) with User_In_2_2[I1, I2, A, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_2[I1, I2, A, String]    {}) with User_In_2_2[I1, I2, A, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_2[I1, I2, A, String]    {}) with User_In_2_2[I1, I2, A, String]    {}
@@ -372,7 +372,7 @@
 //
 //trait User_In_2_2[I1, I2, A, B] extends User with In_2_2[I1, I2, A, B] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_3[I1, I2, A, B, Long]      {}) with User_In_2_3[I1, I2, A, B, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_3[I1, I2, A, B, Long]      {}) with User_In_2_3[I1, I2, A, B, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_3[I1, I2, A, B, String]    {}) with User_In_2_3[I1, I2, A, B, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_3[I1, I2, A, B, String]    {}) with User_In_2_3[I1, I2, A, B, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_3[I1, I2, A, B, String]    {}) with User_In_2_3[I1, I2, A, B, String]    {}
@@ -389,7 +389,7 @@
 //
 //trait User_In_2_3[I1, I2, A, B, C] extends User with In_2_3[I1, I2, A, B, C] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_4[I1, I2, A, B, C, Long]      {}) with User_In_2_4[I1, I2, A, B, C, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_4[I1, I2, A, B, C, Long]      {}) with User_In_2_4[I1, I2, A, B, C, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_4[I1, I2, A, B, C, String]    {}) with User_In_2_4[I1, I2, A, B, C, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_4[I1, I2, A, B, C, String]    {}) with User_In_2_4[I1, I2, A, B, C, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_4[I1, I2, A, B, C, String]    {}) with User_In_2_4[I1, I2, A, B, C, String]    {}
@@ -406,7 +406,7 @@
 //
 //trait User_In_2_4[I1, I2, A, B, C, D] extends User with In_2_4[I1, I2, A, B, C, D] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_5[I1, I2, A, B, C, D, Long]      {}) with User_In_2_5[I1, I2, A, B, C, D, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_5[I1, I2, A, B, C, D, Long]      {}) with User_In_2_5[I1, I2, A, B, C, D, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_5[I1, I2, A, B, C, D, String]    {}) with User_In_2_5[I1, I2, A, B, C, D, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_5[I1, I2, A, B, C, D, String]    {}) with User_In_2_5[I1, I2, A, B, C, D, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_5[I1, I2, A, B, C, D, String]    {}) with User_In_2_5[I1, I2, A, B, C, D, String]    {}
@@ -423,7 +423,7 @@
 //
 //trait User_In_2_5[I1, I2, A, B, C, D, E] extends User with In_2_5[I1, I2, A, B, C, D, E] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_6[I1, I2, A, B, C, D, E, Long]      {}) with User_In_2_6[I1, I2, A, B, C, D, E, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_6[I1, I2, A, B, C, D, E, Long]      {}) with User_In_2_6[I1, I2, A, B, C, D, E, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_6[I1, I2, A, B, C, D, E, String]    {}) with User_In_2_6[I1, I2, A, B, C, D, E, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_6[I1, I2, A, B, C, D, E, String]    {}) with User_In_2_6[I1, I2, A, B, C, D, E, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_6[I1, I2, A, B, C, D, E, String]    {}) with User_In_2_6[I1, I2, A, B, C, D, E, String]    {}
@@ -440,7 +440,7 @@
 //
 //trait User_In_2_6[I1, I2, A, B, C, D, E, F] extends User with In_2_6[I1, I2, A, B, C, D, E, F] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_7[I1, I2, A, B, C, D, E, F, Long]      {}) with User_In_2_7[I1, I2, A, B, C, D, E, F, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_7[I1, I2, A, B, C, D, E, F, Long]      {}) with User_In_2_7[I1, I2, A, B, C, D, E, F, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_7[I1, I2, A, B, C, D, E, F, String]    {}) with User_In_2_7[I1, I2, A, B, C, D, E, F, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_7[I1, I2, A, B, C, D, E, F, String]    {}) with User_In_2_7[I1, I2, A, B, C, D, E, F, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_7[I1, I2, A, B, C, D, E, F, String]    {}) with User_In_2_7[I1, I2, A, B, C, D, E, F, String]    {}
@@ -457,7 +457,7 @@
 //
 //trait User_In_2_7[I1, I2, A, B, C, D, E, F, G] extends User with In_2_7[I1, I2, A, B, C, D, E, F, G] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]      {}) with User_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]      {}
+//  lazy val e          = new e          (this, new User_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]      {}) with User_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_2_8[I1, I2, A, B, C, D, E, F, G, String]    {}) with User_In_2_8[I1, I2, A, B, C, D, E, F, G, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_2_8[I1, I2, A, B, C, D, E, F, G, String]    {}) with User_In_2_8[I1, I2, A, B, C, D, E, F, G, String]    {}
 //  lazy val email        = new email        (this, new User_In_2_8[I1, I2, A, B, C, D, E, F, G, String]    {}) with User_In_2_8[I1, I2, A, B, C, D, E, F, G, String]    {}
@@ -479,7 +479,7 @@
 //
 //trait User_In_3_0[I1, I2, I3] extends User with In_3_0[I1, I2, I3] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_1[I1, I2, I3, Long]      {}) with User_In_3_1[I1, I2, I3, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_1[I1, I2, I3, Long]      {}) with User_In_3_1[I1, I2, I3, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_1[I1, I2, I3, String]    {}) with User_In_3_1[I1, I2, I3, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_1[I1, I2, I3, String]    {}) with User_In_3_1[I1, I2, I3, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_1[I1, I2, I3, String]    {}) with User_In_3_1[I1, I2, I3, String]    {}
@@ -492,7 +492,7 @@
 //
 //trait User_In_3_1[I1, I2, I3, A] extends User with In_3_1[I1, I2, I3, A] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_2[I1, I2, I3, A, Long]      {}) with User_In_3_2[I1, I2, I3, A, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_2[I1, I2, I3, A, Long]      {}) with User_In_3_2[I1, I2, I3, A, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_2[I1, I2, I3, A, String]    {}) with User_In_3_2[I1, I2, I3, A, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_2[I1, I2, I3, A, String]    {}) with User_In_3_2[I1, I2, I3, A, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_2[I1, I2, I3, A, String]    {}) with User_In_3_2[I1, I2, I3, A, String]    {}
@@ -505,7 +505,7 @@
 //
 //trait User_In_3_2[I1, I2, I3, A, B] extends User with In_3_2[I1, I2, I3, A, B] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_3[I1, I2, I3, A, B, Long]      {}) with User_In_3_3[I1, I2, I3, A, B, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_3[I1, I2, I3, A, B, Long]      {}) with User_In_3_3[I1, I2, I3, A, B, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_3[I1, I2, I3, A, B, String]    {}) with User_In_3_3[I1, I2, I3, A, B, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_3[I1, I2, I3, A, B, String]    {}) with User_In_3_3[I1, I2, I3, A, B, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_3[I1, I2, I3, A, B, String]    {}) with User_In_3_3[I1, I2, I3, A, B, String]    {}
@@ -518,7 +518,7 @@
 //
 //trait User_In_3_3[I1, I2, I3, A, B, C] extends User with In_3_3[I1, I2, I3, A, B, C] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_4[I1, I2, I3, A, B, C, Long]      {}) with User_In_3_4[I1, I2, I3, A, B, C, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_4[I1, I2, I3, A, B, C, Long]      {}) with User_In_3_4[I1, I2, I3, A, B, C, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_4[I1, I2, I3, A, B, C, String]    {}) with User_In_3_4[I1, I2, I3, A, B, C, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_4[I1, I2, I3, A, B, C, String]    {}) with User_In_3_4[I1, I2, I3, A, B, C, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_4[I1, I2, I3, A, B, C, String]    {}) with User_In_3_4[I1, I2, I3, A, B, C, String]    {}
@@ -531,7 +531,7 @@
 //
 //trait User_In_3_4[I1, I2, I3, A, B, C, D] extends User with In_3_4[I1, I2, I3, A, B, C, D] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_5[I1, I2, I3, A, B, C, D, Long]      {}) with User_In_3_5[I1, I2, I3, A, B, C, D, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_5[I1, I2, I3, A, B, C, D, Long]      {}) with User_In_3_5[I1, I2, I3, A, B, C, D, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_5[I1, I2, I3, A, B, C, D, String]    {}) with User_In_3_5[I1, I2, I3, A, B, C, D, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_5[I1, I2, I3, A, B, C, D, String]    {}) with User_In_3_5[I1, I2, I3, A, B, C, D, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_5[I1, I2, I3, A, B, C, D, String]    {}) with User_In_3_5[I1, I2, I3, A, B, C, D, String]    {}
@@ -544,7 +544,7 @@
 //
 //trait User_In_3_5[I1, I2, I3, A, B, C, D, E] extends User with In_3_5[I1, I2, I3, A, B, C, D, E] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_6[I1, I2, I3, A, B, C, D, E, Long]      {}) with User_In_3_6[I1, I2, I3, A, B, C, D, E, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_6[I1, I2, I3, A, B, C, D, E, Long]      {}) with User_In_3_6[I1, I2, I3, A, B, C, D, E, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_6[I1, I2, I3, A, B, C, D, E, String]    {}) with User_In_3_6[I1, I2, I3, A, B, C, D, E, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_6[I1, I2, I3, A, B, C, D, E, String]    {}) with User_In_3_6[I1, I2, I3, A, B, C, D, E, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_6[I1, I2, I3, A, B, C, D, E, String]    {}) with User_In_3_6[I1, I2, I3, A, B, C, D, E, String]    {}
@@ -557,7 +557,7 @@
 //
 //trait User_In_3_6[I1, I2, I3, A, B, C, D, E, F] extends User with In_3_6[I1, I2, I3, A, B, C, D, E, F] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]      {}) with User_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]      {}) with User_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_7[I1, I2, I3, A, B, C, D, E, F, String]    {}) with User_In_3_7[I1, I2, I3, A, B, C, D, E, F, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_7[I1, I2, I3, A, B, C, D, E, F, String]    {}) with User_In_3_7[I1, I2, I3, A, B, C, D, E, F, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_7[I1, I2, I3, A, B, C, D, E, F, String]    {}) with User_In_3_7[I1, I2, I3, A, B, C, D, E, F, String]    {}
@@ -570,7 +570,7 @@
 //
 //trait User_In_3_7[I1, I2, I3, A, B, C, D, E, F, G] extends User with In_3_7[I1, I2, I3, A, B, C, D, E, F, G] {
 //  import User._
-//  lazy val eid          = new eid          (this, new User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]      {}) with User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]      {}
+//  lazy val e          = new e          (this, new User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]      {}) with User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]      {}
 //  lazy val firstName    = new firstName    (this, new User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String]    {}) with User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String]    {}
 //  lazy val lastName     = new lastName     (this, new User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String]    {}) with User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String]    {}
 //  lazy val email        = new email        (this, new User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String]    {}) with User_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String]    {}

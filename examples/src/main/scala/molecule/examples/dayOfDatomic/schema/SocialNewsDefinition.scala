@@ -3,7 +3,7 @@ import molecule.dsl.schemaDefinition._
 
 // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
 
-@InOut(0, 8)
+@InOut(2, 5)
 trait SocialNewsDefinition {
 
   trait Story {
@@ -27,6 +27,10 @@ trait SocialNewsDefinition {
 
   trait Publish {
     val at = oneDate.indexed
+  }
+
+  trait Source {
+    val user = one[User]
   }
 }
 

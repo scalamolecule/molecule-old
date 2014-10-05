@@ -7,7 +7,7 @@
 //package molecule.examples.dayOfDatomic_XX
 //
 //import molecule._
-//import molecule.dsl.schemaDSL.NS.eid
+//import molecule.dsl.schemaDSL.NS.e
 //import molecule.dsl.schemaDSL._
 //import molecule.in._
 //import molecule.out._
@@ -30,23 +30,23 @@
 //
 //trait Comment_0 extends Comment with SubMolecule_0 {
 //  import Comment._
-//  def apply(eid: Long) = this
+//  def apply(e: Long) = this
 //  def apply(c: count.type) = new Comment_1[Int] {}
 //
-//  lazy val eid     = new eid    (this, new Comment_1[Long]   {}) with Comment_1[Long]   {}
+//  lazy val e     = new e    (this, new Comment_1[Long]   {}) with Comment_1[Long]   {}
 //  lazy val author  = new author (this, new Comment_1[Long]   {}) with Comment_1[Long]   {}
 //  lazy val text    = new text   (this, new Comment_1[String] {}) with Comment_1[String] {}
 //  lazy val author_ = new author (this, this) with Comment_0 {}
 //  lazy val text_   = new text   (this, this) with Comment_0 {}
 //
 //
-//  lazy val _parent  = new eid [Comment_1[Long]] with Comment_1[Long]
-//  lazy val _parent_ = new eid [Comment_0] with Comment_0
+//  lazy val _parent  = new e [Comment_1[Long]] with Comment_1[Long]
+//  lazy val _parent_ = new e [Comment_0] with Comment_0
 //
 //
 //
-//  lazy val _parent    = new eid    (this, new Comment_1[Long]   {}) with Comment_1[Long]   {}
-//  lazy val root    = new eid    (this, new Comment_1[Long]   {}) with Comment_1[Long]   {}
+//  lazy val _parent    = new e    (this, new Comment_1[Long]   {}) with Comment_1[Long]   {}
+//  lazy val root    = new e    (this, new Comment_1[Long]   {}) with Comment_1[Long]   {}
 //
 //  def tree(root: Long, depth: Int = 99) = this
 //  def _root(e: Long) = this
@@ -86,7 +86,7 @@
 //
 //trait Comment_1[A] extends Comment with SubMolecule_1[A] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_2[A, Long]   {}) with Comment_2[A, Long]   {}
+//  lazy val e    = new e    (this, new Comment_2[A, Long]   {}) with Comment_2[A, Long]   {}
 //  lazy val author = new author (this, new Comment_2[A, Long]   {}) with Comment_2[A, Long]   {}
 //  lazy val text   = new text   (this, new Comment_2[A, String] {}) with Comment_2[A, String] {}
 //  lazy val text_   = new text   (this,this) with Comment_1[A] {}
@@ -120,7 +120,7 @@
 //
 //trait Comment_2[A, B] extends Comment with SubMolecule_2[A, B] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_3[A, B, Long]   {}) with Comment_3[A, B, Long]   {}
+//  lazy val e    = new e    (this, new Comment_3[A, B, Long]   {}) with Comment_3[A, B, Long]   {}
 //  lazy val author = new author (this, new Comment_3[A, B, Long]   {}) with Comment_3[A, B, Long]   {}
 //  lazy val text   = new text   (this, new Comment_3[A, B, String] {}) with Comment_3[A, B, String] {}
 //  def Author = new OneRef[Comment, User] with User_2[A, B]
@@ -134,7 +134,7 @@
 //
 //trait Comment_3[A, B, C] extends Comment with SubMolecule_3[A, B, C] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_4[A, B, C, Long]   {}) with Comment_4[A, B, C, Long]   {}
+//  lazy val e    = new e    (this, new Comment_4[A, B, C, Long]   {}) with Comment_4[A, B, C, Long]   {}
 //  lazy val author = new author (this, new Comment_4[A, B, C, Long]   {}) with Comment_4[A, B, C, Long]   {}
 //  lazy val text   = new text   (this, new Comment_4[A, B, C, String] {}) with Comment_4[A, B, C, String] {}
 //  def Author = new OneRef[Comment, User] with User_3[A, B, C]
@@ -148,7 +148,7 @@
 //
 //trait Comment_4[A, B, C, D] extends Comment with SubMolecule_4[A, B, C, D] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_5[A, B, C, D, Long]   {}) with Comment_5[A, B, C, D, Long]   {}
+//  lazy val e    = new e    (this, new Comment_5[A, B, C, D, Long]   {}) with Comment_5[A, B, C, D, Long]   {}
 //  lazy val author = new author (this, new Comment_5[A, B, C, D, Long]   {}) with Comment_5[A, B, C, D, Long]   {}
 //  lazy val text   = new text   (this, new Comment_5[A, B, C, D, String] {}) with Comment_5[A, B, C, D, String] {}
 //  def Author = new OneRef[Comment, User] with User_4[A, B, C, D]
@@ -162,7 +162,7 @@
 //
 //trait Comment_5[A, B, C, D, E] extends Comment with SubMolecule_5[A, B, C, D, E] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_6[A, B, C, D, E, Long]   {}) with Comment_6[A, B, C, D, E, Long]   {}
+//  lazy val e    = new e    (this, new Comment_6[A, B, C, D, E, Long]   {}) with Comment_6[A, B, C, D, E, Long]   {}
 //  lazy val author = new author (this, new Comment_6[A, B, C, D, E, Long]   {}) with Comment_6[A, B, C, D, E, Long]   {}
 //  lazy val text   = new text   (this, new Comment_6[A, B, C, D, E, String] {}) with Comment_6[A, B, C, D, E, String] {}
 //  def Author = new OneRef[Comment, User] with User_5[A, B, C, D, E]
@@ -176,7 +176,7 @@
 //
 //trait Comment_6[A, B, C, D, E, F] extends Comment with SubMolecule_6[A, B, C, D, E, F] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_7[A, B, C, D, E, F, Long]   {}) with Comment_7[A, B, C, D, E, F, Long]   {}
+//  lazy val e    = new e    (this, new Comment_7[A, B, C, D, E, F, Long]   {}) with Comment_7[A, B, C, D, E, F, Long]   {}
 //  lazy val author = new author (this, new Comment_7[A, B, C, D, E, F, Long]   {}) with Comment_7[A, B, C, D, E, F, Long]   {}
 //  lazy val text   = new text   (this, new Comment_7[A, B, C, D, E, F, String] {}) with Comment_7[A, B, C, D, E, F, String] {}
 //  def Author = new OneRef[Comment, User] with User_6[A, B, C, D, E, F]
@@ -190,7 +190,7 @@
 //
 //trait Comment_7[A, B, C, D, E, F, G] extends Comment with SubMolecule_7[A, B, C, D, E, F, G] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_8[A, B, C, D, E, F, G, Long]   {}) with Comment_8[A, B, C, D, E, F, G, Long]   {}
+//  lazy val e    = new e    (this, new Comment_8[A, B, C, D, E, F, G, Long]   {}) with Comment_8[A, B, C, D, E, F, G, Long]   {}
 //  lazy val author = new author (this, new Comment_8[A, B, C, D, E, F, G, Long]   {}) with Comment_8[A, B, C, D, E, F, G, Long]   {}
 //  lazy val text   = new text   (this, new Comment_8[A, B, C, D, E, F, G, String] {}) with Comment_8[A, B, C, D, E, F, G, String] {}
 //  def Author = new OneRef[Comment, User] with User_7[A, B, C, D, E, F, G]
@@ -209,7 +209,7 @@
 //
 //trait Comment_In_1_0[I1] extends Comment with In_1_0[I1] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_1[I1, Long]   {}) with Comment_In_1_1[I1, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_1[I1, Long]   {}) with Comment_In_1_1[I1, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_1[I1, Long]   {}) with Comment_In_1_1[I1, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_1[I1, String] {}) with Comment_In_1_1[I1, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_0[I1]
@@ -217,7 +217,7 @@
 //
 //trait Comment_In_1_1[I1, A] extends Comment with In_1_1[I1, A] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_2[I1, A, Long]   {}) with Comment_In_1_2[I1, A, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_2[I1, A, Long]   {}) with Comment_In_1_2[I1, A, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_2[I1, A, Long]   {}) with Comment_In_1_2[I1, A, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_2[I1, A, String] {}) with Comment_In_1_2[I1, A, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_1[I1, A]
@@ -229,7 +229,7 @@
 //
 //trait Comment_In_1_2[I1, A, B] extends Comment with In_1_2[I1, A, B] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_3[I1, A, B, Long]   {}) with Comment_In_1_3[I1, A, B, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_3[I1, A, B, Long]   {}) with Comment_In_1_3[I1, A, B, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_3[I1, A, B, Long]   {}) with Comment_In_1_3[I1, A, B, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_3[I1, A, B, String] {}) with Comment_In_1_3[I1, A, B, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_2[I1, A, B]
@@ -241,7 +241,7 @@
 //
 //trait Comment_In_1_3[I1, A, B, C] extends Comment with In_1_3[I1, A, B, C] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_4[I1, A, B, C, Long]   {}) with Comment_In_1_4[I1, A, B, C, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_4[I1, A, B, C, Long]   {}) with Comment_In_1_4[I1, A, B, C, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_4[I1, A, B, C, Long]   {}) with Comment_In_1_4[I1, A, B, C, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_4[I1, A, B, C, String] {}) with Comment_In_1_4[I1, A, B, C, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_3[I1, A, B, C]
@@ -253,7 +253,7 @@
 //
 //trait Comment_In_1_4[I1, A, B, C, D] extends Comment with In_1_4[I1, A, B, C, D] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_5[I1, A, B, C, D, Long]   {}) with Comment_In_1_5[I1, A, B, C, D, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_5[I1, A, B, C, D, Long]   {}) with Comment_In_1_5[I1, A, B, C, D, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_5[I1, A, B, C, D, Long]   {}) with Comment_In_1_5[I1, A, B, C, D, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_5[I1, A, B, C, D, String] {}) with Comment_In_1_5[I1, A, B, C, D, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_4[I1, A, B, C, D]
@@ -265,7 +265,7 @@
 //
 //trait Comment_In_1_5[I1, A, B, C, D, E] extends Comment with In_1_5[I1, A, B, C, D, E] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_6[I1, A, B, C, D, E, Long]   {}) with Comment_In_1_6[I1, A, B, C, D, E, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_6[I1, A, B, C, D, E, Long]   {}) with Comment_In_1_6[I1, A, B, C, D, E, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_6[I1, A, B, C, D, E, Long]   {}) with Comment_In_1_6[I1, A, B, C, D, E, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_6[I1, A, B, C, D, E, String] {}) with Comment_In_1_6[I1, A, B, C, D, E, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_5[I1, A, B, C, D, E]
@@ -277,7 +277,7 @@
 //
 //trait Comment_In_1_6[I1, A, B, C, D, E, F] extends Comment with In_1_6[I1, A, B, C, D, E, F] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_7[I1, A, B, C, D, E, F, Long]   {}) with Comment_In_1_7[I1, A, B, C, D, E, F, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_7[I1, A, B, C, D, E, F, Long]   {}) with Comment_In_1_7[I1, A, B, C, D, E, F, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_7[I1, A, B, C, D, E, F, Long]   {}) with Comment_In_1_7[I1, A, B, C, D, E, F, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_7[I1, A, B, C, D, E, F, String] {}) with Comment_In_1_7[I1, A, B, C, D, E, F, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_6[I1, A, B, C, D, E, F]
@@ -289,7 +289,7 @@
 //
 //trait Comment_In_1_7[I1, A, B, C, D, E, F, G] extends Comment with In_1_7[I1, A, B, C, D, E, F, G] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}) with Comment_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}) with Comment_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}
 //  lazy val author = new author (this, new Comment_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}) with Comment_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_1_8[I1, A, B, C, D, E, F, G, String] {}) with Comment_In_1_8[I1, A, B, C, D, E, F, G, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_1_7[I1, A, B, C, D, E, F, G]
@@ -306,7 +306,7 @@
 //
 //trait Comment_In_2_0[I1, I2] extends Comment with In_2_0[I1, I2] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_1[I1, I2, Long]   {}) with Comment_In_2_1[I1, I2, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_1[I1, I2, Long]   {}) with Comment_In_2_1[I1, I2, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_1[I1, I2, Long]   {}) with Comment_In_2_1[I1, I2, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_1[I1, I2, String] {}) with Comment_In_2_1[I1, I2, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_0[I1, I2]
@@ -314,7 +314,7 @@
 //
 //trait Comment_In_2_1[I1, I2, A] extends Comment with In_2_1[I1, I2, A] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_2[I1, I2, A, Long]   {}) with Comment_In_2_2[I1, I2, A, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_2[I1, I2, A, Long]   {}) with Comment_In_2_2[I1, I2, A, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_2[I1, I2, A, Long]   {}) with Comment_In_2_2[I1, I2, A, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_2[I1, I2, A, String] {}) with Comment_In_2_2[I1, I2, A, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_1[I1, I2, A]
@@ -326,7 +326,7 @@
 //
 //trait Comment_In_2_2[I1, I2, A, B] extends Comment with In_2_2[I1, I2, A, B] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_3[I1, I2, A, B, Long]   {}) with Comment_In_2_3[I1, I2, A, B, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_3[I1, I2, A, B, Long]   {}) with Comment_In_2_3[I1, I2, A, B, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_3[I1, I2, A, B, Long]   {}) with Comment_In_2_3[I1, I2, A, B, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_3[I1, I2, A, B, String] {}) with Comment_In_2_3[I1, I2, A, B, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_2[I1, I2, A, B]
@@ -338,7 +338,7 @@
 //
 //trait Comment_In_2_3[I1, I2, A, B, C] extends Comment with In_2_3[I1, I2, A, B, C] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_4[I1, I2, A, B, C, Long]   {}) with Comment_In_2_4[I1, I2, A, B, C, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_4[I1, I2, A, B, C, Long]   {}) with Comment_In_2_4[I1, I2, A, B, C, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_4[I1, I2, A, B, C, Long]   {}) with Comment_In_2_4[I1, I2, A, B, C, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_4[I1, I2, A, B, C, String] {}) with Comment_In_2_4[I1, I2, A, B, C, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_3[I1, I2, A, B, C]
@@ -350,7 +350,7 @@
 //
 //trait Comment_In_2_4[I1, I2, A, B, C, D] extends Comment with In_2_4[I1, I2, A, B, C, D] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_5[I1, I2, A, B, C, D, Long]   {}) with Comment_In_2_5[I1, I2, A, B, C, D, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_5[I1, I2, A, B, C, D, Long]   {}) with Comment_In_2_5[I1, I2, A, B, C, D, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_5[I1, I2, A, B, C, D, Long]   {}) with Comment_In_2_5[I1, I2, A, B, C, D, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_5[I1, I2, A, B, C, D, String] {}) with Comment_In_2_5[I1, I2, A, B, C, D, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_4[I1, I2, A, B, C, D]
@@ -362,7 +362,7 @@
 //
 //trait Comment_In_2_5[I1, I2, A, B, C, D, E] extends Comment with In_2_5[I1, I2, A, B, C, D, E] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_6[I1, I2, A, B, C, D, E, Long]   {}) with Comment_In_2_6[I1, I2, A, B, C, D, E, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_6[I1, I2, A, B, C, D, E, Long]   {}) with Comment_In_2_6[I1, I2, A, B, C, D, E, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_6[I1, I2, A, B, C, D, E, Long]   {}) with Comment_In_2_6[I1, I2, A, B, C, D, E, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_6[I1, I2, A, B, C, D, E, String] {}) with Comment_In_2_6[I1, I2, A, B, C, D, E, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_5[I1, I2, A, B, C, D, E]
@@ -374,7 +374,7 @@
 //
 //trait Comment_In_2_6[I1, I2, A, B, C, D, E, F] extends Comment with In_2_6[I1, I2, A, B, C, D, E, F] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}) with Comment_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}) with Comment_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}) with Comment_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_7[I1, I2, A, B, C, D, E, F, String] {}) with Comment_In_2_7[I1, I2, A, B, C, D, E, F, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_6[I1, I2, A, B, C, D, E, F]
@@ -386,7 +386,7 @@
 //
 //trait Comment_In_2_7[I1, I2, A, B, C, D, E, F, G] extends Comment with In_2_7[I1, I2, A, B, C, D, E, F, G] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}) with Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}) with Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}
 //  lazy val author = new author (this, new Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}) with Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, String] {}) with Comment_In_2_8[I1, I2, A, B, C, D, E, F, G, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_2_7[I1, I2, A, B, C, D, E, F, G]
@@ -403,7 +403,7 @@
 //
 //trait Comment_In_3_0[I1, I2, I3] extends Comment with In_3_0[I1, I2, I3] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_1[I1, I2, I3, Long]   {}) with Comment_In_3_1[I1, I2, I3, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_1[I1, I2, I3, Long]   {}) with Comment_In_3_1[I1, I2, I3, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_1[I1, I2, I3, Long]   {}) with Comment_In_3_1[I1, I2, I3, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_1[I1, I2, I3, String] {}) with Comment_In_3_1[I1, I2, I3, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_0[I1, I2, I3]
@@ -411,7 +411,7 @@
 //
 //trait Comment_In_3_1[I1, I2, I3, A] extends Comment with In_3_1[I1, I2, I3, A] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_2[I1, I2, I3, A, Long]   {}) with Comment_In_3_2[I1, I2, I3, A, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_2[I1, I2, I3, A, Long]   {}) with Comment_In_3_2[I1, I2, I3, A, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_2[I1, I2, I3, A, Long]   {}) with Comment_In_3_2[I1, I2, I3, A, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_2[I1, I2, I3, A, String] {}) with Comment_In_3_2[I1, I2, I3, A, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_1[I1, I2, I3, A]
@@ -419,7 +419,7 @@
 //
 //trait Comment_In_3_2[I1, I2, I3, A, B] extends Comment with In_3_2[I1, I2, I3, A, B] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_3[I1, I2, I3, A, B, Long]   {}) with Comment_In_3_3[I1, I2, I3, A, B, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_3[I1, I2, I3, A, B, Long]   {}) with Comment_In_3_3[I1, I2, I3, A, B, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_3[I1, I2, I3, A, B, Long]   {}) with Comment_In_3_3[I1, I2, I3, A, B, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_3[I1, I2, I3, A, B, String] {}) with Comment_In_3_3[I1, I2, I3, A, B, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_2[I1, I2, I3, A, B]
@@ -427,7 +427,7 @@
 //
 //trait Comment_In_3_3[I1, I2, I3, A, B, C] extends Comment with In_3_3[I1, I2, I3, A, B, C] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_4[I1, I2, I3, A, B, C, Long]   {}) with Comment_In_3_4[I1, I2, I3, A, B, C, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_4[I1, I2, I3, A, B, C, Long]   {}) with Comment_In_3_4[I1, I2, I3, A, B, C, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_4[I1, I2, I3, A, B, C, Long]   {}) with Comment_In_3_4[I1, I2, I3, A, B, C, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_4[I1, I2, I3, A, B, C, String] {}) with Comment_In_3_4[I1, I2, I3, A, B, C, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_3[I1, I2, I3, A, B, C]
@@ -435,7 +435,7 @@
 //
 //trait Comment_In_3_4[I1, I2, I3, A, B, C, D] extends Comment with In_3_4[I1, I2, I3, A, B, C, D] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}) with Comment_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}) with Comment_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}) with Comment_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_5[I1, I2, I3, A, B, C, D, String] {}) with Comment_In_3_5[I1, I2, I3, A, B, C, D, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_4[I1, I2, I3, A, B, C, D]
@@ -443,7 +443,7 @@
 //
 //trait Comment_In_3_5[I1, I2, I3, A, B, C, D, E] extends Comment with In_3_5[I1, I2, I3, A, B, C, D, E] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}) with Comment_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}) with Comment_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}) with Comment_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_6[I1, I2, I3, A, B, C, D, E, String] {}) with Comment_In_3_6[I1, I2, I3, A, B, C, D, E, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_5[I1, I2, I3, A, B, C, D, E]
@@ -451,7 +451,7 @@
 //
 //trait Comment_In_3_6[I1, I2, I3, A, B, C, D, E, F] extends Comment with In_3_6[I1, I2, I3, A, B, C, D, E, F] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}) with Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}) with Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}) with Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, String] {}) with Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_6[I1, I2, I3, A, B, C, D, E, F]
@@ -459,7 +459,7 @@
 //
 //trait Comment_In_3_7[I1, I2, I3, A, B, C, D, E, F, G] extends Comment with In_3_7[I1, I2, I3, A, B, C, D, E, F, G] {
 //  import Comment._
-//  lazy val eid    = new eid    (this, new Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}) with Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}
+//  lazy val e    = new e    (this, new Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}) with Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}
 //  lazy val author = new author (this, new Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}) with Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}
 //  lazy val text   = new text   (this, new Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String] {}) with Comment_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String] {}
 //  def Author = new OneRef[Comment, User] with User_In_3_7[I1, I2, I3, A, B, C, D, E, F, G]

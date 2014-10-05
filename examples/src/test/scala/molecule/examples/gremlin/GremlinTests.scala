@@ -57,14 +57,14 @@
 //
 //    // https://github.com/tinkerpop/gremlin/wiki/Flow-Rank-Pattern
 //    // "Who created projects"
-//    Person.eid.Created.Project.eid === List(
+//    Person.e.Created.Project.e === List(
 //      (marko, lop),
 //      (josh, lop),
 //      (peter, lop),
 //      (josh, riple)
 //    )
 //    // "Who created most projects"
-//    Person.eid(count).Created.Project === List(
+//    Person.e(count).Created.Project === List(
 //      marko -> 1,
 //      josh -> 2,
 //      peter -> 1
@@ -74,7 +74,7 @@
 //
 //    Being.name("hercules").Father.Father.name.getFirst === "saturn"
 //
-//    Being.name("hercules").eid === 123
+//    Being.name("hercules").e === 123
 //
 //    Being.name("hercules").Father.`type`.Mother.`type` === List("god", "human")
 //

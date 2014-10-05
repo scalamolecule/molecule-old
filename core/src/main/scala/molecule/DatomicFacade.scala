@@ -1,5 +1,5 @@
 package molecule
-import java.util.{Date, UUID}
+import java.util.{Date, UUID, Map => jMap}
 import datomic._
 import datomic.db.Db
 import molecule.ast.model._
@@ -39,6 +39,7 @@ trait DatomicFacade extends Debug {
   //  case class AsOf(date: Date) extends DbOp
   case class Since(date: Date) extends DbOp
   case class Imagine(tx: java.util.List[Object]) extends DbOp
+  case object History extends DbOp
 
   private[molecule] var dbOp: DbOp = null
 
@@ -61,11 +62,12 @@ trait DatomicFacade extends Debug {
     val db = dbOp match {
       case AsOf(txDate(txInstant)) => conn.db.asOf(txInstant)
       case AsOf(txLong(t))         => conn.db.asOf(t)
-      case AsOf(txlObj(tx))          => conn.db.asOf(tx)
+      case AsOf(txlObj(tx))        => conn.db.asOf(tx)
+      case Since(date)             => conn.db.since(date)
+      case Imagine(tx)             => conn.db.`with`(tx).get(Connection.DB_AFTER).asInstanceOf[AnyRef]
+      case History                 => conn.db.history()
+      case _                       => conn.db
       //      case AsOf(date)  => conn.db.asOf(date)
-      case Since(date) => conn.db.since(date)
-      case Imagine(tx) => conn.db.`with`(tx).get(Connection.DB_AFTER).asInstanceOf[AnyRef]
-      case _           => conn.db
     }
 
     // reset db settings
@@ -94,30 +96,56 @@ trait DatomicFacade extends Debug {
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
-  protected[molecule] def upsert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): Seq[Long] = {
+  protected[molecule] def upsertTx(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): jMap[_, _] = {
     val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
-    val txResult = conn.transact(javaTx).get
+    // Get value from Future
+    conn.transact(javaTx).get
+  }
+
+  protected[molecule] def upsert_OLD(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids0: Seq[Long] = Seq()): Seq[Long] = {
+    //    val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
+    //    val txResult = conn.transact(javaTx).get
+    val txResult = upsertTx(conn, model, dataRows, ids0)
     val txData = txResult.get(Connection.TX_DATA)
 
     // We omit the first transaction datom
-    val newDatoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
-    val newIds = newDatoms.map(_.e.asInstanceOf[Long]).distinct
+    val datoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
+    val ids = datoms.map(_.e.asInstanceOf[Long]).distinct
 
     // Alternatively we can resolve fro the temp ids - but we don't get all, hmm...
-    val txTtempIds = txResult.get(Connection.TEMPIDS)
-    val dbAfter = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
-    val insertedIds = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
+    //    val txTtempIds = txResult.get(Connection.TEMPIDS)
+    //    val dbAfter = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
+    //    val insertedIds = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
 
     x(0, txResult)
-    newIds
+    ids
+  }
+  protected[molecule] def upsert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids0: Seq[Long] = Seq()): Tx = {
+    //    val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
+    //    val txResult = conn.transact(javaTx).get
+    Tx(upsertTx(conn, model, dataRows, ids0))
   }
 
 
   def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
-
 }
 
 object DatomicFacade extends DatomicFacade
+
+case class Tx(txResult: jMap[_, _]) {
+  def ids: Seq[Long] = {
+    val txData = txResult.get(Connection.TX_DATA)
+    // We omit the first transaction datom
+    val datoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
+    val ids = datoms.map(_.e.asInstanceOf[Long]).distinct
+    ids
+  }
+  def id = ids.head
+  def db = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
+  def t = db.basisT()
+  def tx = db.entity(Peer.toTx(t))
+  def inst: Date = tx.get(":db/txInstant").asInstanceOf[Date]
+}
 
 
 // From Datomisca...
@@ -128,7 +156,8 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
   def retract = conn.transact(Util.list(Util.list(":db.fn/retractEntity", id))).get()
 
-  def apply(attr: String) = 42 // macro?
+  def apply(attr: String) = 42
+  // macro?
   def --: (attr: String) = this
 
   def toMap: Map[String, Any] = {

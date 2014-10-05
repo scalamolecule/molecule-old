@@ -4,7 +4,7 @@ import molecule.dsl.schemaDefinition._
 
 // See: http://blog.datomic.com/2013/06/component-entities.html
 
-@InOut(3, 8)
+@InOut(0, 5)
 trait ProductsOrderDefinition {
 
   trait Order {

@@ -142,17 +142,17 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftAtom         = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix})"}
   implicit val liftBond         = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
   implicit val liftSubComponent = Liftable[SubComponent] { b => q"SubComponent(${b.ns}, ${b.parentEid})"}
-  implicit val liftGroup        = Liftable[Group] { g =>
-    val es = g.elements map { case q"$e" => e}
-    q"Group(${g.ref}, Seq(..$es))"
-  }
+  //  implicit val liftGroup        = Liftable[Group] { g =>
+  //    val es = g.elements map { case q"$e" => e}
+  //    q"Group(${g.ref}, Seq(..$es))"
+  //  }
 
   implicit val liftListOfElements = Liftable[Seq[Element]] { elements =>
     val es = elements map {
       case a: Atom         => q"$a"
       case b: Bond         => q"$b"
       case n: SubComponent => q"$n"
-      case g: Group        => q"$g"
+      //      case g: Group        => q"$g"
     }
     q"Seq(..$es)"
   }
@@ -161,7 +161,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Atom(ns, name, tpeS, card, value, enumPrefix) => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix)"
     case Bond(ns, refAttr, refNs)                      => q"Bond($ns, $refAttr, $refNs)"
     case SubComponent(ns, parentEid)                   => q"SubComponent($ns, $parentEid)"
-    case Group(ref, elements)                          => q"Group($ref, $elements)"
+    //    case Group(ref, elements)                          => q"Group($ref, $elements)"
   }
 
   implicit val liftModel = Liftable[Model] { model => q"Model(Seq(..${model.elements}))"}

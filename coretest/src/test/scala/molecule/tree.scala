@@ -71,8 +71,8 @@
 //    // Use an insertNode as a template to ease inserting multiple nodes...
 //    //    val comment = Comment.author.text insertSub
 //    //    val comment = Comment.parent.author.text insert
-//    //    val comment = Story.eid.comments(Comment.author.text) insert
-//    //    val comment = Story.eid.Comments.author.text insert
+//    //    val comment = Story.e.comments(Comment.author.text) insert
+//    //    val comment = Story.e.Comments.author.text insert
 //
 //    //    val comment = Story.e.Comment.author.text insert
 //    //

@@ -11,26 +11,24 @@ import molecule.out.Molecule
 
 object schemaDSL {
 
-  // todo
+  // todo?
   trait Partition
 
   trait Tree {
     // Parent entity
-    class _parent[Ns] extends OneLong[Ns] {self: Ns =>}
+//    class _parent[Ns] extends OneLong[Ns] {self: Ns =>}
   }
+  trait HyperEdge
 
   trait NS {
-    // Entity id (internal Datomic id)
-//    class eid[Ns] extends OneLong[Ns] {self: Ns =>}
-
-    // No further attributes after querying transaction functions
-    lazy val tx        = new Molecule_1[Long] {}
-    lazy val t         = new Molecule_1[Long] {}
-    lazy val txInstant = new Molecule_1[Date] {}
-
-    // Schema attributes
-//    class attr[Ns] extends ManyString[Ns] {self: Ns =>}
-//    class ns  [Ns] extends ManyString[Ns] {self: Ns =>}
+    // Common attribute classes
+    class e         [Ns] extends OneLong    [Ns] { self: Ns => }
+    class a         [Ns] extends OneString  [Ns] { self: Ns => }
+    class v         [Ns] extends OneAny     [Ns] { self: Ns => }
+    class ns        [Ns] extends OneString  [Ns] { self: Ns => }
+    class txInstant [Ns] extends OneDate    [Ns] { self: Ns => }
+    class txT       [Ns] extends OneLong    [Ns] { self: Ns => }
+    class txAdded   [Ns] extends OneBoolean [Ns] { self: Ns => }
   }
 
   trait Ref[Ns1, Ns2]
@@ -38,6 +36,7 @@ object schemaDSL {
   trait ManyRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
   trait BackRef[BackRefNS, ThisNs] extends Ref[BackRefNS, ThisNs]
   trait ChildRef[Ns1] extends Ref[Ns1, Ns1]
+  trait HyperRef[Ns1] extends Ref[Ns1, Ns1]
 
   trait Attr
 
@@ -46,7 +45,9 @@ object schemaDSL {
     def apply(value: Long) = self
   }
   trait ManyRefAttr[Ns] extends RefAttr[Ns,  Long] {self: Ns =>
-    def apply(value: Long) = self
+    def apply(value: Long*) = self
+    def add(value: Long) = self
+    def remove(values: Long*) = self
   }
 
   sealed trait ValueAttr[Ns, T] extends Attr {self: Ns =>
@@ -93,11 +94,14 @@ object schemaDSL {
   trait OneUUID    [Ns] extends One[Ns, UUID]    {self: Ns =>}
   trait OneURI     [Ns] extends One[Ns, URI]     {self: Ns =>}
 
+  trait OneAny     [Ns] extends One[Ns, Any]     {self: Ns =>}
+
   // Many-cardinality
   trait Many[Ns, S, T] extends ValueAttr[Ns, T] { self: Ns =>
-    //    def apply(value: T*) = self
-    def apply(one: T, more: T*) = self
-    def apply() = self
+    def apply(value: T*) = self
+//    def apply(one: T, more: T*) = self
+//    def apply() = self
+
 //    def apply(values: Seq[T]) = self
     def apply(oldNew: (T, T), oldNewMore: (T, T)*) = self
     //    def apply(h: Seq[(T, T)]) = self
@@ -137,10 +141,10 @@ object schemaDSL {
 
   //  trait Mandatory
   abstract class Insert(val elements: Seq[Element]) extends DatomicFacade {
-    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements))
+    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements)).ids
   }
   abstract class Update(val elements: Seq[Element], val ids: Seq[Long]) extends DatomicFacade {
-    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements), Seq(), ids)
+    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements), Seq(), ids).ids
   }
   abstract class Retract(elements: Seq[Element]) extends DatomicFacade
   abstract class Entity(elements: Seq[Element]) extends DatomicFacade

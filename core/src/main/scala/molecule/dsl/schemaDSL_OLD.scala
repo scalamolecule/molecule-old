@@ -15,7 +15,7 @@
 //
 //  trait NS {
 //    // Entity id (internal Datomic id)
-//    class eid[Ns1, Ns2](ns1: Ns1, ns2: Ns2) extends OneLong(ns1, ns2)
+//    class e[Ns1, Ns2](ns1: Ns1, ns2: Ns2) extends OneLong(ns1, ns2)
 //
 ////    // No further attributes after querying transaction functions
 //    lazy val tx        = new Molecule_1[Long] {}

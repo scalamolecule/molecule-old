@@ -31,15 +31,15 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
         (stmtss.flatten, tempIdss.flatten.distinct)
       } else {
         assert(dataRows.size == ids.size)
-        val (stmtss, tempIdss) = (dataRows.zip(ids) map { case (dataRow, eid: Long) =>
-          mergeDataWithElements(model.elements, dataRow, eid)
+        val (stmtss, tempIdss) = (dataRows.zip(ids) map { case (dataRow, e: Long) =>
+          mergeDataWithElements(model.elements, dataRow, e)
         }).unzip
         (stmtss.flatten, tempIdss.flatten.distinct)
       }
     }
   }
 
-  def mergeDataWithElements(elements: Seq[Element], dataRow: Seq[Any] = Seq(), eid: Long = 0L): (Seq[Statement], Seq[Object]) = {
+  def mergeDataWithElements(elements: Seq[Element], dataRow: Seq[Any] = Seq(), e: Long = 0L): (Seq[Statement], Seq[Object]) = {
     // Start with last element of molecule and go backwards (to be able to reference nested entities)
     var n = dataRow.size
     val ((newStmts, tempIds), _, _) = elements.foldRight(((Seq[Statement](), Seq[Object]()), "": Object, "")) {
@@ -55,7 +55,7 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
           // When data is null, no fact is asserted (stmts passed unchanged)
           ((stmts, tempIds), null, null)
         } else {
-          val (newStmts0, curId) = mkStatements(stmts, element, data, eid, prevId, prevNs)
+          val (newStmts0, curId) = mkStatements(stmts, element, data, e, prevId, prevNs)
           ((newStmts0, tempIds :+ curId), curId, curNs(element))
         }
       }
@@ -63,8 +63,8 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
     (newStmts, tempIds)
   }
 
-  def mkStatements(stmts: Seq[Statement], element: Element, arg: Any, eid0: Long, prevId: Object, prevNs: String): (Seq[Statement], Object) = {
-    val eid = if (curNs(element) == prevNs) prevId else if (eid0 > 0L) eid0.asInstanceOf[Object] else tempId()
+  def mkStatements(stmts: Seq[Statement], element: Element, arg: Any, e0: Long, prevId: Object, prevNs: String): (Seq[Statement], Object) = {
+    val e = if (curNs(element) == prevNs) prevId else if (e0 > 0L) e0.asInstanceOf[Object] else tempId()
 
     def add(ns: String, attr: String, prefix: Option[String] = None, value: Option[Any] = None): Seq[Statement] = {
       def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
@@ -72,48 +72,48 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
       // Atom value takes precedence over external argument
       value.getOrElse(arg) match {
         case Replace(oldNew)            => oldNew.toSeq.flatMap { case (oldValue, newValue) =>
-          Seq(Retract(eid, s":$ns/$attr", p(oldValue)), Add(eid, s":$ns/$attr", p(newValue)))
+          Seq(Retract(e, s":$ns/$attr", p(oldValue)), Add(e, s":$ns/$attr", p(newValue)))
         }
-        case Remove(Seq())              => getValues(conn.db, eid, ns, attr).toSeq.map(v => Retract(eid, s":$ns/$attr", p(v)))
-        case Remove(removeValues)       => removeValues.map(v => Retract(eid, s":$ns/$attr", p(v)))
-        case vs: Set[_]                 => vs.toSeq.map(v => Add(eid, s":$ns/$attr", p(v)))
-        case vs: List[_] if vs.size > 1 => vs.map(v => Add(eid, s":$ns/$attr", p(v)))
-        case v :: Nil                   => Seq(Add(eid, s":$ns/$attr", p(v)))
-        case v                          => Seq(Add(eid, s":$ns/$attr", p(v)))
+        case Remove(Seq())              => getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v)))
+        case Remove(removeValues)       => removeValues.map(v => Retract(e, s":$ns/$attr", p(v)))
+        case vs: Set[_]                 => vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v)))
+        case vs: List[_] if vs.size > 1 => vs.map(v => Add(e, s":$ns/$attr", p(v)))
+        case v :: Nil                   => Seq(Add(e, s":$ns/$attr", p(v)))
+        case v                          => Seq(Add(e, s":$ns/$attr", p(v)))
       }
     }
 
     val newStmts = element match {
-      case Atom(ns, attr, _, _, EntValue, _)                => stmts ++ add(ns, attr, None, Some(eid))
+      case Atom(ns, attr, _, _, EntValue, _)                => stmts ++ add(ns, attr, None, Some(e))
       case Atom(ns, attr, _, _, VarValue, _)                => stmts ++ add(ns, attr)
       case Atom(ns, attr, _, _, EnumVal, prefix)            => stmts ++ add(ns, attr, prefix)
       case Atom(ns, attr, _, _, Eq(values), prefix)         => stmts ++ add(ns, attr, prefix, Some(values))
       case Atom(ns, attr, _, _, replace@Replace(_), prefix) => stmts ++ add(ns, attr, prefix, Some(replace))
       case Atom(ns, attr, _, _, remove@Remove(_), prefix)   => stmts ++ add(ns, attr, prefix, Some(remove))
 
-      case Bond(ns, refAttr, refNs) => stmts :+ Add(eid, s":$ns/$refAttr", prevId)
+      case Bond(ns, refAttr, refNs) => stmts :+ Add(e, s":$ns/$refAttr", prevId)
 
-      case SubComponent(ns, parentEid) => stmts :+ Add(parentEid.asInstanceOf[Object], s":$ns/sub_", eid)
+      case SubComponent(ns, parentEid) => stmts :+ Add(parentEid.asInstanceOf[Object], s":$ns/sub_", e)
 
-      case Group(Bond(ns, refAttr, refNs), nestedElements) => {
-        val nestedDataRows = nestedData(nestedElements, arg)
-
-        // Loop nested rows of data
-        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) { case ((elementStmts1, nestedIds), nestedDataRow) =>
-          // Recursively create nested elements
-          val (rowStmts, tempIds) = mergeDataWithElements(nestedElements, nestedDataRow)
-          val lastId = rowStmts.last.e
-          (elementStmts1 ++ rowStmts, nestedIds + lastId)
-        }
-
-        // Add references to nested entities
-        val refStmts = elementIds.map(Add(eid, s":$ns/$refAttr", _))
-        elementStmts ++ refStmts
-      }
+//      case Group(Bond(ns, refAttr, refNs), nestedElements) => {
+//        val nestedDataRows = nestedData(nestedElements, arg)
+//
+//        // Loop nested rows of data
+//        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) { case ((elementStmts1, nestedIds), nestedDataRow) =>
+//          // Recursively create nested elements
+//          val (rowStmts, _) = mergeDataWithElements(nestedElements, nestedDataRow)
+//          val lastId = rowStmts.last.e
+//          (elementStmts1 ++ rowStmts, nestedIds + lastId)
+//        }
+//
+//        // Add references to nested entities
+//        val refStmts = elementIds.map(Add(e, s":$ns/$refAttr", _))
+//        elementStmts ++ refStmts
+//      }
 
       case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
     }
-    (newStmts, eid)
+    (newStmts, e)
   }
 
   def nestedData(elements: Seq[Element], data0: Any) = {

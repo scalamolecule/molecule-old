@@ -147,7 +147,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 //    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 22
 //    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 35s `= new
 //    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 31
-//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 29 `: eid
+//    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 29 `: e
 //    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 34
 //    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 21
 //    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled" // 39 + cleanKF

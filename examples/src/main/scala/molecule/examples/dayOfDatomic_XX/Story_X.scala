@@ -22,12 +22,12 @@
 //
 //trait Story_0 extends Story with Molecule_0 {
 //  import Story._
-//  def apply(eid: Long) = this
-//  lazy val eid   = new eid   (this, new Story_1[Long]   {}) with Story_1[Long]   {}
+//  def apply(e: Long) = this
+//  lazy val e   = new e   (this, new Story_1[Long]   {}) with Story_1[Long]   {}
 //  lazy val title = new title (this, new Story_1[String] {}) with Story_1[String] {}
 //  lazy val url   = new url   (this, new Story_1[String] {}) with Story_1[String] {}
 //
-//  lazy val comments   = new eid   (this, new Story_1[Long]   {}) with Story_1[Long]   {}
+//  lazy val comments   = new e   (this, new Story_1[Long]   {}) with Story_1[Long]   {}
 //  def Comments                                              = new ManyRef[Story, Comment] with Comment_0
 ////  def Comment                                               = new ManyRef[Story, Comment] with Comment_0
 ////
@@ -45,7 +45,7 @@
 //
 //trait Story_1[A] extends Story with Molecule_1[A] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_2[A, Long]   {}) with Story_2[A, Long]   {}
+//  lazy val e   = new e   (this, new Story_2[A, Long]   {}) with Story_2[A, Long]   {}
 //  lazy val title = new title (this, new Story_2[A, String] {}) with Story_2[A, String] {}
 //  lazy val url   = new url   (this, new Story_2[A, String] {}) with Story_2[A, String] {}
 //  def apply(in: ?.type)    = new Story_In_1_0[A] {}
@@ -68,7 +68,7 @@
 //
 //trait Story_2[A, B] extends Story with Molecule_2[A, B] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_3[A, B, Long]   {}) with Story_3[A, B, Long]   {}
+//  lazy val e   = new e   (this, new Story_3[A, B, Long]   {}) with Story_3[A, B, Long]   {}
 //  lazy val title = new title (this, new Story_3[A, B, String] {}) with Story_3[A, B, String] {}
 //  lazy val url   = new url   (this, new Story_3[A, B, String] {}) with Story_3[A, B, String] {}
 //  def apply(in: ?.type)    = new Story_In_1_1[B, A] {}
@@ -87,7 +87,7 @@
 //
 //trait Story_3[A, B, C] extends Story with Molecule_3[A, B, C] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_4[A, B, C, Long]   {}) with Story_4[A, B, C, Long]   {}
+//  lazy val e   = new e   (this, new Story_4[A, B, C, Long]   {}) with Story_4[A, B, C, Long]   {}
 //  lazy val title = new title (this, new Story_4[A, B, C, String] {}) with Story_4[A, B, C, String] {}
 //  lazy val url   = new url   (this, new Story_4[A, B, C, String] {}) with Story_4[A, B, C, String] {}
 //  def apply(in: ?.type)    = new Story_In_1_2[C, A, B] {}
@@ -100,7 +100,7 @@
 //
 //trait Story_4[A, B, C, D] extends Story with Molecule_4[A, B, C, D] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_5[A, B, C, D, Long]   {}) with Story_5[A, B, C, D, Long]   {}
+//  lazy val e   = new e   (this, new Story_5[A, B, C, D, Long]   {}) with Story_5[A, B, C, D, Long]   {}
 //  lazy val title = new title (this, new Story_5[A, B, C, D, String] {}) with Story_5[A, B, C, D, String] {}
 //  lazy val url   = new url   (this, new Story_5[A, B, C, D, String] {}) with Story_5[A, B, C, D, String] {}
 //  def apply(in: ?.type)    = new Story_In_1_3[D, A, B, C] {}
@@ -113,7 +113,7 @@
 //
 //trait Story_5[A, B, C, D, E] extends Story with Molecule_5[A, B, C, D, E] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_6[A, B, C, D, E, Long]   {}) with Story_6[A, B, C, D, E, Long]   {}
+//  lazy val e   = new e   (this, new Story_6[A, B, C, D, E, Long]   {}) with Story_6[A, B, C, D, E, Long]   {}
 //  lazy val title = new title (this, new Story_6[A, B, C, D, E, String] {}) with Story_6[A, B, C, D, E, String] {}
 //  lazy val url   = new url   (this, new Story_6[A, B, C, D, E, String] {}) with Story_6[A, B, C, D, E, String] {}
 //  def apply(in: ?.type)    = new Story_In_1_4[E, A, B, C, D] {}
@@ -126,7 +126,7 @@
 //
 //trait Story_6[A, B, C, D, E, F] extends Story with Molecule_6[A, B, C, D, E, F] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_7[A, B, C, D, E, F, Long]   {}) with Story_7[A, B, C, D, E, F, Long]   {}
+//  lazy val e   = new e   (this, new Story_7[A, B, C, D, E, F, Long]   {}) with Story_7[A, B, C, D, E, F, Long]   {}
 //  lazy val title = new title (this, new Story_7[A, B, C, D, E, F, String] {}) with Story_7[A, B, C, D, E, F, String] {}
 //  lazy val url   = new url   (this, new Story_7[A, B, C, D, E, F, String] {}) with Story_7[A, B, C, D, E, F, String] {}
 //  def apply(in: ?.type)    = new Story_In_1_5[F, A, B, C, D, E] {}
@@ -139,7 +139,7 @@
 //
 //trait Story_7[A, B, C, D, E, F, G] extends Story with Molecule_7[A, B, C, D, E, F, G] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_8[A, B, C, D, E, F, G, Long]   {}) with Story_8[A, B, C, D, E, F, G, Long]   {}
+//  lazy val e   = new e   (this, new Story_8[A, B, C, D, E, F, G, Long]   {}) with Story_8[A, B, C, D, E, F, G, Long]   {}
 //  lazy val title = new title (this, new Story_8[A, B, C, D, E, F, G, String] {}) with Story_8[A, B, C, D, E, F, G, String] {}
 //  lazy val url   = new url   (this, new Story_8[A, B, C, D, E, F, G, String] {}) with Story_8[A, B, C, D, E, F, G, String] {}
 //  def apply(in: ?.type)    = new Story_In_1_6[G, A, B, C, D, E, F] {}
@@ -157,14 +157,14 @@
 //
 // trait Story_In_1_0[I1] extends Story with In_1_0[I1] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_1[I1, Long]   {}) with Story_In_1_1[I1, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_1[I1, Long]   {}) with Story_In_1_1[I1, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_1[I1, String] {}) with Story_In_1_1[I1, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_1[I1, String] {}) with Story_In_1_1[I1, String] {}
 //}
 //
 // trait Story_In_1_1[I1, A] extends Story with In_1_1[I1, A] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_2[I1, A, Long]   {}) with Story_In_1_2[I1, A, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_2[I1, A, Long]   {}) with Story_In_1_2[I1, A, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_2[I1, A, String] {}) with Story_In_1_2[I1, A, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_2[I1, A, String] {}) with Story_In_1_2[I1, A, String] {}
 //  def apply(in: ?.type)    = new Story_In_2_0[I1, A] {}
@@ -175,7 +175,7 @@
 //
 // trait Story_In_1_2[I1, A, B] extends Story with In_1_2[I1, A, B] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_3[I1, A, B, Long]   {}) with Story_In_1_3[I1, A, B, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_3[I1, A, B, Long]   {}) with Story_In_1_3[I1, A, B, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_3[I1, A, B, String] {}) with Story_In_1_3[I1, A, B, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_3[I1, A, B, String] {}) with Story_In_1_3[I1, A, B, String] {}
 //  def apply(in: ?.type)    = new Story_In_2_1[I1, B, A] {}
@@ -186,7 +186,7 @@
 //
 // trait Story_In_1_3[I1, A, B, C] extends Story with In_1_3[I1, A, B, C] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_4[I1, A, B, C, Long]   {}) with Story_In_1_4[I1, A, B, C, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_4[I1, A, B, C, Long]   {}) with Story_In_1_4[I1, A, B, C, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_4[I1, A, B, C, String] {}) with Story_In_1_4[I1, A, B, C, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_4[I1, A, B, C, String] {}) with Story_In_1_4[I1, A, B, C, String] {}
 //  def apply(in: ?.type)    = new Story_In_2_2[I1, C, A, B] {}
@@ -197,7 +197,7 @@
 //
 // trait Story_In_1_4[I1, A, B, C, D] extends Story with In_1_4[I1, A, B, C, D] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_5[I1, A, B, C, D, Long]   {}) with Story_In_1_5[I1, A, B, C, D, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_5[I1, A, B, C, D, Long]   {}) with Story_In_1_5[I1, A, B, C, D, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_5[I1, A, B, C, D, String] {}) with Story_In_1_5[I1, A, B, C, D, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_5[I1, A, B, C, D, String] {}) with Story_In_1_5[I1, A, B, C, D, String] {}
 //  def apply(in: ?.type)    = new Story_In_2_3[I1, D, A, B, C] {}
@@ -208,7 +208,7 @@
 //
 // trait Story_In_1_5[I1, A, B, C, D, E] extends Story with In_1_5[I1, A, B, C, D, E] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_6[I1, A, B, C, D, E, Long]   {}) with Story_In_1_6[I1, A, B, C, D, E, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_6[I1, A, B, C, D, E, Long]   {}) with Story_In_1_6[I1, A, B, C, D, E, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_6[I1, A, B, C, D, E, String] {}) with Story_In_1_6[I1, A, B, C, D, E, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_6[I1, A, B, C, D, E, String] {}) with Story_In_1_6[I1, A, B, C, D, E, String] {}
 //  def apply(in: ?.type)    = new Story_In_2_4[I1, E, A, B, C, D] {}
@@ -219,7 +219,7 @@
 //
 // trait Story_In_1_6[I1, A, B, C, D, E, F] extends Story with In_1_6[I1, A, B, C, D, E, F] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_7[I1, A, B, C, D, E, F, Long]   {}) with Story_In_1_7[I1, A, B, C, D, E, F, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_7[I1, A, B, C, D, E, F, Long]   {}) with Story_In_1_7[I1, A, B, C, D, E, F, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_7[I1, A, B, C, D, E, F, String] {}) with Story_In_1_7[I1, A, B, C, D, E, F, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_7[I1, A, B, C, D, E, F, String] {}) with Story_In_1_7[I1, A, B, C, D, E, F, String] {}
 //  def apply(in: ?.type)    = new Story_In_2_5[I1, F, A, B, C, D, E] {}
@@ -230,7 +230,7 @@
 //
 // trait Story_In_1_7[I1, A, B, C, D, E, F, G] extends Story with In_1_7[I1, A, B, C, D, E, F, G] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}) with Story_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}) with Story_In_1_8[I1, A, B, C, D, E, F, G, Long]   {}
 //  lazy val title = new title (this, new Story_In_1_8[I1, A, B, C, D, E, F, G, String] {}) with Story_In_1_8[I1, A, B, C, D, E, F, G, String] {}
 //  lazy val url   = new url   (this, new Story_In_1_8[I1, A, B, C, D, E, F, G, String] {}) with Story_In_1_8[I1, A, B, C, D, E, F, G, String] {}
 //  def apply(in: ?.type)    = new Story_In_2_6[I1, G, A, B, C, D, E, F] {}
@@ -246,14 +246,14 @@
 //
 // trait Story_In_2_0[I1, I2] extends Story with In_2_0[I1, I2] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_1[I1, I2, Long]   {}) with Story_In_2_1[I1, I2, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_1[I1, I2, Long]   {}) with Story_In_2_1[I1, I2, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_1[I1, I2, String] {}) with Story_In_2_1[I1, I2, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_1[I1, I2, String] {}) with Story_In_2_1[I1, I2, String] {}
 //}
 //
 // trait Story_In_2_1[I1, I2, A] extends Story with In_2_1[I1, I2, A] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_2[I1, I2, A, Long]   {}) with Story_In_2_2[I1, I2, A, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_2[I1, I2, A, Long]   {}) with Story_In_2_2[I1, I2, A, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_2[I1, I2, A, String] {}) with Story_In_2_2[I1, I2, A, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_2[I1, I2, A, String] {}) with Story_In_2_2[I1, I2, A, String] {}
 //  def apply(in: ?.type)    = new Story_In_3_0[I1, I2, A] {}
@@ -264,7 +264,7 @@
 //
 // trait Story_In_2_2[I1, I2, A, B] extends Story with In_2_2[I1, I2, A, B] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_3[I1, I2, A, B, Long]   {}) with Story_In_2_3[I1, I2, A, B, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_3[I1, I2, A, B, Long]   {}) with Story_In_2_3[I1, I2, A, B, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_3[I1, I2, A, B, String] {}) with Story_In_2_3[I1, I2, A, B, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_3[I1, I2, A, B, String] {}) with Story_In_2_3[I1, I2, A, B, String] {}
 //  def apply(in: ?.type)    = new Story_In_3_1[I1, I2, B, A] {}
@@ -275,7 +275,7 @@
 //
 // trait Story_In_2_3[I1, I2, A, B, C] extends Story with In_2_3[I1, I2, A, B, C] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_4[I1, I2, A, B, C, Long]   {}) with Story_In_2_4[I1, I2, A, B, C, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_4[I1, I2, A, B, C, Long]   {}) with Story_In_2_4[I1, I2, A, B, C, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_4[I1, I2, A, B, C, String] {}) with Story_In_2_4[I1, I2, A, B, C, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_4[I1, I2, A, B, C, String] {}) with Story_In_2_4[I1, I2, A, B, C, String] {}
 //  def apply(in: ?.type)    = new Story_In_3_2[I1, I2, C, A, B] {}
@@ -286,7 +286,7 @@
 //
 // trait Story_In_2_4[I1, I2, A, B, C, D] extends Story with In_2_4[I1, I2, A, B, C, D] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_5[I1, I2, A, B, C, D, Long]   {}) with Story_In_2_5[I1, I2, A, B, C, D, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_5[I1, I2, A, B, C, D, Long]   {}) with Story_In_2_5[I1, I2, A, B, C, D, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_5[I1, I2, A, B, C, D, String] {}) with Story_In_2_5[I1, I2, A, B, C, D, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_5[I1, I2, A, B, C, D, String] {}) with Story_In_2_5[I1, I2, A, B, C, D, String] {}
 //  def apply(in: ?.type)    = new Story_In_3_3[I1, I2, D, A, B, C] {}
@@ -297,7 +297,7 @@
 //
 // trait Story_In_2_5[I1, I2, A, B, C, D, E] extends Story with In_2_5[I1, I2, A, B, C, D, E] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_6[I1, I2, A, B, C, D, E, Long]   {}) with Story_In_2_6[I1, I2, A, B, C, D, E, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_6[I1, I2, A, B, C, D, E, Long]   {}) with Story_In_2_6[I1, I2, A, B, C, D, E, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_6[I1, I2, A, B, C, D, E, String] {}) with Story_In_2_6[I1, I2, A, B, C, D, E, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_6[I1, I2, A, B, C, D, E, String] {}) with Story_In_2_6[I1, I2, A, B, C, D, E, String] {}
 //  def apply(in: ?.type)    = new Story_In_3_4[I1, I2, E, A, B, C, D] {}
@@ -308,7 +308,7 @@
 //
 // trait Story_In_2_6[I1, I2, A, B, C, D, E, F] extends Story with In_2_6[I1, I2, A, B, C, D, E, F] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}) with Story_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}) with Story_In_2_7[I1, I2, A, B, C, D, E, F, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_7[I1, I2, A, B, C, D, E, F, String] {}) with Story_In_2_7[I1, I2, A, B, C, D, E, F, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_7[I1, I2, A, B, C, D, E, F, String] {}) with Story_In_2_7[I1, I2, A, B, C, D, E, F, String] {}
 //  def apply(in: ?.type)    = new Story_In_3_5[I1, I2, F, A, B, C, D, E] {}
@@ -319,7 +319,7 @@
 //
 // trait Story_In_2_7[I1, I2, A, B, C, D, E, F, G] extends Story with In_2_7[I1, I2, A, B, C, D, E, F, G] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}) with Story_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}) with Story_In_2_8[I1, I2, A, B, C, D, E, F, G, Long]   {}
 //  lazy val title = new title (this, new Story_In_2_8[I1, I2, A, B, C, D, E, F, G, String] {}) with Story_In_2_8[I1, I2, A, B, C, D, E, F, G, String] {}
 //  lazy val url   = new url   (this, new Story_In_2_8[I1, I2, A, B, C, D, E, F, G, String] {}) with Story_In_2_8[I1, I2, A, B, C, D, E, F, G, String] {}
 //  def apply(in: ?.type)    = new Story_In_3_6[I1, I2, G, A, B, C, D, E, F] {}
@@ -335,56 +335,56 @@
 //
 // trait Story_In_3_0[I1, I2, I3] extends Story with In_3_0[I1, I2, I3] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_1[I1, I2, I3, Long]   {}) with Story_In_3_1[I1, I2, I3, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_1[I1, I2, I3, Long]   {}) with Story_In_3_1[I1, I2, I3, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_1[I1, I2, I3, String] {}) with Story_In_3_1[I1, I2, I3, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_1[I1, I2, I3, String] {}) with Story_In_3_1[I1, I2, I3, String] {}
 //}
 //
 // trait Story_In_3_1[I1, I2, I3, A] extends Story with In_3_1[I1, I2, I3, A] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_2[I1, I2, I3, A, Long]   {}) with Story_In_3_2[I1, I2, I3, A, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_2[I1, I2, I3, A, Long]   {}) with Story_In_3_2[I1, I2, I3, A, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_2[I1, I2, I3, A, String] {}) with Story_In_3_2[I1, I2, I3, A, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_2[I1, I2, I3, A, String] {}) with Story_In_3_2[I1, I2, I3, A, String] {}
 //}
 //
 // trait Story_In_3_2[I1, I2, I3, A, B] extends Story with In_3_2[I1, I2, I3, A, B] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_3[I1, I2, I3, A, B, Long]   {}) with Story_In_3_3[I1, I2, I3, A, B, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_3[I1, I2, I3, A, B, Long]   {}) with Story_In_3_3[I1, I2, I3, A, B, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_3[I1, I2, I3, A, B, String] {}) with Story_In_3_3[I1, I2, I3, A, B, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_3[I1, I2, I3, A, B, String] {}) with Story_In_3_3[I1, I2, I3, A, B, String] {}
 //}
 //
 // trait Story_In_3_3[I1, I2, I3, A, B, C] extends Story with In_3_3[I1, I2, I3, A, B, C] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_4[I1, I2, I3, A, B, C, Long]   {}) with Story_In_3_4[I1, I2, I3, A, B, C, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_4[I1, I2, I3, A, B, C, Long]   {}) with Story_In_3_4[I1, I2, I3, A, B, C, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_4[I1, I2, I3, A, B, C, String] {}) with Story_In_3_4[I1, I2, I3, A, B, C, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_4[I1, I2, I3, A, B, C, String] {}) with Story_In_3_4[I1, I2, I3, A, B, C, String] {}
 //}
 //
 // trait Story_In_3_4[I1, I2, I3, A, B, C, D] extends Story with In_3_4[I1, I2, I3, A, B, C, D] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}) with Story_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}) with Story_In_3_5[I1, I2, I3, A, B, C, D, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_5[I1, I2, I3, A, B, C, D, String] {}) with Story_In_3_5[I1, I2, I3, A, B, C, D, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_5[I1, I2, I3, A, B, C, D, String] {}) with Story_In_3_5[I1, I2, I3, A, B, C, D, String] {}
 //}
 //
 // trait Story_In_3_5[I1, I2, I3, A, B, C, D, E] extends Story with In_3_5[I1, I2, I3, A, B, C, D, E] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}) with Story_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}) with Story_In_3_6[I1, I2, I3, A, B, C, D, E, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_6[I1, I2, I3, A, B, C, D, E, String] {}) with Story_In_3_6[I1, I2, I3, A, B, C, D, E, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_6[I1, I2, I3, A, B, C, D, E, String] {}) with Story_In_3_6[I1, I2, I3, A, B, C, D, E, String] {}
 //}
 //
 // trait Story_In_3_6[I1, I2, I3, A, B, C, D, E, F] extends Story with In_3_6[I1, I2, I3, A, B, C, D, E, F] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}) with Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}) with Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, String] {}) with Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, String] {}) with Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, String] {}
 //}
 //
 // trait Story_In_3_7[I1, I2, I3, A, B, C, D, E, F, G] extends Story with In_3_7[I1, I2, I3, A, B, C, D, E, F, G] {
 //  import Story._
-//  lazy val eid   = new eid   (this, new Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}) with Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}
+//  lazy val e   = new e   (this, new Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}) with Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, Long]   {}
 //  lazy val title = new title (this, new Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String] {}) with Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String] {}
 //  lazy val url   = new url   (this, new Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String] {}) with Story_In_3_8[I1, I2, I3, A, B, C, D, E, F, G, String] {}
 //}

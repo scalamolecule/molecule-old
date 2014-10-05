@@ -153,14 +153,14 @@ object DslBoilerplate_OLD {
     val attrs1 = attrs0.filter(a => a._2 != "sub_")
 
     val (longestAttr, longestAttrClean, longestType, longestBaseType) = if (attrs1.isEmpty)
-      (3, 3, 4, 4) // eid: Long
+      (3, 3, 4, 4) // e: Long
     else (
       attrs1.map(_._2.toString.length).max,
       attrs1.map(_._2.toString.replace("`", "").length).max,
       attrs1.map(_._3.toString.length).max,
       attrs1.map(_._4.toString.length).max)
 
-    val entityIdDef = ("attr", "eid", "Long", "Long", 1, "OneLong(ns1, ns2)", List())
+    val entityIdDef = ("attr", "e", "Long", "Long", 1, "OneLong(ns1, ns2)", List())
 
     val attrs = (entityIdDef +: attrs1).map { case (cat, attr, tpe, baseType, card, ext, defs) =>
       val attrClean = attr.replace("`", "")
@@ -320,8 +320,8 @@ object DslBoilerplate_OLD {
 
             val defaults = if (in + out == 0 && attrs1.nonEmpty) {
               val (_, attr, tpeFirst, _, _, _, _) = attrs1.head
-//              Seq("def apply(eid: Long) = this")
-              Seq( s"""|  def apply(eid: Long)     = this
+//              Seq("def apply(e: Long) = this")
+              Seq( s"""|  def apply(e: Long)     = this
                        |  def apply(c: count.type) = new ${Ns1}_1[Int] {}""".stripMargin.trim)
             } else Seq()
 
