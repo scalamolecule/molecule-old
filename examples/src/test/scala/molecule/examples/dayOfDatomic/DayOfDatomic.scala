@@ -346,7 +346,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
     // How many users are there?
     User.email.size === 3
 
-    // How many users have upvoted somehting? (Stuart)
+    // How many users have upvoted something? (Stuart)
     User.email.upVotes_.get.head.size === 1
 
     // Users and optional upvotes
@@ -437,10 +437,10 @@ class DayOfDatomic extends DayOfAtomicSpec {
     // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
 
     // User 1's Role in Group 2
-    User.name_("User1").RoleInGroup.Group.name_("Group2").RoleInGroup.Role.name.get.head === "Role1"
+    User.name_("User1").RoleInGroup.Group.name_("Group2")._RoleInGroup.Role.name.get.head === "Role1"
 
     // User 1's Roles in all Groups
-    User.name_("User1").RoleInGroup.Role.name.RoleInGroup.Group.name.tpls === List(
+    User.name_("User1").RoleInGroup.Role.name._RoleInGroup.Group.name.tpls === List(
       ("Role1", "Group2"),
       ("Role2", "Group1")
     )
@@ -448,29 +448,55 @@ class DayOfDatomic extends DayOfAtomicSpec {
 
 
   "Aggregates" >> {
-    implicit val conn = init("aggregates", "bigger-than-pluto.edn")
+    import molecule.examples.dayOfDatomic.dsl.aggregates._
+    implicit val conn = load(AggregatesSchema.tx, "Aggregates")
 
-    // how many objects are there?
-    m(Obj).count
+    // Insert data
+    Obj.name.meanRadius
+      .tx(Data.source_("http://en.wikipedia.org/wiki/List_of_Solar_System_objects_by_size")) insert Seq(
+      ("Sun", 696000.0),
+      ("Jupiter", 69911.0),
+      ("Saturn", 58232.0),
+      ("Uranus", 25362.0),
+      ("Neptune", 24622.0),
+      ("Earth", 6371.0),
+      ("Venus", 6051.8),
+      ("Mars", 3390.0),
+      ("Ganymede", 2631.2),
+      ("Titan", 2576.0),
+      ("Mercury", 2439.7),
+      ("Callisto", 2410.3),
+      ("Io", 1821.5),
+      ("Moon", 1737.1),
+      ("Europa", 1561.0),
+      ("Triton", 1353.4),
+      ("Eris", 1163.0)
+    )
 
-    // largest radius?
-    m(Obj.meanRadius(max))
+    // How many objects
+    Obj.name.size === 17
+
+    // Largest radius
+    // with database
+    Obj.meanRadius(maybe) === 696000.0
+    // with Scala
+    Obj.meanRadius.get.max === 696000.0
 
     // Smallest radius
-    m(Obj.meanRadius(min))
+    Obj.meanRadius(min))
 
 
     // Average radius
-    m(Obj.meanRadius(avg))
+    Obj.meanRadius(avg))
 
     // Median radius
-    m(Obj.meanRadius(median))
+    Obj.meanRadius(median))
 
     // stddev
-    m(Obj.meanRadius(stddev))
+    Obj.meanRadius(stddev))
 
     // random solar system object
-    m(Obj(rand))
+    Obj(rand))
     // or
     m(Obj).rand
 

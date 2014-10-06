@@ -1,11 +1,12 @@
 package molecule
 package examples.seattle
 import java.io.FileReader
+
 import datomic._
-import molecule.dsl._
 import molecule.examples.seattle.dsl.seattle._
 import molecule.schemas.Db
 import shapeless._
+
 import scala.language.reflectiveCalls
 
 
@@ -64,7 +65,7 @@ class SeattleTests extends SeattleSpec {
       "Discover SLU", "Fremont Universe", "Columbia Citizens")
 
     // Retrieving values of many-attributes like `category`
-    Community.name.apply("belltown"). category.take(1) === List(Set("events", "news"))
+    Community.name.apply("belltown").category.take(1) === List(Set("events", "news"))
 
     // Querying by many-attributes like `category`
     // Multiple values have OR-semantics
@@ -102,7 +103,7 @@ class SeattleTests extends SeattleSpec {
     val communitiesOfType = m(Community.name.type_(?))
 
     // Re-use input molecules to create new molecules with different community types
-    val twitterCommunities = communitiesOfType("twitter")
+    val twitterCommunities = communitiesOfType.apply("twitter")
     val facebookCommunities = communitiesOfType("facebook_page")
 
     // Only the `name` attribute is returned since `type` is the same for all results
@@ -195,7 +196,7 @@ class SeattleTests extends SeattleSpec {
     val beforeC = List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
 
     m(Community.name < "C").take(3) === beforeC
-    Community.name.<("C"). take(3) === beforeC
+    Community.name.<("C").take(3) === beforeC
 
     val communitiesBefore = m(Community.name < ?)
     communitiesBefore("C").take(3) === beforeC
@@ -413,7 +414,7 @@ class SeattleTests extends SeattleSpec {
     // Mixing updates and deletes..........................
 
     // Values before
-//    Community.name("belltown 2").name.`type`.url.category.hls === List(
+    //    Community.name("belltown 2").name.`type`.url.category.hls === List(
     Community.name("belltown 2").`type`.url.category.hls === List(
       "belltown 2" :: "blog" :: "url 2" :: Set("Super cool news", "extra category") :: HNil)
 

@@ -174,10 +174,17 @@ package object molecule {
   implicit def long2Entity(id: Long)(implicit conn: Connection) =  EntityFacade(conn.db.entity(id), conn, id.asInstanceOf[Object])
 
   // Markers
-  object ?
+  trait ?
+  object ? extends ?
+
   object ?!
-  object maybe
-  object count
+
+  trait maybe
+  object maybe extends maybe
+
+  trait count
+  object count extends count
+
   case class contains[T](value: T)
   case class oldNew[T](from: T, to: T)
 }

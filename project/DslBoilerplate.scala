@@ -17,14 +17,14 @@ object DslBoilerplate {
     }
   }
 
-  case class Namespace(ns: String, opt: Option[Options] = None, attrs: Seq[Attr] = Seq())
+  case class Namespace(ns: String, opt: Option[Extension] = None, attrs: Seq[Attr] = Seq())
 
-  sealed trait Options
-  case class Tree() extends Options {
+  sealed trait Extension
+  case class Tree() extends Extension {
     override def toString = " (Tree)"
   }
-  case class HyperEdge(nss: Seq[String]) extends Options {
-    override def toString = s" (HyperEdge[${nss.mkString("\n")}])"
+  case class HyperEdge(edges: Seq[String]) extends Extension {
+    override def toString = s" (HyperEdge to ${edges.mkString(", ")})"
   }
 
   sealed trait Attr {
@@ -36,6 +36,7 @@ object DslBoilerplate {
   case class Val(attr: String, attrClean: String, clazz: String, tpe: String, baseTpe: String, datomicTpe: String, options: Seq[Optional] = Seq()) extends Attr
   case class Enum(attr: String, attrClean: String, clazz: String, tpe: String, baseTpe: String, enums: Seq[String]) extends Attr
   case class Ref(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, refNs: String) extends Attr
+  case class BackRef(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, backRef: String) extends Attr
 
   case class Optional(datomicKeyValue: String, clazz: String)
 
@@ -94,16 +95,16 @@ object DslBoilerplate {
 
 
     def parseOptions(str: String, acc: Seq[Optional] = Seq()): Seq[Optional] = str match {
-      case r"\.doc\(((\w|\s)*)$msg\)$str" => parseOptions(str, acc :+ Optional( s"""":db/doc"               , "$msg"""", ""))
-      case r"\.fullTextSearch(.*)$str"    => parseOptions(str, acc :+ Optional( """":db/fulltext"          , true.asInstanceOf[Object]""", "FulltextSearch[Ns]"))
-      case r"\.uniqueValue(.*)$str"       => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/value"""", "UniqueValue"))
-      case r"\.uniqueIdentity(.*)$str"    => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/identity"""", "UniqueIdentity"))
-      case r"\.indexed(.*)$str"           => parseOptions(str, acc :+ Optional( """":db/index"             , true.asInstanceOf[Object]""", "Indexed"))
-      case r"\.subComponents(.*)$str"     => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
-      case r"\.subComponent(.*)$str"      => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
-      case r"\.noHistory(.*)$str"         => parseOptions(str, acc :+ Optional( """":db/noHistory"         , true.asInstanceOf[Object]""", "NoHistory"))
-      case ""                             => acc
-      case unexpected                     => sys.error(s"Unexpected options code in ${defFile.getName}:\n" + unexpected)
+      case r"\.doc\((.*)$msg\)(.*)$str" => parseOptions(str, acc :+ Optional( s"""":db/doc"               , $msg""", ""))
+      case r"\.fullTextSearch(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/fulltext"          , true.asInstanceOf[Object]""", "FulltextSearch[Ns]"))
+      case r"\.uniqueValue(.*)$str"     => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/value"""", "UniqueValue"))
+      case r"\.uniqueIdentity(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/identity"""", "UniqueIdentity"))
+      case r"\.indexed(.*)$str"         => parseOptions(str, acc :+ Optional( """":db/index"             , true.asInstanceOf[Object]""", "Indexed"))
+      case r"\.subComponents(.*)$str"   => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
+      case r"\.subComponent(.*)$str"    => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
+      case r"\.noHistory(.*)$str"       => parseOptions(str, acc :+ Optional( """":db/noHistory"         , true.asInstanceOf[Object]""", "NoHistory"))
+      case ""                           => acc
+      case unexpected                   => sys.error(s"Unexpected options code in ${defFile.getName}:\n" + unexpected)
     }
 
     def parseAttr(attr: String, attrClean: String, str: String) = str match {
@@ -164,7 +165,10 @@ object DslBoilerplate {
     //        case _                          => ns
     //      }
     //    }
+    definition
+  }
 
+  def resolve(definition: Definition) = {
     // Add backrefs to hyper edge in affected namespaces
     val newNss = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
       ns.opt match {
@@ -176,19 +180,17 @@ object DslBoilerplate {
               sys.error(s"Unexpected attribute in hyper edge definition `${ns.ns}` (only refs allowed):\n" + unexpected)
           }
           nss2.map {
-            // Namespace is a backref to hyper edge
+            // Namespace is a backref to hyper edge (could be many)
             case ns2 if refs.contains(ns2.ns) =>
-              val attrs2 = ns2.attrs :+ Ref(firstLow(ns.ns), firstLow(ns.ns), "OneRefAttr", "OneRef", "Long", "", ns.ns)
+              val attrs2 = ns2.attrs :+ BackRef("_" + firstLow(ns.ns), "_" + firstLow(ns.ns), "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ns.ns)
               ns2.copy(attrs = attrs2)
+            case ns2 if ns2.ns == ns.ns       => ns2.copy(opt = Some(HyperEdge(refs)))
             case ns2                          => ns2
           }
         case _                          => nss2
       }
     }
-    val definition2 = definition.copy(nss = newNss)
-
-    //    println(schemaFile(definition))
-    definition2
+    definition.copy(nss = newNss)
   }
 
   // Generate ..........................................
@@ -196,9 +198,9 @@ object DslBoilerplate {
   def schemaBody(d: Definition) = {
 
     def attrStmts(ns: String, a: Attr) = {
+      val ident = s"""":db/ident"             , ":${firstLow(ns)}/${a.attrClean}""""
       def tpe(t: String) = s"""":db/valueType"         , ":db.type/$t""""
       def card(c: String) = s"""":db/cardinality"       , ":db.cardinality/$c""""
-      val ident = s"""":db/ident"             , ":$ns/${a.attrClean}""""
       val stmts = a match {
         case Val(_, _, clazz, _, _, t, options) if clazz.take(3) == "One" => Seq(tpe(t), card("one")) ++ options.map(_.datomicKeyValue)
         case Val(_, _, _, _, _, t, options)                               => Seq(tpe(t), card("many")) ++ options.map(_.datomicKeyValue)
@@ -206,10 +208,10 @@ object DslBoilerplate {
         case a: Attr                                                      => Seq(tpe("ref"), card("many"))
         case unexpected                                                   => sys.error(s"Unexpected attribute statement:\n" + unexpected)
       }
-      val all = ident +: (stmts ++ Seq(
+      val all = (ident +: stmts) ++ Seq(
         """":db/id"                , Peer.tempid(":db.part/db")""",
         """":db.install/_attribute", ":db.part/db""""
-      ))
+      )
       s"Util.map(${all.mkString(",\n             ")})"
     }
 
@@ -290,19 +292,23 @@ object DslBoilerplate {
           case (i, o) => s"${refNs}_In_${i}_$o[${(InTypes ++ OutTypes) mkString ", "}]"
         }
         acc :+ s"def ${attr.capitalize} : $clazz[$ns, $refNs] with $ref = ???"
-      case (acc, _)                                   => acc
+
+      case (acc, BackRef(_, _, _, clazz, _, _, backRef)) =>
+        val ref = (in, out) match {
+          case (0, 0) => s"${backRef}_0"
+          case (0, o) => s"${backRef}_$o[${OutTypes mkString ", "}]"
+          case (i, o) => s"${backRef}_In_${i}_$o[${(InTypes ++ OutTypes) mkString ", "}]"
+        }
+        acc :+ s"def _$backRef : $clazz[$ns, $backRef] with $ref = ???"
+
+      case (acc, _) => acc
     }
 
     val optional = option match {
       case Some(tree: Tree) =>
         val thisNS = if (out == 0) s"${ns}_0" else s"${ns}_$out[${OutTypes mkString ", "}]"
         Seq(s"def $ns : ChildRef[$ns] with $thisNS = ???")
-      //      case Some(hyperEdge: HyperEdge) =>
-      ////        val
-      //
-      //        val thisNS = if (out == 0) s"${ns}_0" else s"${ns}_$out[${OutTypes mkString ", "}]"
-      //        Seq(s"def $ns : ChildRef[$ns] with $thisNS = ???")
-      case _ => Nil
+      case _                => Nil
     }
 
     val inputMethods = if (out > 0 && in < maxIn) {
@@ -390,15 +396,23 @@ object DslBoilerplate {
     val p2 = (s: String) => padS(attrs.map(_.clazz.length).max, s)
     val attrClasses = attrs.map {
       case Val(attr, _, clazz, _, _, _, options) =>
-        val extensions = if (options.isEmpty) "" else " with " + options.map(_.clazz).mkString(" with ")
-        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]$extensions { self: Ns => }"
+        val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
+        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]$extensions"
+//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]$extensions { self: Ns => }"
 
       case Enum(attr, _, clazz, _, _, enums) =>
         val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
-        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => $enumValues}"
+        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { $enumValues }"
+//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => $enumValues}"
 
       case Ref(attr, _, clazz, _, _, _, _) =>
-        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => }"
+        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]"
+//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => }"
+
+      case BackRef(attr, _, clazz, _, _, _, _) =>
+        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]"
+//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => }"
+
     }.mkString("\n  ").trim
 
     val nsTraits = (for {
@@ -441,7 +455,8 @@ object DslBoilerplate {
 
       // Loop definition files in each domain directory
       definitionFiles flatMap { definitionFile =>
-        val d = parse(definitionFile)
+        val d0 = parse(definitionFile)
+        val d = resolve(d0)
 
         // Write schema file
         val schemaFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((file, pkg) => file / pkg) / "schema" / s"${d.domain}Schema.scala"
@@ -449,7 +464,7 @@ object DslBoilerplate {
 
         // Write namespace files
         val namespaceFiles = d.nss.map { ns =>
-          val nsFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((file, pkg) => file / pkg) / "dsl" / d.domain / s"${ns.ns}.scala"
+          val nsFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((file, pkg) => file / pkg) / "dsl" / firstLow(d.domain) / s"${ns.ns}.scala"
           val nsBody = namespaceBody(d, ns)
           IO.write(nsFile, nsBody)
           nsFile
