@@ -14,10 +14,7 @@ object schemaDSL {
   // todo?
   trait Partition
 
-  trait Tree {
-    // Parent entity
-//    class _parent[Ns] extends OneLong[Ns] {self: Ns =>}
-  }
+  trait Tree
   trait HyperEdge
 
   trait NS {
@@ -41,30 +38,26 @@ object schemaDSL {
   trait Attr
 
   trait RefAttr[Ns1, T] extends Attr
-  trait OneRefAttr[Ns] extends RefAttr[Ns,  Long] { //self: Ns =>
+  trait OneRefAttr[Ns] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns = ???
   }
-  trait ManyRefAttr[Ns] extends RefAttr[Ns,  Long] { //self: Ns =>
+  trait ManyRefAttr[Ns] extends RefAttr[Ns,  Long] {
     def apply(value: Long*): Ns = ???
     def add(value: Long): Ns = ???
     def remove(values: Long*): Ns = ???
   }
 
-//  sealed trait ValueAttr[Ns, T] extends Attr {self: Ns =>
   sealed trait ValueAttr[Ns, T] extends Attr {
     def apply(expr: Exp1[T]) : Ns = ???
     def maybe : Ns = ???
     def < (value: T) : Ns = ???
     def eq(value: T) : Ns = ???
 
-  def apply(in: ?) : Ns = ???
 
-    def apply(m: maybe): Ns = ???
   }
 
 
   // One-cardinality
-//  trait One[Ns, T] extends ValueAttr[Ns, T] { self: Ns =>
   trait One[Ns, T] extends ValueAttr[Ns, T] {
     //    def apply(expr: Exp1[T]): Ns = ???
     //    def apply(values: T*): Ns = ???
@@ -88,7 +81,7 @@ object schemaDSL {
   trait OneAny     [Ns] extends One[Ns, Any]
 
   // Many-cardinality
-  trait Many[Ns, S, T] extends ValueAttr[Ns, T] { //self: Ns =>
+  trait Many[Ns, S, T] extends ValueAttr[Ns, T] {
     def apply(value: T*): Ns = ???
 //    def apply(one: T, more: T*): Ns = ???
 //    def apply(): Ns = ???
@@ -119,7 +112,7 @@ object schemaDSL {
   trait UniqueValue
   trait UniqueIdentity
   trait Indexed
-  trait FulltextSearch[Ns] { //self: Ns =>
+  trait FulltextSearch[Ns] { 
     def contains(that: String): Ns = ???
   }
   trait IsComponent

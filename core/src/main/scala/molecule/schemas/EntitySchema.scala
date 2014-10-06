@@ -7,7 +7,7 @@ import molecule.out._
 object Entity extends Entity_0
 
 trait Entity {
-  class txInstant[NS] extends OneLong[NS] {self: NS =>}
+  class txInstant[NS] extends OneLong[NS]
 }
 
 trait Entity_0 extends Entity with Molecule_0 {

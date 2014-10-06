@@ -477,42 +477,38 @@ class DayOfDatomic extends DayOfAtomicSpec {
     Obj.name.size === 17
 
     // Largest radius
-    // with database
-    Obj.meanRadius(maybe) === 696000.0
-    // with Scala
+    Obj.meanRadius(max) === 696000.0
     Obj.meanRadius.get.max === 696000.0
 
     // Smallest radius
-    Obj.meanRadius(min))
-
+    Obj.meanRadius(min) === 696000.0
+    Obj.meanRadius.get.min === 696000.0
 
     // Average radius
-    Obj.meanRadius(avg))
+    Obj.meanRadius(avg) === 696000.0
 
     // Median radius
-    Obj.meanRadius(median))
+    Obj.meanRadius(median) === 696000.0
 
     // stddev
-    Obj.meanRadius(stddev))
+    Obj.meanRadius(stddev) === 696000.0
 
     // random solar system object
-    Obj(rand))
-    // or
-    m(Obj).rand
+    Obj.meanRadius(rand) === 696000.0
 
     // smallest 3
-    m(Obj.meanRadius min 3)
-    m(Obj.meanRadius).asc.take(3)
+    Obj.meanRadius(min(3)) === List(1,2,3)
+    Obj.meanRadius.get.sorted.take(3) === List(1,2,3)
 
     // largest 3
-    m(Obj.meanRadius max 3)
-    m(Obj.meanRadius).desc.take(3)
+    Obj.meanRadius(max(3)) === List(1,2,3)
+    Obj.meanRadius.get.sorted.reverse.take(3) === List(1,2,3)
 
     // 5 random (duplicates possible)
-    m(Obj(rand, 5))
+    Obj.meanRadius(rand(3)) === List(1,2,3)
 
     // Choose 5, no duplicates
-    m(Obj(sample, 5))
+    Obj.meanRadius(sample(3)) === List(1,2,3)
 
     // What is the average length of a schema name?
     m(e.ident.name(count)).avg

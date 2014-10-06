@@ -317,19 +317,31 @@ object DslBoilerplate {
         case (i, o) => s"${ns}_In_${in + 1}_$out[${((InTypes :+ OutTypes.last) ++ OutTypes) mkString ", "}]"
       }
       Seq(
-        s"def apply(in: ?.type)    : $nextIn = ???",
-        s"def <(in: ?.type)        : $nextIn = ???",
-        s"def contains(in: ?.type) : $nextIn = ???")
+        "",
+        s"def apply(in: ?)    : $nextIn = ???",
+        s"def <(in: ?)        : $nextIn = ???",
+        s"def contains(in: ?) : $nextIn = ???")
     } else Nil
 
     val extraMethods = if (out > 0) {
       val (nextOut, nextOutInt) = (in, out) match {
-        case (0, o) => (s"${ns}_$out[${OutTypes mkString ", "}]", s"${ns}_$out[${(OutTypes.init :+ "Int") mkString ", "}]")
-        case (i, o) => (s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes) mkString ", "}]", s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ "Int") mkString ", "}]")
+        case (0, o) => (
+          s"${ns}_$out[${(OutTypes.init :+ s"Option[${OutTypes.last}]") mkString ", "}]",
+          s"${ns}_$out[${(OutTypes.init :+ "Int") mkString ", "}]")
+        case (i, o) => (
+          s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ s"Option[${OutTypes.last}]") mkString ", "}]",
+          s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ "Int") mkString ", "}]")
       }
       Seq(
-        s"def apply(m: maybe.type) : $nextOut   = ???",
-        s"def apply(c: count.type) : $nextOutInt = ???")
+        s"def apply(m: maybe)  : $nextOut = ???",
+        s"def apply(c: count)  : $nextOutInt       = ???",
+        s"def apply(m: max)    : $nextOutInt       = ???",
+        s"def apply(m: min)    : $nextOutInt       = ???",
+        s"def apply(a: avg)    : $nextOutInt       = ???",
+        s"def apply(m: median) : $nextOutInt       = ???",
+        s"def apply(s: stddev) : $nextOutInt       = ???",
+        s"def apply(r: rand)   : $nextOutInt       = ???",
+        s"def apply(s: sample) : $nextOutInt       = ???")
     } else Nil
 
     (in, out) match {
@@ -343,7 +355,9 @@ object DslBoilerplate {
       // Last output trait
       case (0, o) if o == maxOut =>
         val types = OutTypes mkString ", "
-        s"trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types]"
+        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types] {
+           |  ${extraMethods.mkString("\n  ")}
+           |}""".stripMargin
 
       // Other output traits
       case (0, o) =>
@@ -368,7 +382,9 @@ object DslBoilerplate {
       // Last input trait
       case (i, o) if o == maxOut =>
         val types = (InTypes ++ OutTypes) mkString ", "
-        s"trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types]"
+        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
+           |  ${extraMethods.mkString("\n  ")}
+           |}""".stripMargin
 
       // Other input traits
       case (i, o) =>
@@ -398,20 +414,16 @@ object DslBoilerplate {
       case Val(attr, _, clazz, _, _, _, options) =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
         s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]$extensions"
-//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]$extensions { self: Ns => }"
 
       case Enum(attr, _, clazz, _, _, enums) =>
         val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
         s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { $enumValues }"
-//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => $enumValues}"
 
       case Ref(attr, _, clazz, _, _, _, _) =>
         s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]"
-//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => }"
 
       case BackRef(attr, _, clazz, _, _, _, _) =>
         s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]"
-//        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { self: Ns => }"
 
     }.mkString("\n  ").trim
 
