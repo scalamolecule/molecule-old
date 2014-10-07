@@ -19,13 +19,13 @@ object schemaDSL {
 
   trait NS {
     // Common attribute classes
-    abstract class e         [Ns] extends OneLong    [Ns]
-    abstract class a         [Ns] extends OneString  [Ns]
-    abstract class v         [Ns] extends OneAny     [Ns]
-    abstract class ns        [Ns] extends OneString  [Ns]
-    abstract class txInstant [Ns] extends OneDate    [Ns]
-    abstract class txT       [Ns] extends OneLong    [Ns]
-    abstract class txAdded   [Ns] extends OneBoolean [Ns]
+    abstract class e         [Ns, In] extends OneLong    [Ns, In]
+    abstract class a         [Ns, In] extends OneString  [Ns, In]
+//    abstract class v         [Ns, In] extends OneAny     [Ns, In]
+//    abstract class ns        [Ns, In] extends OneString  [Ns, In]
+//    abstract class txInstant [Ns, In] extends OneDate    [Ns, In]
+//    abstract class txT       [Ns, In] extends OneLong    [Ns, In]
+//    abstract class txAdded   [Ns, In] extends OneBoolean [Ns, In]
   }
 
   trait Ref[Ns1, Ns2]
@@ -38,27 +38,56 @@ object schemaDSL {
   trait Attr
 
   trait RefAttr[Ns1, T] extends Attr
-  trait OneRefAttr[Ns] extends RefAttr[Ns,  Long] {
+  trait OneRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns = ???
   }
-  trait ManyRefAttr[Ns] extends RefAttr[Ns,  Long] {
+  trait ManyRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long*): Ns = ???
     def add(value: Long): Ns = ???
     def remove(values: Long*): Ns = ???
   }
 
-  sealed trait ValueAttr[Ns, T] extends Attr {
+  sealed trait ValueAttr[Ns, In, T] extends Attr {
     def apply(expr: Exp1[T]) : Ns = ???
-    def maybe : Ns = ???
-    def < (value: T) : Ns = ???
+//    def maybe : Ns = ???
+//    def < (value: T) : Ns = ???
     def eq(value: T) : Ns = ???
 
+    // Input
+    def apply(in: ?) : In = ???
 
+    def apply(m: maybe): Ns = ???
+
+//    Seq(
+//      s"def apply(m: maybe)  : $nextOut = ???",
+//      s"def apply(c: count)  : $nextOutInt       = ???",
+//      s"def apply(m: max)    : $nextOutInt       = ???",
+//      s"def apply(m: min)    : $nextOutInt       = ???",
+//      s"def apply(a: avg)    : $nextOutInt       = ???",
+//      s"def apply(m: median) : $nextOutInt       = ???",
+//      s"def apply(s: stddev) : $nextOutInt       = ???",
+//      s"def apply(r: rand)   : $nextOutInt       = ???",
+//      s"def apply(s: sample) : $nextOutInt       = ???")
+  }
+
+  trait Ordered[Ns, In, T] {
+    def < (value: T) : Ns = ???
+    def < (in: ?) : In = ???
+//
+//    def apply(v: max): Ns = ???
+//    def apply(i: ?): Ns = ???
+//
+////    def apply(v: min): Ns = ???
+//    def apply(v: min): Ns = ???
+  }
+
+  trait Number[Ns, In, T] extends Ordered[Ns, In, T] {
+    def apply(v: count): Ns = ???
   }
 
 
   // One-cardinality
-  trait One[Ns, T] extends ValueAttr[Ns, T] {
+  trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
     //    def apply(expr: Exp1[T]): Ns = ???
     //    def apply(values: T*): Ns = ???
     //    def apply(one: T, more: T*): Ns = ???
@@ -68,20 +97,20 @@ object schemaDSL {
     def apply(values: Seq[T]) : Ns = ???
 
   }
-  trait OneString  [Ns] extends One[Ns, String]
-  trait OneInt     [Ns] extends One[Ns, Int]
-  trait OneLong    [Ns] extends One[Ns, Long]
-  trait OneFloat   [Ns] extends One[Ns, Float]
-  trait OneDouble  [Ns] extends One[Ns, Double]
-  trait OneBoolean [Ns] extends One[Ns, Boolean]
-  trait OneDate    [Ns] extends One[Ns, Date]
-  trait OneUUID    [Ns] extends One[Ns, UUID]
-  trait OneURI     [Ns] extends One[Ns, URI]
+  trait OneString  [Ns, In] extends One[Ns, In, String]  with Ordered[Ns, In, String]
+  trait OneInt     [Ns, In] extends One[Ns, In, Int]     with Ordered[Ns, In, Int]
+  trait OneLong    [Ns, In] extends One[Ns, In, Long]    with Ordered[Ns, In, Long]
+  trait OneFloat   [Ns, In] extends One[Ns, In, Float]   with Ordered[Ns, In, Float]
+  trait OneDouble  [Ns, In] extends One[Ns, In, Double]  with Ordered[Ns, In, Double]
+  trait OneDate    [Ns, In] extends One[Ns, In, Date]    with Ordered[Ns, In, Date]
+  trait OneBoolean [Ns, In] extends One[Ns, In, Boolean]
+  trait OneUUID    [Ns, In] extends One[Ns, In, UUID]
+  trait OneURI     [Ns, In] extends One[Ns, In, URI]
 
-  trait OneAny     [Ns] extends One[Ns, Any]
+  trait OneAny     [Ns, In] extends One[Ns, In, Any]
 
   // Many-cardinality
-  trait Many[Ns, S, T] extends ValueAttr[Ns, T] {
+  trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
     def apply(value: T*): Ns = ???
 //    def apply(one: T, more: T*): Ns = ???
 //    def apply(): Ns = ???
@@ -92,19 +121,19 @@ object schemaDSL {
     def add(value: T): Ns = ???
     def remove(values: T*): Ns = ???
   }
-  trait ManyString [Ns] extends Many[Ns, Set[String], String]
-  trait ManyInt    [Ns] extends Many[Ns, Set[Int], Int]
-  trait ManyLong   [Ns] extends Many[Ns, Set[Long], Long]
-  trait ManyFloat  [Ns] extends Many[Ns, Set[Float], Float]
-  trait ManyDouble [Ns] extends Many[Ns, Set[Double], Double]
-  trait ManyDate   [Ns] extends Many[Ns, Set[Date], Date]
-  trait ManyUUID   [Ns] extends Many[Ns, Set[UUID], UUID]
-  trait ManyURI    [Ns] extends Many[Ns, Set[URI], URI]
+  trait ManyString [Ns, In] extends Many[Ns, In, Set[String], String] with Ordered[Ns, In, String]
+  trait ManyInt    [Ns, In] extends Many[Ns, In, Set[Int], Int]       with Ordered[Ns, In, Int]
+  trait ManyLong   [Ns, In] extends Many[Ns, In, Set[Long], Long]     with Ordered[Ns, In, Long]
+  trait ManyFloat  [Ns, In] extends Many[Ns, In, Set[Float], Float]   with Ordered[Ns, In, Float]
+  trait ManyDouble [Ns, In] extends Many[Ns, In, Set[Double], Double] with Ordered[Ns, In, Double]
+  trait ManyDate   [Ns, In] extends Many[Ns, In, Set[Date], Date]     with Ordered[Ns, In, Date]
+  trait ManyUUID   [Ns, In] extends Many[Ns, In, Set[UUID], UUID]
+  trait ManyURI    [Ns, In] extends Many[Ns, In, Set[URI], URI]
 
   // Enums
   trait Enum
-  trait OneEnum  [Ns] extends One [Ns, String]         with Enum
-  trait ManyEnums[Ns] extends Many[Ns, String, String] with Enum
+  trait OneEnum  [Ns, In] extends One [Ns, In, String]         with Enum
+  trait ManyEnums[Ns, In] extends Many[Ns, In, String, String] with Enum
   object EnumValue
 
   // Attribute options
@@ -112,8 +141,9 @@ object schemaDSL {
   trait UniqueValue
   trait UniqueIdentity
   trait Indexed
-  trait FulltextSearch[Ns] { 
+  trait FulltextSearch[Ns, In] {
     def contains(that: String): Ns = ???
+    def contains(in: ?) : In = ???
   }
   trait IsComponent
   trait NoHistory

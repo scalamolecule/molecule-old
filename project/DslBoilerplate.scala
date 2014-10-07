@@ -96,7 +96,7 @@ object DslBoilerplate {
 
     def parseOptions(str: String, acc: Seq[Optional] = Seq()): Seq[Optional] = str match {
       case r"\.doc\((.*)$msg\)(.*)$str" => parseOptions(str, acc :+ Optional( s"""":db/doc"               , $msg""", ""))
-      case r"\.fullTextSearch(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/fulltext"          , true.asInstanceOf[Object]""", "FulltextSearch[Ns]"))
+      case r"\.fullTextSearch(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/fulltext"          , true.asInstanceOf[Object]""", "FulltextSearch[Ns, In]"))
       case r"\.uniqueValue(.*)$str"     => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/value"""", "UniqueValue"))
       case r"\.uniqueIdentity(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/identity"""", "UniqueIdentity"))
       case r"\.indexed(.*)$str"         => parseOptions(str, acc :+ Optional( """":db/index"             , true.asInstanceOf[Object]""", "Indexed"))
@@ -253,18 +253,47 @@ object DslBoilerplate {
     val (ns, option, attrs) = (namesp.ns, namesp.opt, namesp.attrs)
     val InTypes = (0 until in) map (n => "I" + (n + 1))
     val OutTypes = (0 until out) map (n => (n + 'A').toChar.toString)
-    val p1 = (s: String) => padS(attrs.map(_.attr.length).max, s)
-    val p2 = (s: String) => padS(attrs.map(_.tpe.length).max, s)
+    val pad1 = (s: String) => padS(attrs.map(_.attr.length).max, s)
+    val pad2 = (s: String) => padS(attrs.map(_.tpe.length).max, s)
 
     val (attrVals, attrVals_) = attrs.map { a =>
       val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
+      val (p1, p2, p3) = (padS(attrs.map(_.attr.length).max, attr), padS(attrs.map(_.attr.length).max, attrClean), padS(attrs.map(_.tpe.length).max, tpe))
+
       val (nextNS, thisNS) = (in, out) match {
-        case (0, 0) => (s"${ns}_1[$tpe]", s"${ns}_0")
-        case (0, o) => (s"${ns}_${o + 1}[${(OutTypes :+ tpe) mkString ", "}]", s"${ns}_$o[${OutTypes mkString ", "}]")
-        case (i, o) => (s"${ns}_In_${i}_${o + 1}[${(InTypes ++ OutTypes :+ tpe) mkString ", "}]", s"${ns}_In_${i}_$o[${(InTypes ++ OutTypes) mkString ", "}]")
+        case (0, 0) => (
+          s"${ns}_1[$tpe$p3]",
+          s"${ns}_0")
+
+        case (0, o) => (
+          s"${ns}_${o + 1}[${(OutTypes :+ tpe) mkString ", "}$p3]",
+          s"${ns}_$o[${OutTypes mkString ", "}]")
+
+        case (i, o) => (
+          s"${ns}_In_${i}_${o + 1}[${(InTypes ++ OutTypes :+ tpe) mkString ", "}$p3]",
+          s"${ns}_In_${i}_$o[${(InTypes ++ OutTypes) mkString ", "}]")
       }
-      (s"val $attr  ${p1(attr)}: $attr${p1(attr)}[$nextNS] ${p2(tpe)}with $nextNS ${p2(tpe)}= ???",
-        s"val ${attrClean}_ ${p1(attrClean)}: $attr${p1(attr)}[$thisNS] with $thisNS = ???")
+
+      val (nextIn, thisIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing") else (in, out) match {
+        case (0, 0) => (
+          s"${ns}_In_1_1[$tpe$p3, $tpe$p3]",
+          s"${ns}_In_1_0[$tpe$p3]")
+
+        case (0, o) => (
+          s"${ns}_In_1_${o + 1}[$tpe$p3, ${(OutTypes :+ tpe) mkString ", "}$p3]",
+          s"${ns}_In_1_$o[$tpe$p3, ${OutTypes mkString ", "}]")
+
+        case (i, 0) => (
+          s"${ns}_In_${i + 1}_1[${(InTypes :+ tpe) mkString ", "}$p3, $tpe$p3]",
+          s"${ns}_In_${i + 1}_0[${(InTypes :+ tpe) mkString ", "}$p3]")
+
+        case (i, o) => (
+          s"${ns}_In_${i + 1}_${o + 1}[${(InTypes :+ tpe) mkString ", "}$p3, ${(OutTypes :+ tpe) mkString ", "}$p3]",
+          s"${ns}_In_${i + 1}_$o[${(InTypes :+ tpe) mkString ", "}$p3, ${OutTypes mkString ", "}]")
+      }
+
+      (s"val $attr  $p1: $attr$p1[$nextNS, $nextIn] with $nextNS = ???",
+        s"val ${attrClean}_ $p2: $attr$p1[$thisNS, $thisIn] with $thisNS = ???")
     }.unzip
 
     val genericVals = {
@@ -274,13 +303,15 @@ object DslBoilerplate {
       }
       Seq(
         "",
-        s"val e         : e        [${nextNS("Long")}]    with ${nextNS("Long")}    = ???",
-        s"val a         : a        [${nextNS("String")}]  with ${nextNS("String")}  = ???",
-        s"val v         : v        [${nextNS("Any")}]     with ${nextNS("Any")}     = ???",
-        s"val ns        : ns       [${nextNS("String")}]  with ${nextNS("String")}  = ???",
-        s"val txInstant : txInstant[${nextNS("Date")}]    with ${nextNS("Date")}    = ???",
-        s"val txT       : txT      [${nextNS("Long")}]    with ${nextNS("Long")}    = ???",
-        s"val txAdded   : txAdded  [${nextNS("Boolean")}] with ${nextNS("Boolean")} = ???"
+        s"val e : e[${nextNS("Long")}  , ${nextNS("Long")}  ] with ${nextNS("Long")}  = ???",
+        s"val a : a[${nextNS("String")}, ${nextNS("String")}] with ${nextNS("String")} = ???"
+//        s"val e         : e        [${nextNS("Long")}   , ${nextNS("Long")}]    with ${nextNS("Long")}    = ???"
+//        s"val a         : a        [${nextNS("String")} , ${nextNS("String")}]  with ${nextNS("String")}  = ???",
+//        s"val v         : v        [${nextNS("Any")}    , ${nextNS("Any")}]     with ${nextNS("Any")}     = ???",
+//        s"val ns        : ns       [${nextNS("String")} , ${nextNS("String")}]  with ${nextNS("String")}  = ???",
+//        s"val txInstant : txInstant[${nextNS("Date")}   , ${nextNS("Date")}]    with ${nextNS("Date")}    = ???",
+//        s"val txT       : txT      [${nextNS("Long")}   , ${nextNS("Long")}]    with ${nextNS("Long")}    = ???",
+//        s"val txAdded   : txAdded  [${nextNS("Boolean")}, ${nextNS("Boolean")}] with ${nextNS("Boolean")} = ???"
       )
     }
 
@@ -311,38 +342,27 @@ object DslBoilerplate {
       case _                => Nil
     }
 
-    val inputMethods = if (out > 0 && in < maxIn) {
-      val nextIn = (in, out) match {
-        case (0, o) => s"${ns}_In_1_$out[${(OutTypes.last +: OutTypes) mkString ", "}]"
-        case (i, o) => s"${ns}_In_${in + 1}_$out[${((InTypes :+ OutTypes.last) ++ OutTypes) mkString ", "}]"
-      }
-      Seq(
-        "",
-        s"def apply(in: ?)    : $nextIn = ???",
-        s"def <(in: ?)        : $nextIn = ???",
-        s"def contains(in: ?) : $nextIn = ???")
-    } else Nil
+//    val inputMethods = if (out > 0 && in < maxIn) {
+//      val nextIn = (in, out) match {
+//        case (0, o) => s"${ns}_In_1_$out[${(OutTypes.last +: OutTypes) mkString ", "}]"
+//        case (i, o) => s"${ns}_In_${in + 1}_$out[${((InTypes :+ OutTypes.last) ++ OutTypes) mkString ", "}]"
+//      }
+//      Seq(
+//        s"def apply(in: ?.type)    : $nextIn = ???",
+//        s"def <(in: ?.type)        : $nextIn = ???",
+//        s"def contains(in: ?.type) : $nextIn = ???")
+//    } else Nil
 
-    val extraMethods = if (out > 0) {
-      val (nextOut, nextOutInt) = (in, out) match {
-        case (0, o) => (
-          s"${ns}_$out[${(OutTypes.init :+ s"Option[${OutTypes.last}]") mkString ", "}]",
-          s"${ns}_$out[${(OutTypes.init :+ "Int") mkString ", "}]")
-        case (i, o) => (
-          s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ s"Option[${OutTypes.last}]") mkString ", "}]",
-          s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ "Int") mkString ", "}]")
-      }
-      Seq(
-        s"def apply(m: maybe)  : $nextOut = ???",
-        s"def apply(c: count)  : $nextOutInt       = ???",
-        s"def apply(m: max)    : $nextOutInt       = ???",
-        s"def apply(m: min)    : $nextOutInt       = ???",
-        s"def apply(a: avg)    : $nextOutInt       = ???",
-        s"def apply(m: median) : $nextOutInt       = ???",
-        s"def apply(s: stddev) : $nextOutInt       = ???",
-        s"def apply(r: rand)   : $nextOutInt       = ???",
-        s"def apply(s: sample) : $nextOutInt       = ???")
-    } else Nil
+//    val extraMethods = if (out > 0) {
+//      val (nextOut, nextOutInt) = (in, out) match {
+//        case (0, o) => (s"${ns}_$out[${OutTypes mkString ", "}]", s"${ns}_$out[${(OutTypes.init :+ "Int") mkString ", "}]")
+//        case (i, o) => (s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes) mkString ", "}]", s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ "Int") mkString ", "}]")
+//      }
+//      Seq(
+//        s"def apply(m: maybe.type) : $nextOut   = ???",
+//        s"def apply(c: count.type) : $nextOutInt = ???")
+//
+//    } else Nil
 
     (in, out) match {
       // First output trait
@@ -355,15 +375,17 @@ object DslBoilerplate {
       // Last output trait
       case (0, o) if o == maxOut =>
         val types = OutTypes mkString ", "
-        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types] {
-           |  ${extraMethods.mkString("\n  ")}
-           |}""".stripMargin
+        s"trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types]"
 
       // Other output traits
       case (0, o) =>
         val types = OutTypes mkString ", "
+//        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types] {
+//           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
+//           |}
+//         """.stripMargin
         s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types] {
-           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
+           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional).mkString("\n  ")}
            |}
          """.stripMargin
 
@@ -382,15 +404,17 @@ object DslBoilerplate {
       // Last input trait
       case (i, o) if o == maxOut =>
         val types = (InTypes ++ OutTypes) mkString ", "
-        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
-           |  ${extraMethods.mkString("\n  ")}
-           |}""".stripMargin
+        s"trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types]"
 
       // Other input traits
       case (i, o) =>
         val types = (InTypes ++ OutTypes) mkString ", "
+//        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
+//           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
+//           |}
+//         """.stripMargin
         s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
-           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
+           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional).mkString("\n  ")}
            |}
          """.stripMargin
     }
@@ -413,17 +437,17 @@ object DslBoilerplate {
     val attrClasses = attrs.map {
       case Val(attr, _, clazz, _, _, _, options) =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
-        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]$extensions"
+        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions"
 
       case Enum(attr, _, clazz, _, _, enums) =>
         val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
-        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns] { $enumValues }"
+        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }"
 
       case Ref(attr, _, clazz, _, _, _, _) =>
-        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]"
+        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]"
 
       case BackRef(attr, _, clazz, _, _, _, _) =>
-        s"class $attr${p1(attr)}[Ns] extends $clazz${p2(clazz)}[Ns]"
+        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]"
 
     }.mkString("\n  ").trim
 

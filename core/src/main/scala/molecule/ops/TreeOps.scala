@@ -28,12 +28,12 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
     def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
     def isManyRef = tpe <:< weakTypeOf[ManyRef[_, _]]
-    def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _]]
-    def isOne = tpe <:< weakTypeOf[One[_, _]]
-    def isMany = tpe <:< weakTypeOf[Many[_, _, _]]
+    def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _]]
+    def isOne = tpe <:< weakTypeOf[One[_, _, _]]
+    def isMany = tpe <:< weakTypeOf[Many[_, _, _, _]]
     def isEnum = tpe <:< weakTypeOf[Enum]
-    def isOneEnum = tpe <:< weakTypeOf[OneEnum[_]]
-    def isManyEnum = tpe <:< weakTypeOf[ManyEnums[_]]
+    def isOneEnum = tpe <:< weakTypeOf[OneEnum[_, _]]
+    def isManyEnum = tpe <:< weakTypeOf[ManyEnums[_, _]]
     override def toString = t.tpe.typeSymbol.name.toString
   }
   def nsString(ns: String): String = ns.head.toLower + ns.tail
@@ -239,7 +239,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
         typeOf[Long]
       }
       case t: TermSymbol if t.isLazy && t.isPublic                                                                              => {
-        val List(_, _, attrTpe) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _]].typeSymbol).typeArgs
+        val List(_, _, attrTpe) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol).typeArgs
         attrTpe
       }
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]]                                                   => NoType
@@ -253,8 +253,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def ns = new nsp(owner)
     def tpeS = if (tpe =:= NoType) "Long" else tpe.toString
     def contentType = tpe
-    def isOne = attrType <:< weakTypeOf[One[_, _]]
-    def isMany = attrType <:< weakTypeOf[Many[_, _, _]]
+    def isOne = attrType <:< weakTypeOf[One[_, _, _]]
+    def isMany = attrType <:< weakTypeOf[Many[_, _, _, _]]
     def isEnum = attrType <:< weakTypeOf[Enum]
     def enumValues = attrType.members.collect {
       case v: TermSymbol
@@ -263,8 +263,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
       .toList.reverse
     def hasEnum(enumCandidate: String) = enumValues.contains(enumCandidate)
-    def card = if (isOne || attrType <:< weakTypeOf[OneEnum[_]]) 1 else 2
-    def isValue = attrType <:< weakTypeOf[One[_, _]] || attrType <:< weakTypeOf[Many[_, _, _]] || attrType <:< weakTypeOf[OneEnum[_]]
+    def card = if (isOne || attrType <:< weakTypeOf[OneEnum[_, _]]) 1 else 2
+    def isValue = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[Many[_, _, _, _]] || attrType <:< weakTypeOf[OneEnum[_, _]]
     def keyw = KW(ns.toString, this.toString)
     override def toString = sym.name.toString.head.toLower + sym.name.toString.tail
     def kw = KW(ns.toString, this.toString)

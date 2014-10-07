@@ -315,7 +315,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
 
     // Add underscore to attribute name to _not_ return it's value (and keep it as a search attribute)
     // Here we get all Story ids (entities having a url value)
-    val allStories = Story.e.url_.get
+    val allStories = Story.url_.e.get
 
     // Add John and let him upvote all stories
     val john = User.email.firstName.lastName.upVotes insert List(
@@ -474,6 +474,7 @@ class DayOfDatomic extends DayOfAtomicSpec {
     )
 
     // How many objects
+    Obj.name(count) === 17
     Obj.name.size === 17
 
     // Largest radius
@@ -490,28 +491,29 @@ class DayOfDatomic extends DayOfAtomicSpec {
     // Median radius
     Obj.meanRadius(median) === 696000.0
 
-    // stddev
+    // Standard deviation
     Obj.meanRadius(stddev) === 696000.0
 
     // random solar system object
     Obj.meanRadius(rand) === 696000.0
 
-    // smallest 3
-    Obj.meanRadius(min(3)) === List(1,2,3)
-    Obj.meanRadius.get.sorted.take(3) === List(1,2,3)
+    // Smallest 3
+    Obj.meanRadius(min(3)) === List(1, 2, 3)
+    Obj.meanRadius.get.sorted.take(3) === List(1, 2, 3)
 
-    // largest 3
-    Obj.meanRadius(max(3)) === List(1,2,3)
-    Obj.meanRadius.get.sorted.reverse.take(3) === List(1,2,3)
+    // Largest 3
+    Obj.meanRadius(max(3)) === List(1, 2, 3)
+    Obj.meanRadius.get.sorted.reverse.take(3) === List(1, 2, 3)
 
     // 5 random (duplicates possible)
-    Obj.meanRadius(rand(3)) === List(1,2,3)
+    Obj.meanRadius(rand(5)) === List(1, 2, 3, 4, 5)
 
-    // Choose 5, no duplicates
-    Obj.meanRadius(sample(3)) === List(1,2,3)
+    // 5 samples (no duplicates)
+    Obj.meanRadius(sample(5)) === List(1, 2, 3, 4, 5)
 
     // What is the average length of a schema name?
-    m(e.ident.name(count)).avg
+    Obj.e.
+      m(e.ident.name(count)).avg
 
     // ...and the mode(s) ?
     m(e.ident.name(count)).modes

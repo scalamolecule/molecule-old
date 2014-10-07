@@ -160,6 +160,9 @@ package object molecule {
   trait count
   object count extends count
 
+  trait countDistinct
+  object countDistinct extends countDistinct
+
   trait max
   object max extends max { def apply(i: Int): max = ???}
 
