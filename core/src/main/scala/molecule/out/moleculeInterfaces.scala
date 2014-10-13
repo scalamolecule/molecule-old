@@ -1,4 +1,5 @@
-package molecule.out
+package molecule
+package out
 import java.util.Date
 import molecule.dsl.schemaDSL.NS
 import molecule.dsl.schemaDSL._
@@ -53,6 +54,25 @@ trait Molecule_1[Ns1[_], Ns2[_,_], A] extends NS {
   val txT_        : Ns1[Long   ] with OneLong   [Ns1[Long   ], Nothing] = ???
   val txAdded_    : Ns1[Boolean] with OneBoolean[Ns1[Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns1[A] = ???
+  def apply(v: max)     : Ns1[A] = ???
+  def apply(v: rand)    : Ns1[A] = ???
+  def apply(v: sample)  : Ns1[A] = ???
+
+  def apply(v: mins)    : Ns1[Seq[A]] = ???
+  def apply(v: maxs)    : Ns1[Seq[A]] = ???
+  def apply(v: distinct): Ns1[Seq[A]] = ???
+  def apply(v: rands)   : Ns1[Seq[A]] = ???
+  def apply(v: samples) : Ns1[Seq[A]] = ???
+
+  def apply(v: count)        : Ns1[Long] = ???
+  def apply(v: countDistinct): Ns1[Long] = ???
+  def apply(v: sum)          : Ns1[Double] = ???
+  def apply(v: avg)          : Ns1[Double] = ???
+  def apply(v: median)       : Ns1[Double] = ???
+  def apply(v: variance)     : Ns1[Double] = ???
+  def apply(v: stddev)       : Ns1[Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns1[A]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns2[A, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_3[Any, Any, A, a, b]                = ???
@@ -79,6 +99,25 @@ trait Molecule_2[Ns2[_,_], Ns3[_,_,_], A, B] extends NS {
   val txInstant_ : Ns2[A, Date   ] with OneDate   [Ns2[A, Date   ], Nothing] = ???
   val txT_       : Ns2[A, Long   ] with OneLong   [Ns2[A, Long   ], Nothing] = ???
   val txAdded_   : Ns2[A, Boolean] with OneBoolean[Ns2[A, Boolean], Nothing] = ???
+
+  def apply(v: min)     : Ns2[A, B] = ???
+  def apply(v: max)     : Ns2[A, B] = ???
+  def apply(v: rand)    : Ns2[A, B] = ???
+  def apply(v: sample)  : Ns2[A, B] = ???
+
+  def apply(v: mins)    : Ns2[A, Seq[B]] = ???
+  def apply(v: maxs)    : Ns2[A, Seq[B]] = ???
+  def apply(v: distinct): Ns2[A, Seq[B]] = ???
+  def apply(v: rands)   : Ns2[A, Seq[B]] = ???
+  def apply(v: samples) : Ns2[A, Seq[B]] = ???
+
+  def apply(v: count)        : Ns2[A, Long] = ???
+  def apply(v: countDistinct): Ns2[A, Long] = ???
+  def apply(v: sum)          : Ns2[A, Double] = ???
+  def apply(v: avg)          : Ns2[A, Double] = ???
+  def apply(v: median)       : Ns2[A, Double] = ???
+  def apply(v: variance)     : Ns2[A, Double] = ???
+  def apply(v: stddev)       : Ns2[A, Double] = ???
 
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns2[A, B]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns3[A, B, a]                                    = ???
@@ -107,6 +146,25 @@ trait Molecule_3[Ns3[_,_,_], Ns4[_,_,_,_], A, B, C] extends NS {
   val txT_       : Ns3[A, B, Long   ] with OneLong   [Ns3[A, B, Long   ], Nothing] = ???
   val txAdded_   : Ns3[A, B, Boolean] with OneBoolean[Ns3[A, B, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns3[A, B, C] = ???
+  def apply(v: max)     : Ns3[A, B, C] = ???
+  def apply(v: rand)    : Ns3[A, B, C] = ???
+  def apply(v: sample)  : Ns3[A, B, C] = ???
+
+  def apply(v: mins)    : Ns3[A, B, Seq[C]] = ???
+  def apply(v: maxs)    : Ns3[A, B, Seq[C]] = ???
+  def apply(v: distinct): Ns3[A, B, Seq[C]] = ???
+  def apply(v: rands)   : Ns3[A, B, Seq[C]] = ???
+  def apply(v: samples) : Ns3[A, B, Seq[C]] = ???
+
+  def apply(v: count)        : Ns3[A, B, Long] = ???
+  def apply(v: countDistinct): Ns3[A, B, Long] = ???
+  def apply(v: sum)          : Ns3[A, B, Double] = ???
+  def apply(v: avg)          : Ns3[A, B, Double] = ???
+  def apply(v: median)       : Ns3[A, B, Double] = ???
+  def apply(v: variance)     : Ns3[A, B, Double] = ???
+  def apply(v: stddev)       : Ns3[A, B, Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns3 [A, B, C]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns4 [A, B, C, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_5 [Any, Any, A, B, C, a, b]                = ???
@@ -133,6 +191,25 @@ trait Molecule_4[Ns4[_,_,_,_], Ns5[_,_,_,_,_], A, B, C, D] extends NS {
   val txInstant_ : Ns4[A, B, C, Date   ] with OneDate   [Ns4[A, B, C, Date   ], Nothing] = ???
   val txT_       : Ns4[A, B, C, Long   ] with OneLong   [Ns4[A, B, C, Long   ], Nothing] = ???
   val txAdded_   : Ns4[A, B, C, Boolean] with OneBoolean[Ns4[A, B, C, Boolean], Nothing] = ???
+
+  def apply(v: min)     : Ns4[A, B, C, D] = ???
+  def apply(v: max)     : Ns4[A, B, C, D] = ???
+  def apply(v: rand)    : Ns4[A, B, C, D] = ???
+  def apply(v: sample)  : Ns4[A, B, C, D] = ???
+
+  def apply(v: mins)    : Ns4[A, B, C, Seq[D]] = ???
+  def apply(v: maxs)    : Ns4[A, B, C, Seq[D]] = ???
+  def apply(v: distinct): Ns4[A, B, C, Seq[D]] = ???
+  def apply(v: rands)   : Ns4[A, B, C, Seq[D]] = ???
+  def apply(v: samples) : Ns4[A, B, C, Seq[D]] = ???
+
+  def apply(v: count)        : Ns4[A, B, C, Long] = ???
+  def apply(v: countDistinct): Ns4[A, B, C, Long] = ???
+  def apply(v: sum)          : Ns4[A, B, C, Double] = ???
+  def apply(v: avg)          : Ns4[A, B, C, Double] = ???
+  def apply(v: median)       : Ns4[A, B, C, Double] = ???
+  def apply(v: variance)     : Ns4[A, B, C, Double] = ???
+  def apply(v: stddev)       : Ns4[A, B, C, Double] = ???
 
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns4 [A, B, C, D]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns5 [A, B, C, D, a]                                    = ???
@@ -161,6 +238,25 @@ trait Molecule_5[Ns5[_,_,_,_,_], Ns6[_,_,_,_,_,_], A, B, C, D, E] extends NS {
   val txT_       : Ns5[A, B, C, D, Long   ] with OneLong   [Ns5[A, B, C, D, Long   ], Nothing] = ???
   val txAdded_   : Ns5[A, B, C, D, Boolean] with OneBoolean[Ns5[A, B, C, D, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns5[A, B, C, D, E] = ???
+  def apply(v: max)     : Ns5[A, B, C, D, E] = ???
+  def apply(v: rand)    : Ns5[A, B, C, D, E] = ???
+  def apply(v: sample)  : Ns5[A, B, C, D, E] = ???
+
+  def apply(v: mins)    : Ns5[A, B, C, D, Seq[E]] = ???
+  def apply(v: maxs)    : Ns5[A, B, C, D, Seq[E]] = ???
+  def apply(v: distinct): Ns5[A, B, C, D, Seq[E]] = ???
+  def apply(v: rands)   : Ns5[A, B, C, D, Seq[E]] = ???
+  def apply(v: samples) : Ns5[A, B, C, D, Seq[E]] = ???
+
+  def apply(v: count)        : Ns5[A, B, C, D, Long] = ???
+  def apply(v: countDistinct): Ns5[A, B, C, D, Long] = ???
+  def apply(v: sum)          : Ns5[A, B, C, D, Double] = ???
+  def apply(v: avg)          : Ns5[A, B, C, D, Double] = ???
+  def apply(v: median)       : Ns5[A, B, C, D, Double] = ???
+  def apply(v: variance)     : Ns5[A, B, C, D, Double] = ???
+  def apply(v: stddev)       : Ns5[A, B, C, D, Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns5 [A, B, C, D, E]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns6 [A, B, C, D, E, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_7 [Any, Any, A, B, C, D, E, a, b]                = ???
@@ -187,6 +283,25 @@ trait Molecule_6[Ns6[_,_,_,_,_,_], Ns7[_,_,_,_,_,_,_], A, B, C, D, E, F] extends
   val txInstant_ : Ns6[A, B, C, D, E, Date   ] with OneDate   [Ns6[A, B, C, D, E, Date   ], Nothing] = ???
   val txT_       : Ns6[A, B, C, D, E, Long   ] with OneLong   [Ns6[A, B, C, D, E, Long   ], Nothing] = ???
   val txAdded_   : Ns6[A, B, C, D, E, Boolean] with OneBoolean[Ns6[A, B, C, D, E, Boolean], Nothing] = ???
+
+  def apply(v: min)     : Ns6[A, B, C, D, E, F] = ???
+  def apply(v: max)     : Ns6[A, B, C, D, E, F] = ???
+  def apply(v: rand)    : Ns6[A, B, C, D, E, F] = ???
+  def apply(v: sample)  : Ns6[A, B, C, D, E, F] = ???
+
+  def apply(v: mins)    : Ns6[A, B, C, D, E, Seq[F]] = ???
+  def apply(v: maxs)    : Ns6[A, B, C, D, E, Seq[F]] = ???
+  def apply(v: distinct): Ns6[A, B, C, D, E, Seq[F]] = ???
+  def apply(v: rands)   : Ns6[A, B, C, D, E, Seq[F]] = ???
+  def apply(v: samples) : Ns6[A, B, C, D, E, Seq[F]] = ???
+
+  def apply(v: count)        : Ns6[A, B, C, D, E, Long] = ???
+  def apply(v: countDistinct): Ns6[A, B, C, D, E, Long] = ???
+  def apply(v: sum)          : Ns6[A, B, C, D, E, Double] = ???
+  def apply(v: avg)          : Ns6[A, B, C, D, E, Double] = ???
+  def apply(v: median)       : Ns6[A, B, C, D, E, Double] = ???
+  def apply(v: variance)     : Ns6[A, B, C, D, E, Double] = ???
+  def apply(v: stddev)       : Ns6[A, B, C, D, E, Double] = ???
 
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns6 [A, B, C, D, E, F]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns7 [A, B, C, D, E, F, a]                                    = ???
@@ -215,6 +330,25 @@ trait Molecule_7[Ns7[_,_,_,_,_,_,_], Ns8[_,_,_,_,_,_,_,_], A, B, C, D, E, F, G] 
   val txT_       : Ns7[A, B, C, D, E, F, Long   ] with OneLong   [Ns7[A, B, C, D, E, F, Long   ], Nothing] = ???
   val txAdded_   : Ns7[A, B, C, D, E, F, Boolean] with OneBoolean[Ns7[A, B, C, D, E, F, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns7[A, B, C, D, E, F, G] = ???
+  def apply(v: max)     : Ns7[A, B, C, D, E, F, G] = ???
+  def apply(v: rand)    : Ns7[A, B, C, D, E, F, G] = ???
+  def apply(v: sample)  : Ns7[A, B, C, D, E, F, G] = ???
+
+  def apply(v: mins)    : Ns7[A, B, C, D, E, F, Seq[G]] = ???
+  def apply(v: maxs)    : Ns7[A, B, C, D, E, F, Seq[G]] = ???
+  def apply(v: distinct): Ns7[A, B, C, D, E, F, Seq[G]] = ???
+  def apply(v: rands)   : Ns7[A, B, C, D, E, F, Seq[G]] = ???
+  def apply(v: samples) : Ns7[A, B, C, D, E, F, Seq[G]] = ???
+
+  def apply(v: count)        : Ns7[A, B, C, D, E, F, Long] = ???
+  def apply(v: countDistinct): Ns7[A, B, C, D, E, F, Long] = ???
+  def apply(v: sum)          : Ns7[A, B, C, D, E, F, Double] = ???
+  def apply(v: avg)          : Ns7[A, B, C, D, E, F, Double] = ???
+  def apply(v: median)       : Ns7[A, B, C, D, E, F, Double] = ???
+  def apply(v: variance)     : Ns7[A, B, C, D, E, F, Double] = ???
+  def apply(v: stddev)       : Ns7[A, B, C, D, E, F, Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns7 [A, B, C, D, E, F, G]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns8 [A, B, C, D, E, F, G, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_9 [Any, Any, A, B, C, D, E, F, G, a, b]                = ???
@@ -241,6 +375,25 @@ trait Molecule_8[Ns8[_,_,_,_,_,_,_,_], Ns9[_,_,_,_,_,_,_,_,_], A, B, C, D, E, F,
   val txInstant_ : Ns8[A, B, C, D, E, F, G, Date   ] with OneDate   [Ns8[A, B, C, D, E, F, G, Date   ], Nothing] = ???
   val txT_       : Ns8[A, B, C, D, E, F, G, Long   ] with OneLong   [Ns8[A, B, C, D, E, F, G, Long   ], Nothing] = ???
   val txAdded_   : Ns8[A, B, C, D, E, F, G, Boolean] with OneBoolean[Ns8[A, B, C, D, E, F, G, Boolean], Nothing] = ???
+
+  def apply(v: min)     : Ns8[A, B, C, D, E, F, G, H] = ???
+  def apply(v: max)     : Ns8[A, B, C, D, E, F, G, H] = ???
+  def apply(v: rand)    : Ns8[A, B, C, D, E, F, G, H] = ???
+  def apply(v: sample)  : Ns8[A, B, C, D, E, F, G, H] = ???
+
+  def apply(v: mins)    : Ns8[A, B, C, D, E, F, G, Seq[H]] = ???
+  def apply(v: maxs)    : Ns8[A, B, C, D, E, F, G, Seq[H]] = ???
+  def apply(v: distinct): Ns8[A, B, C, D, E, F, G, Seq[H]] = ???
+  def apply(v: rands)   : Ns8[A, B, C, D, E, F, G, Seq[H]] = ???
+  def apply(v: samples) : Ns8[A, B, C, D, E, F, G, Seq[H]] = ???
+
+  def apply(v: count)        : Ns8[A, B, C, D, E, F, G, Long] = ???
+  def apply(v: countDistinct): Ns8[A, B, C, D, E, F, G, Long] = ???
+  def apply(v: sum)          : Ns8[A, B, C, D, E, F, G, Double] = ???
+  def apply(v: avg)          : Ns8[A, B, C, D, E, F, G, Double] = ???
+  def apply(v: median)       : Ns8[A, B, C, D, E, F, G, Double] = ???
+  def apply(v: variance)     : Ns8[A, B, C, D, E, F, G, Double] = ???
+  def apply(v: stddev)       : Ns8[A, B, C, D, E, F, G, Double] = ???
 
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns8 [A, B, C, D, E, F, G, H]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns9 [A, B, C, D, E, F, G, H, a]                                    = ???
@@ -269,6 +422,25 @@ trait Molecule_9[Ns9[_,_,_,_,_,_,_,_,_], Ns10[_,_,_,_,_,_,_,_,_,_], A, B, C, D, 
   val txT_       : Ns9[A, B, C, D, E, F, G, H, Long   ] with OneLong   [Ns9[A, B, C, D, E, F, G, H, Long   ], Nothing] = ???
   val txAdded_   : Ns9[A, B, C, D, E, F, G, H, Boolean] with OneBoolean[Ns9[A, B, C, D, E, F, G, H, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns9[A, B, C, D, E, F, G, H, I] = ???
+  def apply(v: max)     : Ns9[A, B, C, D, E, F, G, H, I] = ???
+  def apply(v: rand)    : Ns9[A, B, C, D, E, F, G, H, I] = ???
+  def apply(v: sample)  : Ns9[A, B, C, D, E, F, G, H, I] = ???
+
+  def apply(v: mins)    : Ns9[A, B, C, D, E, F, G, H, Seq[I]] = ???
+  def apply(v: maxs)    : Ns9[A, B, C, D, E, F, G, H, Seq[I]] = ???
+  def apply(v: distinct): Ns9[A, B, C, D, E, F, G, H, Seq[I]] = ???
+  def apply(v: rands)   : Ns9[A, B, C, D, E, F, G, H, Seq[I]] = ???
+  def apply(v: samples) : Ns9[A, B, C, D, E, F, G, H, Seq[I]] = ???
+
+  def apply(v: count)        : Ns9[A, B, C, D, E, F, G, H, Long] = ???
+  def apply(v: countDistinct): Ns9[A, B, C, D, E, F, G, H, Long] = ???
+  def apply(v: sum)          : Ns9[A, B, C, D, E, F, G, H, Double] = ???
+  def apply(v: avg)          : Ns9[A, B, C, D, E, F, G, H, Double] = ???
+  def apply(v: median)       : Ns9[A, B, C, D, E, F, G, H, Double] = ???
+  def apply(v: variance)     : Ns9[A, B, C, D, E, F, G, H, Double] = ???
+  def apply(v: stddev)       : Ns9[A, B, C, D, E, F, G, H, Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns9 [A, B, C, D, E, F, G, H, I]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns10[A, B, C, D, E, F, G, H, I, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_11[Any, Any, A, B, C, D, E, F, G, H, I, a, b]                = ???
@@ -295,6 +467,25 @@ trait Molecule_9[Ns9[_,_,_,_,_,_,_,_,_], Ns10[_,_,_,_,_,_,_,_,_,_], A, B, C, D, 
   val txInstant_ : Ns10[A, B, C, D, E, F, G, H, I, Date   ] with OneDate   [Ns10[A, B, C, D, E, F, G, H, I, Date   ], Nothing] = ???
   val txT_       : Ns10[A, B, C, D, E, F, G, H, I, Long   ] with OneLong   [Ns10[A, B, C, D, E, F, G, H, I, Long   ], Nothing] = ???
   val txAdded_   : Ns10[A, B, C, D, E, F, G, H, I, Boolean] with OneBoolean[Ns10[A, B, C, D, E, F, G, H, I, Boolean], Nothing] = ???
+
+    def apply(v: min)     : Ns10[A, B, C, D, E, F, G, H, I, J] = ???
+    def apply(v: max)     : Ns10[A, B, C, D, E, F, G, H, I, J] = ???
+    def apply(v: rand)    : Ns10[A, B, C, D, E, F, G, H, I, J] = ???
+    def apply(v: sample)  : Ns10[A, B, C, D, E, F, G, H, I, J] = ???
+  
+    def apply(v: mins)    : Ns10[A, B, C, D, E, F, G, H, I, Seq[J]] = ???
+    def apply(v: maxs)    : Ns10[A, B, C, D, E, F, G, H, I, Seq[J]] = ???
+    def apply(v: distinct): Ns10[A, B, C, D, E, F, G, H, I, Seq[J]] = ???
+    def apply(v: rands)   : Ns10[A, B, C, D, E, F, G, H, I, Seq[J]] = ???
+    def apply(v: samples) : Ns10[A, B, C, D, E, F, G, H, I, Seq[J]] = ???
+  
+    def apply(v: count)        : Ns10[A, B, C, D, E, F, G, H, I, Long] = ???
+    def apply(v: countDistinct): Ns10[A, B, C, D, E, F, G, H, I, Long] = ???
+    def apply(v: sum)          : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
+    def apply(v: avg)          : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
+    def apply(v: median)       : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
+    def apply(v: variance)     : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
+    def apply(v: stddev)       : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
 
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns10[A, B, C, D, E, F, G, H, I, J]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns11[A, B, C, D, E, F, G, H, I, J, a]                                    = ???
@@ -323,6 +514,25 @@ trait Molecule_11[Ns11[_,_,_,_,_,_,_,_,_,_,_], Ns12[_,_,_,_,_,_,_,_,_,_,_,_], A,
   val txT_       : Ns11[A, B, C, D, E, F, G, H, I, J, Long   ] with OneLong   [Ns11[A, B, C, D, E, F, G, H, I, J, Long   ], Nothing] = ???
   val txAdded_   : Ns11[A, B, C, D, E, F, G, H, I, J, Boolean] with OneBoolean[Ns11[A, B, C, D, E, F, G, H, I, J, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns11[A, B, C, D, E, F, G, H, I, J, K] = ???
+  def apply(v: max)     : Ns11[A, B, C, D, E, F, G, H, I, J, K] = ???
+  def apply(v: rand)    : Ns11[A, B, C, D, E, F, G, H, I, J, K] = ???
+  def apply(v: sample)  : Ns11[A, B, C, D, E, F, G, H, I, J, K] = ???
+
+  def apply(v: mins)    : Ns11[A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
+  def apply(v: maxs)    : Ns11[A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
+  def apply(v: distinct): Ns11[A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
+  def apply(v: rands)   : Ns11[A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
+  def apply(v: samples) : Ns11[A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
+
+  def apply(v: count)        : Ns11[A, B, C, D, E, F, G, H, I, J, Long] = ???
+  def apply(v: countDistinct): Ns11[A, B, C, D, E, F, G, H, I, J, Long] = ???
+  def apply(v: sum)          : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
+  def apply(v: avg)          : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
+  def apply(v: median)       : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
+  def apply(v: variance)     : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
+  def apply(v: stddev)       : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns11[A, B, C, D, E, F, G, H, I, J, K]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns12[A, B, C, D, E, F, G, H, I, J, K, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_13[Any, Any, A, B, C, D, E, F, G, H, I, J, K, a, b]                = ???
@@ -349,6 +559,25 @@ trait Molecule_12[Ns12[_,_,_,_,_,_,_,_,_,_,_,_], Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_]
   val txInstant_ : Ns12[A, B, C, D, E, F, G, H, I, J, K, Date   ] with OneDate   [Ns12[A, B, C, D, E, F, G, H, I, J, K, Date   ], Nothing] = ???
   val txT_       : Ns12[A, B, C, D, E, F, G, H, I, J, K, Long   ] with OneLong   [Ns12[A, B, C, D, E, F, G, H, I, J, K, Long   ], Nothing] = ???
   val txAdded_   : Ns12[A, B, C, D, E, F, G, H, I, J, K, Boolean] with OneBoolean[Ns12[A, B, C, D, E, F, G, H, I, J, K, Boolean], Nothing] = ???
+
+  def apply(v: min)     : Ns12[A, B, C, D, E, F, G, H, I, J, K, L] = ???
+  def apply(v: max)     : Ns12[A, B, C, D, E, F, G, H, I, J, K, L] = ???
+  def apply(v: rand)    : Ns12[A, B, C, D, E, F, G, H, I, J, K, L] = ???
+  def apply(v: sample)  : Ns12[A, B, C, D, E, F, G, H, I, J, K, L] = ???
+
+  def apply(v: mins)    : Ns12[A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
+  def apply(v: maxs)    : Ns12[A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
+  def apply(v: distinct): Ns12[A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
+  def apply(v: rands)   : Ns12[A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
+  def apply(v: samples) : Ns12[A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
+
+  def apply(v: count)        : Ns12[A, B, C, D, E, F, G, H, I, J, K, Long] = ???
+  def apply(v: countDistinct): Ns12[A, B, C, D, E, F, G, H, I, J, K, Long] = ???
+  def apply(v: sum)          : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
+  def apply(v: avg)          : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
+  def apply(v: median)       : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
+  def apply(v: variance)     : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
+  def apply(v: stddev)       : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
 
 
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns12[A, B, C, D, E, F, G, H, I, J, K, L]                                       = ???
@@ -378,6 +607,25 @@ trait Molecule_13[Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_], Ns14[_,_,_,_,_,_,_,_,_,_,_,_,
   val txT_       : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Long   ] with OneLong   [Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Long   ], Nothing] = ???
   val txAdded_   : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Boolean] with OneBoolean[Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, M] = ???
+  def apply(v: max)     : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, M] = ???
+  def apply(v: rand)    : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, M] = ???
+  def apply(v: sample)  : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, M] = ???
+
+  def apply(v: mins)    : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
+  def apply(v: maxs)    : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
+  def apply(v: distinct): Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
+  def apply(v: rands)   : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
+  def apply(v: samples) : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
+
+  def apply(v: count)        : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
+  def apply(v: countDistinct): Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
+  def apply(v: sum)          : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
+  def apply(v: avg)          : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
+  def apply(v: median)       : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
+  def apply(v: variance)     : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
+  def apply(v: stddev)       : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, M]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_15[Any, Any, A, B, C, D, E, F, G, H, I, J, K, L, M, a, b]                = ???
@@ -404,6 +652,25 @@ trait Molecule_14[Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns15[_,_,_,_,_,_,_,_,_,_,_,
   val txInstant_ : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Date   ] with OneDate   [Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Date   ], Nothing] = ???
   val txT_       : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Long   ] with OneLong   [Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Long   ], Nothing] = ???
   val txAdded_   : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Boolean] with OneBoolean[Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Boolean], Nothing] = ???
+
+  def apply(v: min)     : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = ???
+  def apply(v: max)     : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = ???
+  def apply(v: rand)    : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = ???
+  def apply(v: sample)  : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = ???
+
+  def apply(v: mins)    : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
+  def apply(v: maxs)    : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
+  def apply(v: distinct): Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
+  def apply(v: rands)   : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
+  def apply(v: samples) : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
+
+  def apply(v: count)        : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
+  def apply(v: countDistinct): Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
+  def apply(v: sum)          : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
+  def apply(v: avg)          : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
+  def apply(v: median)       : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
+  def apply(v: variance)     : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
+  def apply(v: stddev)       : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
 
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, N]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, a]                                    = ???
@@ -432,6 +699,25 @@ trait Molecule_15[Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns16[_,_,_,_,_,_,_,_,_,_,
   val txT_       : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long   ] with OneLong   [Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long   ], Nothing] = ???
   val txAdded_   : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Boolean] with OneBoolean[Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = ???
+  def apply(v: max)     : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = ???
+  def apply(v: rand)    : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = ???
+  def apply(v: sample)  : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = ???
+
+  def apply(v: mins)    : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
+  def apply(v: maxs)    : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
+  def apply(v: distinct): Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
+  def apply(v: rands)   : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
+  def apply(v: samples) : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
+
+  def apply(v: count)        : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
+  def apply(v: countDistinct): Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
+  def apply(v: sum)          : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
+  def apply(v: avg)          : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
+  def apply(v: median)       : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
+  def apply(v: variance)     : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
+  def apply(v: stddev)       : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
+
   def tx[ns0, ns1[_]]                                                  (m0: Molecule_0[ns0, ns1])                     : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]                                       = ???
   def tx[ns1[_], ns2[_,_], a]                                          (m1: Molecule_1[ns1, ns2, a])                  : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, a]                                    = ???
   def tx[ns2[_,_], ns3[_,_,_], a, b]                                   (m2: Molecule_2[ns2, ns3, a, b])               : Molecule_17[Any, Any, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, a, b]                = ???
@@ -459,6 +745,25 @@ trait Molecule_16[Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns17[_,_,_,_,_,_,_,_,_,
   val txT_       : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long   ] with OneLong   [Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long   ], Nothing] = ???
   val txAdded_   : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Boolean] with OneBoolean[Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = ???
+  def apply(v: max)     : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = ???
+  def apply(v: rand)    : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = ???
+  def apply(v: sample)  : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = ???
+
+  def apply(v: mins)    : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
+  def apply(v: maxs)    : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
+  def apply(v: distinct): Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
+  def apply(v: rands)   : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
+  def apply(v: samples) : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
+
+  def apply(v: count)        : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
+  def apply(v: countDistinct): Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
+  def apply(v: sum)          : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
+  def apply(v: avg)          : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
+  def apply(v: median)       : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
+  def apply(v: variance)     : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
+  def apply(v: stddev)       : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
+
   def tx[ns1, ns2]                  (m0: Molecule_0[Any, Any])                  : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]                                    = ???
   def tx[ns1, ns2, a]               (m1: Molecule_1[Any, Any, a])               : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, a]                                 = ???
   def tx[ns1, ns2, a, b]            (m2: Molecule_2[Any, Any, a, b])            : Molecule_18[Any, Any, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, a, b]             = ???
@@ -485,6 +790,25 @@ trait Molecule_17[Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns18[_,_,_,_,_,_,_,_,
   val txT_       : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long   ] with OneLong   [Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long   ], Nothing] = ???
   val txAdded_   : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Boolean] with OneBoolean[Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = ???
+  def apply(v: max)     : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = ???
+  def apply(v: rand)    : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = ???
+  def apply(v: sample)  : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = ???
+
+  def apply(v: mins)    : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
+  def apply(v: maxs)    : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
+  def apply(v: distinct): Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
+  def apply(v: rands)   : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
+  def apply(v: samples) : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
+
+  def apply(v: count)        : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
+  def apply(v: countDistinct): Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
+  def apply(v: sum)          : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
+  def apply(v: avg)          : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
+  def apply(v: median)       : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
+  def apply(v: variance)     : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
+  def apply(v: stddev)       : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
+
   def tx[ns1, ns2]               (m0: Molecule_0[Any, Any])               : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]                                 = ???
   def tx[ns1, ns2, a]            (m1: Molecule_1[Any, Any, a])            : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, a]                              = ???
   def tx[ns1, ns2, a, b]         (m2: Molecule_2[Any, Any, a, b])         : Molecule_19[Any, Any, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, a, b]          = ???
@@ -510,6 +834,25 @@ trait Molecule_18[Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns19[_,_,_,_,_,_,_,
   val txT_       : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long   ] with OneLong   [Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long   ], Nothing] = ???
   val txAdded_   : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Boolean] with OneBoolean[Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = ???
+  def apply(v: max)     : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = ???
+  def apply(v: rand)    : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = ???
+  def apply(v: sample)  : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = ???
+
+  def apply(v: mins)    : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
+  def apply(v: maxs)    : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
+  def apply(v: distinct): Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
+  def apply(v: rands)   : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
+  def apply(v: samples) : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
+
+  def apply(v: count)        : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
+  def apply(v: countDistinct): Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
+  def apply(v: sum)          : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
+  def apply(v: avg)          : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
+  def apply(v: median)       : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
+  def apply(v: variance)     : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
+  def apply(v: stddev)       : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
+
   def tx[ns1, ns2]            (m0: Molecule_0[Any, Any])            : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]                              = ???
   def tx[ns1, ns2, a]         (m1: Molecule_1[Any, Any, a])         : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, a]                           = ???
   def tx[ns1, ns2, a, b]      (m2: Molecule_2[Any, Any, a, b])      : Molecule_20[Any, Any, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, a, b]       = ???
@@ -534,6 +877,25 @@ trait Molecule_19[Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns20[_,_,_,_,_,_,
   val txT_       : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long   ] with OneLong   [Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long   ], Nothing] = ???
   val txAdded_   : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Boolean] with OneBoolean[Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = ???
+  def apply(v: max)     : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = ???
+  def apply(v: rand)    : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = ???
+  def apply(v: sample)  : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = ???
+
+  def apply(v: mins)    : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
+  def apply(v: maxs)    : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
+  def apply(v: distinct): Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
+  def apply(v: rands)   : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
+  def apply(v: samples) : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
+
+  def apply(v: count)        : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
+  def apply(v: countDistinct): Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
+  def apply(v: sum)          : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
+  def apply(v: avg)          : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
+  def apply(v: median)       : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
+  def apply(v: variance)     : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
+  def apply(v: stddev)       : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
+
   def tx[ns1, ns2]         (m0: Molecule_0[Any, Any])         : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]                           = ???
   def tx[ns1, ns2, a]      (m1: Molecule_1[Any, Any, a])      : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, a]                        = ???
   def tx[ns1, ns2, a, b]   (m2: Molecule_2[Any, Any, a, b])   : Molecule_21[Any, Any, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, a, b]    = ???
@@ -557,6 +919,25 @@ trait Molecule_20[Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns21[_,_,_,_,_,
   val txT_       : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long   ] with OneLong   [Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long   ], Nothing] = ???
   val txAdded_   : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Boolean] with OneBoolean[Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Boolean], Nothing] = ???
 
+  def apply(v: min)     : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = ???
+  def apply(v: max)     : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = ???
+  def apply(v: rand)    : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = ???
+  def apply(v: sample)  : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = ???
+
+  def apply(v: mins)    : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
+  def apply(v: maxs)    : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
+  def apply(v: distinct): Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
+  def apply(v: rands)   : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
+  def apply(v: samples) : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
+
+  def apply(v: count)        : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
+  def apply(v: countDistinct): Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
+  def apply(v: sum)          : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
+  def apply(v: avg)          : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
+  def apply(v: median)       : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
+  def apply(v: variance)     : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
+  def apply(v: stddev)       : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
+
   def tx[ns1, ns2]      (m0: Molecule_0[Any, Any])      : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]                        = ???
   def tx[ns1, ns2, a]   (m1: Molecule_1[Any, Any, a])   : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, a]                     = ???
   def tx[ns1, ns2, a, b](m2: Molecule_2[Any, Any, a, b]): Molecule_22[Any, Any, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, a, b] = ???
@@ -578,6 +959,25 @@ trait Molecule_21[Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns22[_,_,_,_,
   val txInstant_ : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Date   ] with OneDate   [Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Date   ], Nothing] = ???
   val txT_       : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long   ] with OneLong   [Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long   ], Nothing] = ???
   val txAdded_   : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Boolean] with OneBoolean[Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Boolean], Nothing] = ???
+
+  def apply(v: min)     : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = ???
+  def apply(v: max)     : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = ???
+  def apply(v: rand)    : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = ???
+  def apply(v: sample)  : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = ???
+
+  def apply(v: mins)    : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
+  def apply(v: maxs)    : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
+  def apply(v: distinct): Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
+  def apply(v: rands)   : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
+  def apply(v: samples) : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
+
+  def apply(v: count)        : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???
+  def apply(v: countDistinct): Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???
+  def apply(v: sum)          : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
+  def apply(v: avg)          : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
+  def apply(v: median)       : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
+  def apply(v: variance)     : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
+  def apply(v: stddev)       : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
 
   def tx[ns1, ns2]   (m0: Molecule_0[Any, Any])   : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]    = ???
   def tx[ns1, ns2, a](m1: Molecule_1[Any, Any, a]): Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, a] = ???

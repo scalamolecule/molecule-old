@@ -60,49 +60,9 @@ object schemaDSL {
 
     def apply(in: ?) : In = ???
 
-
     // Optional value (will return Option[T])
-//    def apply(m: maybe): Ns = ???
-
-    def apply(v: rand): Ns = ???
-    def apply(v: sample): Ns = ???
-
-
-//    def apply(v: max): Ns = ???
-//    def apply(v: min): Ns = ???
-
-    def max: Ns = ???
-    def min: Ns = ???
-
-    def max(i: Int): Ns = ???
-    def min(i: Int): Ns = ???
-
-
-
-//    def apply(v: count): Ns = ???
-
-//    def count: Ns = ???
-//    def countDistinct: Ns = ???
+    //    def apply(m: maybe): Ns = ???
   }
-
-//  trait Ordered[Ns, In, T] {
-//    def < (value: T) : Ns = ???
-//    def > (value: T) : Ns = ???
-//    def <= (value: T) : Ns = ???
-//    def >= (value: T) : Ns = ???
-//
-//    // Input
-//    def < (in: ?) : In = ???
-//    def > (in: ?) : In = ???
-//    def <= (in: ?) : In = ???
-//    def >= (in: ?) : In = ???
-//  }
-
-//  trait Number[Ns, In, T] extends Ordered[Ns, In, T] {
-//    def avg: Ns = ???
-//    def median: Ns = ???
-//    def stddev: Ns = ???
-//  }
 
 
   // One-cardinality

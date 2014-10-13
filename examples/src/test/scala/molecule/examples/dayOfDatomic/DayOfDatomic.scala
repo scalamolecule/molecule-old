@@ -472,70 +472,59 @@ class DayOfDatomic extends DayOfAtomicSpec {
       ("Eris", 1163.0)
     )
 
+    // Aggregated Attributes ..........................
+
+    // Maximum value(s)
+    Obj.meanRadius(max).get.head === 696000.0
+    Obj.meanRadius(max(3)).get.head === List(1, 2, 3)
+
+    // Minimum value(s)
+    Obj.meanRadius(min).get.head === 1163.0
+    Obj.meanRadius(min(3)).get.head === List(1, 2, 3)
+
+    // Random value(s) - duplicates possible
+    Obj.meanRadius(rand).get.head === 1163.0
+    Obj.meanRadius(rand(5)).get.head === List(1, 2, 3, 4, 5)
+
+    // Sample value(s) - no duplicates
+    Obj.meanRadius(sample).get.head === 1163.0
+    Obj.meanRadius(sample(5)).get.head === List(1, 2, 3, 4, 5)
 
 
-    // Aggregates Returning a Single Value ..........................
+    // Aggregate Calculations .............................
 
-    // How many objects
+    // Count
+    Obj.name(count).get.head === 17
+    // (or)
     Obj.name.size === 17
-    Obj.name_.count.name === 17
 
-    // Largest radius
-    Obj.meanRadius(max).name === 696000.0
-    Obj.meanRadius_.max.name === 696000.0
+    // Count distinct
+    Obj.name(countDistinct).get.head === 17
 
-    // Smallest radius
-    Obj.meanRadius(min).name === 1163.0
-    Obj.meanRadius_.min.name === 1163.0
+    // Sum
+    Obj.meanRadius(sum).get.head === 696000.0
 
-    // Average radius
-    Obj.meanRadius_.avg.name === 696000.0
+    // Average
+    Obj.meanRadius(avg).get.head === 696000.0
 
-    // Median radius
-    Obj.meanRadius_.median.name === 696000.0
+    // Median
+    Obj.meanRadius(median).get.head === 696000.0
 
     // Standard deviation
-    Obj.meanRadius_.stddev === 696000.0
-
-    // random solar system object
-    Obj.name(rand) === 696000.0
+    Obj.meanRadius(stddev).get.head === 696000.0
 
 
-    // Aggregates Returning Collections .............................
-
-    // Smallest 3
-    Obj.meanRadius(min(3)) === List(1, 2, 3)
-    Obj.meanRadius_.min(3) === List(1, 2, 3)
-    Obj.meanRadius.get.sorted.take(3) === List(1, 2, 3)
-
-    // Largest 3
-    Obj.meanRadius(max(3)) === List(1, 2, 3)
-    Obj.meanRadius_.max(3) === List(1, 2, 3)
-    Obj.meanRadius.get.sorted.reverse.take(3) === List(1, 2, 3)
-
-    // 5 random (duplicates possible)
-    Obj.meanRadius_.rand(5) === List(1, 2, 3, 4, 5)
-
-    // 5 samples (no duplicates)
-    Obj.meanRadius_.sample(5) === List(1, 2, 3, 4, 5)
+    // Schema aggregations .............................
+    import molecule.schemas.Db
 
     // What is the average length of a schema name?
-    Obj.a_.count_.avg
-    Obj.a.count.avg
-    Obj.a.length.avg.get
-    Obj.a[count => avg].get
-    Obj.a.apply(count.avg).get
-    Obj.a.apply(count).get
-    Obj.a.apply(avg.apply(count)).get
-    //      m(e.ident.name(count)).avg
+    Db.a(avg(count)).get.head === 5.1
 
-    List(1, 2, 3).
-
-      // ...and the mode(s) ?
-      m(e.ident.name(count)).modes
+    // Todo Custom aggregates
+    // ...and the mode(s) -
 
     // How many attributes and value types does this; schema use ?
-    m(e(count).ident(countDistinct))
+    Db.e(count).valueType(countDistinct).tpls.head === (3, 2)
   }
 
 

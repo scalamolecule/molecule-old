@@ -163,7 +163,8 @@ object BuildMolecule {
   // Molecule implementations
 
   def from0attr[Ns1: c.WeakTypeTag, Ns2[_]]
-  (c: Context)(dsl: c.Expr[Molecule_0[Ns1, Ns2]])(implicit ev1: c.WeakTypeTag[Ns2[_]])
+  (c: Context)(dsl: c.Expr[Molecule_0[Ns1, Ns2]])
+    (implicit ev1: c.WeakTypeTag[Ns2[_]])
   : c.Expr[Molecule0] =
     build(c).from0attr(dsl)
 

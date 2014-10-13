@@ -157,38 +157,56 @@ package object molecule {
   object maybe extends maybe
 
 
-  // Aggregates
+  // Aggregates ==========================================================
+
+  // Aggregate attribute (singular/multiple)
+
+  trait max
+  private[molecule] trait maxs
+  object max extends max { def apply(i: Int): maxs = ???}
+
+  trait min
+  private[molecule] trait mins
+  object min extends min {def apply(i: Int): mins = ???}
+
+  trait distinct
+  object distinct extends distinct
+
+  trait rand
+  private[molecule] trait rands
+  object rand extends rand { def apply(i: Int): rands = ???}
+
+  trait sample
+  private[molecule] trait samples
+  object sample extends sample { def apply(i: Int): samples = ???}
+
+
+  // Aggregate calculation
 
   trait aggregate[A] {
-//    def apply(a: aggregate): A = ???
+    def apply[B](a: aggregate[B]): A = ???
   }
 
   trait count extends aggregate[count]
   object count extends count
 
-  trait countDistinct
+  trait countDistinct extends aggregate[countDistinct]
   object countDistinct extends countDistinct
 
-  trait max
-  object max extends max { def apply(i: Int): max = ???}
-
-  trait min
-  object min extends min {def apply(i: Int): min = ???}
+  trait sum extends aggregate[sum]
+  object sum extends sum
 
   trait avg extends aggregate[avg]
   object avg extends avg
 
-  trait median
+  trait median extends aggregate[median]
   object median extends median
 
-  trait stddev
+  trait variance extends aggregate[variance]
+  object variance extends variance
+
+  trait stddev extends aggregate[stddev]
   object stddev extends stddev
-
-  trait rand
-  object rand extends rand { def apply(i: Int): rand = ???}
-
-  trait sample
-  object sample extends sample { def apply(i: Int): sample = ???}
 
 //  case class contains[T](value: T)
 //  case class oldNew[T](from: T, to: T)
