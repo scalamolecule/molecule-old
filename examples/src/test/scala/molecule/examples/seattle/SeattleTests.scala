@@ -14,6 +14,8 @@ class SeattleTests extends SeattleSpec {
 
   "A first query" >> {
 
+
+
     // A Community-name molecule
     val communities = m(Community.name)
 
@@ -196,7 +198,7 @@ class SeattleTests extends SeattleSpec {
     val beforeC = List("All About South Park", "Ballard Neighbor Connection", "Ballard Blog")
 
     m(Community.name < "C").take(3) === beforeC
-    Community.name.<("C").take(3) === beforeC
+    Community.name.<("C").url.take(3) === beforeC
 
     val communitiesBefore = m(Community.name < ?)
     communitiesBefore("C").take(3) === beforeC

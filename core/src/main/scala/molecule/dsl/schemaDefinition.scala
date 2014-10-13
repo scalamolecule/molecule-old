@@ -21,60 +21,69 @@ object schemaDefinition {
   trait HyperEdge
 
 
-  private[molecule] sealed trait scalarAttr[T] {self: T =>
-    def doc(s: String) = self
-    lazy val indexed   = self
-    lazy val noHistory = self
+  private[molecule] sealed trait scalarAttr[T] {
+    def doc(s: String): T = ???
+    val indexed  : T = ???
+    val noHistory: T = ???
   }
 
 
   // String
   object oneString extends oneString
   trait oneString extends scalarAttr[oneString] {
-    lazy val fullTextSearch = this
-    lazy val uniqueValue    = this
-    lazy val uniqueIdentity = this
+    val fullTextSearch: oneString = ???
+    val uniqueValue   : oneString = ???
+    val uniqueIdentity: oneString = ???
   }
   object manyString extends manyString
   trait manyString extends scalarAttr[manyString] {
-    lazy val fullTextSearch = this
+    val fullTextSearch: manyString = ???
   }
 
   // Todo: Specialized attributes with constraints
   object oneEmail extends oneEmail
-  trait oneEmail extends scalarAttr[oneEmail] {
-    lazy val fullTextSearch = this
-    lazy val uniqueValue    = this
-    lazy val uniqueIdentity = this
+  trait oneEmail extends oneString
+
+  // Number .....................
+  trait number[T] extends scalarAttr[T] {
+    // One by one
+    val count   : T = ???
+    val avg     : T = ???
+    val median  : T = ???
+    val variance: T = ???
+    val stddev  : T = ???
+
+    // All
+    val aggregates: T = ???
   }
 
   // Int
   object oneInt extends oneInt
-  trait oneInt extends scalarAttr[oneInt]
+  trait oneInt extends number[oneInt] with scalarAttr[oneInt]
 
   object manyInt extends manyInt
-  trait manyInt extends scalarAttr[manyInt]
+  trait manyInt extends number[manyInt] with scalarAttr[manyInt]
 
   // Long
   object oneLong extends oneLong
-  trait oneLong extends scalarAttr[oneLong]
+  trait oneLong extends number[oneLong] with scalarAttr[oneLong]
 
   object manyLong extends manyLong
-  trait manyLong extends scalarAttr[manyLong]
+  trait manyLong extends number[manyLong] with scalarAttr[manyLong]
 
   // Float
   object oneFloat extends oneFloat
-  trait oneFloat extends scalarAttr[oneFloat]
+  trait oneFloat extends number[oneFloat] with scalarAttr[oneFloat]
 
   object manyFloat extends manyFloat
-  trait manyFloat extends scalarAttr[manyFloat]
+  trait manyFloat extends number[manyFloat] with scalarAttr[manyFloat]
 
   // Double
   object oneDouble extends oneDouble
-  trait oneDouble extends scalarAttr[oneDouble]
+  trait oneDouble extends number[oneDouble] with scalarAttr[oneDouble]
 
   object manyDouble extends manyDouble
-  trait manyDouble extends scalarAttr[manyDouble]
+  trait manyDouble extends number[manyDouble] with scalarAttr[manyDouble]
 
   // Boolean
   object oneBoolean extends oneBoolean

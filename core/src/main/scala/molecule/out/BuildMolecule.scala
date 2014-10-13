@@ -6,6 +6,7 @@ import molecule.ops.TreeOps
 import molecule.transform._
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
+import scala.language.higherKinds
 
 trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
@@ -155,123 +156,146 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 //  }
 }
 
+
 object BuildMolecule {
   def build(c0: Context) = new {val c: c0.type = c0} with BuildMolecule[c0.type]
 
   // Molecule implementations
 
-  def from0attr
-  (c: Context)(dsl: c.Expr[Molecule_0])
+  def from0attr[Ns1: c.WeakTypeTag, Ns2[_]]
+  (c: Context)(dsl: c.Expr[Molecule_0[Ns1, Ns2]])(implicit ev1: c.WeakTypeTag[Ns2[_]])
   : c.Expr[Molecule0] =
     build(c).from0attr(dsl)
 
-  def from1attr[A: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_1[A]])
+  def from1attr[Ns1[_],  Ns2[_, _], A: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_1[Ns1, Ns2, A]])
+    (implicit ev1: c.WeakTypeTag[Ns1[_]], ev2: c.WeakTypeTag[Ns2[_,_]])
   : c.Expr[Molecule1[A]] =
     build(c).from1attr(dsl, c.weakTypeOf[A])
 
-  def from2attr[A: c.WeakTypeTag, B: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_2[A, B]])
+  def from2attr[Ns2[_,_], Ns3[_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_2[Ns2, Ns3, A, B]])
+    (implicit ev1: c.WeakTypeTag[Ns2[_,_]], ev2: c.WeakTypeTag[Ns3[_,_,_]])
   : c.Expr[Molecule2[A, B]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B])
 
-  def from3attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_3[A, B, C]])
+  def from3attr[Ns3[_,_,_], Ns4[_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_3[Ns3, Ns4, A, B, C]])
+    (implicit ev1: c.WeakTypeTag[Ns3[_,_,_]], ev2: c.WeakTypeTag[Ns4[_,_,_,_]])
   : c.Expr[Molecule3[A, B, C]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C])
 
-  def from4attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_4[A, B, C, D]])
+  def from4attr[Ns4[_,_,_,_], Ns5[_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_4[Ns4, Ns5, A, B, C, D]])
+    (implicit ev1: c.WeakTypeTag[Ns4[_,_,_,_]], ev2: c.WeakTypeTag[Ns5[_,_,_,_,_]])
   : c.Expr[Molecule4[A, B, C, D]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D])
 
-  def from5attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_5[A, B, C, D, E]])
+  def from5attr[Ns5[_,_,_,_,_], Ns6[_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_5[Ns5, Ns6, A, B, C, D, E]])
+    (implicit ev1: c.WeakTypeTag[Ns5[_,_,_,_,_]], ev2: c.WeakTypeTag[Ns6[_,_,_,_,_,_]])
   : c.Expr[Molecule5[A, B, C, D, E]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E])
 
-  def from6attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_6[A, B, C, D, E, F]])
+  def from6attr[Ns6[_,_,_,_,_,_], Ns7[_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_6[Ns6, Ns7, A, B, C, D, E, F]])
+    (implicit ev1: c.WeakTypeTag[Ns6[_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns7[_,_,_,_,_,_,_]])
   : c.Expr[Molecule6[A, B, C, D, E, F]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F])
 
-  def from7attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_7[A, B, C, D, E, F, G]])
+  def from7attr[Ns7[_,_,_,_,_,_,_], Ns8[_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_7[Ns7, Ns8, A, B, C, D, E, F, G]])
+    (implicit ev1: c.WeakTypeTag[Ns7[_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns8[_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule7[A, B, C, D, E, F, G]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G])
 
-  def from8attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_8[A, B, C, D, E, F, G, H]])
+  def from8attr[Ns8[_,_,_,_,_,_,_,_], Ns9[_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_8[Ns8, Ns9, A, B, C, D, E, F, G, H]])
+    (implicit ev1: c.WeakTypeTag[Ns8[_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns9[_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule8[A, B, C, D, E, F, G, H]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H])
 
-  def from9attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_9[A, B, C, D, E, F, G, H, I]])
+  def from9attr[Ns9[_,_,_,_,_,_,_,_,_], Ns10[_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_9[Ns9, Ns10, A, B, C, D, E, F, G, H, I]])
+    (implicit ev1: c.WeakTypeTag[Ns9[_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns10[_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule9[A, B, C, D, E, F, G, H, I]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I])
 
-  def from10attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_10[A, B, C, D, E, F, G, H, I, J]])
+  def from10attr[Ns10[_,_,_,_,_,_,_,_,_,_], Ns11[_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_10[Ns10, Ns11, A, B, C, D, E, F, G, H, I, J]])
+    (implicit ev1: c.WeakTypeTag[Ns10[_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns11[_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule10[A, B, C, D, E, F, G, H, I, J]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J])
 
-  def from11attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_11[A, B, C, D, E, F, G, H, I, J, K]])
+  def from11attr[Ns11[_,_,_,_,_,_,_,_,_,_,_], Ns12[_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_11[Ns11, Ns12, A, B, C, D, E, F, G, H, I, J, K]])
+    (implicit ev1: c.WeakTypeTag[Ns11[_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns12[_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule11[A, B, C, D, E, F, G, H, I, J, K]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K])
 
-  def from12attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_12[A, B, C, D, E, F, G, H, I, J, K, L]])
+  def from12attr[Ns12[_,_,_,_,_,_,_,_,_,_,_,_], Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_12[Ns12, Ns13, A, B, C, D, E, F, G, H, I, J, K, L]])
+    (implicit ev1: c.WeakTypeTag[Ns12[_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule12[A, B, C, D, E, F, G, H, I, J, K, L]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L])
 
-  def from13attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_13[A, B, C, D, E, F, G, H, I, J, K, L, M]])
+  def from13attr[Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_], Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_13[Ns13, Ns14, A, B, C, D, E, F, G, H, I, J, K, L, M]])
+    (implicit ev1: c.WeakTypeTag[Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M])
 
-  def from14attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_14[A, B, C, D, E, F, G, H, I, J, K, L, M, N]])
+  def from14attr[Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_14[Ns14, Ns15, A, B, C, D, E, F, G, H, I, J, K, L, M, N]])
+    (implicit ev1: c.WeakTypeTag[Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N])
 
-  def from15attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]])
+  def from15attr[Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_15[Ns15, Ns16, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]])
+    (implicit ev1: c.WeakTypeTag[Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O])
 
-  def from16attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]])
+  def from16attr[Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_16[Ns16, Ns17, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]])
+    (implicit ev1: c.WeakTypeTag[Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P])
 
-  def from17attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]])
+  def from17attr[Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_17[Ns17, Ns18, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]])
+    (implicit ev1: c.WeakTypeTag[Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P], c.weakTypeOf[Q])
 
-  def from18attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]])
+  def from18attr[Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_18[Ns18, Ns19, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]])
+    (implicit ev1: c.WeakTypeTag[Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P], c.weakTypeOf[Q], c.weakTypeOf[R])
 
-  def from19attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]])
+  def from19attr[Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_19[Ns19, Ns20, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]])
+    (implicit ev1: c.WeakTypeTag[Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P], c.weakTypeOf[Q], c.weakTypeOf[R], c.weakTypeOf[S])
 
-  def from20attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag, T: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]])
+  def from20attr[Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag, T: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_20[Ns20, Ns21, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]])
+    (implicit ev1: c.WeakTypeTag[Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P], c.weakTypeOf[Q], c.weakTypeOf[R], c.weakTypeOf[S], c.weakTypeOf[T])
 
-  def from21attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag, T: c.WeakTypeTag, U: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]])
+  def from21attr[Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag, T: c.WeakTypeTag, U: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_21[Ns21, Ns22, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]])
+    (implicit ev1: c.WeakTypeTag[Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]], ev2: c.WeakTypeTag[Ns22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P], c.weakTypeOf[Q], c.weakTypeOf[R], c.weakTypeOf[S], c.weakTypeOf[T], c.weakTypeOf[U])
 
-  def from22attr[A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag, T: c.WeakTypeTag, U: c.WeakTypeTag, V: c.WeakTypeTag]
-  (c: Context)(dsl: c.Expr[Molecule_22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]])
+  def from22attr[Ns22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Nothing, A: c.WeakTypeTag, B: c.WeakTypeTag, C: c.WeakTypeTag, D: c.WeakTypeTag, E: c.WeakTypeTag, F: c.WeakTypeTag, G: c.WeakTypeTag, H: c.WeakTypeTag, I: c.WeakTypeTag, J: c.WeakTypeTag, K: c.WeakTypeTag, L: c.WeakTypeTag, M: c.WeakTypeTag, N: c.WeakTypeTag, O: c.WeakTypeTag, P: c.WeakTypeTag, Q: c.WeakTypeTag, R: c.WeakTypeTag, S: c.WeakTypeTag, T: c.WeakTypeTag, U: c.WeakTypeTag, V: c.WeakTypeTag]
+  (c: Context)(dsl: c.Expr[Molecule_22[Ns22, Nothing, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]])
+    (implicit ev1: c.WeakTypeTag[Ns22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]])
   : c.Expr[Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]] =
     build(c).fromXattrs(dsl, c.weakTypeOf[A], c.weakTypeOf[B], c.weakTypeOf[C], c.weakTypeOf[D], c.weakTypeOf[E], c.weakTypeOf[F], c.weakTypeOf[G], c.weakTypeOf[H], c.weakTypeOf[I], c.weakTypeOf[J], c.weakTypeOf[K], c.weakTypeOf[L], c.weakTypeOf[M], c.weakTypeOf[N], c.weakTypeOf[O], c.weakTypeOf[P], c.weakTypeOf[Q], c.weakTypeOf[R], c.weakTypeOf[S], c.weakTypeOf[T], c.weakTypeOf[U], c.weakTypeOf[V])
 

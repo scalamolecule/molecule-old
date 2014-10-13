@@ -1,42 +1,41 @@
 
 import java.net.URI
 import java.util.{Date, UUID}
-
 import datomic._
 import molecule.ast.model._
 import molecule.in._
 import molecule.out._
-
 import scala.language.experimental.macros
 import scala.language.implicitConversions
+import scala.language.higherKinds
 
 package object molecule {
 
-  // Molecules
+  // Generic interfaces
 
-  implicit def m(dsl: Molecule_0): Molecule0 = macro BuildMolecule.from0attr
-  implicit def m[A](dsl: Molecule_1[A]): Molecule1[A] = macro BuildMolecule.from1attr[A]
-  implicit def m[A, B](dsl: Molecule_2[A, B]): Molecule2[A, B] = macro BuildMolecule.from2attr[A, B]
-  implicit def m[A, B, C](dsl: Molecule_3[A, B, C]): Molecule3[A, B, C] = macro BuildMolecule.from3attr[A, B, C]
-  implicit def m[A, B, C, D](dsl: Molecule_4[A, B, C, D]): Molecule4[A, B, C, D] = macro BuildMolecule.from4attr[A, B, C, D]
-  implicit def m[A, B, C, D, E](dsl: Molecule_5[A, B, C, D, E]): Molecule5[A, B, C, D, E] = macro BuildMolecule.from5attr[A, B, C, D, E]
-  implicit def m[A, B, C, D, E, F](dsl: Molecule_6[A, B, C, D, E, F]): Molecule6[A, B, C, D, E, F] = macro BuildMolecule.from6attr[A, B, C, D, E, F]
-  implicit def m[A, B, C, D, E, F, G](dsl: Molecule_7[A, B, C, D, E, F, G]): Molecule7[A, B, C, D, E, F, G] = macro BuildMolecule.from7attr[A, B, C, D, E, F, G]
-  implicit def m[A, B, C, D, E, F, G, H](dsl: Molecule_8[A, B, C, D, E, F, G, H]): Molecule8[A, B, C, D, E, F, G, H] = macro BuildMolecule.from8attr[A, B, C, D, E, F, G, H]
-  implicit def m[A, B, C, D, E, F, G, H, I](dsl: Molecule_9[A, B, C, D, E, F, G, H, I]): Molecule9[A, B, C, D, E, F, G, H, I] = macro BuildMolecule.from9attr[A, B, C, D, E, F, G, H, I]
-  implicit def m[A, B, C, D, E, F, G, H, I, J](dsl: Molecule_10[A, B, C, D, E, F, G, H, I, J]): Molecule10[A, B, C, D, E, F, G, H, I, J] = macro BuildMolecule.from10attr[A, B, C, D, E, F, G, H, I, J]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K](dsl: Molecule_11[A, B, C, D, E, F, G, H, I, J, K]): Molecule11[A, B, C, D, E, F, G, H, I, J, K] = macro BuildMolecule.from11attr[A, B, C, D, E, F, G, H, I, J, K]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L](dsl: Molecule_12[A, B, C, D, E, F, G, H, I, J, K, L]): Molecule12[A, B, C, D, E, F, G, H, I, J, K, L] = macro BuildMolecule.from12attr[A, B, C, D, E, F, G, H, I, J, K, L]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M](dsl: Molecule_13[A, B, C, D, E, F, G, H, I, J, K, L, M]): Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M] = macro BuildMolecule.from13attr[A, B, C, D, E, F, G, H, I, J, K, L, M]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N](dsl: Molecule_14[A, B, C, D, E, F, G, H, I, J, K, L, M, N]): Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = macro BuildMolecule.from14attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](dsl: Molecule_15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]): Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = macro BuildMolecule.from15attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](dsl: Molecule_16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]): Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = macro BuildMolecule.from16attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](dsl: Molecule_17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]): Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = macro BuildMolecule.from17attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](dsl: Molecule_18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]): Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = macro BuildMolecule.from18attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](dsl: Molecule_19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]): Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = macro BuildMolecule.from19attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](dsl: Molecule_20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]): Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = macro BuildMolecule.from20attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](dsl: Molecule_21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]): Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = macro BuildMolecule.from21attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]
-  implicit def m[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](dsl: Molecule_22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]): Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = macro BuildMolecule.from22attr[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]
+  implicit def m[Ns0, Ns1[_]](dsl: Molecule_0[Ns0, Ns1]): Molecule0 = macro BuildMolecule.from0attr[Ns0, Ns1]
+  implicit def m[Ns1[_], Ns2[_,_], A](dsl: Molecule_1[Ns1, Ns2, A]): Molecule1[A] = macro BuildMolecule.from1attr[Ns1, Ns2, A]
+  implicit def m[Ns2[_,_], Ns3[_,_,_], A, B](dsl: Molecule_2[Ns2, Ns3, A, B]): Molecule2[A, B] = macro BuildMolecule.from2attr[Ns2, Ns3, A, B]
+  implicit def m[Ns3[_,_,_], Ns4[_,_,_,_], A, B, C](dsl: Molecule_3[Ns3, Ns4, A, B, C]): Molecule3[A, B, C] = macro BuildMolecule.from3attr[Ns3, Ns4, A, B, C]
+  implicit def m[Ns4[_,_,_,_], Ns5[_,_,_,_,_], A, B, C, D](dsl: Molecule_4[Ns4, Ns5, A, B, C, D]): Molecule4[A, B, C, D] = macro BuildMolecule.from4attr[Ns4, Ns5, A, B, C, D]
+  implicit def m[Ns5[_,_,_,_,_], Ns6[_,_,_,_,_,_], A, B, C, D, E](dsl: Molecule_5[Ns5, Ns6, A, B, C, D, E]): Molecule5[A, B, C, D, E] = macro BuildMolecule.from5attr[Ns5, Ns6, A, B, C, D, E]
+  implicit def m[Ns6[_,_,_,_,_,_], Ns7[_,_,_,_,_,_,_], A, B, C, D, E, F](dsl: Molecule_6[Ns6, Ns7, A, B, C, D, E, F]): Molecule6[A, B, C, D, E, F] = macro BuildMolecule.from6attr[Ns6, Ns7, A, B, C, D, E, F]
+  implicit def m[Ns7[_,_,_,_,_,_,_], Ns8[_,_,_,_,_,_,_,_], A, B, C, D, E, F, G](dsl: Molecule_7[Ns7, Ns8, A, B, C, D, E, F, G]): Molecule7[A, B, C, D, E, F, G] = macro BuildMolecule.from7attr[Ns7, Ns8, A, B, C, D, E, F, G]
+  implicit def m[Ns8[_,_,_,_,_,_,_,_], Ns9[_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H](dsl: Molecule_8[Ns8, Ns9, A, B, C, D, E, F, G, H]): Molecule8[A, B, C, D, E, F, G, H] = macro BuildMolecule.from8attr[Ns8, Ns9, A, B, C, D, E, F, G, H]
+  implicit def m[Ns9[_,_,_,_,_,_,_,_,_], Ns10[_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I](dsl: Molecule_9[Ns9, Ns10, A, B, C, D, E, F, G, H, I]): Molecule9[A, B, C, D, E, F, G, H, I] = macro BuildMolecule.from9attr[Ns9, Ns10, A, B, C, D, E, F, G, H, I]
+  implicit def m[Ns10[_,_,_,_,_,_,_,_,_,_], Ns11[_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J](dsl: Molecule_10[Ns10, Ns11, A, B, C, D, E, F, G, H, I, J]): Molecule10[A, B, C, D, E, F, G, H, I, J] = macro BuildMolecule.from10attr[Ns10, Ns11, A, B, C, D, E, F, G, H, I, J]
+  implicit def m[Ns11[_,_,_,_,_,_,_,_,_,_,_], Ns12[_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K](dsl: Molecule_11[Ns11, Ns12, A, B, C, D, E, F, G, H, I, J, K]): Molecule11[A, B, C, D, E, F, G, H, I, J, K] = macro BuildMolecule.from11attr[Ns11, Ns12, A, B, C, D, E, F, G, H, I, J, K]
+  implicit def m[Ns12[_,_,_,_,_,_,_,_,_,_,_,_], Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L](dsl: Molecule_12[Ns12, Ns13, A, B, C, D, E, F, G, H, I, J, K, L]): Molecule12[A, B, C, D, E, F, G, H, I, J, K, L] = macro BuildMolecule.from12attr[Ns12, Ns13, A, B, C, D, E, F, G, H, I, J, K, L]
+  implicit def m[Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_], Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M](dsl: Molecule_13[Ns13, Ns14, A, B, C, D, E, F, G, H, I, J, K, L, M]): Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M] = macro BuildMolecule.from13attr[Ns13, Ns14, A, B, C, D, E, F, G, H, I, J, K, L, M]
+  implicit def m[Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N](dsl: Molecule_14[Ns14, Ns15, A, B, C, D, E, F, G, H, I, J, K, L, M, N]): Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = macro BuildMolecule.from14attr[Ns14, Ns15, A, B, C, D, E, F, G, H, I, J, K, L, M, N]
+  implicit def m[Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](dsl: Molecule_15[Ns15, Ns16, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]): Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = macro BuildMolecule.from15attr[Ns15, Ns16, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]
+  implicit def m[Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](dsl: Molecule_16[Ns16, Ns17, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]): Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = macro BuildMolecule.from16attr[Ns16, Ns17, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]
+  implicit def m[Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](dsl: Molecule_17[Ns17, Ns18, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]): Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = macro BuildMolecule.from17attr[Ns17, Ns18, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]
+  implicit def m[Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](dsl: Molecule_18[Ns18, Ns19, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]): Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = macro BuildMolecule.from18attr[Ns18, Ns19, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]
+  implicit def m[Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](dsl: Molecule_19[Ns19, Ns20, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]): Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = macro BuildMolecule.from19attr[Ns19, Ns20, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]
+  implicit def m[Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](dsl: Molecule_20[Ns20, Ns21, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]): Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = macro BuildMolecule.from20attr[Ns20, Ns21, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]
+  implicit def m[Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](dsl: Molecule_21[Ns21, Ns22, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]): Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = macro BuildMolecule.from21attr[Ns21, Ns22, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]
+  implicit def m[Ns22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Nothing, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](dsl: Molecule_22[Ns22, Nothing, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]): Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = macro BuildMolecule.from22attr[Ns22, Nothing, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]
 
 
   // Input molecules awaiting 1 input
@@ -142,7 +141,7 @@ package object molecule {
   implicit def uuidSet2Model   (set: Set[UUID])    = TermValue(set)
   implicit def uriSet2Model    (set: Set[URI])     = TermValue(set)
 
-  implicit def contains2Model[T](c: contains[T]) = TermValue(c.value)
+//  implicit def contains2Model[T](c: contains[T]) = TermValue(c.value)
   implicit def tuple2Model[A, B](tpl: (A, B)) = TermValue(tpl)
 
   // Entity api
@@ -157,7 +156,14 @@ package object molecule {
   trait maybe
   object maybe extends maybe
 
-  trait count
+
+  // Aggregates
+
+  trait aggregate[A] {
+//    def apply(a: aggregate): A = ???
+  }
+
+  trait count extends aggregate[count]
   object count extends count
 
   trait countDistinct
@@ -169,7 +175,7 @@ package object molecule {
   trait min
   object min extends min {def apply(i: Int): min = ???}
 
-  trait avg
+  trait avg extends aggregate[avg]
   object avg extends avg
 
   trait median
@@ -184,6 +190,6 @@ package object molecule {
   trait sample
   object sample extends sample { def apply(i: Int): sample = ???}
 
-  case class contains[T](value: T)
-  case class oldNew[T](from: T, to: T)
+//  case class contains[T](value: T)
+//  case class oldNew[T](from: T, to: T)
 }

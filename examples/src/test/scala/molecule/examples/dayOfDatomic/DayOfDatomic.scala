@@ -6,7 +6,6 @@ import molecule.examples.dayOfDatomic.dsl.productsOrder._
 //import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic.schema._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-
 import scala.collection.JavaConversions._
 import scala.language.existentials
 
@@ -473,50 +472,67 @@ class DayOfDatomic extends DayOfAtomicSpec {
       ("Eris", 1163.0)
     )
 
+
+
+    // Aggregates Returning a Single Value ..........................
+
     // How many objects
-    Obj.name(count) === 17
     Obj.name.size === 17
+    Obj.name_.count.name === 17
 
     // Largest radius
-    Obj.meanRadius(max) === 696000.0
-    Obj.meanRadius.get.max === 696000.0
+    Obj.meanRadius(max).name === 696000.0
+    Obj.meanRadius_.max.name === 696000.0
 
     // Smallest radius
-    Obj.meanRadius(min) === 696000.0
-    Obj.meanRadius.get.min === 696000.0
+    Obj.meanRadius(min).name === 1163.0
+    Obj.meanRadius_.min.name === 1163.0
 
     // Average radius
-    Obj.meanRadius(avg) === 696000.0
+    Obj.meanRadius_.avg.name === 696000.0
 
     // Median radius
-    Obj.meanRadius(median) === 696000.0
+    Obj.meanRadius_.median.name === 696000.0
 
     // Standard deviation
-    Obj.meanRadius(stddev) === 696000.0
+    Obj.meanRadius_.stddev === 696000.0
 
     // random solar system object
-    Obj.meanRadius(rand) === 696000.0
+    Obj.name(rand) === 696000.0
+
+
+    // Aggregates Returning Collections .............................
 
     // Smallest 3
     Obj.meanRadius(min(3)) === List(1, 2, 3)
+    Obj.meanRadius_.min(3) === List(1, 2, 3)
     Obj.meanRadius.get.sorted.take(3) === List(1, 2, 3)
 
     // Largest 3
     Obj.meanRadius(max(3)) === List(1, 2, 3)
+    Obj.meanRadius_.max(3) === List(1, 2, 3)
     Obj.meanRadius.get.sorted.reverse.take(3) === List(1, 2, 3)
 
     // 5 random (duplicates possible)
-    Obj.meanRadius(rand(5)) === List(1, 2, 3, 4, 5)
+    Obj.meanRadius_.rand(5) === List(1, 2, 3, 4, 5)
 
     // 5 samples (no duplicates)
-    Obj.meanRadius(sample(5)) === List(1, 2, 3, 4, 5)
+    Obj.meanRadius_.sample(5) === List(1, 2, 3, 4, 5)
 
     // What is the average length of a schema name?
-    Obj.e.
-      m(e.ident.name(count)).avg
+    Obj.a_.count_.avg
+    Obj.a.count.avg
+    Obj.a.length.avg.get
+    Obj.a[count => avg].get
+    Obj.a.apply(count.avg).get
+    Obj.a.apply(count).get
+    Obj.a.apply(avg.apply(count)).get
+    //      m(e.ident.name(count)).avg
 
-    // ...and the mode(s) ?
-    m(e.ident.name(count)).modes
+    List(1, 2, 3).
+
+      // ...and the mode(s) ?
+      m(e.ident.name(count)).modes
 
     // How many attributes and value types does this; schema use ?
     m(e(count).ident(countDistinct))

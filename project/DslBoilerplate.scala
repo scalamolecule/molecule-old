@@ -1,5 +1,4 @@
 import java.io.File
-
 import sbt._
 
 // Generate molecule dsl from definition files
@@ -274,7 +273,8 @@ object DslBoilerplate {
           s"${ns}_In_${i}_$o[${(InTypes ++ OutTypes) mkString ", "}]")
       }
 
-      val (nextIn, thisIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing") else (in, out) match {
+      val (nextIn, thisIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing")
+      else (in, out) match {
         case (0, 0) => (
           s"${ns}_In_1_1[$tpe$p3, $tpe$p3]",
           s"${ns}_In_1_0[$tpe$p3]")
@@ -305,13 +305,13 @@ object DslBoilerplate {
         "",
         s"val e : e[${nextNS("Long")}  , ${nextNS("Long")}  ] with ${nextNS("Long")}  = ???",
         s"val a : a[${nextNS("String")}, ${nextNS("String")}] with ${nextNS("String")} = ???"
-//        s"val e         : e        [${nextNS("Long")}   , ${nextNS("Long")}]    with ${nextNS("Long")}    = ???"
-//        s"val a         : a        [${nextNS("String")} , ${nextNS("String")}]  with ${nextNS("String")}  = ???",
-//        s"val v         : v        [${nextNS("Any")}    , ${nextNS("Any")}]     with ${nextNS("Any")}     = ???",
-//        s"val ns        : ns       [${nextNS("String")} , ${nextNS("String")}]  with ${nextNS("String")}  = ???",
-//        s"val txInstant : txInstant[${nextNS("Date")}   , ${nextNS("Date")}]    with ${nextNS("Date")}    = ???",
-//        s"val txT       : txT      [${nextNS("Long")}   , ${nextNS("Long")}]    with ${nextNS("Long")}    = ???",
-//        s"val txAdded   : txAdded  [${nextNS("Boolean")}, ${nextNS("Boolean")}] with ${nextNS("Boolean")} = ???"
+        //        s"val e         : e        [${nextNS("Long")}   , ${nextNS("Long")}]    with ${nextNS("Long")}    = ???"
+        //        s"val a         : a        [${nextNS("String")} , ${nextNS("String")}]  with ${nextNS("String")}  = ???",
+        //        s"val v         : v        [${nextNS("Any")}    , ${nextNS("Any")}]     with ${nextNS("Any")}     = ???",
+        //        s"val ns        : ns       [${nextNS("String")} , ${nextNS("String")}]  with ${nextNS("String")}  = ???",
+        //        s"val txInstant : txInstant[${nextNS("Date")}   , ${nextNS("Date")}]    with ${nextNS("Date")}    = ???",
+        //        s"val txT       : txT      [${nextNS("Long")}   , ${nextNS("Long")}]    with ${nextNS("Long")}    = ???",
+        //        s"val txAdded   : txAdded  [${nextNS("Boolean")}, ${nextNS("Boolean")}] with ${nextNS("Boolean")} = ???"
       )
     }
 
@@ -342,50 +342,54 @@ object DslBoilerplate {
       case _                => Nil
     }
 
-//    val inputMethods = if (out > 0 && in < maxIn) {
-//      val nextIn = (in, out) match {
-//        case (0, o) => s"${ns}_In_1_$out[${(OutTypes.last +: OutTypes) mkString ", "}]"
-//        case (i, o) => s"${ns}_In_${in + 1}_$out[${((InTypes :+ OutTypes.last) ++ OutTypes) mkString ", "}]"
-//      }
-//      Seq(
-//        s"def apply(in: ?.type)    : $nextIn = ???",
-//        s"def <(in: ?.type)        : $nextIn = ???",
-//        s"def contains(in: ?.type) : $nextIn = ???")
-//    } else Nil
+    //    val inputMethods = if (out > 0 && in < maxIn) {
+    //      val nextIn = (in, out) match {
+    //        case (0, o) => s"${ns}_In_1_$out[${(OutTypes.last +: OutTypes) mkString ", "}]"
+    //        case (i, o) => s"${ns}_In_${in + 1}_$out[${((InTypes :+ OutTypes.last) ++ OutTypes) mkString ", "}]"
+    //      }
+    //      Seq(
+    //        s"def apply(in: ?.type)    : $nextIn = ???",
+    //        s"def <(in: ?.type)        : $nextIn = ???",
+    //        s"def contains(in: ?.type) : $nextIn = ???")
+    //    } else Nil
 
-//    val extraMethods = if (out > 0) {
-//      val (nextOut, nextOutInt) = (in, out) match {
-//        case (0, o) => (s"${ns}_$out[${OutTypes mkString ", "}]", s"${ns}_$out[${(OutTypes.init :+ "Int") mkString ", "}]")
-//        case (i, o) => (s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes) mkString ", "}]", s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ "Int") mkString ", "}]")
-//      }
-//      Seq(
-//        s"def apply(m: maybe.type) : $nextOut   = ???",
-//        s"def apply(c: count.type) : $nextOutInt = ???")
-//
-//    } else Nil
+    //    val extraMethods = if (out > 0) {
+    //      val (nextOut, nextOutInt) = (in, out) match {
+    //        case (0, o) => (s"${ns}_$out[${OutTypes mkString ", "}]", s"${ns}_$out[${(OutTypes.init :+ "Int") mkString ", "}]")
+    //        case (i, o) => (s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes) mkString ", "}]", s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ "Int") mkString ", "}]")
+    //      }
+    //      Seq(
+    //        s"def apply(m: maybe.type) : $nextOut   = ???",
+    //        s"def apply(c: count.type) : $nextOutInt = ???")
+    //
+    //    } else Nil
 
     (in, out) match {
       // First output trait
       case (0, 0) =>
-        s"""trait ${ns}_0 extends $ns with Molecule_0 {
-           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional).mkString("\n  ")}
+        //        s"""trait ${ns}_0 extends $ns with Molecule_0 {
+        //           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional).mkString("\n  ")}
+        //           |}
+        //         """.stripMargin
+        s"""trait ${ns}_0 extends $ns with Molecule_0[${ns}_0, ${ns}_1] {
+           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ")}
            |}
          """.stripMargin
 
       // Last output trait
       case (0, o) if o == maxOut =>
         val types = OutTypes mkString ", "
-        s"trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types]"
+        s"trait ${ns}_$o[$types] extends $ns with Molecule_$o[${ns}_$o, Nothing, $types]"
 
       // Other output traits
       case (0, o) =>
         val types = OutTypes mkString ", "
-//        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types] {
-//           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
-//           |}
-//         """.stripMargin
-        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types] {
-           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional).mkString("\n  ")}
+        //        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[$types] {
+        //           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
+        //           |}
+        //         """.stripMargin
+        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[${ns}_$o, ${ns}_${o + 1}, $types] {
+           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ")}
            |}
          """.stripMargin
 
@@ -393,28 +397,31 @@ object DslBoilerplate {
       case (i, 0) =>
         val s = if (in > 1) "s" else ""
         val types = InTypes mkString ", "
+        //           |trait ${ns}_In_${i}_0[$types] extends $ns with In_${i}_0[${ns}_In_${i}_0, ${ns}_In_${i}_1, $types] {
         s"""
            |/********* Input molecules awaiting $i input$s *******************************/
            |
            |trait ${ns}_In_${i}_0[$types] extends $ns with In_${i}_0[$types] {
-           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional).mkString("\n  ")}
+           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ")}
            |}
          """.stripMargin
 
       // Last input trait
       case (i, o) if o == maxOut =>
         val types = (InTypes ++ OutTypes) mkString ", "
+        //        s"trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_$o, $types]"
         s"trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types]"
 
       // Other input traits
       case (i, o) =>
         val types = (InTypes ++ OutTypes) mkString ", "
-//        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
-//           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
-//           |}
-//         """.stripMargin
+        //        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
+        //           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional ++ inputMethods ++ extraMethods).mkString("\n  ")}
+        //           |}
+        //         """.stripMargin
+        //        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, $types] {
         s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
-           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ genericVals ++ refCode ++ optional).mkString("\n  ")}
+           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ")}
            |}
          """.stripMargin
     }
@@ -457,6 +464,10 @@ object DslBoilerplate {
     } yield nsTrait(namespace, in, out, inArity, outArity)).mkString("\n")
 
     val inImport = if (inArity > 0) "\nimport molecule.in._" else ""
+    val javaImports0 = attrs.collect {
+      case Val(_, _, _, tpe, _, _, options) if tpe.take(4) == "java" => tpe
+    }.distinct
+    val javaImports = if(javaImports0.isEmpty) "" else javaImports0.mkString(s"\nimport ", "\nimport ", "")
 
     s"""|/*
         | * AUTO-GENERATED CODE - DON'T CHANGE!
@@ -467,8 +478,7 @@ object DslBoilerplate {
         |package ${d.pkg}.dsl.${firstLow(d.domain)}
         |import molecule._
         |import molecule.dsl.schemaDSL._$inImport
-        |import molecule.out._
-        |import java.util.Date
+        |import molecule.out._$javaImports
         |
         |
         |object $Ns extends ${Ns}_0 {
