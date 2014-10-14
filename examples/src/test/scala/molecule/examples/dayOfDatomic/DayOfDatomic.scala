@@ -510,6 +510,9 @@ class DayOfDatomic extends DayOfAtomicSpec {
     // Median
     Obj.meanRadius(median).get.head === 696000.0
 
+    // Variance
+    Obj.meanRadius(variance).get.head === 696000.0
+
     // Standard deviation
     Obj.meanRadius(stddev).get.head === 696000.0
 
@@ -529,20 +532,19 @@ class DayOfDatomic extends DayOfAtomicSpec {
 
 
   "Attribute groups" >> {
-    implicit val conn = init("Attribute groups", "social-news.edn")
+    import molecule.schemas.Db
+    implicit val conn = load(SocialNewsSchema.tx, "Attribute groups")
 
     // Find all attributes in the story namespace
-    m(e.valueType.ident.ns("story")).get(e)
+    Db.a.ns_("story").get === List("title", "url", "comments")
 
     // Create a reusable rule
-    val rules = m(e.valueType.ident.ns(?))
+    val attrInNs = m(Db.a.ns_(?))
 
     // Find all attributes in story namespace, using the rule
-    rules("story").get(a)
-    m(a.rules("story"))
+    attrInNs("story").get === List("title", "url", "comments")
 
     // Find all entities possessing *any* story attribute
-    m(e.a(rules("story")))
+    Db.e.a_.ns_("story").get === List()
   }
 }
-
