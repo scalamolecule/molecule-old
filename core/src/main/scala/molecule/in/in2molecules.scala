@@ -9,31 +9,6 @@ import molecule.out._
 
 // 2 inputs X outputs
 
-trait In_2_0[I1, I2] extends NS
-trait In_2_1[I1, I2, A] extends NS
-trait In_2_2[I1, I2, A, B] extends NS
-trait In_2_3[I1, I2, A, B, C] extends NS
-trait In_2_4[I1, I2, A, B, C, D] extends NS
-trait In_2_5[I1, I2, A, B, C, D, E] extends NS
-trait In_2_6[I1, I2, A, B, C, D, E, F] extends NS
-trait In_2_7[I1, I2, A, B, C, D, E, F, G] extends NS
-trait In_2_8[I1, I2, A, B, C, D, E, F, G, H] extends NS
-trait In_2_9[I1, I2, A, B, C, D, E, F, G, H, I] extends NS
-trait In_2_10[I1, I2, A, B, C, D, E, F, G, H, I, J] extends NS
-trait In_2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, K] extends NS
-trait In_2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L] extends NS
-trait In_2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M] extends NS
-trait In_2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N] extends NS
-trait In_2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] extends NS
-trait In_2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] extends NS
-trait In_2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] extends NS
-trait In_2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] extends NS
-trait In_2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] extends NS
-trait In_2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] extends NS
-trait In_2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] extends NS
-trait In_2_22[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] extends NS
-
-
 trait InputMolecule_2[I1, I2] extends InputMolecule {
 
   def resolveAnd(and: And2[I1, I2])(implicit conn: Connection): (Seq[I1], Seq[I2]) = {

@@ -9,31 +9,6 @@ import molecule.out._
 
 // 3 inputs X outputs
 
-trait In_3_0[I1, I2, I3] extends NS
-trait In_3_1[I1, I2, I3, A] extends NS
-trait In_3_2[I1, I2, I3, A, B] extends NS
-trait In_3_3[I1, I2, I3, A, B, C] extends NS
-trait In_3_4[I1, I2, I3, A, B, C, D] extends NS
-trait In_3_5[I1, I2, I3, A, B, C, D, E] extends NS
-trait In_3_6[I1, I2, I3, A, B, C, D, E, F] extends NS
-trait In_3_7[I1, I2, I3, A, B, C, D, E, F, G] extends NS
-trait In_3_8[I1, I2, I3, A, B, C, D, E, F, G, H] extends NS
-trait In_3_9[I1, I2, I3, A, B, C, D, E, F, G, H, I] extends NS
-trait In_3_10[I1, I2, I3, A, B, C, D, E, F, G, H, I, J] extends NS
-trait In_3_11[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K] extends NS
-trait In_3_12[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L] extends NS
-trait In_3_13[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M] extends NS
-trait In_3_14[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N] extends NS
-trait In_3_15[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] extends NS
-trait In_3_16[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] extends NS
-trait In_3_17[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] extends NS
-trait In_3_18[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] extends NS
-trait In_3_19[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] extends NS
-trait In_3_20[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] extends NS
-trait In_3_21[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] extends NS
-trait In_3_22[I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] extends NS
-
-
 trait InputMolecule_3[I1, I2, I3] extends InputMolecule {
 
   // Todo

@@ -3,10 +3,10 @@ import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.dsl.schemaDSL
-import schemaDSL.NS
 import molecule.out._
 
 
+// 1 input X outputs
 
 trait InputMolecule_1[I1] extends InputMolecule {
 

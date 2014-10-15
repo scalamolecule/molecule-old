@@ -13,16 +13,7 @@ object schemaDSL {
   trait Tree
   trait HyperEdge
 
-  trait NS {
-    // Common attribute classes
-    abstract class e         [Ns, In] extends OneLong    [Ns, In]
-    abstract class a         [Ns, In] extends OneString  [Ns, In]
-    //    abstract class v         [Ns, In] extends OneAny     [Ns, In]
-    //    abstract class ns        [Ns, In] extends OneString  [Ns, In]
-    //    abstract class txInstant [Ns, In] extends OneDate    [Ns, In]
-    //    abstract class txT       [Ns, In] extends OneLong    [Ns, In]
-    //    abstract class txAdded   [Ns, In] extends OneBoolean [Ns, In]
-  }
+  trait NS
 
   trait Ref[Ns1, Ns2]
   trait OneRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
@@ -64,23 +55,20 @@ object schemaDSL {
     //    def apply(m: maybe): Ns = ???
   }
 
-
   // One-cardinality
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
     // Request for no value!
     def apply(): Ns = ???
-
     def apply(values: Seq[T]) : Ns = ???
   }
-//  trait OneString [Ns, In] extends One[Ns, In, String ] with Ordered[Ns, In, String] {
   trait OneString [Ns, In] extends One[Ns, In, String ]  {
     def length: Ns = ???
   }
-  trait OneInt    [Ns, In] extends One[Ns, In, Int    ] //with Number [Ns, In, Int   ]
-  trait OneLong   [Ns, In] extends One[Ns, In, Long   ] //with Number [Ns, In, Long  ]
-  trait OneFloat  [Ns, In] extends One[Ns, In, Float  ] //with Number [Ns, In, Float ]
-  trait OneDouble [Ns, In] extends One[Ns, In, Double ] //with Number [Ns, In, Double]
-  trait OneDate   [Ns, In] extends One[Ns, In, Date   ] //with Ordered[Ns, In, Date  ]
+  trait OneInt    [Ns, In] extends One[Ns, In, Int    ]
+  trait OneLong   [Ns, In] extends One[Ns, In, Long   ]
+  trait OneFloat  [Ns, In] extends One[Ns, In, Float  ]
+  trait OneDouble [Ns, In] extends One[Ns, In, Double ]
+  trait OneDate   [Ns, In] extends One[Ns, In, Date   ]
   trait OneBoolean[Ns, In] extends One[Ns, In, Boolean]
   trait OneUUID   [Ns, In] extends One[Ns, In, UUID   ]
   trait OneURI    [Ns, In] extends One[Ns, In, URI    ]
@@ -98,12 +86,12 @@ object schemaDSL {
     def add(value: T): Ns = ???
     def remove(values: T*): Ns = ???
   }
-  trait ManyString[Ns, In] extends Many[Ns, In, Set[String], String] //with Ordered[Ns, In, String]
-  trait ManyInt   [Ns, In] extends Many[Ns, In, Set[Int]   , Int   ] //with Number [Ns, In, Int   ]
-  trait ManyLong  [Ns, In] extends Many[Ns, In, Set[Long]  , Long  ] //with Number [Ns, In, Long  ]
-  trait ManyFloat [Ns, In] extends Many[Ns, In, Set[Float] , Float ] //with Number [Ns, In, Float ]
-  trait ManyDouble[Ns, In] extends Many[Ns, In, Set[Double], Double] //with Number [Ns, In, Double]
-  trait ManyDate  [Ns, In] extends Many[Ns, In, Set[Date]  , Date  ] //with Ordered[Ns, In, Date  ]
+  trait ManyString[Ns, In] extends Many[Ns, In, Set[String], String]
+  trait ManyInt   [Ns, In] extends Many[Ns, In, Set[Int]   , Int   ]
+  trait ManyLong  [Ns, In] extends Many[Ns, In, Set[Long]  , Long  ]
+  trait ManyFloat [Ns, In] extends Many[Ns, In, Set[Float] , Float ]
+  trait ManyDouble[Ns, In] extends Many[Ns, In, Set[Double], Double]
+  trait ManyDate  [Ns, In] extends Many[Ns, In, Set[Date]  , Date  ]
   trait ManyUUID  [Ns, In] extends Many[Ns, In, Set[UUID]  , UUID  ]
   trait ManyURI   [Ns, In] extends Many[Ns, In, Set[URI]   , URI   ]
 
@@ -124,17 +112,4 @@ object schemaDSL {
   }
   trait IsComponent
   trait NoHistory
-
-
-  //  Manipulation traits
-
-//  abstract class Insert(val elements: Seq[Element]) extends DatomicFacade {
-//    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements)).ids
-//  }
-//  abstract class Update(val elements: Seq[Element], val ids: Seq[Long]) extends DatomicFacade {
-//    def save(implicit conn: Connection): Seq[Long] = upsert(conn, Model(elements), Seq(), ids).ids
-//  }
-//  abstract class Retract(elements: Seq[Element]) extends DatomicFacade
-//  abstract class Entity(elements: Seq[Element]) extends DatomicFacade
-
 }

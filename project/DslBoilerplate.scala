@@ -373,29 +373,42 @@ object DslBoilerplate {
            |}
          """.stripMargin
 
+
       // First input trait
       case (i, 0) =>
         val s = if (in > 1) "s" else ""
+        val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing") else (s"${ns}_In_${i + 1}_0", s"${ns}_In_${i + 1}_1")
         val types = InTypes mkString ", "
         s"""
            |/********* Input molecules awaiting $i input$s *******************************/
            |
-           |trait ${ns}_In_${i}_0[$types] extends $ns with In_${i}_0[$types] {
+           |trait ${ns}_In_${i}_0[$types] extends $ns with In_${i}_0[${ns}_In_${i}_0, ${ns}_In_${i}_1, $thisIn, $nextIn, $types] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}
          """.stripMargin
 
       // Last input trait
-      case (i, o) if o == maxOut =>
+      case (i, o) if i <= maxIn && o == maxOut =>
+//      case (i, o) if o == maxOut =>
+        val thisIn = if (maxIn == 0 || i == maxIn) "Nothing" else s"${ns}_In_${i + 1}_$o"
         val types = (InTypes ++ OutTypes) mkString ", "
-        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
+        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, Nothing, $thisIn, Nothing, $types] {
            |  ${(attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}""".stripMargin
 
-      // Other input traits
-      case (i, o) =>
+      // Max input traits
+      case (i, o) if i == maxIn =>
         val types = (InTypes ++ OutTypes) mkString ", "
-        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[$types] {
+        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, Nothing, Nothing, $types] {
+           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
+           |}
+         """.stripMargin
+
+      // Other input traits
+      case (i, o)  =>
+        val (thisIn, nextIn) = if(i == maxIn) ("Nothing", "Nothing") else (s"${ns}_In_${i + 1}_$o", s"${ns}_In_${i + 1}_${o + 1}")
+        val types = (InTypes ++ OutTypes) mkString ", "
+        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, $thisIn, $nextIn, $types] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}
          """.stripMargin
