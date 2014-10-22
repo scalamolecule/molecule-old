@@ -1,5 +1,7 @@
 package molecule.util
 
+import molecule.ast.model.Model
+
 import scala.reflect.macros.whitebox.Context
 
 trait MacroHelpers[Ctx <: Context] {
@@ -42,10 +44,10 @@ trait MacroHelpers[Ctx <: Context] {
         def traverse(x: Any, level: Int, i: Int): String = {
           val indent = if(i == 0) "" else "  " * level + i + "          "
           x match {
-            case l: List[_]   => indent + "List(\n" +
-              l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-            case l: Map[_, _] => indent + "Map(\n" +
-              l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case l: List[_]   => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case l: Map[_, _] => indent + "Map(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case m: Model                => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+
             case (a, b)       => {
               val bb = b match {
                 case it: Iterable[_] => traverse(it, level, 0)

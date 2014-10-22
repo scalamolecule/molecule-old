@@ -15,7 +15,7 @@
 //    val txresult = conn.transact(list(list(":db/add", tempid, ":db/doc", "Hello world")))
 //
 //    // Transaction result is data
-//    txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
+//    txresult.get().toString.get(26) === "{:db-before datomic.db.Db@" // etc...
 //
 //    val dbVal = conn.db()
 //

@@ -47,12 +47,12 @@ trait MoleculeSpec extends Specification with DatomicFacade {
   }
 
   def formatInputs(query: Query) = {
-    val rules = if (query.in.rules.isEmpty) ""
+    val rules = if (query.i.rules.isEmpty) ""
     else {
       val p = (expr: QueryExpr) => Query2String(query).p(expr)
-      query.in.rules map p mkString("[", "\n     ", "]")
+      query.i.rules map p mkString("[", "\n     ", "]")
     }
-    val first = if (query.in.rules.isEmpty) Seq("datomic.db.Db@xxx") else Seq("datomic.db.Db@xxx", rules)
+    val first = if (query.i.rules.isEmpty) Seq("datomic.db.Db@xxx") else Seq("datomic.db.Db@xxx", rules)
     val allInputs = first ++ inputs(query)
     if (allInputs.size == 1)
       ""

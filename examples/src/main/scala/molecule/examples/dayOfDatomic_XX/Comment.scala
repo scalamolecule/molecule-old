@@ -7,8 +7,8 @@
 //package molecule.examples.dayOfDatomic_XX
 //
 //import molecule._
-//import molecule.dsl.schemaDSL.NS.e
-//import molecule.dsl.schemaDSL._
+//import molecule.util.dsl.schemaDSL.NS.e
+//import molecule.util.dsl.schemaDSL._
 //import molecule.in._
 //import molecule.out._
 //import datomic.Connection

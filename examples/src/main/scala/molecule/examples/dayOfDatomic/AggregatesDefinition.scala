@@ -2,7 +2,7 @@
 //
 //import scala.language.postfixOps
 //import molecule.ast.schemaDefinition
-//import molecule.dsl.DefinitionDSL
+//import molecule.util.dsl.DefinitionDSL
 //object AggregatesDefinition extends DefinitionDSL {
 //  import schemaDefinition._
 //

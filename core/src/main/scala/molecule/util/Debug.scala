@@ -1,5 +1,6 @@
 package molecule.util
 import scala.collection.JavaConversions._
+import molecule.ast.model._
 
 trait Debug {
 
@@ -27,6 +28,7 @@ trait Debug {
             case l: java.util.List[_]        => indent + "JavaList(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
             case l: Map[_, _] if max         => indent + "Map(" + l.mkString(",   ") + ")"
             case l: Map[_, _]                => indent + "Map(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case m: Model                => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
 
             case m: java.util.Map[_, _] => {
               if (m.size() == 4 && m.keys.map(_.toString).contains(":db-before")) {

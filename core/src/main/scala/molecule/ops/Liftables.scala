@@ -94,7 +94,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftDataClause = Liftable[DataClause] { cl =>
-    q"DataClause(${cl.ds}, ${cl.entity}, ${cl.attr}, ${cl.value}, ${cl.tx})"
+    q"DataClause(${cl.ds}, ${cl.e}, ${cl.a}, ${cl.v}, ${cl.tx})"
   }
 
   implicit val liftRule = Liftable[Rule] { rd =>
@@ -117,15 +117,15 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftIn    = Liftable[In] { in => q"In(Seq(..${in.inputs}), Seq(..${in.rules}), Seq(..${in.ds}))"}
   implicit val liftWhere = Liftable[Where] { where => q"Where(Seq(..${where.clauses}))"}
   implicit val liftQuery = Liftable[Query] { q =>
-    q"import molecule.ast.query._; Query(${q.find}, ${q.widh}, ${q.in}, ${q.where})"
+    q"import molecule.ast.query._; Query(${q.f}, ${q.wi}, ${q.i}, ${q.wh})"
   }
 
 
   // Liftables for Model --------------------------------------------------------------
 
   implicit val liftTerm = Liftable[Value] {
-    case NoValue          => q"NoValue"
-    case Blank            => q"Blank"
+//    case NoValue          => q"NoValue"
+//    case Blank            => q"Blank"
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
     case EnumVal          => q"EnumVal"

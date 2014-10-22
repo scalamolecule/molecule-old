@@ -35,11 +35,11 @@
 //
 //    // smallest 3
 //    m(Obj.meanRadius min 3)
-//    m(Obj.meanRadius).asc.take(3)
+//    m(Obj.meanRadius).asc.get(3)
 //
 //    // largest 3
 //    m(Obj.meanRadius max 3)
-//    m(Obj.meanRadius).desc.take(3)
+//    m(Obj.meanRadius).desc.get(3)
 //
 //    // 5 random (duplicates possible)
 //    m(Obj(rand, 5))

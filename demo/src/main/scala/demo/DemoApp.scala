@@ -13,7 +13,7 @@
 //  val companyId = Person.insert.name("John").age(26).gender("male").save.head
 //
 //  // Retrieve data
-//  val (person, age, gender) = Person.name.age.gender.tpls.head
+//  val (person, age, gender) = Person.name.age.gender.get.head
 //
 //  // Verify
 //  assert((person,age,gender) == ("John", 26, "male"))

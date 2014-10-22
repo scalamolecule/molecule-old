@@ -49,7 +49,7 @@
 //
 //    // https://github.com/tinkerpop/gremlin/wiki/Backtrack-Pattern
 //    // "get the names of those songs that follow Dark Star and are sung by Jerry Garcia"
-//    Song.id(89).FollowedBy.name.Singer.name("Jerry Garcia").take(3) === List("Eyes of the World", "Sing me back home", "Morning Dew")
+//    Song.id(89).FollowedBy.name.Singer.name("Jerry Garcia").get(3) === List("Eyes of the World", "Sing me back home", "Morning Dew")
 //
 //    // https://github.com/tinkerpop/gremlin/wiki/Except-Retain-Pattern
 //    // “Who are my friends friends that are not already my friends?”

@@ -5,7 +5,7 @@ object query {
 
   trait QueryExpr
 
-  case class Query(find: Find, widh: With, in: In, where: Where) extends QueryExpr {
+  case class Query(f : Find, wi: With, i: In, wh: Where) extends QueryExpr {
     lazy val print = Query2String(this)
     def toList: String = print.toList
     def toMap: String = print.toMap
@@ -55,24 +55,10 @@ object query {
 
   sealed trait Clause extends QueryExpr
 
-  case class DataClause(ds: DataSource, entity: Var, attr: KW, value: QueryValue, tx: QueryTerm) extends Clause
+  case class DataClause(ds: DataSource, e: Var, a: KW, v: QueryValue, tx: QueryTerm) extends Clause
   case class RuleInvocation(name: String, args: Seq[QueryValue]) extends Clause
 
   sealed trait ExpressionClause extends Clause
   case class Predicate(name: String, args: Seq[QueryTerm]) extends ExpressionClause
   case class Funct(name: String, ins: Seq[QueryTerm], outs: Binding) extends ExpressionClause
-
-
-  // Convenience constructors ........................................
-
-  object Query {
-    def apply(find: Find, where: Where) = new Query(find, With(Seq()), In(Seq()), where)
-    def apply(find: Find, in: In, where: Where) = new Query(find, With(Seq()), in, where)
-    def apply(find: Find) = new Query(find, With(Seq()), In(Seq()), Where(List()))
-    def apply() = new Query(Find(Seq()), With(Seq()), In(Seq()), Where(List()))
-  }
-  object DataClause {
-    def apply(e: String, attr: KW, tpeS: String, v: String) = new DataClause(ImplDS, Var(e, tpeS), attr, Var(v, tpeS), Empty)
-    def apply(e: String, attr: KW, tpeS: String, value: Val) = new DataClause(ImplDS, Var(e, tpeS), attr, value, Empty)
-  }
 }

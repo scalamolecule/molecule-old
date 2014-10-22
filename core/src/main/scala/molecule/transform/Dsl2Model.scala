@@ -1,8 +1,9 @@
 package molecule
 package transform
 import molecule.ast.model._
-import molecule.dsl.schemaDSL._
+import molecule.util.dsl.schemaDSL._
 import molecule.ops.TreeOps
+
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -32,30 +33,33 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val refNs = if (refNsRaw == refAttr) "" else refNsRaw
       traverse(q"$prev", Bond(ns, refAttr, refNs))
 
-    case e@q"$prev.e"   => traverse(q"$prev", Atom(e.ns, "e", "Long", 1, EntValue))
-    case attr@q"$prev.$cur" => traverse(q"$prev", atom(attr))
+    case e@q"$prev.e"       => traverse(q"$prev", Atom(e.ns, "e", "Long", 1, EntValue))
+    case attr@q"$prev.$cur" =>
+      //      x(2, attr, prev, cur)
+      traverse(q"$prev", atom(attr))
 
-////    case t@q"$prev.$manyRef[..$types]($subModel)" =>
-//    case t@q"$prev.$manyRef[..$types]($subModel)" =>
-////      val refAttr: String = manyRef.toString match {
-////        // Name of `*` method's first parameter
-////        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
-////        case methodName => methodName.toString
-////      }
-//      val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
-//      val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
-//      traverse(q"$prev", Group(Bond(prev.name.toString, manyRef.toString, refNs), resolve(q"$subModel").elements))
+    ////    case t@q"$prev.$manyRef[..$types]($subModel)" =>
+    //    case t@q"$prev.$manyRef[..$types]($subModel)" =>
+    ////      val refAttr: String = manyRef.toString match {
+    ////        // Name of `*` method's first parameter
+    ////        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
+    ////        case methodName => methodName.toString
+    ////      }
+    //      val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
+    //      val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
+    //      traverse(q"$prev", Group(Bond(prev.name.toString, manyRef.toString, refNs), resolve(q"$subModel").elements))
   }
 
   def atomOp(attr: Tree, op: Tree, values0: Tree) = {
     def errValue(v: Any) = abort(s"[Dsl2Model:atomOp] Unexpected resolved value for `${attr.name}.$op`: $v")
-    //    x(1, values0, getValues(attr, values0))
 
     val values = getValues(attr, values0)
+//    x(1, attr, op, values0, values)
+
     val modelValue = op.toString() match {
       case "apply"    => values match {
         case resolved: Value => resolved
-        case vs: Seq[_]      => if(vs.isEmpty) Remove(Seq()) else Eq(vs)
+        case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
         case other           => errValue(other)
       }
       case "$less"    => values match {
@@ -69,7 +73,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case "add"      => values match {
         case vs: Seq[_] => Eq(vs)
       }
-      case "remove"      => values match {
+      case "remove"   => values match {
         case vs: Seq[_] => Remove(vs)
       }
       case unexpected => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
@@ -90,13 +94,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   def getValues(attr: Tree, values: Tree): Any = values match {
     case q"Seq($pkg.?)"     => Qm
-    case q"Seq($pkg.?!)"    => QmR
     case q"Seq($pkg.count)" => Fn("count")
     case q"Seq(..$vs)"      =>
-//      if (vs.isEmpty) abort(s"[Dsl2Model:getValues] Unexpected empty values for attribute `${attr.name}`")
+      //      if (vs.isEmpty) abort(s"[Dsl2Model:getValues] Unexpected empty values for attribute `${attr.name}`")
       vs match {
-        case tpls if tpls.nonEmpty && tpls.head.tpe <:< weakTypeOf[Tuple2[_, _]] =>
-          val oldNew: Map[Any, Any] = tpls.map {
+        case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
+          val oldNew: Map[Any, Any] = get.map {
             case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
           }.toMap
           Replace(oldNew)

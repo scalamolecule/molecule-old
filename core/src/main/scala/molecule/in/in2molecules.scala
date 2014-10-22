@@ -2,7 +2,7 @@ package molecule.in
 import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.dsl.schemaDSL
+import molecule.util.dsl.schemaDSL
 import schemaDSL.NS
 import molecule.out._
 
@@ -31,17 +31,17 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
   def bindValues(inputTuples: Seq[(I1, I2)]) = {
     val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
     val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
-    val query1 = query.copy(in = In(Seq(InVar(RelationBinding(vars), values))))
-    val entityQuery = query.copy(find = Find(Seq(Var("ent", "Long"))))
+    val query1 = query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
+    val entityQuery = query.copy(f = Find(Seq(Var("ent", "Long"))))
     (query1, entityQuery)
   }
 
   def bindValues2(inputLists: (Seq[I1], Seq[I2])) = {
     // Extract placeholder info and discard placeholders
-    val varsAndPrefixes = query.in.inputs.collect {
+    val varsAndPrefixes = query.i.inputs.collect {
       case Placeholder(_, kw, t, enumPrefix, e) => (kw, t, enumPrefix.getOrElse(""), e)
     }
-    val query1 = query.copy(in = In(Seq()))
+    val query1 = query.copy(i = In(Seq()))
 
     if (varsAndPrefixes.size != 2)
       sys.error(s"[InputMolecule_2] Query should expect exactly 2 inputs:\nQuery: ${query.pretty}")
@@ -50,18 +50,19 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
     val query2 = inputLists.productIterator.toList.zip(varsAndPrefixes).foldLeft(query1) {
       case (q, (inputList: Seq[_], (kw, t, p, e))) => {
         // Add rule for each input value
-        val ruleName = "rule" + (q.in.rules.map(_.name).distinct.size + 1)
-        val newRules = inputList.foldLeft(q.in.rules) { case (rules, input) =>
-          val dataClause = DataClause(e, kw, t, Val(p + input.toString))
+        val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
+        val newRules = inputList.foldLeft(q.i.rules) { case (rules, input) =>
+//          val dataClause = DataClause(e, kw, t, Val(p + input.toString))
+          val dataClause = DataClause(ImplDS, Var(e, t), kw, Val(p + input.toString), Empty)
           val rule = Rule(ruleName, Seq(Var(e)), Seq(dataClause))
           rules :+ rule
         }
-        val newIn = q.in.copy(ds = (q.in.ds :+ DS).distinct, rules = newRules)
-        val newWhere = Where(q.where.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
-        q.copy(in = newIn, where = newWhere)
+        val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = newRules)
+        val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
+        q.copy(i = newIn, wh = newWhere)
       }
     }
-    val entityQuery = query2.copy(find = Find(Seq(Var("ent", "Long"))))
+    val entityQuery = query2.copy(f = Find(Seq(Var("ent", "Long"))))
     (query2, entityQuery)
   }
 }

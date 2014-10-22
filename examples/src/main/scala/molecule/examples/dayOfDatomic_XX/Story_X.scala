@@ -6,7 +6,7 @@
 // */
 //package molecule.examples.dayOfDatomic.dsl.socialNews
 //import molecule._
-//import molecule.dsl.schemaDSL._
+//import molecule.util.dsl.schemaDSL._
 //import molecule.examples.dayOfDatomic.dsl.productsOrder.{LineItem_3, LineItem_2, LineItem, LineItem_1}
 //import molecule.in._
 //import molecule.out._

@@ -1,4 +1,4 @@
-package molecule.dsl
+package molecule.util.dsl
 import java.net.URI
 import java.util.{UUID, Date}
 import molecule._
@@ -15,6 +15,38 @@ object schemaDSL {
 
   trait NS
 
+  // Dummy types used with generated trait types
+
+  type P0 = Nothing
+  type P1[A] = Nothing
+  type P2[A, B] = Nothing
+  type P3[A, B, C] = Nothing
+  type P4[A, B, C, D] = Nothing
+  type P5[A, B, C, D, E] = Nothing
+  type P6[A, B, C, D, E, F] = Nothing
+  type P7[A, B, C, D, E, F, G] = Nothing
+  type P8[A, B, C, D, E, F, G, H] = Nothing
+  type P9[A, B, C, D, E, F, G, H, I] = Nothing
+  type P10[A, B, C, D, E, F, G, H, I, J] = Nothing
+  type P11[A, B, C, D, E, F, G, H, I, J, K] = Nothing
+  type P12[A, B, C, D, E, F, G, H, I, J, K, L] = Nothing
+  type P13[A, B, C, D, E, F, G, H, I, J, K, L, M] = Nothing
+  type P14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = Nothing
+  type P15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = Nothing
+  type P16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = Nothing
+  type P17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = Nothing
+  type P18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = Nothing
+  type P19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = Nothing
+  type P20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = Nothing
+  type P21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = Nothing
+  type P22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = Nothing
+  type P23[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X] = Nothing
+  type P24[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y] = Nothing
+  type P25[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, Z] = Nothing
+  type P26[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, Z, AA] = Nothing
+  type P27[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, Z, AA, AB] = Nothing
+
+
   trait Ref[Ns1, Ns2]
   trait OneRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
   trait ManyRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
@@ -22,9 +54,11 @@ object schemaDSL {
   trait ChildRef[Ns1] extends Ref[Ns1, Ns1]
   trait HyperRef[Ns1] extends Ref[Ns1, Ns1]
 
+
   trait Attr
 
   trait RefAttr[Ns1, T] extends Attr
+
   trait OneRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns = ???
   }
@@ -97,8 +131,8 @@ object schemaDSL {
 
   // Enums
   trait Enum
-  trait OneEnum  [Ns, In] extends One [Ns, In, String]         with Enum
-  trait ManyEnums[Ns, In] extends Many[Ns, In, String, String] with Enum
+  trait OneEnum  [Ns, In] extends One [Ns, In, String]              with Enum
+  trait ManyEnums[Ns, In] extends Many[Ns, In, Set[String], String] with Enum
   object EnumValue
 
   // Attribute options

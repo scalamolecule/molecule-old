@@ -52,19 +52,19 @@ case class Query2String(q: Query) {
   def toList: String = p(q)
 
   def toMap: String = {
-    s"""{ :find [ ${q.find.outputs map p mkString " "} ]""" +
-      (if (q.widh.variables.isEmpty) "" else s" :with [ ${q.widh.variables map s mkString " "} ]") +
-      mkIn(q.in, true) +
-      s""" :where [ ${q.where.clauses map p mkString " "} ] }"""
+    s"""{ :find [ ${q.f.outputs map p mkString " "} ]""" +
+      (if (q.wi.variables.isEmpty) "" else s" :with [ ${q.wi.variables map s mkString " "} ]") +
+      mkIn(q.i, true) +
+      s""" :where [ ${q.wh.clauses map p mkString " "} ] }"""
   }
 
   def pretty(maxLength: Int = 80): String = {
     val queryString = p(q)
-    val (firstParts, where) = (List(p(q.find), p(q.widh), p(q.in)).filter(_.trim.nonEmpty), p(q.where))
+    val (firstParts, where) = (List(p(q.f), p(q.wi), p(q.i)).filter(_.trim.nonEmpty), p(q.wh))
     if (queryString.length > maxLength) {
       firstParts.mkString("[", "\n ", "\n ") +
         (if (where.length > maxLength)
-          q.where.clauses.map(p).mkString(":where\n   ", "\n   ", "")
+          q.wh.clauses.map(p).mkString(":where\n   ", "\n   ", "")
         else where) + "]"
     } else {
       queryString

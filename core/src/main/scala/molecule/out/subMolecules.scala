@@ -4,7 +4,7 @@
 ////import molecule.DatomicFacade
 //import molecule.ast.model._
 //import molecule.ast.query.Query
-//import molecule.dsl.schemaDSL.NS
+//import molecule.util.dsl.schemaDSL.NS
 //import shapeless.{::, HNil}
 //
 //

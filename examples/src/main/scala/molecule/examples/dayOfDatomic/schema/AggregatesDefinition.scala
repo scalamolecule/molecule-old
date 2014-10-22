@@ -1,6 +1,6 @@
 package molecule.examples.dayOfDatomic.schema
 
-import molecule.dsl.schemaDefinition._
+import molecule.util.dsl.schemaDefinition._
 
 @InOut(0, 3)
 trait AggregatesDefinition {

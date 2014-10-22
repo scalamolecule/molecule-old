@@ -140,7 +140,7 @@ object DslBoilerplate {
       case (d, line) => line match {
         case r"\/\/.*" /* comments allowed */                 => d
         case r"package (.*)$path\.[\w]*"                      => d.copy(pkg = path)
-        case "import molecule.dsl.schemaDefinition._"         => d
+        case "import molecule.util.dsl.schemaDefinition._"         => d
         case r"@InOut\((\d+)$inS, (\d+)$outS\)"               => d.copy(in = inS.toString.toInt, out = outS.toString.toInt)
         case r"trait (.*)${dmn}Definition \{"                 => d.copy(domain = dmn)
         case r"trait (\w*)$ns\s*extends\s*Tree\s*\{"          => d.copy(nss = d.nss :+ Namespace(ns, Some(Tree())))
@@ -215,7 +215,7 @@ object DslBoilerplate {
     }
 
     def enums(ns: String, a: String, es: Seq[String]) = es.map(e =>
-      s"""Util.map(":db/id", Peer.tempid(":db.part/user"), ":db/ident", ":$ns.$a/$e")""").mkString(",\n    ")
+      s"""Util.map(":db/id", Peer.tempid(":db.part/user"), ":db/ident", ":${firstLow(ns)}.$a/$e")""").mkString(",\n    ")
 
     val stmts = d.nss map { ns =>
       val exts = ns.opt.getOrElse("").toString
@@ -237,7 +237,7 @@ object DslBoilerplate {
         | * Instead, change the molecule definition files and recompile your project with `sbt compile`
         | */
         |package ${d.pkg}.schema
-        |import molecule.dsl.Transaction
+        |import molecule.util.dsl.Transaction
         |import datomic.{Util, Peer}
         |
         |object ${d.domain}Schema extends Transaction {
@@ -273,8 +273,12 @@ object DslBoilerplate {
           s"${ns}_In_${i}_$o[${(InTypes ++ OutTypes) mkString ", "}]")
       }
 
-      val (nextIn, thisIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing")
-      else (in, out) match {
+
+      val (nextIn, thisIn) = if (maxIn == 0 || in == maxIn) {
+        val (n1, n2) = (out + in + 1, out + in + 2)
+        val (t1, t2) = ((1 to n1).map(i => "_").mkString(","), (1 to n2).map(i => "_").mkString(","))
+        (s"P$n2[$t2]", s"P$n1[$t1]")
+      } else (in, out) match {
         case (0, 0) => (
           s"${ns}_In_1_1[$tpe$p3, $tpe$p3]",
           s"${ns}_In_1_0[$tpe$p3]")
@@ -323,34 +327,10 @@ object DslBoilerplate {
       case _                => Nil
     }
 
-    //    val inputMethods = if (out > 0 && in < maxIn) {
-    //      val nextIn = (in, out) match {
-    //        case (0, o) => s"${ns}_In_1_$out[${(OutTypes.last +: OutTypes) mkString ", "}]"
-    //        case (i, o) => s"${ns}_In_${in + 1}_$out[${((InTypes :+ OutTypes.last) ++ OutTypes) mkString ", "}]"
-    //      }
-    //      Seq(
-    //        s"def apply(in: ?.type)    : $nextIn = ???",
-    //        s"def <(in: ?.type)        : $nextIn = ???",
-    //        s"def contains(in: ?.type) : $nextIn = ???")
-    //    } else Nil
-
-    //    val extraMethods = if (out > 0) {
-    //      val (nextOut, nextOutInt) = (in, out) match {
-    //        case (0, o) => (s"${ns}_$out[${OutTypes mkString ", "}]", s"${ns}_$out[${(OutTypes.init :+ "Int") mkString ", "}]")
-    //        case (i, o) => (s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes) mkString ", "}]", s"${ns}_In_${i}_$out[${(InTypes ++ OutTypes.init :+ "Int") mkString ", "}]")
-    //      }
-    //      Seq(
-    //        s"def apply(m: maybe.type) : $nextOut   = ???",
-    //        s"def apply(c: count.type) : $nextOutInt = ???")
-    //
-    //    } else Nil
-
-
-
     (in, out) match {
       // First output trait
       case (0, 0) =>
-        val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing") else (s"${ns}_In_1_0", s"${ns}_In_1_1")
+        val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_1_0", s"${ns}_In_1_1")
         s"""trait ${ns}_0 extends $ns with Molecule_0[${ns}_0, ${ns}_1, $thisIn, $nextIn] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}
@@ -358,15 +338,15 @@ object DslBoilerplate {
 
       // Last output trait
       case (0, o) if o == maxOut =>
-        val thisIn = if (maxIn == 0 || in == maxIn) "Nothing" else s"${ns}_In_1_$o"
+        val thisIn = if (maxIn == 0 || in == maxIn) "P" + (out + in + 1) else s"${ns}_In_1_$o"
         val types = OutTypes mkString ", "
-        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[${ns}_$o, Nothing, $thisIn, Nothing, $types] {
+        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[${ns}_$o, P${out + in + 1}, $thisIn, P${out + in + 2}, $types] {
            |  ${(attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}""".stripMargin
 
       // Other output traits
       case (0, o) =>
-        val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing") else (s"${ns}_In_1_$o", s"${ns}_In_1_${o + 1}")
+        val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_1_$o", s"${ns}_In_1_${o + 1}")
         val types = OutTypes mkString ", "
         s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[${ns}_$o, ${ns}_${o + 1}, $thisIn, $nextIn, $types] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
@@ -377,9 +357,10 @@ object DslBoilerplate {
       // First input trait
       case (i, 0) =>
         val s = if (in > 1) "s" else ""
-        val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("Nothing", "Nothing") else (s"${ns}_In_${i + 1}_0", s"${ns}_In_${i + 1}_1")
+        val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_${i + 1}_0", s"${ns}_In_${i + 1}_1")
         val types = InTypes mkString ", "
         s"""
+           |
            |/********* Input molecules awaiting $i input$s *******************************/
            |
            |trait ${ns}_In_${i}_0[$types] extends $ns with In_${i}_0[${ns}_In_${i}_0, ${ns}_In_${i}_1, $thisIn, $nextIn, $types] {
@@ -390,23 +371,23 @@ object DslBoilerplate {
       // Last input trait
       case (i, o) if i <= maxIn && o == maxOut =>
 //      case (i, o) if o == maxOut =>
-        val thisIn = if (maxIn == 0 || i == maxIn) "Nothing" else s"${ns}_In_${i + 1}_$o"
+        val thisIn = if (maxIn == 0 || i == maxIn) "P" + (out + in + 1) else s"${ns}_In_${i + 1}_$o"
         val types = (InTypes ++ OutTypes) mkString ", "
-        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, Nothing, $thisIn, Nothing, $types] {
+        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, P${out + in + 1}, $thisIn, P${out + in + 2}, $types] {
            |  ${(attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}""".stripMargin
 
       // Max input traits
       case (i, o) if i == maxIn =>
         val types = (InTypes ++ OutTypes) mkString ", "
-        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, Nothing, Nothing, $types] {
+        s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, P${out + in + 1}, P${out + in + 2}, $types] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}
          """.stripMargin
 
       // Other input traits
       case (i, o)  =>
-        val (thisIn, nextIn) = if(i == maxIn) ("Nothing", "Nothing") else (s"${ns}_In_${i + 1}_$o", s"${ns}_In_${i + 1}_${o + 1}")
+        val (thisIn, nextIn) = if(i == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_${i + 1}_$o", s"${ns}_In_${i + 1}_${o + 1}")
         val types = (InTypes ++ OutTypes) mkString ", "
         s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, $thisIn, $nextIn, $types] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
@@ -465,7 +446,7 @@ object DslBoilerplate {
         | */
         |package ${d.pkg}.dsl.${firstLow(d.domain)}
         |import molecule._
-        |import molecule.dsl.schemaDSL._$inImport
+        |import molecule.util.dsl.schemaDSL._$inImport
         |import molecule.out._$javaImports
         |
         |

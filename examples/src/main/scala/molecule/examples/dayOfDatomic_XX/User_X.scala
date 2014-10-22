@@ -1,6 +1,6 @@
 //import molecule.{maybe, count}
-//import molecule.dsl.schemaDSL.ManyRef
-//import molecule.dsl.schemaDSL.NS.e
+//import molecule.util.dsl.schemaDSL.ManyRef
+//import molecule.util.dsl.schemaDSL.NS.e
 //import molecule.examples.dayOfDatomic.dsl.socialNews._
 //import molecule.out.{Molecule_1, Molecule_0}
 ///*
@@ -11,7 +11,7 @@
 //*/
 //package molecule.examples.dayOfDatomic.dsl.socialNews
 //import molecule._
-//import molecule.dsl.schemaDSL._
+//import molecule.util.dsl.schemaDSL._
 //import molecule.in._
 //import molecule.out._
 //

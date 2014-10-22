@@ -23,8 +23,8 @@ object model {
 //  case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
   sealed trait Value
-  case object NoValue extends Value
-  case object Blank extends Value
+//  case object NoValue extends Value
+//  case object Blank extends Value
   case object EntValue extends Value
   case object VarValue extends Value
   case object EnumVal extends Value

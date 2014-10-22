@@ -1,6 +1,6 @@
 package molecule.ops
 import molecule.ast.query._
-import molecule.dsl.schemaDSL._
+import molecule.util.dsl.schemaDSL._
 import molecule.out.Molecule_0
 import scala.language.existentials
 import scala.reflect.macros.whitebox.Context
@@ -225,20 +225,24 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     val x = debug("TreeOps:att", 1)
 
     lazy val attrType = sym match {
-      case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
+//      case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
+      case t: TermSymbol                                                 => sym.typeSignature.typeSymbol.typeSignature
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Attr] => sym.asMethod.returnType
       case unexpected                                                    =>
         abortTree(q"$unexpected", s"[TreeOps:attrType] Unexpected attribute symbol")
     }
 
     lazy val tpe = sym match {
-      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
+//      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
         typeOf[Long]
       }
-      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
+//      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
         typeOf[Long]
       }
-      case t: TermSymbol if t.isLazy && t.isPublic                                                                              => {
+//      case t: TermSymbol if t.isLazy && t.isPublic                                                                              => {
+      case t: TermSymbol if t.isPublic                                                                              => {
         val List(_, _, attrTpe) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol).typeArgs
         attrTpe
       }
@@ -249,7 +253,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     def name = TermName(toString)
     def fullName = attrType.typeSymbol.fullName
-    def owner = attrType.typeSymbol.owner.owner
+//    def owner = attrType.typeSymbol.owner.owner
+    def owner = attrType.typeSymbol.owner
     def ns = new nsp(owner)
     def tpeS = if (tpe =:= NoType) "Long" else tpe.toString
     def contentType = tpe
@@ -272,7 +277,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     // todo: if (nestedNS.isDefined) s":$ns.$nestedNS/$name" else s":$ns/$name"
     def enumPrefix = ns.enums.size match {
       case 0 => ""
-      case _ => s":$ns.$name/"
+      case _ => s":$ns." + (if(name.toString.last == '_') name.toString.init else name) + "/"
     }
   }
 

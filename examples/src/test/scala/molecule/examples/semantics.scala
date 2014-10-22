@@ -259,10 +259,10 @@
 //    User(ed)._Comments.e.get.sorted === List(c2, c4, c5, c7, c11)
 //
 //    // Author who wrote "7" in a Comment
-//    Comment.text.contains("7").Author.e.tpls.sorted === List(ed)
+//    Comment.text.contains("7").Author.e.get.sorted === List(ed)
 //
 //    // All Comments of Author who wrote "7" in a Comment
-//    Comment.text.contains("7").Author._Comments.e.tpls.sorted === List(c2, c4, c5, c7, c11)
+//    Comment.text.contains("7").Author._Comments.e.get.sorted === List(c2, c4, c5, c7, c11)
 //
 //
 //
