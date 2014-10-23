@@ -7,15 +7,6 @@ import molecule.schemas._
 import shapeless._
 import scala.language.reflectiveCalls
 
-//package molecule
-//package examples.seattle
-//import molecule.examples
-//import java.io.FileReader
-//import datomic._
-//import molecule.schemas._
-//import molecule.examples.seattle.dsl.seattle._
-//import shapeless._
-//import scala.language.reflectiveCalls
 
 class SeattleTests extends SeattleSpec {
 
