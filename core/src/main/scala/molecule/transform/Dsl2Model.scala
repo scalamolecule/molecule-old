@@ -1,9 +1,8 @@
 package molecule
 package transform
 import molecule.ast.model._
-import molecule.util.dsl.schemaDSL._
 import molecule.ops.TreeOps
-
+import molecule.util.dsl.schemaDSL._
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -34,6 +33,9 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       traverse(q"$prev", Bond(ns, refAttr, refNs))
 
     case e@q"$prev.e"       => traverse(q"$prev", Atom(e.ns, "e", "Long", 1, EntValue))
+    case q"$prev.txInstant" => traverse(q"$prev", Atom("db", "txInstant", "Date", 1, VarValue))
+    case q"$prev.txT"       => traverse(q"$prev", Atom("db", "txT", "Long", 1, VarValue))
+    case q"$prev.txAdded"   => traverse(q"$prev", Atom("db", "txAdded", "Boolean", 1, VarValue))
     case attr@q"$prev.$cur" =>
       //      x(2, attr, prev, cur)
       traverse(q"$prev", atom(attr))
@@ -54,7 +56,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     def errValue(v: Any) = abort(s"[Dsl2Model:atomOp] Unexpected resolved value for `${attr.name}.$op`: $v")
 
     val values = getValues(attr, values0)
-//    x(1, attr, op, values0, values)
+    //    x(1, attr, op, values0, values)
 
     val modelValue = op.toString() match {
       case "apply"    => values match {

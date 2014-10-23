@@ -15,6 +15,12 @@ object schemaDSL {
 
   trait NS
 
+  trait Dbb extends NS {
+
+
+    class txInstant[Ns, In] extends OneDate[Ns, In]
+  }
+
   // Dummy types used with generated trait types
 
   type P0 = Nothing

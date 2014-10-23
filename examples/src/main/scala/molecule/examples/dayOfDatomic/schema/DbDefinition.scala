@@ -7,5 +7,6 @@ trait DbDefinition {
 
   trait Db {
     val valueType = oneString
+    val txInstant = oneDate
   }
 }

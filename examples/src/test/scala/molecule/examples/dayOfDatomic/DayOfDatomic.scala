@@ -22,7 +22,7 @@
 //
 //    // Transaction result is data
 //    val txresult = conn.transact(txData)
-//    txresult.get().toString.get(26) === "{:db-before datomic.db.Db@" // etc...
+//    txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
 //
 //    // Database is a value
 //    val dbValue = conn.db()

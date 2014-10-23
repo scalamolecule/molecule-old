@@ -27,9 +27,8 @@ trait Molecule extends DatomicFacade {
   def since(date: Date) = { dbOp = Since(date); this }
   def imagine(tx: lObj) = { dbOp = Imagine(tx); this }
 
-  def insert                (implicit conn: Cnx): Tx = upsert(conn, _model)
+  def add                   (implicit conn: Cnx): Tx = upsert(conn, _model)
   def update(updateId: Long)(implicit conn: Cnx): Tx = upsert(conn, _model, Seq(), Seq(updateId))
-  def update                (implicit conn: Cnx): Tx = upsert(conn, _model, Seq())
 }
 
 abstract class Molecule0(val _model: Model, val _query: Query) extends Molecule
