@@ -1,5 +1,5 @@
 package demo.schema
-import molecule.util.dsl.schemaDefinition._
+import molecule.dsl.schemaDefinition._
 
 
 @InOut(0, 3)

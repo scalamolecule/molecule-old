@@ -527,7 +527,7 @@
 //    // ...and the mode(s) -
 //
 //    // How many attributes and value types does this; schema use ?
-//    Db.e(count).valueType(countDistinct).get.head === (3, 2)
+//    Db.e(count).valueType(countDistinct).get.head ===(3, 2)
 //  }
 //
 //

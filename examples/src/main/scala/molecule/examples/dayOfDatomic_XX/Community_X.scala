@@ -6,7 +6,7 @@
 // */
 //package molecule.examples.seattle.dsl.seattle
 //import molecule._
-//import molecule.util.dsl.schemaDSL._
+//import molecule.dsl.schemaDSL._
 //import molecule.in._
 //import molecule.out._
 //import java.util.Date

@@ -68,7 +68,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       def -->(query: Query) = new {
         molecule._query === query
         def -->(queryString: String) = {
-          query.pretty(30) + formatInputs(query) === queryString
+          query.datalog(30) + formatInputs(query) === queryString
         }
       }
 
@@ -82,7 +82,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     }
 
     def -->(queryString: String) = {
-      molecule._query.pretty(30) + formatInputs(molecule._query) === queryString
+      molecule._query.datalog(30) + formatInputs(molecule._query) === queryString
     }
 
     def -->(data: Seq[Seq[Any]]) = new {
@@ -95,17 +95,17 @@ trait MoleculeSpec extends Specification with DatomicFacade {
 
   implicit class inputDsl2model2query2string(inputMolecule: InputMolecule) {
     def -->(model: Model) = new {
-      inputMolecule.model === model
+      inputMolecule._model === model
       def -->(query: Query) = new {
-        inputMolecule.query === query
+        inputMolecule._query === query
         def -->(queryString: String) = {
-          query.pretty(30) === queryString
+          query.datalog(30) === queryString
         }
       }
     }
 
     def -->(queryString: String) = {
-      inputMolecule.query.pretty(30) === queryString
+      inputMolecule._query.datalog(30) === queryString
     }
   }
 

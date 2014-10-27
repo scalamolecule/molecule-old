@@ -1,6 +1,6 @@
 package molecule.ops
 import molecule.ast.query._
-import molecule.util.dsl.schemaDSL._
+import molecule.dsl.schemaDSL._
 import molecule.out.Molecule_0
 import scala.language.existentials
 import scala.reflect.macros.whitebox.Context
@@ -194,7 +194,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
   class nsp(val sym: Symbol) {
-    val x = debug("ModelOps:nsp", 8)
+    val x = Debug("ModelOps:nsp", 8)
     lazy val nsType = sym match {
       case s: TermSymbol if s.isLazy && s.isPublic    => s.typeSignature.typeSymbol.typeSignature
       case s: MethodSymbol
@@ -222,7 +222,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
   class att(val sym: Symbol) {
-    val x = debug("TreeOps:att", 1)
+    val x = Debug("TreeOps:att", 1)
 
     lazy val attrType = sym match {
 //      case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature

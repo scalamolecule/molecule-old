@@ -1,6 +1,6 @@
 //package molecule
 //package examples.seattle
-//import molecule.util.dsl.DbSchema._
+//import molecule.dsl.DbSchema._
 //import molecule.examples.seattle.dsl.seattle._
 //import scala.language.reflectiveCalls
 //

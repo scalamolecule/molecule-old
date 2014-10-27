@@ -6,6 +6,8 @@ object model {
     // Convenience methods
     def +:(e: Element) = Model(e +: elements)
     def :+(e: Element) = Model(elements :+ e)
+
+    override def toString = "Model(\n  " + elements.mkString("\n  ") + ")"
   }
 
   trait Element

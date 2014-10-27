@@ -51,7 +51,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
 //      Community.url.insert.apply(
 
 //  Error:(34, 87) value insert is not a member of
-//  molecule.util.dsl.schemaDSL.OneRef[
+//  molecule.dsl.schemaDSL.OneRef[
 //    molecule.examples.seattle.dsl.seattle.Neighborhood,
 //    molecule.examples.seattle.dsl.seattle.District] with
 //  molecule.examples.seattle.dsl.seattle.District_6[

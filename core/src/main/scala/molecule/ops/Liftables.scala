@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   import c.universe._
-  val z = debug("Liftables", 1, 10, true)
+  val z = Debug("Liftables", 1, 10, true)
 
 
   // General liftables --------------------------------------------------------------
@@ -19,18 +19,24 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
   implicit val liftAny = Liftable[Any] {
-    case s: String     => q"$s"
-    case i: Int        => q"$i"
-    case l: Long       => q"$l"
-    case f: Float      => q"$f"
-    case d: Double     => q"$d"
-    case b: Boolean    => q"$b"
-    case date: Date    => mkDate(date)
-    case uuid: UUID    => mkUUID(uuid)
-    case uri: URI      => mkURI(uri)
-    case qm: Qm.type   => q"Qm"
-    case qmr: QmR.type => q"QmR"
-    case other         => abort("[Liftables:liftAny] Can't lift unexpected base type: " + other.getClass)
+    case Literal(Constant(s: String))  => q"$s"
+    case Literal(Constant(i: Int))     => q"$i"
+    case Literal(Constant(l: Long))    => q"$l"
+    case Literal(Constant(f: Float))   => q"$f"
+    case Literal(Constant(d: Double))  => q"$d"
+    case Literal(Constant(b: Boolean)) => q"$b"
+    case s: String                     => q"$s"
+    case i: Int                        => q"$i"
+    case l: Long                       => q"$l"
+    case f: Float                      => q"$f"
+    case d: Double                     => q"$d"
+    case b: Boolean                    => q"$b"
+    case date: Date                    => mkDate(date)
+    case uuid: UUID                    => mkUUID(uuid)
+    case uri: URI                      => mkURI(uri)
+    case qm: Qm.type                   => q"Qm"
+    //    case qmr: QmR.type => q"QmR"
+    case other => abort("[Liftables:liftAny] Can't lift unexpected base type: " + other.getClass)
   }
 
   implicit val liftTuple2 = Liftable[Product] {
@@ -124,8 +130,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   // Liftables for Model --------------------------------------------------------------
 
   implicit val liftTerm = Liftable[Value] {
-//    case NoValue          => q"NoValue"
-//    case Blank            => q"Blank"
+    //    case NoValue          => q"NoValue"
+    //    case Blank            => q"Blank"
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
     case EnumVal          => q"EnumVal"

@@ -1,5 +1,5 @@
 package molecule.util.schema
-import molecule.util.dsl.schemaDefinition._
+import molecule.dsl.schemaDefinition._
 
 @InOut(3, 22)
 trait CoreTestDefinition {

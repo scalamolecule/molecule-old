@@ -6,11 +6,11 @@ package molecule.schemas
  * Instead, change the molecule definition files and recompile your project with `sbt compile`.
  */
 import molecule._
-import molecule.util.dsl.schemaDSL.OneString
-import molecule.util.dsl.schemaDSL._
+import molecule.dsl.schemaDSL.OneString
+import molecule.dsl.schemaDSL._
 import molecule.in._
 import molecule.out._
-import molecule.util.dsl.schemaDSL._
+import molecule.dsl.schemaDSL._
 
 
 object Db extends Db_0 {

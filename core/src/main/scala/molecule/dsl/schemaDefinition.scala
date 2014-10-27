@@ -1,4 +1,4 @@
-package molecule.util.dsl
+package molecule.dsl
 import scala.annotation.StaticAnnotation
 
 

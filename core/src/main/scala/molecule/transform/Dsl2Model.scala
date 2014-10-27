@@ -2,13 +2,13 @@ package molecule
 package transform
 import molecule.ast.model._
 import molecule.ops.TreeOps
-import molecule.util.dsl.schemaDSL._
+import molecule.dsl.schemaDSL._
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = debug("Dsl2Model", 1, 10, false)
+  val x = Debug("Dsl2Model", 1, 10, false)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))

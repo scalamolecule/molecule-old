@@ -3,8 +3,8 @@ package in
 
 import molecule.out._
 import java.util.Date
-import molecule.util.dsl.schemaDSL.NS
-import molecule.util.dsl.schemaDSL._
+import molecule.dsl.schemaDSL.NS
+import molecule.dsl.schemaDSL._
 import scala.language.higherKinds
 
 

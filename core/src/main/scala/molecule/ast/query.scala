@@ -5,12 +5,23 @@ object query {
 
   trait QueryExpr
 
-  case class Query(f : Find, wi: With, i: In, wh: Where) extends QueryExpr {
+  case class Query(f: Find, wi: With, i: In, wh: Where) extends QueryExpr {
     lazy val print = Query2String(this)
     def toList: String = print.toList
     def toMap: String = print.toMap
-    def pretty(maxLength: Int): String = print.pretty(maxLength)
-    def pretty: String = pretty(30)
+    def datalog(maxLength: Int = 35): String = print.multiLine(maxLength)
+    def datalog: String = datalog(30)
+
+    override def toString = {
+      val sep = "\n    "
+      val widh = if (wi.variables.isEmpty) "" else wi.variables.mkString("\n  With(\n    ", sep, ")")
+      val in = if (i.inputs.isEmpty) "" else i.inputs.mkString("\n  In(\n    ", sep, ")")
+      s"""|Query(
+          |  Find(
+          |    ${f.outputs.mkString(sep)})$widh$in
+          |  Where(
+          |    ${wh.clauses.mkString(sep)}))""".stripMargin
+    }
   }
 
   case class Find(outputs: Seq[Output]) extends QueryExpr
@@ -27,8 +38,8 @@ object query {
   case class KW(ns: String, attr: String, refNs: String = "") extends QueryTerm
 
   sealed trait QueryValue extends QueryTerm
-  case class Var(v: String, tpeS: String = "") extends QueryValue with Output
-  case class Val(v: Any, tpeS: String = "String") extends QueryValue
+  case class Var(v: String, tpeS: String) extends QueryValue with Output
+  case class Val(v: Any, tpeS: String) extends QueryValue
   case class Dummy(v: Any) extends QueryValue
   case object NoVal extends QueryValue
 
@@ -41,8 +52,8 @@ object query {
   case class Rule(name: String, args: Seq[QueryValue], clauses: Seq[DataClause]) extends QueryTerm
 
   trait Input extends QueryTerm
-  case class InDataSource(ds: DataSource, argss: Seq[Seq[String]] = Seq(Seq())) extends Input
-  case class InVar(binding: Binding, argss: Seq[Seq[String]] = Seq(Seq())) extends Input
+  case class InDataSource(ds: DataSource, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input
+  case class InVar(binding: Binding, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input
   case class Placeholder(v: String, kw: KW, tpeS: String, enumPrefix: Option[String] = None, e: String = "") extends Input
 
 

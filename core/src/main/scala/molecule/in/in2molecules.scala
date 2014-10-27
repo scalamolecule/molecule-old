@@ -2,7 +2,7 @@ package molecule.in
 import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.util.dsl.schemaDSL
+import molecule.dsl.schemaDSL
 import schemaDSL.NS
 import molecule.out._
 
@@ -28,46 +28,80 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
     traverse(or)
   }
 
-  def bindValues(inputTuples: Seq[(I1, I2)]) = {
+  def bindValues1(inputTuples: Seq[(I1, I2)]) = {
     val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
     val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
-    val query1 = query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
-    val entityQuery = query.copy(f = Find(Seq(Var("ent", "Long"))))
+    val query1 = _query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
+    val entityQuery = _query.copy(f = Find(Seq(Var("ent", "Long"))))
     (query1, entityQuery)
   }
 
   def bindValues2(inputLists: (Seq[I1], Seq[I2])) = {
+
     // Extract placeholder info and discard placeholders
-    val varsAndPrefixes = query.i.inputs.collect {
-      case Placeholder(_, kw, t, enumPrefix, e) => (kw, t, enumPrefix.getOrElse(""), e)
+    val varsAndPrefixes = _query.i.inputs.collect {
+//      case Placeholder(_, kw, t, enumPrefix, e) => (kw, t, enumPrefix.getOrElse(""), e)
+      case Placeholder(_, kw, tpeS, enumPrefix, e) => (kw, tpeS, enumPrefix, e)
     }
-    val query1 = query.copy(i = In(Seq()))
+    val query1 = _query.copy(i = In(Seq()))
 
     if (varsAndPrefixes.size != 2)
-      sys.error(s"[InputMolecule_2] Query should expect exactly 2 inputs:\nQuery: ${query.pretty}")
+      sys.error(s"[InputMolecule_2] Query should expect exactly 2 inputs:\nQuery: ${_query.datalog}")
+
+
 
     // Add rules for each list of inputs
     val query2 = inputLists.productIterator.toList.zip(varsAndPrefixes).foldLeft(query1) {
-      case (q, (inputList: Seq[_], (kw, t, p, e))) => {
+      case (q, (inputList: Seq[_], (kw, tpeS, enumPrefix, e))) => {
         // Add rule for each input value
         val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
         val newRules = inputList.foldLeft(q.i.rules) { case (rules, input) =>
-//          val dataClause = DataClause(e, kw, t, Val(p + input.toString))
-          val dataClause = DataClause(ImplDS, Var(e, t), kw, Val(p + input.toString), Empty)
-          val rule = Rule(ruleName, Seq(Var(e)), Seq(dataClause))
+          val value = if (enumPrefix.isDefined) enumPrefix.get + input else input
+          val dataClause = DataClause(ImplDS, Var(e, tpeS), kw, Val(value, tpeS), Empty)
+          val rule = Rule(ruleName, Seq(Var(e, tpeS)), Seq(dataClause))
           rules :+ rule
         }
         val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = newRules)
-        val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
+        val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e, "Long"))))
         q.copy(i = newIn, wh = newWhere)
       }
     }
     val entityQuery = query2.copy(f = Find(Seq(Var("ent", "Long"))))
     (query2, entityQuery)
   }
+
+  def inputValues1(inputTuples: Seq[(I1, I2)]) = {
+    val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
+    val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
+    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
+  }
+
+//  def inputValues2(inputLists: (Seq[I1], Seq[I2])) = {
+//    val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
+//    val query2 = inputLists.productIterator.toList.zip(varsAndPrefixes).map {
+//          case (inputList: Seq[_], (kw, tpeS, enumPrefix, e)) => {
+//
+//
+//            // Add rule for each input value
+//            val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
+//            val newRules = inputList.foldLeft(q.i.rules) { case (rules, input) =>
+//              val value = if (enumPrefix.isDefined) enumPrefix.get + input else input
+//              val dataClause = DataClause(ImplDS, Var(e, tpeS), kw, Val(value, tpeS), Empty)
+//              val rule = Rule(ruleName, Seq(Var(e, tpeS)), Seq(dataClause))
+//              rules :+ rule
+//            }
+//            val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = newRules)
+//            val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e, "Long"))))
+//            q.copy(i = newIn, wh = newWhere)
+//          }
+//        }
+//
+//    val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
+//    values.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n"
+//  }
 }
 
-abstract class InputMolecule_2_0[I1, I2](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_0[I1, I2](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule0
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule0 = apply(Seq((i1, i2)))(conn)
   def apply(in1: Seq[I1], in2: Seq[I2])     (implicit conn: Connection): Molecule0
@@ -79,7 +113,7 @@ abstract class InputMolecule_2_0[I1, I2](val model: Model, val query: Query) ext
   }
 }
 
-abstract class InputMolecule_2_1[I1, I2, A](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_1[I1, I2, A](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule1[A]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule1[A] = apply(Seq((i1, i2)))(conn)
   def apply(in1: Seq[I1], in2: Seq[I2])     (implicit conn: Connection): Molecule1[A]
@@ -91,7 +125,7 @@ abstract class InputMolecule_2_1[I1, I2, A](val model: Model, val query: Query) 
   }
 }
 
-abstract class InputMolecule_2_2[I1, I2, A, B](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_2[I1, I2, A, B](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule2[A, B]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule2[A, B] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule2[A, B] = apply(head +: tail)(conn)
@@ -103,7 +137,7 @@ abstract class InputMolecule_2_2[I1, I2, A, B](val model: Model, val query: Quer
   }
 }
 
-abstract class InputMolecule_2_3[I1, I2, A, B, C](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_3[I1, I2, A, B, C](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule3[A, B, C]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule3[A, B, C] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule3[A, B, C] = apply(head +: tail)(conn)
@@ -115,7 +149,7 @@ abstract class InputMolecule_2_3[I1, I2, A, B, C](val model: Model, val query: Q
   }
 }
 
-abstract class InputMolecule_2_4[I1, I2, A, B, C, D](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_4[I1, I2, A, B, C, D](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule4[A, B, C, D]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule4[A, B, C, D] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule4[A, B, C, D] = apply(head +: tail)(conn)
@@ -127,7 +161,7 @@ abstract class InputMolecule_2_4[I1, I2, A, B, C, D](val model: Model, val query
   }
 }
 
-abstract class InputMolecule_2_5[I1, I2, A, B, C, D, E](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_5[I1, I2, A, B, C, D, E](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule5[A, B, C, D, E]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule5[A, B, C, D, E] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule5[A, B, C, D, E] = apply(head +: tail)(conn)
@@ -139,7 +173,7 @@ abstract class InputMolecule_2_5[I1, I2, A, B, C, D, E](val model: Model, val qu
   }
 }
 
-abstract class InputMolecule_2_6[I1, I2, A, B, C, D, E, F](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_6[I1, I2, A, B, C, D, E, F](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule6[A, B, C, D, E, F]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule6[A, B, C, D, E, F] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule6[A, B, C, D, E, F] = apply(head +: tail)(conn)
@@ -151,7 +185,7 @@ abstract class InputMolecule_2_6[I1, I2, A, B, C, D, E, F](val model: Model, val
   }
 }
 
-abstract class InputMolecule_2_7[I1, I2, A, B, C, D, E, F, G](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_7[I1, I2, A, B, C, D, E, F, G](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule7[A, B, C, D, E, F, G]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule7[A, B, C, D, E, F, G] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule7[A, B, C, D, E, F, G] = apply(head +: tail)(conn)
@@ -163,7 +197,7 @@ abstract class InputMolecule_2_7[I1, I2, A, B, C, D, E, F, G](val model: Model, 
   }
 }
 
-abstract class InputMolecule_2_8[I1, I2, A, B, C, D, E, F, G, H](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_8[I1, I2, A, B, C, D, E, F, G, H](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule8[A, B, C, D, E, F, G, H]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule8[A, B, C, D, E, F, G, H] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule8[A, B, C, D, E, F, G, H] = apply(head +: tail)(conn)
@@ -175,7 +209,7 @@ abstract class InputMolecule_2_8[I1, I2, A, B, C, D, E, F, G, H](val model: Mode
   }
 }
 
-abstract class InputMolecule_2_9[I1, I2, A, B, C, D, E, F, G, H, I](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_9[I1, I2, A, B, C, D, E, F, G, H, I](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule9[A, B, C, D, E, F, G, H, I]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule9[A, B, C, D, E, F, G, H, I] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule9[A, B, C, D, E, F, G, H, I] = apply(head +: tail)(conn)
@@ -187,7 +221,7 @@ abstract class InputMolecule_2_9[I1, I2, A, B, C, D, E, F, G, H, I](val model: M
   }
 }
 
-abstract class InputMolecule_2_10[I1, I2, A, B, C, D, E, F, G, H, I, J](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_10[I1, I2, A, B, C, D, E, F, G, H, I, J](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule10[A, B, C, D, E, F, G, H, I, J]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule10[A, B, C, D, E, F, G, H, I, J] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule10[A, B, C, D, E, F, G, H, I, J] = apply(head +: tail)(conn)
@@ -199,7 +233,7 @@ abstract class InputMolecule_2_10[I1, I2, A, B, C, D, E, F, G, H, I, J](val mode
   }
 }
 
-abstract class InputMolecule_2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, K](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, K](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule11[A, B, C, D, E, F, G, H, I, J, K]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule11[A, B, C, D, E, F, G, H, I, J, K] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule11[A, B, C, D, E, F, G, H, I, J, K] = apply(head +: tail)(conn)
@@ -211,7 +245,7 @@ abstract class InputMolecule_2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, K](val m
   }
 }
 
-abstract class InputMolecule_2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule12[A, B, C, D, E, F, G, H, I, J, K, L]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule12[A, B, C, D, E, F, G, H, I, J, K, L] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule12[A, B, C, D, E, F, G, H, I, J, K, L] = apply(head +: tail)(conn)
@@ -223,7 +257,7 @@ abstract class InputMolecule_2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L](va
   }
 }
 
-abstract class InputMolecule_2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M] = apply(head +: tail)(conn)
@@ -235,7 +269,7 @@ abstract class InputMolecule_2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M]
   }
 }
 
-abstract class InputMolecule_2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = apply(head +: tail)(conn)
@@ -247,7 +281,7 @@ abstract class InputMolecule_2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = apply(head +: tail)(conn)
@@ -259,7 +293,7 @@ abstract class InputMolecule_2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = apply(head +: tail)(conn)
@@ -271,7 +305,7 @@ abstract class InputMolecule_2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = apply(head +: tail)(conn)
@@ -283,7 +317,7 @@ abstract class InputMolecule_2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = apply(head +: tail)(conn)
@@ -295,7 +329,7 @@ abstract class InputMolecule_2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = apply(head +: tail)(conn)
@@ -307,7 +341,7 @@ abstract class InputMolecule_2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = apply(head +: tail)(conn)
@@ -319,7 +353,7 @@ abstract class InputMolecule_2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = apply(head +: tail)(conn)
@@ -331,7 +365,7 @@ abstract class InputMolecule_2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M,
   }
 }
 
-abstract class InputMolecule_2_22[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val model: Model, val query: Query) extends InputMolecule_2[I1, I2] {
+abstract class InputMolecule_2_22[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val _model: Model, val _query: Query) extends InputMolecule_2[I1, I2] {
   def apply(ins: Seq[(I1, I2)])             (implicit conn: Connection): Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V]
   def apply(i1: I1, i2: I2)                 (implicit conn: Connection): Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = apply(Seq((i1, i2)))(conn)
   def apply(head: (I1, I2), tail: (I1, I2)*)(implicit conn: Connection): Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = apply(head +: tail)(conn)

@@ -7,8 +7,8 @@ import molecule.util.Debug
 import scala.collection.JavaConverters._
 import java.util.{List => jList}
 
-case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()) extends Debug with DatomicFacade {
-  val y = debug("Model2Transaction", 3, 99, false, 2)
+case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()) extends DatomicFacade {
+  val y = Debug("Model2Transaction", 3, 99, false, 2)
 
   def javaTx: (jList[jList[_]], Seq[Object]) = {
     val (stmts, tempIds) = tx

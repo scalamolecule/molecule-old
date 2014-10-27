@@ -1,19 +1,30 @@
 package molecule.out
 import molecule.ast.model._
-import molecule.util.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
+import molecule.dsl.schemaDSL._
+//import scala.collection.JavaConverters._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
 
 trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = debug("BuildMolecule", 1, 60, false)
+  val x = Debug("BuildMolecule", 1, 60, false)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
-  val imports = q"""
+  def basics(dsl: c.Expr[NS]) = {
+    val model0 = Dsl2Model(c)(dsl)
+
+    //    x(3, model0)
+
+    val identifiers = (model0.elements collect {
+      case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
+        ident -> q"${TermName(ident.toString.substring(9))}"
+    }).toMap
+
+    q"""
       import molecule.out._
       import molecule.ast.query._
       import molecule.ast.model._
@@ -24,19 +35,8 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import scala.collection.JavaConversions._
       import scala.collection.JavaConverters._
       import datomic.Connection
-      """
+      import molecule.ops.QueryOps._
 
-  def basics(dsl: c.Expr[NS]) = {
-    val model0 = Dsl2Model(c)(dsl)
-
-//    x(3, model0)
-
-    val identifiers = (model0.elements collect {
-      case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
-        ident -> q"${TermName(ident.toString.substring(9))}"
-    }).toMap
-    q"""
-      ..$imports
       val model = Model($model0.elements.map {
         case atom@Atom(_, _, _, _, value, _) => value match {
           case Eq(Seq(ident)) if ident.toString.startsWith("__ident__") =>
@@ -47,6 +47,16 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       })
       val query = Model2Query(model)
       val entityQuery = query.copy(f = Find(Seq(Var("ent", "Long"))))
+
+      def debugMolecule(q: Query, rows: java.util.Collection[java.util.List[java.lang.Object]]): Unit = sys.error(
+        "\n--------------------------------------------------------------------------\n" +
+        ${show(dsl.tree)} + "\n\n" +
+        model + "\n\n" +
+        q + "\n\n" +
+        q.datalog + "\n\n" +
+        rows.toList.zipWithIndex.map(r => (r._2 + 1) + ". " + r._1).mkString("\n") +
+        "\n--------------------------------------------------------------------------\n"
+      )
     """
   }
 
@@ -55,6 +65,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       ..${basics(dsl)}
       new Molecule0(model, query) {
         def ids: Seq[Long] = entityIds(entityQuery)
+        def debug(implicit conn: Connection): Unit = debugMolecule(results(query, conn))
       }
     """)
   }
@@ -73,15 +84,10 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new Molecule1[$A](model, query) {
-        def ids: Seq[Long] = entityIds(entityQuery)
-        def tpe(implicit conn: Connection): Unit = sys.error(
-          "model : " + model.toString + "\n" +
-          "result: " + results(_query, conn).toString + "\n" +
-          "type  : " + ${A.toString}
-          )
-        def get2(implicit conn: Connection): Unit = sys.error(results(_query, conn).toList.mkString("\n"))
-        def get(implicit conn: Connection): Seq[$A]         = results(_query, conn).toList.map(data => ${cast(q"data")})
-        def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(_query, conn).toList.map(data => ${hlist(q"data")})
+        def ids: Seq[Long]                                  = entityIds(entityQuery)
+        def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${cast(q"data")})
+        def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query, conn).toList.map(data => ${hlist(q"data")})
+        def debug(implicit conn: Connection): Unit          = debugMolecule(query, results(query, conn))
       }
     """)
   }
@@ -101,11 +107,10 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new $MoleculeTpe[..$OutTypes](model, query) {
-        def ids: Seq[Long] = entityIds(entityQuery)
-        def get2(implicit conn: Connection): Unit = sys.error(results(_query, conn).toList.mkString("\n"))
-        def get2s(implicit conn: Connection): Unit = sys.error(results(_query, conn).toList.length.toString)
-        def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(_query, conn).toList.map(data => (..${tplValues(q"data")}))
-        def hl(implicit conn: Connection) : Seq[$HListType]    = results(_query, conn).toList.map(data => ${hlist(q"data")})
+        def ids: Seq[Long]                                     = entityIds(entityQuery)
+        def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query, conn).toList.map(data => (..${tplValues(q"data")}))
+        def hl(implicit conn: Connection) : Seq[$HListType]    = results(query, conn).toList.map(data => ${hlist(q"data")})
+        def debug(implicit conn: Connection): Unit             = debugMolecule(query, results(query, conn))
       }
     """)
   }

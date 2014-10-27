@@ -140,7 +140,7 @@ object DslBoilerplate {
       case (d, line) => line match {
         case r"\/\/.*" /* comments allowed */                 => d
         case r"package (.*)$path\.[\w]*"                      => d.copy(pkg = path)
-        case "import molecule.util.dsl.schemaDefinition._"         => d
+        case "import molecule.dsl.schemaDefinition._"         => d
         case r"@InOut\((\d+)$inS, (\d+)$outS\)"               => d.copy(in = inS.toString.toInt, out = outS.toString.toInt)
         case r"trait (.*)${dmn}Definition \{"                 => d.copy(domain = dmn)
         case r"trait (\w*)$ns\s*extends\s*Tree\s*\{"          => d.copy(nss = d.nss :+ Namespace(ns, Some(Tree())))
@@ -237,7 +237,7 @@ object DslBoilerplate {
         | * Instead, change the molecule definition files and recompile your project with `sbt compile`
         | */
         |package ${d.pkg}.schema
-        |import molecule.util.dsl.Transaction
+        |import molecule.dsl.Transaction
         |import datomic.{Util, Peer}
         |
         |object ${d.domain}Schema extends Transaction {
@@ -446,7 +446,7 @@ object DslBoilerplate {
         | */
         |package ${d.pkg}.dsl.${firstLow(d.domain)}
         |import molecule._
-        |import molecule.util.dsl.schemaDSL._$inImport
+        |import molecule.dsl.schemaDSL._$inImport
         |import molecule.out._$javaImports
         |
         |

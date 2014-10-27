@@ -145,7 +145,8 @@ class SeattleTests extends SeattleSpec {
 
     // Notation variations with OR-semantics for multiple inputs:
 
-    // 1. OR expression
+    // 1. OR expression-----------------------------------------------------
+
     communitiesWithType("facebook_page" or "twitter").get(3) === facebookOrTwitterCommunities
 
     // 2. Comma-separated list

@@ -4,8 +4,8 @@ import molecule.ast.query.{Placeholder, Query, Var}
 
 
 trait InputMolecule {
-  val model: Model
-  val query: Query
+  val _model: Model
+  val _query: Query
 
   def resolveOr[I1](or: Or[I1]): Seq[I1] = {
     def traverse(expr: Or[I1]): Seq[I1] = expr match {
@@ -17,12 +17,19 @@ trait InputMolecule {
     traverse(or)
   }
 
-  def varsAndPrefixes = query.i.inputs.collect {
-    case Placeholder(v, kw, t, enumPrefix, _) => (Var(v, t), enumPrefix.getOrElse(""))
+  def varsAndPrefixes = _query.i.inputs.collect {
+    case Placeholder(v, kw, tpeS, enumPrefix, _) => (Var(v, tpeS), enumPrefix.getOrElse(""))
   }
 
-  def getValues(prefix: String, rawValues: Seq[Any]) = rawValues.flatMap {
-    case many: Set[_] => many.toList.map(setValue => prefix + setValue.toString).toSeq
-    case one          => Seq(prefix + one.toString)
+  def getValues(prefix: String, rawValues: Seq[Any]) = if (prefix != "") {
+    rawValues.flatMap {
+      case many: Set[_] => many.toList.map(setValue => prefix + setValue.toString).toSeq
+      case one          => Seq(prefix + one.toString)
+    }
+  } else {
+    rawValues.flatMap {
+      case many: Set[_] => many.toSeq
+      case one          => Seq(one)
+    }
   }
 }

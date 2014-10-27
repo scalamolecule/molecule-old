@@ -1,7 +1,6 @@
 package molecule
 import java.util.UUID._
 import java.util.{Date, UUID, Map => jMap}
-
 import datomic._
 import datomic.db.Db
 import molecule.ast.model._
@@ -9,26 +8,25 @@ import molecule.ast.query._
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.Debug
-
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.language.existentials
 
-trait DatomicFacade extends Debug {
-  private val x = debug("DatomicFacade", 1, 99, false, 2)
+trait DatomicFacade {
+  private val x = Debug("DatomicFacade", 1, 99, false, 2)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
   // Create database and load schema ========================================
 
   def load(tx: java.util.List[_], identifier: String = "test"): Connection = {
     val uri = "datomic:mem://" + randomUUID()
-//    val uri = "datomic:mem://" + identifier
+    //    val uri = "datomic:mem://" + identifier
     //    Peer.deleteDatabase(uri)
     //    Peer.createDatabase(uri)
     //    val conn = Peer.connect(uri)
     //    conn.transact(tx).get()
     //    conn
-//    val conn = try {
+    //    val conn = try {
     try {
       Peer.deleteDatabase(uri)
       Peer.createDatabase(uri)
@@ -63,8 +61,10 @@ trait DatomicFacade extends Debug {
   }
 
   def inputs(query: Query) = query.i.inputs.map {
-    case InVar(RelationBinding(_), argss)   => Util.list(argss.map(args => Util.list(args.asJava: _*)).asJava: _*)
-    case InVar(CollectionBinding(_), argss) => Util.list(argss.head.asJava: _*)
+    //    case InVar(RelationBinding(_), argss)   => Util.list(argss.map(args => Util.list(args.asJava: _*)).asJava: _*)
+    //    case InVar(CollectionBinding(_), argss) => Util.list(argss.head.asJava: _*)
+    case InVar(RelationBinding(_), argss)   => Util.list(argss.map(args => Util.list(args.map(_.asInstanceOf[Object]): _*)).asJava: _*)
+    case InVar(CollectionBinding(_), argss) => Util.list(argss.head.map(_.asInstanceOf[Object]): _*)
     case InVar(_, argss)                    => argss.head.head
     case InDataSource(_, argss)             => argss.head.head
     case args                               => sys.error(s"[DatomicFacade] UNRESOLVED input args: $args")
@@ -87,24 +87,53 @@ trait DatomicFacade extends Debug {
     // reset db settings
     dbOp = null
 
-    //    println(conn)
-    //    println(conn.db)
-    //    println(query.format)
-//    println("##############################################################################")
-//    println(query.pretty)
-//    println("------------------------------------------------ ")
-//    println("RULES: " + (if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")))
-//    println("================================================ ")
 
     val first = if (query.i.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
-    //    println("------------------------------------------------ ")
-    //    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
-    //    println("###########################################################################################\n")
+//    println(query)
+//    println("##############################################################################")
+//    println(query.datalog)
+//    println("------------------------------------------------ ")
+//    println("RULES: " + (if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")))
+//    println("------------------------------------------------ ")
+//    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
+//    println("###########################################################################################\n")
 
-//    Peer.q( s"""[:find ?a :where [_ ?a "hi"]]""", conn.db)
-    Peer.q(query.toMap, allInputs: _*)
+    //    Peer.q( s"""[:find (distinct ?b) :with ?ent :where [?ent :ns/ints ?b]]""", conn.db)
+    //    Peer.q( s"""[:find (distinct ?b) :where [?ent :ns/ints ?b]]""", conn.db)
+    //    Peer.q( s"""[:find ?b :where [?ent :ns/ints ?b]]""", conn.db)       // // [[28], [37], [7], [12]]
+    //    Peer.q( s"""[:find ?ent ?b :where [?ent :ns/ints ?b]]""", conn.db) // [[17592186045437 28], [17592186045436 37], [17592186045437 7], [17592186045436 12]]
+    //    Peer.q( s"""[:find (distinct ?b) :with ?ent :where [?ent :ns/ints ?b]]""", conn.db) // [[#{7 28 12 37}]]
+    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent][?ent :ns/ints ?b]]""", conn.db) // [[#{7 28 12 37}]]
+    //    Peer.q( s"""[:find (distinct ?b)  :where [_ :ns/ints ?b]]""", conn.db) // [[#{7 28 12 37}]]
+    //    Peer.q( s"""[:find ?a (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db) // [["John" #{12 37}] ["Lisa" #{7 28}]]
+    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)
+    //    Peer.q( s"""[:find ?a (distinct ?b) :with ?ent :where [_ :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [["John" #{7 28 12 37}] ["Lisa" #{7 28 12 37}]]
+    //    Peer.q( s"""[:find ?b (distinct ?b) :with ?ent :where [_ :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [[7 #{7}] [12 #{12}] [28 #{28}] [37 #{37}]]
+    //    Peer.q( s"""[:find (distinct ?b) :with ?a :where [_ :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    //
+    //    Peer.q( s"""[:find (distinct ?b) :with ?a :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [[#{7 28 12 37}]]
+
+    //    val xx = Peer.q( s"""[:find ?a (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [["John" #{12 37}] ["Lisa" #{7 28}]]
+    //    Peer.q( s"""[:find ?b :where [_ ?b]]""", xx)    // [[#{12 37}] [#{7 28}]]
+
+    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent :ns/ints ?b]]""", conn.db)    // [[#{7 28 12 37}]]
+    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)
+    //    xx
+    //    val pairs = Peer.q(s"""[:find ?ent (distinct ?b) :where [?ent :ns/ints ?b]]""", conn.db) // [[17592186045436 #{12 37}] [17592186045437 #{7 28}]]
+    //    Peer.q(s"""[:find ?b :where [_ ?b]]""", pairs)    // [[#{12 37}] [#{7 28}]]
+    //    Peer.q(s"""[:find ?ent (distinct ?b) :where [?ent :ns/ints ?b]]""", conn.db) // [[17592186045436 #{12 37}] [17592186045437 #{7 28}]]
+
+    //    Peer.q(s"""
+    //       [:find ?a ?b
+    //        :where
+    //          [?ent :ns/str ?a]
+    //          [?ent :ns/int 28]
+    //          [?ent :ns/int ?b]]
+    //       """, conn.db)
+
+    //    Peer.q(query.toMap, allInputs: _*)
+    Peer.q(query.toMap, allInputs.map(_.asInstanceOf[Object]): _*)
   }
 
   def getValues(db: Database, id: Any, ns: Any, attr: Any) =
@@ -157,9 +186,9 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
   def retract = conn.transact(Util.list(Util.list(":db.fn/retractEntity", id))).get()
 
-//  def apply(attr: String) = 42
+  //  def apply(attr: String) = 42
   // macro?
-//  def --:(attr: String) = this
+  //  def --:(attr: String) = this
 
   def toMap: Map[String, Any] = {
     //  def toMap = {

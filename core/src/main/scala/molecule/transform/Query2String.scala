@@ -58,7 +58,7 @@ case class Query2String(q: Query) {
       s""" :where [ ${q.wh.clauses map p mkString " "} ] }"""
   }
 
-  def pretty(maxLength: Int = 80): String = {
+  def multiLine(maxLength: Int = 80): String = {
     val queryString = p(q)
     val (firstParts, where) = (List(p(q.f), p(q.wi), p(q.i)).filter(_.trim.nonEmpty), p(q.wh))
     if (queryString.length > maxLength) {

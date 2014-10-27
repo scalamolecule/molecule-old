@@ -1,4 +1,4 @@
-package molecule.util.dsl
+package molecule.dsl
 import java.net.URI
 import java.util.{UUID, Date}
 import molecule._
@@ -97,6 +97,11 @@ object schemaDSL {
 
   // One-cardinality
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
+
+    //    def apply(expr: Exp1[T]): Ns = ???
+    //    def apply(values: T*): Ns = ???
+        def apply(one: T, more: T*): Ns = ???
+
     // Request for no value!
     def apply(): Ns = ???
     def apply(values: Seq[T]) : Ns = ???
