@@ -7,7 +7,16 @@ object model {
     def +:(e: Element) = Model(e +: elements)
     def :+(e: Element) = Model(elements :+ e)
 
-    override def toString = "Model(\n  " + elements.mkString("\n  ") + ")"
+    override def toString = {
+      val lines = elements.map {
+        case Group(bond, nestedElements) =>
+          s"""|Group(
+              |    $bond
+              |    ${nestedElements.mkString("\n    ")})""".stripMargin
+        case other                       => other
+      }
+      "Model(\n  " + lines.mkString("\n  ") + ")"
+    }
   }
 
   trait Element
@@ -22,11 +31,11 @@ object model {
   case class SubComponent(ns: String, parentEid: Long) extends Element
 
   // Group of elements treated as one element - allowing recursive sub models
-//  case class Group(ref: Bond, elements: Seq[Element]) extends Element
+  case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
   sealed trait Value
-//  case object NoValue extends Value
-//  case object Blank extends Value
+  //  case object NoValue extends Value
+  //  case object Blank extends Value
   case object EntValue extends Value
   case object VarValue extends Value
   case object EnumVal extends Value
@@ -72,8 +81,8 @@ object model {
   def curNs(e: Element) = e match {
     case Atom(ns, _, _, _, _, _)  => ns
     case Bond(ns, _, _)           => ns
-    case SubComponent(ns, _)              => ns
-//    case Group(Bond(ns, _, _), _) => ns
+    case SubComponent(ns, _)      => ns
+    case Group(Bond(ns, _, _), _) => ns
     case unexpected               => sys.error("[model:curNs] Unexpected element: " + unexpected)
   }
 

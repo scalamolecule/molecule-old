@@ -1,71 +1,593 @@
-//package molecule
-//package examples.dayOfDatomic
-//import datomic.Peer
-//import datomic.Util.list
-//import molecule.examples.dayOfDatomic.dsl.productsOrder._
-////import molecule.examples.dayOfDatomic.dsl.socialNews._
-//import molecule.examples.dayOfDatomic.schema._
-//import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-//import scala.collection.JavaConversions._
-//import scala.language.existentials
+package molecule
+package examples.dayOfDatomic
+import datomic.Peer
+import datomic.Util.list
+import molecule.examples.dayOfDatomic.dsl.productsOrder._
+//import molecule.examples.dayOfDatomic.dsl.socialNews._
+import molecule.examples.dayOfDatomic.schema._
+import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import scala.collection.JavaConversions._
+import scala.language.existentials
+
+class DayOfDatomic extends DayOfAtomicSpec {
+
+    "Hello World" >> {
+
+      // Transaction input is data
+      val tempid = Peer.tempid(":db.part/user")
+      val txData = list(list(
+        ":db/add", tempid,
+        ":db/doc", "Hello world"))
+      val conn = load(txData, "hello-world")
+
+      // Transaction result is data
+      val txresult = conn.transact(txData)
+      txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
+
+      // Database is a value
+      val dbValue = conn.db()
+
+      // Query input is data
+      val qresult = Peer.q( """[:find ?e :where [?e :db/doc "Hello world"]]""", dbValue)
+
+      // Query result is data
+      val id = qresult.toList.head.head
+
+      // Entity is a navigable view over data
+      dbValue.entity(id).get(":db/id") === 17592186045417L
+
+      // Schema itself is data
+      dbValue.entity(":db/doc").get(":db/id") === 62
+    }
+
+
+  "ProductsAndOrders (nested data)" >> {
+
+    // See: http://blog.datomic.com/2013/06/component-entities.html
+
+    // Make db
+    implicit val conn = load(ProductsOrderSchema.tx, "Orders")
+
+    // Insert 2 products
+    val List(chocolateId, whiskyId) = Product.description insert("Expensive Chocolate", "Cheap Whisky") ids
+
+
+    // Insert nested data .................................
+
+    // Template for Order with multiple LineItems
+    val order = m(Order.LineItems.apply(LineItem.product.price.quantity))
+
+
+    // Make order with two line items and return created entity id
+    val orderId = order.insert(List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).ids.last
+
+    // Find id of order with chocolate
+    Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId
+
+
+    // Touch entity ................................
+
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved and sorted by their ids
+    orderId.touch === Map(
+      ":db/id" -> 17592186045423L,
+      ":order/lineItems" -> List(
+        Map(
+          ":db/id" -> 17592186045421L,
+          ":lineItem/quantity" -> 1,
+          ":lineItem/price" -> 48.0,
+          ":lineItem/product" -> Map(":db/id" -> chocolateId, ":product/description" -> "Expensive Chocolate")),
+        Map(
+          ":db/id" -> 17592186045422L,
+          ":lineItem/quantity" -> 2,
+          ":lineItem/price" -> 38.0,
+          ":lineItem/product" -> Map(":db/id" -> whiskyId, ":product/description" -> "Cheap Whisky"))
+      ))
+
+    // Retract nested data ............................
+
+    // Retract entity - all subcomponents/lineItems are retracted
+    orderId.retract
+
+    // The products are still there
+    Product.description("Expensive Chocolate" or "Cheap Whisky").ids === List(chocolateId, whiskyId)
+  }
+
+
+  //  "Query tour + Social News" >> {
+  //    import molecule.examples.dayOfDatomic.dsl.socialNews._
+  //
+  //    // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
+  //
+  //    // 1-2. Make db
+  //    implicit val conn = load(SocialNewsSchema.tx, "SocialNews")
+  //
+  //    // Add Stories
+  //    val List(s1, s2, s3) = Story.title.url insert List(
+  //      ("Teach Yourself Programming in Ten Years", "http://norvig.com/21-days.html"),
+  //      ("Clojure Rationale", "http://clojure.org/rationale"),
+  //      ("Beating the Averages", "http://www.paulgraham.com/avg.html")
+  //    ) ids
+  //
+  //    // Add Users
+  //    val List(stu, ed) = User.firstName.lastName.email insert List(
+  //      ("stu", "Halloway", "stuarthalloway@datomic.com"),
+  //      ("ed", "Itor", "editor@example")
+  //    ) ids
+  //
+  //    // Created entity ids are simply Long values
+  //    (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
+  //    (stu, ed) ===(17592186045422L, 17592186045423L)
+  //
+  //    // 3. Finding All Users with a first name
+  //    User.firstName.ids === List(stu, ed)
+  //
+  //    // 4. Finding a specific user
+  //    User.email("editor@example").ids.head === ed
+  //
+  //
+  //    // Add comments ..............................
+  //
+  //    // Users can:
+  //
+  //    // 1. Comment on a Story
+  //    val storyComment = Story.e.Comments.author.text insert
+  //
+  //    // 2. Comment on a Comment
+  //    val subComment = Comment.e.Comment.author.text insert
+  //
+  //    // Sub-comments form hierarchical trees of Comment nodes having the
+  //    // previous comment as parent and the initial Story Comment as root
+  //
+  //    // Insert Stu's first comment to story 1 and return the id of this comment
+  //    val c1 = storyComment(s1, stu, "blah 1") id
+  //
+  //    // Ed's Comment to Stu's first Comment
+  //    val c2 = subComment(c1, ed, "blah 2") id
+  //
+  //    // More sub-comments
+  //    val c3 = subComment(c2, stu, "blah 3") id
+  //    val c4 = subComment(c3, ed, "blah 4") id
+  //
+  //    // Story 2 comments
+  //    val c5 = storyComment(s2, ed, "blah 5") id
+  //    val c6 = subComment(c5, stu, "blah 6") id
+  //
+  //    // Story 3 comments
+  //    val c7 = storyComment(s3, ed, "blah 7") id
+  //    val c8 = subComment(c7, stu, "blah 8") id
+  //    // Stu comments on his own comment
+  //    val c9 = subComment(c8, stu, "blah 9") id
+  //
+  //    // Story 2 again - a second thread of comments. This time Stu starts
+  //    val c10 = storyComment(s2, stu, "blah 10") id
+  //    val c11 = subComment(c10, ed, "blah 11") id
+  //    val c12 = subComment(c11, stu, "blah 12") id
+  //
+  //    // New Comment ids (a second entity is created for each association)
+  //    List(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) === List(
+  //      17592186045425L, 17592186045427L, 17592186045429L, 17592186045431L, 17592186045433L, 17592186045435L,
+  //      17592186045437L, 17592186045439L, 17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L
+  //    )
+  //
+  //    // 5. Finding a User's Comments
+  //    Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+  //
+  //    Comment.e.text.Author.email_("editor@example").firstName.get === List(
+  //      (c2, "blah 2", "Ed"),
+  //      (c4, "blah 4", "Ed"),
+  //      (c5, "blah 5", "Ed"),
+  //      (c7, "blah 7", "Ed"),
+  //      (c11, "blah 11", "Ed")
+  //    )
+  //
+  //
+  //    // 6. Returning an Aggregate of Comments of some Author
+  //    Comment(count).Author.email_("editor@example").get.head === 5
+  //
+  //    // Or we could read the size of the (un-aggregated) result set of Comment entity ids
+  //    Comment.e.Author.email("editor@example").size === 5
+  //    Comment.Author.email("editor@example").size === 5
+  //
+  //
+  //    // 7. Have people commented on other people? (Multiple joins)
+  //
+  //    // Molecule - or any database system - won't prevent us from programmatically inserting an
+  //    // id for for an unintentional entity. We could for instance have referenced the id of Ed
+  //    // by mistake instead of supplying an id of a story:
+  //    val unintentionalComment = storyComment(ed, stu, "blah 13") id
+  //
+  //    // With Molecule you can express the intentions of your domain with the words of your
+  //    // domain so that such unintentional mistakes are more unlikely to happen. Our
+  //    // definition of our insert molecule `storyComment` clearly expects a Story id.
+  //
+  //    // If one needs to find out if our database has been polluted with unintentional
+  //    // references one would have to explore this with Datalog queries since Molecule only
+  //    // supports intentional query combinations.
+  //
+  //
+  //    // Schema-aware joins .........................
+  //
+  //    // 8. A Schema Query
+  //
+  //    // Attributes of stories having comments
+  //    Story.a.Comments.text_.get === List(
+  //      ":story/title",
+  //      ":story/url"
+  //    )
+  //
+  //    // Attributes of comments having a sub-comment
+  //    Comment.a.Comment.text_.get === List(
+  //      ":comment/text",
+  //      ":comment/author",
+  //      ":comment/tree_"
+  //    )
+  //
+  //
+  //    // Entities ...................................
+  //
+  //    // 9-11. Finding an entity ID - An implicit Entity
+  //    // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
+  //    val editor = User.e.email_("editor@example.com").get.head
+  //
+  //    // 12. Requesting an Attribute value
+  //    editor(":user/firstName") === Some("Edward")
+  //    // this one ??
+  //    User(editor).firstName.first === "Edward"
+  //
+  //    // 13. Touching an entity
+  //    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+  //    editor.touch === Map(
+  //      ":db/id" -> 17592186045423L,
+  //      ":user/firstName" -> "Edward",
+  //      ":user/lastName" -> "Itor",
+  //      ":user/email" -> "editor@example.com"
+  //    )
+  //
+  //    // 14. Navigating backwards
+  //    // The editors comments (Comments pointing to the Editor entity)
+  //    editor(":comment/_author") === List(c2, c4, c5, c7, c11)
+  //
+  //    // .. almost same as: (here, only matching data is returned)
+  //    // Comments of editor
+  //    Comment.e.author_(editor).get === List(c2, c4, c5, c7, c11)
+  //
+  //    // 15. Navigating Deeper
+  //    // The editors comments' comments
+  //    editor(":comment/_author")(":comment/tree_") === List(c6, c8, c12)
+  //    Comment.author_(editor).Comment.e.get === List(c6, c8, c12)
+  //
+  //    // Comments that Editor commented on
+  //    Comment.e.Comment.author_(editor).get === List(c6, c8, c12)
+  //
+  //
+  //    // Time travel ....................................
+  //
+  //    // 16. Querying for a Transaction
+  //    val tx = User(ed).firstName_.txInstant
+  //
+  //    // 17. Converting Transacting to T
+  //    val t = Peer.toT(tx)
+  //
+  //    // Query for relative system time
+  //    User(ed).firstName_.txT === t
+  //
+  //    // 18. Getting Tx Instant
+  //    val txInstant = User(ed).firstName_.txInstant.get.last
+  //
+  //    // 19. Going back in Time
+  //    User(ed).firstName.asOf(t - 1).get.head === "Ed"
+  //
+  //
+  //    // Auditing .......................................
+  //
+  //    // 20. Querying Across All time
+  //    User(ed).firstName.txT.txAdded.history.get === List(
+  //      ("Ed", 123456789L, true),
+  //      ("Ed", 123456789L, false),
+  //      ("Edward", 123456789L, true)
+  //    )
+  //
+  //    // 21. Querying Plain Java Data
+  //    // Not supported by Molecule
+  //
+  //
+  //    // Social News =======================================================================================
+  //
+  //    // (Adding what the Query Tour hasn't already covered)
+  //
+  //    // Add underscore to attribute name to _not_ return it's value (and keep it as a search attribute)
+  //    // Here we get all Story ids (entities having a url value)
+  //    val allStories = Story.url_.e.get
+  //
+  //    // Add John and let him upvote all stories
+  //    val john = User.email.firstName.lastName.upVotes insert List(
+  //      ("john@example.com", "John", "Doe", allStories.toSet)
+  //    ) id
+  //
+  //    // Update John's first name
+  //    User(john).firstName("Jonathan").update
+  //    // or
+  //    User.firstName("Jonathan").update(john)
+  //
+  //    // John regrets upvoting Paul Graham story (`s3`)
+  //    User(john).upVotes.remove(s3).update
+  //
+  //    // John now has only 2 upvotes
+  //    User(john).upVotes.get.head.size === 2
+  //
+  //    // John skips all upvotes
+  //    User(john).upVotes().update
+  //
+  //    // John has no upvotes any longer
+  //    User(john).upVotes.get.head.size === 0
+  //
+  //
+  //    // Let Stuart upvote a story
+  //    User(stu).upVotes(s1).update
+  //
+  //    // How many users are there?
+  //    User.email.size === 3
+  //
+  //    // How many users have upvoted something? (Stuart)
+  //    User.email.upVotes_.get.head.size === 1
+  //
+  //    // Users and optional upvotes
+  //    // Cardinality many attribute upVotes might return an empty set
+  //    User.email.upVotes.get === List(
+  //      ("stuarthalloway@datomic.com", Set(s1)),
+  //      ("editor@example", Set()),
+  //      ("john@example.com", Set())
+  //    )
+  //
+  //
+  //    // Provenance =======================================================================================
+  //
+  //    val ecURL = "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"
+  //
+  //    // Add data associated with transaction data
+  //    val tx1 = Story.title.url.tx(Source.user_(stu)) insert List(
+  //      ("ElastiCache in 6 minutes", ecURL),
+  //      ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html")
+  //    )
+  //    val storyId = tx1.id
+  //
+  //    // Ed fixes the spelling error
+  //    Story(storyId).title("ElastiCache in 5 minutes").tx(Source.user(ed)) update
+  //
+  //    // Title now
+  //    Story.url_(ecURL).title.get.head === "ElastiCache in 5 minutes"
+  //
+  //    // Title before
+  //    Story.url_(ecURL).title.asOf(tx1.inst).get.head === "ElastiCache in 6 minutes"
+  //
+  //    // Who changed the title and when?
+  //    Story.url_(ecURL).title.txInstant.txAdded.tx(User.email).history.get === List(
+  //      ("5 feb", true, "ed@itor.com")
+  //    )
+  //
+  //    // Entire history of story entity
+  //    Story(storyId).a.v.txInstant.txAdded.history.get === List(
+  //      ("title", "ElastiCache in 6 minutes", "date...", true)
+  //    )
+  //  }
+  //
+  //
+  //  "Binding" >> {
+  //    import molecule.examples.dayOfDatomic.dsl.socialNews._
+  //    implicit val conn = load(SocialNewsSchema.tx, "Binding")
+  //
+  //    // Input molecules
+  //    val person = m(User.firstName(?).lastName(?))
+  //    val firstN = m(User.firstName(?))
+  //
+  //    // Bind vars
+  //    person("John", "Doe").get(1) ===("John", "Doe")
+  //
+  //    // Bind tuple
+  //    person(("John", "Doe")).get(1) ===("John", "Doe")
+  //
+  //    // Bind collection
+  //    firstN(List("John", "Jane", "Phineas")).get === List("John", "Jane", "Phineas")
+  //
+  //    // Bind relation
+  //    person(List(("John", "Doe"), ("Jane", "Doe"))).get === List(("John", "Doe"), ("Jane", "Doe"))
+  //
+  //
+  //    // Binding queries
+  //
+  //    // Find all the Stewart first names
+  //    firstN("Stewart") === List()
+  //
+  //    // Find all the Stewart or Stuart first names
+  //    firstN("Stewart", "Stuart") === List()
+  //
+  //    // Find all the Stewart/Stuart as either first name or last name
+  //    person(("Stewart", "Stuart"), ("Stewart", "Stuart")) === List()
+  //
+  //    // Find only the Smalley Stuarts
+  //    person("Stewart", "Stuart") === List()
+  //
+  //    // Same query above, but with map (tuple) form
+  //    person(("Stewart", "Stuart")) === List()
+  //  }
+  //
+  //
+  //  "Graph" >> {
+  //    import molecule.examples.dayOfDatomic.dsl.graph._
+  //    implicit val conn = load(GraphSchema.tx, "Graph")
+  //
+  //    // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
+  //
+  //    // User 1's Role in Group 2
+  //    User.name_("User1").RoleInGroup.Group.name_("Group2")._RoleInGroup.Role.name.get.head === "Role1"
+  //
+  //    // User 1's Roles in all Groups
+  //    User.name_("User1").RoleInGroup.Role.name._RoleInGroup.Group.name.get === List(
+  //      ("Role1", "Group2"),
+  //      ("Role2", "Group1")
+  //    )
+  //  }
+  //
+  //
+  //  "Aggregates" >> {
+  //    import molecule.examples.dayOfDatomic.dsl.aggregates._
+  //    implicit val conn = load(AggregatesSchema.tx, "Aggregates")
+  //
+  //    // Insert data
+  //    Obj.name.meanRadius
+  //      .tx(Data.source_("http://en.wikipedia.org/wiki/List_of_Solar_System_objects_by_size")) insert Seq(
+  //      ("Sun", 696000.0),
+  //      ("Jupiter", 69911.0),
+  //      ("Saturn", 58232.0),
+  //      ("Uranus", 25362.0),
+  //      ("Neptune", 24622.0),
+  //      ("Earth", 6371.0),
+  //      ("Venus", 6051.8),
+  //      ("Mars", 3390.0),
+  //      ("Ganymede", 2631.2),
+  //      ("Titan", 2576.0),
+  //      ("Mercury", 2439.7),
+  //      ("Callisto", 2410.3),
+  //      ("Io", 1821.5),
+  //      ("Moon", 1737.1),
+  //      ("Europa", 1561.0),
+  //      ("Triton", 1353.4),
+  //      ("Eris", 1163.0)
+  //    )
+  //
+  //    // Aggregated Attributes ..........................
+  //
+  //    // Maximum value(s)
+  //    Obj.meanRadius(max).get.head === 696000.0
+  //    Obj.meanRadius(max(3)).get.head === List(1, 2, 3)
+  //
+  //    // Minimum value(s)
+  //    Obj.meanRadius(min).get.head === 1163.0
+  //    Obj.meanRadius(min(3)).get.head === List(1, 2, 3)
+  //
+  //    // Random value(s) - duplicates possible
+  //    Obj.meanRadius(rand).get.head === 1163.0
+  //    Obj.meanRadius(rand(5)).get.head === List(1, 2, 3, 4, 5)
+  //
+  //    // Sample value(s) - no duplicates
+  //    Obj.meanRadius(sample).get.head === 1163.0
+  //    Obj.meanRadius(sample(5)).get.head === List(1, 2, 3, 4, 5)
+  //
+  //
+  //    // Aggregate Calculations .............................
+  //
+  //    // Count
+  //    Obj.name(count).get.head === 17
+  //    // (or)
+  //    Obj.name.size === 17
+  //
+  //    // Count distinct
+  //    Obj.name(countDistinct).get.head === 17
+  //
+  //    // Sum
+  //    Obj.meanRadius(sum).get.head === 696000.0
+  //
+  //    // Average
+  //    Obj.meanRadius(avg).get.head === 696000.0
+  //
+  //    // Median
+  //    Obj.meanRadius(median).get.head === 696000.0
+  //
+  //    // Variance
+  //    Obj.meanRadius(variance).get.head === 696000.0
+  //
+  //    // Standard deviation
+  //    Obj.meanRadius(stddev).get.head === 696000.0
+  //
+  //
+  //    // Schema aggregations .............................
+  //    import molecule.schemas.Db
+  //
+  //    // What is the average length of a schema name?
+  //    Db.a(avg(count)).get.head === 5.1
+  //
+  //    // Todo Custom aggregates
+  //    // ...and the mode(s) -
+  //
+  //    // How many attributes and value types does this; schema use ?
+  //    Db.e(count).valueType(countDistinct).get.head ===(3, 2)
+  //  }
+  //
+  //
+  //  "Attribute groups" >> {
+  //    import molecule.schemas.Db
+  //    implicit val conn = load(SocialNewsSchema.tx, "Attribute groups")
+  //
+  //    // Find all attributes in the story namespace
+  //    Db.a.ns_("story").get === List("title", "url", "comments")
+  //
+  //    // Create a reusable rule
+  //    val attrInNs = m(Db.a.ns_(?))
+  //
+  //    // Find all attributes in story namespace, using the rule
+  //    attrInNs("story").get === List("title", "url", "comments")
+  //
+  //    // Find all entities possessing *any* story attribute
+  //    Db.e.a_.ns_("story").get === List()
+  //  }
+}
+
+
+//    // Order with multiple LineItems
+//    val order = m(Order.orderid.lineItems(m(LineItem.product.price.quantity)))
 //
-//class DayOfDatomic extends DayOfAtomicSpec {
+//    val order = m(Order.orderid.lineItems(LineItem.product.price.quantity))
+//    val order4 = m(Order.orderid.lineItems(LineItem.product.price.quantity.Product.description_))
+//    val order5 = m(Order.orderid.lineItems(LineItem.product.price.Product.description))
+//    val order6 = m(Order.orderid.lineItems(Product.description.description.description))
 //
-//  "Hello World" >> {
+//    val order = m(Order.orderid.lineItemsNested(LineItem.product.price.quantity))
 //
-//    // Transaction input is data
-//    val tempid = Peer.tempid(":db.part/user")
-//    val txData = list(list(
-//      ":db/add", tempid,
-//      ":db/doc", "Hello world"))
-//    val conn = load(txData, "hello-world")
+////    val order = m(Order.orderid.lineItemsNested(LineItem.product.price.Product.description))
 //
-//    // Transaction result is data
-//    val txresult = conn.transact(txData)
-//    txresult.get().toString.take(26) === "{:db-before datomic.db.Db@" // etc...
+//    val order2 = m(Order.orderid ~~ LineItem.product.price.quantity)
 //
-//    // Database is a value
-//    val dbValue = conn.db()
-//
-//    // Query input is data
-//    val qresult = Peer.q( """[:find ?e :where [?e :db/doc "Hello world"]]""", dbValue)
-//
-//    // Query result is data
-//    val id = qresult.toList.head.head
-//
-//    // Entity is a navigable view over data
-//    dbValue.entity(id).get(":db/id") === 17592186045417L
-//
-//    // Schema itself is data
-//    dbValue.entity(":db/doc").get(":db/id") === 62
-//  }
+//    val order20 = m(Order.orderid ~~ LineItem.product.price.Product.description)
 //
 //
-//  "ProductsAndOrders (nested data)" >> {
+////    val order21 = m(Order.orderid ~~~ LineItem.product.price.quantity)
 //
-//    // See: http://blog.datomic.com/2013/06/component-entities.html
+//    // Same...
+//    val order22 = m(Order.orderid ~ LineItem.product)
+//    val order23 = m(Order.orderid.LineItems.product)
 //
-//    // Make db
-//    implicit val conn = load(ProductsOrderSchema.tx, "Orders")
-//
-//    // Insert 2 products
-//    val List(chocolateId, whiskyId) = Product.description insert("Expensive Chocolate", "Cheap Whisky") ids
-//
-//
-//    // Insert nested data .................................
-//
-//    // Model of Order with multiple LineItems
-//    // 3 LineItem attributes are treated as one Tuple3 of data
-//    //      val order = m(Order.lineItems(LineItem.product.price.quantity))
-//    val order = m(Order.LineItems.product.price.quantity)
-//    //    val order = m(Order.e.LineItems.product.price.quantity)
-//    //    val order = m(Order(1L).LineItems.product.price.quantity)
+//    val order2a = m(Order.orderid ~ LineItem.product.price)
+////    val order3 = m(Order.orderid ~ LineItem.product.price.Product.description)
 //
 //
-//    val order2 = Order
+////    val order = m(Order.orderid.lineItemsNested(Product.description_._LineItem.price.quantity))
+//
+//
+//
 //
 //    // Make order with two line items and return created entity id
-//    val orderId = order.insert(List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).ids.last
+//    //    val orderId = order.insert(List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).ids
+//    //    val orderId = order.insert(List((7, chocolateId, 48.00, 1), (7, whiskyId, 38.00, 2))).ids
+//
+////    val orderId = order insert List((chocolateId, 48.00, 1)) //.ids
+////    val orderId = order.insert(List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).ids
+//    val orderId = order.insert(7, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).ids
+//    val orderId = order4.insert(7, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).ids
+//    val orderId = order5.insert(7, List((chocolateId, 48.00, ""), (whiskyId, 38.00, ""))).ids
+//    val orderId = order20.insert(7, List((chocolateId, 48.00, ""), (whiskyId, 38.00, ""))).ids
+//    val orderId = order6.insert(7, List(("","", ""), ("","", ""))).ids
+//
+////    val orderId = order21.insert("", chocolateId, 48.00, 1).ids
+////    val orderId = order21.insert(7, chocolateId, 48.00, 1).ids
+//
+//    val orderId = order22.insert(7, chocolateId).ids
+//    val orderId = order23.insert(7, chocolateId).ids
+//
+//    val orderId = order2.insert(7, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).ids
+//    val orderId = order2.insert(List((7, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))))).ids
+//
+//
+//    //    val orderId = order.insert(7).ids
 //    //    val orderId = order insert List((1L, chocolateId, 48.00, 1), (1L, whiskyId, 38.00, 2)) last
 //    //    val orderId = order insert List((1L, chocolateId, 48.00, 1), (1L, whiskyId, 38.00, 2)) last
 //
@@ -78,473 +600,7 @@
 //    //    Order.LineItems.product.price.quantity.insert
 //
 //    // Find id of order with chocolate
-//    val orderIdFound = Order.e.LineItems.Product.description_("Expensive Chocolate").get.head
+////    val orderIdFound = Order.e.lineItems(LineItem.price.Product.description("Expensive Chocolate")).get.head
+////    val orderIdFound = Order.e.lineItems(LineItem.Product.description("Expensive Chocolate")).get.head
+//    val orderIdFound = Order.e.LineItems.Product.description("Expensive Chocolate").get.head
 //    orderIdFound === orderId
-//
-//
-//    // Touch entity ................................
-//
-//    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-//    orderId.touch === Map(
-//      ":db/id" -> 17592186045423L,
-//      ":order/lineItems" -> List(
-//        Map(
-//          ":db/id" -> 17592186045421L,
-//          ":lineItem/product" -> List(Map(":db/id" -> chocolateId, ":product/description" -> "Expensive Chocolate")),
-//          ":lineItem/quantity" -> 1,
-//          ":lineItem/price" -> 48.0),
-//        Map(
-//          ":db/id" -> 17592186045422L,
-//          ":lineItem/product" -> List(Map(":db/id" -> whiskyId, ":product/description" -> "Cheap Whisky")),
-//          ":lineItem/quantity" -> 2,
-//          ":lineItem/price" -> 38.0)
-//      ))
-//
-//    // Retract nested data ............................
-//
-//    // Retract entity - all subcomponents/lineItems are retracted
-//    orderId.retract
-//
-//    // The products are still there
-//    Product.description("Expensive Chocolate" or "Cheap Whisky").ids === List(chocolateId, whiskyId)
-//  }
-//
-//
-//  "Query tour + Social News" >> {
-//    import molecule.examples.dayOfDatomic.dsl.socialNews._
-//
-//    // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
-//
-//    // 1-2. Make db
-//    implicit val conn = load(SocialNewsSchema.tx, "SocialNews")
-//
-//    // Add Stories
-//    val List(s1, s2, s3) = Story.title.url insert List(
-//      ("Teach Yourself Programming in Ten Years", "http://norvig.com/21-days.html"),
-//      ("Clojure Rationale", "http://clojure.org/rationale"),
-//      ("Beating the Averages", "http://www.paulgraham.com/avg.html")
-//    ) ids
-//
-//    // Add Users
-//    val List(stu, ed) = User.firstName.lastName.email insert List(
-//      ("stu", "Halloway", "stuarthalloway@datomic.com"),
-//      ("ed", "Itor", "editor@example")
-//    ) ids
-//
-//    // Created entity ids are simply Long values
-//    (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
-//    (stu, ed) ===(17592186045422L, 17592186045423L)
-//
-//    // 3. Finding All Users with a first name
-//    User.firstName.ids === List(stu, ed)
-//
-//    // 4. Finding a specific user
-//    User.email("editor@example").ids.head === ed
-//
-//
-//    // Add comments ..............................
-//
-//    // Users can:
-//
-//    // 1. Comment on a Story
-//    val storyComment = Story.e.Comments.author.text insert
-//
-//    // 2. Comment on a Comment
-//    val subComment = Comment.e.Comment.author.text insert
-//
-//    // Sub-comments form hierarchical trees of Comment nodes having the
-//    // previous comment as parent and the initial Story Comment as root
-//
-//    // Insert Stu's first comment to story 1 and return the id of this comment
-//    val c1 = storyComment(s1, stu, "blah 1") id
-//
-//    // Ed's Comment to Stu's first Comment
-//    val c2 = subComment(c1, ed, "blah 2") id
-//
-//    // More sub-comments
-//    val c3 = subComment(c2, stu, "blah 3") id
-//    val c4 = subComment(c3, ed, "blah 4") id
-//
-//    // Story 2 comments
-//    val c5 = storyComment(s2, ed, "blah 5") id
-//    val c6 = subComment(c5, stu, "blah 6") id
-//
-//    // Story 3 comments
-//    val c7 = storyComment(s3, ed, "blah 7") id
-//    val c8 = subComment(c7, stu, "blah 8") id
-//    // Stu comments on his own comment
-//    val c9 = subComment(c8, stu, "blah 9") id
-//
-//    // Story 2 again - a second thread of comments. This time Stu starts
-//    val c10 = storyComment(s2, stu, "blah 10") id
-//    val c11 = subComment(c10, ed, "blah 11") id
-//    val c12 = subComment(c11, stu, "blah 12") id
-//
-//    // New Comment ids (a second entity is created for each association)
-//    List(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) === List(
-//      17592186045425L, 17592186045427L, 17592186045429L, 17592186045431L, 17592186045433L, 17592186045435L,
-//      17592186045437L, 17592186045439L, 17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L
-//    )
-//
-//    // 5. Finding a User's Comments
-//    Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
-//
-//    Comment.e.text.Author.email_("editor@example").firstName.get === List(
-//      (c2, "blah 2", "Ed"),
-//      (c4, "blah 4", "Ed"),
-//      (c5, "blah 5", "Ed"),
-//      (c7, "blah 7", "Ed"),
-//      (c11, "blah 11", "Ed")
-//    )
-//
-//
-//    // 6. Returning an Aggregate of Comments of some Author
-//    Comment(count).Author.email_("editor@example").get.head === 5
-//
-//    // Or we could read the size of the (un-aggregated) result set of Comment entity ids
-//    Comment.e.Author.email("editor@example").size === 5
-//    Comment.Author.email("editor@example").size === 5
-//
-//
-//    // 7. Have people commented on other people? (Multiple joins)
-//
-//    // Molecule - or any database system - won't prevent us from programmatically inserting an
-//    // id for for an unintentional entity. We could for instance have referenced the id of Ed
-//    // by mistake instead of supplying an id of a story:
-//    val unintentionalComment = storyComment(ed, stu, "blah 13") id
-//
-//    // With Molecule you can express the intentions of your domain with the words of your
-//    // domain so that such unintentional mistakes are more unlikely to happen. Our
-//    // definition of our insert molecule `storyComment` clearly expects a Story id.
-//
-//    // If one needs to find out if our database has been polluted with unintentional
-//    // references one would have to explore this with Datalog queries since Molecule only
-//    // supports intentional query combinations.
-//
-//
-//    // Schema-aware joins .........................
-//
-//    // 8. A Schema Query
-//
-//    // Attributes of stories having comments
-//    Story.a.Comments.text_.get === List(
-//      ":story/title",
-//      ":story/url"
-//    )
-//
-//    // Attributes of comments having a sub-comment
-//    Comment.a.Comment.text_.get === List(
-//      ":comment/text",
-//      ":comment/author",
-//      ":comment/tree_"
-//    )
-//
-//
-//    // Entities ...................................
-//
-//    // 9-11. Finding an entity ID - An implicit Entity
-//    // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
-//    val editor = User.e.email_("editor@example.com").get.head
-//
-//    // 12. Requesting an Attribute value
-//    editor(":user/firstName") === Some("Edward")
-//    // this one ??
-//    User(editor).firstName.first === "Edward"
-//
-//    // 13. Touching an entity
-//    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-//    editor.touch === Map(
-//      ":db/id" -> 17592186045423L,
-//      ":user/firstName" -> "Edward",
-//      ":user/lastName" -> "Itor",
-//      ":user/email" -> "editor@example.com"
-//    )
-//
-//    // 14. Navigating backwards
-//    // The editors comments (Comments pointing to the Editor entity)
-//    editor(":comment/_author") === List(c2, c4, c5, c7, c11)
-//
-//    // .. almost same as: (here, only matching data is returned)
-//    // Comments of editor
-//    Comment.e.author_(editor).get === List(c2, c4, c5, c7, c11)
-//
-//    // 15. Navigating Deeper
-//    // The editors comments' comments
-//    editor(":comment/_author")(":comment/tree_") === List(c6, c8, c12)
-//    Comment.author_(editor).Comment.e.get === List(c6, c8, c12)
-//
-//    // Comments that Editor commented on
-//    Comment.e.Comment.author_(editor).get === List(c6, c8, c12)
-//
-//
-//    // Time travel ....................................
-//
-//    // 16. Querying for a Transaction
-//    val tx = User(ed).firstName_.txInstant
-//
-//    // 17. Converting Transacting to T
-//    val t = Peer.toT(tx)
-//
-//    // Query for relative system time
-//    User(ed).firstName_.txT === t
-//
-//    // 18. Getting Tx Instant
-//    val txInstant = User(ed).firstName_.txInstant.get.last
-//
-//    // 19. Going back in Time
-//    User(ed).firstName.asOf(t - 1).get.head === "Ed"
-//
-//
-//    // Auditing .......................................
-//
-//    // 20. Querying Across All time
-//    User(ed).firstName.txT.txAdded.history.get === List(
-//      ("Ed", 123456789L, true),
-//      ("Ed", 123456789L, false),
-//      ("Edward", 123456789L, true)
-//    )
-//
-//    // 21. Querying Plain Java Data
-//    // Not supported by Molecule
-//
-//
-//    // Social News =======================================================================================
-//
-//    // (Adding what the Query Tour hasn't already covered)
-//
-//    // Add underscore to attribute name to _not_ return it's value (and keep it as a search attribute)
-//    // Here we get all Story ids (entities having a url value)
-//    val allStories = Story.url_.e.get
-//
-//    // Add John and let him upvote all stories
-//    val john = User.email.firstName.lastName.upVotes insert List(
-//      ("john@example.com", "John", "Doe", allStories.toSet)
-//    ) id
-//
-//    // Update John's first name
-//    User(john).firstName("Jonathan").update
-//    // or
-//    User.firstName("Jonathan").update(john)
-//
-//    // John regrets upvoting Paul Graham story (`s3`)
-//    User(john).upVotes.remove(s3).update
-//
-//    // John now has only 2 upvotes
-//    User(john).upVotes.get.head.size === 2
-//
-//    // John skips all upvotes
-//    User(john).upVotes().update
-//
-//    // John has no upvotes any longer
-//    User(john).upVotes.get.head.size === 0
-//
-//
-//    // Let Stuart upvote a story
-//    User(stu).upVotes(s1).update
-//
-//    // How many users are there?
-//    User.email.size === 3
-//
-//    // How many users have upvoted something? (Stuart)
-//    User.email.upVotes_.get.head.size === 1
-//
-//    // Users and optional upvotes
-//    // Cardinality many attribute upVotes might return an empty set
-//    User.email.upVotes.get === List(
-//      ("stuarthalloway@datomic.com", Set(s1)),
-//      ("editor@example", Set()),
-//      ("john@example.com", Set())
-//    )
-//
-//
-//    // Provenance =======================================================================================
-//
-//    val ecURL = "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"
-//
-//    // Add data associated with transaction data
-//    val tx1 = Story.title.url.tx(Source.user_(stu)) insert List(
-//      ("ElastiCache in 6 minutes", ecURL),
-//      ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html")
-//    )
-//    val storyId = tx1.id
-//
-//    // Ed fixes the spelling error
-//    Story(storyId).title("ElastiCache in 5 minutes").tx(Source.user(ed)) update
-//
-//    // Title now
-//    Story.url_(ecURL).title.get.head === "ElastiCache in 5 minutes"
-//
-//    // Title before
-//    Story.url_(ecURL).title.asOf(tx1.inst).get.head === "ElastiCache in 6 minutes"
-//
-//    // Who changed the title and when?
-//    Story.url_(ecURL).title.txInstant.txAdded.tx(User.email).history.get === List(
-//      ("5 feb", true, "ed@itor.com")
-//    )
-//
-//    // Entire history of story entity
-//    Story(storyId).a.v.txInstant.txAdded.history.get === List(
-//      ("title", "ElastiCache in 6 minutes", "date...", true)
-//    )
-//  }
-//
-//
-//  "Binding" >> {
-//    import molecule.examples.dayOfDatomic.dsl.socialNews._
-//    implicit val conn = load(SocialNewsSchema.tx, "Binding")
-//
-//    // Input molecules
-//    val person = m(User.firstName(?).lastName(?))
-//    val firstN = m(User.firstName(?))
-//
-//    // Bind vars
-//    person("John", "Doe").get(1) ===("John", "Doe")
-//
-//    // Bind tuple
-//    person(("John", "Doe")).get(1) ===("John", "Doe")
-//
-//    // Bind collection
-//    firstN(List("John", "Jane", "Phineas")).get === List("John", "Jane", "Phineas")
-//
-//    // Bind relation
-//    person(List(("John", "Doe"), ("Jane", "Doe"))).get === List(("John", "Doe"), ("Jane", "Doe"))
-//
-//
-//    // Binding queries
-//
-//    // Find all the Stewart first names
-//    firstN("Stewart") === List()
-//
-//    // Find all the Stewart or Stuart first names
-//    firstN("Stewart", "Stuart") === List()
-//
-//    // Find all the Stewart/Stuart as either first name or last name
-//    person(("Stewart", "Stuart"), ("Stewart", "Stuart")) === List()
-//
-//    // Find only the Smalley Stuarts
-//    person("Stewart", "Stuart") === List()
-//
-//    // Same query above, but with map (tuple) form
-//    person(("Stewart", "Stuart")) === List()
-//  }
-//
-//
-//  "Graph" >> {
-//    import molecule.examples.dayOfDatomic.dsl.graph._
-//    implicit val conn = load(GraphSchema.tx, "Graph")
-//
-//    // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
-//
-//    // User 1's Role in Group 2
-//    User.name_("User1").RoleInGroup.Group.name_("Group2")._RoleInGroup.Role.name.get.head === "Role1"
-//
-//    // User 1's Roles in all Groups
-//    User.name_("User1").RoleInGroup.Role.name._RoleInGroup.Group.name.get === List(
-//      ("Role1", "Group2"),
-//      ("Role2", "Group1")
-//    )
-//  }
-//
-//
-//  "Aggregates" >> {
-//    import molecule.examples.dayOfDatomic.dsl.aggregates._
-//    implicit val conn = load(AggregatesSchema.tx, "Aggregates")
-//
-//    // Insert data
-//    Obj.name.meanRadius
-//      .tx(Data.source_("http://en.wikipedia.org/wiki/List_of_Solar_System_objects_by_size")) insert Seq(
-//      ("Sun", 696000.0),
-//      ("Jupiter", 69911.0),
-//      ("Saturn", 58232.0),
-//      ("Uranus", 25362.0),
-//      ("Neptune", 24622.0),
-//      ("Earth", 6371.0),
-//      ("Venus", 6051.8),
-//      ("Mars", 3390.0),
-//      ("Ganymede", 2631.2),
-//      ("Titan", 2576.0),
-//      ("Mercury", 2439.7),
-//      ("Callisto", 2410.3),
-//      ("Io", 1821.5),
-//      ("Moon", 1737.1),
-//      ("Europa", 1561.0),
-//      ("Triton", 1353.4),
-//      ("Eris", 1163.0)
-//    )
-//
-//    // Aggregated Attributes ..........................
-//
-//    // Maximum value(s)
-//    Obj.meanRadius(max).get.head === 696000.0
-//    Obj.meanRadius(max(3)).get.head === List(1, 2, 3)
-//
-//    // Minimum value(s)
-//    Obj.meanRadius(min).get.head === 1163.0
-//    Obj.meanRadius(min(3)).get.head === List(1, 2, 3)
-//
-//    // Random value(s) - duplicates possible
-//    Obj.meanRadius(rand).get.head === 1163.0
-//    Obj.meanRadius(rand(5)).get.head === List(1, 2, 3, 4, 5)
-//
-//    // Sample value(s) - no duplicates
-//    Obj.meanRadius(sample).get.head === 1163.0
-//    Obj.meanRadius(sample(5)).get.head === List(1, 2, 3, 4, 5)
-//
-//
-//    // Aggregate Calculations .............................
-//
-//    // Count
-//    Obj.name(count).get.head === 17
-//    // (or)
-//    Obj.name.size === 17
-//
-//    // Count distinct
-//    Obj.name(countDistinct).get.head === 17
-//
-//    // Sum
-//    Obj.meanRadius(sum).get.head === 696000.0
-//
-//    // Average
-//    Obj.meanRadius(avg).get.head === 696000.0
-//
-//    // Median
-//    Obj.meanRadius(median).get.head === 696000.0
-//
-//    // Variance
-//    Obj.meanRadius(variance).get.head === 696000.0
-//
-//    // Standard deviation
-//    Obj.meanRadius(stddev).get.head === 696000.0
-//
-//
-//    // Schema aggregations .............................
-//    import molecule.schemas.Db
-//
-//    // What is the average length of a schema name?
-//    Db.a(avg(count)).get.head === 5.1
-//
-//    // Todo Custom aggregates
-//    // ...and the mode(s) -
-//
-//    // How many attributes and value types does this; schema use ?
-//    Db.e(count).valueType(countDistinct).get.head ===(3, 2)
-//  }
-//
-//
-//  "Attribute groups" >> {
-//    import molecule.schemas.Db
-//    implicit val conn = load(SocialNewsSchema.tx, "Attribute groups")
-//
-//    // Find all attributes in the story namespace
-//    Db.a.ns_("story").get === List("title", "url", "comments")
-//
-//    // Create a reusable rule
-//    val attrInNs = m(Db.a.ns_(?))
-//
-//    // Find all attributes in story namespace, using the rule
-//    attrInNs("story").get === List("title", "url", "comments")
-//
-//    // Find all entities possessing *any* story attribute
-//    Db.e.a_.ns_("story").get === List()
-//  }
-//}

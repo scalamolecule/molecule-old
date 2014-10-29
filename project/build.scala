@@ -29,7 +29,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-        "coretest/src/main/scala/molecule/util"
+//        "coretest/src/main/scala/molecule/util"
       ),
       publish :=(),
       publishLocal :=()
@@ -55,8 +55,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-        "examples/src/main/scala/molecule/examples/dayOfDatomic",
-        "examples/src/main/scala/molecule/examples/seattle"
+        "examples/src/main/scala/molecule/examples/dayOfDatomic"
+//        ,"examples/src/main/scala/molecule/examples/seattle"
       ),
       publish :=(),
       publishLocal :=()
@@ -70,7 +70,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "com.marcgrue",
     version := "0.1.2",
-    scalaVersion := "2.11.3",
+    scalaVersion := "2.11.4",
     scalacOptions := Seq("-feature", "-language:implicitConversions"),
     resolvers ++= Seq(
       Resolver.sonatypeRepo("releases"),

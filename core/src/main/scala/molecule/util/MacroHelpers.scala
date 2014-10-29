@@ -1,7 +1,6 @@
 package molecule.util
 
-import molecule.ast.model.Model
-
+import molecule.ast.model._
 import scala.reflect.macros.whitebox.Context
 
 trait MacroHelpers[Ctx <: Context] {
@@ -42,20 +41,20 @@ trait MacroHelpers[Ctx <: Context] {
       if (id >= threshold && id <= max) {
 
         def traverse(x: Any, level: Int, i: Int): String = {
-          val indent = if(i == 0) "" else "  " * level + i + "          "
+          val indent = if (i == 0) "" else "  " * level + i + "          "
           x match {
-            case l: List[_]   => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-            case l: Map[_, _] => indent + "Map(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-            case m: Model                => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-
-            case (a, b)       => {
+            case l: List[_]          => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case l: Map[_, _]        => indent + "Map(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case Group(bond, nested) => indent + "Group(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case m: Model            => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+            case (a, b)              => {
               val bb = b match {
                 case it: Iterable[_] => traverse(it, level, 0)
                 case other           => other
               }
               indent + s"$a -> " + bb
             }
-            case value        => indent + value
+            case value               => indent + value
           }
         }
 

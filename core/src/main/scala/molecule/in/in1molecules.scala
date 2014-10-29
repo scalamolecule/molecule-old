@@ -19,24 +19,6 @@ trait InputMolecule_1[I1] extends InputMolecule {
     else
       _query.copy(i = In(Seq(InVar(ScalarBinding(vars.head), Seq(Seq(values.head))))))
 
-
-//    println("vars  : " + vars)
-//    println("values: " + values)
-//    println("------------------------------------------------ ")
-//    println(_model)
-//    println("XXXXXXXXXXXXXXXX")
-//    println(_query)
-//    println("------------------------------------------------ ")
-//    println(_query.datalog)
-//    println("XXXXXXXXXXXXXXXX")
-//    println(query1)
-//    println("------------------------------------------------ ")
-//    println(query1.datalog)
-//    println("------------------------------------------------ ")
-//    println("RULES: " + (if (query1.i.rules.isEmpty) "none" else query1.i.rules.mkString("[\n ", "\n ", "\n]")))
-//    println("------------------------------------------------ ")
-//    println("INPUTS: " + values.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
-//    println("XXXXXXXXXXXXXXXX")
     val entityQuery1 = query1.copy(f = Find(Seq(Var("ent", "Long"))))
     (query1, entityQuery1)
   }

@@ -1,7 +1,6 @@
 package molecule.ops
 import molecule.ast.query._
 import molecule.dsl.schemaDSL._
-import molecule.out.Molecule_0
 import scala.language.existentials
 import scala.reflect.macros.whitebox.Context
 
@@ -20,7 +19,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     lazy val enumPrefix = at.enumPrefix
     def isPartition = tpe <:< typeOf[Partition]
     def isNS = tpe <:< typeOf[NS]
-//    def isD0 = tpe <:< weakTypeOf[Molecule_0]
+    //    def isD0 = tpe <:< weakTypeOf[Molecule_0]
     def nsS = nsString(tpe.typeSymbol.owner.owner.name.toString.init)
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
@@ -28,6 +27,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
     def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
     def isManyRef = tpe <:< weakTypeOf[ManyRef[_, _]]
+    def isOneRefAttr = tpe <:< weakTypeOf[OneRefAttr[_, _]]
+    def isManyRefAttr = tpe <:< weakTypeOf[ManyRefAttr[_, _]]
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
     def isMany = tpe <:< weakTypeOf[Many[_, _, _, _]]
@@ -196,7 +197,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   class nsp(val sym: Symbol) {
     val x = Debug("ModelOps:nsp", 8)
     lazy val nsType = sym match {
-      case s: TermSymbol if s.isLazy && s.isPublic    => s.typeSignature.typeSymbol.typeSignature
+      //      case s: TermSymbol if s.isLazy && s.isPublic    => s.typeSignature.typeSymbol.typeSignature
+      case s: TermSymbol if s.isPublic                => s.typeSignature.typeSymbol.typeSignature
       case s: MethodSymbol
         if s.asMethod.returnType <:< weakTypeOf[Attr] => s.asMethod.returnType
       case s: ClassSymbol if s.toType <:< typeOf[NS]  => s.toType
@@ -208,7 +210,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
       s.head.toLower + s.tail.takeWhile(_ != '_')
     }
     def attrs = nsType.members.collect {
-      case s: TermSymbol if s.isLazy && s.isPublic                       => new att(s)
+      //      case s: TermSymbol if s.isLazy && s.isPublic                       => new att(s)
+      case s: TermSymbol if s.isPublic                                   => new att(s)
       case s: MethodSymbol if s.asMethod.returnType <:< weakTypeOf[Attr] => new att(s)
     }.toList.reverse
     // todo: remove redundant Ref methods!!
@@ -225,7 +228,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     val x = Debug("TreeOps:att", 1)
 
     lazy val attrType = sym match {
-//      case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
+      //      case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
       case t: TermSymbol                                                 => sym.typeSignature.typeSymbol.typeSignature
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Attr] => sym.asMethod.returnType
       case unexpected                                                    =>
@@ -233,27 +236,27 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
 
     lazy val tpe = sym match {
-//      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
-      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
+      //      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]] => {
         typeOf[Long]
       }
-//      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
+      //      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
       case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
         typeOf[Long]
       }
-//      case t: TermSymbol if t.isLazy && t.isPublic                                                                              => {
-      case t: TermSymbol if t.isPublic                                                                              => {
+      //      case t: TermSymbol if t.isLazy && t.isPublic                                                                              => {
+      case t: TermSymbol if t.isPublic                                        => {
         val List(_, _, attrTpe) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol).typeArgs
         attrTpe
       }
-      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]]                                                   => NoType
-      case unexpected                                                                                                           =>
+      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]] => NoType
+      case unexpected                                                         =>
         abortTree(q"$unexpected", s"[TreeOps:tpe] ModelOps.att(sym) can only take an Attr symbol")
     }
 
     def name = TermName(toString)
     def fullName = attrType.typeSymbol.fullName
-//    def owner = attrType.typeSymbol.owner.owner
+    //    def owner = attrType.typeSymbol.owner.owner
     def owner = attrType.typeSymbol.owner
     def ns = new nsp(owner)
     def tpeS = if (tpe =:= NoType) "Long" else tpe.toString
@@ -277,7 +280,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     // todo: if (nestedNS.isDefined) s":$ns.$nestedNS/$name" else s":$ns/$name"
     def enumPrefix = ns.enums.size match {
       case 0 => ""
-      case _ => s":$ns." + (if(name.toString.last == '_') name.toString.init else name) + "/"
+      case _ => s":$ns." + (if (name.toString.last == '_') name.toString.init else name) + "/"
     }
   }
 

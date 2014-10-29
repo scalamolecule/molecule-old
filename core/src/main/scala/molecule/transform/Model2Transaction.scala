@@ -95,21 +95,21 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
 
       case SubComponent(ns, parentEid) => stmts :+ Add(parentEid.asInstanceOf[Object], s":$ns/sub_", e)
 
-//      case Group(Bond(ns, refAttr, refNs), nestedElements) => {
-//        val nestedDataRows = nestedData(nestedElements, arg)
-//
-//        // Loop nested rows of data
-//        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) { case ((elementStmts1, nestedIds), nestedDataRow) =>
-//          // Recursively create nested elements
-//          val (rowStmts, _) = mergeDataWithElements(nestedElements, nestedDataRow)
-//          val lastId = rowStmts.last.e
-//          (elementStmts1 ++ rowStmts, nestedIds + lastId)
-//        }
-//
-//        // Add references to nested entities
-//        val refStmts = elementIds.map(Add(e, s":$ns/$refAttr", _))
-//        elementStmts ++ refStmts
-//      }
+      case Group(Bond(ns, refAttr, refNs), nestedElements) => {
+        val nestedDataRows = nestedData(nestedElements, arg)
+
+        // Loop nested rows of data
+        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) { case ((elementStmts1, nestedIds), nestedDataRow) =>
+          // Recursively create nested elements
+          val (rowStmts, _) = mergeDataWithElements(nestedElements, nestedDataRow)
+          val lastId = rowStmts.last.e
+          (elementStmts1 ++ rowStmts, nestedIds + lastId)
+        }
+
+        // Add references to nested entities
+        val refStmts = elementIds.map(Add(e, s":$ns/$refAttr", _))
+        elementStmts ++ refStmts
+      }
 
       case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
     }

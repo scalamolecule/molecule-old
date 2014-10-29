@@ -33,48 +33,8 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     // Insert data
     Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
 
-//    Community.url.`type`.orgtype.category.Neighborhood.name.District.name.region.insert.apply(
-//      "http://groups.yahoo.com/group/15thAve_Community/", "email_list", "community", Set("15th avenue residents"), "Capitol Hill", "East", "e")
-
-//    m(Community.url).insert.apply(
-//    Community.url.insert.apply(
-//      "http://gro")
-
     conn
   }
-
-//  Error:(39, 19) value insert is not a member of
-//  molecule.examples.seattle.dsl.seattle.Community.url[
-//    molecule.examples.seattle.dsl.seattle.Community_1[String],
-//    molecule.examples.seattle.dsl.seattle.Community_In_1_1[String,String]] with
-//  molecule.examples.seattle.dsl.seattle.Community_1[String]
-//      Community.url.insert.apply(
-
-//  Error:(34, 87) value insert is not a member of
-//  molecule.dsl.schemaDSL.OneRef[
-//    molecule.examples.seattle.dsl.seattle.Neighborhood,
-//    molecule.examples.seattle.dsl.seattle.District] with
-//  molecule.examples.seattle.dsl.seattle.District_6[
-//    String,String,String,String,scala.collection.immutable.Set[String],String]
-//
-//  #name[
-//    molecule.examples.seattle.dsl.seattle.District_7[
-//      String,String,String,String,scala.collection.immutable.Set[String],String,String],
-//    molecule.examples.seattle.dsl.seattle.District_In_1_7[
-//      String,String,String,String,String,scala.collection.immutable.Set[String],String,String]] with
-//  molecule.examples.seattle.dsl.seattle.District_7[
-//    String,String,String,String,scala.collection.immutable.Set[String],String,String]
-//
-//  #region[
-//    molecule.examples.seattle.dsl.seattle.District_8[
-//      String,String,String,String,scala.collection.immutable.Set[String],String,String,String],
-//    molecule.examples.seattle.dsl.seattle.District_In_1_8[
-//      String,String,String,String,String,scala.collection.immutable.Set[String],String,String,String]] with
-//  molecule.examples.seattle.dsl.seattle.District_8[
-//    String,String,String,String,scala.collection.immutable.Set[String],String,String,String]
-//
-//      Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
-//                                                                                        ^
 
   implicit val conn = loadSeattle(1)
 

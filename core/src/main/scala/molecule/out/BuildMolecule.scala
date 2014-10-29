@@ -16,8 +16,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
   def basics(dsl: c.Expr[NS]) = {
     val model0 = Dsl2Model(c)(dsl)
-
-    //    x(3, model0)
+//        x(3, dsl.tree, model0)
 
     val identifiers = (model0.elements collect {
       case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
@@ -54,7 +53,8 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         model + "\n\n" +
         q + "\n\n" +
         q.datalog + "\n\n" +
-        rows.toList.zipWithIndex.map(r => (r._2 + 1) + ". " + r._1).mkString("\n") +
+        (if (q.i.rules.isEmpty) "" else q.i.rules.mkString("RULES: [\n ", "\n ", "\n]\n\n")) +
+        "OUTPUTS:\n" + rows.toList.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n") +
         "\n--------------------------------------------------------------------------\n"
       )
     """

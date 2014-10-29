@@ -97,6 +97,8 @@ object Model2Query {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
+        case Group(ref, elements) => q
+
         case unresolved => sys.error("[Model2Query] Unresolved model (we should never get here): " + unresolved)
       }
     }
@@ -107,6 +109,7 @@ object Model2Query {
       val ns = element match {
         case Atom(ns1, _, _, _, _, _) => ns1
         case Bond(ns1, _, _)          => ns1
+        case Group(ref, elements)     => ref.ns
       }
 
       val (prevNS, prevAttr, prevRefNs) = if (q1.wh.clauses.isEmpty)

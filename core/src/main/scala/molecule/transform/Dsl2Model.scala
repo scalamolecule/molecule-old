@@ -1,8 +1,8 @@
 package molecule
 package transform
 import molecule.ast.model._
-import molecule.ops.TreeOps
 import molecule.dsl.schemaDSL._
+import molecule.ops.TreeOps
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -32,24 +32,22 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val refNs = if (refNsRaw == refAttr) "" else refNsRaw
       traverse(q"$prev", Bond(ns, refAttr, refNs))
 
-    case e@q"$prev.e"       => traverse(q"$prev", Atom(e.ns, "e", "Long", 1, EntValue))
+    case e@q"$prev.e"       => traverse(q"$prev", Atom(prev.name, "e", "Long", 1, EntValue))
     case q"$prev.txInstant" => traverse(q"$prev", Atom("db", "txInstant", "Date", 1, VarValue))
     case q"$prev.txT"       => traverse(q"$prev", Atom("db", "txT", "Long", 1, VarValue))
     case q"$prev.txAdded"   => traverse(q"$prev", Atom("db", "txAdded", "Boolean", 1, VarValue))
     case attr@q"$prev.$cur" =>
-      //      x(2, attr, prev, cur)
+//      x(4, attr, prev, cur)
       traverse(q"$prev", atom(attr))
 
-    ////    case t@q"$prev.$manyRef[..$types]($subModel)" =>
-    //    case t@q"$prev.$manyRef[..$types]($subModel)" =>
-    ////      val refAttr: String = manyRef.toString match {
-    ////        // Name of `*` method's first parameter
-    ////        case "$times"   => t.symbol.asMethod.paramLists.head.head.name.toString
-    ////        case methodName => methodName.toString
-    ////      }
-    //      val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
-    //      val refNs = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
-    //      traverse(q"$prev", Group(Bond(prev.name.toString, manyRef.toString, refNs), resolve(q"$subModel").elements))
+    // Nested group (ManyRef)
+    case t@q"$prev.$manyRef.apply[..$types]($nestedMolecule)" =>
+      val nestedModel = resolve(q"$nestedMolecule")
+      val refNs = curNs(nestedModel.elements.head)
+//      val group = Group(Bond(prev.name, firstLow(manyRef.toString), refNs.capitalize), nestedModel.elements.reverse)
+      val group = Group(Bond(prev.name, firstLow(manyRef.toString), refNs.capitalize), nestedModel.elements)
+//      x(2, t, nestedModel, group, traverse(q"$prev", group))
+      traverse(q"$prev", group)
   }
 
   def atomOp(attr: Tree, op: Tree, values0: Tree) = {
@@ -88,7 +86,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case a if a.isEnum && value == VarValue => Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix))
     case a if a.isValueAttr                 => Atom(a.ns, a.name, a.tpeS, a.card, value)
     case a if a.isOneRef                    => Atom(a.ns, a.name, "Long", 1, value)
-    case unknown                            => abortTree(unknown, "[Dsl2Model:atom] Unknown atom type")
+    case a if a.isOneRefAttr                => Atom(a.ns, a.name, "Long", 1, value)
+    //    case a if a.isOneRef                    => Atom(a.ns, a.name, "Long", 1, value)
+    //    case a if a.isManyRef                    => Atom(a.ns, a.name, "Long", 1, value)
+    case unknown => abortTree(unknown, "[Dsl2Model:atom] Unknown atom type")
   }
 
 

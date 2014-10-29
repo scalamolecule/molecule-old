@@ -152,45 +152,28 @@ object DslBoilerplate {
       }
     }
 
-    //    // Only allow refs in hyper edge definitions
-    //    val checkHyperEdges = definition.nss.map { ns =>
-    //      ns.opt match {
-    //        case Some(hyperEdge: HyperEdge) =>
-    //          ns.attrs.map {
-    //            case ref@Ref(_, _, _, _, _, _, _) => ref
-    //            case unexpected                   =>
-    //              sys.error(s"Unexpected attribute in hyper edge definition `${ns.ns}` (only refs allowed):\n" + unexpected)
-    //          }
-    //        case _                          => ns
-    //      }
-    //    }
     definition
   }
 
   def resolve(definition: Definition) = {
-    // Add backrefs to hyper edge in affected namespaces
     val newNss = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
-      ns.opt match {
-        case Some(hyperEdge: HyperEdge) =>
-          // Gather refs of hyper edge
-          val refs = ns.attrs.map {
-            case ref@Ref(_, _, _, _, _, _, refNs) => refNs
-            case unexpected                       =>
-              sys.error(s"Unexpected attribute in hyper edge definition `${ns.ns}` (only refs allowed):\n" + unexpected)
-          }
-          nss2.map {
-            // Namespace is a backref to hyper edge (could be many)
-            case ns2 if refs.contains(ns2.ns) =>
-              val attrs2 = ns2.attrs :+ BackRef("_" + firstLow(ns.ns), "_" + firstLow(ns.ns), "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ns.ns)
-              ns2.copy(attrs = attrs2)
-            case ns2 if ns2.ns == ns.ns       => ns2.copy(opt = Some(HyperEdge(refs)))
-            case ns2                          => ns2
-          }
-        case _                          => nss2
+      // Gather OneRefs (ManyRefs are treated as nested data structures)
+      val refs = ns.attrs.collect {
+        //        case ref@Ref(_, _, clazz, _, _, _, refNs) if clazz.take(3) == "One" => refNs
+        case ref@Ref(_, _, clazz, _, _, _, refNs) => refNs
+      }
+      // Add BackRefs
+      nss2.map {
+        case ns2 if refs.contains(ns2.ns) =>
+          // Back reference is always a ManyRef
+          val attrs2 = ns2.attrs :+ BackRef("_" + firstLow(ns.ns), "_" + firstLow(ns.ns), "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ns.ns)
+          ns2.copy(attrs = attrs2)
+        case ns2                          => ns2
       }
     }
     definition.copy(nss = newNss)
   }
+
 
   // Generate ..........................................
 
@@ -248,7 +231,7 @@ object DslBoilerplate {
         |}""".stripMargin
   }
 
-  def nsTrait(namesp: Namespace, in: Int, out: Int, maxIn: Int, maxOut: Int) = {
+  def nsTrait(namesp: Namespace, in: Int, out: Int, maxIn: Int, maxOut: Int, nsArities: Map[String, Int]) = {
     val (ns, option, attrs) = (namesp.ns, namesp.opt, namesp.attrs)
     val InTypes = (0 until in) map (n => "I" + (n + 1))
     val OutTypes = (0 until out) map (n => (n + 'A').toChar.toString)
@@ -301,13 +284,17 @@ object DslBoilerplate {
     }.unzip
 
     val refCode = attrs.foldLeft(Seq("")) {
-      case (acc, Ref(attr, _, _, clazz, _, _, refNs)) =>
+      case (acc, Ref(attr, _, _, clazz, _, _, refNs)) => {
         val ref = (in, out) match {
           case (0, 0) => s"${refNs}_0"
           case (0, o) => s"${refNs}_$o[${OutTypes mkString ", "}]"
           case (i, o) => s"${refNs}_In_${i}_$o[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        acc :+ s"def ${attr.capitalize} : $clazz[$ns, $refNs] with $ref = ???"
+        if (clazz == "OneRef" || out == maxOut)
+          acc :+ s"def ${attr.capitalize} : $clazz[$ns, $refNs] with $ref = ???"
+        else
+          acc :+ s"def ${attr.capitalize} : $clazz[$ns, $refNs] with Nested${out + 1}[${((ns + "_" + (out + 1)) +: OutTypes) mkString ", "}] with $ref = ???"
+      }
 
       case (acc, BackRef(_, _, _, clazz, _, _, backRef)) =>
         val ref = (in, out) match {
@@ -370,7 +357,7 @@ object DslBoilerplate {
 
       // Last input trait
       case (i, o) if i <= maxIn && o == maxOut =>
-//      case (i, o) if o == maxOut =>
+        //      case (i, o) if o == maxOut =>
         val thisIn = if (maxIn == 0 || i == maxIn) "P" + (out + in + 1) else s"${ns}_In_${i + 1}_$o"
         val types = (InTypes ++ OutTypes) mkString ", "
         s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, P${out + in + 1}, $thisIn, P${out + in + 2}, $types] {
@@ -386,8 +373,8 @@ object DslBoilerplate {
          """.stripMargin
 
       // Other input traits
-      case (i, o)  =>
-        val (thisIn, nextIn) = if(i == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_${i + 1}_$o", s"${ns}_In_${i + 1}_${o + 1}")
+      case (i, o) =>
+        val (thisIn, nextIn) = if (i == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_${i + 1}_$o", s"${ns}_In_${i + 1}_${o + 1}")
         val types = (InTypes ++ OutTypes) mkString ", "
         s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, $thisIn, $nextIn, $types] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
@@ -427,16 +414,19 @@ object DslBoilerplate {
 
     }.mkString("\n  ").trim
 
+    val nsArities = d.nss.map(ns => ns.ns -> ns.attrs.size).toMap
+
     val nsTraits = (for {
       in <- 0 to inArity
       out <- 0 to outArity
-    } yield nsTrait(namespace, in, out, inArity, outArity)).mkString("\n")
+    } yield nsTrait(namespace, in, out, inArity, outArity, nsArities)).mkString("\n")
 
     val inImport = if (inArity > 0) "\nimport molecule.in._" else ""
-    val javaImports0 = attrs.collect {
-      case Val(_, _, _, tpe, _, _, options) if tpe.take(4) == "java" => tpe
+    val extraImports0 = attrs.collect {
+      case Val(_, _, _, tpe, _, _, _) if tpe.take(4) == "java" => tpe
+//      case Ref(_, _, _, "ManyRef", _, _, _)                    => "molecule.out._"
     }.distinct
-    val javaImports = if(javaImports0.isEmpty) "" else javaImports0.mkString(s"\nimport ", "\nimport ", "")
+    val extraImports = if (extraImports0.isEmpty) "" else extraImports0.mkString(s"\nimport ", "\nimport ", "")
 
     s"""|/*
         | * AUTO-GENERATED CODE - DON'T CHANGE!
@@ -447,7 +437,7 @@ object DslBoilerplate {
         |package ${d.pkg}.dsl.${firstLow(d.domain)}
         |import molecule._
         |import molecule.dsl.schemaDSL._$inImport
-        |import molecule.out._$javaImports
+        |import molecule.out._$extraImports
         |
         |
         |object $Ns extends ${Ns}_0 {
@@ -472,6 +462,7 @@ object DslBoilerplate {
       definitionFiles flatMap { definitionFile =>
         val d0 = parse(definitionFile)
         val d = resolve(d0)
+
 
         // Write schema file
         val schemaFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((file, pkg) => file / pkg) / "schema" / s"${d.domain}Schema.scala"

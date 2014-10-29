@@ -10,7 +10,7 @@ import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.Debug
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-import scala.language.existentials
+import scala.language.{existentials, higherKinds}
 
 trait DatomicFacade {
   private val x = Debug("DatomicFacade", 1, 99, false, 2)
@@ -61,8 +61,6 @@ trait DatomicFacade {
   }
 
   def inputs(query: Query) = query.i.inputs.map {
-    //    case InVar(RelationBinding(_), argss)   => Util.list(argss.map(args => Util.list(args.asJava: _*)).asJava: _*)
-    //    case InVar(CollectionBinding(_), argss) => Util.list(argss.head.asJava: _*)
     case InVar(RelationBinding(_), argss)   => Util.list(argss.map(args => Util.list(args.map(_.asInstanceOf[Object]): _*)).asJava: _*)
     case InVar(CollectionBinding(_), argss) => Util.list(argss.head.map(_.asInstanceOf[Object]): _*)
     case InVar(_, argss)                    => argss.head.head
@@ -81,7 +79,6 @@ trait DatomicFacade {
       case Imagine(tx)             => conn.db.`with`(tx).get(Connection.DB_AFTER).asInstanceOf[AnyRef]
       case History                 => conn.db.history()
       case _                       => conn.db
-      //      case AsOf(date)  => conn.db.asOf(date)
     }
 
     // reset db settings
@@ -91,38 +88,15 @@ trait DatomicFacade {
     val first = if (query.i.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
-//    println(query)
-//    println("##############################################################################")
-//    println(query.datalog)
-//    println("------------------------------------------------ ")
-//    println("RULES: " + (if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")))
-//    println("------------------------------------------------ ")
-//    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
-//    println("###########################################################################################\n")
+    //    println(query)
+    //    println("##############################################################################")
+    //    println(query.datalog)
+    //    println("------------------------------------------------ ")
+    //    println("RULES: " + (if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")))
+    //    println("------------------------------------------------ ")
+    //    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
+    //    println("###########################################################################################\n")
 
-    //    Peer.q( s"""[:find (distinct ?b) :with ?ent :where [?ent :ns/ints ?b]]""", conn.db)
-    //    Peer.q( s"""[:find (distinct ?b) :where [?ent :ns/ints ?b]]""", conn.db)
-    //    Peer.q( s"""[:find ?b :where [?ent :ns/ints ?b]]""", conn.db)       // // [[28], [37], [7], [12]]
-    //    Peer.q( s"""[:find ?ent ?b :where [?ent :ns/ints ?b]]""", conn.db) // [[17592186045437 28], [17592186045436 37], [17592186045437 7], [17592186045436 12]]
-    //    Peer.q( s"""[:find (distinct ?b) :with ?ent :where [?ent :ns/ints ?b]]""", conn.db) // [[#{7 28 12 37}]]
-    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent][?ent :ns/ints ?b]]""", conn.db) // [[#{7 28 12 37}]]
-    //    Peer.q( s"""[:find (distinct ?b)  :where [_ :ns/ints ?b]]""", conn.db) // [[#{7 28 12 37}]]
-    //    Peer.q( s"""[:find ?a (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db) // [["John" #{12 37}] ["Lisa" #{7 28}]]
-    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)
-    //    Peer.q( s"""[:find ?a (distinct ?b) :with ?ent :where [_ :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [["John" #{7 28 12 37}] ["Lisa" #{7 28 12 37}]]
-    //    Peer.q( s"""[:find ?b (distinct ?b) :with ?ent :where [_ :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [[7 #{7}] [12 #{12}] [28 #{28}] [37 #{37}]]
-    //    Peer.q( s"""[:find (distinct ?b) :with ?a :where [_ :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    //
-    //    Peer.q( s"""[:find (distinct ?b) :with ?a :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [[#{7 28 12 37}]]
-
-    //    val xx = Peer.q( s"""[:find ?a (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)    // [["John" #{12 37}] ["Lisa" #{7 28}]]
-    //    Peer.q( s"""[:find ?b :where [_ ?b]]""", xx)    // [[#{12 37}] [#{7 28}]]
-
-    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent :ns/ints ?b]]""", conn.db)    // [[#{7 28 12 37}]]
-    //    Peer.q( s"""[:find ?ent (distinct ?b) :with ?ent :where [?ent :ns/str ?a][?ent :ns/ints ?b]]""", conn.db)
-    //    xx
-    //    val pairs = Peer.q(s"""[:find ?ent (distinct ?b) :where [?ent :ns/ints ?b]]""", conn.db) // [[17592186045436 #{12 37}] [17592186045437 #{7 28}]]
-    //    Peer.q(s"""[:find ?b :where [_ ?b]]""", pairs)    // [[#{12 37}] [#{7 28}]]
-    //    Peer.q(s"""[:find ?ent (distinct ?b) :where [?ent :ns/ints ?b]]""", conn.db) // [[17592186045436 #{12 37}] [17592186045437 #{7 28}]]
 
     //    Peer.q(s"""
     //       [:find ?a ?b
@@ -132,7 +106,6 @@ trait DatomicFacade {
     //          [?ent :ns/int ?b]]
     //       """, conn.db)
 
-    //    Peer.q(query.toMap, allInputs: _*)
     Peer.q(query.toMap, allInputs.map(_.asInstanceOf[Object]): _*)
   }
 
@@ -182,13 +155,18 @@ case class Tx(txResult: jMap[_, _]) {
 
 case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
-  def touch: Map[String, Any] = toMap
+  def touch: Map[String, Any] = toMap map { case (k, v) =>
+    val sortedValue = v match {
+        // Todo: presuming
+      case vs: List[Any] => vs.sortBy(_.asInstanceOf[Map[String, Any]].head._2.asInstanceOf[Long])
+      case other         => other
+    }
+    k -> sortedValue
+  }
+
 
   def retract = conn.transact(Util.list(Util.list(":db.fn/retractEntity", id))).get()
 
-  //  def apply(attr: String) = 42
-  // macro?
-  //  def --:(attr: String) = this
 
   def toMap: Map[String, Any] = {
     //  def toMap = {

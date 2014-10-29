@@ -43,9 +43,10 @@ abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecu
   def hl         (implicit conn: Connection): Seq[A :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: HNil] = hl.take(n)
   object insert {
-    def apply(a: A)                        (implicit conn: Connection): Tx = upsert(conn, _model, Seq(Seq(a)))
+//    def apply(a: A)                        (implicit conn: Connection): Tx = upsert(conn, _model, Seq(Seq(a)))
+    def apply(a: A, ax: A*)         (implicit conn: Connection): Tx = upsert(conn, _model, (a +: ax.toSeq).map(Seq(_)))
+//    def apply(a: A, a2: A, ax: A*)         (implicit conn: Connection): Tx = upsert(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
     def apply(data: A :: HNil)             (implicit conn: Connection): Tx = upsert(conn, _model, Seq(data.toList))
-    def apply(a: A, a2: A, ax: A*)         (implicit conn: Connection): Tx = upsert(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
     def apply(data: Seq[A], hack: Int = 42)(implicit conn: Connection): Tx = upsert(conn, _model, data.map(Seq(_)))
     def apply(data: Seq[A :: HNil])        (implicit conn: Connection): Tx = upsert(conn, _model, data.map(_.toList))
   }
