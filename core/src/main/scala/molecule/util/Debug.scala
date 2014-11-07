@@ -5,6 +5,12 @@ import scala.collection.JavaConversions._
 
 case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace: Boolean = false, maxLevel: Int = 99) {
 
+  // Helpers ..........................................
+
+  def padS(longest: Int, str: String) = pad(longest, str.length)
+  def pad(longest: Int, shorter: Int) = if (longest > shorter) " " * (longest - shorter) else ""
+
+
   def apply(id: Int, params: Any*): Unit = {
     val stackTrace = if (showStackTrace) Thread.currentThread.getStackTrace mkString "\n" else ""
     if (id >= threshold && id <= max) {
@@ -18,15 +24,19 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
         val indent = if (i == 0) "" else pad1 + i + pad2
         val max = level >= maxLevel
         x match {
-          case l: List[_] if max           => indent + "List(" + l.mkString(",   ") + ")"
-          case l: List[_]                  => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case l: java.util.List[_] if max => indent + "JavaList(" + l.mkString(",   ") + ")"
-          case l: java.util.List[_]        => indent + "JavaList(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case l: Map[_, _] if max         => indent + "Map(" + l.mkString(",   ") + ")"
-          case l: Map[_, _]                => indent + "Map(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case Group(bond, nested)         => indent + "Group(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case m: Model                    => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case m: java.util.Map[_, _]      => {
+          case l: List[_] if max                     => indent + "List(" + l.mkString(",   ") + ")"
+          case l: List[_]                            => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case l: java.util.List[_] if l.size() == 4 => {
+            val List(action, id, attr, value) = l.toList
+            indent + action + padS(13, action.toString) + id + padS(34, id.toString) + attr + padS(23, attr.toString) + "   " + value
+          }
+          case l: java.util.List[_] if max           => indent + "JavaList(" + l.mkString(",   ") + ")"
+          case l: java.util.List[_]                  => indent + "JavaList(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case l: Map[_, _] if max                   => indent + "Map(" + l.mkString(",   ") + ")"
+          case l: Map[_, _]                          => indent + "Map(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case Group(bond, nested)                   => indent + "Group(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case m: Model                              => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case m: java.util.Map[_, _]                => {
             if (m.size() == 4 && m.keys.map(_.toString).contains(":db-before")) {
               val tx = m.toList
               indent + "Transaction(\n" +

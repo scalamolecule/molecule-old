@@ -126,16 +126,39 @@ object schemaDefinition {
 
 
   // Ref
-  object one {
+  object _one {
     def apply[NS] = this
     lazy val subComponent = this
+    lazy val _subComponent = this
     lazy val tree         = this
+    def ~(other: one.type) = this
+    def ~(other: many.type) = this
+  }
+  object one {
+    def apply[NS] = this
+//    def apply[NS, Ns2] = this
+    lazy val subComponent = this
+    lazy val _subComponent = this
+    lazy val tree         = this
+    def ~(other: one.type) = this
+    def ~(other: many.type) = this
+  }
+
+  object _many {
+    def apply[NS1] = this
+//    def apply[Ns1, Ns2] = this
+    def _many[Ns2] = this
+
+    lazy val _subComponents = this
+    lazy val subComponents = this
+    lazy val trees         = this
+    def withOptional(other: many.type) = this
     def ~(other: one.type) = this
     def ~(other: many.type) = this
   }
   object many {
     def apply[NS1] = this
-    //    def apply[NS1, NS2] = this
+    lazy val _subComponents = this
     lazy val subComponents = this
     lazy val trees         = this
     def withOptional(other: many.type) = this
@@ -144,8 +167,8 @@ object schemaDefinition {
   }
 
   // Hyper edge
-  object hyper {
-    def apply[NS, NS2] = this
-  }
+//  object hyper {
+//    def apply[NS, NS2] = this
+//  }
 }
 

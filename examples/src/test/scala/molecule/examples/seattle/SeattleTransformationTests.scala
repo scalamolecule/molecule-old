@@ -1,14 +1,14 @@
-//package molecule
-//package examples.seattle
-//import molecule.ast.model._
-//import molecule.ast.query._
+package molecule
+package examples.seattle
+import molecule.ast.model._
+import molecule.ast.query._
 //import molecule.dsl.DbSchema._
-//import molecule.examples.seattle.dsl.seattle._
-//import scala.language.reflectiveCalls
-//
-//
-//class SeattleTransformationTests extends SeattleSpec {
-//
+import molecule.examples.seattle.dsl.seattle._
+import scala.language.reflectiveCalls
+
+
+class SeattleTransformationTests extends SeattleSpec {
+
 //  "A first query" >> {
 //
 //    // Testing that a molecule goes correctly through 3 transformations:
@@ -29,117 +29,116 @@
 //
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        Where(List(
-//          DataClause("ent", KW("community", "name"), "String", "a"))))
+//          DataClause("a", KW("community", "name"), "String", "b"))))
 //
 //    } --> {
 //
 //      // Query --> Query string
 //      // The Query object is transformed to a query string
 //
-//      """[:find ?a
-//        | :where
-//        |   [?ent :community/name ?a]]""".stripMargin
+//      """[:find ?b
+//        | :where [?a :community/name ?b]]""".stripMargin
 //    }
 //  }
-//
-//
-//  "Querying _for_ attribute values" >> {
-//
-//    // Multiple attributes
-//    m(Community.name.url.category) -->
-//      Model(List(
-//        Atom("community", "name", "String", 1, VarValue),
-//        Atom("community", "url", "String", 1, VarValue),
-//        Atom("community", "category", "Set[String]", 2, VarValue))
-//      ) -->
-//      Query(
-//        Find(List(
-//          Var("a", "String"),
-//          Var("b", "String"),
-//          AggrExpr("distinct", List(), Var("c", "Set[String]"), "Set[String]"))),
-//        Where(List(
-//          DataClause("ent", KW("community", "name"), "String", "a"),
-//          DataClause("ent", KW("community", "url"), "String", "b"),
-//          DataClause("ent", KW("community", "category"), "Set[String]", "c")))
-//      ) -->
-//      """[:find ?a ?b (distinct ?c)
-//        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/url ?b]
-//        |   [?ent :community/category ?c]]""".stripMargin
-//  }
-//
-//  "Querying _by_ attribute values" >> {
-//
-//    // Names of twitter communities
-//    m(Community.name.`type`("twitter")) -->
-//      Model(List(
-//        Atom("community", "name", "String", 1, VarValue),
-//        Atom("community", "type", "String", 1, Eq(List("twitter")), Some(":community.type/")))
-//      ) -->
-//      Query(
-//        Find(List(
-//          Var("a", "String"))),
-//        Where(List(
-//          DataClause("ent", KW("community", "name"), "String", "a"),
-//          DataClause("ent", KW("community", "type"), "String", Val(":community.type/twitter", "String"))))
-//      ) -->
-//      """[:find ?a
-//        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ":community.type/twitter"]]""".stripMargin
-//
-//
-//    // Categories (many-cardinality) of the Belltown community
-//    m(Community.name("belltown").category) -->
-//      Model(List(
-//        Atom("community", "name", "String", 1, Eq(List("belltown"))),
-//        Atom("community", "category", "Set[String]", 2, VarValue))
-//      ) -->
-//      Query(
-//        Find(List(
-//          AggrExpr("distinct", List(), Var("b", "Set[String]"), "Set[String]"))),
-//        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Val("belltown", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "Set[String]"), KW("community", "category"), Var("b", "Set[String]"), Empty)))
-//      ) -->
-//      """[:find (distinct ?b)
-//        | :where
-//        |   [?ent :community/name "belltown"]
-//        |   [?ent :community/category ?b]]""".stripMargin
-//
-//
-//    // Names of news or arts communities - transforms to a query using Rules
-//    m(Community.name.category("news", "arts")) -->
-//      Model(List(
-//        Atom("community", "name", "String", 1, VarValue),
-//        Atom("community", "category", "Set[String]", 2, Eq(List("news", "arts")), None))
-//      ) -->
-//      Query(
-//        Find(List(
-//          Var("a", "String"))),
-//        In(List(), List(
-//          Rule("rule1", List(Var("ent", "")), List(DataClause(ImplDS, Var("ent", "Set[String]"), KW("community", "category"), Val("news", "String"), Empty))),
-//          Rule("rule1", List(Var("ent", "")), List(DataClause(ImplDS, Var("ent", "Set[String]"), KW("community", "category"), Val("arts", "String"), Empty)))), List(DS)),
-//        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          RuleInvocation("rule1", List(Var("ent", "")))))
-//      ) -->
-//      """[:find ?a
-//        | :in $ %
-//        | :where
-//        |   [?ent :community/name ?a]
-//        |   (rule1 ?ent)]
-//        |
-//        |INPUTS:
-//        |List(
-//        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/category "news"]]
-//        |     [[rule1 ?ent] [?ent :community/category "arts"]]]
-//        |)""".stripMargin
-//  }
+
+
+  "Querying _for_ attribute values" >> {
+
+    // Multiple attributes
+    m(Community.name.url.category) -->
+      Model(List(
+        Atom("community", "name", "String", 1, VarValue),
+        Atom("community", "url", "String", 1, VarValue),
+        Atom("community", "category", "Set[String]", 2, VarValue))
+      ) -->
+      Query(
+        Find(List(
+          Var("b", "String"),
+          Var("c", "String"),
+          AggrExpr("distinct", List(), Var("d", "Set[String]"), "Set[String]"))),
+        Where(List(
+          DataClause("a", KW("community", "name"), "String", "b"),
+          DataClause("a", KW("community", "url"), "String", "c"),
+          DataClause("a", KW("community", "category"), "Set[String]", "d")))
+      ) -->
+      """[:find ?b ?c (distinct ?d)
+        | :where
+        |   [?a :community/name ?b]
+        |   [?a :community/url ?c]
+        |   [?a :community/category ?d]]""".stripMargin
+  }
+
+  "Querying _by_ attribute values" >> {
+
+    // Names of twitter communities
+    m(Community.name.`type`("twitter")) -->
+      Model(List(
+        Atom("community", "name", "String", 1, VarValue),
+        Atom("community", "type", "String", 1, Eq(List("twitter")), Some(":community.type/")))
+      ) -->
+      Query(
+        Find(List(
+          Var("b", "String"))),
+        Where(List(
+          DataClause("a", KW("community", "name"), "String", "b"),
+          DataClause("a", KW("community", "type"), "String", Val(":community.type/twitter", "String"))))
+      ) -->
+      """[:find ?b
+        | :where
+        |   [?a :community/name ?b]
+        |   [?a :community/type ":community.type/twitter"]]""".stripMargin
+
+
+    // Categories (many-cardinality) of the Belltown community
+    m(Community.name("belltown").category) -->
+      Model(List(
+        Atom("community", "name", "String", 1, Eq(List("belltown"))),
+        Atom("community", "category", "Set[String]", 2, VarValue))
+      ) -->
+      Query(
+        Find(List(
+          AggrExpr("distinct", List(), Var("c", "Set[String]"), "Set[String]"))),
+        Where(List(
+          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Val("belltown", "String"), Empty),
+          DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Var("c", "Set[String]"), Empty)))
+      ) -->
+      """[:find (distinct ?c)
+        | :where
+        |   [?a :community/name "belltown"]
+        |   [?a :community/category ?c]]""".stripMargin
+
+
+    // Names of news or arts communities - transforms to a query using Rules
+    m(Community.name.category("news", "arts")) -->
+      Model(List(
+        Atom("community", "name", "String", 1, VarValue),
+        Atom("community", "category", "Set[String]", 2, Eq(List("news", "arts")), None))
+      ) -->
+      Query(
+        Find(List(
+          Var("b", "String"))),
+        In(List(), List(
+          Rule("rule1", List(Var("a", "")), List(DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Val("news", "String"), Empty))),
+          Rule("rule1", List(Var("a", "")), List(DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Val("arts", "String"), Empty)))), List(DS)),
+        Where(List(
+          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+          RuleInvocation("rule1", List(Var("a", "")))))
+      ) -->
+      """[:find ?b
+        | :in $ %
+        | :where
+        |   [?a :community/name ?b]
+        |   (rule1 ?a)]
+        |
+        |INPUTS:
+        |List(
+        |  1 datomic.db.Db@xxx
+        |  2 [[[rule1 ?a] [?a :community/category "news"]]
+        |     [[rule1 ?a] [?a :community/category "arts"]]]
+        |)""".stripMargin
+  }
 //
 //
 //  "Querying across references" >> {
@@ -155,19 +154,19 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "neighborhood"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("neighborhood", "district"), Var("c", "String"), Empty),
-//          DataClause(ImplDS, Var("c", "String"), KW("district", "region"), Val(":district.region/ne", "String"), Empty)))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "neighborhood"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("neighborhood", "district"), Var("d", "String"), Empty),
+//          DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/ne", "String"), Empty)))
 //      ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/neighborhood ?b]
-//        |   [?b :neighborhood/district ?c]
-//        |   [?c :district/region ":district.region/ne"]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/neighborhood ?c]
+//        |   [?c :neighborhood/district ?d]
+//        |   [?d :district/region ":district.region/ne"]]""".stripMargin
 //
 //
 //    // Communities and their region
@@ -180,24 +179,24 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
+//          Var("b", "String"),
 //          Var("d2", "String"))),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "neighborhood"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("neighborhood", "district"), Var("c", "String"), Empty),
-//          DataClause(ImplDS, Var("c", "String"), KW("district", "region"), Var("d", "String"), Empty),
-//          DataClause(ImplDS, Var("d", "String"), KW("db", "ident"), Var("d1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "neighborhood"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("neighborhood", "district"), Var("d", "String"), Empty),
+//          DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Var("e", "String"), Empty),
+//          DataClause(ImplDS, Var("e", "String"), KW("db", "ident"), Var("d1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("d1", "")), ScalarBinding(Var("d2", "")))))
 //      ) -->
-//      """[:find ?a ?d2
+//      """[:find ?b ?e2
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/neighborhood ?b]
-//        |   [?b :neighborhood/district ?c]
-//        |   [?c :district/region ?d]
-//        |   [?d :db/ident ?d1]
-//        |   [(.getName ^clojure.lang.Keyword ?d1) ?d2]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/neighborhood ?c]
+//        |   [?c :neighborhood/district ?d]
+//        |   [?d :district/region ?e]
+//        |   [?e :db/ident ?e1]
+//        |   [(.getName ^clojure.lang.Keyword ?e1) ?e2]]""".stripMargin
 //  }
 //
 //
@@ -213,18 +212,18 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(
-//          Placeholder("b", KW("community", "type"), "String", Some(":community.type/"), "ent")), List(), List(DS)),
+//          Placeholder("c", KW("community", "type"), "String", Some(":community.type/"), "a")), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty)))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty)))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?b
+//      """[:find ?b
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]]""".stripMargin
 //
 //    // Applying a value completes the query
 //    m(Community.name.`type`(?)).apply("twitter") -->
@@ -234,20 +233,20 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(
 //          InVar(
-//            ScalarBinding(Var("b", "String")),
+//            ScalarBinding(Var("c", "String")),
 //            List(List(":community.type/twitter")))), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty)))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty)))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?b
+//      """[:find ?b
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -264,23 +263,23 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
+//          Var("b", "String"),
 //          Var("b2", "String"))),
 //        In(List(
-//          Placeholder("b", KW("community", "type"), "String", Some(":community.type/"), "")), List(), List(DS)),
+//          Placeholder("c", KW("community", "type"), "String", Some(":community.type/"), "")), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("b1", "")), ScalarBinding(Var("b2", "")))))
 //      ) -->
-//      """[:find ?a ?b2
-//        | :in $ ?b
+//      """[:find ?b ?c2
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?!)).apply("twitter") -->
@@ -290,25 +289,25 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
+//          Var("b", "String"),
 //          Var("b2", "String"))),
 //        In(List(
 //          InVar(
-//            ScalarBinding(Var("b", "String")),
+//            ScalarBinding(Var("c", "String")),
 //            List(List(":community.type/twitter")))), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("b1", "")), ScalarBinding(Var("b2", "")))))
 //      ) -->
-//      """[:find ?a ?b2
-//        | :in $ ?b
+//      """[:find ?b ?c2
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -327,25 +326,25 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
+//          Var("b", "String"),
 //          Var("b2", "String"))),
 //        In(List(
 //          InVar(
-//            CollectionBinding(Var("b", "String")),
+//            CollectionBinding(Var("c", "String")),
 //            List(List(":community.type/facebook_page", ":community.type/twitter")))), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("b1", "")), ScalarBinding(Var("b2", "")))))
 //      ) -->
-//      """[:find ?a ?b2
-//        | :in $ [?b ...]
+//      """[:find ?b ?c2
+//        | :in $ [?c ...]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -365,25 +364,25 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
+//          Var("b", "String"),
 //          Var("b2", "String"))),
 //        In(List(
 //          InVar(
-//            CollectionBinding(Var("b", "String")),
+//            CollectionBinding(Var("c", "String")),
 //            List(List(":community.type/facebook_page", ":community.type/twitter")))), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("b1", "")), ScalarBinding(Var("b2", "")))))
 //      ) -->
-//      """[:find ?a ?b2
-//        | :in $ [?b ...]
+//      """[:find ?b ?c2
+//        | :in $ [?c ...]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -404,24 +403,24 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(
 //          List(
-//            Placeholder("b", KW("community", "type"), "String", Some(":community.type/"), "ent"),
-//            Placeholder("c", KW("community", "orgtype"), "String", Some(":community.orgtype/"), "ent")),
+//            Placeholder("c", KW("community", "type"), "String", Some(":community.type/"), "a"),
+//            Placeholder("d", KW("community", "orgtype"), "String", Some(":community.orgtype/"), "a")),
 //          List(),
 //          List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "orgtype"), Var("c", "String"), Empty)))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "orgtype"), Var("d", "String"), Empty)))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?b ?c
+//      """[:find ?b
+//        | :in $ ?c ?d
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/orgtype ?c]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/orgtype ?d]]""".stripMargin
 //
 //
 //    // The following 3 notation variations transform in the same way
@@ -436,27 +435,27 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(
 //          List(
 //            InVar(
 //              RelationBinding(
-//                List(Var("b", "String"), Var("c", "String"))),
+//                List(Var("c", "String"), Var("d", "String"))),
 //              List(
 //                List(":community.type/email_list", ":community.orgtype/community")))),
 //          List(),
 //          List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "orgtype"), Var("c", "String"), Empty)))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "orgtype"), Var("d", "String"), Empty)))
 //      ) -->
-//      """[:find ?a
-//        | :in $ [[ ?b ?c ]]
+//      """[:find ?b
+//        | :in $ [[ ?c ?d ]]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/orgtype ?c]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/orgtype ?d]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -476,37 +475,37 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
+//          Var("b", "String"),
 //          Var("b2", "String"),
 //          Var("c2", "String"))),
 //        In(
 //          List(
-//            Placeholder("b", KW("community", "type"), "String", Some(":community.type/"), ""),
-//            Placeholder("c", KW("community", "orgtype"), "String", Some(":community.orgtype/"), "")),
+//            Placeholder("c", KW("community", "type"), "String", Some(":community.type/"), ""),
+//            Placeholder("d", KW("community", "orgtype"), "String", Some(":community.orgtype/"), "")),
 //          List(),
 //          List(DS)),
 //
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
 //
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("b1", "")), ScalarBinding(Var("b2", ""))),
 //
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "orgtype"), Var("c", "String"), Empty),
-//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("c1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "orgtype"), Var("d", "String"), Empty),
+//          DataClause(ImplDS, Var("d", "String"), KW("db", "ident"), Var("c1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("c1", "")), ScalarBinding(Var("c2", "")))))
 //      ) -->
-//      """[:find ?a ?b2 ?c2
-//        | :in $ ?b ?c
+//      """[:find ?b ?c2 ?d2
+//        | :in $ ?c ?d
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]
-//        |   [?ent :community/orgtype ?c]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
 //        |   [?c :db/ident ?c1]
-//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]""".stripMargin
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]
+//        |   [?a :community/orgtype ?d]
+//        |   [?d :db/ident ?d1]
+//        |   [(.getName ^clojure.lang.Keyword ?d1) ?d2]]""".stripMargin
 //
 //
 //    // The following 3 notation variations transform in the same way
@@ -521,14 +520,14 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
+//          Var("b", "String"),
 //          Var("b2", "String"),
 //          Var("c2", "String"))),
 //        In(
 //          List(
 //            InVar(
 //              RelationBinding(
-//                List(Var("b", "String"), Var("c", "String"))),
+//                List(Var("c", "String"), Var("d", "String"))),
 //              List(
 //                List(":community.type/email_list", ":community.orgtype/community"),
 //                List(":community.type/website", ":community.orgtype/commercial")))),
@@ -536,26 +535,26 @@
 //          List(DS)),
 //
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
 //
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("b1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("b1", "")), ScalarBinding(Var("b2", ""))),
 //
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "orgtype"), Var("c", "String"), Empty),
-//          DataClause(ImplDS, Var("c", "String"), KW("db", "ident"), Var("c1", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "orgtype"), Var("d", "String"), Empty),
+//          DataClause(ImplDS, Var("d", "String"), KW("db", "ident"), Var("c1", "String"), Empty),
 //          Funct(".getName ^clojure.lang.Keyword", List(Var("c1", "")), ScalarBinding(Var("c2", "")))))
 //      ) -->
-//      """[:find ?a ?b2 ?c2
-//        | :in $ [[ ?b ?c ]]
+//      """[:find ?b ?c2 ?d2
+//        | :in $ [[ ?c ?d ]]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]
-//        |   [?ent :community/orgtype ?c]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
 //        |   [?c :db/ident ?c1]
-//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]
+//        |   [?a :community/orgtype ?d]
+//        |   [?d :db/ident ?d1]
+//        |   [(.getName ^clojure.lang.Keyword ?d1) ?d2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -573,17 +572,17 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          Funct(".compareTo ^String", List(Var("a", ""), Val("C", "String")), ScalarBinding(Var("a1", ""))),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          Funct(".compareTo ^String", List(Var("b", ""), Val("C", "String")), ScalarBinding(Var("a1", ""))),
 //          Funct("<", List(Var("a1", ""), Val(0, "Int")), NoBinding)))
 //      ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [(.compareTo ^String ?a "C") ?a1]
-//        |   [(< ?a1 0) ]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [(.compareTo ^String ?b "C") ?b1]
+//        |   [(< ?b1 0) ]]""".stripMargin
 //
 //    m(Community.name < ?) -->
 //      Model(List(
@@ -591,20 +590,20 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(
 //          Placeholder("a1", KW("community", "name"), "String", None, "")), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          Funct(".compareTo ^String", List(Var("a", ""), Var("a1", "")), ScalarBinding(Var("a2", ""))),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          Funct(".compareTo ^String", List(Var("b", ""), Var("a1", "")), ScalarBinding(Var("a2", ""))),
 //          Funct("<", List(Var("a2", ""), Val(0, "Int")), NoBinding)))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [(.compareTo ^String ?a ?a1) ?a2]
-//        |   [(< ?a2 0) ]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [(.compareTo ^String ?b ?b1) ?b2]
+//        |   [(< ?b2 0) ]]""".stripMargin
 //
 //    m(Community.name < ?).apply("C") -->
 //      Model(List(
@@ -612,20 +611,20 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(
 //          InVar(ScalarBinding(Var("a1", "String")), List(List("C")))), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          Funct(".compareTo ^String", List(Var("a", ""), Var("a1", "")), ScalarBinding(Var("a2", ""))),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          Funct(".compareTo ^String", List(Var("b", ""), Var("a1", "")), ScalarBinding(Var("a2", ""))),
 //          Funct("<", List(Var("a2", ""), Val(0, "Int")), NoBinding)))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [(.compareTo ^String ?a ?a1) ?a2]
-//        |   [(< ?a2 0) ]]
+//        |   [?a :community/name ?b]
+//        |   [(.compareTo ^String ?b ?b1) ?b2]
+//        |   [(< ?b2 0) ]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -643,15 +642,15 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        Where(List(
 //          Funct("fulltext",
 //            List(DS(), KW("community", "name"), Val("Wallingford", "String")),
-//            RelationBinding(List(Var("ent", ""), Var("a", ""))))))
+//            RelationBinding(List(Var("a", ""), Var("b", ""))))))
 //      ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [(fulltext $ :community/name "Wallingford") [[ ?ent ?a ]]]]""".stripMargin
+//        |   [(fulltext $ :community/name "Wallingford") [[ ?a ?b ]]]]""".stripMargin
 //
 //
 //    m(Community.name contains ?) -->
@@ -660,18 +659,18 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(
 //          Placeholder("a1", KW("community", "name"), "String", None, "")), List(), List(DS)),
 //        Where(List(
 //          Funct("fulltext",
 //            List(DS(), KW("community", "name"), Var("a1", "")),
-//            RelationBinding(List(Var("ent", ""), Var("a", ""))))))
+//            RelationBinding(List(Var("a", ""), Var("b", ""))))))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [(fulltext $ :community/name ?a1) [[ ?ent ?a ]]]]""".stripMargin
+//        |   [(fulltext $ :community/name ?b1) [[ ?a ?b ]]]]""".stripMargin
 //
 //
 //    m(Community.name contains ?).apply("Wallingford") -->
@@ -680,18 +679,18 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(
 //          InVar(ScalarBinding(Var("a1", "String")), List(List("Wallingford")))), List(), List(DS)),
 //        Where(List(
 //          Funct("fulltext",
 //            List(DS(), KW("community", "name"), Var("a1", "")),
-//            RelationBinding(List(Var("ent", ""), Var("a", ""))))))
+//            RelationBinding(List(Var("a", ""), Var("b", ""))))))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [(fulltext $ :community/name ?a1) [[ ?ent ?a ]]]]
+//        |   [(fulltext $ :community/name ?b1) [[ ?a ?b ]]]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -710,20 +709,20 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
-//          AggrExpr("distinct", List(), Var("c", "Set[String]"), "Set[String]"))),
+//          Var("b", "String"),
+//          AggrExpr("distinct", List(), Var("d", "Set[String]"), "Set[String]"))),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Val(":community.type/website", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Val(":community.type/website", "String"), Empty),
 //          Funct("fulltext",
 //            List(DS(), KW("community", "category"), Val("food", "String")),
-//            RelationBinding(List(Var("ent", ""), Var("c", ""))))))
+//            RelationBinding(List(Var("a", ""), Var("d", ""))))))
 //      ) -->
-//      """[:find ?a (distinct ?c)
+//      """[:find ?b (distinct ?d)
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ":community.type/website"]
-//        |   [(fulltext $ :community/category "food") [[ ?ent ?c ]]]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ":community.type/website"]
+//        |   [(fulltext $ :community/category "food") [[ ?a ?d ]]]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?).category contains ?) -->
@@ -734,24 +733,24 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
-//          AggrExpr("distinct", List(), Var("c", "Set[String]"), "Set[String]"))),
+//          Var("b", "String"),
+//          AggrExpr("distinct", List(), Var("d", "Set[String]"), "Set[String]"))),
 //        In(List(
-//          Placeholder("b", KW("community", "type"), "String", Some(":community.type/"), "ent"),
+//          Placeholder("c", KW("community", "type"), "String", Some(":community.type/"), "a"),
 //          Placeholder("c1", KW("community", "category"), "Set[String]", None, "")), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
 //          Funct("fulltext",
 //            List(DS(), KW("community", "category"), Var("c1", "")),
-//            RelationBinding(List(Var("ent", ""), Var("c", ""))))))
+//            RelationBinding(List(Var("a", ""), Var("d", ""))))))
 //      ) -->
-//      """[:find ?a (distinct ?c)
-//        | :in $ ?b ?c1
+//      """[:find ?b (distinct ?d)
+//        | :in $ ?c ?d1
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [(fulltext $ :community/category ?c1) [[ ?ent ?c ]]]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [(fulltext $ :community/category ?d1) [[ ?a ?d ]]]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?).category contains ?).apply("website", Set("food")) -->
@@ -762,29 +761,29 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"),
-//          AggrExpr("distinct", List(), Var("c", "Set[String]"), "Set[String]"))),
+//          Var("b", "String"),
+//          AggrExpr("distinct", List(), Var("d", "Set[String]"), "Set[String]"))),
 //        In(
 //          List(
 //            InVar(
-//              RelationBinding(List(Var("b", "String"), Var("c1", "Set[String]"))),
+//              RelationBinding(List(Var("c", "String"), Var("c1", "Set[String]"))),
 //              // Todo: set is saved wrongly as a string!
 //              List(List(":community.type/website", "Set(food)")))),
 //          List(),
 //          List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
 //          Funct("fulltext",
 //            List(DS(), KW("community", "category"), Var("c1", "")),
-//            RelationBinding(List(Var("ent", ""), Var("c", ""))))))
+//            RelationBinding(List(Var("a", ""), Var("d", ""))))))
 //      ) -->
-//      """[:find ?a (distinct ?c)
-//        | :in $ [[ ?b ?c1 ]]
+//      """[:find ?b (distinct ?d)
+//        | :in $ [[ ?c ?d1 ]]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [(fulltext $ :community/category ?c1) [[ ?ent ?c ]]]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [(fulltext $ :community/category ?d1) [[ ?a ?d ]]]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -805,27 +804,27 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(), List(
-//          Rule("rule1", List(Var("ent", "")), List(
-//            DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Val(":community.type/twitter", "String"), Empty))),
-//          Rule("rule1", List(Var("ent", "")), List(
-//            DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Val(":community.type/facebook_page", "String"), Empty)))), List(DS)),
+//          Rule("rule1", List(Var("a", "")), List(
+//            DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Val(":community.type/twitter", "String"), Empty))),
+//          Rule("rule1", List(Var("a", "")), List(
+//            DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Val(":community.type/facebook_page", "String"), Empty)))), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          RuleInvocation("rule1", List(Var("ent", "")))))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          RuleInvocation("rule1", List(Var("a", "")))))
 //      ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   (rule1 ?ent)]
+//        |   [?a :community/name ?b]
+//        |   (rule1 ?a)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/type ":community.type/twitter"]]
-//        |     [[rule1 ?ent] [?ent :community/type ":community.type/facebook_page"]]]
+//        |  2 [[[rule1 ?a] [?a :community/type ":community.type/twitter"]]
+//        |     [[rule1 ?a] [?a :community/type ":community.type/facebook_page"]]]
 //        |)""".stripMargin
 //
 //
@@ -838,31 +837,31 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(), List(
-//          Rule("rule1", List(Var("c", "")), List(
-//            DataClause(ImplDS, Var("c", "String"), KW("district", "region"), Val(":district.region/ne", "String"), Empty))),
-//          Rule("rule1", List(Var("c", "")), List(
-//            DataClause(ImplDS, Var("c", "String"), KW("district", "region"), Val(":district.region/sw", "String"), Empty)))), List(DS)),
+//          Rule("rule1", List(Var("d", "")), List(
+//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/ne", "String"), Empty))),
+//          Rule("rule1", List(Var("d", "")), List(
+//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/sw", "String"), Empty)))), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "neighborhood"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("b", "String"), KW("neighborhood", "district"), Var("c", "String"), Empty),
-//          RuleInvocation("rule1", List(Var("c", "")))))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "neighborhood"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("c", "String"), KW("neighborhood", "district"), Var("d", "String"), Empty),
+//          RuleInvocation("rule1", List(Var("d", "")))))
 //      ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/neighborhood ?b]
-//        |   [?b :neighborhood/district ?c]
-//        |   (rule1 ?c)]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/neighborhood ?c]
+//        |   [?c :neighborhood/district ?d]
+//        |   (rule1 ?d)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?c] [?c :district/region ":district.region/ne"]]
-//        |     [[rule1 ?c] [?c :district/region ":district.region/sw"]]]
+//        |  2 [[[rule1 ?d] [?d :district/region ":district.region/ne"]]
+//        |     [[rule1 ?d] [?d :district/region ":district.region/sw"]]]
 //        |)""".stripMargin
 //
 //
@@ -877,45 +876,45 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //
 //        In(List(), List(
-//          Rule("rule1", List(Var("ent", "")), List(
-//            DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Val(":community.type/twitter", "String"), Empty))),
-//          Rule("rule1", List(Var("ent", "")), List(
-//            DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Val(":community.type/facebook_page", "String"), Empty))),
+//          Rule("rule1", List(Var("a", "")), List(
+//            DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Val(":community.type/twitter", "String"), Empty))),
+//          Rule("rule1", List(Var("a", "")), List(
+//            DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Val(":community.type/facebook_page", "String"), Empty))),
 //
-//          Rule("rule2", List(Var("d", "")), List(
-//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/sw", "String"), Empty))),
-//          Rule("rule2", List(Var("d", "")), List(
-//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/s", "String"), Empty))),
-//          Rule("rule2", List(Var("d", "")), List(
-//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/se", "String"), Empty)))), List(DS)),
+//          Rule("rule2", List(Var("e", "")), List(
+//            DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Val(":district.region/sw", "String"), Empty))),
+//          Rule("rule2", List(Var("e", "")), List(
+//            DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Val(":district.region/s", "String"), Empty))),
+//          Rule("rule2", List(Var("e", "")), List(
+//            DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Val(":district.region/se", "String"), Empty)))), List(DS)),
 //
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          RuleInvocation("rule1", List(Var("ent", ""))),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "neighborhood"), Var("c", "String"), Empty),
-//          DataClause(ImplDS, Var("c", "String"), KW("neighborhood", "district"), Var("d", "String"), Empty),
-//          RuleInvocation("rule2", List(Var("d", "")))))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          RuleInvocation("rule1", List(Var("a", ""))),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "neighborhood"), Var("d", "String"), Empty),
+//          DataClause(ImplDS, Var("d", "String"), KW("neighborhood", "district"), Var("e", "String"), Empty),
+//          RuleInvocation("rule2", List(Var("e", "")))))
 //      ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   (rule1 ?ent)
-//        |   [?ent :community/neighborhood ?c]
-//        |   [?c :neighborhood/district ?d]
-//        |   (rule2 ?d)]
+//        |   [?a :community/name ?b]
+//        |   (rule1 ?a)
+//        |   [?a :community/neighborhood ?d]
+//        |   [?d :neighborhood/district ?e]
+//        |   (rule2 ?e)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/type ":community.type/twitter"]]
-//        |     [[rule1 ?ent] [?ent :community/type ":community.type/facebook_page"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/sw"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/s"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/se"]]]
+//        |  2 [[[rule1 ?a] [?a :community/type ":community.type/twitter"]]
+//        |     [[rule1 ?a] [?a :community/type ":community.type/facebook_page"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/sw"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/s"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/se"]]]
 //        |)""".stripMargin
 //
 //
@@ -929,25 +928,25 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //        In(List(
-//          Placeholder("b", KW("community", "type"), "String", Some(":community.type/"), "ent"),
-//          Placeholder("e", KW("district", "region"), "String", Some(":district.region/"), "d")), List(), List(DS)),
+//          Placeholder("c", KW("community", "type"), "String", Some(":community.type/"), "a"),
+//          Placeholder("f", KW("district", "region"), "String", Some(":district.region/"), "e")), List(), List(DS)),
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "neighborhood"), Var("c", "String"), Empty),
-//          DataClause(ImplDS, Var("c", "String"), KW("neighborhood", "district"), Var("d", "String"), Empty),
-//          DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Var("e", "String"), Empty)))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "neighborhood"), Var("d", "String"), Empty),
+//          DataClause(ImplDS, Var("d", "String"), KW("neighborhood", "district"), Var("e", "String"), Empty),
+//          DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Var("f", "String"), Empty)))
 //      ) -->
-//      """[:find ?a
-//        | :in $ ?b ?e
+//      """[:find ?b
+//        | :in $ ?c ?e
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/neighborhood ?c]
-//        |   [?c :neighborhood/district ?d]
-//        |   [?d :district/region ?e]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/neighborhood ?d]
+//        |   [?d :neighborhood/district ?e]
+//        |   [?e :district/region ?f]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?).Neighborhood.District.region(?)).apply(
@@ -964,49 +963,49 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "String"))),
+//          Var("b", "String"))),
 //
 //        In(List(), List(
-//          Rule("rule1", List(Var("ent", "")), List(
-//            DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Val(":community.type/twitter", "String"), Empty))),
-//          Rule("rule1", List(Var("ent", "")), List(
-//            DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Val(":community.type/facebook_page", "String"), Empty))),
+//          Rule("rule1", List(Var("a", "")), List(
+//            DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Val(":community.type/twitter", "String"), Empty))),
+//          Rule("rule1", List(Var("a", "")), List(
+//            DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Val(":community.type/facebook_page", "String"), Empty))),
 //
-//          Rule("rule2", List(Var("d", "")), List(
-//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/sw", "String"), Empty))),
-//          Rule("rule2", List(Var("d", "")), List(
-//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/s", "String"), Empty))),
-//          Rule("rule2", List(Var("d", "")), List(
-//            DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Val(":district.region/se", "String"), Empty)))), List(DS)),
+//          Rule("rule2", List(Var("e", "")), List(
+//            DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Val(":district.region/sw", "String"), Empty))),
+//          Rule("rule2", List(Var("e", "")), List(
+//            DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Val(":district.region/s", "String"), Empty))),
+//          Rule("rule2", List(Var("e", "")), List(
+//            DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Val(":district.region/se", "String"), Empty)))), List(DS)),
 //
 //        Where(List(
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "name"), Var("a", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "type"), Var("b", "String"), Empty),
-//          DataClause(ImplDS, Var("ent", "String"), KW("community", "neighborhood"), Var("c", "String"), Empty),
-//          DataClause(ImplDS, Var("c", "String"), KW("neighborhood", "district"), Var("d", "String"), Empty),
-//          DataClause(ImplDS, Var("d", "String"), KW("district", "region"), Var("e", "String"), Empty),
-//          RuleInvocation("rule1", List(Var("ent", ""))),
-//          RuleInvocation("rule2", List(Var("d", "")))))
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "type"), Var("c", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "neighborhood"), Var("d", "String"), Empty),
+//          DataClause(ImplDS, Var("d", "String"), KW("neighborhood", "district"), Var("e", "String"), Empty),
+//          DataClause(ImplDS, Var("e", "String"), KW("district", "region"), Var("f", "String"), Empty),
+//          RuleInvocation("rule1", List(Var("a", ""))),
+//          RuleInvocation("rule2", List(Var("e", "")))))
 //      ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/neighborhood ?c]
-//        |   [?c :neighborhood/district ?d]
-//        |   [?d :district/region ?e]
-//        |   (rule1 ?ent)
-//        |   (rule2 ?d)]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/neighborhood ?d]
+//        |   [?d :neighborhood/district ?e]
+//        |   [?e :district/region ?f]
+//        |   (rule1 ?a)
+//        |   (rule2 ?e)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/type ":community.type/twitter"]]
-//        |     [[rule1 ?ent] [?ent :community/type ":community.type/facebook_page"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/sw"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/s"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/se"]]]
+//        |  2 [[[rule1 ?a] [?a :community/type ":community.type/twitter"]]
+//        |     [[rule1 ?a] [?a :community/type ":community.type/facebook_page"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/sw"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/s"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/se"]]]
 //        |)""".stripMargin
 //  }
 //
@@ -1021,12 +1020,12 @@
 //      ) -->
 //      Query(
 //        Find(List(
-//          Var("a", "Long"))),
+//          Var("b", "Long"))),
 //        Where(List(
-//          DataClause("ent", KW("db", "txInstant"), "Long", "a")))
+//          DataClause("a", KW("db", "txInstant"), "Long", "b")))
 //      ) -->
-//      """[:find ?a
-//        | :where [?ent :db/txInstant ?a]]""".stripMargin
+//      """[:find ?b
+//        | :where [?a :db/txInstant ?b]]""".stripMargin
 //  }
 //
 //
@@ -1227,4 +1226,4 @@
 //        |  List(  :db/add    ,   17592186045888,   :community/name    ,   belltown 3                      )
 //        |)""".stripMargin
 //  }
-//}
+}

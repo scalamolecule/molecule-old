@@ -5,6 +5,32 @@ import scala.language.higherKinds
 
 trait Nested
 
+trait Nested0[Ns0] extends Nested {
+  def apply                                                                   (nested: NS0                                                                   ): Ns0 = ???
+  def apply[a                                                               ] (nested: NS1 [a                                                               ]): Ns0 = ???
+  def apply[a, b                                                            ] (nested: NS2 [a, b                                                            ]): Ns0 = ???
+  def apply[a, b, c                                                         ] (nested: NS3 [a, b, c                                                         ]): Ns0 = ???
+//  def apply[a, b, c, d                                                      ] (nested: NS4 [a, b, c, d                                                      ]): Ns1[Seq[(a, b, c, d                                                      )]] = ???
+//  def apply[a, b, c, d, e                                                   ] (nested: NS5 [a, b, c, d, e                                                   ]): Ns1[Seq[(a, b, c, d, e                                                   )]] = ???
+//  def apply[a, b, c, d, e, f                                                ] (nested: NS6 [a, b, c, d, e, f                                                ]): Ns1[Seq[(a, b, c, d, e, f                                                )]] = ???
+//  def apply[a, b, c, d, e, f, g                                             ] (nested: NS7 [a, b, c, d, e, f, g                                             ]): Ns1[Seq[(a, b, c, d, e, f, g                                             )]] = ???
+//  def apply[a, b, c, d, e, f, g, h                                          ] (nested: NS8 [a, b, c, d, e, f, g, h                                          ]): Ns1[Seq[(a, b, c, d, e, f, g, h                                          )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i                                       ] (nested: NS9 [a, b, c, d, e, f, g, h, i                                       ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i                                       )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j                                    ] (nested: NS10[a, b, c, d, e, f, g, h, i, j                                    ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j                                    )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k                                 ] (nested: NS11[a, b, c, d, e, f, g, h, i, j, k                                 ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k                                 )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l                              ] (nested: NS12[a, b, c, d, e, f, g, h, i, j, k, l                              ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l                              )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m                           ] (nested: NS13[a, b, c, d, e, f, g, h, i, j, k, l, m                           ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m                           )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n                        ] (nested: NS14[a, b, c, d, e, f, g, h, i, j, k, l, m, n                        ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n                        )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o                     ] (nested: NS15[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o                     ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o                     )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p                  ] (nested: NS16[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p                  ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p                  )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q               ] (nested: NS17[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q               ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q               )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r            ] (nested: NS18[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r            ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r            )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s         ] (nested: NS19[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s         ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s         )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ] (nested: NS20[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ] (nested: NS21[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   )]] = ???
+//  def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v] (nested: NS22[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)]] = ???
+}
+
 trait Nested1[Ns1[_]] extends Nested {
   def apply[a                                                               ] (nested: NS1 [a                                                               ]): Ns1[Seq[(a                                                               )]] = ???
   def apply[a, b                                                            ] (nested: NS2 [a, b                                                            ]): Ns1[Seq[(a, b                                                            )]] = ???
@@ -28,7 +54,6 @@ trait Nested1[Ns1[_]] extends Nested {
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ] (nested: NS20[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      )]] = ???
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ] (nested: NS21[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   )]] = ???
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v] (nested: NS22[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v]): Ns1[Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)]] = ???
-
 }
 
 trait Nested2[Ns2[_,_], A] extends Nested {
@@ -54,7 +79,6 @@ trait Nested2[Ns2[_,_], A] extends Nested {
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ] (nested: NS20[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ]): Ns2[A, Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      )]] = ???
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ] (nested: NS21[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ]): Ns2[A, Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   )]] = ???
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v] (nested: NS22[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v]): Ns2[A, Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)]] = ???
-
 }
 
 trait Nested3[Ns3[_,_,_], A, B] extends Nested {
@@ -80,7 +104,6 @@ trait Nested3[Ns3[_,_,_], A, B] extends Nested {
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ] (nested: NS20[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      ]): Ns3[A, B, Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t      )]] = ???
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ] (nested: NS21[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   ]): Ns3[A, B, Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u   )]] = ???
   def apply[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v] (nested: NS22[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v]): Ns3[A, B, Seq[(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)]] = ???
-
 }
 
 trait Nested4[Ns4[_, _, _, _], A, B, C] extends Nested {

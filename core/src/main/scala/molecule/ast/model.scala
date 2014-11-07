@@ -4,8 +4,8 @@ object model {
 
   case class Model(elements: Seq[Element]) {
     // Convenience methods
-    def +:(e: Element) = Model(e +: elements)
-    def :+(e: Element) = Model(elements :+ e)
+    //    def +:(e: Element) = Model(e +: elements)
+    //    def :+(e: Element) = Model(elements :+ e)
 
     override def toString = {
       val lines = elements.map {
@@ -21,26 +21,22 @@ object model {
 
   trait Element
 
-  // Basic unit of namespaced data
   case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None) extends Element
-
-  // Relationship to another namespace
-  // If refAttr doesn't match the referenced namespace, add refNs (and refAttr can be an arbitrary name)
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
-
-  case class SubComponent(ns: String, parentEid: Long) extends Element
-
-  // Group of elements treated as one element - allowing recursive sub models
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
+  case class Meta(ns: String, attr: String, kind: String, tpe: String, value: Any) extends Element
+  //  case class Meta(ns: String, attr: String, kind: String, tpe: String, v: Any, tx: String) extends Element
+  case object EmptyElement extends Element
+  //  case class SubComponent(ns: String, parentEid: Long) extends Element
+
 
   sealed trait Value
-  //  case object NoValue extends Value
-  //  case object Blank extends Value
+
   case object EntValue extends Value
   case object VarValue extends Value
+  case class BackValue(backNs: String) extends Value
   case object EnumVal extends Value
 
-  // Expressions
   case class Eq(values: Seq[Any]) extends Value
   case class Lt(value: Any) extends Value
   case class Fulltext(search: Seq[Any]) extends Value
@@ -52,6 +48,7 @@ object model {
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value
   case class Remove(value: Seq[Any]) extends Value
+
 
   trait Expression
 
@@ -81,9 +78,10 @@ object model {
   def curNs(e: Element) = e match {
     case Atom(ns, _, _, _, _, _)  => ns
     case Bond(ns, _, _)           => ns
-    case SubComponent(ns, _)      => ns
     case Group(Bond(ns, _, _), _) => ns
+    case Meta(ns, _, _, _, _)     => ns
     case unexpected               => sys.error("[model:curNs] Unexpected element: " + unexpected)
+    //    case SubComponent(ns, _)      => ns
   }
 
 

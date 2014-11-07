@@ -10,7 +10,7 @@ case class Query2String(q: Query) {
     case in@In(_, _, _)               => mkIn(in, false)
     case Where(clauses)               => ":where " + (clauses map p mkString " ")
     case KW(ns, attr, _)              => s":$ns/$attr"
-    case AggrExpr(fn, args, v, tpeS)  => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
+    case AggrExpr(fn, args, v, _)     => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
     case Var("?", _)                  => "?"
     case Var(v, _)                    => "?" + v
     case Val(v, "Int")                => v.toString
@@ -44,7 +44,7 @@ case class Query2String(q: Query) {
     val (l, r) = if (bracket) (":in [ ", " ]") else (":in ", "")
     if (in.inputs.isEmpty && in.rules.isEmpty) ""
     else
-      l + ((in.ds map p mkString ("", " ", " "))
+      l + ((in.ds map p mkString("", " ", " "))
         + (if (in.rules.isEmpty) "" else "% ")
         + (in.inputs map p mkString " ")).trim + r
   }
@@ -58,7 +58,7 @@ case class Query2String(q: Query) {
       s""" :where [ ${q.wh.clauses map p mkString " "} ] }"""
   }
 
-  def multiLine(maxLength: Int = 80): String = {
+  def multiLine(maxLength: Int = 30): String = {
     val queryString = p(q)
     val (firstParts, where) = (List(p(q.f), p(q.wi), p(q.i)).filter(_.trim.nonEmpty), p(q.wh))
     if (queryString.length > maxLength) {

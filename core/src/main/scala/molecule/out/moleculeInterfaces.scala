@@ -7,6 +7,7 @@ import scala.language.higherKinds
 
 trait Molecule_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]] extends NS0 {
 
+//  val e          : Ns1[Long   ] with OneLong   [Ns1[Long   ], In1_1[Long   , Long   ]] with Nested1[Ns1] = ???
   val e          : Ns1[Long   ] with OneLong   [Ns1[Long   ], In1_1[Long   , Long   ]] = ???
   val a          : Ns1[String ] with OneString [Ns1[String ], In1_1[String , String ]] = ???
   val v          : Ns1[Any    ] with OneAny    [Ns1[Any    ], In1_1[Any    , Any    ]] = ???
@@ -23,21 +24,52 @@ trait Molecule_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]] extends NS0 {
   val txT_       : Ns0 with OneLong   [Ns0, In1_0[Long   ]] = ???
   val txAdded_   : Ns0 with OneBoolean[Ns0, In1_0[Boolean]] = ???
 
+
+  // Build on from entity id
+//  def apply(e: Long): Ns0 = ???
+
+
+  // Count entities
+//  def apply(v: count): Ns1[Int] = ???
+
+
+  // If only 1 or 2 transaction attributes are supplied, we can continue building on the original molecule
+  def tx[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns0                                                 = ???
+  def tx[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns1[a]                                              = ???
+
   // If we supply 2 or more tx attributes we return a generic molecule
   // This means that you can't continue expanding the molecule from the initial namespace anymore, so you'll
   // want to have the tx data defined in the end of the molecule
-  def tx[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns0                                                 = ???
-  def tx[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns1[a]                                              = ???
   def tx[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_2[Any, Any, Any, Any, a, b]                = ???
   def tx[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_3[Any, Any, Any, Any, a, b, c]             = ???
   def tx[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_4[Any, Any, Any, Any, a, b, c, d]          = ???
   def tx[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_5[Any, Any, Any, Any, a, b, c, d, e]       = ???
   def tx[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_6[Any, Any, Any, Any, a, b, c, d, e, f]    = ???
   def tx[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_7[Any, Any, Any, Any, a, b, c, d, e, f, g] = ???
+
+
+//  def ~[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns0                                                 = ???
+//  def ~[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns1[a]                                              = ???
+//  def ~[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_2[Any, Any, Any, Any, a, b]                = ???
+//  def ~[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_3[Any, Any, Any, Any, a, b, c]             = ???
+//  def ~[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_4[Any, Any, Any, Any, a, b, c, d]          = ???
+//  def ~[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_5[Any, Any, Any, Any, a, b, c, d, e]       = ???
+//  def ~[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_6[Any, Any, Any, Any, a, b, c, d, e, f]    = ???
+//  def ~[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_7[Any, Any, Any, Any, a, b, c, d, e, f, g] = ???
+
+
+  def apply[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns0                                                 = ???
+  def apply[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns1[a]                                              = ???
+//  def apply[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_2[Any, Any, Any, Any, a, b]                = ???
+//  def apply[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_3[Any, Any, Any, Any, a, b, c]             = ???
+//  def apply[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_4[Any, Any, Any, Any, a, b, c, d]          = ???
+//  def apply[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_5[Any, Any, Any, Any, a, b, c, d, e]       = ???
+//  def apply[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_6[Any, Any, Any, Any, a, b, c, d, e, f]    = ???
+//  def apply[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_7[Any, Any, Any, Any, a, b, c, d, e, f, g] = ???
 }
 
 
-trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A] {
+trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A] with Nested2[Ns2, A] {
 
   val e         : Ns2[A, Long   ] with OneLong   [Ns2[A, Long   ], In1_2[Long   , A, Long   ]] = ???
   val a         : Ns2[A, String ] with OneString [Ns2[A, String ], In1_2[String , A, String ]] = ???
@@ -66,8 +98,8 @@ trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A] {
   def apply(v: rands)   : Ns1[Seq[A]] = ???
   def apply(v: samples) : Ns1[Seq[A]] = ???
 
-  def apply(v: count)        : Ns1[Long] = ???
-  def apply(v: countDistinct): Ns1[Long] = ???
+  def apply(v: count)        : Ns1[Int] = ???
+  def apply(v: countDistinct): Ns1[Int] = ???
   def apply(v: sum)          : Ns1[Double] = ???
   def apply(v: avg)          : Ns1[Double] = ???
   def apply(v: median)       : Ns1[Double] = ???
@@ -82,6 +114,24 @@ trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A] {
   def tx[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_6[Any, Any, Any, Any, A, a, b, c, d, e]       = ???
   def tx[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_7[Any, Any, Any, Any, A, a, b, c, d, e, f]    = ???
   def tx[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_8[Any, Any, Any, Any, A, a, b, c, d, e, f, g] = ???
+
+//  def ~[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns1[A]                                                 = ???
+//  def ~[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns2[A, a]                                              = ???
+//  def ~[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_3[Any, Any, Any, Any, A, a, b]                = ???
+//  def ~[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_4[Any, Any, Any, Any, A, a, b, c]             = ???
+//  def ~[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_5[Any, Any, Any, Any, A, a, b, c, d]          = ???
+//  def ~[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_6[Any, Any, Any, Any, A, a, b, c, d, e]       = ???
+//  def ~[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_7[Any, Any, Any, Any, A, a, b, c, d, e, f]    = ???
+//  def ~[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_8[Any, Any, Any, Any, A, a, b, c, d, e, f, g] = ???
+
+  def apply[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns1[A]                                                 = ???
+  def apply[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns2[A, a]                                              = ???
+//  def apply[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_3[Any, Any, Any, Any, A, a, b]                = ???
+//  def apply[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_4[Any, Any, Any, Any, A, a, b, c]             = ???
+//  def apply[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_5[Any, Any, Any, Any, A, a, b, c, d]          = ???
+//  def apply[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_6[Any, Any, Any, Any, A, a, b, c, d, e]       = ???
+//  def apply[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_7[Any, Any, Any, Any, A, a, b, c, d, e, f]    = ???
+//  def apply[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_8[Any, Any, Any, Any, A, a, b, c, d, e, f, g] = ???
 }
 
 
@@ -114,8 +164,8 @@ trait Molecule_2[Ns2[_,_], Ns3[_,_,_], In1_2[_,_,_], In1_3[_,_,_,_], A, B] exten
   def apply(v: rands)   : Ns2[A, Seq[B]] = ???
   def apply(v: samples) : Ns2[A, Seq[B]] = ???
 
-  def apply(v: count)        : Ns2[A, Long] = ???
-  def apply(v: countDistinct): Ns2[A, Long] = ???
+  def apply(v: count)        : Ns2[A, Int] = ???
+  def apply(v: countDistinct): Ns2[A, Int] = ???
   def apply(v: sum)          : Ns2[A, Double] = ???
   def apply(v: avg)          : Ns2[A, Double] = ???
   def apply(v: median)       : Ns2[A, Double] = ???
@@ -130,6 +180,24 @@ trait Molecule_2[Ns2[_,_], Ns3[_,_,_], In1_2[_,_,_], In1_3[_,_,_,_], A, B] exten
   def tx[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_7[Any, Any, Any, Any, A, B, a, b, c, d, e]       = ???
   def tx[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_8[Any, Any, Any, Any, A, B, a, b, c, d, e, f]    = ???
   def tx[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_9[Any, Any, Any, Any, A, B, a, b, c, d, e, f, g] = ???
+
+//  def ~[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns2[A, B]                                       = ???
+//  def ~[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns3[A, B, a]                                    = ???
+//  def ~[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_4[Any, Any, Any, Any, A, B, a, b]                = ???
+//  def ~[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_5[Any, Any, Any, Any, A, B, a, b, c]             = ???
+//  def ~[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_6[Any, Any, Any, Any, A, B, a, b, c, d]          = ???
+//  def ~[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_7[Any, Any, Any, Any, A, B, a, b, c, d, e]       = ???
+//  def ~[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_8[Any, Any, Any, Any, A, B, a, b, c, d, e, f]    = ???
+//  def ~[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_9[Any, Any, Any, Any, A, B, a, b, c, d, e, f, g] = ???
+
+  def apply[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns2[A, B]                                       = ???
+  def apply[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns3[A, B, a]                                    = ???
+//  def apply[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_4[Any, Any, Any, Any, A, B, a, b]                = ???
+//  def apply[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_5[Any, Any, Any, Any, A, B, a, b, c]             = ???
+//  def apply[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_6[Any, Any, Any, Any, A, B, a, b, c, d]          = ???
+//  def apply[ns5[_,_,_,_,_]    , ns6[_,_,_,_,_,_]    , in1_5[_,_,_,_,_,_]    , in1_6[_,_,_,_,_,_,_]    , a, b, c, d, e      ] (m5: Molecule_5[ns5, ns6, in1_5, in1_6, a, b, c, d, e])      : Molecule_7[Any, Any, Any, Any, A, B, a, b, c, d, e]       = ???
+//  def apply[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_8[Any, Any, Any, Any, A, B, a, b, c, d, e, f]    = ???
+//  def apply[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_9[Any, Any, Any, Any, A, B, a, b, c, d, e, f, g] = ???
 }
 
 
@@ -162,8 +230,8 @@ trait Molecule_3[Ns3[_,_,_], Ns4[_,_,_,_], In1_3[_,_,_,_], In1_4[_,_,_,_,_], A, 
   def apply(v: rands)   : Ns3[A, B, Seq[C]] = ???
   def apply(v: samples) : Ns3[A, B, Seq[C]] = ???
 
-  def apply(v: count)        : Ns3[A, B, Long] = ???
-  def apply(v: countDistinct): Ns3[A, B, Long] = ???
+  def apply(v: count)        : Ns3[A, B, Int] = ???
+  def apply(v: countDistinct): Ns3[A, B, Int] = ???
   def apply(v: sum)          : Ns3[A, B, Double] = ???
   def apply(v: avg)          : Ns3[A, B, Double] = ???
   def apply(v: median)       : Ns3[A, B, Double] = ???
@@ -210,8 +278,8 @@ trait Molecule_4[Ns4[_,_,_,_], Ns5[_,_,_,_,_], In1_4[_,_,_,_,_], In1_5[_,_,_,_,_
   def apply(v: rands)   : Ns4[A, B, C, Seq[D]] = ???
   def apply(v: samples) : Ns4[A, B, C, Seq[D]] = ???
 
-  def apply(v: count)        : Ns4[A, B, C, Long] = ???
-  def apply(v: countDistinct): Ns4[A, B, C, Long] = ???
+  def apply(v: count)        : Ns4[A, B, C, Int] = ???
+  def apply(v: countDistinct): Ns4[A, B, C, Int] = ???
   def apply(v: sum)          : Ns4[A, B, C, Double] = ???
   def apply(v: avg)          : Ns4[A, B, C, Double] = ???
   def apply(v: median)       : Ns4[A, B, C, Double] = ???
@@ -258,8 +326,8 @@ trait Molecule_5[Ns5[_,_,_,_,_], Ns6[_,_,_,_,_,_], In1_5[_,_,_,_,_,_], In1_6[_,_
   def apply(v: rands)   : Ns5[A, B, C, D, Seq[E]] = ???
   def apply(v: samples) : Ns5[A, B, C, D, Seq[E]] = ???
 
-  def apply(v: count)        : Ns5[A, B, C, D, Long] = ???
-  def apply(v: countDistinct): Ns5[A, B, C, D, Long] = ???
+  def apply(v: count)        : Ns5[A, B, C, D, Int] = ???
+  def apply(v: countDistinct): Ns5[A, B, C, D, Int] = ???
   def apply(v: sum)          : Ns5[A, B, C, D, Double] = ???
   def apply(v: avg)          : Ns5[A, B, C, D, Double] = ???
   def apply(v: median)       : Ns5[A, B, C, D, Double] = ???
@@ -306,8 +374,8 @@ trait Molecule_6[Ns6[_,_,_,_,_,_], Ns7[_,_,_,_,_,_,_], In1_6[_,_,_,_,_,_,_], In1
   def apply(v: rands)   : Ns6[A, B, C, D, E, Seq[F]] = ???
   def apply(v: samples) : Ns6[A, B, C, D, E, Seq[F]] = ???
 
-  def apply(v: count)        : Ns6[A, B, C, D, E, Long] = ???
-  def apply(v: countDistinct): Ns6[A, B, C, D, E, Long] = ???
+  def apply(v: count)        : Ns6[A, B, C, D, E, Int] = ???
+  def apply(v: countDistinct): Ns6[A, B, C, D, E, Int] = ???
   def apply(v: sum)          : Ns6[A, B, C, D, E, Double] = ???
   def apply(v: avg)          : Ns6[A, B, C, D, E, Double] = ???
   def apply(v: median)       : Ns6[A, B, C, D, E, Double] = ???
@@ -354,8 +422,8 @@ trait Molecule_7[Ns7[_,_,_,_,_,_,_], Ns8[_,_,_,_,_,_,_,_], In1_7[_,_,_,_,_,_,_,_
   def apply(v: rands)   : Ns7[A, B, C, D, E, F, Seq[G]] = ???
   def apply(v: samples) : Ns7[A, B, C, D, E, F, Seq[G]] = ???
 
-  def apply(v: count)        : Ns7[A, B, C, D, E, F, Long] = ???
-  def apply(v: countDistinct): Ns7[A, B, C, D, E, F, Long] = ???
+  def apply(v: count)        : Ns7[A, B, C, D, E, F, Int] = ???
+  def apply(v: countDistinct): Ns7[A, B, C, D, E, F, Int] = ???
   def apply(v: sum)          : Ns7[A, B, C, D, E, F, Double] = ???
   def apply(v: avg)          : Ns7[A, B, C, D, E, F, Double] = ???
   def apply(v: median)       : Ns7[A, B, C, D, E, F, Double] = ???
@@ -402,8 +470,8 @@ trait Molecule_8[Ns8[_,_,_,_,_,_,_,_], Ns9[_,_,_,_,_,_,_,_,_], In1_8[_,_,_,_,_,_
   def apply(v: rands)   : Ns8[A, B, C, D, E, F, G, Seq[H]] = ???
   def apply(v: samples) : Ns8[A, B, C, D, E, F, G, Seq[H]] = ???
 
-  def apply(v: count)        : Ns8[A, B, C, D, E, F, G, Long] = ???
-  def apply(v: countDistinct): Ns8[A, B, C, D, E, F, G, Long] = ???
+  def apply(v: count)        : Ns8[A, B, C, D, E, F, G, Int] = ???
+  def apply(v: countDistinct): Ns8[A, B, C, D, E, F, G, Int] = ???
   def apply(v: sum)          : Ns8[A, B, C, D, E, F, G, Double] = ???
   def apply(v: avg)          : Ns8[A, B, C, D, E, F, G, Double] = ???
   def apply(v: median)       : Ns8[A, B, C, D, E, F, G, Double] = ???
@@ -450,8 +518,8 @@ trait Molecule_9[Ns9[_,_,_,_,_,_,_,_,_], Ns10[_,_,_,_,_,_,_,_,_,_], In1_9[_,_,_,
   def apply(v: rands)   : Ns9[A, B, C, D, E, F, G, H, Seq[I]] = ???
   def apply(v: samples) : Ns9[A, B, C, D, E, F, G, H, Seq[I]] = ???
 
-  def apply(v: count)        : Ns9[A, B, C, D, E, F, G, H, Long] = ???
-  def apply(v: countDistinct): Ns9[A, B, C, D, E, F, G, H, Long] = ???
+  def apply(v: count)        : Ns9[A, B, C, D, E, F, G, H, Int] = ???
+  def apply(v: countDistinct): Ns9[A, B, C, D, E, F, G, H, Int] = ???
   def apply(v: sum)          : Ns9[A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: avg)          : Ns9[A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: median)       : Ns9[A, B, C, D, E, F, G, H, Double] = ???
@@ -498,8 +566,8 @@ trait Molecule_9[Ns9[_,_,_,_,_,_,_,_,_], Ns10[_,_,_,_,_,_,_,_,_,_], In1_9[_,_,_,
     def apply(v: rands)   : Ns10[A, B, C, D, E, F, G, H, I, Seq[J]] = ???
     def apply(v: samples) : Ns10[A, B, C, D, E, F, G, H, I, Seq[J]] = ???
 
-    def apply(v: count)        : Ns10[A, B, C, D, E, F, G, H, I, Long] = ???
-    def apply(v: countDistinct): Ns10[A, B, C, D, E, F, G, H, I, Long] = ???
+    def apply(v: count)        : Ns10[A, B, C, D, E, F, G, H, I, Int] = ???
+    def apply(v: countDistinct): Ns10[A, B, C, D, E, F, G, H, I, Int] = ???
     def apply(v: sum)          : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
     def apply(v: avg)          : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
     def apply(v: median)       : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
@@ -546,8 +614,8 @@ trait Molecule_11[Ns11[_,_,_,_,_,_,_,_,_,_,_], Ns12[_,_,_,_,_,_,_,_,_,_,_,_], In
   def apply(v: rands)   : Ns11[A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
   def apply(v: samples) : Ns11[A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
 
-  def apply(v: count)        : Ns11[A, B, C, D, E, F, G, H, I, J, Long] = ???
-  def apply(v: countDistinct): Ns11[A, B, C, D, E, F, G, H, I, J, Long] = ???
+  def apply(v: count)        : Ns11[A, B, C, D, E, F, G, H, I, J, Int] = ???
+  def apply(v: countDistinct): Ns11[A, B, C, D, E, F, G, H, I, J, Int] = ???
   def apply(v: sum)          : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: avg)          : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: median)       : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
@@ -594,8 +662,8 @@ trait Molecule_12[Ns12[_,_,_,_,_,_,_,_,_,_,_,_], Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_]
   def apply(v: rands)   : Ns12[A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
   def apply(v: samples) : Ns12[A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
 
-  def apply(v: count)        : Ns12[A, B, C, D, E, F, G, H, I, J, K, Long] = ???
-  def apply(v: countDistinct): Ns12[A, B, C, D, E, F, G, H, I, J, K, Long] = ???
+  def apply(v: count)        : Ns12[A, B, C, D, E, F, G, H, I, J, K, Int] = ???
+  def apply(v: countDistinct): Ns12[A, B, C, D, E, F, G, H, I, J, K, Int] = ???
   def apply(v: sum)          : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: avg)          : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: median)       : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
@@ -643,8 +711,8 @@ trait Molecule_13[Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_], Ns14[_,_,_,_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
   def apply(v: samples) : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
 
-  def apply(v: count)        : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
-  def apply(v: countDistinct): Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
+  def apply(v: count)        : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Int] = ???
+  def apply(v: countDistinct): Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Int] = ???
   def apply(v: sum)          : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: avg)          : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: median)       : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
@@ -691,8 +759,8 @@ trait Molecule_14[Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns15[_,_,_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
   def apply(v: samples) : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
 
-  def apply(v: count)        : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
-  def apply(v: countDistinct): Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
+  def apply(v: count)        : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Int] = ???
+  def apply(v: countDistinct): Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Int] = ???
   def apply(v: sum)          : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: avg)          : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: median)       : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
@@ -739,8 +807,8 @@ trait Molecule_15[Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns16[_,_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
   def apply(v: samples) : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
 
-  def apply(v: count)        : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
-  def apply(v: countDistinct): Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
+  def apply(v: count)        : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Int] = ???
+  def apply(v: countDistinct): Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Int] = ???
   def apply(v: sum)          : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: avg)          : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: median)       : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
@@ -787,8 +855,8 @@ trait Molecule_16[Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns17[_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
   def apply(v: samples) : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
 
-  def apply(v: count)        : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
-  def apply(v: countDistinct): Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
+  def apply(v: count)        : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Int] = ???
+  def apply(v: countDistinct): Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Int] = ???
   def apply(v: sum)          : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: avg)          : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: median)       : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
@@ -834,8 +902,8 @@ trait Molecule_17[Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns18[_,_,_,_,_,_,_,_,
   def apply(v: rands)   : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
   def apply(v: samples) : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
 
-  def apply(v: count)        : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
-  def apply(v: countDistinct): Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
+  def apply(v: count)        : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Int] = ???
+  def apply(v: countDistinct): Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Int] = ???
   def apply(v: sum)          : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: avg)          : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: median)       : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
@@ -880,8 +948,8 @@ trait Molecule_18[Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns19[_,_,_,_,_,_,_,
   def apply(v: rands)   : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
   def apply(v: samples) : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
 
-  def apply(v: count)        : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
-  def apply(v: countDistinct): Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
+  def apply(v: count)        : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Int] = ???
+  def apply(v: countDistinct): Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Int] = ???
   def apply(v: sum)          : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: avg)          : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: median)       : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
@@ -925,8 +993,8 @@ trait Molecule_19[Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns20[_,_,_,_,_,_,
   def apply(v: rands)   : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
   def apply(v: samples) : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
 
-  def apply(v: count)        : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
-  def apply(v: countDistinct): Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
+  def apply(v: count)        : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Int] = ???
+  def apply(v: countDistinct): Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Int] = ???
   def apply(v: sum)          : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: avg)          : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: median)       : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
@@ -969,8 +1037,8 @@ trait Molecule_20[Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns21[_,_,_,_,_,
   def apply(v: rands)   : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
   def apply(v: samples) : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
 
-  def apply(v: count)        : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
-  def apply(v: countDistinct): Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
+  def apply(v: count)        : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Int] = ???
+  def apply(v: countDistinct): Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Int] = ???
   def apply(v: sum)          : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: avg)          : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: median)       : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
@@ -1012,8 +1080,8 @@ trait Molecule_21[Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], Ns22[_,_,_,_,
   def apply(v: rands)   : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
   def apply(v: samples) : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
 
-  def apply(v: count)        : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???
-  def apply(v: countDistinct): Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???
+  def apply(v: count)        : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Int] = ???
+  def apply(v: countDistinct): Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Int] = ???
   def apply(v: sum)          : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: avg)          : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: median)       : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???

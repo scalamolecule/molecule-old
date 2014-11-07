@@ -16,7 +16,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
   def basics(dsl: c.Expr[NS]) = {
     val model0 = Dsl2Model(c)(dsl)
-//        x(3, dsl.tree, model0)
+//        x(30, dsl.tree, model0)
 
     val identifiers = (model0.elements collect {
       case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
@@ -29,7 +29,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import molecule.ast.model._
       import molecule.transform.Model2Transaction._
       import molecule.transform.Model2Query
-      import molecule.DatomicFacade._
+      //import molecule.DatomicFacade._
       import shapeless._
       import scala.collection.JavaConversions._
       import scala.collection.JavaConverters._
@@ -45,18 +45,25 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         case other => other
       })
       val query = Model2Query(model)
-      val entityQuery = query.copy(f = Find(Seq(Var("ent", "Long"))))
+      val entityQuery = query.copy(f = Find(Seq(Var("a", "Long"))))
 
-      def debugMolecule(q: Query, rows: java.util.Collection[java.util.List[java.lang.Object]]): Unit = sys.error(
-        "\n--------------------------------------------------------------------------\n" +
-        ${show(dsl.tree)} + "\n\n" +
-        model + "\n\n" +
-        q + "\n\n" +
-        q.datalog + "\n\n" +
-        (if (q.i.rules.isEmpty) "" else q.i.rules.mkString("RULES: [\n ", "\n ", "\n]\n\n")) +
-        "OUTPUTS:\n" + rows.toList.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n") +
-        "\n--------------------------------------------------------------------------\n"
-      )
+      def debugMolecule(conn: Connection): Unit = {
+        val rows = try {
+          results(query, conn)
+        } catch {
+          case e: Throwable => sys.error(e.toString)
+        }
+        sys.error(
+          "\n--------------------------------------------------------------------------\n" +
+          ${show(dsl.tree)} + "\n\n" +
+          model + "\n\n" +
+          query + "\n\n" +
+          query.datalog + "\n\n" +
+          (if (query.i.rules.isEmpty) "" else query.i.rules.mkString("RULES: [\n ", "\n ", "\n]\n\n")) +
+          "OUTPUTS:\n" + rows.toList.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n") +
+          "\n--------------------------------------------------------------------------\n"
+        )
+      }
     """
   }
 
@@ -65,7 +72,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       ..${basics(dsl)}
       new Molecule0(model, query) {
         def ids: Seq[Long] = entityIds(entityQuery)
-        def debug(implicit conn: Connection): Unit = debugMolecule(results(query, conn))
+        def debug(implicit conn: Connection): Unit = debugMolecule(conn)
       }
     """)
   }
@@ -87,7 +94,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         def ids: Seq[Long]                                  = entityIds(entityQuery)
         def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${cast(q"data")})
         def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query, conn).toList.map(data => ${hlist(q"data")})
-        def debug(implicit conn: Connection): Unit          = debugMolecule(query, results(query, conn))
+        def debug(implicit conn: Connection): Unit          = debugMolecule(conn)
       }
     """)
   }
@@ -110,7 +117,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         def ids: Seq[Long]                                     = entityIds(entityQuery)
         def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query, conn).toList.map(data => (..${tplValues(q"data")}))
         def hl(implicit conn: Connection) : Seq[$HListType]    = results(query, conn).toList.map(data => ${hlist(q"data")})
-        def debug(implicit conn: Connection): Unit             = debugMolecule(query, results(query, conn))
+        def debug(implicit conn: Connection): Unit             = debugMolecule(conn)
       }
     """)
   }

@@ -7,14 +7,7 @@ import molecule.ast.model._
 
 object schemaDSL {
 
-  // todo?
-  trait Partition
-
-  trait Tree
-  trait HyperEdge
-
   trait NS
-
   trait NS0 extends NS
   trait NS1[A] extends NS
   trait NS2[A, B] extends NS
@@ -41,7 +34,6 @@ object schemaDSL {
 
 
   // Dummy types used with generated trait types
-
   type P0 = Nothing
   type P1[A] = Nothing
   type P2[A, B] = Nothing
@@ -72,12 +64,18 @@ object schemaDSL {
   type P27[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, Z, AA, AB] = Nothing
 
 
-  trait Ref[Ns1, Ns2]
-  trait OneRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
-  trait ManyRef[Ns1, Ns2] extends Ref[Ns1, Ns2]
-//  trait BackRef[BackRefNS, ThisNs] extends Ref[BackRefNS, ThisNs]
-  trait ChildRef[Ns1] extends Ref[Ns1, Ns1]
-  trait HyperRef[Ns1] extends Ref[Ns1, Ns1]
+  trait Ref[This, Next]
+  trait OneRef[This, Next] extends Ref[This, Next]
+  trait ManyRef[This, Next] extends Ref[This, Next]
+  trait BackRef[This, Prev] extends Ref[This, Prev]
+
+
+  // todo?
+  trait Partition
+  trait Tree
+  trait HyperEdge
+//  trait ChildRef[Ns1] extends Ref[Ns1, Ns1]
+//  trait HyperRef[Ns1] extends Ref[Ns1, Ns1]
 
 
   trait Attr
@@ -91,6 +89,9 @@ object schemaDSL {
     def apply(value: Long*): Ns = ???
     def add(value: Long): Ns = ???
     def remove(values: Long*): Ns = ???
+  }
+  trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
+    def apply(value: Long): Ns = ???
   }
 
   sealed trait ValueAttr[Ns, In, T] extends Attr {
@@ -120,6 +121,8 @@ object schemaDSL {
     //    def apply(expr: Exp1[T]): Ns = ???
     //    def apply(values: T*): Ns = ???
         def apply(one: T, more: T*): Ns = ???
+
+//    def apply(v1: v1.type): Ns = ???
 
     // Request for no value!
     def apply(): Ns = ???

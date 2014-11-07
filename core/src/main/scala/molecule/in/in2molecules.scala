@@ -32,7 +32,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
     val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
     val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
     val query1 = _query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
-    val entityQuery = _query.copy(f = Find(Seq(Var("ent", "Long"))))
+    val entityQuery = _query.copy(f = Find(Seq(Var("a", "Long"))))
     (query1, entityQuery)
   }
 
@@ -66,7 +66,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
         q.copy(i = newIn, wh = newWhere)
       }
     }
-    val entityQuery = query2.copy(f = Find(Seq(Var("ent", "Long"))))
+    val entityQuery = query2.copy(f = Find(Seq(Var("a", "Long"))))
     (query2, entityQuery)
   }
 

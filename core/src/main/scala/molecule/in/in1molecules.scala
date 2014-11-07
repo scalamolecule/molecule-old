@@ -19,7 +19,7 @@ trait InputMolecule_1[I1] extends InputMolecule {
     else
       _query.copy(i = In(Seq(InVar(ScalarBinding(vars.head), Seq(Seq(values.head))))))
 
-    val entityQuery1 = query1.copy(f = Find(Seq(Var("ent", "Long"))))
+    val entityQuery1 = query1.copy(f = Find(Seq(Var("a", "Long"))))
     (query1, entityQuery1)
   }
   

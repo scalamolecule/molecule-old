@@ -44,7 +44,8 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
     var n = dataRow.size
     val ((newStmts, tempIds), _, _) = elements.foldRight(((Seq[Statement](), Seq[Object]()), "": Object, "")) {
       case (element, ((stmts, tempIds), prevId, prevNs)) => {
-        val data = if (element.isInstanceOf[Bond] || element.isInstanceOf[SubComponent] || dataRow.isEmpty)
+//        val data = if (element.isInstanceOf[Bond] || element.isInstanceOf[SubComponent] || dataRow.isEmpty)
+        val data = if (element.isInstanceOf[Bond] || dataRow.isEmpty)
           0
         else {
           n -= 1
@@ -84,8 +85,13 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
     }
 
     val newStmts = element match {
-      case Atom(ns, attr, _, _, EntValue, _)                => stmts ++ add(ns, attr, None, Some(e))
+
+//      case Atom(ns, attr, _, _, EntValue, _)                => stmts //++ add(ns, attr, None, Some(e))
       case Atom(ns, attr, _, _, VarValue, _)                => stmts ++ add(ns, attr)
+
+//      case Atom(ns, "e", _, _, BackValue(_), _)                => stmts ++ add(ns, attr)
+      case Atom(ns, attr, _, _, BackValue(_), _)                => stmts ++ add(ns, attr)
+
       case Atom(ns, attr, _, _, EnumVal, prefix)            => stmts ++ add(ns, attr, prefix)
       case Atom(ns, attr, _, _, Eq(values), prefix)         => stmts ++ add(ns, attr, prefix, Some(values))
       case Atom(ns, attr, _, _, replace@Replace(_), prefix) => stmts ++ add(ns, attr, prefix, Some(replace))
@@ -93,7 +99,7 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
 
       case Bond(ns, refAttr, refNs) => stmts :+ Add(e, s":$ns/$refAttr", prevId)
 
-      case SubComponent(ns, parentEid) => stmts :+ Add(parentEid.asInstanceOf[Object], s":$ns/sub_", e)
+//      case SubComponent(ns, parentEid) => stmts :+ Add(parentEid.asInstanceOf[Object], s":$ns/sub_", e)
 
       case Group(Bond(ns, refAttr, refNs), nestedElements) => {
         val nestedDataRows = nestedData(nestedElements, arg)
@@ -110,6 +116,9 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
         val refStmts = elementIds.map(Add(e, s":$ns/$refAttr", _))
         elementStmts ++ refStmts
       }
+
+
+      case Meta(ns, _, _, _, EntValue)                => stmts //++ add(ns, attr, None, Some(e))
 
       case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
     }

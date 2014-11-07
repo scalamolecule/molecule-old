@@ -95,6 +95,8 @@ class SeattleTests extends SeattleSpec {
   "Querying across references" >> {
 
     // Communities in north eastern region
+//    Community.name.Neighborhood.District.region_("ne").debug
+//    ok
     Community.name.Neighborhood.District.region_("ne").get(3) === List(
       "KOMO Communities - U-District",
       "Maple Leaf Community Council",
@@ -211,8 +213,10 @@ class SeattleTests extends SeattleSpec {
 
   "Invoking functions in queries" >> {
 
-    val beforeC = List("ArtsWest", "All About South Park", "Alki News/Alki Community Council")
+//    val beforeC = List("ArtsWest", "All About South Park", "Alki News/Alki Community Council")
+    val beforeC = List("ArtsWest", "All About South Park", "Ballard Neighbor Connection")
 
+//    m(Community.name < "C").debug
     m(Community.name < "C").get(3) === beforeC
     Community.name.<("C").get(3) === beforeC
 

@@ -2,6 +2,7 @@ package molecule.ops
 import molecule.ast.query._
 import molecule.dsl.schemaDSL._
 import scala.language.existentials
+//import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
 
 trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
@@ -17,18 +18,26 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     lazy val tpeS       = at.tpeS
     lazy val card       = at.card
     lazy val enumPrefix = at.enumPrefix
+
     def isPartition = tpe <:< typeOf[Partition]
     def isNS = tpe <:< typeOf[NS]
     //    def isD0 = tpe <:< weakTypeOf[Molecule_0]
-    def nsS = nsString(tpe.typeSymbol.owner.owner.name.toString.init)
+//    def nsS = nsString(tpe.typeSymbol.owner.owner.name.toString.init)
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
-    def isAttr = tpe <:< typeOf[Attr]
+
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
     def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
     def isManyRef = tpe <:< weakTypeOf[ManyRef[_, _]]
+    def isBackRef = tpe <:< weakTypeOf[BackRef[_, _]]
+
+    def isAttr = tpe <:< typeOf[Attr]
+
+    def isRefAttr = tpe <:< weakTypeOf[RefAttr[_, _]]
     def isOneRefAttr = tpe <:< weakTypeOf[OneRefAttr[_, _]]
     def isManyRefAttr = tpe <:< weakTypeOf[ManyRefAttr[_, _]]
+    def isBackRefAttr = tpe <:< weakTypeOf[BackRefAttr[_, _]]
+
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
     def isMany = tpe <:< weakTypeOf[Many[_, _, _, _]]
@@ -228,7 +237,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     val x = Debug("TreeOps:att", 1)
 
     lazy val attrType = sym match {
-      //      case t: TermSymbol if t.isLazy                                     => sym.typeSignature.typeSymbol.typeSignature
       case t: TermSymbol                                                 => sym.typeSignature.typeSymbol.typeSignature
       case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Attr] => sym.asMethod.returnType
       case unexpected                                                    =>
@@ -236,21 +244,17 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
 
     lazy val tpe = sym match {
-      //      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]        => {
-      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]] => {
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]          =>
         typeOf[Long]
-      }
-      //      case t: TermSymbol if t.isLazy && t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
-      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]] => {
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]]      =>
         typeOf[Long]
-      }
-      //      case t: TermSymbol if t.isLazy && t.isPublic                                                                              => {
-      case t: TermSymbol if t.isPublic                                        => {
-        val List(_, _, attrTpe) = t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol).typeArgs
-        attrTpe
-      }
-      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]] => NoType
-      case unexpected                                                         =>
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[ValueAttr[_, _, _]] =>
+        t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol).typeArgs.last
+      case t: TermSymbol if t.isPublic                                                                                =>
+        NoType
+      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]]                                         =>
+        typeOf[Long]
+      case unexpected                                                                                                 =>
         abortTree(q"$unexpected", s"[TreeOps:tpe] ModelOps.att(sym) can only take an Attr symbol")
     }
 
@@ -259,7 +263,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     //    def owner = attrType.typeSymbol.owner.owner
     def owner = attrType.typeSymbol.owner
     def ns = new nsp(owner)
-    def tpeS = if (tpe =:= NoType) "Long" else tpe.toString
+    def tpeS = if (tpe =:= NoType) "" else tpe.toString
+    //    def tpeS = tpe.toString
     def contentType = tpe
     def isOne = attrType <:< weakTypeOf[One[_, _, _]]
     def isMany = attrType <:< weakTypeOf[Many[_, _, _, _]]
@@ -271,7 +276,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
       .toList.reverse
     def hasEnum(enumCandidate: String) = enumValues.contains(enumCandidate)
-    def card = if (isOne || attrType <:< weakTypeOf[OneEnum[_, _]]) 1 else 2
+//    def card = if (isOne || attrType <:< weakTypeOf[OneEnum[_, _]]) 1 else 2
+    def card = if (isMany || attrType <:< weakTypeOf[ManyEnums[_, _]]) 2 else 1
     def isValue = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[Many[_, _, _, _]] || attrType <:< weakTypeOf[OneEnum[_, _]]
     def keyw = KW(ns.toString, this.toString)
     override def toString = sym.name.toString.head.toLower + sym.name.toString.tail

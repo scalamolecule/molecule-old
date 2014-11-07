@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 1, 10, false)
+  val x = Debug("Dsl2Model", 10, 10, false)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -19,42 +19,85 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     else
       Model(Seq(element))
 
+  def traverse(prev: Tree, elements: Seq[Element]): Model = Model(elements)
+
   val dslStructure: PartialFunction[Tree, Model] = {
     case q"TermValue.apply($ns)" => resolve(ns)
-    //        case t@q"$prev.e.$op(..$values)"  => traverse(q"$prev", atomOp(q"$prev.e", q"$op", q"Seq(..$values)"))
-    case t@q"$prev.$cur.$op(..$values)" => traverse(q"$prev", atomOp(q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
-    case ref@q"$prev.$refAttr" if ref.isRef && refAttr.toString.head.isUpper =>
-      val typeArgs = ref.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
-      val ns = firstLow(typeArgs.head.typeSymbol.name.toString)
-      val refAttr = att(ref).toString
-      val refNsRaw = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
-      val refNs = if (refNsRaw == refAttr) "" else refNsRaw
+    case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef =>
+      abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
+
+    case q"$prev.$cur.$op(..$values)" =>
+      traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
+
+    case t@q"$prev.$refAttr" if t.isRef =>
+      val (ns, refAttr, refNs) = ref(t)
       traverse(q"$prev", Bond(ns, refAttr, refNs))
 
-    case e@q"$prev.e"       => traverse(q"$prev", Atom(prev.name, "e", "Long", 1, EntValue))
-    case q"$prev.txInstant" => traverse(q"$prev", Atom("db", "txInstant", "Date", 1, VarValue))
-    case q"$prev.txT"       => traverse(q"$prev", Atom("db", "txT", "Long", 1, VarValue))
-    case q"$prev.txAdded"   => traverse(q"$prev", Atom("db", "txAdded", "Boolean", 1, VarValue))
-    case attr@q"$prev.$cur" =>
-//      x(4, attr, prev, cur)
-      traverse(q"$prev", atom(attr))
+    //    case q"$prev.e" if q"$prev".isAttr => traverse(q"$prev", Atom(prev.ns, "eid", "Long", 1, EntValue))
+    //    case q"$prev.e"                    => traverse(q"$prev", Atom(prev.name, "eid", "Long", 1, EntValue))
+    //    case q"$prev.e"                    => traverse(q"$prev", meta(prev, "eid"))
+    case q"$prev.e"                    => traverse(q"$prev", meta(prev, "eid"))
+    case q"$prev.a" if q"$prev".isAttr => traverse(q"$prev", Atom(prev.ns, "attr", "Long", 1, EntValue))
+    case q"$prev.a"                    => traverse(q"$prev", Atom(prev.name, "attr", "Long", 1, EntValue))
+    case q"$prev.v"                    => traverse(q"$prev", Atom(prev.name, "value", "Long", 1, EntValue))
+    case q"$prev.ns"                   => traverse(q"$prev", Atom(prev.name, "ns", "Long", 1, EntValue))
+    case q"$prev.txInstant"            => traverse(q"$prev", Atom("db", "txInstant", "Date", 1, VarValue))
+    case q"$prev.txT"                  => traverse(q"$prev", Atom("db", "txT", "Long", 1, VarValue))
+    case q"$prev.txAdded"              => traverse(q"$prev", Atom("db", "txAdded", "Boolean", 1, VarValue))
+    case attr@q"$prev.$cur"            => traverse(q"$prev", atom(attr))
 
     // Nested group (ManyRef)
     case t@q"$prev.$manyRef.apply[..$types]($nestedMolecule)" =>
       val nestedModel = resolve(q"$nestedMolecule")
       val refNs = curNs(nestedModel.elements.head)
-//      val group = Group(Bond(prev.name, firstLow(manyRef.toString), refNs.capitalize), nestedModel.elements.reverse)
       val group = Group(Bond(prev.name, firstLow(manyRef.toString), refNs.capitalize), nestedModel.elements)
-//      x(2, t, nestedModel, group, traverse(q"$prev", group))
+      //      x(2, t, nestedModel, group, traverse(q"$prev", group))
       traverse(q"$prev", group)
   }
 
-  def atomOp(attr: Tree, op: Tree, values0: Tree) = {
+  def ref(t: Tree) = {
+    val typeArgs = t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs
+    val ns = firstLow(typeArgs.head.typeSymbol.name.toString)
+    val refAttr = att(t).toString
+    val refNsRaw = firstLow(typeArgs.tail.head.typeSymbol.name.toString)
+    val refNs = if (refNsRaw == refAttr) "" else refNsRaw
+    (ns, refAttr, refNs)
+  }
+
+  def meta(prev: Tree, kind: String) = {
+
+    val (ns1, attr1, value1) = traverse(q"$prev", EmptyElement).elements.collectFirst {
+      case Atom(ns, attr, _, _, value, _) => (ns, attr, value)
+      case Bond(ns, attr, _)              => (ns, attr, "")
+      case Group(Bond(ns, attr, _), _)    => (ns, attr, "")
+    } getOrElse {
+      (prev.name, "", "")
+
+      //      abort(s"[Dsl2Model:meta] ")
+    }
+
+    val meta1 = kind match {
+      case "eid" => Meta(ns1, attr1, "eid", "Long", EntValue)
+    }
+
+    x(0
+      , prev
+      , kind
+      , ns1
+      , attr1
+      , value1
+      , meta1
+    )
+
+    meta1
+  }
+
+  def atomOp(previous: Tree, cur: Tree, attr: Tree, op: Tree, values0: Tree) = {
     def errValue(v: Any) = abort(s"[Dsl2Model:atomOp] Unexpected resolved value for `${attr.name}.$op`: $v")
 
     val values = getValues(attr, values0)
-    //    x(1, attr, op, values0, values)
+    //        x(1, attr, op, values0, values)
 
     val modelValue = op.toString() match {
       case "apply"    => values match {
@@ -79,16 +122,58 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case unexpected => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
     }
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
-    Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
+
+    x(0
+      , previous
+      , cur
+      , op
+      //    , attr
+      , attr.isAttr
+      , previous.isAttr
+      //    , prev.toString()
+      //    , prev.tpe
+      , previous.name
+      , previous.ns
+      //    , prev.tpe.toString
+      , attr.ns
+      , attr.at.attrType
+      , attr.at.ns
+      , attr.at.ns.toString
+    )
+
+    //    val (ns, name, tpeS) = previous match {
+    previous match {
+      case prev if cur.toString.head.isUpper          => x(1, prev, cur); Atom(attr.name, cur.toString, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if prev.isAttr && cur.toString == "e" => x(2, prev, cur); Atom(prev.ns, cur.toString, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if prev.isRef && cur.toString == "e"  => x(3, prev, cur);
+        val (_, _, refNs) = ref(prev)
+        Meta(prev.name, refNs, "eid", attr.tpeS, modelValue)
+      //      (prev.name, cur.toString, attr.tpeS)
+      case prev if attr.isAttr && cur.toString == "e" => x(4, prev, cur); Atom(prev.name, cur.toString, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if attr.isAttr                        => x(5, prev, cur); Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if prev.isAttr                        => x(6, prev, cur); Atom(prev.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if cur.toString == "e"                => x(7, prev, cur); Atom(prev.name, cur.toString, "Int", attr.card, modelValue, enumPrefix)
+      case prev                                       => x(8, prev, cur); Atom(attr.name, cur.toString, "Int", attr.card, modelValue, enumPrefix)
+      //      case a if a.isAttr                        => (a.ns, attr.name, attr.tpeS)
+    }
+
+    //    val tpeS = if(attr.)
+    //    val tpeS = if (cur.toString == "e") "Int" else attr.tpeS
+
+    //    Atom(ns, name, tpeS, attr.card, modelValue, enumPrefix)
   }
 
-  def atom(attr: Tree, value: Value = VarValue): Atom = attr match {
-    case a if a.isEnum && value == VarValue => Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix))
-    case a if a.isValueAttr                 => Atom(a.ns, a.name, a.tpeS, a.card, value)
-    case a if a.isOneRef                    => Atom(a.ns, a.name, "Long", 1, value)
-    case a if a.isOneRefAttr                => Atom(a.ns, a.name, "Long", 1, value)
-    //    case a if a.isOneRef                    => Atom(a.ns, a.name, "Long", 1, value)
-    //    case a if a.isManyRef                    => Atom(a.ns, a.name, "Long", 1, value)
+  def atom(attr: Tree): Atom = attr match {
+    case a if a.isEnum        => Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix))
+    case a if a.isValueAttr   => Atom(a.ns, a.name, a.tpeS, a.card, VarValue)
+    case a if a.isOneRef      => Atom(a.ns, a.name, "Long", 1, VarValue)
+    case a if a.isOneRefAttr  => Atom(a.ns, a.name, "Long", 1, VarValue)
+    case a if a.isManyRef     => Atom(a.ns, a.name, "Set[Long]", 1, VarValue)
+    case a if a.isManyRefAttr => Atom(a.ns, a.name, "Set[Long]", 1, VarValue)
+    //    case a if a.isBackRefAttr =>
+    //      val refNs = a.name.takeWhile(_.isLetter)
+    //      val refAttr = a.name.substring(a.name.indexOf("_") + 1)
+    //      Atom(refNs, refAttr, "Long", 1, BackValue(refNs))
     case unknown => abortTree(unknown, "[Dsl2Model:atom] Unknown atom type")
   }
 
@@ -99,7 +184,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"Seq($pkg.?)"     => Qm
     case q"Seq($pkg.count)" => Fn("count")
     case q"Seq(..$vs)"      =>
-      //      if (vs.isEmpty) abort(s"[Dsl2Model:getValues] Unexpected empty values for attribute `${attr.name}`")
       vs match {
         case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
           val oldNew: Map[Any, Any] = get.map {
@@ -143,5 +227,13 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
 object Dsl2Model {
   def inst(c0: Context) = new {val c: c0.type = c0} with Dsl2Model[c0.type]
-  def apply(c: Context)(model: c.Expr[NS]): Model = inst(c).resolve(model.tree)
+  def apply(c: Context)(model: c.Expr[NS]): Model = {
+    val model1 = inst(c).resolve(model.tree)
+
+    // Sanity check
+    model1.elements.collectFirst { case a: Atom => a} getOrElse
+      c.abort(c.enclosingPosition, "[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.")
+
+    model1
+  }
 }

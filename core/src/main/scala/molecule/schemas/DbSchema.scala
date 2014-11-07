@@ -13,10 +13,11 @@ import molecule.out._
 import molecule.dsl.schemaDSL._
 
 
-object Db extends Db_0 {
-  def apply(e: Long)       : Db_0      = ???
-  def apply(c: count.type) : Db_1[Int] = ???
-}
+object Db extends Db_0
+//{
+//  def apply(e: Long)       : Db_0      = ???
+//  def apply(c: count.type) : Db_1[Int] = ???
+//}
 
 trait Db {
   class valueType[Ns, In] extends OneString[Ns, In]

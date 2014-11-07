@@ -35,8 +35,8 @@ object QueryOps {
     def where(e: String, ns: String, attr: String, tpeS: String): Query =
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e, tpeS), KW(ns, attr), NoVal, Empty)))
 
-    def where(e: String, ns: String, attr: String, tpeS: String, v: String): Query =
-      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e, tpeS), KW(ns, attr), Var(v, tpeS), Empty)))
+    def where(e: String, ns: String, attr: String, tpeS: String, v: String, refNs: String = ""): Query =
+      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e, tpeS), KW(ns, attr, refNs), Var(v, tpeS), Empty)))
 
     def where(e: String, a: Atom, v: String): Query =
       where(e, a.ns, a.name, a.tpeS, v)
@@ -61,7 +61,7 @@ object QueryOps {
         .func(op, Seq(Var(v + 2, a.tpeS), Val(0, "Int")))
 
     def fulltext(e: String, a: Atom, v: String, qv: QueryValue): Query =
-      q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var("ent", "Long"), Var(v, a.tpeS))))
+      q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var("a", "Long"), Var(v, a.tpeS))))
 
     def orRules(e: String, a: Atom, args: Seq[Any]): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)

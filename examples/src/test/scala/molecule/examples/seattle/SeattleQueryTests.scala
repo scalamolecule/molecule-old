@@ -11,9 +11,9 @@
 //
 //    // Query of molecule
 //    m(Community.name) --> {
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [?ent :community/name ?a]]""".stripMargin
+//        |   [?a :community/name ?b]]""".stripMargin
 //    }
 //  }
 //
@@ -22,44 +22,44 @@
 //
 //    // Multiple attributes
 //    m(Community.name.url.category) -->
-//      """[:find ?a ?b (distinct ?c)
+//      """[:find ?b ?c (distinct ?d)
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/url ?b]
-//        |   [?ent :community/category ?c]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/url ?c]
+//        |   [?a :community/category ?d]]""".stripMargin
 //  }
 //
 //  "Querying _by_ attribute values" >> {
 //
 //    // Names of twitter communities
 //    m(Community.name.`type`.apply("twitter")) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ":community.type/twitter"]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ":community.type/twitter"]]""".stripMargin
 //
 //
 //    // Categories (many-cardinality) of the Belltown community
 //    m(Community.name("belltown").category) -->
-//      """[:find (distinct ?b)
+//      """[:find (distinct ?c)
 //        | :where
-//        |   [?ent :community/name "belltown"]
-//        |   [?ent :community/category ?b]]""".stripMargin
+//        |   [?a :community/name "belltown"]
+//        |   [?a :community/category ?c]]""".stripMargin
 //
 //
 //    // Names of news or arts communities - transforms to a query using Rules
 //    m(Community.name.category("news", "arts")) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   (rule1 ?ent)]
+//        |   [?a :community/name ?b]
+//        |   (rule1 ?a)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/category "news"]]
-//        |     [[rule1 ?ent] [?ent :community/category "arts"]]]
+//        |  2 [[[rule1 ?a] [?a :community/category "news"]]
+//        |     [[rule1 ?a] [?a :community/category "arts"]]]
 //        |)""".stripMargin
 //  }
 //
@@ -69,24 +69,24 @@
 //    // Communities in north eastern region
 //    // Ref's are modelelled as "Bond"'s (between Atoms)
 //    m(Community.name.Neighborhood.District.region("ne")) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/neighborhood ?b]
-//        |   [?b :neighborhood/district ?c]
-//        |   [?c :district/region ":district.region/ne"]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/neighborhood ?c]
+//        |   [?c :neighborhood/district ?d]
+//        |   [?d :district/region ":district.region/ne"]]""".stripMargin
 //
 //
 //    // Communities and their region
 //    m(Community.name.Neighborhood.District.region) -->
-//      """[:find ?a ?d2
+//      """[:find ?b ?e2
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/neighborhood ?b]
-//        |   [?b :neighborhood/district ?c]
-//        |   [?c :district/region ?d]
-//        |   [?d :db/ident ?d1]
-//        |   [(.getName ^clojure.lang.Keyword ?d1) ?d2]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/neighborhood ?c]
+//        |   [?c :neighborhood/district ?d]
+//        |   [?d :district/region ?e]
+//        |   [?e :db/ident ?e1]
+//        |   [(.getName ^clojure.lang.Keyword ?e1) ?e2]]""".stripMargin
 //  }
 //
 //
@@ -96,19 +96,19 @@
 //
 //    // Community input molecule awaiting some type value
 //    m(Community.name.`type`(?)) -->
-//      """[:find ?a
-//        | :in $ ?b
+//      """[:find ?b
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]]""".stripMargin
 //
 //    // Applying a value completes the query
 //    m(Community.name.`type`(?)).apply("twitter") -->
-//      """[:find ?a
-//        | :in $ ?b
+//      """[:find ?b
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -119,23 +119,23 @@
 //
 //    // Add a `!` to the question mark to return the input value too
 //    m(Community.name.`type`(?!)) -->
-//      """[:find ?a ?b2
-//        | :in $ ?b
+//      """[:find ?b ?c2
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?!)).apply("twitter") -->
-//      """[:find ?a ?b2
-//        | :in $ ?b
+//      """[:find ?b ?c2
+//        | :in $ ?c
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -148,13 +148,13 @@
 //    // Multiple input values - logical OR ------------------------
 //
 //    m(Community.name.`type`(?!)).apply("facebook_page" or "twitter") -->
-//      """[:find ?a ?b2
-//        | :in $ [?b ...]
+//      """[:find ?b ?c2
+//        | :in $ [?c ...]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -168,13 +168,13 @@
 //    m(Community.name.`type`(?!)).apply("facebook_page" or "twitter") -->
 //      //    m(Community.name.`type`(?!)).apply("facebook_page", "twitter") -->
 //      //    m(Community.name.`type`(?!)).apply(List("facebook_page", "twitter")) -->
-//      """[:find ?a ?b2
-//        | :in $ [?b ...]
+//      """[:find ?b ?c2
+//        | :in $ [?c ...]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?c :db/ident ?c1]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -188,12 +188,12 @@
 //    // Single tuple of input values - AND-semantics ------------------------
 //
 //    m(Community.name.`type`(?).orgtype(?)) -->
-//      """[:find ?a
-//        | :in $ ?b ?c
+//      """[:find ?b
+//        | :in $ ?c ?d
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/orgtype ?c]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/orgtype ?d]]""".stripMargin
 //
 //
 //    // The following 3 notation variations transform in the same way
@@ -201,12 +201,12 @@
 //    m(Community.name.`type`(?).orgtype(?)).apply("email_list" and "community") -->
 //      //    m(Community.name.`type`(?).orgtype(?)).apply("email_list", "community") -->
 //      //    m(Community.name.`type`(?).orgtype(?)).apply(List(("email_list", "community"))) -->
-//      """[:find ?a
-//        | :in $ [[ ?b ?c ]]
+//      """[:find ?b
+//        | :in $ [[ ?c ?d ]]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/orgtype ?c]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/orgtype ?d]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -219,16 +219,16 @@
 //
 //    // Communities of some `type` AND some `orgtype` (include input values!)
 //    m(Community.name.`type`(?!).orgtype(?!)) -->
-//      """[:find ?a ?b2 ?c2
-//        | :in $ ?b ?c
+//      """[:find ?b ?c2 ?d2
+//        | :in $ ?c ?d
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]
-//        |   [?ent :community/orgtype ?c]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
 //        |   [?c :db/ident ?c1]
-//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]""".stripMargin
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]
+//        |   [?a :community/orgtype ?d]
+//        |   [?d :db/ident ?d1]
+//        |   [(.getName ^clojure.lang.Keyword ?d1) ?d2]]""".stripMargin
 //
 //
 //    // The following 3 notation variations transform in the same way
@@ -236,16 +236,16 @@
 //    //    m(Community.name.`type`(?!).orgtype(?!)).apply(("email_list" and "community") or ("website" and "commercial")) -->
 //    //    m(Community.name.`type`(?!).orgtype(?!)).apply(("email_list", "community"), ("website", "commercial")) -->
 //    m(Community.name.`type`(?!).orgtype(?!)).apply(Seq(("email_list", "community"), ("website", "commercial"))) -->
-//      """[:find ?a ?b2 ?c2
-//        | :in $ [[ ?b ?c ]]
+//      """[:find ?b ?c2 ?d2
+//        | :in $ [[ ?c ?d ]]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?b :db/ident ?b1]
-//        |   [(.getName ^clojure.lang.Keyword ?b1) ?b2]
-//        |   [?ent :community/orgtype ?c]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
 //        |   [?c :db/ident ?c1]
-//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]]
+//        |   [(.getName ^clojure.lang.Keyword ?c1) ?c2]
+//        |   [?a :community/orgtype ?d]
+//        |   [?d :db/ident ?d1]
+//        |   [(.getName ^clojure.lang.Keyword ?d1) ?d2]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -258,27 +258,27 @@
 //  "Invoking functions in queries" >> {
 //
 //    m(Community.name < "C") -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [(.compareTo ^String ?a "C") ?a1]
-//        |   [(< ?a1 0) ]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [(.compareTo ^String ?b "C") ?b1]
+//        |   [(< ?b1 0) ]]""".stripMargin
 //
 //    m(Community.name < ?) -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [(.compareTo ^String ?a ?a1) ?a2]
-//        |   [(< ?a2 0) ]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [(.compareTo ^String ?b ?b1) ?b2]
+//        |   [(< ?b2 0) ]]""".stripMargin
 //
 //    m(Community.name < ?).apply("C") -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [(.compareTo ^String ?a ?a1) ?a2]
-//        |   [(< ?a2 0) ]]
+//        |   [?a :community/name ?b]
+//        |   [(.compareTo ^String ?b ?b1) ?b2]
+//        |   [(< ?b2 0) ]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -291,23 +291,23 @@
 //  "Querying with fulltext search" >> {
 //
 //    m(Community.name contains "Wallingford") -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :where
-//        |   [(fulltext $ :community/name "Wallingford") [[ ?ent ?a ]]]]""".stripMargin
+//        |   [(fulltext $ :community/name "Wallingford") [[ ?a ?b ]]]]""".stripMargin
 //
 //
 //    m(Community.name contains ?) -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [(fulltext $ :community/name ?a1) [[ ?ent ?a ]]]]""".stripMargin
+//        |   [(fulltext $ :community/name ?b1) [[ ?a ?b ]]]]""".stripMargin
 //
 //
 //    m(Community.name contains ?).apply("Wallingford") -->
-//      """[:find ?a
-//        | :in $ ?a1
+//      """[:find ?b
+//        | :in $ ?b1
 //        | :where
-//        |   [(fulltext $ :community/name ?a1) [[ ?ent ?a ]]]]
+//        |   [(fulltext $ :community/name ?b1) [[ ?a ?b ]]]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -319,29 +319,29 @@
 //    // Fulltext search on many-attribute (`category`)
 //
 //    m(Community.name.`type`("website").category contains "food") -->
-//      """[:find ?a (distinct ?c)
+//      """[:find ?b (distinct ?d)
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ":community.type/website"]
-//        |   [(fulltext $ :community/category "food") [[ ?ent ?c ]]]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ":community.type/website"]
+//        |   [(fulltext $ :community/category "food") [[ ?a ?d ]]]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?).category contains ?) -->
-//      """[:find ?a (distinct ?c)
-//        | :in $ ?b ?c1
+//      """[:find ?b (distinct ?d)
+//        | :in $ ?c ?d1
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [(fulltext $ :community/category ?c1) [[ ?ent ?c ]]]]""".stripMargin
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [(fulltext $ :community/category ?d1) [[ ?a ?d ]]]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?).category contains ?).apply("website", Set("food")) -->
-//      """[:find ?a (distinct ?c)
-//        | :in $ [[ ?b ?c1 ]]
+//      """[:find ?b (distinct ?d)
+//        | :in $ [[ ?c ?d1 ]]
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [(fulltext $ :community/category ?c1) [[ ?ent ?c ]]]]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [(fulltext $ :community/category ?d1) [[ ?a ?d ]]]]
 //        |
 //        |INPUTS:
 //        |List(
@@ -354,68 +354,67 @@
 //  "Querying with rules (logical OR)" >> {
 //
 //    m(Community.name.`type`("twitter" or "facebook_page")) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   (rule1 ?ent)]
+//        |   [?a :community/name ?b]
+//        |   (rule1 ?a)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/type ":community.type/twitter"]]
-//        |     [[rule1 ?ent] [?ent :community/type ":community.type/facebook_page"]]]
+//        |  2 [[[rule1 ?a] [?a :community/type ":community.type/twitter"]]
+//        |     [[rule1 ?a] [?a :community/type ":community.type/facebook_page"]]]
 //        |)""".stripMargin
 //
 //
 //    m(Community.name.Neighborhood.District.region("ne" or "sw")) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/neighborhood ?b]
-//        |   [?b :neighborhood/district ?c]
-//        |   (rule1 ?c)]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/neighborhood ?c]
+//        |   [?c :neighborhood/district ?d]
+//        |   (rule1 ?d)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?c] [?c :district/region ":district.region/ne"]]
-//        |     [[rule1 ?c] [?c :district/region ":district.region/sw"]]]
+//        |  2 [[[rule1 ?d] [?d :district/region ":district.region/ne"]]
+//        |     [[rule1 ?d] [?d :district/region ":district.region/sw"]]]
 //        |)""".stripMargin
 //
 //
 //    // Social media in southern regions
 //    m(Community.name.`type`("twitter" or "facebook_page").Neighborhood.District.region("sw" or "s" or "se")) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   (rule1 ?ent)
-//        |   [?ent :community/neighborhood ?c]
-//        |   [?c :neighborhood/district ?d]
-//        |   (rule2 ?d)]
+//        |   [?a :community/name ?b]
+//        |   (rule1 ?a)
+//        |   [?a :community/neighborhood ?d]
+//        |   [?d :neighborhood/district ?e]
+//        |   (rule2 ?e)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/type ":community.type/twitter"]]
-//        |     [[rule1 ?ent] [?ent :community/type ":community.type/facebook_page"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/sw"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/s"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/se"]]]
+//        |  2 [[[rule1 ?a] [?a :community/type ":community.type/twitter"]]
+//        |     [[rule1 ?a] [?a :community/type ":community.type/facebook_page"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/sw"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/s"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/se"]]]
 //        |)""".stripMargin
 //
 //
 //    m(Community.name.`type`(?).Neighborhood.District.region(?)) -->
-//      """[:find ?a
-//        | :in $ ?b ?e
-//        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/neighborhood ?c]
-//        |   [?c :neighborhood/district ?d]
-//        |   [?d :district/region ?e]]""".stripMargin
+//      """[:find ?b
+//        | :in $ ?c ?f //        | :where
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/neighborhood ?d]
+//        |   [?d :neighborhood/district ?e]
+//        |   [?e :district/region ?f]]""".stripMargin
 //
 //
 //    m(Community.name.`type`(?).Neighborhood.District.region(?)).apply(
@@ -423,25 +422,25 @@
 //      // or
 //      // Seq("twitter", "facebook_page"), Seq("sw", "s", "se")
 //    ) -->
-//      """[:find ?a
+//      """[:find ?b
 //        | :in $ %
 //        | :where
-//        |   [?ent :community/name ?a]
-//        |   [?ent :community/type ?b]
-//        |   [?ent :community/neighborhood ?c]
-//        |   [?c :neighborhood/district ?d]
-//        |   [?d :district/region ?e]
-//        |   (rule1 ?ent)
-//        |   (rule2 ?d)]
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ?c]
+//        |   [?a :community/neighborhood ?d]
+//        |   [?d :neighborhood/district ?e]
+//        |   [?e :district/region ?f]
+//        |   (rule1 ?a)
+//        |   (rule2 ?e)]
 //        |
 //        |INPUTS:
 //        |List(
 //        |  1 datomic.db.Db@xxx
-//        |  2 [[[rule1 ?ent] [?ent :community/type ":community.type/twitter"]]
-//        |     [[rule1 ?ent] [?ent :community/type ":community.type/facebook_page"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/sw"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/s"]]
-//        |     [[rule2 ?d] [?d :district/region ":district.region/se"]]]
+//        |  2 [[[rule1 ?a] [?a :community/type ":community.type/twitter"]]
+//        |     [[rule1 ?a] [?a :community/type ":community.type/facebook_page"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/sw"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/s"]]
+//        |     [[rule2 ?e] [?e :district/region ":district.region/se"]]]
 //        |)""".stripMargin
 //  }
 //
@@ -452,8 +451,8 @@
 //
 //
 //    m(Db.txInstant) -->
-//      """[:find ?a
-//        | :where [?ent :db/txInstant ?a]]""".stripMargin
+//      """[:find ?b
+//        | :where [?a :db/txInstant ?b]]""".stripMargin
 //  }
 //
 //

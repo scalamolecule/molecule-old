@@ -145,7 +145,7 @@ package object molecule {
   implicit def uuidSet2Model   (set: Set[UUID]   ): TermValue[Set[UUID]]    = TermValue(set)
   implicit def uriSet2Model    (set: Set[URI]    ): TermValue[Set[URI]]     = TermValue(set)
 
-  //  implicit def contains2Model[T](c: contains[T]) = TermValue(c.value)
+    //  implicit def contains2Model[T](c: contains[T]) = TermValue(c.value)
   implicit def tuple2Model[A, B](tpl: (A, B)) = TermValue(tpl)
 
   // Entity api
@@ -155,6 +155,8 @@ package object molecule {
   // Input marker
   trait ?
   object ? extends ?
+
+  object v1
 
 //  trait maybe
 //  object maybe extends maybe

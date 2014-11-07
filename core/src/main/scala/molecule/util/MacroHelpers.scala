@@ -34,7 +34,7 @@ trait MacroHelpers[Ctx <: Context] {
     abort(s"$msg:\n$tree \n$stack")
   }
 
-  protected case class Debug(clazz: String, threshold: Int, max: Int = 9999, debug: Boolean = true) {
+  protected case class Debug(clazz: String, threshold: Int, max: Int = 9999, debug: Boolean = false) {
 
     def apply(id: Int, params: Any*): Unit = {
       val stackTrace = if (debug) Thread.currentThread.getStackTrace mkString "\n" else ""

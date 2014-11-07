@@ -81,7 +81,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "commons-codec" % "commons-codec" % "1.6",
-      "com.datomic" % "datomic-free" % "0.9.4956",
+      "com.datomic" % "datomic-free" % "0.9.5052",
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.specs2" %% "specs2" % "2.3.11" % "test"
     ),

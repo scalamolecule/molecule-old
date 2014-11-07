@@ -1,6 +1,6 @@
 package molecule
 import java.util.UUID._
-import java.util.{Date, UUID, Map => jMap}
+import java.util.{Date, UUID, Collection => jCollection, List => jList, Map => jMap}
 import datomic._
 import datomic.db.Db
 import molecule.ast.model._
@@ -68,7 +68,7 @@ trait DatomicFacade {
     case args                               => sys.error(s"[DatomicFacade] UNRESOLVED input args: $args")
   }
 
-  def results(query: Query, conn: Connection) = {
+  def results(query: Query, conn: Connection): jCollection[jList[AnyRef]] = {
     val p = (expr: QueryExpr) => Query2String(query).p(expr)
     val rules = "[" + (query.i.rules map p mkString " ") + "]"
     val db = dbOp match {
@@ -84,7 +84,6 @@ trait DatomicFacade {
     // reset db settings
     dbOp = null
 
-
     val first = if (query.i.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
@@ -97,7 +96,6 @@ trait DatomicFacade {
     //    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
     //    println("###########################################################################################\n")
 
-
     //    Peer.q(s"""
     //       [:find ?a ?b
     //        :where
@@ -106,7 +104,24 @@ trait DatomicFacade {
     //          [?ent :ns/int ?b]]
     //       """, conn.db)
 
-    Peer.q(query.toMap, allInputs.map(_.asInstanceOf[Object]): _*)
+    try {
+      Peer.q(query.toMap, allInputs.map(_.asInstanceOf[Object]): _*)
+    } catch {
+      case e: Throwable => throw new RuntimeException(
+        s"""
+           |#############################################################################
+           |$e
+           |
+           |$query
+           |
+           |${query.datalog}
+           |
+           |RULES: ${if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")}
+           |
+           |INPUTS: ${allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1)}
+           |#############################################################################
+         """.stripMargin)
+    }
   }
 
   def getValues(db: Database, id: Any, ns: Any, attr: Any) =
@@ -117,11 +132,10 @@ trait DatomicFacade {
   protected[molecule] def upsertTx(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): jMap[_, _] = {
     val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
     x(0
-      , model
+//      , model
       , javaTx
-      //      , conn.transact(javaTx)
-      //      , conn.transact(javaTx).get
     )
+
     // Get value from Future
     conn.transact(javaTx).get
   }
@@ -157,7 +171,7 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
   def touch: Map[String, Any] = toMap map { case (k, v) =>
     val sortedValue = v match {
-        // Todo: presuming
+      // Todo: presuming
       case vs: List[Any] => vs.sortBy(_.asInstanceOf[Map[String, Any]].head._2.asInstanceOf[Long])
       case other         => other
     }

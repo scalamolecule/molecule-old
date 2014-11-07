@@ -1,8 +1,198 @@
 //package molecule
 //package examples.dayOfDatomic.tutorial
+//import molecule.examples.dayOfDatomic.dsl.graph.Role
+//import molecule.examples.dayOfDatomic.schema.GraphSchema
 //import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
 ////import molecule.examples.dayOfDatomic.GraphSchema
+//
+//
 //class Graph extends DayOfAtomicSpec {
+//
+//
+//  "Graph" >> {
+//    import molecule.examples.dayOfDatomic.dsl.graph._
+//    implicit val conn = load(GraphSchema.tx, "Graph")
+//
+//    // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
+//
+//    User.name_("User1").RoleInGroup.Group.name_("Group2").RoleInGroup_group.Role.name.get.head === "Role1"
+//
+//
+//    // User 1 ..........................
+//
+//    // User 1's Roles
+//    User.name_("User1").RoleInGroup.Role.name.get.head === "Role1"
+//
+//    // User 1's Groups
+//    User.name_("User1").RoleInGroup.Group.name.get.head === "Group2"
+//
+//    // User 1's Roles in Group 2
+//    User.name_("User1").RoleInGroup(Group.name_("Group2")).Role.name.get.head === "Role1"
+//
+//    // User 1's Groups having Role 1
+//    User.name_("User1").RoleInGroup(Role.name("Role1")).Group.name.get.head === "Group2"
+//
+//
+//    // Role 1 ............................
+//
+//    // Users having Role 1
+//    User.name.RoleInGroup.Role.name("Role1").get.head === "User1"
+//
+//    // Groups with Role 1
+//    RoleInGroup(Role.name("Role1")).Group.name.get.head === "Group2"
+//
+//    // Users in Group 2 having Role 1
+//    User.name.RoleInGroup(Group.name("Group2")).Role.name("Role1").get.head === "User1"
+//
+//    // Groups where User 1 has Role 1
+//    User.name("User1").RoleInGroup(Group.name).Role.name("Role1").get.head === "User1"
+//
+//
+//    // Group 2 ...........................
+//
+//    // Users in Group 2
+//    User.name.RoleInGroup.Group.name_("Group2").get.head === ""
+//
+//    // Roles of Group 2
+//    RoleInGroup(Group.name_("Group2")).Role.name.get.head === ""
+//
+//    // Users with Role 1 in Group 2
+//    User.name.RoleInGroup(Role.name("Role1")).Group.name_("Group2").get.head === ""
+//
+//    // Roles of User 1 in Group 2
+//    User.name("User1").RoleInGroup(Group.name("Group2")).Role.name.get.head === ""
+//
+//
+//
+//    /*
+//
+//    RoleInGroup -- User1
+//          |
+//          |
+//        Group2 -- Role.name?
+//
+//
+//        User
+//         :
+//    RoleInGroup —— Group
+//         |
+//        Role
+//
+//
+//
+//       User
+//        |
+//    RoleInGroup
+//     |      |
+//     |    Group
+//    Role
+//
+//
+//    User
+//    |
+//    RoleGroup
+//    —— Role
+//    —— Group
+//
+//
+//
+//    User
+//    |
+//    RoleInGroup —— Role
+//                —— Group
+//
+//
+//       User
+//        |
+//    RoleInGroup
+//     |      |
+//    Role  Group
+//
+//
+//
+//                  User
+//                /
+//    RoleInGroup
+//     |      |
+//    Role  Group
+//
+//
+//
+//    User.name_("User1")
+//     |
+//    Role.name
+//     In
+//    Group.name_("Group2")
+//
+//
+//
+//
+//     With
+//    Tasks
+//
+//
+//
+//      User.name_("User1")
+//       |
+//     -----
+//    |Role |.name
+//    | In  |
+//    |Group|.name_("Group2")
+//     -----
+//
+//
+//    User
+//     |
+//    Role  —— Role
+//     In
+//    Group —— Group
+//
+//
+//
+//
+//       User1
+//        |
+//    RoleInGroup
+//     |       |
+//    Role?  Group2
+//
+//
+//
+//                User
+//                 |
+//                RoleInGroup —— Group
+//                 |
+//                Role
+//
+//
+//         User
+//          |
+//    RoleInGroup —— Group2
+//          |
+//        Role.name?
+//
+//*/
+//
+//    RoleInGroup.apply(User.name_("User1"))
+//
+//    RoleInGroup.apply(User.name("User1"))
+//
+//
+//    // User 1's Roles in all Groups
+//    User.name_("User1").RoleInGroup(Role.name).Group.name.get
+//
+//    User.name_("User1").RoleInGroup.Role.name.RoleInGroup_role.Group.name.get === List(
+//      ("Role1", "Group2"),
+//      ("Role2", "Group1")
+//    )
+//
+//
+//
+//
+//
+//
+//
+//  }
 //
 //  "Graph" >> {
 //    implicit val conn = init("graph", "graph.edn")
