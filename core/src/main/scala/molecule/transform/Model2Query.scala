@@ -22,9 +22,9 @@ object Model2Query {
             // Input
             case (_, Qm) if isEnum      => q.in(v, a, enumPrefix, e).where(e, a, v)
             case (_, Qm)                => q.where(e, a, v).in(v, a)
-            case (_, Lt(Qm))            => q.where(e, a, v).compareTo("<", a, v, Var(v1, a.tpeS))
-            case (2, Fulltext(Seq(Qm))) => q.in(v1, a).fulltext(e, a, v, Var(v1, a.tpeS))
-            case (_, Fulltext(Seq(Qm))) => q.in(v1, a).fulltext(e, a, v, Var(v1, a.tpeS))
+            case (_, Lt(Qm))            => q.where(e, a, v).compareTo("<", a, v, Var(v1))
+            case (2, Fulltext(Seq(Qm))) => q.in(v1, a).fulltext(e, a, v, Var(v1))
+            case (_, Fulltext(Seq(Qm))) => q.in(v1, a).fulltext(e, a, v, Var(v1))
 
             // Output
             //            case (_, EntValue) => q.find(e, tpe)
@@ -36,14 +36,14 @@ object Model2Query {
             // Expressions
             case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(eP + _))
             case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss)
-            case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(eP + s, a.tpeS))
-            case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s, a.tpeS))
-            case (_, Lt(arg))                         => q.where(e, a, v).compareTo("<", a, v, Val(arg, a.tpeS))
+            case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(eP + s))
+            case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s))
+            case (_, Lt(arg))                         => q.where(e, a, v).compareTo("<", a, v, Val(arg))
             //            case (_, Fn("count")) if a.name == "eid"    => q
-            case (_, Fn("count"))         => q.where(e, a, v).find("count", Seq(), e, "Int")
-            case (2, Fulltext(qv :: Nil)) => q.fulltext(e, a, v, Val(qv, a.tpeS))
-            case (_, Fulltext(qv :: Nil)) => q.fulltext(e, a, v, Val(qv, a.tpeS))
-            case (_, Fulltext(qvs))       => q.orRules(v1, a, qvs).fulltext(e, a, v, Var(v1, a.tpeS))
+            case (_, Fn("count"))         => q.where(e, a, v).find("count", Seq(), e)
+            case (2, Fulltext(qv :: Nil)) => q.fulltext(e, a, v, Val(qv))
+            case (_, Fulltext(qv :: Nil)) => q.fulltext(e, a, v, Val(qv))
+            case (_, Fulltext(qvs))       => q.orRules(v1, a, qvs).fulltext(e, a, v, Var(v1))
 
             // Manipulate
             case (_, Replace(_)) => q
@@ -59,34 +59,34 @@ object Model2Query {
           (card, value) match {
 
             // Input
-            case (_, Qm) if isEnum => q.find(v2, tpe).in(v, a, enumPrefix).enum(e, a, v)
-            //            case (_, Qm) if isEnum      => q.find(v2, tpe).in(v, a, enumPrefix, e).enum(e, a, v)
-            case (_, Qm)                => q.find(v, tpe).in(v, a).where(e, a, v)
-            case (_, Lt(Qm))            => q.find(v, tpe).in(v1, a).where(e, a, v).compareTo("<", a, v, Var(v1, a.tpeS))
-            case (2, Fulltext(Seq(Qm))) => q.find("distinct", Seq(), v, tpe).in(v1, a).fulltext(e, a, v, Var(v1, a.tpeS))
-            case (_, Fulltext(Seq(Qm))) => q.find(v, tpe).in(v1, a).fulltext(e, a, v, Var(v1, a.tpeS))
+            case (_, Qm) if isEnum => q.find(v2).in(v, a, enumPrefix).enum(e, a, v)
+            //            case (_, Qm) if isEnum      => q.find(v2).in(v, a, enumPrefix, e).enum(e, a, v)
+            case (_, Qm)                => q.find(v).in(v, a).where(e, a, v)
+            case (_, Lt(Qm))            => q.find(v).in(v1, a).where(e, a, v).compareTo("<", a, v, Var(v1))
+            case (2, Fulltext(Seq(Qm))) => q.find("distinct", Seq(), v).in(v1, a).fulltext(e, a, v, Var(v1))
+            case (_, Fulltext(Seq(Qm))) => q.find(v).in(v1, a).fulltext(e, a, v, Var(v1))
 
             // Output
-            case (_, EntValue) => q.find(e, tpe)
-            case (2, VarValue) => q.find("distinct", Seq(), v, tpe).where(e, a, v)
-            case (_, VarValue) => q.find(v, tpe).where(e, a, v)
-            //            case (_, BackValue(backNs)) => q.find(v, tpe).where(e, a.ns, a.name, a.tpeS, v, backNs)
-            case (_, BackValue(backNs)) => q.find(e, tpe).where(v, a.ns, a.name, a.tpeS, e, backNs)
-            case (2, EnumVal)           => q.find("distinct", Seq(), v2, tpe).enum(e, a, v)
-            case (_, EnumVal)           => q.find(v2, tpe).enum(e, a, v)
+            case (_, EntValue) => q.find(e)
+            case (2, VarValue) => q.find("distinct", Seq(), v).where(e, a, v)
+            case (_, VarValue) => q.find(v).where(e, a, v)
+            //            case (_, BackValue(backNs)) => q.find(v).where(e, a.ns, a.name, v, backNs)
+            case (_, BackValue(backNs)) => q.find(e).where(v, a.ns, a.name, e, backNs)
+            case (2, EnumVal)           => q.find("distinct", Seq(), v2).enum(e, a, v)
+            case (_, EnumVal)           => q.find(v2).enum(e, a, v)
 
             // Expressions
             case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(eP + _))
-            case (2, Eq(ss)) if ss.size > 1           => q.find("distinct", Seq(), v, tpe).orRules(e, a, ss).where(e, a, v)
-            case (_, Eq(ss)) if ss.size > 1           => q.find(v, tpe).orRules(e, a, ss)
-            case (_, Eq(s :: Nil)) if isEnum          => q.find(v2, tpe).where(e, a, Val(eP + s, a.tpeS)).enum(e, a, v) // todo: can we output a constant value instead?
-            case (_, Eq(s :: Nil))                    => q.find(v, tpe).where(e, a, Val(s, a.tpeS)).where(e, a, v) // todo: can we output a constant value instead?
-            case (_, Lt(arg))                         => q.find(v, tpe).where(e, a, v).compareTo("<", a, v, Val(arg, a.tpeS))
+            case (2, Eq(ss)) if ss.size > 1           => q.find("distinct", Seq(), v).orRules(e, a, ss).where(e, a, v)
+            case (_, Eq(ss)) if ss.size > 1           => q.find(v).orRules(e, a, ss)
+            case (_, Eq(s :: Nil)) if isEnum          => q.find(v2).where(e, a, Val(eP + s)).enum(e, a, v) // todo: can we output a constant value instead?
+            case (_, Eq(s :: Nil))                    => q.find(v).where(e, a, Val(s)).where(e, a, v) // todo: can we output a constant value instead?
+            case (_, Lt(arg))                         => q.find(v).where(e, a, v).compareTo("<", a, v, Val(arg))
             //            case (_, Fn("count")) if a.name == "eid"  => q.find("count", Seq(), e, "Int")
-            case (_, Fn("count"))         => q.find("count", Seq(), e, "Int") //.where(e, a, v)
-            case (2, Fulltext(qv :: Nil)) => q.find("distinct", Seq(), v, tpe).fulltext(e, a, v, Val(qv, a.tpeS))
-            case (_, Fulltext(qv :: Nil)) => q.find(v, tpe).fulltext(e, a, v, Val(qv, a.tpeS))
-            case (_, Fulltext(qvs))       => q.find(v, tpe).fulltext(e, a, v, Var(v1, a.tpeS)).orRules(v1, a, qvs)
+            case (_, Fn("count"))         => q.find("count", Seq(), e) //.where(e, a, v)
+            case (2, Fulltext(qv :: Nil)) => q.find("distinct", Seq(), v).fulltext(e, a, v, Val(qv))
+            case (_, Fulltext(qv :: Nil)) => q.find(v).fulltext(e, a, v, Val(qv))
+            case (_, Fulltext(qvs))       => q.find(v).fulltext(e, a, v, Var(v1)).orRules(v1, a, qvs)
 
 
             // Manipulate
@@ -103,7 +103,7 @@ object Model2Query {
         case Group(ref, elements) => q
 
         case Meta(ns, attr, kind, tpe, value) => value match {
-          case EntValue => q.find(e, "Long")
+          case EntValue => q.find(e)
           case _        => q
         }
 

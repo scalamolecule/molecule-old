@@ -35,15 +35,17 @@ object query {
   trait Output extends QueryExpr //{val tpeS: String}
   // todo
 //  case class AggrExpr(fn: String, args: Seq[String], v: Var) extends Output
-  case class AggrExpr(fn: String, args: Seq[String], v: Var, tpeS: String) extends Output
+  case class AggrExpr(fn: String, args: Seq[String], v: Var) extends Output
 
   case class KW(ns: String, attr: String, refNs: String = "") extends QueryTerm
 
   sealed trait QueryValue extends QueryTerm
 
   // todo: can we skip tpeS ?
-  case class Var(v: String, tpeS: String) extends QueryValue with Output
-  case class Val(v: Any, tpeS: String) extends QueryValue
+//  case class Var(v: String, tpeS: String) extends QueryValue with Output
+//  case class Val(v: Any, tpeS: String) extends QueryValue
+  case class Var(v: String) extends QueryValue with Output
+  case class Val(v: Any) extends QueryValue
   case class Dummy(v: Any) extends QueryValue
   case object NoVal extends QueryValue
 
@@ -58,7 +60,7 @@ object query {
   trait Input extends QueryTerm
   case class InDataSource(ds: DataSource, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input
   case class InVar(binding: Binding, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input
-  case class Placeholder(v: String, kw: KW, tpeS: String, enumPrefix: Option[String] = None, e: String = "") extends Input
+  case class Placeholder(v: String, kw: KW, enumPrefix: Option[String] = None, e: String = "") extends Input
 
 
   sealed trait Binding extends QueryTerm
@@ -87,7 +89,7 @@ object query {
     def apply() = new Query(Find(Seq()), With(Seq()), In(Seq()), Where(List()))
   }
   object DataClause {
-    def apply(e: String, attr: KW, tpeS: String, v: String) = new DataClause(ImplDS, Var(e, tpeS), attr, Var(v, tpeS), Empty)
-    def apply(e: String, attr: KW, tpeS: String, value: Val) = new DataClause(ImplDS, Var(e, tpeS), attr, value, Empty)
+    def apply(e: String, attr: KW, v: String) = new DataClause(ImplDS, Var(e), attr, Var(v), Empty)
+    def apply(e: String, attr: KW, value: Val) = new DataClause(ImplDS, Var(e), attr, value, Empty)
   }
 }

@@ -18,6 +18,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   def mkUUID(uuid: UUID) = q"java.util.UUID.fromString(${uuid.toString})"
   def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
+
   implicit val liftAny = Liftable[Any] {
     case Literal(Constant(s: String))  => q"$s"
     case Literal(Constant(i: Int))     => q"$i"
@@ -38,38 +39,35 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
     case Fn(value)                     => q"Fn($value)"
-
-    //    case qmr: QmR.type => q"QmR"
-    case other => abort("[Liftables:liftAny] Can't lift unexpected base type: " + other.getClass)
+    case other                         => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
   }
 
   implicit val liftTuple2 = Liftable[Product] {
-    case (k, v) => (k, v) match {
-      case (k: String, v: String) => q"($k, $v)"
-      case (k: Int, v: Int)       => q"($k, $v)"
-      case (k: Long, v: Long)     => q"($k, $v)"
-      case (k: Float, v: Float)   => q"($k, $v)"
-      case (k: Double, v: Double) => q"($k, $v)"
-      case (k: Date, v: Date)     => q"(${mkDate(k)}, ${mkDate(v)})"
-      case (k: UUID, v: UUID)     => q"(${mkUUID(k)}, ${mkUUID(v)})"
-      case (k: URI, v: URI)       => q"(${mkURI(k)}, ${mkURI(v)})"
-    }
-    case other  => abort("[Liftables:liftTuple2] Can't lift unexpected product type: " + other.getClass)
+    case (k: String, v: String) => q"($k, $v)"
+    case (k: Int, v: Int)       => q"($k, $v)"
+    case (k: Long, v: Long)     => q"($k, $v)"
+    case (k: Float, v: Float)   => q"($k, $v)"
+    case (k: Double, v: Double) => q"($k, $v)"
+    case (k: Date, v: Date)     => q"(${mkDate(k)}, ${mkDate(v)})"
+    case (k: UUID, v: UUID)     => q"(${mkUUID(k)}, ${mkUUID(v)})"
+    case (k: URI, v: URI)       => q"(${mkURI(k)}, ${mkURI(v)})"
+    case (a, b)                 => abort(s"[Liftables:liftTuple2] Can't lift unexpected Tuple2: ($a, $b)")
+    case other                  => abort(s"[Liftables:liftTuple2] Can't lift unexpected product type: $other")
   }
 
 
   // Liftables for Query --------------------------------------------------------------
 
-  implicit val liftVar    = Liftable[Var] { v => q"Var(${v.v}, ${v.tpeS})"}
-  implicit val liftVal    = Liftable[Val] { value => q"Val(${value.v}, ${value.tpeS})"}
+  implicit val liftVar    = Liftable[Var] { v => q"Var(${v.v})"}
+  implicit val liftVal    = Liftable[Val] { value => q"Val(${value.v})"}
   implicit val liftAttrKW = Liftable[KW] { kw => q"KW(${kw.ns}, ${kw.attr}, ${kw.refNs})"}
   implicit val liftWith   = Liftable[With] { widh => q"With(Seq(..${widh.variables}))"}
 
   implicit val liftQueryValue = Liftable[QueryValue] {
-    case Var(sym, tpeS) => q"Var($sym, $tpeS)"
-    case Val(v, tpeS)   => q"Val($v, $tpeS)"
-    case Dummy(v)       => q"Dummy($v)"
-    case NoVal          => q"NoVal"
+    case Var(sym) => q"Var($sym)"
+    case Val(v)   => q"Val($v)"
+    case Dummy(v) => q"Dummy($v)"
+    case NoVal    => q"NoVal"
   }
 
   implicit val liftDataSource = Liftable[DataSource] {
@@ -81,8 +79,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftQueryTerm = Liftable[QueryTerm] {
     case KW(ns, attr, refNs) => q"KW($ns, $attr, $refNs)"
     case Empty               => q"Empty"
-    case Var(sym, tpeS)      => q"Var($sym, $tpeS)"
-    case Val(v, tpeS)        => q"Val($v, $tpeS)"
+    case Var(sym)            => q"Var($sym)"
+    case Val(v)              => q"Val($v)"
     case DS(name)            => q"DS($name)"
     case DS                  => q"DS"
     case ImplDS              => q"ImplDS"
@@ -90,8 +88,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftOutput = Liftable[Output] {
-    case AggrExpr(fn, args, v, tpeS) => q"AggrExpr($fn, Seq(..$args), $v, $tpeS)"
-    case Var(sym, tpeS)              => q"Var($sym, $tpeS)"
+    case AggrExpr(fn, args, v) => q"AggrExpr($fn, Seq(..$args), $v)"
+    case Var(sym)              => q"Var($sym)"
   }
   implicit val liftFind   = Liftable[Find] { find => q"Find(Seq(..${find.outputs}))"}
 
@@ -112,9 +110,9 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftInput = Liftable[Input] {
-    case InDataSource(ds, argss)                 => q"InDataSource($ds, Seq(...$argss))"
-    case InVar(binding, argss)                   => q"InVar($binding, Seq(...$argss))"
-    case Placeholder(v, kw, tpeS, enumPrefix, e) => q"Placeholder($v, $kw, $tpeS, $enumPrefix, $e)"
+    case InDataSource(ds, argss)           => q"InDataSource($ds, Seq(...$argss))"
+    case InVar(binding, argss)             => q"InVar($binding, Seq(...$argss))"
+    case Placeholder(v, kw, enumPrefix, e) => q"Placeholder($v, $kw, $enumPrefix, $e)"
   }
 
   implicit val liftClause = Liftable[Clause] {
@@ -144,7 +142,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Lt(value)        => q"Lt($value)"
     case Fn(value)        => q"Fn($value)"
     case Qm               => q"Qm"
-    case QmR              => q"QmR"
+    //    case QmR              => q"QmR"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
     case Replace(values)  => q"Replace($values)"
     case Remove(values)   => q"Remove(Seq(..$values))"

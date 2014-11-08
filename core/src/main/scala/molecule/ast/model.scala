@@ -43,7 +43,7 @@ object model {
   case class Fn(name: String) extends Value
 
   case object Qm extends Value
-  case object QmR extends Value
+//  case object QmR extends Value
 
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value

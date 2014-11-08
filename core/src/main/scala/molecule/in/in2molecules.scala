@@ -32,7 +32,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
     val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
     val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
     val query1 = _query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
-    val entityQuery = _query.copy(f = Find(Seq(Var("a", "Long"))))
+    val entityQuery = _query.copy(f = Find(Seq(Var("a"))))
     (query1, entityQuery)
   }
 
@@ -41,7 +41,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
     // Extract placeholder info and discard placeholders
     val varsAndPrefixes = _query.i.inputs.collect {
 //      case Placeholder(_, kw, t, enumPrefix, e) => (kw, t, enumPrefix.getOrElse(""), e)
-      case Placeholder(_, kw, tpeS, enumPrefix, e) => (kw, tpeS, enumPrefix, e)
+      case Placeholder(_, kw, enumPrefix, e) => (kw, enumPrefix, e)
     }
     val query1 = _query.copy(i = In(Seq()))
 
@@ -52,21 +52,21 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
 
     // Add rules for each list of inputs
     val query2 = inputLists.productIterator.toList.zip(varsAndPrefixes).foldLeft(query1) {
-      case (q, (inputList: Seq[_], (kw, tpeS, enumPrefix, e))) => {
+      case (q, (inputList: Seq[_], (kw, enumPrefix, e))) => {
         // Add rule for each input value
         val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
         val newRules = inputList.foldLeft(q.i.rules) { case (rules, input) =>
           val value = if (enumPrefix.isDefined) enumPrefix.get + input else input
-          val dataClause = DataClause(ImplDS, Var(e, tpeS), kw, Val(value, tpeS), Empty)
-          val rule = Rule(ruleName, Seq(Var(e, tpeS)), Seq(dataClause))
+          val dataClause = DataClause(ImplDS, Var(e), kw, Val(value), Empty)
+          val rule = Rule(ruleName, Seq(Var(e)), Seq(dataClause))
           rules :+ rule
         }
         val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = newRules)
-        val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e, "Long"))))
+        val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
         q.copy(i = newIn, wh = newWhere)
       }
     }
-    val entityQuery = query2.copy(f = Find(Seq(Var("a", "Long"))))
+    val entityQuery = query2.copy(f = Find(Seq(Var("a"))))
     (query2, entityQuery)
   }
 

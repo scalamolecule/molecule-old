@@ -1,14 +1,14 @@
-package molecule
-package examples.seattle
-import molecule.ast.model._
-import molecule.ast.query._
-//import molecule.dsl.DbSchema._
-import molecule.examples.seattle.dsl.seattle._
-import scala.language.reflectiveCalls
-
-
-class SeattleTransformationTests extends SeattleSpec {
-
+//package molecule
+//package examples.seattle
+//import molecule.ast.model._
+//import molecule.ast.query._
+////import molecule.dsl.DbSchema._
+//import molecule.examples.seattle.dsl.seattle._
+//import scala.language.reflectiveCalls
+//
+//
+//class SeattleTransformationTests extends SeattleSpec {
+//
 //  "A first query" >> {
 //
 //    // Testing that a molecule goes correctly through 3 transformations:
@@ -42,103 +42,103 @@ class SeattleTransformationTests extends SeattleSpec {
 //        | :where [?a :community/name ?b]]""".stripMargin
 //    }
 //  }
-
-
-  "Querying _for_ attribute values" >> {
-
-    // Multiple attributes
-    m(Community.name.url.category) -->
-      Model(List(
-        Atom("community", "name", "String", 1, VarValue),
-        Atom("community", "url", "String", 1, VarValue),
-        Atom("community", "category", "Set[String]", 2, VarValue))
-      ) -->
-      Query(
-        Find(List(
-          Var("b", "String"),
-          Var("c", "String"),
-          AggrExpr("distinct", List(), Var("d", "Set[String]"), "Set[String]"))),
-        Where(List(
-          DataClause("a", KW("community", "name"), "String", "b"),
-          DataClause("a", KW("community", "url"), "String", "c"),
-          DataClause("a", KW("community", "category"), "Set[String]", "d")))
-      ) -->
-      """[:find ?b ?c (distinct ?d)
-        | :where
-        |   [?a :community/name ?b]
-        |   [?a :community/url ?c]
-        |   [?a :community/category ?d]]""".stripMargin
-  }
-
-  "Querying _by_ attribute values" >> {
-
-    // Names of twitter communities
-    m(Community.name.`type`("twitter")) -->
-      Model(List(
-        Atom("community", "name", "String", 1, VarValue),
-        Atom("community", "type", "String", 1, Eq(List("twitter")), Some(":community.type/")))
-      ) -->
-      Query(
-        Find(List(
-          Var("b", "String"))),
-        Where(List(
-          DataClause("a", KW("community", "name"), "String", "b"),
-          DataClause("a", KW("community", "type"), "String", Val(":community.type/twitter", "String"))))
-      ) -->
-      """[:find ?b
-        | :where
-        |   [?a :community/name ?b]
-        |   [?a :community/type ":community.type/twitter"]]""".stripMargin
-
-
-    // Categories (many-cardinality) of the Belltown community
-    m(Community.name("belltown").category) -->
-      Model(List(
-        Atom("community", "name", "String", 1, Eq(List("belltown"))),
-        Atom("community", "category", "Set[String]", 2, VarValue))
-      ) -->
-      Query(
-        Find(List(
-          AggrExpr("distinct", List(), Var("c", "Set[String]"), "Set[String]"))),
-        Where(List(
-          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Val("belltown", "String"), Empty),
-          DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Var("c", "Set[String]"), Empty)))
-      ) -->
-      """[:find (distinct ?c)
-        | :where
-        |   [?a :community/name "belltown"]
-        |   [?a :community/category ?c]]""".stripMargin
-
-
-    // Names of news or arts communities - transforms to a query using Rules
-    m(Community.name.category("news", "arts")) -->
-      Model(List(
-        Atom("community", "name", "String", 1, VarValue),
-        Atom("community", "category", "Set[String]", 2, Eq(List("news", "arts")), None))
-      ) -->
-      Query(
-        Find(List(
-          Var("b", "String"))),
-        In(List(), List(
-          Rule("rule1", List(Var("a", "")), List(DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Val("news", "String"), Empty))),
-          Rule("rule1", List(Var("a", "")), List(DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Val("arts", "String"), Empty)))), List(DS)),
-        Where(List(
-          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
-          RuleInvocation("rule1", List(Var("a", "")))))
-      ) -->
-      """[:find ?b
-        | :in $ %
-        | :where
-        |   [?a :community/name ?b]
-        |   (rule1 ?a)]
-        |
-        |INPUTS:
-        |List(
-        |  1 datomic.db.Db@xxx
-        |  2 [[[rule1 ?a] [?a :community/category "news"]]
-        |     [[rule1 ?a] [?a :community/category "arts"]]]
-        |)""".stripMargin
-  }
+//
+//
+//  "Querying _for_ attribute values" >> {
+//
+//    // Multiple attributes
+//    m(Community.name.url.category) -->
+//      Model(List(
+//        Atom("community", "name", "String", 1, VarValue),
+//        Atom("community", "url", "String", 1, VarValue),
+//        Atom("community", "category", "Set[String]", 2, VarValue))
+//      ) -->
+//      Query(
+//        Find(List(
+//          Var("b", "String"),
+//          Var("c", "String"),
+//          AggrExpr("distinct", List(), Var("d", "Set[String]"), "Set[String]"))),
+//        Where(List(
+//          DataClause("a", KW("community", "name"), "String", "b"),
+//          DataClause("a", KW("community", "url"), "String", "c"),
+//          DataClause("a", KW("community", "category"), "Set[String]", "d")))
+//      ) -->
+//      """[:find ?b ?c (distinct ?d)
+//        | :where
+//        |   [?a :community/name ?b]
+//        |   [?a :community/url ?c]
+//        |   [?a :community/category ?d]]""".stripMargin
+//  }
+//
+//  "Querying _by_ attribute values" >> {
+//
+//    // Names of twitter communities
+//    m(Community.name.`type`("twitter")) -->
+//      Model(List(
+//        Atom("community", "name", "String", 1, VarValue),
+//        Atom("community", "type", "String", 1, Eq(List("twitter")), Some(":community.type/")))
+//      ) -->
+//      Query(
+//        Find(List(
+//          Var("b", "String"))),
+//        Where(List(
+//          DataClause("a", KW("community", "name"), "String", "b"),
+//          DataClause("a", KW("community", "type"), "String", Val(":community.type/twitter", "String"))))
+//      ) -->
+//      """[:find ?b
+//        | :where
+//        |   [?a :community/name ?b]
+//        |   [?a :community/type ":community.type/twitter"]]""".stripMargin
+//
+//
+//    // Categories (many-cardinality) of the Belltown community
+//    m(Community.name("belltown").category) -->
+//      Model(List(
+//        Atom("community", "name", "String", 1, Eq(List("belltown"))),
+//        Atom("community", "category", "Set[String]", 2, VarValue))
+//      ) -->
+//      Query(
+//        Find(List(
+//          AggrExpr("distinct", List(), Var("c", "Set[String]"), "Set[String]"))),
+//        Where(List(
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Val("belltown", "String"), Empty),
+//          DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Var("c", "Set[String]"), Empty)))
+//      ) -->
+//      """[:find (distinct ?c)
+//        | :where
+//        |   [?a :community/name "belltown"]
+//        |   [?a :community/category ?c]]""".stripMargin
+//
+//
+//    // Names of news or arts communities - transforms to a query using Rules
+//    m(Community.name.category("news", "arts")) -->
+//      Model(List(
+//        Atom("community", "name", "String", 1, VarValue),
+//        Atom("community", "category", "Set[String]", 2, Eq(List("news", "arts")), None))
+//      ) -->
+//      Query(
+//        Find(List(
+//          Var("b", "String"))),
+//        In(List(), List(
+//          Rule("rule1", List(Var("a", "")), List(DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Val("news", "String"), Empty))),
+//          Rule("rule1", List(Var("a", "")), List(DataClause(ImplDS, Var("a", "Set[String]"), KW("community", "category"), Val("arts", "String"), Empty)))), List(DS)),
+//        Where(List(
+//          DataClause(ImplDS, Var("a", "String"), KW("community", "name"), Var("b", "String"), Empty),
+//          RuleInvocation("rule1", List(Var("a", "")))))
+//      ) -->
+//      """[:find ?b
+//        | :in $ %
+//        | :where
+//        |   [?a :community/name ?b]
+//        |   (rule1 ?a)]
+//        |
+//        |INPUTS:
+//        |List(
+//        |  1 datomic.db.Db@xxx
+//        |  2 [[[rule1 ?a] [?a :community/category "news"]]
+//        |     [[rule1 ?a] [?a :community/category "arts"]]]
+//        |)""".stripMargin
+//  }
 //
 //
 //  "Querying across references" >> {
@@ -1226,4 +1226,4 @@ class SeattleTransformationTests extends SeattleSpec {
 //        |  List(  :db/add    ,   17592186045888,   :community/name    ,   belltown 3                      )
 //        |)""".stripMargin
 //  }
-}
+//}

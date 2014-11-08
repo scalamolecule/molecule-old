@@ -45,7 +45,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         case other => other
       })
       val query = Model2Query(model)
-      val entityQuery = query.copy(f = Find(Seq(Var("a", "Long"))))
+      val entityQuery = query.copy(f = Find(Seq(Var("a"))))
 
       def debugMolecule(conn: Connection): Unit = {
         val rows = try {

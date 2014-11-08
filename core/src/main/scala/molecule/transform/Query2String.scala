@@ -10,11 +10,11 @@ case class Query2String(q: Query) {
     case in@In(_, _, _)               => mkIn(in, false)
     case Where(clauses)               => ":where " + (clauses map p mkString " ")
     case KW(ns, attr, _)              => s":$ns/$attr"
-    case AggrExpr(fn, args, v, _)     => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
-    case Var("?", _)                  => "?"
-    case Var(v, _)                    => "?" + v
-    case Val(v, "Int")                => v.toString
-    case Val(v, _)                    => "\"" + v + "\""
+    case AggrExpr(fn, args, v)        => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
+    case Var("?")                     => "?"
+    case Var(v)                       => "?" + v
+    case Val(v: Int)                  => v.toString
+    case Val(v)                       => "\"" + v + "\""
     case Dummy(_)                     => "_"
     case NoVal                        => ""
     case DS(name)                     => "$" + name
@@ -23,7 +23,7 @@ case class Query2String(q: Query) {
     case ImplDS                       => ""
     case InDataSource(ds, _)          => p(ds)
     case InVar(binding, _)            => p(binding)
-    case Placeholder(v, _, _, _, _)   => "?" + v
+    case Placeholder(v, _, _, _)      => "?" + v
     case NoBinding                    => ""
     case ScalarBinding(v)             => p(v)
     case CollectionBinding(v)         => "[" + p(v) + " ...]"
