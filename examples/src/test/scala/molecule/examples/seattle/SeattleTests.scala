@@ -95,8 +95,6 @@ class SeattleTests extends SeattleSpec {
   "Querying across references" >> {
 
     // Communities in north eastern region
-//    Community.name.Neighborhood.District.region_("ne").debug
-//    ok
     Community.name.Neighborhood.District.region_("ne").get(3) === List(
       "KOMO Communities - U-District",
       "Maple Leaf Community Council",
