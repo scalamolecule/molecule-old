@@ -26,14 +26,7 @@ object QueryOps {
       q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(a.ns, a.name), enumPrefix, e)))
 
 
-    // With ..........................................
-    // ?
-
-
     // Where ..........................................
-
-//    def where(e: String, ns: String, attr: String): Query =
-//      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(ns, attr), NoVal, Empty)))
 
     def where(e: String, ns: String, attr: String, v: String, refNs: String = ""): Query =
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Empty)))
