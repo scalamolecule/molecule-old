@@ -8,14 +8,9 @@ import molecule.util.Debug
 import scala.collection.JavaConverters._
 
 
-case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()) extends DatomicFacade {
+//case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()) extends DatomicFacade {
+case class Model2Transaction(conn: Connection, model: Model) extends DatomicFacade {
   val y = Debug("Model2Transaction", 3, 10, false, 6)
-
-
-  def javaTx: (jList[jList[_]], Seq[Object]) = {
-    val (stmts, tempIds) = tx
-    (stmts.map(_.toJava).asJava, tempIds)
-  }
 
   val stmtsModel = {
     val (_, _, _, stmts2) = model.elements.foldLeft('_, '_, '_, Seq[Statement]()) { case ((e, a, v, stmts), element) =>
@@ -54,29 +49,6 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
     }
   }
 
-  def updateStmts = {
-
-    //    dataRows.zip(ids).flatMap { case (args, id) =>
-    val (_, stmts2) = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
-      val j = i + 1
-      //        val arg = args(i)
-      stmt match {
-        //            case Add('id, a, 'arg)                   => (j, add(stmts, tempId(), a, arg))
-        case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
-        //            case Add('e, a, 'arg)                    => (j, add(stmts, stmts.last.e, a, arg))
-        //            case Add('e, a, Values(EnumVal, prefix)) => (j, add(stmts, stmts.last.e, a, arg, prefix))
-        case Add('e, a, Values(vs, prefix)) => (j, add(stmts, stmts.last.e, a, vs, prefix))
-        case Add('e, a, 'id)                => (i, add(stmts, stmts.last.e, a, tempId()))
-        //            case Add('v, a, 'arg)                    => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, arg))
-        case Add('v, a, Values(vs, prefix)) => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-        case Retract(e, a, v)               => (i, stmts)
-        case unexpected                     => sys.error("[Model2Transaction:updateStmts] Unexpected statement: " + unexpected)
-      }
-    }
-    stmts2
-    //    }
-  }
-
 
   def insertStmts(dataRows: Seq[Seq[Any]]) = dataRows.flatMap { args =>
     stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
@@ -100,25 +72,59 @@ case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[A
     }._2
   }.map(_.toJava).asJava
 
-  def saveStmts = {
-    stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
-      val j = i + 1
-      stmt match {
-        case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
-        case Add('e, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.e, a, vs, prefix))
-        case Add('e, a, 'id)                 => (i, add(stmts, stmts.last.e, a, tempId()))
-        case Add('v, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-        case Retract(e, a, v)                => (i, stmts)
-        case Add(_, a, 'arg)                 => sys.error(s"[Model2Transaction:insert] Attribute `$a` needs a value applied")
-        case unexpected                      => sys.error("[Model2Transaction:insert] Unexpected statement: " + unexpected)
-        //        case Retract(e, a, v) => (j, stmts :+ stmt)
-        //        case Add(e, a, v)     => (j, stmts :+ stmt)
-      }
-    }._2.map(_.toJava).asJava
-    //    Seq(Add('e, "attr", 'v))
-  }
+  def saveStmts = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+    val j = i + 1
+    stmt match {
+      case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
+      case Add('e, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.e, a, vs, prefix))
+      case Add('e, a, 'id)                 => (i, add(stmts, stmts.last.e, a, tempId()))
+      case Add('v, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+      case Retract(e, a, v)                => (i, stmts)
+      case Add(_, a, 'arg)                 => sys.error(s"[Model2Transaction:insert] Attribute `$a` needs a value applied")
+      case unexpected                      => sys.error("[Model2Transaction:insert] Unexpected statement: " + unexpected)
+    }
+  }._2.map(_.toJava).asJava
 
-  def tx: (Seq[Statement], Seq[Object]) = {
+//  def updateStmts = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+//    val j = i + 1
+//    stmt match {
+//      case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
+//      case Add('e, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.e, a, vs, prefix))
+//      case Add('e, a, 'id)                 => (i, add(stmts, stmts.last.e, a, tempId()))
+//      case Add('v, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+//      case Retract(e, a, v)                => (i, stmts)
+//      case Add(_, a, 'arg)                 => sys.error(s"[Model2Transaction:insert] Attribute `$a` needs a value applied")
+//      case unexpected                      => sys.error("[Model2Transaction:insert] Unexpected statement: " + unexpected)
+//    }
+//  }._2.map(_.toJava).asJava
+//
+//
+//
+//  def updateStmts0 = {
+//
+//    //    dataRows.zip(ids).flatMap { case (args, id) =>
+//    val (_, stmts2) = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+//      val j = i + 1
+//      //        val arg = args(i)
+//      stmt match {
+//        //            case Add('id, a, 'arg)                   => (j, add(stmts, tempId(), a, arg))
+//        case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
+//        //            case Add('e, a, 'arg)                    => (j, add(stmts, stmts.last.e, a, arg))
+//        //            case Add('e, a, Values(EnumVal, prefix)) => (j, add(stmts, stmts.last.e, a, arg, prefix))
+//        case Add('e, a, Values(vs, prefix)) => (j, add(stmts, stmts.last.e, a, vs, prefix))
+//        case Add('e, a, 'id)                => (i, add(stmts, stmts.last.e, a, tempId()))
+//        //            case Add('v, a, 'arg)                    => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, arg))
+//        case Add('v, a, Values(vs, prefix)) => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+//        case Retract(e, a, v)               => (i, stmts)
+//        case unexpected                     => sys.error("[Model2Transaction:updateStmts] Unexpected statement: " + unexpected)
+//      }
+//    }
+//    stmts2
+//    //    }
+//  }
+
+
+  def tx(dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): (Seq[Statement], Seq[Object]) = {
     if (dataRows.isEmpty) {
       if (ids.isEmpty)
         mergeDataWithElements(model.elements)

@@ -75,7 +75,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       // Input molecule + insert data
       def -->(data: Seq[Seq[Any]]) = new {
         def -->(txString: String) = {
-          val (tx, _) = Model2Transaction(conn, model, data).tx
+          val (tx, _) = Model2Transaction(conn, model).tx(data)
           formatTx(tx) === txString
         }
       }
@@ -87,7 +87,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
 
     def -->(data: Seq[Seq[Any]]) = new {
       def -->(txString: String) = {
-        val (tx, _) = Model2Transaction(conn, molecule._model, data).tx
+        val (tx, _) = Model2Transaction(conn, molecule._model).tx(data)
         formatTx(tx) === txString
       }
     }
@@ -116,13 +116,13 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       def --> (model: Model) = new {
         molecule._model === model
         def --> (txString: String) = {
-          val (tx, _) = Model2Transaction(conn, model, Seq(), Seq(updateId)).tx
+          val (tx, _) = Model2Transaction(conn, model).tx(Seq(), Seq(updateId))
           formatTx(tx) === txString
         }
       }
 
       def -->(txString: String) = {
-        val (tx, _) = Model2Transaction(conn, molecule._model, Seq(),  Seq(updateId)).tx
+        val (tx, _) = Model2Transaction(conn, molecule._model).tx(Seq(), Seq(updateId))
         formatTx(tx) === txString
       }
     }
@@ -132,14 +132,14 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     def -->(model: Model) = new {
       molecule._model === model
       def -->(txString: String) = {
-        val (tx, _) = Model2Transaction(conn, model, Seq(), ids).tx
+        val (tx, _) = Model2Transaction(conn, model).tx(Seq(), ids)
         formatTx(tx) === txString
       }
     }
 
     def -->(txString: String) = {
       val t = Model2Transaction
-      val (tx, _) = Model2Transaction(conn, molecule._model, Seq(), ids).tx
+      val (tx, _) = Model2Transaction(conn, molecule._model).tx(Seq(), ids)
       formatTx(tx) === txString
     }
   }

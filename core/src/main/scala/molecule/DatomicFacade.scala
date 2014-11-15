@@ -124,6 +124,8 @@ trait DatomicFacade {
     }
   }
 
+  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+
   def getValues(db: Database, id: Any, ns: Any, attr: Any) =
     Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
 
@@ -132,47 +134,30 @@ trait DatomicFacade {
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
-  protected[molecule] def insertTx(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): jMap[_, _] = {
-    //    val (stmts, tempIds0) = Model2Transaction(conn, model, dataRows, ids).tx
-    val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
 
-    val transformer = Model2Transaction(conn, model)
-    val javaTx2 = transformer.insertStmts(dataRows)
-//    val javaTx3 = transformer.saveStmts
-    x(0
-      , model
-      //      , dataRows
-      , transformer.stmtsModel
-      , javaTx
-      , javaTx2
-//      , javaTx3
-    )
-
-    // Get value from Future
-    conn.transact(javaTx2).get
-  }
-
-    protected[molecule] def save(conn: Connection, model: Model): Tx = {
-      val transformer = Model2Transaction(conn, model)
-      val javaTx = transformer.saveStmts
-      x(2
-        , model
-        , transformer.stmtsModel
-        , javaTx
-      )
-      Tx(conn.transact(javaTx).get)
-    }
-
-
-  protected[molecule] def update(conn: Connection, model: Model, id: Long): Tx = {
-    Tx(insertTx(conn, model, Seq(), Seq(id)))
-  }
+  // Manipulation
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
-    Tx(insertTx(conn, model, dataRows))
+    val transformer = Model2Transaction(conn, model)
+    val javaTx = transformer.insertStmts(dataRows)
+//    x(1, model, transformer.stmtsModel, javaTx)
+    Tx(conn.transact(javaTx).get)
   }
 
-  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+  protected[molecule] def save(conn: Connection, model: Model): Tx = {
+    val transformer = Model2Transaction(conn, model)
+    val javaTx = transformer.saveStmts
+//    x(2, model, transformer.stmtsModel, javaTx)
+    Tx(conn.transact(javaTx).get)
+  }
+
+  protected[molecule] def update(conn: Connection, model: Model, id: Long): Tx = {
+    val transformer = Model2Transaction(conn, model)
+    val (stmts, prevIds) = transformer.tx(Seq(), Seq(id))
+    val javaTx = stmts.map(_.toJava).asJava
+//    x(3, model, transformer.stmtsModel, stmts)
+    Tx(conn.transact(javaTx).get)
+  }
 }
 
 object DatomicFacade extends DatomicFacade
