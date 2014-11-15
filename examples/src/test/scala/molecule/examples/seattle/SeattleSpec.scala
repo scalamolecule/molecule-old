@@ -1,11 +1,11 @@
 package molecule
 package examples.seattle
 import java.io.FileReader
-
 import datomic.{Connection, Peer, Util}
 import molecule.examples.seattle.dsl.seattle._
 import molecule.examples.seattle.schema.SeattleSchema
 import molecule.util.MoleculeSpec
+import org.specs2.specification.Scope
 
 
 trait SeattleSpec extends MoleculeSpec with DatomicFacade {
@@ -28,15 +28,30 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     conn
   }
 
+  class Setup extends Scope with DatomicFacade {
+    implicit val conn = load(SeattleSchema.tx, "seattle")
+    // Insert data
+    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData0
+//        Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
+
+  }
+
   def loadSeattle(version: Int): Connection = {
     implicit val conn = load(SeattleSchema.tx, "seattle" + version)
     // Insert data
-    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
+    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData0
+//        Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
 
     conn
   }
 
-  implicit val conn = loadSeattle(1)
+//  implicit val conn = loadSeattle(1)
+
+  lazy val seattleData0 = List(
+    ("15th Ave Community", "http://groups.yahoo.com/group/15thAve_Community/", "email_list", "community", Set("15th avenue residents"), "Capitol Hill", "East", "e"),
+//    ("Admiral Neighborhood Association", "http://groups.yahoo.com/group/AdmiralNeighborhood/", "email_list", "community", Set("neighborhood association"), "Admiral (West Seattle)", "Southwest", "sw")
+    ("BikeWorks!", "http://www.bikeworks.org/", "website", null, null, "Columbia City", "Southeast", "se")
+  )
 
   lazy val seattleData = List(
     ("15th Ave Community", "http://groups.yahoo.com/group/15thAve_Community/", "email_list", "community", Set("15th avenue residents"), "Capitol Hill", "East", "e"),

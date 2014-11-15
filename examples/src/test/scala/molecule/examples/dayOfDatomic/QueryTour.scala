@@ -25,28 +25,29 @@ class QueryTour extends DayOfAtomicSpec {
     // 1-2. Make db
     implicit val conn = load(SocialNewsSchema.tx, "SocialNews")
 
-//    // Add Stories
-//    val List(s1, s2, s3) = Story.title.url insert List(
-//      ("Teach Yourself Programming in Ten Years", "http://norvig.com/21-days.html"),
-//      ("Clojure Rationale", "http://clojure.org/rationale"),
-//      ("Beating the Averages", "http://www.paulgraham.com/avg.html")
-//    ) ids
-//
-//    // Add Users
-//    val List(stu, ed) = User.firstName.lastName.email insert List(
-//      ("stu", "Halloway", "stuarthalloway@datomic.com"),
-//      ("ed", "Itor", "editor@example")
-//    ) ids
-//
-//    // Add comments
-//    // Input Molecule act as a template to insert data
-//    //  val addComment0 = Parent.e.Comments.author.text.debug
-//    val addComment = Parent.e.Comments.author.text.insert
-//
-//    // Insert Stu's first comment to story 1 and return the id of this comment
-//    // (Parent s1 is a Story)
-//    val c1 = addComment(s1, stu, "blah 1") id
-//
+    // Add Stories
+    val List(s1, s2, s3) = Story.title.url insert List(
+      ("Teach Yourself Programming in Ten Years", "http://norvig.com/21-days.html"),
+      ("Clojure Rationale", "http://clojure.org/rationale"),
+      ("Beating the Averages", "http://www.paulgraham.com/avg.html")
+    ) ids
+
+    // Add Users
+    val List(stu, ed) = User.firstName.lastName.email insert List(
+      ("stu", "Halloway", "stuarthalloway@datomic.com"),
+      ("ed", "Itor", "editor@example")
+    ) ids
+
+    // Add comments
+    // Input Molecule act as a template to insert data
+    //  val addComment0 = Parent.e.Comments.author.text.debug
+    val addComment = Parent.e.Comments.author.text.insert
+    //    Parent.e.Comments.author.text.debug
+
+    // Insert Stu's first comment to story 1 and return the id of this comment
+    // (Parent s1 is a Story)
+    val c1 = addComment(s1, stu, "blah 1") id
+
 //    // Ed's Comment to Stu's first Comment
 //    // (Parent c1 is a Comment)
 //    val c2 = addComment(c1, ed, "blah 2") id
@@ -75,93 +76,36 @@ class QueryTour extends DayOfAtomicSpec {
 
     //  "Query tour + Social News" >> {
 
-//    //    // Created entity ids are simply Long values
-//    (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
-//    (stu, ed) ===(17592186045422L, 17592186045423L)
-//    (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
-//      17592186045425L, 17592186045428L, 17592186045431L, 17592186045434L,
-//      17592186045437L, 17592186045440L, 17592186045443L, 17592186045446L,
-//      17592186045449L, 17592186045452L, 17592186045455L, 17592186045458L)
+//            // Created entity ids are simply Long values
+//        (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
+//        (stu, ed) ===(17592186045422L, 17592186045423L)
+//        (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
+//          17592186045425L, 17592186045428L, 17592186045431L, 17592186045434L,
+//          17592186045437L, 17592186045440L, 17592186045443L, 17592186045446L,
+//          17592186045449L, 17592186045452L, 17592186045455L, 17592186045458L)
 //
 //
-//    // 3. Finding All Users with a first name
-//    User.firstName.ids === List(stu, ed)
+//        // 3. Finding All Users with a first name
+//        User.firstName.ids === List(stu, ed)
 //
-//    // 4. Finding a specific user
-//    User.email("editor@example").ids.head === ed
+//        // 4. Finding a specific user
+//        User.email("editor@example").ids.head === ed
 //
-//    // 5. Finding a User's Comments
-//    //            Comment.e.Author.email_("editor@example").debug
-//    Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
-//    Comment.e.Author.email_("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
+//        // 5. Finding a User's Comments
+//        //            Comment.e.Author.email_("editor@example").debug
+//        Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+//        Comment.e.Author.email_("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
 //
-//    Comment.e.text.Author.email_("editor@example").firstName.get.sorted === List(
-//      (c2, "blah 2", "ed"),
-//      (c4, "blah 4", "ed"),
-//      (c5, "blah 5", "ed"),
-//      (c7, "blah 7", "ed"),
-//      (c11, "blah 11", "ed")
-//    )
-
-
-    // 6. Returning an Aggregate of Comments of some Author
-//    Comment.text.author.e(count).debug
-//    Comment.text.e(count).author.debug
-//    Comment.e(count).text.author.debug
-//    Comment(count).text.author.debug
-//    Comment.e(count).text.debug
-//    Comment.e(count).debug
-//    Comment.e(count).text_.debug
-//    --------------------------------------------------------------------------
-//    molecule.examples.dayOfDatomic.dsl.socialNews.Comment.e.apply(molecule.this.`package`.count).text_
+//        Comment.e.text.Author.email_("editor@example").firstName.get.sorted === List(
+//          (c2, "blah 2", "ed"),
+//          (c4, "blah 4", "ed"),
+//          (c5, "blah 5", "ed"),
+//          (c7, "blah 7", "ed"),
+//          (c11, "blah 11", "ed")
+//        )
 //
-//    Model(
-//      Atom(comment,e,Int,1,Fn(count),None)
-//      Atom(comment,text_,String,1,VarValue,None))
 //
-//    Query(
-//      Find(
-//        AggrExpr(count,List(),Var(a,Int),Int))
-//      Where(
-//        DataClause(ImplDS,Var(a,String),KW(comment,text,),Var(b,String),Empty)))
-//
-//    [:find (count ?a)
-//     :where [?a :comment/text ?b]]
-//
-//    OUTPUTS:
-//
-//    --------------------------------------------------------------------------
-
-//    Comment(count).text_.debug
-//    --------------------------------------------------------------------------
-//    molecule.examples.dayOfDatomic.dsl.socialNews.Comment.apply(molecule.this.`package`.count).text_
-//
-//    Model(
-//      Atom(socialNews,comment,,2,Fn(count),None)
-//      Atom(comment,text_,String,1,VarValue,None))
-//
-//    Query(
-//      Find(
-//        AggrExpr(count,List(),Var(a,Int),Int))
-//      Where(
-//        DataClause(ImplDS,Var(a,String),KW(comment,text,),Var(b,String),Empty)))
-//
-//    [:find (count ?a)
-//     :where [?a :comment/text ?b]]
-//
-//    OUTPUTS:
-//
-//    --------------------------------------------------------------------------
-
-//    Comment.text.Author.e(count).email_("editor@example").debug
-//    Comment.text.Author.e(count).email_("editor@example").debug
-//    Comment.text.Author.e(count).email_("editor@example").debug
-//    Comment.text.e(count).Author.email_("editor@example").debug
-//    Comment(count).Author.email_.apply("editor@example").debug
-//    Comment.e(count).Author.email_.apply("editor@example").debug
-//    Comment.apply(count).Author.email_("editor@example").debug
-//    Comment.apply(count).Author.email_("editor@example").get.head === 5
-//    // Same as
+//    // 6. Returning an Aggregate of Comments of some Author
 //    Comment.e(count).Author.email_("editor@example").get.head === 5
 //
 //    // Or we could simply read the size of the (un-aggregated) result (todo: measure performance differences)
@@ -169,49 +113,55 @@ class QueryTour extends DayOfAtomicSpec {
 //
 //
 //    // 7. Have people commented on other people? (Multiple joins)
-//    Parent(User.email).Comments.author.size === 0
-//
-//
-//
-//    //    [?a :user/email]
-//    //    [?a :parent/comments ?b]
-//    //    [?b :comment/author]
-//
-//
-//
-//
-//    // hyper edge ???!!!
-//    // Parent is both a User and a Story...
-//    Parent(
-//      User.email)(
-//        Story.title).Comments.author.size === 3
-//
-//    Parent.apply(User.email).apply(Story.title).Comments.author.size === 3
-//
-//
-//
-//    // or
-//    Parent.apply(User.email_(count)).Comments.author_.get === 3
-//    Parent.apply(User.email(count)).Comments.author_.get === 3
-//    Parent.apply(User.email).Comments.author_.get === 3
-//    Parent.apply(User.email_).Comments.author(count).get === 3
-//
-//
-//
-//
-//    //    m(Parent.e.Comments.author_(count) ~ User.e.email_).get === 3
-//
-//    m(Parent.e(User.email).Comments.author_(count)).get === 3
-//
-//    Parent.e(User.email).Comments.author.size === 3
-//
-//
-//
-//
-//
-//    Comment(User.email).author.get === 3
-//
-//    Comment.author(User.email).get === 3
+////    Parent(User.email).Comments.author.debug
+//    Parent.e.Comments.author.text.debug
+//    Parent.e.Comments.author.debug
+////    Parent(Story.title).Comments.author_.debug
+////    Parent(Story.title).Comments.author.get === 7
+////    Parent(Comment.text).Comments.author.debug
+////    Parent(User.email).Comments.author.size === 0
+
+
+
+    //    //    [?a :user/email]
+    //    //    [?a :parent/comments ?b]
+    //    //    [?b :comment/author]
+    //
+    //
+    //
+    //
+    //    // hyper edge ???!!!
+    //    // Parent is both a User and a Story...
+    //    Parent(
+    //      User.email)(
+    //        Story.title).Comments.author.size === 3
+    //
+    //    Parent.apply(User.email).apply(Story.title).Comments.author.size === 3
+    //
+    //
+    //
+    //    // or
+    //    Parent.apply(User.email_(count)).Comments.author_.get === 3
+    //    Parent.apply(User.email(count)).Comments.author_.get === 3
+    //    Parent.apply(User.email).Comments.author_.get === 3
+    //    Parent.apply(User.email_).Comments.author(count).get === 3
+    //
+    //
+    //
+    //
+    //    //    m(Parent.e.Comments.author_(count) ~ User.e.email_).get === 3
+    //
+    //    m(Parent.e(User.email).Comments.author_(count)).get === 3
+    //
+    //    Parent.e(User.email).Comments.author.size === 3
+    //
+    //
+    //
+    //
+    //
+    //    Comment(User.email).author.get === 3
+    //
+    //    Comment.author(User.email).get === 3
 
     //    m(Comment.author_. ~ User.email_).get === 3
     //    Parent.Comments.e.debug === 3

@@ -26,6 +26,9 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
 
+    def refThis = firstLow(t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.head.typeSymbol.name.toString)
+    def refNext = firstLow(t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name.toString)
+
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
     def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
     def isManyRef = tpe <:< weakTypeOf[ManyRef[_, _]]

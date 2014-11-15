@@ -24,7 +24,12 @@ object model {
   case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None) extends Element
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
+
   case class Meta(ns: String, attr: String, kind: String, tpe: String, value: Any) extends Element
+
+//  trait Meta1
+//  trait Eid extends Meta1
+
   //  case class Meta(ns: String, attr: String, kind: String, tpe: String, v: Any, tx: String) extends Element
   case object EmptyElement extends Element
   //  case class SubComponent(ns: String, parentEid: Long) extends Element

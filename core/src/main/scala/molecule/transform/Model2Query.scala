@@ -6,7 +6,7 @@ import molecule.ops.QueryOps._
 import molecule.util.Debug
 
 object Model2Query {
-  val x = Debug("Model2Query", 10, 60, false)
+  val x = Debug("Model2Query", 1, 60, false)
 
   def apply(model: Model): Query = {
 
@@ -74,34 +74,83 @@ object Model2Query {
         //        case Bond(ns, refAttr, refNs) if ns.head.isUpper => q.ref(v, ns, refAttr, e, refNs)
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Group(ref, elements) => q
+        //        case Group(ref, elements) => q
+        //        case Group(ref, elements) => elements.resolve(q, e, v)
 
         case Meta(ns, attr, kind, tpe, value) => value match {
           case EntValue => q.find(e)
           case _        => q
         }
 
-        case unresolved => sys.error("[Model2Query] Unresolved model (we should never get here): " + unresolved)
+        case unresolved => sys.error("[Model2Query] Unresolved model: " + unresolved)
       }
     }
 
-    val query0 = new Query(Find(Seq()), With(Seq()), In(Seq()), Where(List()))
-    model.elements.foldLeft((query0, "a", "b", "", "", "")) { case ((query, a, b, prevNs, prevAttr, prevRefNs), element) =>
-      val c = (b.toCharArray.head + 1).toChar.toString
-      val (a1, b1, ns1, attr1, refNs1) = element match {
-        case Atom(ns, attr, _, _, _, _) if ns == prevNs    => (a, c, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _) if ns == prevAttr  => (b, c, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _) if ns == prevRefNs => (b, c, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _)                    => (a, b, ns, attr, "")
-        case Bond(ns, refAttr, refNs) if ns == prevNs      => (a, c, ns, refAttr, refNs)
-        case Bond(ns, refAttr, refNs) if ns == prevAttr    => (b, c, ns, refAttr, refNs)
-        case Bond(ns, refAttr, refNs) if ns == prevRefNs   => (b, c, ns, refAttr, refNs)
-        case Bond(ns, refAttr, refNs)                      => (a, b, ns, refAttr, refNs)
-        case other                                         => (a, b, prevNs, prevAttr, prevRefNs)
+    def make(query: Query, element: Element, e: String, v: String, prevNs: String, prevAttr: String, prevRefNs: String): (Query, String, String, String, String, String) = {
+      val w = (v.toCharArray.head + 1).toChar.toString
+      element match {
+        case Atom(ns, attr, _, _, _, _) if ns == prevNs    => (resolve(query, e, w, element), e, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _) if ns == prevAttr  => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _)                    => (resolve(query, e, v, element), e, v, ns, attr, "")
+
+        case Bond(ns, refAttr, refNs) if ns == prevNs    => (resolve(query, e, w, element), e, w, ns, refAttr, refNs)
+        case Bond(ns, refAttr, refNs) if ns == prevAttr  => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
+        case Bond(ns, refAttr, refNs) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
+        case Bond(ns, refAttr, refNs)                    => (resolve(query, e, v, element), e, v, ns, refAttr, refNs)
+
+        case Group(Bond(ns, refAttr, refNs), elements) =>
+          //          val (bond, nested) = (elements.head, elements.tail)
+          //          nested.foldLeft(make(query, bond, e, v, prevNs, prevAttr, prevRefNs)) { case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
+          //          elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) { case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
+          val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
+            case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
+              make(query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)
+          }
+          (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
+
+        case Meta(ns, attr, kind, tpe, value) => (resolve(query, e, v, element), e, v, ns, attr, "")
+
+        case other => sys.error("[Model2Query] Unresolved query variables from model: " +(other, e, v, prevNs, prevAttr, prevRefNs))
+        //        case other                                         => (e, v, prevNs, prevAttr, prevRefNs)
       }
-      val query1 = resolve(query, a1, b1, element)
-      (query1, a1, b1, ns1, attr1, refNs1)
-    }._1 // Get Query
+    }
+
+    model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query, e, v, prevNs, prevAttr, prevRefNs), element) =>
+      //      val w = (v.toCharArray.head + 1).toChar.toString
+      //      val (e1, v1, ns1, attr1, refNs1) = element match {
+      //        case Atom(ns, attr, _, _, _, _) if ns == prevNs    => (e, w, ns, attr, "")
+      //        case Atom(ns, attr, _, _, _, _) if ns == prevAttr  => (v, w, ns, attr, "")
+      //        case Atom(ns, attr, _, _, _, _) if ns == prevRefNs => (v, w, ns, attr, "")
+      //        case Atom(ns, attr, _, _, _, _)                    => (e, v, ns, attr, "")
+      //
+      //        case Bond(ns, refAttr, refNs) if ns == prevNs    => (e, w, ns, refAttr, refNs)
+      //        case Bond(ns, refAttr, refNs) if ns == prevAttr  => (v, w, ns, refAttr, refNs)
+      //        case Bond(ns, refAttr, refNs) if ns == prevRefNs => (v, w, ns, refAttr, refNs)
+      //        case Bond(ns, refAttr, refNs)                    => (e, v, ns, refAttr, refNs)
+      //
+      ////        case Group(Bond(ns, refAttr, refNs), _) if ns == prevNs    => x(1, ns, refAttr, refNs); (e, w, ns, refAttr, refNs)
+      ////        case Group(Bond(ns, refAttr, refNs), _) if ns == prevAttr  => x(2, ns, refAttr, refNs); (v, w, ns, refAttr, refNs)
+      ////        case Group(Bond(ns, refAttr, refNs), _) if ns == prevRefNs => x(3, ns, refAttr, refNs); (v, w, ns, refAttr, refNs)
+      ////        case Group(Bond(ns, refAttr, refNs), _)                    => x(4, ns, refAttr, refNs); (e, v, ns, refAttr, refNs)
+      //        case Group(Bond(ns, refAttr, refNs), elements)                    =>
+      //
+      //
+      //          (e, v, ns, refAttr, refNs)
+      //
+      //        case Meta(ns, attr, kind, tpe, value) => (e, v, ns, attr, "")
+      //
+      //        case other => sys.error("[Model2Query] Unresolved query variables from model: " +(other, e, v, prevNs, prevAttr, prevRefNs))
+      //        //        case other                                         => (e, v, prevNs, prevAttr, prevRefNs)
+      //      }
+      //
+      //
+      //      val query1 = resolve(query, e1, v1, element)
+      //      (query1, e1, v1, ns1, attr1, refNs1)
+
+      make(query, element, e, v, prevNs, prevAttr, prevRefNs)
+
+    }._1
   }
 }
 

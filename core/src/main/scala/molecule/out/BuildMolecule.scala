@@ -1,9 +1,9 @@
 package molecule.out
 import molecule.ast.model._
+import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
-import molecule.dsl.schemaDSL._
 //import scala.collection.JavaConverters._
 import scala.language.experimental.macros
 import scala.language.higherKinds
@@ -14,9 +14,24 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   val x = Debug("BuildMolecule", 1, 60, false)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
+
   def basics(dsl: c.Expr[NS]) = {
     val model0 = Dsl2Model(c)(dsl)
-//        x(30, dsl.tree, model0)
+
+    implicit class Regex(sc: StringContext) {
+      def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
+    }
+    val p = dsl.tree.pos
+    val dslTailCode = p.source.lineToString(p.line - 1).substring(p.column)
+    val checkCorrectModel = dslTailCode match {
+      // todo: lift into quasiquotes and check against resolved `model`
+      case r".*[\.|\s]*add.*"    => "check add..."
+      case r".*[\.|\s]*insert.*" => "check insert..."
+      case r".*[\.|\s]*update.*" => "check update..."
+      case _                     => "other..."
+    }
+
+//    x(30, dsl.tree, model0, checkCorrectModel)
 
     val identifiers = (model0.elements collect {
       case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>

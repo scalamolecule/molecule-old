@@ -26,7 +26,7 @@ trait Molecule_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]] extends NS0 {
 
 
   // Build on from entity id
-//  def apply(e: Long): Ns0 = ???
+  def apply(e: Long): Ns0 = ???
 
 
   // Count entities

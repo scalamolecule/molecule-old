@@ -13,7 +13,7 @@ import scala.collection.JavaConverters._
 import scala.language.{existentials, higherKinds}
 
 trait DatomicFacade {
-  private val x = Debug("DatomicFacade", 1, 99, false, 2)
+  private val x = Debug("DatomicFacade", 1, 99, false, 3)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
   // Create database and load schema ========================================
@@ -127,21 +127,49 @@ trait DatomicFacade {
   def getValues(db: Database, id: Any, ns: Any, attr: Any) =
     Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
 
+  def getValues1(db: Database, id: Any, attr: String) =
+    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
-  protected[molecule] def upsertTx(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): jMap[_, _] = {
+  protected[molecule] def insertTx(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): jMap[_, _] = {
+    //    val (stmts, tempIds0) = Model2Transaction(conn, model, dataRows, ids).tx
     val (javaTx, tempIds) = Model2Transaction(conn, model, dataRows, ids).javaTx
+
+    val transformer = Model2Transaction(conn, model)
+    val javaTx2 = transformer.insertStmts(dataRows)
+//    val javaTx3 = transformer.saveStmts
     x(0
-//      , model
+      , model
+      //      , dataRows
+      , transformer.stmtsModel
       , javaTx
+      , javaTx2
+//      , javaTx3
     )
 
     // Get value from Future
-    conn.transact(javaTx).get
+    conn.transact(javaTx2).get
   }
 
-  protected[molecule] def upsert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids0: Seq[Long] = Seq()): Tx = {
-    Tx(upsertTx(conn, model, dataRows, ids0))
+    protected[molecule] def save(conn: Connection, model: Model): Tx = {
+      val transformer = Model2Transaction(conn, model)
+      val javaTx = transformer.saveStmts
+      x(2
+        , model
+        , transformer.stmtsModel
+        , javaTx
+      )
+      Tx(conn.transact(javaTx).get)
+    }
+
+
+  protected[molecule] def update(conn: Connection, model: Model, id: Long): Tx = {
+    Tx(insertTx(conn, model, Seq(), Seq(id)))
+  }
+
+  protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
+    Tx(insertTx(conn, model, dataRows))
   }
 
   def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
