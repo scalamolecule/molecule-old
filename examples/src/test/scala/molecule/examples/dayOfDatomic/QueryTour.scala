@@ -74,130 +74,63 @@ class QueryTour extends DayOfAtomicSpec {
 
   "Query tour + Social News" in new Setup {
 
-    //  "Query tour + Social News" >> {
-
-            // Created entity ids are simply Long values
-        (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
-        (stu, ed) ===(17592186045422L, 17592186045423L)
-        (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
-          17592186045425L, 17592186045428L, 17592186045431L, 17592186045434L,
-          17592186045437L, 17592186045440L, 17592186045443L, 17592186045446L,
-          17592186045449L, 17592186045452L, 17592186045455L, 17592186045458L)
+    // Created entity ids are simply Long values
+    (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
+    (stu, ed) ===(17592186045422L, 17592186045423L)
+    (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
+      17592186045425L, 17592186045427L, 17592186045429L, 17592186045431L,
+      17592186045433L, 17592186045435L, 17592186045437L, 17592186045439L,
+      17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L)
 
 
-        // 3. Finding All Users with a first name
-        User.firstName.ids === List(stu, ed)
+    // 3. Finding All Users with a first name
+    User.e.firstName_.get === List(stu, ed)
 
-        // 4. Finding a specific user
-        User.email("editor@example").ids.head === ed
+    // 4. Finding a specific user
+    User.e.email_("editor@example").get.head === ed
 
-        // 5. Finding a User's Comments
-        //            Comment.e.Author.email_("editor@example").debug
-        Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
-        Comment.e.Author.email_("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
+    // 5. Finding a User's Comments
+    Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+    Comment.e.Author.email_("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
 
-        Comment.e.text.Author.email_("editor@example").firstName.get.sorted === List(
-          (c2, "blah 2", "ed"),
-          (c4, "blah 4", "ed"),
-          (c5, "blah 5", "ed"),
-          (c7, "blah 7", "ed"),
-          (c11, "blah 11", "ed")
-        )
-//
-//
-//    // 6. Returning an Aggregate of Comments of some Author
-//    Comment.e(count).Author.email_("editor@example").get.head === 5
-//
-//    // Or we could simply read the size of the (un-aggregated) result (todo: measure performance differences)
-//    Comment.Author.email("editor@example").size === 5
-//
-//
-//    // 7. Have people commented on other people? (Multiple joins)
-////    Parent(User.email).Comments.author.debug
-//    Parent.e.Comments.author.text.debug
-//    Parent.e.Comments.author.debug
-////    Parent(Story.title).Comments.author_.debug
-////    Parent(Story.title).Comments.author.get === 7
-////    Parent(Comment.text).Comments.author.debug
-////    Parent(User.email).Comments.author.size === 0
+    Comment.e.text.Author.email_("editor@example").firstName.get.sorted === List(
+      (c2, "blah 2", "ed"),
+      (c4, "blah 4", "ed"),
+      (c5, "blah 5", "ed"),
+      (c7, "blah 7", "ed"),
+      (c11, "blah 11", "ed")
+    )
 
 
+    // 6. Returning an Aggregate of Comments of some Author
+    Comment.e(count).Author.email_("editor@example").get.head === 5
 
-    //    //    [?a :user/email]
-    //    //    [?a :parent/comments ?b]
-    //    //    [?b :comment/author]
-    //
-    //
-    //
-    //
-    //    // hyper edge ???!!!
-    //    // Parent is both a User and a Story...
-    //    Parent(
-    //      User.email)(
-    //        Story.title).Comments.author.size === 3
-    //
-    //    Parent.apply(User.email).apply(Story.title).Comments.author.size === 3
-    //
-    //
-    //
-    //    // or
-    //    Parent.apply(User.email_(count)).Comments.author_.get === 3
-    //    Parent.apply(User.email(count)).Comments.author_.get === 3
-    //    Parent.apply(User.email).Comments.author_.get === 3
-    //    Parent.apply(User.email_).Comments.author(count).get === 3
-    //
-    //
-    //
-    //
-    //    //    m(Parent.e.Comments.author_(count) ~ User.e.email_).get === 3
-    //
-    //    m(Parent.e(User.email).Comments.author_(count)).get === 3
-    //
-    //    Parent.e(User.email).Comments.author.size === 3
-    //
-    //
-    //
-    //
-    //
-    //    Comment(User.email).author.get === 3
-    //
-    //    Comment.author(User.email).get === 3
+    // Or we could simply read the size of the (un-aggregated) result (todo: measure performance differences)
+    Comment.e.Author.email("editor@example").get.size === 5
 
-    //    m(Comment.author_. ~ User.email_).get === 3
-    //    Parent.Comments.e.debug === 3
-    //    User.e(asA) Parent.Comments.author.debug === 3
-    //    Parent.e.Comment.debug === 3
-    //    Parent.e.comment.debug === 3
-    //    Parent.comment.e.debug === 3
-    ////    Parent.e.debug === 3
-    ////    Parent.e.a.get === 3
 
-    //    [?comment :comment/author]
-    //    [?commentable :comments ?comment]
-    //    [?commentable :user/email]
+    // 7. Have people commented on other people? (Multiple joins)
+    Parent(User.email_).Comments.author.get.size === 0
 
-    //    [?a :comment/author]
-    //    [?b :parent/comments ?a]
-    //    [?b :user/email]
+    // Sanity check: 2 people are commenting on stories
+    Parent(Story.title_).Comments.author.get.size === 2
 
-    //    [?a :comment/author]
-    //    [?b :parent/comments ?a]
-    //    [?b :user/email]
 
     // Schema-aware joins .........................
 
     // 8. A Schema Query
 
 
-    //    // Attributes of entities having comments
-    //    Parent.a.Comments.get.sorted === List(
-    //      ":comment/author",
-    //      ":comment/text",
-    //      ":comment/tree_",
-    //      ":parent/comment",
-    //      ":story/title",
-    //      ":story/url"
-    //    )
+    // Attributes of entities having comments
+//    Parent.a.Comments.debug
+//    Parent.a.Comments.get.sorted === List(
+//      ":comment/author",
+//      ":comment/text",
+//      ":comment/tree_",
+//      ":parent/comment",
+//      ":story/title",
+//      ":story/url"
+//    )
 
     // Attributes of stories having comments
     //    Story.a.Comments.text_.get === List(

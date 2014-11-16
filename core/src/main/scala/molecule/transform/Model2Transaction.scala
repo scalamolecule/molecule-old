@@ -18,35 +18,39 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
   def getValues1(db: Database, id: Any, attr: String) = {
     val query = s"[:find ?values :in $$ ?id :where [?id $attr ?values]]"
-    x(25, query, id.asInstanceOf[Object], Peer.q(query, db, id.asInstanceOf[Object]))
+    //    x(25, query, id.asInstanceOf[Object], Peer.q(query, db, id.asInstanceOf[Object]))
     Peer.q(query, db, id.asInstanceOf[Object]).map(_.get(0))
   }
-  val stmtsModel = {
-    x(24, model)
+  val stmtsModel: Seq[Statement] = {
+    //    x(24, model)
 
     val (_, _, _, stmts2) = model.elements.foldLeft('_: Any, '_, '_, Seq[Statement]()) { case ((e, a, v, stmts), element) =>
       (e, a, v, element) match {
-        case ('_, '_, '_, Meta(ns, "", "e", "Long", id: Long))                => (Eid(id), '_, '_, stmts)
-        case (Eid(id), '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix)) => ('e, '_, '_, stmts :+ Retract(id.asInstanceOf[Object], s":$ns/$name", Values(value, prefix)))
-        case (Eid(id), '_, '_, Atom(ns, name, _, _, value, prefix))           => ('e, '_, '_, stmts :+ Add(id.asInstanceOf[Object], s":$ns/$name", Values(value, prefix)))
+        case ('_, '_, '_, Meta(ns, "", "e", "Long", EntValue)) => ('arg, '_, '_, stmts)
+        case ('_, '_, '_, Meta(ns, "", "e", "Long", id: Long)) => (Eid(id), '_, '_, stmts)
+
+        case (Eid(id), '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix)) => ('e, '_, '_, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
+        case (Eid(id), '_, '_, Atom(ns, name, _, _, value, prefix))           => ('e, '_, '_, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
         case ('_, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", 'arg))
         case ('_, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", Values(value, prefix)))
-        case ('_, '_, '_, Bond(ns, refAttr, _))                               => ('v, '_, '_, stmts :+ Add('id, s":$ns/$refAttr", 'id))
         case ('e, '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix))      => ('e, '_, '_, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
         case ('e, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", 'arg))
         case ('e, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
-        case ('e, '_, '_, Bond(ns, refAttr, _))                               => ('v, '_, '_, stmts :+ Add('e, s":$ns/$refAttr", 'id))
         case ('v, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", 'arg))
         case ('v, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
-        case ('v, '_, '_, Bond(ns, refAttr, _))                               => ('v, '_, '_, stmts :+ Add('v, s":$ns/$refAttr", 'id))
 
-        case (e_, a_, v_, elem) => sys.error(s"[Model2Transaction:stmtsModel] Unexpected statement model:\ne: $e_ \na: $a_ \nv: $v_ \nm: $elem ")
+        case ('arg, '_, '_, Bond(ns, refAttr, _)) => ('v, '_, '_, stmts :+ Add('arg, s":$ns/$refAttr", 'id))
+        case ('e, '_, '_, Bond(ns, refAttr, _))   => ('v, '_, '_, stmts :+ Add('e, s":$ns/$refAttr", 'id))
+        case ('v, '_, '_, Bond(ns, refAttr, _))   => ('v, '_, '_, stmts :+ Add('v, s":$ns/$refAttr", 'id))
+        //        case ('_, '_, '_, Bond(ns, refAttr, _))                               => ('v, '_, '_, stmts :+ Add('id, s":$ns/$refAttr", 'id))
+
+        case (e_, a_, v_, elem) => sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e_, $a_, $v_, $elem)")
       }
     }
     stmts2
   }
 
-  def resolve(stmts: Seq[Statement], e: Object, a: String, value: Any, prefix: Option[String] = None) = {
+  def resolve(stmts: Seq[Statement], e: Any, a: String, value: Any, prefix: Option[String] = None) = {
     def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
     stmts ++ (value match {
       case Replace(oldNew)      => oldNew.toSeq.flatMap {
@@ -62,7 +66,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
     })
   }
 
-  def insertStmts(dataRows: Seq[Seq[Any]]) = dataRows.flatMap { args =>
+  def insertStmts(dataRows: Seq[Seq[Any]]) = dataRows.map { args =>
     stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
       val j = i + 1
       val arg = args(i)
@@ -70,19 +74,20 @@ case class Model2Transaction(conn: Connection, model: Model) {
         (j, stmts)
       else
         stmt match {
+          case Add('arg, a, 'id)                   => (j, resolve(stmts, arg, a, tempId()))
           case Add('id, a, 'arg)                   => (j, resolve(stmts, tempId(), a, arg))
           case Add('id, a, Values(vs, prefix))     => (j, resolve(stmts, tempId(), a, vs, prefix))
           case Add('e, a, 'arg)                    => (j, resolve(stmts, stmts.last.e, a, arg))
           case Add('e, a, Values(EnumVal, prefix)) => (j, resolve(stmts, stmts.last.e, a, arg, prefix))
           case Add('e, a, Values(vs, prefix))      => (j, resolve(stmts, stmts.last.e, a, vs, prefix))
           case Add('e, a, 'id)                     => (i, resolve(stmts, stmts.last.e, a, tempId()))
-          case Add('v, a, 'arg)                    => (j, resolve(stmts, stmts.last.v.asInstanceOf[Object], a, arg))
-          case Add('v, a, Values(vs, prefix))      => (j, resolve(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+          case Add('v, a, 'arg)                    => (j, resolve(stmts, stmts.last.v, a, arg))
+          case Add('v, a, Values(vs, prefix))      => (j, resolve(stmts, stmts.last.v, a, vs, prefix))
           case Retract(e, a, v)                    => (i, stmts)
           case unexpected                          => sys.error("[Model2Transaction:insertStmts] Unexpected statement: " + unexpected)
         }
     }._2
-  }.map(_.toJava).asJava
+  }
 
   def saveStmts() = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
     val j = i + 1
@@ -95,7 +100,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case Add(_, a, 'arg)                 => sys.error(s"[Model2Transaction:saveStmts] Attribute `$a` needs a value applied")
       case unexpected                      => sys.error("[Model2Transaction:saveStmts] Unexpected statement: " + unexpected)
     }
-  }._2.map(_.toJava).asJava
+  }._2
 
 
   def updateStmts() = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
@@ -110,7 +115,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case Add(_, a, 'arg)                    => sys.error(s"[Model2Transaction:updateStmts] Attribute `$a` needs a value applied")
       case unexpected                         => sys.error("[Model2Transaction:updateStmts] Unexpected statement: " + unexpected)
     }
-  }._2.map(_.toJava).asJava
+  }._2
 
 
   def tx(dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): (Seq[Statement], Seq[Object]) = {
@@ -222,7 +227,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
           case ((elementStmts1, nestedIds), nestedDataRow) =>
             // Recursively create nested elements
             val (rowStmts, _) = mergeDataWithElements(nestedElements, nestedDataRow)
-            val lastId = rowStmts.last.e
+            val lastId = rowStmts.last.e.asInstanceOf[Object]
             (elementStmts1 ++ rowStmts, nestedIds + lastId)
         }
 

@@ -16,21 +16,19 @@ trait Molecule extends DatomicFacade {
 
   override def toString: String = _query.toList
 //  def p = _query.pretty
-  def ids: Seq[Long]
-  def size: Int = ids.size
+//  def ids: Seq[Long]
+//  def size: Int = ids.size
   
   protected type lObj = java.util.List[Object]
-  protected def asOf_   [M <: Molecule](thisMolecule: M, d: Date) = { dbOp = AsOf(txDate(d)); thisMolecule }
-  protected def asOf_   [M <: Molecule](thisMolecule: M, l: Long) = { dbOp = AsOf(txLong(l)); thisMolecule }
-  protected def asOf_   [M <: Molecule](thisMolecule: M, t: lObj) = { dbOp = AsOf(txlObj(t)); thisMolecule }
-  protected def history_[M <: Molecule](thisMolecule: M)          = { dbOp = History        ; thisMolecule }
+  protected def asOf_   [M <: Molecule](thisMolecule: M, d: Date)    = { dbOp = AsOf(txDate(d)); thisMolecule }
+  protected def asOf_   [M <: Molecule](thisMolecule: M, l: Long)    = { dbOp = AsOf(txLong(l)); thisMolecule }
+  protected def asOf_   [M <: Molecule](thisMolecule: M, t: lObj)    = { dbOp = AsOf(txlObj(t)); thisMolecule }
+  protected def history_[M <: Molecule](thisMolecule: M)             = { dbOp = History        ; thisMolecule }
+  protected def since_  [M <: Molecule](thisMolecule: M, date: Date) = { dbOp = Since(date)    ; thisMolecule }
+  protected def imagine_[M <: Molecule](thisMolecule: M, tx: lObj)   = { dbOp = Imagine(tx)    ; thisMolecule }
 
-  def since(date: Date) = { dbOp = Since(date); this }
-  def imagine(tx: lObj) = { dbOp = Imagine(tx); this }
-
-  def add                   (implicit conn: Connection): Tx = save(conn, _model)
-//  def update(updateId: Long)(implicit conn: Connection): Tx = update0(conn, _model, updateId)
-  def update                (implicit conn: Connection): Tx = update(conn, _model)
+  def add   (implicit conn: Connection): Tx = save(conn, _model)
+  def update(implicit conn: Connection): Tx = update(conn, _model)
 
   def debug(implicit conn: Connection): Unit
 }
@@ -45,17 +43,17 @@ abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecu
   def hl         (implicit conn: Connection): Seq[A :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: HNil] = hl.take(n)
   object insert {
-//    def apply(a: A)                        (implicit conn: Connection): Tx = upsert(conn, _model, Seq(Seq(a)))
-    def apply(a: A, ax: A*)         (implicit conn: Connection): Tx = insert(conn, _model, (a +: ax.toSeq).map(Seq(_)))
-//    def apply(a: A, a2: A, ax: A*)         (implicit conn: Connection): Tx = upsert(conn, _model, (Seq(a, a2) ++ ax.toSeq).map(Seq(_)))
+    def apply(a: A, ax: A*)                (implicit conn: Connection): Tx = insert(conn, _model, (a +: ax.toSeq).map(Seq(_)))
     def apply(data: A :: HNil)             (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
     def apply(data: Seq[A], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(Seq(_)))
     def apply(data: Seq[A :: HNil])        (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule2[A, B](val _model: Model, val _query: Query) extends Molecule {
@@ -71,10 +69,12 @@ abstract class Molecule2[A, B](val _model: Model, val _query: Query) extends Mol
     def apply(data: Seq[(A, B)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2)))
     def apply(data: Seq[A :: B :: HNil])        (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule3[A, B, C](val _model: Model, val _query: Query) extends Molecule {
@@ -90,10 +90,12 @@ abstract class Molecule3[A, B, C](val _model: Model, val _query: Query) extends 
     def apply(data: Seq[(A, B, C)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3)))
     def apply(data: Seq[A :: B :: C :: HNil])      (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule4[A, B, C, D](val _model: Model, val _query: Query) extends Molecule {
@@ -109,10 +111,12 @@ abstract class Molecule4[A, B, C, D](val _model: Model, val _query: Query) exten
     def apply(data: Seq[(A, B, C, D)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4)))
     def apply(data: Seq[A :: B :: C :: D :: HNil])    (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule5[A, B, C, D, E](val _model: Model, val _query: Query) extends Molecule {
@@ -128,10 +132,12 @@ abstract class Molecule5[A, B, C, D, E](val _model: Model, val _query: Query) ex
     def apply(data: Seq[(A, B, C, D, E)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
     def apply(data: Seq[A :: B :: C :: D :: E :: HNil])  (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule6[A, B, C, D, E, F](val _model: Model, val _query: Query) extends Molecule {
@@ -147,10 +153,12 @@ abstract class Molecule6[A, B, C, D, E, F](val _model: Model, val _query: Query)
     def apply(data: Seq[(A, B, C, D, E, F)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule7[A, B, C, D, E, F, G](val _model: Model, val _query: Query) extends Molecule {
@@ -166,10 +174,12 @@ abstract class Molecule7[A, B, C, D, E, F, G](val _model: Model, val _query: Que
     def apply(data: Seq[(A, B, C, D, E, F, G)], hack: Int = 42)  (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule8[A, B, C, D, E, F, G, H](val _model: Model, val _query: Query) extends Molecule {
@@ -185,10 +195,12 @@ abstract class Molecule8[A, B, C, D, E, F, G, H](val _model: Model, val _query: 
     def apply(data: Seq[(A, B, C, D, E, F, G, H)], hack: Int = 42)    (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val _query: Query) extends Molecule {
@@ -204,10 +216,12 @@ abstract class Molecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val _quer
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I)], hack: Int = 42)      (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule10[A, B, C, D, E, F, G, H, I, J](val _model: Model, val _query: Query) extends Molecule {
@@ -223,10 +237,12 @@ abstract class Molecule10[A, B, C, D, E, F, G, H, I, J](val _model: Model, val _
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J)], hack: Int = 42)        (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule11[A, B, C, D, E, F, G, H, I, J, K](val _model: Model, val _query: Query) extends Molecule {
@@ -242,10 +258,12 @@ abstract class Molecule11[A, B, C, D, E, F, G, H, I, J, K](val _model: Model, va
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K)], hack: Int = 42)          (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model, val _query: Query) extends Molecule {
@@ -261,10 +279,12 @@ abstract class Molecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model,
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L)], hack: Int = 42)            (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Model, val _query: Query) extends Molecule {
@@ -280,10 +300,12 @@ abstract class Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Mod
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)], hack: Int = 42)              (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: Model, val _query: Query) extends Molecule {
@@ -299,10 +321,12 @@ abstract class Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: 
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)], hack: Int = 42)                (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _model: Model, val _query: Query) extends Molecule {
@@ -318,10 +342,12 @@ abstract class Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _mode
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)], hack: Int = 42)                  (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _model: Model, val _query: Query) extends Molecule {
@@ -337,10 +363,12 @@ abstract class Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _m
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)], hack: Int = 42)                    (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val _model: Model, val _query: Query) extends Molecule {
@@ -356,10 +384,12 @@ abstract class Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)], hack: Int = 42)                      (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil])(implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val _model: Model, val _query: Query) extends Molecule {
@@ -375,10 +405,12 @@ abstract class Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)], hack: Int = 42)                         (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil]) (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val _model: Model, val _query: Query) extends Molecule {
@@ -394,10 +426,12 @@ abstract class Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)], hack: Int = 42)                            (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil])  (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val _model: Model, val _query: Query) extends Molecule {
@@ -413,10 +447,12 @@ abstract class Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)], hack: Int = 42)                               (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil])   (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val _model: Model, val _query: Query) extends Molecule {
@@ -432,10 +468,12 @@ abstract class Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)], hack: Int = 42)                                  (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil])    (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }
 
 abstract class Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val _model: Model, val _query: Query) extends Molecule {
@@ -451,8 +489,10 @@ abstract class Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)], hack: Int = 42)                                     (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
     def apply(data: Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil])     (implicit conn: Connection): Tx = insert(conn, _model, data.map(_.toList))
   }
-  def asOf(d: Date) = asOf_(this, d)
-  def asOf(l: Long) = asOf_(this, l)
-  def asOf(t: lObj) = asOf_(this, t)
-  def history       = history_(this)
+  def asOf(d: Date)     = asOf_   (this, d)
+  def asOf(l: Long)     = asOf_   (this, l)
+  def asOf(tx: lObj)    = asOf_   (this, tx)
+  def history           = history_(this)
+  def since(d: Date)    = since_  (this, d)
+  def imagine(tx: lObj) = imagine_(this, tx)
 }

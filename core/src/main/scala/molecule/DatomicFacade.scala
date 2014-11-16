@@ -5,6 +5,7 @@ import datomic._
 import datomic.db.Db
 import molecule.ast.model._
 import molecule.ast.query._
+import molecule.ast.transaction.{Statement, _}
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.Debug
@@ -124,13 +125,13 @@ trait DatomicFacade {
     }
   }
 
-//  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+  //  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
 
-//  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
-//    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
-//
-//  def getValues1(db: Database, id: Any, attr: String) =
-//    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+  //  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
+  //    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+  //
+  //  def getValues1(db: Database, id: Any, attr: String) =
+  //    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
@@ -139,36 +140,53 @@ trait DatomicFacade {
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
-    val javaTx = transformer.insertStmts(dataRows)
-//    x(1, model, transformer.stmtsModel, javaTx)
-    Tx(conn.transact(javaTx).get)
+    val stmtss = transformer.insertStmts(dataRows)
+    //    x(1, model, transformer.stmtsModel, stmtss)
+    Tx(conn, transformer, stmtss)
   }
 
   protected[molecule] def save(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
-    val javaTx = transformer.saveStmts
-//    x(2, model, transformer.stmtsModel, javaTx)
-    Tx(conn.transact(javaTx).get)
+    val stmts = transformer.saveStmts
+    //    x(2, model, transformer.stmtsModel, stmts)
+    Tx(conn, transformer, Seq(stmts))
   }
 
   protected[molecule] def update(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmts = transformer.updateStmts
-    x(3, model, transformer.stmtsModel, stmts)
-    Tx(conn.transact(stmts).get)
+    //    x(3, model, transformer.stmtsModel, stmts)
+    Tx(conn, transformer, Seq(stmts))
   }
 }
 
 object DatomicFacade extends DatomicFacade
 
-case class Tx(txResult: jMap[_, _]) {
+
+case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[Statement]]) {
+  private val x = Debug("Tx", 1, 99, false, 3)
+
+  val txResult: jMap[_, _] = conn.transact(stmtss.flatten.map(_.toJava).asJava).get
+
   def ids: Seq[Long] = {
     val txData = txResult.get(Connection.TX_DATA)
-    // We omit the first transaction datom
+
+    // Omit first transaction datom
     val datoms = txData.asInstanceOf[java.util.Collection[Datom]].toList.tail
-    val ids = datoms.map(_.e.asInstanceOf[Long]).distinct
+
+    val tempIds = stmtss.flatten.collect {
+      case Add(e, _, _) if e.toString.take(6) == "#db/id" => e
+      case Add(_, _, v) if v.toString.take(6) == "#db/id" => v
+    }.distinct
+
+    val txTtempIds = txResult.get(Connection.TEMPIDS)
+    val dbAfter = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
+    val ids = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
+
+//    x(1, transformer.stmtsModel, stmtss, datoms, ids)
     ids
   }
+
   def id = ids.head
   def db = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
   def t = db.basisT()

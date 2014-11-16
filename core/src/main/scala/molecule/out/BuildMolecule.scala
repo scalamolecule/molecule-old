@@ -86,7 +86,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new Molecule0(model, query) {
-        def ids: Seq[Long] = entityIds(entityQuery)
+        //def ids: Seq[Long] = entityIds(entityQuery)
         def debug(implicit conn: Connection): Unit = debugMolecule(conn)
       }
     """)
@@ -106,7 +106,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new Molecule1[$A](model, query) {
-        def ids: Seq[Long]                                  = entityIds(entityQuery)
+        //def ids: Seq[Long]                                  = entityIds(entityQuery)
         def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${cast(q"data")})
         def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query, conn).toList.map(data => ${hlist(q"data")})
         def debug(implicit conn: Connection): Unit          = debugMolecule(conn)
@@ -129,7 +129,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new $MoleculeTpe[..$OutTypes](model, query) {
-        def ids: Seq[Long]                                     = entityIds(entityQuery)
+        //def ids: Seq[Long]                                     = entityIds(entityQuery)
         def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query, conn).toList.map(data => (..${tplValues(q"data")}))
         def hl(implicit conn: Connection) : Seq[$HListType]    = results(query, conn).toList.map(data => ${hlist(q"data")})
         def debug(implicit conn: Connection): Unit             = debugMolecule(conn)

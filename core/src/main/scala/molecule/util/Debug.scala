@@ -26,15 +26,12 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
         val indent = if (i == 0) "" else pad1 + i + pad2
         val max = level >= maxLevel
         x match {
-          case Add(e, a, v) if e.toString.head == '#'     => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
-          case Retract(e, a, v) if e.toString.head == '#' => indent + ":db/retract" + padS(13, ":db/retract") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
-          case Add(e, a, v)                               => indent + "add" + padS(9, "add") + e + padS(16, e.toString) + a + padS(26, a.toString) + "   " + v
-          case Retract(e, a, v)                           => indent + "retract" + padS(9, "retract") + e + padS(16, e.toString) + a + padS(26, a.toString) + "   " + v
+          case Add(e, a, v)     => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
+          case Retract(e, a, v) => indent + ":db/retract" + padS(13, ":db/retract") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
 
           case l: java.util.List[_] if l.size() == 4 && l.head.toString.take(4) == ":db/" => {
             val List(action, e, a, v) = l.toList
-            val p = if (e.toString.head == '#') 34 else 16
-            indent + action + padS(13, action.toString) + e + padS(p, e.toString) + a + padS(26, a.toString) + "   " + v
+            indent + action + padS(13, action.toString) + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
           }
 
           case l: List[_] if max      => indent + "List(" + l.mkString(",   ") + ")"

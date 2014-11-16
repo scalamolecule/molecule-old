@@ -12,11 +12,11 @@ class SeattleTests extends SeattleSpec {
 
   "A first query" >> {
     // A Community-name molecule
-    val communities = m(Community.name)
+    val communities = m(Community.e.name_)
 
     // Community entity ids
-    communities.ids.take(3) === List(17592186045520L, 17592186045519L, 17592186045517L)
-    communities.size === 150
+    communities.get.take(3) === List(17592186045520L, 17592186045519L, 17592186045517L)
+    communities.get.size === 150
   }
 
   // Todo: Getting an entity's attribute values
@@ -285,15 +285,15 @@ class SeattleTests extends SeattleSpec {
     val schemaTxDate = txDates(1)
 
     // Take all Community entities
-    val communities = m(Community.name)
+    val communities = m(Community.e.name_)
 
     // Revisiting the past
 
-    communities.asOf(schemaTxDate).size === 0
-    communities.asOf(dataTxDate).size === 150
+    communities.asOf(schemaTxDate).get.size === 0
+    communities.asOf(dataTxDate).get.size === 150
 
-    communities.since(schemaTxDate).size === 150
-    communities.since(dataTxDate).size === 0
+    communities.since(schemaTxDate).get.size === 150
+    communities.since(dataTxDate).get.size === 0
 
     // Imagining the future
     val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
@@ -301,24 +301,22 @@ class SeattleTests extends SeattleSpec {
 
 
     // future db
-    communities.imagine(newDataTx).size === 258
+    communities.imagine(newDataTx).get.size === 258
 
     // existing db
-    communities.size === 150
+    communities.get.size === 150
 
     // transact
     conn.transact(newDataTx)
 
     // updated db
-    communities.size === 258
+    communities.get.size === 258
 
     // number of new transactions
-    communities.since(dataTxDate).size === 108
+    communities.since(dataTxDate).get.size === 108
   }
 
 
-//  "Manipulating data - insert" >> {
-//    implicit val conn = loadSeattle(3)
   "Manipulating data - insert" in new SeattleSetup {
 
     // Add Community with Neighborhood and Region
@@ -336,7 +334,7 @@ class SeattleTests extends SeattleSpec {
       ("AAA", "myUrl", "twitter", "personal", Set("my", "favorites"), "myNeighborhood", "myDistrict", "nw"))
 
     // Now we have one more community
-    Community.name.size === 151
+    Community.e.name_.get.size === 151
 
     // We can also insert data in two steps:
 
@@ -362,7 +360,7 @@ class SeattleTests extends SeattleSpec {
 
     // Confirm that new entities have been inserted
     Community.name.contains("Com").get.sorted === List("Com A", "Com B", "Com C", "Com D")
-    Community.name.size === 157
+    Community.e.name_.get.size === 157
 
 
     // Add multiple sets of entities with multiple facts across multiple namespaces in one go (!):
@@ -379,12 +377,15 @@ class SeattleTests extends SeattleSpec {
     // Categories before insert (one Set with distinct values)
     Community.category.get.head.size === 88
 
-    // Re-use insert molecule to insert 3 new communities with 3 new neighborhoods
-    insertCommunity(newCommunitiesData).ids === List(17592186045669L, 17592186045670L, 17592186045671L, 17592186045672L, 17592186045673L, 17592186045674L)
+    // Re-use insert molecule to insert 3 new communities with 3 new neighborhoods and references to 3 existing Districts
+    insertCommunity(newCommunitiesData).ids === List(
+      17592186045669L, 17592186045670L, 17592186045452L,
+      17592186045671L, 17592186045672L, 17592186045540L,
+      17592186045673L, 17592186045674L, 17592186045443L)
 
     // Data has been added
     Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.get === newCommunitiesData
-    Community.name.size === 160
+    Community.e.name_.get.size === 160
 
     // 4 new categories added (these are facts, not entities)
     Community.category.get.head.size === 92
@@ -448,14 +449,12 @@ class SeattleTests extends SeattleSpec {
     // Retract entities ...................................
 
     // Belltown exists
-    Community.name("belltown 3").size === 1
+    Community.name("belltown 3").get.size === 1
 
     // Simply use an entity id and retract it!
     belltown.retract
 
     // Belltown is gone
-    Community.name("belltown 3").size === 0
-
-    ok
+    Community.name("belltown 3").get.size === 0
   }
 }

@@ -48,7 +48,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
   implicit val conn = loadSeattle(1)
 
   lazy val seattleData0 = List(
-    ("15th Ave Community", "http://groups.yahoo.com/group/15thAve_Community/", "email_list", "community", Set("15th avenue residents"), "Capitol Hill", "East", "e"),
+    ("15th Ave Community", "http://groups.yahoo.com/group/15thAve_Community/", "email_list", "community", Set("15th avenue residents", "xx"), "Capitol Hill", "East", "e"),
     ("BikeWorks!", "http://www.bikeworks.org/", "website", null, null, "Columbia City", "Southeast", "se")
   )
 
