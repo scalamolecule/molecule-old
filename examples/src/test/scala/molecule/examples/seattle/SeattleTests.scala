@@ -319,7 +319,7 @@ class SeattleTests extends SeattleSpec {
 
 //  "Manipulating data - insert" >> {
 //    implicit val conn = loadSeattle(3)
-  "Manipulating data - insert" in new Setup {
+  "Manipulating data - insert" in new SeattleSetup {
 
     // Add Community with Neighborhood and Region
     Community
@@ -329,10 +329,7 @@ class SeattleTests extends SeattleSpec {
       .orgtype("personal")
       .category("my", "favorites") // many cardinality allows multiple values
       .Neighborhood.name("myNeighborhood")
-//      .District.name("myDistrict").region("nw").add.ids === List(17592186045890L, 17592186045891L, 17592186045892L)
       .District.name("myDistrict").region("nw").add.ids === List(17592186045651L, 17592186045652L, 17592186045653L)
-
-//    ok
 
     // Confirm all data is inserted
     Community.name.contains("AAA").url.`type`.orgtype.category.Neighborhood.name.District.name.region.get(1) === List(
@@ -393,10 +390,7 @@ class SeattleTests extends SeattleSpec {
     Community.category.get.head.size === 92
   }
 
-  "Manipulating data - update/retract" >> {
-    implicit val conn = loadSeattle(4)
-//  "Manipulating data - update/retract" in new Setup {
-
+  "Manipulating data - update/retract" in new SeattleSetup {
 
     // One-cardinality attributes..........................
 
@@ -406,7 +400,6 @@ class SeattleTests extends SeattleSpec {
     // Replace some belltown attributes
     Community(belltown).name("belltown 2").url("url 2").update
 
-    Community.name("belltown 2").url("url 2").update(belltown)
 
     // Find belltown by its updated name and confirm that the url is also updated
     Community.name_("belltown 2").url.get === List("url 2")
@@ -418,21 +411,21 @@ class SeattleTests extends SeattleSpec {
     Community.name_("belltown 2").category.get.head === Set("news", "events")
 
     // Tell which value to update
-    Community.category("news" -> "Cool news").update(belltown)
+    Community(belltown).category("news" -> "Cool news").update
     Community.name_("belltown 2").category.get.head === Set("Cool news", "events")
 
     // Or update multiple values in one go...
-    Community.category(
+    Community(belltown).category(
       "Cool news" -> "Super cool news",
-      "events" -> "Super cool events").update(belltown)
+      "events" -> "Super cool events").update
     Community.name_("belltown 2").category.get.head === Set("Super cool news", "Super cool events")
 
     // Add value
-    Community.category.add("extra category").update(belltown)
+    Community(belltown).category.add("extra category").update
     Community.name_("belltown 2").category.get.head === Set("Super cool news", "Super cool events", "extra category")
 
     // Remove value
-    Community.category.remove("Super cool events").update(belltown)
+    Community(belltown).category.remove("Super cool events").update
     Community.name_("belltown 2").category.get.head === Set("Super cool news", "extra category")
 
 
@@ -443,7 +436,7 @@ class SeattleTests extends SeattleSpec {
       "belltown 2" :: "blog" :: "url 2" :: Set("Super cool news", "extra category") :: HNil)
 
     // Applying nothing (empty parenthesises) finds and retract all values of an attribute
-    Community.name("belltown 3").url().category().update(belltown)
+    Community(belltown).name("belltown 3").url().category().update
 
     // Belltown has no longer a url or any categories
     Community.name_("belltown 3").name.`type`.url.category.hl === List()
@@ -462,5 +455,7 @@ class SeattleTests extends SeattleSpec {
 
     // Belltown is gone
     Community.name("belltown 3").size === 0
+
+    ok
   }
 }

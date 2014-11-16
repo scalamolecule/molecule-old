@@ -31,11 +31,11 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
 
-//    x(30, dsl.tree, model0, checkCorrectModel)
+    //    x(30, dsl.tree, model0, checkCorrectModel)
 
     val identifiers = (model0.elements collect {
-      case atom@Atom(_, _, _, _, Eq(Seq(ident)), _) if ident.toString.startsWith("__ident__") =>
-        ident -> q"${TermName(ident.toString.substring(9))}"
+      case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _) if ident.startsWith("__ident__") => ident -> q"${TermName(ident.substring(9))}"
+      case meta@Meta(_, _, _, _, ident: String) if ident.startsWith("__ident__")             => ident -> q"${TermName(ident.substring(9))}"
     }).toMap
 
     q"""
@@ -53,10 +53,10 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
       val model = Model($model0.elements.map {
         case atom@Atom(_, _, _, _, value, _) => value match {
-          case Eq(Seq(ident)) if ident.toString.startsWith("__ident__") =>
-            atom.copy(value = Eq(Seq($identifiers.get(ident.toString).get)))
-          case _ => atom
+          case Eq(Seq(ident)) if ident.toString.startsWith("__ident__") => atom.copy(value = Eq(Seq($identifiers.get(ident.toString).get)))
+          case _                                                        => atom
         }
+        case meta@Meta(_, _, _, _, ident: String) if ident.startsWith("__ident__") => meta.copy(value = $identifiers.get(ident).get)
         case other => other
       })
       val query = Model2Query(model)

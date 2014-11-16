@@ -48,61 +48,61 @@ class QueryTour extends DayOfAtomicSpec {
     // (Parent s1 is a Story)
     val c1 = addComment(s1, stu, "blah 1") id
 
-//    // Ed's Comment to Stu's first Comment
-//    // (Parent c1 is a Comment)
-//    val c2 = addComment(c1, ed, "blah 2") id
-//
-//    // More sub-comments
-//    val c3 = addComment(c2, stu, "blah 3") id
-//    val c4 = addComment(c3, ed, "blah 4") id
-//
-//    // Story 2 comments
-//    val c5 = addComment(s2, ed, "blah 5") id
-//    val c6 = addComment(c5, stu, "blah 6") id
-//
-//    // Story 3 comments
-//    val c7 = addComment(s3, ed, "blah 7") id
-//    val c8 = addComment(c7, stu, "blah 8") id
-//    // Stu comments on his own comment
-//    val c9 = addComment(c8, stu, "blah 9") id
-//
-//    // Story 2 again - a second thread of comments. This time Stu starts
-//    val c10 = addComment(s2, stu, "blah 10") id
-//    val c11 = addComment(c10, ed, "blah 11") id
-//    val c12 = addComment(c11, stu, "blah 12") id
+    // Ed's Comment to Stu's first Comment
+    // (Parent c1 is a Comment)
+    val c2 = addComment(c1, ed, "blah 2") id
+
+    // More sub-comments
+    val c3 = addComment(c2, stu, "blah 3") id
+    val c4 = addComment(c3, ed, "blah 4") id
+
+    // Story 2 comments
+    val c5 = addComment(s2, ed, "blah 5") id
+    val c6 = addComment(c5, stu, "blah 6") id
+
+    // Story 3 comments
+    val c7 = addComment(s3, ed, "blah 7") id
+    val c8 = addComment(c7, stu, "blah 8") id
+    // Stu comments on his own comment
+    val c9 = addComment(c8, stu, "blah 9") id
+
+    // Story 2 again - a second thread of comments. This time Stu starts
+    val c10 = addComment(s2, stu, "blah 10") id
+    val c11 = addComment(c10, ed, "blah 11") id
+    val c12 = addComment(c11, stu, "blah 12") id
   }
 
   "Query tour + Social News" in new Setup {
 
     //  "Query tour + Social News" >> {
 
-//            // Created entity ids are simply Long values
-//        (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
-//        (stu, ed) ===(17592186045422L, 17592186045423L)
-//        (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
-//          17592186045425L, 17592186045428L, 17592186045431L, 17592186045434L,
-//          17592186045437L, 17592186045440L, 17592186045443L, 17592186045446L,
-//          17592186045449L, 17592186045452L, 17592186045455L, 17592186045458L)
-//
-//
-//        // 3. Finding All Users with a first name
-//        User.firstName.ids === List(stu, ed)
-//
-//        // 4. Finding a specific user
-//        User.email("editor@example").ids.head === ed
-//
-//        // 5. Finding a User's Comments
-//        //            Comment.e.Author.email_("editor@example").debug
-//        Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
-//        Comment.e.Author.email_("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
-//
-//        Comment.e.text.Author.email_("editor@example").firstName.get.sorted === List(
-//          (c2, "blah 2", "ed"),
-//          (c4, "blah 4", "ed"),
-//          (c5, "blah 5", "ed"),
-//          (c7, "blah 7", "ed"),
-//          (c11, "blah 11", "ed")
-//        )
+            // Created entity ids are simply Long values
+        (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
+        (stu, ed) ===(17592186045422L, 17592186045423L)
+        (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
+          17592186045425L, 17592186045428L, 17592186045431L, 17592186045434L,
+          17592186045437L, 17592186045440L, 17592186045443L, 17592186045446L,
+          17592186045449L, 17592186045452L, 17592186045455L, 17592186045458L)
+
+
+        // 3. Finding All Users with a first name
+        User.firstName.ids === List(stu, ed)
+
+        // 4. Finding a specific user
+        User.email("editor@example").ids.head === ed
+
+        // 5. Finding a User's Comments
+        //            Comment.e.Author.email_("editor@example").debug
+        Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+        Comment.e.Author.email_("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
+
+        Comment.e.text.Author.email_("editor@example").firstName.get.sorted === List(
+          (c2, "blah 2", "ed"),
+          (c4, "blah 4", "ed"),
+          (c5, "blah 5", "ed"),
+          (c7, "blah 7", "ed"),
+          (c11, "blah 11", "ed")
+        )
 //
 //
 //    // 6. Returning an Aggregate of Comments of some Author

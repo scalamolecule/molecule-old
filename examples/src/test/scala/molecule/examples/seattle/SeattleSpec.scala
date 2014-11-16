@@ -28,7 +28,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     conn
   }
 
-  class Setup extends Scope with DatomicFacade {
+  class SeattleSetup extends Scope with DatomicFacade {
     implicit val conn = load(SeattleSchema.tx, "seattle")
     // Insert data
 //    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData0

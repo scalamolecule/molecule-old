@@ -22,6 +22,12 @@ object transaction {
     val action = ":db/retract"
   }
 
+
+//  case class Action(e: Object, a: String, v: Any) extends Statement {
+//    val action = "meta..."
+//  }
+
+  case class Eid(id: Long)
   case class Prefix(s: String)
   case class Values(vs: Any, prefix: Option[String] = None)
 }

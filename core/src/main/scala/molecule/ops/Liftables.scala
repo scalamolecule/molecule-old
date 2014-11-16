@@ -18,7 +18,6 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   def mkUUID(uuid: UUID) = q"java.util.UUID.fromString(${uuid.toString})"
   def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
-
   implicit val liftAny = Liftable[Any] {
     case Literal(Constant(s: String))  => q"$s"
     case Literal(Constant(i: Int))     => q"$i"
@@ -39,8 +38,12 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
     case Fn(value)                     => q"Fn($value)"
+//    case Eq(value)                     => q"Eq($value)"
     case other                         => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
   }
+
+//  implicit val liftEq = Liftable[Eq] { Eq => q"Eq(Seq(..${Eq.values}))"}
+
 
   implicit val liftTuple2 = Liftable[Product] {
     case (k: String, v: String) => q"($k, $v)"

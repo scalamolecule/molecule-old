@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 20, 20, false)
+  val x = Debug("Dsl2Model", 14, 13, true)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -27,9 +27,15 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef =>
       abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
 
-    case q"$prev.$cur.$op(..$values)" => traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
+    case q"$prev.$ns.apply($id)" if ns.toString.head.isUpper =>
+      //      x(13, prev, ns, id, showRaw(q"$id"))
+      traverse(q"$prev", Meta(firstLow(ns), "", "e", "Long", extract(id)))
 
-    case t@q"$prev.$refAttr" if t.isRef => x(15, refAttr); traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
+    case q"$prev.$cur.$op(..$values)" =>
+      traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
+
+    case t@q"$prev.$refAttr" if t.isRef => //x(15, refAttr)
+      traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
 
     case q"$prev.e"  => traverse(q"$prev", meta(prev, "e"))
     case q"$prev.a"  => traverse(q"$prev", meta(prev, "a"))
@@ -48,7 +54,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.$manyRef.apply[..$types]($nestedMolecule)" =>
       val nestedModel = resolve(q"$nestedMolecule")
       val refNs = curNs(nestedModel.elements.head)
-      val group = Group(Bond(prev.name, firstLow(manyRef.toString), refNs.capitalize), nestedModel.elements)
+      val group = Group(Bond(prev.name, firstLow(manyRef), refNs.capitalize), nestedModel.elements)
       //      x(2, t, nestedModel, group, traverse(q"$prev", group))
       traverse(q"$prev", group)
 
@@ -133,20 +139,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     }
   }
 
-  //  def atom(attr: Tree): Atom = attr match {
-  //    case a if a.isEnum        => Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix))
-  //    case a if a.isValueAttr   => Atom(a.ns, a.name, a.tpeS, a.card, VarValue)
-  //    case a if a.isOneRef      => Atom(a.ns, a.name, "Long", 1, VarValue)
-  //    case a if a.isOneRefAttr  => Atom(a.ns, a.name, "Long", 1, VarValue)
-  //    case a if a.isManyRef     => Atom(a.ns, a.name, "Set[Long]", 1, VarValue)
-  //    case a if a.isManyRefAttr => Atom(a.ns, a.name, "Set[Long]", 1, VarValue)
-  //    //    case a if a.isBackRefAttr =>
-  //    //      val refNs = a.name.takeWhile(_.isLetter)
-  //    //      val refAttr = a.name.substring(a.name.indexOf("_") + 1)
-  //    //      Atom(refNs, refAttr, "Long", 1, BackValue(refNs))
-  //    case unknown => abortTree(unknown, "[Dsl2Model:atom] Unknown atom type")
-  //  }
-
 
   // Values --------------------------------------------------------------------------
 
@@ -167,10 +159,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   }
 
   def extract(t: Tree) = t match {
-    case Constant(v: String)          => v
-    case Literal(Constant(v: String)) => v
-    case Ident(TermName(v: String))   => "__ident__" + v
-    case v                            => v
+    case Constant(v: String)                                  => v
+    case Literal(Constant(v: String))                         => v
+    case Ident(TermName(v: String))                           => "__ident__" + v
+    case Select(This(TypeName("$anon")), TermName(v: String)) => "__ident__" + v
+    case v                                                    => v
   }
 
   def resolveValues(tree: Tree, at: att) = {

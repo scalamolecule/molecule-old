@@ -1,54 +1,66 @@
 package molecule.transform
 import java.util.{List => jList}
-import datomic.Connection
-import molecule.DatomicFacade
+import datomic.{Connection, Database, Peer}
+//import molecule.DatomicFacade
 import molecule.ast.model._
 import molecule.ast.transaction._
 import molecule.util.Debug
+import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 
 //case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()) extends DatomicFacade {
-case class Model2Transaction(conn: Connection, model: Model) extends DatomicFacade {
-  val y = Debug("Model2Transaction", 3, 10, false, 6)
+//case class Model2Transaction(conn: Connection, model: Model) extends DatomicFacade {
+case class Model2Transaction(conn: Connection, model: Model) {
+  val x = Debug("Model2Transaction", 24, 30, false, 6)
 
+  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+
+  def getValues1(db: Database, id: Any, attr: String) = {
+    val query = s"[:find ?values :in $$ ?id :where [?id $attr ?values]]"
+    x(25, query, id.asInstanceOf[Object], Peer.q(query, db, id.asInstanceOf[Object]))
+    Peer.q(query, db, id.asInstanceOf[Object]).map(_.get(0))
+  }
   val stmtsModel = {
-    val (_, _, _, stmts2) = model.elements.foldLeft('_, '_, '_, Seq[Statement]()) { case ((e, a, v, stmts), element) =>
+    x(24, model)
+
+    val (_, _, _, stmts2) = model.elements.foldLeft('_: Any, '_, '_, Seq[Statement]()) { case ((e, a, v, stmts), element) =>
       (e, a, v, element) match {
-        case ('_, '_, '_, Atom(ns, name, _, _, VarValue, _))   => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", 'arg))
-        case ('_, '_, '_, Atom(ns, name, _, _, value, prefix)) => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", Values(value, prefix)))
-        case ('_, '_, '_, Bond(ns, refAttr, _))                => ('v, '_, '_, stmts :+ Add('id, s":$ns/$refAttr", 'id))
+        case ('_, '_, '_, Meta(ns, "", "e", "Long", id: Long))                => (Eid(id), '_, '_, stmts)
+        case (Eid(id), '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix)) => ('e, '_, '_, stmts :+ Retract(id.asInstanceOf[Object], s":$ns/$name", Values(value, prefix)))
+        case (Eid(id), '_, '_, Atom(ns, name, _, _, value, prefix))           => ('e, '_, '_, stmts :+ Add(id.asInstanceOf[Object], s":$ns/$name", Values(value, prefix)))
+        case ('_, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", 'arg))
+        case ('_, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", Values(value, prefix)))
+        case ('_, '_, '_, Bond(ns, refAttr, _))                               => ('v, '_, '_, stmts :+ Add('id, s":$ns/$refAttr", 'id))
+        case ('e, '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix))      => ('e, '_, '_, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
+        case ('e, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", 'arg))
+        case ('e, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
+        case ('e, '_, '_, Bond(ns, refAttr, _))                               => ('v, '_, '_, stmts :+ Add('e, s":$ns/$refAttr", 'id))
+        case ('v, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", 'arg))
+        case ('v, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
+        case ('v, '_, '_, Bond(ns, refAttr, _))                               => ('v, '_, '_, stmts :+ Add('v, s":$ns/$refAttr", 'id))
 
-        case ('e, '_, '_, Atom(ns, name, _, _, VarValue, _))   => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", 'arg))
-        case ('e, '_, '_, Atom(ns, name, _, _, value, prefix)) => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
-        case ('e, '_, '_, Bond(ns, refAttr, _))                => ('v, '_, '_, stmts :+ Add('e, s":$ns/$refAttr", 'id))
-
-        case ('v, '_, '_, Atom(ns, name, _, _, VarValue, _))   => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", 'arg))
-        case ('v, '_, '_, Atom(ns, name, _, _, value, prefix)) => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
-        case ('v, '_, '_, Bond(ns, refAttr, _))                => ('v, '_, '_, stmts :+ Add('v, s":$ns/$refAttr", 'id))
+        case (e_, a_, v_, elem) => sys.error(s"[Model2Transaction:stmtsModel] Unexpected statement model:\ne: $e_ \na: $a_ \nv: $v_ \nm: $elem ")
       }
     }
     stmts2
   }
 
-  def add(stmts: Seq[Statement], e: Object, a: String, value: Any, prefix: Option[String] = None) = {
+  def resolve(stmts: Seq[Statement], e: Object, a: String, value: Any, prefix: Option[String] = None) = {
     def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
-
-    value match {
+    stmts ++ (value match {
       case Replace(oldNew)      => oldNew.toSeq.flatMap {
         case (oldValue, newValue) => Seq(Retract(e, a, p(oldValue)), Add(e, a, p(newValue)))
       }
       case Remove(Seq())        => getValues1(conn.db, e, a).toSeq.map(v => Retract(e, a, p(v)))
       case Remove(removeValues) => removeValues.map(v => Retract(e, a, p(v)))
-      case Eq(vs)               => stmts ++ vs.map(v => Add(e, a, p(v)))
-      case vs: Set[_]           => stmts ++ vs.map(v => Add(e, a, p(v)))
-      case v :: Nil             => stmts :+ Add(e, a, p(v))
-      case vs: List[_]          => stmts ++ vs.map(v => Add(e, a, p(v)))
-      case v                    => stmts :+ Add(e, a, p(v))
-      //      case unexpected           => sys.error("[Model2Transaction:insertStmts] Unexpected statement: " + unexpected)
-    }
+      case Eq(vs)               => vs.map(v => Add(e, a, p(v)))
+      case vs: Set[_]           => vs.map(v => Add(e, a, p(v)))
+      case v :: Nil             => Seq(Add(e, a, p(v)))
+      case vs: List[_]          => vs.map(v => Add(e, a, p(v)))
+      case v                    => Seq(Add(e, a, p(v)))
+    })
   }
-
 
   def insertStmts(dataRows: Seq[Seq[Any]]) = dataRows.flatMap { args =>
     stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
@@ -58,70 +70,47 @@ case class Model2Transaction(conn: Connection, model: Model) extends DatomicFaca
         (j, stmts)
       else
         stmt match {
-          case Add('id, a, 'arg)                   => (j, add(stmts, tempId(), a, arg))
-          case Add('id, a, Values(vs, prefix))     => (j, add(stmts, tempId(), a, vs, prefix))
-          case Add('e, a, 'arg)                    => (j, add(stmts, stmts.last.e, a, arg))
-          case Add('e, a, Values(EnumVal, prefix)) => (j, add(stmts, stmts.last.e, a, arg, prefix))
-          case Add('e, a, Values(vs, prefix))      => (j, add(stmts, stmts.last.e, a, vs, prefix))
-          case Add('e, a, 'id)                     => (i, add(stmts, stmts.last.e, a, tempId()))
-          case Add('v, a, 'arg)                    => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, arg))
-          case Add('v, a, Values(vs, prefix))      => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+          case Add('id, a, 'arg)                   => (j, resolve(stmts, tempId(), a, arg))
+          case Add('id, a, Values(vs, prefix))     => (j, resolve(stmts, tempId(), a, vs, prefix))
+          case Add('e, a, 'arg)                    => (j, resolve(stmts, stmts.last.e, a, arg))
+          case Add('e, a, Values(EnumVal, prefix)) => (j, resolve(stmts, stmts.last.e, a, arg, prefix))
+          case Add('e, a, Values(vs, prefix))      => (j, resolve(stmts, stmts.last.e, a, vs, prefix))
+          case Add('e, a, 'id)                     => (i, resolve(stmts, stmts.last.e, a, tempId()))
+          case Add('v, a, 'arg)                    => (j, resolve(stmts, stmts.last.v.asInstanceOf[Object], a, arg))
+          case Add('v, a, Values(vs, prefix))      => (j, resolve(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
           case Retract(e, a, v)                    => (i, stmts)
           case unexpected                          => sys.error("[Model2Transaction:insertStmts] Unexpected statement: " + unexpected)
         }
     }._2
   }.map(_.toJava).asJava
 
-  def saveStmts = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+  def saveStmts() = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
     val j = i + 1
     stmt match {
-      case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
-      case Add('e, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.e, a, vs, prefix))
-      case Add('e, a, 'id)                 => (i, add(stmts, stmts.last.e, a, tempId()))
-      case Add('v, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+      case Add('id, a, Values(vs, prefix)) => (j, resolve(stmts, tempId(), a, vs, prefix))
+      case Add('e, a, Values(vs, prefix))  => (j, resolve(stmts, stmts.last.e, a, vs, prefix))
+      case Add('e, a, 'id)                 => (i, resolve(stmts, stmts.last.e, a, tempId()))
+      case Add('v, a, Values(vs, prefix))  => (j, resolve(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
       case Retract(e, a, v)                => (i, stmts)
-      case Add(_, a, 'arg)                 => sys.error(s"[Model2Transaction:insert] Attribute `$a` needs a value applied")
-      case unexpected                      => sys.error("[Model2Transaction:insert] Unexpected statement: " + unexpected)
+      case Add(_, a, 'arg)                 => sys.error(s"[Model2Transaction:saveStmts] Attribute `$a` needs a value applied")
+      case unexpected                      => sys.error("[Model2Transaction:saveStmts] Unexpected statement: " + unexpected)
     }
   }._2.map(_.toJava).asJava
 
-//  def updateStmts = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
-//    val j = i + 1
-//    stmt match {
-//      case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
-//      case Add('e, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.e, a, vs, prefix))
-//      case Add('e, a, 'id)                 => (i, add(stmts, stmts.last.e, a, tempId()))
-//      case Add('v, a, Values(vs, prefix))  => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-//      case Retract(e, a, v)                => (i, stmts)
-//      case Add(_, a, 'arg)                 => sys.error(s"[Model2Transaction:insert] Attribute `$a` needs a value applied")
-//      case unexpected                      => sys.error("[Model2Transaction:insert] Unexpected statement: " + unexpected)
-//    }
-//  }._2.map(_.toJava).asJava
-//
-//
-//
-//  def updateStmts0 = {
-//
-//    //    dataRows.zip(ids).flatMap { case (args, id) =>
-//    val (_, stmts2) = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
-//      val j = i + 1
-//      //        val arg = args(i)
-//      stmt match {
-//        //            case Add('id, a, 'arg)                   => (j, add(stmts, tempId(), a, arg))
-//        case Add('id, a, Values(vs, prefix)) => (j, add(stmts, tempId(), a, vs, prefix))
-//        //            case Add('e, a, 'arg)                    => (j, add(stmts, stmts.last.e, a, arg))
-//        //            case Add('e, a, Values(EnumVal, prefix)) => (j, add(stmts, stmts.last.e, a, arg, prefix))
-//        case Add('e, a, Values(vs, prefix)) => (j, add(stmts, stmts.last.e, a, vs, prefix))
-//        case Add('e, a, 'id)                => (i, add(stmts, stmts.last.e, a, tempId()))
-//        //            case Add('v, a, 'arg)                    => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, arg))
-//        case Add('v, a, Values(vs, prefix)) => (j, add(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-//        case Retract(e, a, v)               => (i, stmts)
-//        case unexpected                     => sys.error("[Model2Transaction:updateStmts] Unexpected statement: " + unexpected)
-//      }
-//    }
-//    stmts2
-//    //    }
-//  }
+
+  def updateStmts() = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+    val j = i + 1
+    stmt match {
+      case Add('e, a, Values(vs, prefix))     => (j, resolve(stmts, stmts.last.e, a, vs, prefix))
+      case Add('e, a, 'id)                    => (i, resolve(stmts, stmts.last.e, a, tempId()))
+      case Add('v, a, Values(vs, prefix))     => (j, resolve(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+      case Add(e, a, Values(vs, prefix))      => (j, resolve(stmts, e, a, vs, prefix))
+      case Retract('e, a, Values(vs, prefix)) => (j, resolve(stmts, stmts.last.e, a, vs, prefix))
+      case Retract(e, a, Values(vs, prefix))  => (j, resolve(stmts, e, a, vs, prefix))
+      case Add(_, a, 'arg)                    => sys.error(s"[Model2Transaction:updateStmts] Attribute `$a` needs a value applied")
+      case unexpected                         => sys.error("[Model2Transaction:updateStmts] Unexpected statement: " + unexpected)
+    }
+  }._2.map(_.toJava).asJava
 
 
   def tx(dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): (Seq[Statement], Seq[Object]) = {
@@ -175,6 +164,10 @@ case class Model2Transaction(conn: Connection, model: Model) extends DatomicFaca
     (newStmts, tempIds)
   }
 
+
+  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
+    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+
   private def mkStatements(stmts: Seq[Statement], element: Element, arg: Any, id0: Long, nextId: Object, nextNs: String): (Seq[Statement], Object) = {
     val e = if (curNs(element) == nextNs)
       nextId
@@ -188,37 +181,37 @@ case class Model2Transaction(conn: Connection, model: Model) extends DatomicFaca
 
       // Atom value takes precedence over external argument
       value.getOrElse(arg) match {
-        case Replace(oldNew)            => y(11);
+        case Replace(oldNew)            => x(11);
           oldNew.toSeq.flatMap {
             case (oldValue, newValue) =>
               Seq(Retract(e, s":$ns/$attr", p(oldValue)), Add(e, s":$ns/$attr", p(newValue)))
           }
-        case Remove(Seq())              => y(12, getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v))));
+        case Remove(Seq())              => x(12, getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v))));
           getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v)))
-        case Remove(removeValues)       => y(13, removeValues, removeValues.map(v => Retract(e, s":$ns/$attr", p(v))));
+        case Remove(removeValues)       => x(13, removeValues, removeValues.map(v => Retract(e, s":$ns/$attr", p(v))));
           removeValues.map(v => Retract(e, s":$ns/$attr", p(v)))
-        case vs: Set[_]                 => y(14, vs, vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v))));
+        case vs: Set[_]                 => x(14, vs, vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v))));
           vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v)))
-        case vs: List[_] if vs.size > 1 => y(15, vs, vs.map(v => Add(e, s":$ns/$attr", p(v))));
+        case vs: List[_] if vs.size > 1 => x(15, vs, vs.map(v => Add(e, s":$ns/$attr", p(v))));
           vs.map(v => Add(e, s":$ns/$attr", p(v)))
-        case v :: Nil                   => y(16, v, Seq(Add(e, s":$ns/$attr", p(v))));
+        case v :: Nil                   => x(16, v, Seq(Add(e, s":$ns/$attr", p(v))));
           Seq(Add(e, s":$ns/$attr", p(v)))
-        case v                          => y(17, v, Seq(Add(e, s":$ns/$attr", p(v))));
+        case v                          => x(17, v, Seq(Add(e, s":$ns/$attr", p(v))));
           Seq(Add(e, s":$ns/$attr", p(v)))
       }
     }
 
     val newStmts = element match {
-      case Atom(ns, attr, _, _, VarValue, _)                => y(1, s":$ns/$attr");
+      case Atom(ns, attr, _, _, VarValue, _)                => x(1, s":$ns/$attr");
         stmts ++ addAtoms(ns, attr)
       case Atom(ns, attr, _, _, EnumVal, prefix)            => stmts ++ addAtoms(ns, attr, prefix)
       case Atom(ns, attr, _, _, Eq(values), prefix)         => stmts ++ addAtoms(ns, attr, prefix, Some(values))
-      case Atom(ns, attr, _, _, replace@Replace(_), prefix) => y(4, stmts, addAtoms(ns, attr, prefix, Some(replace)));
+      case Atom(ns, attr, _, _, replace@Replace(_), prefix) => x(4, stmts, addAtoms(ns, attr, prefix, Some(replace)));
         stmts ++ addAtoms(ns, attr, prefix, Some(replace))
-      case Atom(ns, attr, _, _, remove@Remove(_), prefix)   => y(5, stmts, addAtoms(ns, attr, prefix, Some(remove)), stmts ++ addAtoms(ns, attr, prefix, Some(remove)));
+      case Atom(ns, attr, _, _, remove@Remove(_), prefix)   => x(5, stmts, addAtoms(ns, attr, prefix, Some(remove)), stmts ++ addAtoms(ns, attr, prefix, Some(remove)));
         stmts ++ addAtoms(ns, attr, prefix, Some(remove))
 
-      case Bond(ns, refAttr, refNs) => y(2, s":$ns/$refAttr $nextId");
+      case Bond(ns, refAttr, refNs) => x(2, s":$ns/$refAttr $nextId");
         stmts :+ Add(e, s":$ns/$refAttr", nextId)
 
       case Group(Bond(ns, refAttr, refNs), nestedElements) => {

@@ -124,13 +124,13 @@ trait DatomicFacade {
     }
   }
 
-  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+//  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
 
-  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
-    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
-
-  def getValues1(db: Database, id: Any, attr: String) =
-    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+//  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
+//    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+//
+//  def getValues1(db: Database, id: Any, attr: String) =
+//    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
@@ -151,12 +151,11 @@ trait DatomicFacade {
     Tx(conn.transact(javaTx).get)
   }
 
-  protected[molecule] def update(conn: Connection, model: Model, id: Long): Tx = {
+  protected[molecule] def update(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
-    val (stmts, prevIds) = transformer.tx(Seq(), Seq(id))
-    val javaTx = stmts.map(_.toJava).asJava
-//    x(3, model, transformer.stmtsModel, stmts)
-    Tx(conn.transact(javaTx).get)
+    val stmts = transformer.updateStmts
+    x(3, model, transformer.stmtsModel, stmts)
+    Tx(conn.transact(stmts).get)
   }
 }
 

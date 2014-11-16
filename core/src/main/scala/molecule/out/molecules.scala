@@ -29,8 +29,8 @@ trait Molecule extends DatomicFacade {
   def imagine(tx: lObj) = { dbOp = Imagine(tx); this }
 
   def add                   (implicit conn: Connection): Tx = save(conn, _model)
-  def update(updateId: Long)(implicit conn: Connection): Tx = update(conn, _model, updateId)
-  def update                (implicit conn: Connection): Tx = insert(conn, _model)
+//  def update(updateId: Long)(implicit conn: Connection): Tx = update0(conn, _model, updateId)
+  def update                (implicit conn: Connection): Tx = update(conn, _model)
 
   def debug(implicit conn: Connection): Unit
 }
