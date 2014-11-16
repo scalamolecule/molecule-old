@@ -14,13 +14,10 @@ trait InputMolecule_1[I1] extends InputMolecule {
   def bindValues1(in1: Seq[I1]) = {
     val (vars, Seq(p1)) = varsAndPrefixes.unzip
     val values = getValues(p1, in1)
-    val query1 = if (values.size > 1)
+    if (values.size > 1)
       _query.copy(i = In(Seq(InVar(CollectionBinding(vars.head), Seq(values)))))
     else
       _query.copy(i = In(Seq(InVar(ScalarBinding(vars.head), Seq(Seq(values.head))))))
-
-    val entityQuery1 = query1.copy(f = Find(Seq(Var("a"))))
-    (query1, entityQuery1)
   }
   
   def inputValues1(in1: Seq[I1]) = {

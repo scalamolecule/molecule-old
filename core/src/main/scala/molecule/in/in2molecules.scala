@@ -31,24 +31,19 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
   def bindValues1(inputTuples: Seq[(I1, I2)]) = {
     val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
     val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
-    val query1 = _query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
-    val entityQuery = _query.copy(f = Find(Seq(Var("a"))))
-    (query1, entityQuery)
+    _query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
   }
 
   def bindValues2(inputLists: (Seq[I1], Seq[I2])) = {
 
     // Extract placeholder info and discard placeholders
     val varsAndPrefixes = _query.i.inputs.collect {
-//      case Placeholder(_, kw, t, enumPrefix, e) => (kw, t, enumPrefix.getOrElse(""), e)
       case Placeholder(_, kw, enumPrefix, e) => (kw, enumPrefix, e)
     }
     val query1 = _query.copy(i = In(Seq()))
 
     if (varsAndPrefixes.size != 2)
       sys.error(s"[InputMolecule_2] Query should expect exactly 2 inputs:\nQuery: ${_query.datalog}")
-
-
 
     // Add rules for each list of inputs
     val query2 = inputLists.productIterator.toList.zip(varsAndPrefixes).foldLeft(query1) {
@@ -66,8 +61,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
         q.copy(i = newIn, wh = newWhere)
       }
     }
-    val entityQuery = query2.copy(f = Find(Seq(Var("a"))))
-    (query2, entityQuery)
+    query2
   }
 
   def inputValues1(inputTuples: Seq[(I1, I2)]) = {

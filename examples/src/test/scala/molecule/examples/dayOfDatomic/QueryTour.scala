@@ -122,15 +122,15 @@ class QueryTour extends DayOfAtomicSpec {
 
 
     // Attributes of entities having comments
-//    Parent.a.Comments.debug
-//    Parent.a.Comments.get.sorted === List(
-//      ":comment/author",
-//      ":comment/text",
-//      ":comment/tree_",
-//      ":parent/comment",
-//      ":story/title",
-//      ":story/url"
-//    )
+    Parent.a.Comments.debug
+    Parent.a.Comments.get.sorted === List(
+      ":comment/author",
+      ":comment/text",
+      ":comment/tree_",
+      ":parent/comment",
+      ":story/title",
+      ":story/url"
+    )
 
     // Attributes of stories having comments
     //    Story.a.Comments.text_.get === List(

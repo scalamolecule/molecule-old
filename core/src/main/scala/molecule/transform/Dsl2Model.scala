@@ -194,8 +194,12 @@ object Dsl2Model {
     val model1 = inst(c).resolve(model.tree)
 
     // Sanity check
-    model1.elements.collectFirst { case a: Atom => a} getOrElse
-      c.abort(c.enclosingPosition, "[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.")
+    model1.elements.collectFirst {
+      case a: Atom => a
+      case b: Bond => b
+//      case m: Meta => m
+    } getOrElse
+      c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$model1")
 
     model1
   }

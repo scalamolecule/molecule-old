@@ -53,9 +53,8 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       ..${basics(inputDsl)}
       new $InputMoleculeTpe[..$InTypes](model, query) {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule0 = {
-          val (query1, entityQuery1) = bindValues1(args)
+          val query1 = bindValues1(args)
           new Molecule0(model, query1) {
-            //def ids: Seq[Long]                         = entityIds(entityQuery1)
             def debug(implicit conn: Connection): Unit = debugMolecule(query1, inputValues1(args), results(query1, conn))
           }
         }
@@ -86,9 +85,8 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       }.unzip
       q"""
         def apply(..$inParams)(implicit conn: Connection): Molecule1[$A] = {
-          val (query2, entityQuery2) = bindValues2(..$inTerms)
+          val query2 = bindValues2(..$inTerms)
           new Molecule1[$A](model, query2) {
-            //def ids: Seq[Long]                                  = entityIds(entityQuery2)
             def get(implicit conn: Connection): Seq[$A]         = results(query2, conn).toList.map(data => ${cast(q"data")})
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query2, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit          = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
@@ -101,9 +99,8 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       ..${basics(inputDsl)}
       new $InputMoleculeTpe[..$InTypes, $A](model, query) {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule1[$A] = {
-          val (query1, entityQuery1) = bindValues1(args)
+          val query1 = bindValues1(args)
           new Molecule1[$A](model, query1) {
-            //def ids: Seq[Long]                                  = entityIds(entityQuery1)
             def get(implicit conn: Connection): Seq[$A]         = results(query1, conn).toList.map(data => ${cast(q"data")})
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query1, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit          = debugMolecule(query1, inputValues1(args), results(query1, conn))
@@ -135,9 +132,8 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       }.unzip
       q"""
         def apply(..$inParams)(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
-          val (query2, entityQuery2) = bindValues2(..$inTerms)
+          val query2 = bindValues2(..$inTerms)
           new $MoleculeTpe[..$OutTypes](model, query2) {
-            //override def ids: Seq[Long]                            = entityIds(entityQuery2)
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query2, conn).toList.map(data => (..${tplValues(q"data")}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(query2, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit             = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
@@ -150,9 +146,8 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       ..${basics(inputDsl)}
       new $InputMoleculeTpe[..$InTypes, ..$OutTypes](model, query) {
         def apply(args: Seq[(..$InTypes)])(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
-          val (query1, entityQuery1) = bindValues1(args)
+          val query1 = bindValues1(args)
           new $MoleculeTpe[..$OutTypes](model, query1) {
-            //override def ids: Seq[Long]                            = entityIds(entityQuery1)
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query1, conn).toList.map(data => (..${tplValues(q"data")}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(query1, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit             = debugMolecule(query1, inputValues1(args), results(query1, conn))

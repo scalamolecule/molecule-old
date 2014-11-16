@@ -3,9 +3,6 @@ package molecule.ast
 object model {
 
   case class Model(elements: Seq[Element]) {
-    // Convenience methods
-    //    def +:(e: Element) = Model(e +: elements)
-    //    def :+(e: Element) = Model(elements :+ e)
 
     override def toString = {
       val lines = elements.map {
@@ -27,12 +24,7 @@ object model {
 
   case class Meta(ns: String, attr: String, kind: String, tpe: String, value: Any) extends Element
 
-//  trait Meta1
-//  trait Eid extends Meta1
-
-  //  case class Meta(ns: String, attr: String, kind: String, tpe: String, v: Any, tx: String) extends Element
   case object EmptyElement extends Element
-  //  case class SubComponent(ns: String, parentEid: Long) extends Element
 
 
   sealed trait Value
@@ -48,7 +40,6 @@ object model {
   case class Fn(name: String) extends Value
 
   case object Qm extends Value
-//  case object QmR extends Value
 
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value
@@ -86,7 +77,6 @@ object model {
     case Group(Bond(ns, _, _), _) => ns
     case Meta(ns, _, _, _, _)     => ns
     case unexpected               => sys.error("[model:curNs] Unexpected element: " + unexpected)
-    //    case SubComponent(ns, _)      => ns
   }
 
 
