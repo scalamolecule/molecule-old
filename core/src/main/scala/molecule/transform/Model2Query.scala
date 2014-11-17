@@ -74,8 +74,11 @@ object Model2Query {
         //        case Bond(ns, refAttr, refNs) if ns.head.isUpper => q.ref(v, ns, refAttr, e, refNs)
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        //        case Group(ref, elements) => q
-        //        case Group(ref, elements) => elements.resolve(q, e, v)
+        case Meta(_, _, "a", _, _) => q
+          .find(v2)
+          .copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW("?", v), NoVal, Empty)))
+          .ident(v, v1)
+          .func(".toString ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
 
         case Meta(ns, attr, kind, tpe, value) => value match {
           case EntValue => q.find(e)

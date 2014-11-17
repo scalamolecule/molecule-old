@@ -32,18 +32,13 @@ object query {
   trait QueryTerm extends QueryExpr
   case object Empty extends QueryTerm
 
-  trait Output extends QueryExpr //{val tpeS: String}
-  // todo
-//  case class AggrExpr(fn: String, args: Seq[String], v: Var) extends Output
+  trait Output extends QueryExpr
   case class AggrExpr(fn: String, args: Seq[String], v: Var) extends Output
 
   case class KW(ns: String, attr: String, refNs: String = "") extends QueryTerm
 
   sealed trait QueryValue extends QueryTerm
 
-  // todo: can we skip tpeS ?
-//  case class Var(v: String, tpeS: String) extends QueryValue with Output
-//  case class Val(v: Any, tpeS: String) extends QueryValue
   case class Var(v: String) extends QueryValue with Output
   case class Val(v: Any) extends QueryValue
   case class Dummy(v: Any) extends QueryValue

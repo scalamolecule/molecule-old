@@ -82,7 +82,6 @@ class QueryTour extends DayOfAtomicSpec {
       17592186045433L, 17592186045435L, 17592186045437L, 17592186045439L,
       17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L)
 
-
     // 3. Finding All Users with a first name
     User.e.firstName_.get === List(stu, ed)
 
@@ -100,7 +99,6 @@ class QueryTour extends DayOfAtomicSpec {
       (c7, "blah 7", "ed"),
       (c11, "blah 11", "ed")
     )
-
 
     // 6. Returning an Aggregate of Comments of some Author
     Comment.e(count).Author.email_("editor@example").get.head === 5
@@ -120,33 +118,31 @@ class QueryTour extends DayOfAtomicSpec {
 
     // 8. A Schema Query
 
-
-    // Attributes of entities having comments
-    Parent.a.Comments.debug
+    // Attributes of all entities having comments
     Parent.a.Comments.get.sorted === List(
       ":comment/author",
       ":comment/text",
-      ":comment/tree_",
-      ":parent/comment",
+      ":parent/comments",
       ":story/title",
       ":story/url"
     )
 
     // Attributes of stories having comments
-    //    Story.a.Comments.text_.get === List(
-    //      ":story/title",
-    //      ":story/url"
-    //    )
-    //
-    //    // Attributes of comments having a sub-comment
-    //    Comment.a.Comment.text_.get === List(
-    //      ":comment/text",
-    //      ":comment/author",
-    //      ":comment/tree_"
-    //    )
-    //
-    //
-    //          // Entities ...................................
+    Parent(Story.a.title_).Comments.get.sorted === List(
+      ":parent/comments",
+      ":story/title",
+      ":story/url"
+    )
+
+    // Attributes of comments having a sub-comment
+    Parent(Comment.a.text_).Comments.get.sorted === List(
+      ":comment/author",
+      ":comment/text",
+      ":parent/comments"
+    )
+
+
+              // Entities ...................................
     //
     //          // 9-11. Finding an entity ID - An implicit Entity
     //          // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`

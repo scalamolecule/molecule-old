@@ -9,6 +9,7 @@ case class Query2String(q: Query) {
     case With(variables)              => if (variables.isEmpty) "" else ":with " + (variables map s mkString " ")
     case in@In(_, _, _)               => mkIn(in, false)
     case Where(clauses)               => ":where " + (clauses map p mkString " ")
+    case KW("?", attr, _)             => s"?$attr"
     case KW(ns, attr, _)              => s":$ns/$attr"
     case AggrExpr(fn, args, v)        => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
     case Var("?")                     => "?"
