@@ -14,12 +14,10 @@ trait Molecule extends DatomicFacade {
    val _model: Model
    val _query: Query
 
-  override def toString: String = _query.toList
-//  def p = _query.pretty
-//  def ids: Seq[Long]
-//  def size: Int = ids.size
-  
   protected type lObj = java.util.List[Object]
+
+  override def toString: String = _query.toList
+
   protected def asOf_   [M <: Molecule](thisMolecule: M, d: Date)    = { dbOp = AsOf(txDate(d)); thisMolecule }
   protected def asOf_   [M <: Molecule](thisMolecule: M, l: Long)    = { dbOp = AsOf(txLong(l)); thisMolecule }
   protected def asOf_   [M <: Molecule](thisMolecule: M, t: lObj)    = { dbOp = AsOf(txlObj(t)); thisMolecule }

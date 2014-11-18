@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 14, 13, true)
+  val x = Debug("Dsl2Model", 12, 11, false)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -29,7 +29,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case q"$prev.$ns.apply($id)" if ns.toString.head.isUpper =>
       //      x(13, prev, ns, id, showRaw(q"$id"))
-      traverse(q"$prev", Meta(firstLow(ns), "", "e", "Long", extract(id)))
+      traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(id)))))
 
     case q"$prev.$cur.$op(..$values)" =>
       traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
@@ -67,12 +67,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case Bond(ns, attr, _)              => (ns, attr, "")
       case Group(Bond(ns, attr, _), _)    => (ns, attr, "")
     } getOrElse(prev.name, "", "")
+
     val meta1 = kind match {
-      case "e" => Meta(ns1, attr1, "e", "Long", EntValue)
-      // todo
-      case "a"  => Meta(ns1, attr1, "a", "Long", EntValue)
-      case "v"  => Meta(ns1, attr1, "v", "Long", EntValue)
-      case "ns" => Meta(ns1, attr1, "ns", "Long", EntValue)
+      case "e"  => Meta(ns1, attr1, "e", EntValue)
+      case "a"  => Meta(ns1, attr1, "a", EntValue)
+      case "v"  => Meta(ns1, attr1, "v", EntValue)
+      case "ns" => Meta(ns1, attr1, "ns", EntValue)
     }
     x(10, prev, kind, ns1, attr1, value1, meta1)
     meta1
@@ -85,7 +85,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val values = getValues(attr, values0)
     x(11, curTree, attr, op, values0, values)
 
-    val modelValue = op.toString() match {
+    val modelValue: Value = op.toString() match {
       case "apply"    => values match {
         case resolved: Value => resolved
         case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
@@ -128,14 +128,18 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     )
     val cur = curTree.toString
     previous match {
-      case prev if cur.head.isUpper          => x(1, prev, curTree); Atom(attr.name, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev if cur == "e" && prev.isRef  => x(3, prev, curTree); Meta(prev.name, prev.refNext, "e", attr.tpeS, modelValue)
-      case prev if cur == "e" && prev.isAttr => x(2, prev, curTree); Atom(prev.ns, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev if cur == "e" && attr.isAttr => x(4, prev, curTree); Atom(prev.name, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev if cur == "e"                => x(5, prev, curTree); Atom(prev.name, cur, "Int", attr.card, modelValue, enumPrefix)
-      case prev if attr.isAttr               => x(6, prev, curTree); Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev if prev.isAttr               => x(7, prev, curTree); Atom(prev.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev                              => x(8, prev, curTree); Atom(attr.name, cur, "Int", attr.card, modelValue, enumPrefix)
+      case prev if cur.head.isUpper          => x(1, prev, cur, curTree, modelValue); Atom(attr.name, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if cur == "e" && prev.isRef  => x(2, prev, op, cur, curTree, modelValue); Meta(prev.name, prev.refNext, "e", modelValue)
+      case prev if cur == "e" && prev.isAttr => x(3, prev, curTree); Atom(prev.ns, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if cur == "e"                => x(4, prev, op, cur, curTree); Atom(prev.name, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if attr.isAttr               => x(5, prev, curTree, modelValue); Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if prev.isAttr               => x(6, prev, curTree, modelValue); Atom(prev.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev                              => x(7, prev, curTree, modelValue); Atom(attr.name, cur, "Int", attr.card, modelValue, enumPrefix)
+
+      //      case prev if cur == "e" && prev.isAttr => x(5, prev, curTree, modelValue); Meta(prev.name, attr.name, "e", modelValue)
+      //      case prev if cur == "e" && attr.isAttr => x(6, prev, curTree, modelValue); Meta(prev.name, attr.name, "e", modelValue)
+      //      case prev if cur == "e" && prev.isAttr => x(7, prev, curTree, modelValue); Meta(prev.name, "", "e", modelValue)
+      //      case prev if cur == "e"                => x(8, prev, curTree, modelValue); Meta(prev.name, "", "e", modelValue)
     }
   }
 
@@ -197,7 +201,7 @@ object Dsl2Model {
     model1.elements.collectFirst {
       case a: Atom => a
       case b: Bond => b
-//      case m: Meta => m
+      //      case m: Meta => m
     } getOrElse
       c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$model1")
 

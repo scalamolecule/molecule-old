@@ -13,8 +13,10 @@ case class Query2String(q: Query) {
     case KW(ns, attr, _)              => s":$ns/$attr"
     case AggrExpr(fn, args, v)        => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
     case Var("?")                     => "?"
+    case Var(eid) if eid.length > 3   => eid
     case Var(v)                       => "?" + v
     case Val(v: Int)                  => v.toString
+    case Val(v: Long)                 => v.toString
     case Val(v)                       => "\"" + v + "\""
     case Dummy(_)                     => "_"
     case NoVal                        => ""

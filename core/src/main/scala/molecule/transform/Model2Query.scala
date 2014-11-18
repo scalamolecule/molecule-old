@@ -6,7 +6,7 @@ import molecule.ops.QueryOps._
 import molecule.util.Debug
 
 object Model2Query {
-  val x = Debug("Model2Query", 1, 60, false)
+  val x = Debug("Model2Query", 4, 60, false)
 
   def apply(model: Model): Query = {
 
@@ -16,7 +16,7 @@ object Model2Query {
         case Atom(_, _, _, _, Replace(_), _) => q
         case Atom(_, _, _, _, Remove(_), _)  => q
 
-        case a0@Atom(ns, attr0, tpe, card, value, enumPrefix) if attr0.last == '_' => {
+        case a0@Atom(_, attr0, _, card, value, enumPrefix) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
           val (isEnum, prefix) = if (enumPrefix.isDefined) (true, enumPrefix.get) else (false, "")
           (card, value) match {
@@ -42,7 +42,7 @@ object Model2Query {
           }
         }
 
-        case a0@Atom(ns, attr, tpe, card, value, enumPrefix) => {
+        case a0@Atom(_, _, _, card, value, enumPrefix) => {
           val a = a0
           val (isEnum, prefix) = if (enumPrefix.isDefined) (true, enumPrefix.get) else (false, "")
           (card, value) match {
@@ -71,19 +71,17 @@ object Model2Query {
           }
         }
 
-        //        case Bond(ns, refAttr, refNs) if ns.head.isUpper => q.ref(v, ns, refAttr, e, refNs)
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Meta(_, _, "a", _, _) => q
+        case Meta(_, _, "e", value) => value match {
+          case EntValue => q.find(e)
+          case _        => q
+        }
+        case Meta(_, _, "a", _)     => q
           .find(v2)
           .copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW("?", v), NoVal, Empty)))
           .ident(v, v1)
           .func(".toString ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
-
-        case Meta(ns, attr, kind, tpe, value) => value match {
-          case EntValue => q.find(e)
-          case _        => q
-        }
 
         case unresolved => sys.error("[Model2Query] Unresolved model: " + unresolved)
       }
@@ -92,6 +90,7 @@ object Model2Query {
     def make(query: Query, element: Element, e: String, v: String, prevNs: String, prevAttr: String, prevRefNs: String): (Query, String, String, String, String, String) = {
       val w = (v.toCharArray.head + 1).toChar.toString
       element match {
+//        case Atom(ns, "e", _, _, Eq(Seq(id: Long)), _)     => (resolve(query, e, w, element), e, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _) if ns == prevNs    => (resolve(query, e, w, element), e, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _) if ns == prevAttr  => (resolve(query, v, w, element), v, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, attr, "")
@@ -102,68 +101,23 @@ object Model2Query {
         case Bond(ns, refAttr, refNs) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
         case Bond(ns, refAttr, refNs)                    => (resolve(query, e, v, element), e, v, ns, refAttr, refNs)
 
+//        case Meta(ns, "e_", "e", Eq(Seq(id: Long)))   => x(1, element); (resolve(query, id.toString, v, element), id.toString, v, ns, "e_", "")
+        case Meta(ns, attr, "e", Eq(Seq(id: Long)))   => x(2, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
+        case Meta(ns, attr, _, _)                     => x(3, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+
         case Group(Bond(ns, refAttr, refNs), elements) =>
-          //          val (bond, nested) = (elements.head, elements.tail)
-          //          nested.foldLeft(make(query, bond, e, v, prevNs, prevAttr, prevRefNs)) { case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
-          //          elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) { case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
           val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
             case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
               make(query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)
           }
           (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
 
-        case Meta(ns, attr, kind, tpe, value) => (resolve(query, e, v, element), e, v, ns, attr, "")
-
         case other => sys.error("[Model2Query] Unresolved query variables from model: " +(other, e, v, prevNs, prevAttr, prevRefNs))
-        //        case other                                         => (e, v, prevNs, prevAttr, prevRefNs)
       }
     }
 
     model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query, e, v, prevNs, prevAttr, prevRefNs), element) =>
-      //      val w = (v.toCharArray.head + 1).toChar.toString
-      //      val (e1, v1, ns1, attr1, refNs1) = element match {
-      //        case Atom(ns, attr, _, _, _, _) if ns == prevNs    => (e, w, ns, attr, "")
-      //        case Atom(ns, attr, _, _, _, _) if ns == prevAttr  => (v, w, ns, attr, "")
-      //        case Atom(ns, attr, _, _, _, _) if ns == prevRefNs => (v, w, ns, attr, "")
-      //        case Atom(ns, attr, _, _, _, _)                    => (e, v, ns, attr, "")
-      //
-      //        case Bond(ns, refAttr, refNs) if ns == prevNs    => (e, w, ns, refAttr, refNs)
-      //        case Bond(ns, refAttr, refNs) if ns == prevAttr  => (v, w, ns, refAttr, refNs)
-      //        case Bond(ns, refAttr, refNs) if ns == prevRefNs => (v, w, ns, refAttr, refNs)
-      //        case Bond(ns, refAttr, refNs)                    => (e, v, ns, refAttr, refNs)
-      //
-      ////        case Group(Bond(ns, refAttr, refNs), _) if ns == prevNs    => x(1, ns, refAttr, refNs); (e, w, ns, refAttr, refNs)
-      ////        case Group(Bond(ns, refAttr, refNs), _) if ns == prevAttr  => x(2, ns, refAttr, refNs); (v, w, ns, refAttr, refNs)
-      ////        case Group(Bond(ns, refAttr, refNs), _) if ns == prevRefNs => x(3, ns, refAttr, refNs); (v, w, ns, refAttr, refNs)
-      ////        case Group(Bond(ns, refAttr, refNs), _)                    => x(4, ns, refAttr, refNs); (e, v, ns, refAttr, refNs)
-      //        case Group(Bond(ns, refAttr, refNs), elements)                    =>
-      //
-      //
-      //          (e, v, ns, refAttr, refNs)
-      //
-      //        case Meta(ns, attr, kind, tpe, value) => (e, v, ns, attr, "")
-      //
-      //        case other => sys.error("[Model2Query] Unresolved query variables from model: " +(other, e, v, prevNs, prevAttr, prevRefNs))
-      //        //        case other                                         => (e, v, prevNs, prevAttr, prevRefNs)
-      //      }
-      //
-      //
-      //      val query1 = resolve(query, e1, v1, element)
-      //      (query1, e1, v1, ns1, attr1, refNs1)
-
       make(query, element, e, v, prevNs, prevAttr, prevRefNs)
-
     }._1
   }
 }
-
-
-//        case Atom(ns, attr, _, _, _, _) if ns == prevNs    => x(1, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Atom] $a :$ns/$attr $c"); (a, c, ns, attr, "")
-//        case Atom(ns, attr, _, _, _, _) if ns == prevAttr  => x(2, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Atom] $b :$ns/$attr $c"); (b, c, ns, attr, "")
-//        case Atom(ns, attr, _, _, _, _) if ns == prevRefNs => x(3, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Atom] $b :$ns/$attr $c"); (b, c, ns, attr, "")
-//        case Atom(ns, attr, _, _, _, _)                    => x(6, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Atom] $a :$ns/$attr $b"); (a, b, ns, attr, "")
-//        case Bond(ns, refAttr, refNs) if ns == prevNs      => x(4, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Bond] $a :$ns/$refAttr($refNs) $c"); (a, c, ns, refAttr, refNs)
-//        case Bond(ns, refAttr, refNs) if ns == prevAttr    => x(4, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Bond] $b :$ns/$refAttr($refNs) $c"); (b, c, ns, refAttr, refNs)
-//        case Bond(ns, refAttr, refNs) if ns == prevRefNs   => x(4, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Bond] $b :$ns/$refAttr($refNs) $c"); (b, c, ns, refAttr, refNs)
-//        case Bond(ns, refAttr, refNs)                      => x(5, s"[Prev] $a :$prevNs/$prevAttr($prevRefNs) $b", s"[Bond] $a :$ns/$refAttr($refNs) $b"); (a, b, ns, refAttr, refNs)
-//        case z                                             => x(33, z); (a, b, prevNs, prevAttr, prevRefNs)

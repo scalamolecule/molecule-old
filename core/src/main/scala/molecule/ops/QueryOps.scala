@@ -25,6 +25,9 @@ object QueryOps {
     def in(v: String, a: Atom, enumPrefix: Option[String] = None, e: String = ""): Query =
       q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(a.ns, a.name), enumPrefix, e)))
 
+    def placeholder(v: String, a: Atom, enumPrefix: Option[String] = None, e: String = ""): Query =
+      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(a.ns, a.name), enumPrefix, e)))
+
 
     // Where ..........................................
 

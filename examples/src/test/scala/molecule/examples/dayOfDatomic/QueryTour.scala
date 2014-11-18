@@ -1,5 +1,6 @@
 package molecule
 package examples.dayOfDatomic
+import molecule.ast.model._
 import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic.schema._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
@@ -34,15 +35,14 @@ class QueryTour extends DayOfAtomicSpec {
 
     // Add Users
     val List(stu, ed) = User.firstName.lastName.email insert List(
-      ("stu", "Halloway", "stuarthalloway@datomic.com"),
-      ("ed", "Itor", "editor@example")
+      ("Stu", "Halloway", "stuarthalloway@datomic.com"),
+      ("Ed", "Itor", "editor@example.com")
     ) ids
 
     // Add comments
     // Input Molecule act as a template to insert data
     //  val addComment0 = Parent.e.Comments.author.text.debug
     val addComment = Parent.e.Comments.author.text.insert
-    //    Parent.e.Comments.author.text.debug
 
     // Insert Stu's first comment to story 1 and return the id of this comment
     // (Parent s1 is a Story)
@@ -51,7 +51,6 @@ class QueryTour extends DayOfAtomicSpec {
     // Ed's Comment to Stu's first Comment
     // (Parent c1 is a Comment)
     val c2 = addComment(c1, ed, "blah 2") id
-
     // More sub-comments
     val c3 = addComment(c2, stu, "blah 3") id
     val c4 = addComment(c3, ed, "blah 4") id
@@ -77,7 +76,9 @@ class QueryTour extends DayOfAtomicSpec {
     // Created entity ids are simply Long values
     (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
     (stu, ed) ===(17592186045422L, 17592186045423L)
-    (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
+    (c1, c2, c3, c4,
+      c5, c6, c7, c8,
+      c9, c10, c11, c12) ===(
       17592186045425L, 17592186045427L, 17592186045429L, 17592186045431L,
       17592186045433L, 17592186045435L, 17592186045437L, 17592186045439L,
       17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L)
@@ -86,25 +87,25 @@ class QueryTour extends DayOfAtomicSpec {
     User.e.firstName_.get === List(stu, ed)
 
     // 4. Finding a specific user
-    User.e.email_("editor@example").get.head === ed
+    User.e.email_("editor@example.com").get.head === ed
 
     // 5. Finding a User's Comments
-    Comment.e.Author.email_("editor@example").get.sorted === List(c2, c4, c5, c7, c11)
+    Comment.e.Author.email_("editor@example.com").get.sorted === List(c2, c4, c5, c7, c11)
     Comment.e.Author.email_("stuarthalloway@datomic.com").get.sorted === List(c1, c3, c6, c8, c9, c10, c12)
 
-    Comment.e.text.Author.email_("editor@example").firstName.get.sorted === List(
-      (c2, "blah 2", "ed"),
-      (c4, "blah 4", "ed"),
-      (c5, "blah 5", "ed"),
-      (c7, "blah 7", "ed"),
-      (c11, "blah 11", "ed")
+    Comment.e.text.Author.email_("editor@example.com").firstName.get.sorted === List(
+      (c2, "blah 2", "Ed"),
+      (c4, "blah 4", "Ed"),
+      (c5, "blah 5", "Ed"),
+      (c7, "blah 7", "Ed"),
+      (c11, "blah 11", "Ed")
     )
 
     // 6. Returning an Aggregate of Comments of some Author
-    Comment.e(count).Author.email_("editor@example").get.head === 5
+    Comment.e.apply(count).Author.email_("editor@example.com").get.head === 5
 
     // Or we could simply read the size of the (un-aggregated) result (todo: measure performance differences)
-    Comment.e.Author.email("editor@example").get.size === 5
+    Comment.e.Author.email("editor@example.com").get.size === 5
 
 
     // 7. Have people commented on other people? (Multiple joins)
@@ -142,44 +143,52 @@ class QueryTour extends DayOfAtomicSpec {
     )
 
 
-              // Entities ...................................
-    //
-    //          // 9-11. Finding an entity ID - An implicit Entity
-    //          // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
-    //          val editor = User.e.email_("editor@example.com").get.head
-    //
-    //          // 12. Requesting an Attribute value
-    //          editor(":user/firstName") === Some("Edward")
-    //          // this one ??
-    //          User(editor).firstName.first === "Edward"
-    //
-    //          // 13. Touching an entity
-    //          // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-    //          editor.touch === Map(
-    //            ":db/id" -> 17592186045423L,
-    //            ":user/firstName" -> "Edward",
-    //            ":user/lastName" -> "Itor",
-    //            ":user/email" -> "editor@example.com"
-    //          )
-    //
-    //          // 14. Navigating backwards
-    //          // The editors comments (Comments pointing to the Editor entity)
-    //          editor(":comment/_author") === List(c2, c4, c5, c7, c11)
-    //
-    //          // .. almost same as: (here, only matching data is returned)
-    //          // Comments of editor
-    //          Comment.e.author_(editor).get === List(c2, c4, c5, c7, c11)
-    //
-    //          // 15. Navigating Deeper
-    //          // The editors comments' comments
-    //          editor(":comment/_author")(":comment/tree_") === List(c6, c8, c12)
-    //          Comment.author_(editor).Comment.e.get === List(c6, c8, c12)
-    //
-    //          // Comments that Editor commented on
-    //          Comment.e.Comment.author_(editor).get === List(c6, c8, c12)
-    //
-    //
-    //          // Time travel ....................................
+    // Entities ...................................
+
+    // 9-11. Finding an entity ID - An implicit Entity
+    // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
+    val editor: Long = User.e.email_("editor@example.com").get.head
+
+    // 12. Requesting an Attribute value
+    //    editor(":user/firstName") === Some("Ed")
+
+    // Or as query
+    User(editor).firstName.get.head === "Ed"
+
+
+    // 13. Touching an entity
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+    editor.touch === Map(
+      ":db/id" -> 17592186045423L,
+      ":user/email" -> "editor@example.com",
+      ":user/firstName" -> "Ed",
+      ":user/lastName" -> "Itor"
+    )
+
+    // 14. Navigating backwards
+    // The editors comments (Comments pointing to the Editor entity)
+    editor(":comment/_author") === Some(List(c2, c4, c5, c7, c11))
+
+    // .. almost same as: (here, only matching data is returned)
+    // Comments of editor
+    Comment.e.author_(editor).get.sorted === List(c2, c4, c5, c7, c11)
+
+    // 15. Navigating Deeper
+    // Comments to the editors comments
+    editor(":comment/_author").get.asInstanceOf[List[Long]]
+      .flatMap(_(":parent/comments")).asInstanceOf[List[Map[String, Any]]]
+      .map(_.head._2) === List(c3, c6, c8, c12)
+
+    // .. or use `for` loop
+    (for {
+      editorComment <- editor(":comment/_author").get.asInstanceOf[List[Long]]
+      editorCommentComment <- editorComment(":parent/comments").asInstanceOf[Option[Map[String, Any]]]
+    } yield editorCommentComment.head._2) === List(c3, c6, c8, c12)
+
+    // .. or make query
+    Parent(Comment.author_(editor)).comments.get.sorted === List(c3, c6, c8, c12)
+
+    // Time travel ....................................
     //
     //          // 16. Querying for a Transaction
     //          val tx = User(ed).firstName_.txInstant
@@ -252,7 +261,7 @@ class QueryTour extends DayOfAtomicSpec {
     //          // Cardinality many attribute upVotes might return an empty set
     //          User.email.upVotes.get === List(
     //            ("stuarthalloway@datomic.com", Set(s1)),
-    //            ("editor@example", Set()),
+    //            ("editor@example.com", Set()),
     //            ("john@example.com", Set())
     //          )
     //
@@ -290,3 +299,15 @@ class QueryTour extends DayOfAtomicSpec {
   }
 
 }
+
+
+    //    import datomic.Peer
+    //    import scala.collection.JavaConversions._
+    //    import scala.collection.JavaConverters._
+    //
+    //      Peer.q(
+    //        """
+    //          |[:find ?a
+    //          | :where
+    //          |   [?a :comment/author 17592186045423]]
+    //        """.stripMargin, conn.db).map(_.get(0)) === 7

@@ -14,7 +14,8 @@ trait SocialNewsDefinition {
   }
 
   trait Parent {
-    val comments = many[Comment].subComponents
+    val comment = one[Comment].subComponent
+//    val comments = many[Comment].subComponents
   }
 
   trait Comment {

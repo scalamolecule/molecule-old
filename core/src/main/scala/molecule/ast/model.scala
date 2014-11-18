@@ -22,7 +22,7 @@ object model {
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
-  case class Meta(ns: String, attr: String, kind: String, tpe: String, value: Any) extends Element
+  case class Meta(ns: String, attr: String, kind: String, value: Value) extends Element
 
   case object EmptyElement extends Element
 
@@ -75,7 +75,7 @@ object model {
     case Atom(ns, _, _, _, _, _)  => ns
     case Bond(ns, _, _)           => ns
     case Group(Bond(ns, _, _), _) => ns
-    case Meta(ns, _, _, _, _)     => ns
+    case Meta(ns, _, _, _)     => ns
     case unexpected               => sys.error("[model:curNs] Unexpected element: " + unexpected)
   }
 

@@ -18,6 +18,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   def mkUUID(uuid: UUID) = q"java.util.UUID.fromString(${uuid.toString})"
   def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
+
   implicit val liftAny = Liftable[Any] {
     case Literal(Constant(s: String))  => q"$s"
     case Literal(Constant(i: Int))     => q"$i"
@@ -38,11 +39,16 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
     case Fn(value)                     => q"Fn($value)"
-//    case Eq(value)                     => q"Eq($value)"
-    case other                         => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
+//    case Eq(values)                    => {
+//      val vs = values map { case q"$v" => v}
+//      q"Eq(Seq(..$vs))"
+//    }
+    //    case Eq(values)                    => q"Eq(Seq(..$values))"
+    case other => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
   }
+//    implicit val liftSeqAny = Liftable[Seq[Any]] { vs => q"Seq(..$vs)"}
 
-//  implicit val liftEq = Liftable[Eq] { Eq => q"Eq(Seq(..${Eq.values}))"}
+//  implicit val liftEq = Liftable[Eq] { eeq => q"Eq(Seq(..${eeq.values}))"}
 
 
   implicit val liftTuple2 = Liftable[Product] {
@@ -135,8 +141,6 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   // Liftables for Model --------------------------------------------------------------
 
   implicit val liftTerm = Liftable[Value] {
-    //    case NoValue          => q"NoValue"
-    //    case Blank            => q"Blank"
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
     case BackValue(value) => q"BackValue($value)"
@@ -145,7 +149,6 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Lt(value)        => q"Lt($value)"
     case Fn(value)        => q"Fn($value)"
     case Qm               => q"Qm"
-    //    case QmR              => q"QmR"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
     case Replace(values)  => q"Replace($values)"
     case Remove(values)   => q"Remove(Seq(..$values))"
@@ -153,11 +156,11 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   implicit val liftAtom  = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix})"}
   implicit val liftBond  = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
+  implicit val liftMeta  = Liftable[Meta] { a => q"Meta(${a.ns}, ${a.attr}, ${a.kind}, ${a.value})"}
   implicit val liftGroup = Liftable[Group] { g =>
     val es = g.elements map { case q"$e" => e}
     q"Group(${g.ref}, Seq(..$es))"
   }
-  implicit val liftMeta  = Liftable[Meta] { a => q"Meta(${a.ns}, ${a.attr}, ${a.kind}, ${a.tpe}, ${a.value})"}
   //  implicit val liftEmptyElement = Liftable[EmptyElement] { a => q"EmptyElement"}
   //  implicit val liftSubComponent = Liftable[SubComponent] { b => q"SubComponent(${b.ns}, ${b.parentEid})"}
 
@@ -167,20 +170,17 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
       case b: Bond  => q"$b"
       case g: Group => q"$g"
       case m: Meta  => q"$m"
-      //      case m: EmptyElement => q"$m"
     }
     q"Seq(..$es)"
   }
-  //      case n: SubComponent => q"$n"
 
   implicit val liftElement = Liftable[Element] {
     case Atom(ns, name, tpeS, card, value, enumPrefix) => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix)"
     case Bond(ns, refAttr, refNs)                      => q"Bond($ns, $refAttr, $refNs)"
     case Group(ref, elements)                          => q"Group($ref, $elements)"
-    case Meta(ns, attr, kind, tpe, value)              => q"Meta($ns, $attr, $kind, $tpe, $value)"
+    case Meta(ns, attr, kind, value)                   => q"Meta($ns, $attr, $kind, $value)"
     case EmptyElement                                  => q"EmptyElement"
   }
-  //    case SubComponent(ns, parentEid)                   => q"SubComponent($ns, $parentEid)"
 
   implicit val liftModel = Liftable[Model] { model => q"Model(Seq(..${model.elements}))"}
 }

@@ -6,7 +6,6 @@ import molecule.ast.model._
 import molecule.ast.transaction._
 import molecule.util.Debug
 import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
 
 
 //case class Model2Transaction(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()) extends DatomicFacade {
@@ -26,8 +25,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
     val (_, _, _, stmts2) = model.elements.foldLeft('_: Any, '_, '_, Seq[Statement]()) { case ((e, a, v, stmts), element) =>
       (e, a, v, element) match {
-        case ('_, '_, '_, Meta(ns, "", "e", "Long", EntValue)) => ('arg, '_, '_, stmts)
-        case ('_, '_, '_, Meta(ns, "", "e", "Long", id: Long)) => (Eid(id), '_, '_, stmts)
+        case ('_, '_, '_, Meta(ns, "", "e", EntValue))          => ('arg, '_, '_, stmts)
+        case ('_, '_, '_, Meta(ns, "", "e", Eq(Seq(id: Long)))) => (Eid(id), '_, '_, stmts)
 
         case (Eid(id), '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix)) => ('e, '_, '_, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
         case (Eid(id), '_, '_, Atom(ns, name, _, _, value, prefix))           => ('e, '_, '_, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
@@ -237,7 +236,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       }
 
 
-      case Meta(ns, _, _, _, EntValue) => stmts //++ add(ns, attr, None, Some(e))
+      case Meta(ns, _, _, EntValue) => stmts //++ add(ns, attr, None, Some(e))
 
       case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
     }
