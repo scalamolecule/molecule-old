@@ -34,6 +34,10 @@ trait MacroHelpers[Ctx <: Context] {
     abort(s"$msg:\n$tree \n$stack")
   }
 
+  implicit class Regex(sc: StringContext) {
+    def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
+  }
+
   protected case class Debug(clazz: String, threshold: Int, max: Int = 9999, debug: Boolean = false) {
 
     def apply(id: Int, params: Any*): Unit = {

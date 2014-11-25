@@ -18,8 +18,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   def mkUUID(uuid: UUID) = q"java.util.UUID.fromString(${uuid.toString})"
   def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
-
   implicit val liftAny = Liftable[Any] {
+    case Literal(Constant(s: String))  => q"$s"
     case Literal(Constant(s: String))  => q"$s"
     case Literal(Constant(i: Int))     => q"$i"
     case Literal(Constant(l: Long))    => q"$l"
@@ -39,17 +39,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
     case Fn(value)                     => q"Fn($value)"
-    //    case Eq(values)                    => {
-    //      val vs = values map { case q"$v" => v}
-    //      q"Eq(Seq(..$vs))"
-    //    }
-    //    case Eq(values)                    => q"Eq(Seq(..$values))"
-    case other => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
+    case other                         => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
   }
-  //    implicit val liftSeqAny = Liftable[Seq[Any]] { vs => q"Seq(..$vs)"}
-
-  //  implicit val liftEq = Liftable[Eq] { eeq => q"Eq(Seq(..${eeq.values}))"}
-
 
   implicit val liftTuple2 = Liftable[Product] {
     case (k: String, v: String) => q"($k, $v)"
@@ -88,6 +79,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftQueryTerm = Liftable[QueryTerm] {
     case KW(ns, attr, refNs) => q"KW($ns, $attr, $refNs)"
     case Empty               => q"Empty"
+    case NoBinding           => q"NoBinding"
     case Var(sym)            => q"Var($sym)"
     case Val(v)              => q"Val($v)"
     case DS(name)            => q"DS($name)"
@@ -111,7 +103,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftDataClause = Liftable[DataClause] { cl =>
-    q"DataClause(${cl.ds}, ${cl.e}, ${cl.a}, ${cl.v}, ${cl.tx})"
+    q"DataClause(${cl.ds}, ${cl.e}, ${cl.a}, ${cl.v}, ${cl.tx}, ${cl.op})"
   }
 
   implicit val liftRule = Liftable[Rule] { rd =>
@@ -125,10 +117,10 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftClause = Liftable[Clause] {
-    case DataClause(ds, entity, attr, value, tx) => q"DataClause($ds, $entity, $attr, $value, $tx)"
-    case RuleInvocation(name, args)              => q"RuleInvocation($name, Seq(..$args))"
-    case Predicate(name, args)                   => q"Predicate($name, Seq(..$args))"
-    case Funct(name, ins, outs)                  => q"Funct($name, Seq(..$ins), $outs)"
+    case DataClause(ds, e, a, v, tx, op) => q"DataClause($ds, $e, $a, $v, $tx, $op)"
+    case RuleInvocation(name, args)      => q"RuleInvocation($name, Seq(..$args))"
+    case Predicate(name, args)           => q"Predicate($name, Seq(..$args))"
+    case Funct(name, ins, outs)          => q"Funct($name, Seq(..$ins), $outs)"
   }
 
   implicit val liftIn    = Liftable[In] { in => q"In(Seq(..${in.inputs}), Seq(..${in.rules}), Seq(..${in.ds}))"}
@@ -150,6 +142,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftValue = Liftable[Value] {
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
+    case NoValue          => q"NoValue"
     case TxValue          => q"TxValue"
     case TxTValue         => q"TxTValue"
     case TxInstantValue   => q"TxInstantValue"

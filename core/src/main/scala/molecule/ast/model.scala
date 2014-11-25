@@ -31,6 +31,8 @@ object model {
 
   case object EntValue extends Value
   case object VarValue extends Value
+//  case object NoValue extends Value
+  case object NoValue extends Value
   case class BackValue(backNs: String) extends Value
   case object EnumVal extends Value
 

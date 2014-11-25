@@ -21,20 +21,16 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case ((es, last), e)                                      => (es :+ e, e)
     }._1)
 
-    implicit class Regex(sc: StringContext) {
-      def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
-    }
-    val p = dsl.tree.pos
-    val dslTailCode = p.source.lineToString(p.line - 1).substring(p.column)
-    val checkCorrectModel = dslTailCode match {
-      // todo: lift into quasiquotes and check against resolved `model`
-      case r".*[\.|\s]*add.*"    => "check add..."
-      case r".*[\.|\s]*insert.*" => "check insert..."
-      case r".*[\.|\s]*update.*" => "check update..."
-      case _                     => "other..."
-    }
-
-    //    x(30, dsl.tree, model0, checkCorrectModel)
+    //    val p = dsl.tree.pos
+    //    val dslTailCode = p.source.lineToString(p.line - 1).substring(p.column)
+    //    val checkCorrectModel = dslTailCode match {
+    //      // todo: lift into quasiquotes and check against resolved `model`
+    //      case r".*[\.|\s]*add.*"    => "check add..."
+    //      case r".*[\.|\s]*insert.*" => "check insert..."
+    //      case r".*[\.|\s]*update.*" => "check update..."
+    //      case _                     => "other..."
+    //    }
+    //    x(0, dsl.tree, showRaw(dsl.tree), model0, model, checkCorrectModel)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {

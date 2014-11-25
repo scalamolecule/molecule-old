@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 12, 12, false)
+  val x = Debug("Dsl2Model", 14, 13, false)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -21,21 +21,19 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   def traverse(prev: Tree, elements: Seq[Element]): Model = Model(elements)
 
+  def kw(kwTree: Tree): (String, String) = (kwTree.toString: String) match {
+    case r""""\:(\w*)$ns0/(\w*)$attr0"""" => (ns0, attr0)
+    case otherKw                          => abort("[Dsl2Model:kw] Unrecognized attribute keyword: " + otherKw)
+  }
+
   val dslStructure: PartialFunction[Tree, Model] = {
-    case q"TermValue.apply($ns)" => resolve(ns)
-
-    case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef =>
-      abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
-
-    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper =>
-      //      x(13, prev, ns, id, showRaw(q"$id"))
-      traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(eid)))))
-
-    case q"$prev.$cur.$op(..$values)" =>
-      traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
-
-    case t@q"$prev.$refAttr" if t.isRef => //x(15, refAttr)
-      traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
+    case q"TermValue.apply($ns)"                               => resolve(ns)
+    case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
+//    case q"$prev.a.apply($kw0)"                                => traverse(q"$prev", Atom(kw(kw0)._1, kw(kw0)._2, "", 1, VarValue))
+//    case q"$prev.a_.apply($kw0)"                               => traverse(q"$prev", Atom(kw(kw0)._1, kw(kw0)._2 + "_", "", 1, NoValue))
+    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper  => traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(eid)))))
+    case q"$prev.$cur.$op(..$values)"                          => traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
+    case t@q"$prev.$refAttr" if t.isRef                        => traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
 
     case q"$prev.e"  => traverse(q"$prev", meta(prev, "e"))
     case q"$prev.a"  => traverse(q"$prev", meta(prev, "a"))
@@ -81,7 +79,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case Atom(ns, attr, _, _, value, _, _) => (ns, attr, value)
       case Bond(ns, attr, _)                 => (ns, attr, "")
       case Group(Bond(ns, attr, _), _)       => (ns, attr, "")
-    } getOrElse(prev.name, "", "")
+      //    } getOrElse(prev.name, "", "")
+    } getOrElse {
+      x(12, q"$prev", q"$prev".isAttr, prev.name, prev.ns)
+      //      if(q"$prev".isAttr)
+      (prev.name, "", "")
+    }
 
     val meta1 = kind match {
       case "e"  => Meta(ns1, attr1, "e", EntValue)
@@ -177,11 +180,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   }
 
   def extract(t: Tree) = t match {
-    case Constant(v: String)                                  => v
-    case Literal(Constant(v: String))                         => v
-    case Ident(TermName(v: String))                           => "__ident__" + v
-    case Select(This(TypeName("$anon")), TermName(v: String)) => "__ident__" + v
-    case v                                                    => v
+    case Constant(v: String)                            => v
+    case Literal(Constant(v: String))                   => v
+    case Ident(TermName(v: String))                     => "__ident__" + v
+    case Select(This(TypeName(_)), TermName(v: String)) => "__ident__" + v
+    case v                                              => v
   }
 
   def resolveValues(tree: Tree, at: att) = {

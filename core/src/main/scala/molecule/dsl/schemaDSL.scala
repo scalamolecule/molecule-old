@@ -110,20 +110,11 @@ object schemaDSL {
     def >= (in: ?) : In with Attr = ???
 
     def apply(in: ?) : In with Attr = ???
-
-    // Optional value (will return Option[T])
-    //    def apply(m: maybe): Ns with Attr = ???
   }
 
   // One-cardinality
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
-
-    //    def apply(expr: Exp1[T]): Ns = ???
-    //    def apply(values: T*): Ns = ???
-//        def apply(one: T, more: T*): Ns = ???
-        def apply(one: T, more: T*): Ns with Attr = ???
-
-//    def apply(v1: v1.type): Ns = ???
+    def apply(one: T, more: T*): Ns with Attr = ???
 
     // Request for no value!
     def apply(): Ns with Attr = ???
@@ -145,12 +136,7 @@ object schemaDSL {
   // Many-cardinality
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
     def apply(value: T*): Ns with Attr = ???
-//    def apply(one: T, more: T*): Ns = ???
-//    def apply(): Ns = ???
-
-//    def apply(values: Seq[T]): Ns = ???
     def apply(oldNew: (T, T), oldNewMore: (T, T)*): Ns with Attr = ???
-    //    def apply(h: Seq[(T, T)]): Ns = ???
     def add(value: T): Ns with Attr = ???
     def remove(values: T*): Ns with Attr = ???
   }

@@ -80,6 +80,7 @@ object Model2Query {
             case (_, EntValue)                        => q.find(e, tx)
             case (2, VarValue)                        => q.find("distinct", Seq(), v, tx).where(e, a, v, tx)
             case (_, VarValue)                        => q.find(v, tx).where(e, a, v, tx)
+            case (_, NoValue)                         => q.find(NoVal, tx).where(e, a, v, tx)
             case (_, BackValue(backNs))               => q.find(e, tx).where(v, a.ns, a.name, e, backNs, tx)
             case (2, EnumVal)                         => q.find("distinct", Seq(), v2, tx).enum(e, a, v, tx)
             case (_, EnumVal)                         => q.find(v2, tx).enum(e, a, v, tx)

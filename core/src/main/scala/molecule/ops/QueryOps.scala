@@ -20,12 +20,12 @@ object QueryOps {
     }
 
     def find(o: Output, tx: Seq[TxValues]): Query = {
-      val txVars = tx map {
-        case TxValue        => Var("tx")
-        case TxTValue       => Var("txT")
-        case TxInstantValue => Var("txInst")
-        case TxAddedValue   => Var("op")
-      }
+      val txVars = tx.flatMap {
+        case TxValue        => Seq(Var("tx"))
+        case TxTValue       => Seq(Var("txT"))
+        case TxInstantValue => Seq(Var("txInst"))
+        case TxAddedValue   => Seq(Var("tx"), Var("op"))
+      }.distinct
       o match {
         case NoVal                         => q.copy(f = Find(q.f.outputs ++ txVars))
         case _ if !q.f.outputs.contains(o) => q.copy(f = Find((q.f.outputs :+ o) ++ txVars))
@@ -49,14 +49,19 @@ object QueryOps {
       val attrClauses = if (tx.isEmpty)
         Seq(DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Empty))
       else {
-        Seq(DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Var("tx"))) ++ tx.flatMap {
-          case TxValue        => None
-          case TxTValue       => Some(DataClause(ImplDS, Var("tx"), KW("db", "txT", ""), Var("txT"), Empty))
-          case TxInstantValue => Some(DataClause(ImplDS, Var("tx"), KW("db", "txInstant", ""), Var("txInst"), Empty))
-          case TxAddedValue   => Some(DataClause(ImplDS, Var("tx"), KW("db", "txInstant", ""), Var("op"), Empty))
-        }
-      }
+        val extendedClause = if (tx.contains(TxAddedValue))
+          DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Var("tx"), Var("op"))
+        else
+          DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Var("tx"), NoBinding)
 
+        val extraClauses = tx.flatMap {
+          case TxValue        => Nil
+          case TxTValue       => Seq(Funct("datomic.Peer/toT ^Long", Seq(Var("tx")), ScalarBinding(Var("txT"))))
+          case TxInstantValue => Seq(DataClause(ImplDS, Var("tx"), KW("db", "txInstant", ""), Var("txInst"), Empty))
+          case TxAddedValue   => Nil
+        }
+        extendedClause +: extraClauses
+      }
       q.copy(wh = Where(q.wh.clauses ++ attrClauses))
     }
 

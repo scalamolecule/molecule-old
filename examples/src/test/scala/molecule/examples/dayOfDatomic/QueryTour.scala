@@ -1,23 +1,11 @@
 package molecule
-
 package examples.dayOfDatomic
+import datomic.Peer
 import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic.schema._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-import scala.language.existentials
-//import scala.language.postfixOps
-import datomic.Peer
 import org.specs2.specification.Scope
-
-//package examples.dayOfDatomic
-//import molecule.examples.dayOfDatomic.schema._
-//import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-//import datomic.Peer
-//import datomic.Util.list
-//import molecule.examples.dayOfDatomic.dsl.socialNews._
-//import scala.collection.JavaConversions._
-//import scala.language.existentials
-//import org.specs2.specification.Scope
+import scala.language.existentials
 
 class QueryTour extends DayOfAtomicSpec {
 
@@ -40,6 +28,7 @@ class QueryTour extends DayOfAtomicSpec {
       ("Stu", "Halloway", "stuarthalloway@datomic.com"),
       ("Ed", "Itor", "editor@example.com")
     ) ids
+
 
     // Add comments
     // Input Molecule act as a template to insert data
@@ -73,6 +62,7 @@ class QueryTour extends DayOfAtomicSpec {
     val c12 = addComment(c11, stu, "blah 12") id
   }
 
+
   "Query tour + Social News" in new Setup {
 
     // Created entity ids are simply Long values
@@ -85,11 +75,14 @@ class QueryTour extends DayOfAtomicSpec {
       17592186045433L, 17592186045435L, 17592186045437L, 17592186045439L,
       17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L)
 
+
     // 3. Finding All Users with a first name
     User.e.firstName_.get === List(stu, ed)
 
+
     // 4. Finding a specific user
     User.e.email_("editor@example.com").get.head === ed
+
 
     // 5. Finding a User's Comments
     Comment.e.Author.email_("editor@example.com").get.sorted === List(c2, c4, c5, c7, c11)
@@ -102,6 +95,7 @@ class QueryTour extends DayOfAtomicSpec {
       (c7, "blah 7", "Ed"),
       (c11, "blah 11", "Ed")
     )
+
 
     // 6. Returning an Aggregate of Comments of some Author
     Comment.e.apply(count).Author.email_("editor@example.com").get.head === 5
@@ -117,7 +111,7 @@ class QueryTour extends DayOfAtomicSpec {
     Parent(Story.title_).Comment.author.get.size === 2
 
 
-    // Schema-aware joins .........................
+    // Schema-aware joins ......................................................
 
     // 8. A Schema Query
 
@@ -145,11 +139,12 @@ class QueryTour extends DayOfAtomicSpec {
     )
 
 
-    // Entities ...................................
+    // Entities ................................................................
 
     // 9-11. Finding an entity ID - An implicit Entity
     // Since we can implicitly convert an entity ID to an entity we'll call the id `editor`
     val editor: Long = User.e.email_("editor@example.com").get.head
+
 
     // 12. Requesting an Attribute value
     //    editor(":user/firstName") === Some("Ed")
@@ -167,7 +162,9 @@ class QueryTour extends DayOfAtomicSpec {
       ":user/lastName" -> "Itor"
     )
 
+
     // 14. Navigating backwards
+
     // The editors comments (Comments pointing to the Editor entity)
     editor(":comment/_author") === Some(List(c2, c4, c5, c7, c11))
 
@@ -175,171 +172,74 @@ class QueryTour extends DayOfAtomicSpec {
     // Comments of editor
     Comment.e.author_(editor).get.sorted === List(c2, c4, c5, c7, c11)
 
+
     // 15. Navigating Deeper with entity api
-    // Comments to the editors comments
+
+    // Todo: using the entity api like this is clumsy. Find a better way...
+
+    // Comments to the editors comments (with mapping)
     editor(":comment/_author").get.asInstanceOf[List[Long]]
       .flatMap(_(":parent/comment")).asInstanceOf[List[Map[String, Any]]]
       .map(_.head._2) === List(c3, c6, c8, c12)
 
-    // .. or use `for` loop
+    // Comments to the editors comments (with `for` loop)
     (for {
       editorComment <- editor(":comment/_author").get.asInstanceOf[List[Long]]
       editorCommentComment <- editorComment(":parent/comment").asInstanceOf[Option[Map[String, Any]]]
     } yield editorCommentComment.head._2) === List(c3, c6, c8, c12)
 
-    // .. or make query
+    // Comments to the editors comments (with query)
     Parent(Comment.author_(editor)).comment.get.sorted === List(c3, c6, c8, c12)
 
-    // Time travel ....................................
+
+    // Time travel .............................................................
+
+    // Update Ed's first name
+    m(User(ed).firstName("Edward")).update
+
 
     // 16. Querying for a Transaction
-    //    User.txT.firstName_._model === 234
-    //    User(ed).txT.firstName_._model === 234
-    //    User(ed).firstName_.tx._model === 234
-    /*
-    'Model(
-      Meta(user,,e,Eq(List(17592186045423)))
-      Atom(user,firstName_,String,1,VarValue,None,List())
-      Meta(db,tx,tx,TxValue))'
-     */
-    //    User(ed).firstName_.tx._model1 === 234
-    /*
-    'Model(
-      Meta(user,,e,Eq(List(17592186045423)))
-      Atom(user,firstName_,String,1,VarValue,None,List(TxValue)))'
-     */
-
-    //    User(ed).firstName_.tx.debug
-    //    User(ed).firstName_.tx.debug
-    //    val tx = User(ed).firstName_.txInstant
-    //    User(ed).firstName_.tx.debug
-    //    val tx = User(ed).firstName_.tx._model
     val tx = User(ed).firstName_.tx.get.head
-    tx === 13194139534317L
+    tx === 13194139534344L
+
 
     // 17. Converting Transacting to T
     val t = Peer.toT(tx)
-    t === 1005
+    t === 1032
 
-    // Query for relative system time directly
-    User(ed).firstName_.txT.debug
+    // Or query for relative system time directly
     User(ed).firstName_.txT.get.head === t
+
 
     // 18. Getting a Tx Instant
     val txInstant = User(ed).firstName_.txInstant.get.last
-    txInstant === 234
+
 
     // 19. Going back in Time
+
+    // Current name
+    User(ed).firstName.asOf(t).get.head === "Edward"
+
+    // Name before change (from previous transaction)
     User(ed).firstName.asOf(t - 1).get.head === "Ed"
 
+    // We can use the transaction value also
+    User(ed).firstName.asOf(tx).get.head === "Edward"
+    User(ed).firstName.asOf(tx - 1).get.head === "Ed"
 
-    // Auditing .......................................
+
+    // Auditing ................................................................
 
     // 20. Querying Across All time
-    //                  User(ed).txT.firstName_.history.get === List(
-    //    User(ed).firstName.apply(":user/firstName").txT.txAdded.history.get === List(
-    //    User.firstName.a.apply(":user/firstName").txT.txAdded.history.get === List(
-    //    User.a.apply(":user/firstName").txT.txAdded.history.get === List(
-    User(ed).a.apply(":user/firstName").txT.txAdded.history.get === List(
-      //    User(ed).a.txT.txAdded.history.get === List(
-      ("Ed", 123456789L, true),
-      ("Ed", 123456789L, false),
-      ("Edward", 123456789L, true)
+    User(ed).firstName.tx.txAdded.history.get.reverse === List(
+      ("Ed", 13194139534317L, true),
+      ("Ed", 13194139534344L, false),
+      ("Edward", 13194139534344L, true)
     )
-    //
-    //          // 21. Querying Plain Java Data
-    //          // Not supported by Molecule
-    //
-    //
-    //          // Social News =======================================================================================
-    //
-    //          // (Adding what the Query Tour hasn't already covered)
-    //
-    //          // Add underscore to attribute name to _not_ return it's value (and keep it as a search attribute)
-    //          // Here we get all Story ids (entities having a url value)
-    //          val allStories = Story.url_.e.get
-    //
-    //          // Add John and let him upvote all stories
-    //          val john = User.email.firstName.lastName.upVotes insert List(
-    //            ("john@example.com", "John", "Doe", allStories.toSet)
-    //          ) id
-    //
-    //          // Update John's first name
-    //          User.firstName("Jonathan").update(john)
-    //
-    //          // John regrets upvoting Paul Graham story (`s3`)
-    //          User.upVotes.remove(s3).update(john)
-    //
-    //          // John now has only 2 upvotes
-    //          User(john).upVotes.get.head.size === 2
-    //
-    //          // John skips all upvotes
-    //          User.upVotes().update(john)
-    //
-    //          // John has no upvotes any longer
-    //          User(john).upVotes.get.head.size === 0
-    //
-    //
-    //          // Let Stuart upvote a story
-    //          User.upVotes(s1).update(stu)
-    //
-    //          // How many users are there?
-    //          User.email.size === 3
-    //
-    //          // How many users have upvoted something? (Stuart)
-    //          User.email.upVotes_.get.head.size === 1
-    //
-    //          // Users and optional upvotes
-    //          // Cardinality many attribute upVotes might return an empty set
-    //          User.email.upVotes.get === List(
-    //            ("stuarthalloway@datomic.com", Set(s1)),
-    //            ("editor@example.com", Set()),
-    //            ("john@example.com", Set())
-    //          )
-    //
-    //
-    //          // Provenance =======================================================================================
-    //
-    //          val ecURL = "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"
-    //
-    //          // Add data associated with transaction data
-    //          val tx1 = Story.title.url.tx(Source.user_(stu)) insert List(
-    //            ("ElastiCache in 6 minutes", ecURL),
-    //            ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html")
-    //          )
-    //          val storyId = tx1.id
-    //
-    //          // Ed fixes the spelling error
-    //          Story(storyId).title("ElastiCache in 5 minutes").tx(Source.user(ed)) update
-    //
-    //          // Title now
-    //          Story.url_(ecURL).title.get.head === "ElastiCache in 5 minutes"
-    //
-    //          // Title before
-    //          Story.url_(ecURL).title.asOf(tx1.inst).get.head === "ElastiCache in 6 minutes"
-    //
-    //          // Who changed the title and when?
-    //          Story.url_(ecURL).title.txInstant.txAdded.tx(User.email).history.get === List(
-    //            ("5 feb", true, "ed@itor.com")
-    //          )
-    //
-    //          // Entire history of story entity
-    //          Story(storyId).a.v.txInstant.txAdded.history.get === List(
-    //            ("title", "ElastiCache in 6 minutes", "date...", true)
-    //          )
-    ok
-  }
 
+    // 21. Querying Plain Java Data - not supported by Molecule
+  }
 }
 
 
-//    import datomic.Peer
-//    import scala.collection.JavaConversions._
-//    import scala.collection.JavaConverters._
-//
-//      Peer.q(
-//        """
-//          |[:find ?a
-//          | :where
-//          |   [?a :comment/author 17592186045423]]
-//        """.stripMargin, conn.db).map(_.get(0)) === 7
+

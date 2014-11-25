@@ -68,7 +68,7 @@ object query {
 
   sealed trait Clause extends QueryExpr
 
-  case class DataClause(ds: DataSource, e: Var, a: KW, v: QueryValue, tx: QueryTerm) extends Clause
+  case class DataClause(ds: DataSource, e: Var, a: KW, v: QueryValue, tx: QueryTerm, op: QueryTerm = NoBinding) extends Clause
   case class RuleInvocation(name: String, args: Seq[QueryValue]) extends Clause
 
   sealed trait ExpressionClause extends Clause
