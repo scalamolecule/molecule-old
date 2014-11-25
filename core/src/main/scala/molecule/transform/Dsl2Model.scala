@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 12, 11, false)
+  val x = Debug("Dsl2Model", 12, 12, false)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -27,9 +27,9 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef =>
       abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
 
-    case q"$prev.$ns.apply($id)" if ns.toString.head.isUpper =>
+    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper =>
       //      x(13, prev, ns, id, showRaw(q"$id"))
-      traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(id)))))
+      traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(eid)))))
 
     case q"$prev.$cur.$op(..$values)" =>
       traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
@@ -42,9 +42,23 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.v"  => traverse(q"$prev", meta(prev, "v"))
     case q"$prev.ns" => traverse(q"$prev", meta(prev, "ns"))
 
-    case q"$prev.txInstant" => traverse(q"$prev", Atom("db", "txInstant", "Date", 1, VarValue))
-    case q"$prev.txT"       => traverse(q"$prev", Atom("db", "txT", "Long", 1, VarValue))
-    case q"$prev.txAdded"   => traverse(q"$prev", Atom("db", "txAdded", "Boolean", 1, VarValue))
+    // Db.txInstant etc.. (all database transactions)
+    case q"$prev.Db.tx"        => traverse(q"$prev", Atom("db", "tx", "Long", 1, VarValue))
+    case q"$prev.Db.txT"       => traverse(q"$prev", Atom("db", "txT", "Long", 1, VarValue))
+    case q"$prev.Db.txInstant" => traverse(q"$prev", Atom("db", "txInstant", "Long", 1, VarValue))
+    case q"$prev.Db.txAdded"   => traverse(q"$prev", Atom("db", "txAdded", "Boolean", 1, VarValue))
+
+    // ns.txInstant.attr - `txInstant` doesn't relate to any previous attr
+    case q"$prev.tx" if !q"$prev".isAttr        => abort(s"[Dsl2Model:dslStructure] Please add `tx` after an attribute or another transaction value")
+    case q"$prev.txT" if !q"$prev".isAttr       => abort(s"[Dsl2Model:dslStructure] Please add `txT` after an attribute or another transaction value")
+    case q"$prev.txInstant" if !q"$prev".isAttr => abort(s"[Dsl2Model:dslStructure] Please add `txInstant` after an attribute or another transaction value")
+    case q"$prev.txAdded" if !q"$prev".isAttr   => abort(s"[Dsl2Model:dslStructure] Please add `txAdded` after an attribute or another transaction value")
+
+    // ns.attr.txInstant etc.. (transaction related to current attribute)
+    case q"$prev.tx"        => traverse(q"$prev", Meta("db", "tx", "tx", TxValue))
+    case q"$prev.txT"       => traverse(q"$prev", Meta("db", "txT", "tx", TxTValue))
+    case q"$prev.txInstant" => traverse(q"$prev", Meta("db", "txInstant", "tx", TxInstantValue))
+    case q"$prev.txAdded"   => traverse(q"$prev", Meta("db", "txAdded", "tx", TxAddedValue))
 
     case a@q"$prev.$cur" if a.isEnum               => traverse(q"$prev", Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix)))
     case a@q"$prev.$cur" if a.isValueAttr          => traverse(q"$prev", Atom(a.ns, a.name, a.tpeS, a.card, VarValue))
@@ -62,10 +76,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   }
 
   def meta(prev: Tree, kind: String) = {
+    // Try to find previous non-meta element
     val (ns1, attr1, value1) = traverse(q"$prev", EmptyElement).elements.collectFirst {
-      case Atom(ns, attr, _, _, value, _) => (ns, attr, value)
-      case Bond(ns, attr, _)              => (ns, attr, "")
-      case Group(Bond(ns, attr, _), _)    => (ns, attr, "")
+      case Atom(ns, attr, _, _, value, _, _) => (ns, attr, value)
+      case Bond(ns, attr, _)                 => (ns, attr, "")
+      case Group(Bond(ns, attr, _), _)       => (ns, attr, "")
     } getOrElse(prev.name, "", "")
 
     val meta1 = kind match {
@@ -135,7 +150,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case prev if attr.isAttr               => x(5, prev, curTree, modelValue); Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
       case prev if prev.isAttr               => x(6, prev, curTree, modelValue); Atom(prev.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
       case prev                              => x(7, prev, curTree, modelValue); Atom(attr.name, cur, "Int", attr.card, modelValue, enumPrefix)
-
       //      case prev if cur == "e" && prev.isAttr => x(5, prev, curTree, modelValue); Meta(prev.name, attr.name, "e", modelValue)
       //      case prev if cur == "e" && attr.isAttr => x(6, prev, curTree, modelValue); Meta(prev.name, attr.name, "e", modelValue)
       //      case prev if cur == "e" && prev.isAttr => x(7, prev, curTree, modelValue); Meta(prev.name, "", "e", modelValue)
@@ -199,8 +213,9 @@ object Dsl2Model {
 
     // Sanity check
     model1.elements.collectFirst {
-      case a: Atom => a
-      case b: Bond => b
+      case a: Atom                      => a
+      case b: Bond                      => b
+      case m@Meta(_, "txInstant", _, _) => m
       //      case m: Meta => m
     } getOrElse
       c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$model1")

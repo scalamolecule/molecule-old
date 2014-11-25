@@ -1,5 +1,5 @@
 package molecule.ops
-import molecule.ast.model.Atom
+import molecule.ast.model._
 import molecule.ast.query._
 
 object QueryOps {
@@ -9,15 +9,29 @@ object QueryOps {
 
     // Find ..........................................
 
-    def find(fn: String, args: Seq[String], v: String): Query =
-      find(AggrExpr(fn, args, Var(v)))
+    def find(fn: String, args: Seq[String], v: String, tx: Seq[TxValues]): Query =
+      find(AggrExpr(fn, args, Var(v)), tx)
 
-    def find(v: String): Query =
-      find(Var(v))
+    def find(v: String, tx: Seq[TxValues]): Query =
+      find(Var(v), tx)
 
-    def find(o: Output): Query = if (!q.f.outputs.contains(o))
-      q.copy(f = Find(q.f.outputs :+ o))
-    else q
+    def find(tx: Seq[TxValues]): Query = {
+      find(NoVal, tx)
+    }
+
+    def find(o: Output, tx: Seq[TxValues]): Query = {
+      val txVars = tx map {
+        case TxValue        => Var("tx")
+        case TxTValue       => Var("txT")
+        case TxInstantValue => Var("txInst")
+        case TxAddedValue   => Var("op")
+      }
+      o match {
+        case NoVal                         => q.copy(f = Find(q.f.outputs ++ txVars))
+        case _ if !q.f.outputs.contains(o) => q.copy(f = Find((q.f.outputs :+ o) ++ txVars))
+        case _                             => q.copy(f = Find(q.f.outputs ++ txVars))
+      }
+    }
 
 
     // In ..........................................
@@ -31,23 +45,38 @@ object QueryOps {
 
     // Where ..........................................
 
-    def where(e: String, ns: String, attr: String, v: String, refNs: String = ""): Query =
-      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Empty)))
+    def where(e: String, ns: String, attr: String, v: String, refNs: String, tx: Seq[TxValues]): Query = {
+      val attrClauses = if (tx.isEmpty)
+        Seq(DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Empty))
+      else {
+        Seq(DataClause(ImplDS, Var(e), KW(ns, attr, refNs), Var(v), Var("tx"))) ++ tx.flatMap {
+          case TxValue        => None
+          case TxTValue       => Some(DataClause(ImplDS, Var("tx"), KW("db", "txT", ""), Var("txT"), Empty))
+          case TxInstantValue => Some(DataClause(ImplDS, Var("tx"), KW("db", "txInstant", ""), Var("txInst"), Empty))
+          case TxAddedValue   => Some(DataClause(ImplDS, Var("tx"), KW("db", "txInstant", ""), Var("op"), Empty))
+        }
+      }
 
-    def where(e: String, a: Atom, v: String): Query =
-      where(e, a.ns, a.name, v)
+      q.copy(wh = Where(q.wh.clauses ++ attrClauses))
+    }
 
-    def where(e: String, a: Atom, qv: Val): Query =
+    def where(e: String, a: Atom, v: String, tx: Seq[TxValues]): Query =
+      where(e, a.ns, a.name, v, "", tx)
+
+    def where(e: String, a: Atom, qv: Val, tx: Seq[TxValues]): Query =
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(a.ns, a.name), qv, Empty)))
 
+    def where(e: String, v: String): Query =
+      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW("?", v), NoVal, Empty)))
 
-    // Other..........................................
 
-    def enum(e: String, a: Atom, v: String, output: Int = 1): Query =
-      q.where(e, a, v).ident(v, v + 1).kw(v + 1, v + 2)
+    // Extra ..........................................
 
-    def ident(v: String, v1: String) =
-      q.where(v, "db", "ident", v1)
+    def enum(e: String, a: Atom, v: String, tx: Seq[TxValues] = Seq()): Query =
+      q.where(e, a, v, tx).ident(v, v + 1).kw(v + 1, v + 2)
+
+    def ident(v: String, v1: String, tx: Seq[TxValues] = Seq()) =
+      q.where(v, "db", "ident", v1, "", tx)
 
     def kw(v1: String, v2: String) =
       q.func(".getName ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
@@ -60,7 +89,7 @@ object QueryOps {
     // todo: Var("a") ??
       q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var("a"), Var(v))))
 
-    def orRules(e: String, a: Atom, args: Seq[Any]): Query = {
+    def orRules(e: String, a: Atom, args: Seq[Any], tx: Seq[TxValues] = Seq()): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
       val newRules = args.foldLeft(q.i.rules) { case (rules, arg) =>
         val dataClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg), Empty)

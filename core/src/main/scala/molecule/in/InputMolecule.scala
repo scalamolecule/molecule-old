@@ -4,6 +4,7 @@ import molecule.ast.query.{Placeholder, Query, Var}
 
 
 trait InputMolecule {
+  val _model0: Model
   val _model: Model
   val _query: Query
 

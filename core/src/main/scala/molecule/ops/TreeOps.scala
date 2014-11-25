@@ -21,7 +21,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     def isPartition = tpe <:< typeOf[Partition]
     def isNS = tpe <:< typeOf[NS]
-    //    def isD0 = tpe <:< weakTypeOf[Molecule_0]
+//        def isNS0 = tpe <:< weakTypeOf[NS0]
 //    def nsS = nsString(tpe.typeSymbol.owner.owner.name.toString.init)
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString

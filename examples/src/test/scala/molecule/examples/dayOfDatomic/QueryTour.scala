@@ -1,17 +1,19 @@
 package molecule
+
 package examples.dayOfDatomic
-import molecule.ast.model._
 import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic.schema._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-import org.specs2.specification.Scope
 import scala.language.existentials
+//import scala.language.postfixOps
+import datomic.Peer
+import org.specs2.specification.Scope
+
 //package examples.dayOfDatomic
 //import molecule.examples.dayOfDatomic.schema._
 //import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
 //import datomic.Peer
 //import datomic.Util.list
-//import molecule.examples.dayOfDatomic.dsl.productsOrder._
 //import molecule.examples.dayOfDatomic.dsl.socialNews._
 //import scala.collection.JavaConversions._
 //import scala.language.existentials
@@ -42,7 +44,7 @@ class QueryTour extends DayOfAtomicSpec {
     // Add comments
     // Input Molecule act as a template to insert data
     //  val addComment0 = Parent.e.Comments.author.text.debug
-    val addComment = Parent.e.Comments.author.text.insert
+    val addComment = Parent.e.Comment.author.text.insert
 
     // Insert Stu's first comment to story 1 and return the id of this comment
     // (Parent s1 is a Story)
@@ -109,10 +111,10 @@ class QueryTour extends DayOfAtomicSpec {
 
 
     // 7. Have people commented on other people? (Multiple joins)
-    Parent(User.email_).Comments.author.get.size === 0
+    Parent(User.email_).Comment.author.get.size === 0
 
     // Sanity check: 2 people are commenting on stories
-    Parent(Story.title_).Comments.author.get.size === 2
+    Parent(Story.title_).Comment.author.get.size === 2
 
 
     // Schema-aware joins .........................
@@ -120,26 +122,26 @@ class QueryTour extends DayOfAtomicSpec {
     // 8. A Schema Query
 
     // Attributes of all entities having comments
-    Parent.a.Comments.get.sorted === List(
+    Parent.a.Comment.get.sorted === List(
       ":comment/author",
       ":comment/text",
-      ":parent/comments",
+      ":parent/comment",
       ":story/title",
       ":story/url"
     )
 
     // Attributes of stories having comments
-    Parent(Story.a.title_).Comments.get.sorted === List(
-      ":parent/comments",
+    Parent(Story.a.title_).Comment.get.sorted === List(
+      ":parent/comment",
       ":story/title",
       ":story/url"
     )
 
     // Attributes of comments having a sub-comment
-    Parent(Comment.a.text_).Comments.get.sorted === List(
+    Parent(Comment.a.text_).Comment.get.sorted === List(
       ":comment/author",
       ":comment/text",
-      ":parent/comments"
+      ":parent/comment"
     )
 
 
@@ -173,47 +175,77 @@ class QueryTour extends DayOfAtomicSpec {
     // Comments of editor
     Comment.e.author_(editor).get.sorted === List(c2, c4, c5, c7, c11)
 
-    // 15. Navigating Deeper
+    // 15. Navigating Deeper with entity api
     // Comments to the editors comments
     editor(":comment/_author").get.asInstanceOf[List[Long]]
-      .flatMap(_(":parent/comments")).asInstanceOf[List[Map[String, Any]]]
+      .flatMap(_(":parent/comment")).asInstanceOf[List[Map[String, Any]]]
       .map(_.head._2) === List(c3, c6, c8, c12)
 
     // .. or use `for` loop
     (for {
       editorComment <- editor(":comment/_author").get.asInstanceOf[List[Long]]
-      editorCommentComment <- editorComment(":parent/comments").asInstanceOf[Option[Map[String, Any]]]
+      editorCommentComment <- editorComment(":parent/comment").asInstanceOf[Option[Map[String, Any]]]
     } yield editorCommentComment.head._2) === List(c3, c6, c8, c12)
 
     // .. or make query
-    Parent(Comment.author_(editor)).comments.get.sorted === List(c3, c6, c8, c12)
+    Parent(Comment.author_(editor)).comment.get.sorted === List(c3, c6, c8, c12)
 
     // Time travel ....................................
-    //
-    //          // 16. Querying for a Transaction
-    //          val tx = User(ed).firstName_.txInstant
-    //
-    //          // 17. Converting Transacting to T
-    //          val t = Peer.toT(tx)
-    //
-    //          // Query for relative system time
-    //          User(ed).firstName_.txT === t
-    //
-    //          // 18. Getting Tx Instant
-    //          val txInstant = User(ed).firstName_.txInstant.get.last
-    //
-    //          // 19. Going back in Time
-    //          User(ed).firstName.asOf(t - 1).get.head === "Ed"
-    //
-    //
-    //          // Auditing .......................................
-    //
-    //          // 20. Querying Across All time
-    //          User(ed).firstName.txT.txAdded.history.get === List(
-    //            ("Ed", 123456789L, true),
-    //            ("Ed", 123456789L, false),
-    //            ("Edward", 123456789L, true)
-    //          )
+
+    // 16. Querying for a Transaction
+    //    User.txT.firstName_._model === 234
+    //    User(ed).txT.firstName_._model === 234
+    //    User(ed).firstName_.tx._model === 234
+    /*
+    'Model(
+      Meta(user,,e,Eq(List(17592186045423)))
+      Atom(user,firstName_,String,1,VarValue,None,List())
+      Meta(db,tx,tx,TxValue))'
+     */
+    //    User(ed).firstName_.tx._model1 === 234
+    /*
+    'Model(
+      Meta(user,,e,Eq(List(17592186045423)))
+      Atom(user,firstName_,String,1,VarValue,None,List(TxValue)))'
+     */
+
+    //    User(ed).firstName_.tx.debug
+    //    User(ed).firstName_.tx.debug
+    //    val tx = User(ed).firstName_.txInstant
+    //    User(ed).firstName_.tx.debug
+    //    val tx = User(ed).firstName_.tx._model
+    val tx = User(ed).firstName_.tx.get.head
+    tx === 13194139534317L
+
+    // 17. Converting Transacting to T
+    val t = Peer.toT(tx)
+    t === 1005
+
+    // Query for relative system time directly
+    User(ed).firstName_.txT.debug
+    User(ed).firstName_.txT.get.head === t
+
+    // 18. Getting a Tx Instant
+    val txInstant = User(ed).firstName_.txInstant.get.last
+    txInstant === 234
+
+    // 19. Going back in Time
+    User(ed).firstName.asOf(t - 1).get.head === "Ed"
+
+
+    // Auditing .......................................
+
+    // 20. Querying Across All time
+    //                  User(ed).txT.firstName_.history.get === List(
+    //    User(ed).firstName.apply(":user/firstName").txT.txAdded.history.get === List(
+    //    User.firstName.a.apply(":user/firstName").txT.txAdded.history.get === List(
+    //    User.a.apply(":user/firstName").txT.txAdded.history.get === List(
+    User(ed).a.apply(":user/firstName").txT.txAdded.history.get === List(
+      //    User(ed).a.txT.txAdded.history.get === List(
+      ("Ed", 123456789L, true),
+      ("Ed", 123456789L, false),
+      ("Edward", 123456789L, true)
+    )
     //
     //          // 21. Querying Plain Java Data
     //          // Not supported by Molecule
@@ -301,13 +333,13 @@ class QueryTour extends DayOfAtomicSpec {
 }
 
 
-    //    import datomic.Peer
-    //    import scala.collection.JavaConversions._
-    //    import scala.collection.JavaConverters._
-    //
-    //      Peer.q(
-    //        """
-    //          |[:find ?a
-    //          | :where
-    //          |   [?a :comment/author 17592186045423]]
-    //        """.stripMargin, conn.db).map(_.get(0)) === 7
+//    import datomic.Peer
+//    import scala.collection.JavaConversions._
+//    import scala.collection.JavaConverters._
+//
+//      Peer.q(
+//        """
+//          |[:find ?a
+//          | :where
+//          |   [?a :comment/author 17592186045423]]
+//        """.stripMargin, conn.db).map(_.get(0)) === 7

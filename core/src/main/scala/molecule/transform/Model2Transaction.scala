@@ -28,15 +28,15 @@ case class Model2Transaction(conn: Connection, model: Model) {
         case ('_, '_, '_, Meta(ns, "", "e", EntValue))          => ('arg, '_, '_, stmts)
         case ('_, '_, '_, Meta(ns, "", "e", Eq(Seq(id: Long)))) => (Eid(id), '_, '_, stmts)
 
-        case (Eid(id), '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix)) => ('e, '_, '_, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
-        case (Eid(id), '_, '_, Atom(ns, name, _, _, value, prefix))           => ('e, '_, '_, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
-        case ('_, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", 'arg))
-        case ('_, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", Values(value, prefix)))
-        case ('e, '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix))      => ('e, '_, '_, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
-        case ('e, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", 'arg))
-        case ('e, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
-        case ('v, '_, '_, Atom(ns, name, _, _, VarValue, _))                  => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", 'arg))
-        case ('v, '_, '_, Atom(ns, name, _, _, value, prefix))                => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
+        case (Eid(id), '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, '_, '_, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
+        case (Eid(id), '_, '_, Atom(ns, name, _, _, value, prefix, _))           => ('e, '_, '_, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
+        case ('_, '_, '_, Atom(ns, name, _, _, VarValue, _, _))                  => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", 'arg))
+        case ('_, '_, '_, Atom(ns, name, _, _, value, prefix, _))                => ('e, '_, '_, stmts :+ Add('id, s":$ns/$name", Values(value, prefix)))
+        case ('e, '_, '_, Atom(ns, name, _, _, value@Remove(_), prefix, _))      => ('e, '_, '_, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
+        case ('e, '_, '_, Atom(ns, name, _, _, VarValue, _, _))                  => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", 'arg))
+        case ('e, '_, '_, Atom(ns, name, _, _, value, prefix, _))                => ('e, '_, '_, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
+        case ('v, '_, '_, Atom(ns, name, _, _, VarValue, _, _))                  => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", 'arg))
+        case ('v, '_, '_, Atom(ns, name, _, _, value, prefix, _))                => ('e, '_, '_, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
 
         case ('arg, '_, '_, Bond(ns, refAttr, _)) => ('v, '_, '_, stmts :+ Add('arg, s":$ns/$refAttr", 'id))
         case ('e, '_, '_, Bond(ns, refAttr, _))   => ('v, '_, '_, stmts :+ Add('e, s":$ns/$refAttr", 'id))
@@ -206,13 +206,13 @@ case class Model2Transaction(conn: Connection, model: Model) {
     }
 
     val newStmts = element match {
-      case Atom(ns, attr, _, _, VarValue, _)                => x(1, s":$ns/$attr");
+      case Atom(ns, attr, _, _, VarValue, _, _)                => x(1, s":$ns/$attr");
         stmts ++ addAtoms(ns, attr)
-      case Atom(ns, attr, _, _, EnumVal, prefix)            => stmts ++ addAtoms(ns, attr, prefix)
-      case Atom(ns, attr, _, _, Eq(values), prefix)         => stmts ++ addAtoms(ns, attr, prefix, Some(values))
-      case Atom(ns, attr, _, _, replace@Replace(_), prefix) => x(4, stmts, addAtoms(ns, attr, prefix, Some(replace)));
+      case Atom(ns, attr, _, _, EnumVal, prefix, _)            => stmts ++ addAtoms(ns, attr, prefix)
+      case Atom(ns, attr, _, _, Eq(values), prefix, _)         => stmts ++ addAtoms(ns, attr, prefix, Some(values))
+      case Atom(ns, attr, _, _, replace@Replace(_), prefix, _) => x(4, stmts, addAtoms(ns, attr, prefix, Some(replace)));
         stmts ++ addAtoms(ns, attr, prefix, Some(replace))
-      case Atom(ns, attr, _, _, remove@Remove(_), prefix)   => x(5, stmts, addAtoms(ns, attr, prefix, Some(remove)), stmts ++ addAtoms(ns, attr, prefix, Some(remove)));
+      case Atom(ns, attr, _, _, remove@Remove(_), prefix, _)   => x(5, stmts, addAtoms(ns, attr, prefix, Some(remove)), stmts ++ addAtoms(ns, attr, prefix, Some(remove)));
         stmts ++ addAtoms(ns, attr, prefix, Some(remove))
 
       case Bond(ns, refAttr, refNs) => x(2, s":$ns/$refAttr $nextId");

@@ -18,7 +18,7 @@ object model {
 
   trait Element
 
-  case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None) extends Element
+  case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None, tx: Seq[TxValues] = Seq()) extends Element
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
@@ -38,6 +38,12 @@ object model {
   case class Lt(value: Any) extends Value
   case class Fulltext(search: Seq[Any]) extends Value
   case class Fn(name: String) extends Value
+
+  sealed trait TxValues extends Value
+  case object TxValue extends TxValues
+  case object TxTValue extends TxValues
+  case object TxInstantValue extends TxValues
+  case object TxAddedValue extends TxValues
 
   case object Qm extends Value
 
@@ -72,7 +78,7 @@ object model {
   // Convenience methods .........................
 
   def curNs(e: Element) = e match {
-    case Atom(ns, _, _, _, _, _)  => ns
+    case Atom(ns, _, _, _, _, _,_)  => ns
     case Bond(ns, _, _)           => ns
     case Group(Bond(ns, _, _), _) => ns
     case Meta(ns, _, _, _)     => ns

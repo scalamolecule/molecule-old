@@ -83,36 +83,36 @@ object schemaDSL {
   trait RefAttr[Ns, T] extends Attr
 
   trait OneRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
-    def apply(value: Long): Ns = ???
+    def apply(value: Long): Ns with Attr = ???
   }
   trait ManyRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
-    def apply(value: Long*): Ns = ???
-    def add(value: Long): Ns = ???
-    def remove(values: Long*): Ns = ???
+    def apply(value: Long*): Ns with Attr = ???
+    def add(value: Long): Ns with Attr = ???
+    def remove(values: Long*): Ns with Attr = ???
   }
   trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
-    def apply(value: Long): Ns = ???
+    def apply(value: Long): Ns with Attr = ???
   }
 
   sealed trait ValueAttr[Ns, In, T] extends Attr {
-    def apply(expr: Exp1[T]) : Ns = ???
-    def eq(value: T) : Ns = ???
+    def apply(expr: Exp1[T]) : Ns with Attr = ???
+    def eq(value: T) : Ns with Attr = ???
 
-    def < (value: T) : Ns = ???
-    def > (value: T) : Ns = ???
-    def <= (value: T) : Ns = ???
-    def >= (value: T) : Ns = ???
+    def < (value: T) : Ns with Attr = ???
+    def > (value: T) : Ns with Attr = ???
+    def <= (value: T) : Ns with Attr = ???
+    def >= (value: T) : Ns with Attr = ???
 
     // Input
-    def < (in: ?) : In = ???
-    def > (in: ?) : In = ???
-    def <= (in: ?) : In = ???
-    def >= (in: ?) : In = ???
+    def < (in: ?) : In with Attr = ???
+    def > (in: ?) : In with Attr = ???
+    def <= (in: ?) : In with Attr = ???
+    def >= (in: ?) : In with Attr = ???
 
-    def apply(in: ?) : In = ???
+    def apply(in: ?) : In with Attr = ???
 
     // Optional value (will return Option[T])
-    //    def apply(m: maybe): Ns = ???
+    //    def apply(m: maybe): Ns with Attr = ???
   }
 
   // One-cardinality
@@ -120,16 +120,17 @@ object schemaDSL {
 
     //    def apply(expr: Exp1[T]): Ns = ???
     //    def apply(values: T*): Ns = ???
-        def apply(one: T, more: T*): Ns = ???
+//        def apply(one: T, more: T*): Ns = ???
+        def apply(one: T, more: T*): Ns with Attr = ???
 
 //    def apply(v1: v1.type): Ns = ???
 
     // Request for no value!
-    def apply(): Ns = ???
-    def apply(values: Seq[T]) : Ns = ???
+    def apply(): Ns with Attr = ???
+    def apply(values: Seq[T]) : Ns with Attr = ???
   }
   trait OneString [Ns, In] extends One[Ns, In, String ]  {
-    def length: Ns = ???
+    def length: Ns with Attr = ???
   }
   trait OneInt    [Ns, In] extends One[Ns, In, Int    ]
   trait OneLong   [Ns, In] extends One[Ns, In, Long   ]
@@ -143,15 +144,15 @@ object schemaDSL {
 
   // Many-cardinality
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
-    def apply(value: T*): Ns = ???
+    def apply(value: T*): Ns with Attr = ???
 //    def apply(one: T, more: T*): Ns = ???
 //    def apply(): Ns = ???
 
 //    def apply(values: Seq[T]): Ns = ???
-    def apply(oldNew: (T, T), oldNewMore: (T, T)*): Ns = ???
+    def apply(oldNew: (T, T), oldNewMore: (T, T)*): Ns with Attr = ???
     //    def apply(h: Seq[(T, T)]): Ns = ???
-    def add(value: T): Ns = ???
-    def remove(values: T*): Ns = ???
+    def add(value: T): Ns with Attr = ???
+    def remove(values: T*): Ns with Attr = ???
   }
   trait ManyString[Ns, In] extends Many[Ns, In, Set[String], String]
   trait ManyInt   [Ns, In] extends Many[Ns, In, Set[Int]   , Int   ]
@@ -174,8 +175,8 @@ object schemaDSL {
   trait UniqueIdentity
   trait Indexed
   trait FulltextSearch[Ns, In] {
-    def contains(that: String): Ns = ???
-    def contains(in: ?) : In = ???
+    def contains(that: String): Ns with Attr = ???
+    def contains(in: ?) : In with Attr = ???
   }
   trait IsComponent
   trait NoHistory

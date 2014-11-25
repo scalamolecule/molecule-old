@@ -1,9 +1,9 @@
 package molecule.in
-import molecule.ast.query._
+import molecule.ast.model._
+import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
-import molecule.dsl.schemaDSL._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
@@ -15,8 +15,14 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
   def basics(inputDsl: c.Expr[NS]) = {
-    val model = Dsl2Model(c)(inputDsl)
+    val model0 = Dsl2Model(c)(inputDsl)
+    val model = Model(model0.elements.foldLeft((Seq[Element](), null: Element)) {
+      case ((es, last: Atom), e@Meta(_, _, _, value: TxValues)) => (es.init :+ last.copy(tx = last.tx :+ value), last)
+      case ((es, last), e)                                      => (es :+ e, e)
+    }._1)
+
     val query = Model2Query(model)
+
     q"""
     import molecule.in._
     import molecule.out._
@@ -30,6 +36,7 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     import datomic.Connection
     import molecule.ops.QueryOps._
 
+    val model0 = $model0
     val model = $model
     val query = $query
 
@@ -51,10 +58,10 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     val InputTypes = if (InTypes.length == 1) tq"Seq[..$InTypes]" else tq"Seq[(..$InTypes)]"
     expr( q"""
       ..${basics(inputDsl)}
-      new $InputMoleculeTpe[..$InTypes](model, query) {
+      new $InputMoleculeTpe[..$InTypes](model0, model, query) {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule0 = {
           val query1 = bindValues1(args)
-          new Molecule0(model, query1) {
+          new Molecule0(model0, model, query1) {
             def debug(implicit conn: Connection): Unit = debugMolecule(query1, inputValues1(args), results(query1, conn))
           }
         }
@@ -86,7 +93,7 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       q"""
         def apply(..$inParams)(implicit conn: Connection): Molecule1[$A] = {
           val query2 = bindValues2(..$inTerms)
-          new Molecule1[$A](model, query2) {
+          new Molecule1[$A](model0, model, query2) {
             def get(implicit conn: Connection): Seq[$A]         = results(query2, conn).toList.map(data => ${cast(q"data")})
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query2, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit          = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
@@ -97,10 +104,10 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
     expr( q"""
       ..${basics(inputDsl)}
-      new $InputMoleculeTpe[..$InTypes, $A](model, query) {
+      new $InputMoleculeTpe[..$InTypes, $A](model0, model, query) {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule1[$A] = {
           val query1 = bindValues1(args)
-          new Molecule1[$A](model, query1) {
+          new Molecule1[$A](model0, model, query1) {
             def get(implicit conn: Connection): Seq[$A]         = results(query1, conn).toList.map(data => ${cast(q"data")})
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query1, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit          = debugMolecule(query1, inputValues1(args), results(query1, conn))
@@ -133,7 +140,7 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       q"""
         def apply(..$inParams)(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
           val query2 = bindValues2(..$inTerms)
-          new $MoleculeTpe[..$OutTypes](model, query2) {
+          new $MoleculeTpe[..$OutTypes](model0, model, query2) {
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query2, conn).toList.map(data => (..${tplValues(q"data")}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(query2, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit             = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
@@ -144,10 +151,10 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
     expr( q"""
       ..${basics(inputDsl)}
-      new $InputMoleculeTpe[..$InTypes, ..$OutTypes](model, query) {
+      new $InputMoleculeTpe[..$InTypes, ..$OutTypes](model0, model, query) {
         def apply(args: Seq[(..$InTypes)])(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
           val query1 = bindValues1(args)
-          new $MoleculeTpe[..$OutTypes](model, query1) {
+          new $MoleculeTpe[..$OutTypes](model0, model, query1) {
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query1, conn).toList.map(data => (..${tplValues(q"data")}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(query1, conn).toList.map(data => ${hlist(q"data")})
             def debug(implicit conn: Connection): Unit             = debugMolecule(query1, inputValues1(args), results(query1, conn))

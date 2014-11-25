@@ -279,7 +279,6 @@ class SeattleTests extends SeattleSpec {
     // :neighborhood/name and :district/name without uniqueness - todo: why do we get problems otherwise?
     implicit val conn = loadFromFiles("seattle-schema1a.dtm", "seattle-data0a.dtm", 2)
 
-
     val txDates = Db.txInstant.get(2).sorted.reverse
     val dataTxDate = txDates(0)
     val schemaTxDate = txDates(1)
