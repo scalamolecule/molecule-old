@@ -157,6 +157,10 @@ package object molecule {
 //  trait maybe
 //  object maybe extends maybe
 
+  // Optional marker
+//  trait o
+//  object o extends o
+
 
   // Aggregates ==========================================================
 

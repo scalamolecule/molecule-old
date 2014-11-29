@@ -53,6 +53,8 @@ abstract class Molecule1[A](val _model0: Model, val _model: Model, val _query: Q
   def history           = history_(this)
   def since(d: Date)    = since_  (this, d)
   def imagine(tx: lObj) = imagine_(this, tx)
+
+//  def maybe: Pull2[A] //= ???
 }
 
 abstract class Molecule2[A, B](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {

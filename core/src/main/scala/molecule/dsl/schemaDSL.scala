@@ -89,6 +89,8 @@ object schemaDSL {
     def apply(value: Long*): Ns with Attr = ???
     def add(value: Long): Ns with Attr = ???
     def remove(values: Long*): Ns with Attr = ???
+
+//    def apply(test: maybe) : Ns with Attr = ???
   }
   trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns with Attr = ???
@@ -110,13 +112,14 @@ object schemaDSL {
     def >= (in: ?) : In with Attr = ???
 
     def apply(in: ?) : In with Attr = ???
+//    def apply(test: maybe) : Ns with Attr = ???
   }
 
   // One-cardinality
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
     def apply(one: T, more: T*): Ns with Attr = ???
 
-    // Request for no value!
+    // Request to delete values!
     def apply(): Ns with Attr = ???
     def apply(values: Seq[T]) : Ns with Attr = ???
   }

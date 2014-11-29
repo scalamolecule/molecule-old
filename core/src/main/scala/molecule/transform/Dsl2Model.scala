@@ -168,6 +168,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   def getValues(attr: Tree, values: Tree): Any = values match {
     case q"Seq($pkg.?)"     => Qm
+    case q"Seq($pkg.maybe)" => Maybe
     case q"Seq($pkg.count)" => Fn("count")
     case q"Seq(..$vs)"      =>
       vs match {

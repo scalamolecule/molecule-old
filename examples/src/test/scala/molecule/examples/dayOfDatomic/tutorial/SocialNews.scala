@@ -1,9 +1,8 @@
 package molecule
 package examples.dayOfDatomic.tutorial
-//import scala.language.reflectiveCalls
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic._
+import molecule.examples.dayOfDatomic.dsl.socialNews._
+import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
 
 class SocialNews extends DayOfAtomicSpec {
 
@@ -18,38 +17,42 @@ class SocialNews extends DayOfAtomicSpec {
       ("john@example.com", "John", "Doe", allStories.toSet)
     ) id
 
+    // Users with upvotes
+    User.email.upVotes.get === List(("john@example.com", Set(s1, s2, s3)))
+
     // Update John's first name
-    User(john).firstName("Jonathan").update
+    User(john).firstName.apply("Jonathan").update
 
     // John regrets upvoting Paul Graham story (`s3`)
-    User(john).upVotes.remove(s3).debug
-    User(john).upVotes.remove(s3).update
+    val paulGrahamStory = Story.e.url_("http://www.paulgraham.com/avg.html").get.head
+    User(john).upVotes.remove(paulGrahamStory).update
 
     // John now has only 2 upvotes
     User(john).upVotes.get.head.size === 2
 
-    // John skips all upvotes
+    // Only John's 2 upvotes exist
+    User.email.upVotes.get === List(("john@example.com", Set(s1, s2)))
+
+    // Retract all John's upvotes
     User(john).upVotes().update
 
     // John now has no upvotes
-    User(john).upVotes.get.head.size === 0
+    User(john).upVotes.get.length === 0
 
+    // No Users with upvotes anymore
+    User.email.upVotes.get === List()
 
     // Let Stuart upvote a story
-    User(stu).upVotes(s1).update
+    User(stu).upVotes(paulGrahamStory).update
 
-    // How many users are there?
-    User.email.get.length === 3
+    // Current Users and upvotes
+    User.email.upVotes.get.head ===("stuarthalloway@datomic.com", Set(paulGrahamStory))
 
-    // How many users have upvoted something? (Stuart)
-    User.email.upVotes_.get.head.size === 1
-
-    // Users and optional upvotes
-    // Cardinality many attribute upVotes might return an empty set
-    User.email.upVotes.get === List(
-      ("stuarthalloway@datomic.com", Set(s1)),
-      ("editor@example.com", Set()),
-      ("john@example.com", Set())
-    )
+    // Todo: Optional attributes (Pull API)
+    //    User.email.upVotes(o).get === List(
+    //      ("stuarthalloway@datomic.com", Some(Set(s1))),
+    //      ("editor@example.com", None),
+    //      ("john@example.com", None)
+    //    )
   }
 }

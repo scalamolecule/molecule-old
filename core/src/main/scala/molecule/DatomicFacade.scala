@@ -132,6 +132,28 @@ trait DatomicFacade {
   //
   def getValues1(db: Database, id: Any, attr: String) =
     Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+  //
+//  def maybe(db: Database, e: Any, attr: String, ifNot: Any) =
+//    Peer.q(s"[:find ?v :in $$ ?e ?a :where [?e ?a ?v]]", db, e.asInstanceOf[Object], attr).map(_.get(0)).headOption match {
+//      case Some(set: Set[_]) =>
+//    }
+
+  /*
+  (defn maybe
+    "Returns the value of attr for e, or if-not if e does not possess
+     any values for attr. Cardinality-many attributes will be
+     returned as a set"
+    [db e attr if-not]
+    (let [result (d/q '[:find ?v
+                        :in $ ?e ?a
+                        :where [?e ?a ?v]]
+                      db e (d/entid db attr))]
+      (if (seq result)
+        (case (schema/cardinality db attr)
+              :db.cardinality/one (ffirst result)
+              :db.cardinality/many (into #{} (map first result)))
+        if-not)))
+*/
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 

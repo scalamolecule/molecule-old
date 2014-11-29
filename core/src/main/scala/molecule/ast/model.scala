@@ -52,6 +52,7 @@ object model {
   case object TxAddedValue extends TxValues
 
   case object Qm extends Value
+  case object Maybe extends Value
 
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value

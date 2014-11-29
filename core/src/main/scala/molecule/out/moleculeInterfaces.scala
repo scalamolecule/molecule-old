@@ -99,6 +99,8 @@ trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A]  
   def apply(v: variance)     : Ns1[Double] = ???
   def apply(v: stddev)       : Ns1[Double] = ???
 
+//  def apply(optional: o)       : Ns1[Option[A]] = ???
+
   def tx[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns1[A]                                                 = ???
   def tx[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns2[A, a]                                              = ???
   def tx[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_3[Any, Any, Any, Any, A, a, b]                = ???
@@ -167,6 +169,8 @@ trait Molecule_2[Ns2[_,_], Ns3[_,_,_], In1_2[_,_,_], In1_3[_,_,_,_], A, B] exten
   def apply(v: variance)     : Ns2[A, Double] = ???
   def apply(v: stddev)       : Ns2[A, Double] = ???
 
+//  def apply(optional: o)     : Ns2[A, Option[B]] = ???
+
   def tx[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns2[A, B]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns3[A, B, a]                                    = ???
   def tx[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_4[Any, Any, Any, Any, A, B, a, b]                = ???
@@ -234,6 +238,8 @@ trait Molecule_3[Ns3[_,_,_], Ns4[_,_,_,_], In1_3[_,_,_,_], In1_4[_,_,_,_,_], A, 
   def apply(v: median)       : Ns3[A, B, Double] = ???
   def apply(v: variance)     : Ns3[A, B, Double] = ???
   def apply(v: stddev)       : Ns3[A, B, Double] = ???
+
+//  def apply(optional: o)     : Ns3[A, B, Option[C]] = ???
 
   def tx[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns3 [A, B, C]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns4 [A, B, C, a]                                    = ???

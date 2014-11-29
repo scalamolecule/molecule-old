@@ -4,7 +4,7 @@ import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
-//import scala.collection.JavaConverters._
+import scala.collection.JavaConverters._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context

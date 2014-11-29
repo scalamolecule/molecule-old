@@ -269,8 +269,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def tpeS = if (tpe =:= NoType) "" else tpe.toString
     //    def tpeS = tpe.toString
     def contentType = tpe
-    def isOne = attrType <:< weakTypeOf[One[_, _, _]]
-    def isMany = attrType <:< weakTypeOf[Many[_, _, _, _]]
+    def isOne = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[OneRefAttr[_, _]]
+    def isMany = attrType <:< weakTypeOf[Many[_, _, _, _]] || attrType <:< weakTypeOf[ManyRefAttr[_, _]]
     def isEnum = attrType <:< weakTypeOf[Enum]
     def enumValues = attrType.members.collect {
       case v: TermSymbol
