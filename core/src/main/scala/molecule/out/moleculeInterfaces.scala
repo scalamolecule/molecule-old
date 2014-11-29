@@ -59,7 +59,8 @@ trait Molecule_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]] extends NS0 {
 }
 
 
-trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A] with Nested2[Ns2, A] {
+//trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A] with Nested2[Ns2, A] {
+trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A]  {
 
   val e         : Ns2[A, Long   ] with OneLong   [Ns2[A, Long   ], In1_2[Long   , A, Long   ]] = ???
   val a         : Ns2[A, String ] with OneString [Ns2[A, String ], In1_2[String , A, String ]] = ???
@@ -184,8 +185,8 @@ trait Molecule_2[Ns2[_,_], Ns3[_,_,_], In1_2[_,_,_], In1_3[_,_,_,_], A, B] exten
 //  def ~[ns6[_,_,_,_,_,_]  , ns7[_,_,_,_,_,_,_]  , in1_6[_,_,_,_,_,_,_]  , in1_7[_,_,_,_,_,_,_,_]  , a, b, c, d, e, f   ] (m6: Molecule_6[ns6, ns7, in1_6, in1_7, a, b, c, d, e, f])   : Molecule_8[Any, Any, Any, Any, A, B, a, b, c, d, e, f]    = ???
 //  def ~[ns7[_,_,_,_,_,_,_], ns8[_,_,_,_,_,_,_,_], in1_7[_,_,_,_,_,_,_,_], in1_8[_,_,_,_,_,_,_,_,_], a, b, c, d, e, f, g] (m7: Molecule_7[ns7, ns8, in1_7, in1_8, a, b, c, d, e, f, g]): Molecule_9[Any, Any, Any, Any, A, B, a, b, c, d, e, f, g] = ???
 
-  def apply[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns2[A, B]                                       = ???
-  def apply[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns3[A, B, a]                                    = ???
+//  def apply[ns0               , ns1[_]              , in1_0[_]              , in1_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in1_0, in1_1])                     : Ns2[A, B]                                       = ???
+//  def apply[ns1[_]            , ns2[_,_]            , in1_1[_,_]            , in1_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in1_1, in1_2, a])                  : Ns3[A, B, a]                                    = ???
 //  def apply[ns2[_,_]          , ns3[_,_,_]          , in1_2[_,_,_]          , in1_3[_,_,_,_]          , a, b               ] (m2: Molecule_2[ns2, ns3, in1_2, in1_3, a, b])               : Molecule_4[Any, Any, Any, Any, A, B, a, b]                = ???
 //  def apply[ns3[_,_,_]        , ns4[_,_,_,_]        , in1_3[_,_,_,_]        , in1_4[_,_,_,_,_]        , a, b, c            ] (m3: Molecule_3[ns3, ns4, in1_3, in1_4, a, b, c])            : Molecule_5[Any, Any, Any, Any, A, B, a, b, c]             = ???
 //  def apply[ns4[_,_,_,_]      , ns5[_,_,_,_,_]      , in1_4[_,_,_,_,_]      , in1_5[_,_,_,_,_,_]      , a, b, c, d         ] (m4: Molecule_4[ns4, ns5, in1_4, in1_5, a, b, c, d])         : Molecule_6[Any, Any, Any, Any, A, B, a, b, c, d]          = ???

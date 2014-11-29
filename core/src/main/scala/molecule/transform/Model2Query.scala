@@ -86,7 +86,7 @@ object Model2Query {
             case (_, EnumVal)                         => q.find(v2, tx).enum(e, a, v, tx)
             case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), tx)
             case (2, Eq(ss)) if ss.size > 1           => q.find("distinct", Seq(), v, tx).orRules(e, a, ss).where(e, a, v, tx)
-            case (_, Eq(ss)) if ss.size > 1           => q.find(v, tx).orRules(e, a, ss, tx)
+            case (_, Eq(ss)) if ss.size > 1           => q.find(e, tx).orRules(e, a, ss, tx)
             case (_, Eq(s :: Nil)) if isEnum          => q.find(v2, tx).where(e, a, Val(prefix + s), tx).enum(e, a, v) // todo: can we output a constant value instead?
             case (_, Eq(s :: Nil))                    => q.find(v, tx).where(e, a, Val(s), tx).where(e, a, v, Seq()) // todo: can we output a constant value instead?
             case (_, Lt(arg))                         => q.find(v, tx).where(e, a, v, tx).compareTo("<", a, v, Val(arg))
@@ -121,10 +121,17 @@ object Model2Query {
         case Bond(ns, refAttr, refNs) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
         case Bond(ns, refAttr, refNs)                    => (resolve(query, e, v, element), e, v, ns, refAttr, refNs)
 
+        case Group(Bond(ns, refAttr, refNs), elements) =>
+          val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
+            case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
+              make(query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)
+          }
+          (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
+
         case Meta(ns, attr, "e", Eq(Seq(id: Long))) => x(2, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
         case Meta(ns, attr, _, _)                   => x(3, element); (resolve(query, e, v, element), e, v, ns, attr, "")
 
-        case Group(Bond(ns, refAttr, refNs), elements) =>
+        case TxModel(elements) => //query
           val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
             case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
               make(query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)

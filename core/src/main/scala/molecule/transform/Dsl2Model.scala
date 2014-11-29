@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 14, 13, false)
+  val x = Debug("Dsl2Model", 11, 11, false)
 
   def resolve(tree: Tree): Model = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -29,11 +29,14 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   val dslStructure: PartialFunction[Tree, Model] = {
     case q"TermValue.apply($ns)"                               => resolve(ns)
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
-//    case q"$prev.a.apply($kw0)"                                => traverse(q"$prev", Atom(kw(kw0)._1, kw(kw0)._2, "", 1, VarValue))
-//    case q"$prev.a_.apply($kw0)"                               => traverse(q"$prev", Atom(kw(kw0)._1, kw(kw0)._2 + "_", "", 1, NoValue))
-    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper  => traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(eid)))))
-    case q"$prev.$cur.$op(..$values)"                          => traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
-    case t@q"$prev.$refAttr" if t.isRef                        => traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
+    case q"$prev.tx[..$t]($txMolecule)"                        =>
+      //      x(11, prev, txData);
+      traverse(q"$prev", TxModel(resolve(q"$txMolecule").elements))
+    //    case q"$prev.a.apply($kw0)"                                => traverse(q"$prev", Atom(kw(kw0)._1, kw(kw0)._2, "", 1, VarValue))
+    //    case q"$prev.a_.apply($kw0)"                               => traverse(q"$prev", Atom(kw(kw0)._1, kw(kw0)._2 + "_", "", 1, NoValue))
+    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper => traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(eid)))))
+    case q"$prev.$cur.$op(..$values)"                         => traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
+    case t@q"$prev.$refAttr" if t.isRef                       => traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
 
     case q"$prev.e"  => traverse(q"$prev", meta(prev, "e"))
     case q"$prev.a"  => traverse(q"$prev", meta(prev, "a"))
@@ -101,7 +104,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
 
     val values = getValues(attr, values0)
-    x(11, curTree, attr, op, values0, values)
+    //    x(11, curTree, attr, op, values0, showRaw(values0), values)
 
     val modelValue: Value = op.toString() match {
       case "apply"    => values match {
@@ -218,6 +221,7 @@ object Dsl2Model {
     model1.elements.collectFirst {
       case a: Atom                      => a
       case b: Bond                      => b
+      case g: Group                     => g
       case m@Meta(_, "txInstant", _, _) => m
       //      case m: Meta => m
     } getOrElse

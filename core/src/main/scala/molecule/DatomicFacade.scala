@@ -141,7 +141,7 @@ trait DatomicFacade {
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmtss = transformer.insertStmts(dataRows)
-    //    x(1, model, transformer.stmtsModel, stmtss)
+//        x(1, model, transformer.stmtsModel, stmtss)
     Tx(conn, transformer, stmtss)
   }
 
@@ -155,7 +155,7 @@ trait DatomicFacade {
   protected[molecule] def update(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmts = transformer.updateStmts
-    //    x(3, model, transformer.stmtsModel, stmts)
+//        x(3, model, transformer.stmtsModel, stmts)
     Tx(conn, transformer, Seq(stmts))
   }
 }
@@ -168,7 +168,7 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
 
   val txResult: jMap[_, _] = conn.transact(stmtss.flatten.map(_.toJava).asJava).get
 
-  def ids: Seq[Long] = {
+  def ids: List[Long] = {
     val txData = txResult.get(Connection.TX_DATA)
 
     // Omit first transaction datom
@@ -184,7 +184,7 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
     val ids = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
 
     //    x(1, transformer.stmtsModel, stmtss, datoms, ids)
-    ids
+    ids.toList
   }
 
   def id = ids.head

@@ -10,6 +10,9 @@ object model {
           s"""|Group(
               |    $bond
               |    ${nestedElements.mkString("\n    ")})""".stripMargin
+        case TxModel(nestedElements)     =>
+          s"""|TxModel(
+              |    ${nestedElements.mkString("\n    ")})""".stripMargin
         case other                       => other
       }
       "Model(\n  " + lines.mkString("\n  ") + ")"
@@ -23,6 +26,7 @@ object model {
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
   case class Meta(ns: String, attr: String, kind: String, value: Value) extends Element
+  case class TxModel(elements: Seq[Element]) extends Element
 
   case object EmptyElement extends Element
 
@@ -31,7 +35,7 @@ object model {
 
   case object EntValue extends Value
   case object VarValue extends Value
-//  case object NoValue extends Value
+  //  case object NoValue extends Value
   case object NoValue extends Value
   case class BackValue(backNs: String) extends Value
   case object EnumVal extends Value
@@ -80,11 +84,11 @@ object model {
   // Convenience methods .........................
 
   def curNs(e: Element) = e match {
-    case Atom(ns, _, _, _, _, _,_)  => ns
-    case Bond(ns, _, _)           => ns
-    case Group(Bond(ns, _, _), _) => ns
-    case Meta(ns, _, _, _)     => ns
-    case unexpected               => sys.error("[model:curNs] Unexpected element: " + unexpected)
+    case Atom(ns, _, _, _, _, _, _) => ns
+    case Bond(ns, _, _)             => ns
+    case Group(Bond(ns, _, _), _)   => ns
+    case Meta(ns, _, _, _)          => ns
+    case unexpected                 => sys.error("[model:curNs] Unexpected element: " + unexpected)
   }
 
 

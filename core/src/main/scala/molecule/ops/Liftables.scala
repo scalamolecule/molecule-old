@@ -159,20 +159,25 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
 
-  implicit val liftAtom  = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.tx}))"}
-  implicit val liftBond  = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
-  implicit val liftMeta  = Liftable[Meta] { a => q"Meta(${a.ns}, ${a.attr}, ${a.kind}, ${a.value})"}
-  implicit val liftGroup = Liftable[Group] { g =>
+  implicit val liftAtom    = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.tx}))"}
+  implicit val liftBond    = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
+  implicit val liftMeta    = Liftable[Meta] { a => q"Meta(${a.ns}, ${a.attr}, ${a.kind}, ${a.value})"}
+  implicit val liftGroup   = Liftable[Group] { g =>
     val es = g.elements map { case q"$e" => e}
     q"Group(${g.ref}, Seq(..$es))"
+  }
+  implicit val liftTxModel = Liftable[TxModel] { g =>
+    val es = g.elements map { case q"$e" => e}
+    q"TxModel(Seq(..$es))"
   }
 
   implicit val liftListOfElements = Liftable[Seq[Element]] { elements =>
     val es = elements map {
-      case a: Atom  => q"$a"
-      case b: Bond  => q"$b"
-      case g: Group => q"$g"
-      case m: Meta  => q"$m"
+      case a: Atom    => q"$a"
+      case b: Bond    => q"$b"
+      case g: Group   => q"$g"
+      case m: Meta    => q"$m"
+      case t: TxModel => q"$t"
     }
     q"Seq(..$es)"
   }
@@ -182,6 +187,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Bond(ns, refAttr, refNs)                          => q"Bond($ns, $refAttr, $refNs)"
     case Group(ref, elements)                              => q"Group($ref, $elements)"
     case Meta(ns, attr, kind, value)                       => q"Meta($ns, $attr, $kind, $value)"
+    case TxModel(elements)                                 => q"TxModel($elements)"
     case EmptyElement                                      => q"EmptyElement"
   }
 

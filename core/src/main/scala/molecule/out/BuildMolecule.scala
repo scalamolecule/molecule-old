@@ -16,27 +16,30 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
   def basics(dsl: c.Expr[NS]) = {
     val model0 = Dsl2Model(c)(dsl)
+
+    // Condense model
     val model = Model(model0.elements.foldLeft((Seq[Element](), null: Element)) {
       case ((es, last: Atom), e@Meta(_, _, _, value: TxValues)) => (es.init :+ last.copy(tx = last.tx :+ value), last)
       case ((es, last), e)                                      => (es :+ e, e)
     }._1)
 
-    //    val p = dsl.tree.pos
-    //    val dslTailCode = p.source.lineToString(p.line - 1).substring(p.column)
-    //    val checkCorrectModel = dslTailCode match {
-    //      // todo: lift into quasiquotes and check against resolved `model`
-    //      case r".*[\.|\s]*add.*"    => "check add..."
-    //      case r".*[\.|\s]*insert.*" => "check insert..."
-    //      case r".*[\.|\s]*update.*" => "check update..."
-    //      case _                     => "other..."
-    //    }
-    //    x(0, dsl.tree, showRaw(dsl.tree), model0, model, checkCorrectModel)
+    val p = dsl.tree.pos
+    val dslTailCode = p.source.lineToString(p.line - 1).substring(p.column)
+    val checkCorrectModel = dslTailCode match {
+      // todo: lift into quasiquotes and check against resolved `model`
+      case r".*[\.|\s]*add.*"    => "check add..."
+      case r".*[\.|\s]*insert.*" => "check insert..."
+      case r".*[\.|\s]*update.*" => "check update..."
+      case _                     => "other..."
+    }
+//    x(1, dsl.tree, showRaw(dsl.tree), model0, model, checkCorrectModel)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
-        case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => Seq(ident -> q"${TermName(ident.substring(9))}")
-        case meta@Meta(_, _, _, Eq(Seq(ident: String))) if ident.startsWith("__ident__")          => Seq(ident -> q"${TermName(ident.substring(9))}")
-        case Group(_, nestedElements)                                                             => mapIdentifiers(nestedElements, identifiers0)
+        case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _) if ident.startsWith("__ident__")     => Seq(ident -> q"${TermName(ident.substring(9))}")
+        case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => Seq(ident -> q"${TermName(ident.substring(9))}")
+        case meta@Meta(_, _, _, Eq(Seq(ident: String))) if ident.startsWith("__ident__")              => Seq(ident -> q"${TermName(ident.substring(9))}")
+        case Group(_, nestedElements)                                                                 => mapIdentifiers(nestedElements, identifiers0)
       }).flatten
       (identifiers0 ++ newIdentifiers).distinct
     }
@@ -55,10 +58,11 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import shapeless._
 
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
-        case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => atom.copy(value = Eq(Seq($identifiers.get(ident).get)))
-        case meta@Meta(_, _, _,    Eq(Seq(ident: String)))       if ident.startsWith("__ident__") => meta.copy(value = Eq(Seq($identifiers.get(ident).get)))
-        case Group(ns, nestedElements)                                                            => Group(ns, resolveIdentifiers(nestedElements))
-        case other                                                                                => other
+        case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _)     if ident.startsWith("__ident__") => atom.copy(value = Eq(Seq($identifiers.get(ident).get)))
+        case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => atom.copy(value = Remove(Seq($identifiers.get(ident).get)))
+        case meta@Meta(_, _, _,    Eq(Seq(ident: String)))           if ident.startsWith("__ident__") => meta.copy(value = Eq(Seq($identifiers.get(ident).get)))
+        case Group(ns, nestedElements)                                                                => Group(ns, resolveIdentifiers(nestedElements))
+        case other                                                                                    => other
       }
       val model0 = Model(resolveIdentifiers($model0.elements))
       val model =  Model(resolveIdentifiers($model.elements))
