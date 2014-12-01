@@ -141,8 +141,7 @@ package object molecule {
   implicit def uuidSet2Model   (set: Set[UUID]   ): TermValue[Set[UUID]]    = TermValue(set)
   implicit def uriSet2Model    (set: Set[URI]    ): TermValue[Set[URI]]     = TermValue(set)
 
-    //  implicit def contains2Model[T](c: contains[T]) = TermValue(c.value)
-  implicit def tuple2Model[A, B](tpl: (A, B)) = TermValue(tpl)
+  implicit def tuple2Model[A, B](tpl: (A, B)): TermValue[(A, B)] = TermValue(tpl)
 
   // Entity api
   implicit def long2Entity(id: Long)(implicit conn: Connection): EntityFacade = EntityFacade(conn.db.entity(id), conn, id.asInstanceOf[Object])
@@ -154,17 +153,20 @@ package object molecule {
 
   object v1
 
-//  trait maybe
-//  object maybe extends maybe
+  //  trait maybe
+  //  object maybe extends maybe
 
   // Optional marker
-//  trait o
-//  object o extends o
+  //  trait o
+  //  object o extends o
 
 
   // Aggregates ==========================================================
 
   // Aggregate attribute (singular/multiple)
+
+  trait distinct
+  object distinct extends distinct
 
   trait max
   private[molecule] trait maxs
@@ -173,9 +175,6 @@ package object molecule {
   trait min
   private[molecule] trait mins
   object min extends min {def apply(i: Int): mins = ???}
-
-  trait distinct
-  object distinct extends distinct
 
   trait rand
   private[molecule] trait rands

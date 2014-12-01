@@ -1,5 +1,4 @@
-package molecule
-package examples.dayOfDatomic.tutorial
+package molecule.examples.dayOfDatomic
 import datomic.Peer
 import datomic.Util._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec

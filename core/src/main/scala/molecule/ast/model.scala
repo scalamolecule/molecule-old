@@ -21,7 +21,7 @@ object model {
 
   trait Element
 
-  case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None, tx: Seq[TxValues] = Seq()) extends Element
+  case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None, tx: Seq[Generic] = Seq()) extends Element
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
@@ -35,7 +35,6 @@ object model {
 
   case object EntValue extends Value
   case object VarValue extends Value
-  //  case object NoValue extends Value
   case object NoValue extends Value
   case class BackValue(backNs: String) extends Value
   case object EnumVal extends Value
@@ -45,14 +44,16 @@ object model {
   case class Fulltext(search: Seq[Any]) extends Value
   case class Fn(name: String) extends Value
 
-  sealed trait TxValues extends Value
-  case object TxValue extends TxValues
-  case object TxTValue extends TxValues
-  case object TxInstantValue extends TxValues
-  case object TxAddedValue extends TxValues
+  sealed trait Generic extends Value
+  case class AttrVar(v: String) extends Generic
+  case object TxValue extends Generic
+  case object TxTValue extends Generic
+  case object TxInstantValue extends Generic
+  case object OpValue extends Generic
 
   case object Qm extends Value
-  case object Maybe extends Value
+  case object Distinct extends Value
+//  case object Maybe extends Value
 
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value

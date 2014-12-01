@@ -1,13 +1,13 @@
-package molecule
-package examples.dayOfDatomic.tutorial
+package molecule.examples.dayOfDatomic
+import molecule._
+import molecule.examples.dayOfDatomic.dsl.productsOrder._
 import molecule.examples.dayOfDatomic.schema._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
-import molecule.examples.dayOfDatomic.dsl.productsOrder._
 
 class ProductsAndOrders extends DayOfAtomicSpec {
 
 
-  "Products And Orders (nested data)" >> {
+  "Nested data" >> {
 
     // See: http://blog.datomic.com/2013/06/component-entities.html
 

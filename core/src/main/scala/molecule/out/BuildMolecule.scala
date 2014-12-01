@@ -4,35 +4,29 @@ import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
-import scala.collection.JavaConverters._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
 
 trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("BuildMolecule", 1, 60, false)
+  val x = Debug("BuildMolecule", 1, 20, false)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
   def basics(dsl: c.Expr[NS]) = {
-    val model0 = Dsl2Model(c)(dsl)
-
-    // Condense model
-    val model = Model(model0.elements.foldLeft((Seq[Element](), null: Element)) {
-      case ((es, last: Atom), e@Meta(_, _, _, value: TxValues)) => (es.init :+ last.copy(tx = last.tx :+ value), last)
-      case ((es, last), e)                                      => (es :+ e, e)
-    }._1)
+    val model = Dsl2Model(c)(dsl)
 
     val p = dsl.tree.pos
     val dslTailCode = p.source.lineToString(p.line - 1).substring(p.column)
     val checkCorrectModel = dslTailCode match {
-      // todo: lift into quasiquotes and check against resolved `model`
+      // todo: lift into quasiquotes and check against resolved model
       case r".*[\.|\s]*add.*"    => "check add..."
       case r".*[\.|\s]*insert.*" => "check insert..."
       case r".*[\.|\s]*update.*" => "check update..."
       case _                     => "other..."
     }
-//    x(1, dsl.tree, showRaw(dsl.tree), model0, model, checkCorrectModel)
+    //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
+//    x(1, dsl.tree, model)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
@@ -40,10 +34,11 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => Seq(ident -> q"${TermName(ident.substring(9))}")
         case meta@Meta(_, _, _, Eq(Seq(ident: String))) if ident.startsWith("__ident__")              => Seq(ident -> q"${TermName(ident.substring(9))}")
         case Group(_, nestedElements)                                                                 => mapIdentifiers(nestedElements, identifiers0)
+        case TxModel(txElements)                                                                      => mapIdentifiers(txElements, identifiers0)
       }).flatten
       (identifiers0 ++ newIdentifiers).distinct
     }
-    val identifiers = mapIdentifiers(model0.elements).toMap
+    val identifiers = mapIdentifiers(model.elements).toMap
 
     q"""
       import molecule.ast.model._
@@ -62,9 +57,9 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => atom.copy(value = Remove(Seq($identifiers.get(ident).get)))
         case meta@Meta(_, _, _,    Eq(Seq(ident: String)))           if ident.startsWith("__ident__") => meta.copy(value = Eq(Seq($identifiers.get(ident).get)))
         case Group(ns, nestedElements)                                                                => Group(ns, resolveIdentifiers(nestedElements))
+        case TxModel(txElements)                                                                      => TxModel(resolveIdentifiers(txElements))
         case other                                                                                    => other
       }
-      val model0 = Model(resolveIdentifiers($model0.elements))
       val model =  Model(resolveIdentifiers($model.elements))
       val query = Model2Query(model)
 
@@ -92,7 +87,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   def from0attr(dsl: c.Expr[NS]) = {
     expr( q"""
       ..${basics(dsl)}
-      new Molecule0(model0, model, query) {
+      new Molecule0(model, query) {
         def debug(implicit conn: Connection): Unit = debugMolecule(conn)
       }
     """)
@@ -111,7 +106,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
     expr( q"""
       ..${basics(dsl)}
-      new Molecule1[$A](model0, model, query) {
+      new Molecule1[$A](model, query) {
         def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${cast(q"data")})
         def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query, conn).toList.map(data => ${hlist(q"data")})
         def debug(implicit conn: Connection): Unit          = debugMolecule(conn)
@@ -135,7 +130,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       ..${
       basics(dsl)
     }
-      new $MoleculeTpe[..$OutTypes](model0, model, query) {
+      new $MoleculeTpe[..$OutTypes](model, query) {
         def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query, conn).toList.map(data => (..${tplValues(q"data")}))
         def hl(implicit conn: Connection) : Seq[$HListType]    = results(query, conn).toList.map(data => ${hlist(q"data")})
         def debug(implicit conn: Connection): Unit             = debugMolecule(conn)

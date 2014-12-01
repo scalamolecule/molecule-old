@@ -1,17 +1,14 @@
 package molecule.out
-import java.util.{Date, List => jList}
-//import datomic.{Connection => Cnx}
+import java.util.Date
 import datomic.Connection
 import molecule.DatomicFacade
 import molecule.Tx
 import molecule.ast.model._
 import molecule.ast.query.Query
-//import molecule.dsl.schemaDSL.NS
 import shapeless.{::, HNil}
 
 
 trait Molecule extends DatomicFacade {
-   val _model0: Model
    val _model: Model
    val _query: Query
 
@@ -32,9 +29,9 @@ trait Molecule extends DatomicFacade {
   def debug(implicit conn: Connection): Unit
 }
 
-abstract class Molecule0(val _model0: Model, val _model: Model, val _query: Query) extends Molecule
+abstract class Molecule0(val _model: Model, val _query: Query) extends Molecule
 
-abstract class Molecule1[A](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[A]
   def get(n: Int)(implicit conn: Connection): Seq[A]    = get(conn).take(n)
   def one        (implicit conn: Connection): A         = get(conn).head
@@ -53,11 +50,9 @@ abstract class Molecule1[A](val _model0: Model, val _model: Model, val _query: Q
   def history           = history_(this)
   def since(d: Date)    = since_  (this, d)
   def imagine(tx: lObj) = imagine_(this, tx)
-
-//  def maybe: Pull2[A] //= ???
 }
 
-abstract class Molecule2[A, B](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule2[A, B](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B)         = get(conn).head
@@ -78,7 +73,7 @@ abstract class Molecule2[A, B](val _model0: Model, val _model: Model, val _query
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule3[A, B, C](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule3[A, B, C](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C)         = get(conn).head
@@ -99,7 +94,7 @@ abstract class Molecule3[A, B, C](val _model0: Model, val _model: Model, val _qu
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule4[A, B, C, D](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule4[A, B, C, D](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D)         = get(conn).head
@@ -120,7 +115,7 @@ abstract class Molecule4[A, B, C, D](val _model0: Model, val _model: Model, val 
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule5[A, B, C, D, E](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule5[A, B, C, D, E](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E)         = get(conn).head
@@ -141,7 +136,7 @@ abstract class Molecule5[A, B, C, D, E](val _model0: Model, val _model: Model, v
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule6[A, B, C, D, E, F](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule6[A, B, C, D, E, F](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F)         = get(conn).head
@@ -162,7 +157,7 @@ abstract class Molecule6[A, B, C, D, E, F](val _model0: Model, val _model: Model
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule7[A, B, C, D, E, F, G](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule7[A, B, C, D, E, F, G](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G)         = get(conn).head
@@ -183,7 +178,7 @@ abstract class Molecule7[A, B, C, D, E, F, G](val _model0: Model, val _model: Mo
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule8[A, B, C, D, E, F, G, H](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule8[A, B, C, D, E, F, G, H](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H)         = get(conn).head
@@ -204,7 +199,7 @@ abstract class Molecule8[A, B, C, D, E, F, G, H](val _model0: Model, val _model:
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule9[A, B, C, D, E, F, G, H, I](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I)         = get(conn).head
@@ -225,7 +220,7 @@ abstract class Molecule9[A, B, C, D, E, F, G, H, I](val _model0: Model, val _mod
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule10[A, B, C, D, E, F, G, H, I, J](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule10[A, B, C, D, E, F, G, H, I, J](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J)         = get(conn).head
@@ -246,7 +241,7 @@ abstract class Molecule10[A, B, C, D, E, F, G, H, I, J](val _model0: Model, val 
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule11[A, B, C, D, E, F, G, H, I, J, K](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule11[A, B, C, D, E, F, G, H, I, J, K](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K)         = get(conn).head
@@ -267,7 +262,7 @@ abstract class Molecule11[A, B, C, D, E, F, G, H, I, J, K](val _model0: Model, v
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L)         = get(conn).head
@@ -288,7 +283,7 @@ abstract class Molecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model0: Model
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M)         = get(conn).head
@@ -309,7 +304,7 @@ abstract class Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model0: Mo
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N)         = get(conn).head
@@ -330,7 +325,7 @@ abstract class Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model0:
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)         = get(conn).head
@@ -351,7 +346,7 @@ abstract class Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _mode
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)         = get(conn).head
@@ -372,7 +367,7 @@ abstract class Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _m
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)         = get(conn).head
@@ -393,7 +388,7 @@ abstract class Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)         = get(conn).head
@@ -414,7 +409,7 @@ abstract class Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)         = get(conn).head
@@ -435,7 +430,7 @@ abstract class Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)         = get(conn).head
@@ -456,7 +451,7 @@ abstract class Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)         = get(conn).head
@@ -477,7 +472,7 @@ abstract class Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
   def imagine(tx: lObj) = imagine_(this, tx)
 }
 
-abstract class Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val _model0: Model, val _model: Model, val _query: Query) extends Molecule {
+abstract class Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val _model: Model, val _query: Query) extends Molecule {
   def get        (implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)]
   def get(n: Int)(implicit conn: Connection): Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)]    = get(conn).take(n)
   def one        (implicit conn: Connection): (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)         = get(conn).head

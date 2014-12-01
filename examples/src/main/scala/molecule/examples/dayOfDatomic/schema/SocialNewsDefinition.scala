@@ -4,13 +4,12 @@ import molecule.dsl.schemaDefinition._
 // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
 
 
-
 @InOut(2, 5)
 trait SocialNewsDefinition {
 
   trait Story {
-    val title    = oneString.fullTextSearch.indexed
-    val url      = oneString.uniqueIdentity
+    val title = oneString.fullTextSearch.indexed
+    val url   = oneString.uniqueIdentity
   }
 
   trait Parent {
@@ -18,8 +17,8 @@ trait SocialNewsDefinition {
   }
 
   trait Comment {
-    val author  = one[User]
-    val text    = oneString
+    val author = one[User]
+    val text   = oneString
   }
 
   trait User {
@@ -35,7 +34,8 @@ trait SocialNewsDefinition {
   }
 
   trait Source {
-    val user = one[User]
+    val user    = one[User]
+    val usecase = oneString
   }
 }
 

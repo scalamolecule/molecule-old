@@ -1,12 +1,10 @@
-package molecule
-package examples.dayOfDatomic.tutorial
-import molecule.examples.dayOfDatomic._
+package molecule.examples.dayOfDatomic
 import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
 
 class SocialNews extends DayOfAtomicSpec {
 
-  "Social news" in new SocialNewsSetup {
+  "Social News" in new SocialNewsSetup {
 
     // Add underscore to attribute name to _not_ return it's value (and keep it as a search attribute)
     // Here we get all Story ids (entities having a url value)
@@ -21,7 +19,7 @@ class SocialNews extends DayOfAtomicSpec {
     User.email.upVotes.get === List(("john@example.com", Set(s1, s2, s3)))
 
     // Update John's first name
-    User(john).firstName.apply("Jonathan").update
+    User(john).firstName("Jonathan").update
 
     // John regrets upvoting Paul Graham story (`s3`)
     val paulGrahamStory = Story.e.url_("http://www.paulgraham.com/avg.html").get.head

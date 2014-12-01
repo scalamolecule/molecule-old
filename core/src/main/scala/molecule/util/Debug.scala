@@ -10,7 +10,7 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
   // Helpers ..........................................
 
   def padS(longest: Int, str: String) = pad(longest, str.length)
-  def pad(longest: Int, shorter: Int) = if (longest > shorter) " " * (longest - shorter) else ""
+  def pad(longest: Int, shorter: Int) = if (longest > shorter) " " * (longest - shorter) + " " else ""
 
 
   def apply(id: Int, params: Any*): Unit = {
@@ -26,7 +26,7 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
         val indent = if (i == 0) "" else pad1 + i + pad2
         val max = level >= maxLevel
         x match {
-          case Add(e, a, stmts: Seq[_]) => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) + "List(\n" +
+          case Add(e, a, stmts: Seq[_]) => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) +  "List(\n" +
             stmts.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case Add(e, a, v)             => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
           case Retract(e, a, v)         => indent + ":db/retract" + padS(13, ":db/retract") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
@@ -36,10 +36,8 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
             indent + action + padS(13, action.toString) + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
           }
 
-          case l: List[_] if max => indent + "List(" + l.mkString(",   ") + ")"
-          case l: List[_]        => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          //          case l: Seq[_] if max       => indent + "Seq(" + l.mkString(",   ") + ")"
-          //          case l: Seq[_]              => indent + "Seq(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case l: List[_] if max      => indent + "List(" + l.mkString(",   ") + ")"
+          case l: List[_]             => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case l: jList[_] if max     => indent + "JavaList(" + l.mkString(",   ") + ")"
           case l: jList[_]            => indent + "JavaList(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case l: Map[_, _] if max    => indent + "Map(" + l.mkString(",   ") + ")"

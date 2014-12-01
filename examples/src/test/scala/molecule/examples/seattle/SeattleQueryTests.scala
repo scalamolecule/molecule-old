@@ -450,7 +450,7 @@
 //    implicit val conn = loadFromFiles("seattle-schema1a.dtm", "seattle-data0a.dtm", 2)
 //
 //
-//    m(Db.txInstant) -->
+//    m(Db.txI) -->
 //      """[:find ?b
 //        | :where [?a :db/txInstant ?b]]""".stripMargin
 //  }

@@ -36,7 +36,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case uuid: UUID                    => mkUUID(uuid)
     case uri: URI                      => mkURI(uri)
     case qm: Qm.type                   => q"Qm"
-    case maybe: Maybe.type             => q"Maybe"
+    case maybe: Distinct.type          => q"Distinct"
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
     case Fn(value)                     => q"Fn($value)"
@@ -133,28 +133,30 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   // Liftables for Model --------------------------------------------------------------
 
-  implicit val liftTxValues = Liftable[TxValues] {
+  implicit val liftGeneric = Liftable[Generic] {
+    case AttrVar(v)     => q"AttrVar($v)"
     case TxValue        => q"TxValue"
     case TxTValue       => q"TxTValue"
     case TxInstantValue => q"TxInstantValue"
-    case TxAddedValue   => q"TxAddedValue"
+    case OpValue        => q"OpValue"
   }
 
   implicit val liftValue = Liftable[Value] {
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
     case NoValue          => q"NoValue"
+    case AttrVar(v)       => q"AttrVar($v)"
     case TxValue          => q"TxValue"
     case TxTValue         => q"TxTValue"
     case TxInstantValue   => q"TxInstantValue"
-    case TxAddedValue     => q"TxAddedValue"
+    case OpValue          => q"OpValue"
     case BackValue(value) => q"BackValue($value)"
     case EnumVal          => q"EnumVal"
     case Eq(values)       => q"Eq(Seq(..$values))"
     case Lt(value)        => q"Lt($value)"
     case Fn(value)        => q"Fn($value)"
     case Qm               => q"Qm"
-    case Maybe            => q"Maybe"
+    case Distinct         => q"Distinct"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
     case Replace(values)  => q"Replace($values)"
     case Remove(values)   => q"Remove(Seq(..$values))"

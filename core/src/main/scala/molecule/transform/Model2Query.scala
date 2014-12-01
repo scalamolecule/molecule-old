@@ -16,6 +16,9 @@ object Model2Query {
         case Atom(_, _, _, _, Replace(_), _, _) => q
         case Atom(_, _, _, _, Remove(_), _, _)  => q
 
+        case Atom("?", "attr", _, _, Distinct, _, tx) => q.find("distinct", Seq(), v2, tx, v).attr(e, v, v1, v2, tx)
+        case Atom("?", "attr", _, _, _, _, tx)        => q.find(v2, tx, v).attr(e, v, v1, v2, tx)
+
         case a0@Atom(_, attr0, _, card, value, enumPrefix, tx) if attr0.last == '_' && tx.isEmpty => {
           val a = a0.copy(name = attr0.init)
           val (isEnum, prefix) = if (enumPrefix.isDefined) (true, enumPrefix.get) else (false, "")
@@ -100,7 +103,6 @@ object Model2Query {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Meta(_, _, "a", _)      => q.find(v2, Seq()).where(e, v).ident(v, v1).func(".toString ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
         case Meta(_, _, _, EntValue) => q.find(e, Seq())
         case Meta(_, _, _, _)        => q
 
@@ -111,6 +113,7 @@ object Model2Query {
     def make(query: Query, element: Element, e: String, v: String, prevNs: String, prevAttr: String, prevRefNs: String): (Query, String, String, String, String, String) = {
       val w = (v.toCharArray.head + 1).toChar.toString
       element match {
+        case Atom("?", "attr", _, _, _, _, _)                 => (resolve(query, e, v, element), e, w, "?", "attr", "")
         case Atom(ns, attr, _, _, _, _, _) if ns == prevNs    => (resolve(query, e, w, element), e, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _) if ns == prevAttr  => (resolve(query, v, w, element), v, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, attr, "")
@@ -131,8 +134,9 @@ object Model2Query {
         case Meta(ns, attr, "e", Eq(Seq(id: Long))) => x(2, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
         case Meta(ns, attr, _, _)                   => x(3, element); (resolve(query, e, v, element), e, v, ns, attr, "")
 
-        case TxModel(elements) => //query
-          val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
+        case TxModel(elements) =>
+          //          val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
+          val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, "tx", w, prevNs, prevAttr, prevRefNs)) {
             case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
               make(query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)
           }
