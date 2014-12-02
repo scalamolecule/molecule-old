@@ -9,7 +9,7 @@ object QueryOps {
 
     // Find ..........................................
 
-    def find(fn: String, args: Seq[String], v: String, tx: Seq[Generic]): Query =
+    def find(fn: String, args: Seq[Any], v: String, tx: Seq[Generic]): Query =
       find(AggrExpr(fn, args, Var(v)), tx)
 
     def find(v: String, tx: Seq[Generic]): Query =

@@ -1,5 +1,4 @@
 package molecule.in
-import molecule.ast.model._
 import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
@@ -68,11 +67,15 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
     val cast = (data: Tree) => if (A <:< typeOf[Set[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
+    else if (A <:< typeOf[Vector[_]])
+      q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
     else
       q"$data.get(0).asInstanceOf[$A]"
 
     val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A] :: HNil"
+    else if (A <:< typeOf[Vector[_]])
+      q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A] :: HNil"
     else
       q"$data.get(0).asInstanceOf[$A] :: HNil"
 
@@ -116,13 +119,15 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
     val MoleculeTpe = molecule_o(OutTypes.size)
     val tplValues = (data: Tree) => OutTypes.zipWithIndex.map {
-      case (t, i) if t <:< typeOf[Set[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
-      case (t, i)                         => q"$data.get($i).asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Set[_]]    => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Vector[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
+      case (t, i)                            => q"$data.get($i).asInstanceOf[$t]"
     }
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
     val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
-      case ((t, i), hl) if t <:< typeOf[Set[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
-      case ((t, i), hl)                         => q"$hl.::($data.get($i).asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Set[_]]    => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Vector[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t])"
+      case ((t, i), hl)                            => q"$hl.::($data.get($i).asInstanceOf[$t])"
     }
 
     val bindValues2 = if (InTypes.size > 1) {

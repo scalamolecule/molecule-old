@@ -26,7 +26,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-//    x(1, dsl.tree, model)
+    //    x(1, dsl.tree, model)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
@@ -92,15 +92,22 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       }
     """)
   }
+  //Vector(23).to
 
   def from1attr(dsl: c.Expr[NS], A: Type) = {
     val cast = (data: Tree) => if (A <:< typeOf[Set[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
+    else if (A <:< typeOf[Vector[_]])
+      q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
+    else if (A <:< typeOf[Stream[_]])
+      q"$data.get(0).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
     else
       q"$data.get(0).asInstanceOf[$A]"
 
     val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A] :: HNil"
+    else if (A <:< typeOf[Vector[_]])
+      q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A] :: HNil"
     else
       q"$data.get(0).asInstanceOf[$A] :: HNil"
 
@@ -116,13 +123,15 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
   def fromXattrs(dsl: c.Expr[NS], OutTypes: Type*) = {
     val tplValues = (data: Tree) => OutTypes.zipWithIndex.map {
-      case (t, i) if t <:< typeOf[Set[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
-      case (t, i)                         => q"$data.get($i).asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Set[_]]    => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Vector[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
+      case (t, i)                            => q"$data.get($i).asInstanceOf[$t]"
     }
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
     val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
-      case ((t, i), hl) if t <:< typeOf[Set[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
-      case ((t, i), hl)                         => q"$hl.::($data.get($i).asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Set[_]]    => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Vector[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t])"
+      case ((t, i), hl)                            => q"$hl.::($data.get($i).asInstanceOf[$t])"
     }
     val MoleculeTpe = molecule_o(OutTypes.size)
 

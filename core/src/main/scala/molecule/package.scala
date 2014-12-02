@@ -187,29 +187,29 @@ package object molecule {
 
   // Aggregate calculation
 
-  trait aggregate[A] {
-    def apply[B](a: aggregate[B]): A = ???
-  }
+//  trait aggregate[A] {
+//    def apply[B](a: aggregate[B]): A = ???
+//  }
 
-  trait count extends aggregate[count]
+  trait count //extends aggregate[count]
   object count extends count
 
-  trait countDistinct extends aggregate[countDistinct]
+  trait countDistinct //extends aggregate[countDistinct]
   object countDistinct extends countDistinct
 
-  trait sum extends aggregate[sum]
+  trait sum //extends aggregate[sum]
   object sum extends sum
 
-  trait avg extends aggregate[avg]
+  trait avg //extends aggregate[avg]
   object avg extends avg
 
-  trait median extends aggregate[median]
+  trait median //extends aggregate[median]
   object median extends median
 
-  trait variance extends aggregate[variance]
+  trait variance //extends aggregate[variance]
   object variance extends variance
 
-  trait stddev extends aggregate[stddev]
+  trait stddev //extends aggregate[stddev]
   object stddev extends stddev
 
 //  case class contains[T](value: T)

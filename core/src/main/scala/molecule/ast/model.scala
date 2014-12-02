@@ -42,7 +42,7 @@ object model {
   case class Eq(values: Seq[Any]) extends Value
   case class Lt(value: Any) extends Value
   case class Fulltext(search: Seq[Any]) extends Value
-  case class Fn(name: String) extends Value
+  case class Fn(name: String, i: Option[Int] = None) extends Value
 
   sealed trait Generic extends Value
   case class AttrVar(v: String) extends Generic

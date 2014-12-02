@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 30, 30, false)
+  val x = Debug("Dsl2Model", 20, 30, false)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -149,20 +149,23 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   }
 
   def getValues(attr: Tree, values: Tree): Any = values match {
-    case q"Seq($pkg.?)"             => Qm
-    case q"Seq($pkg.distinct)"      => Distinct
-    case q"Seq($pkg.max)"           => Fn("max")
-    case q"Seq($pkg.min)"           => Fn("min")
-    case q"Seq($pkg.rand)"          => Fn("rand")
-    case q"Seq($pkg.sample)"        => Fn("sample")
-    case q"Seq($pkg.count)"         => Fn("count")
-    case q"Seq($pkg.countDistinct)" => Fn("countDistinct")
-    case q"Seq($pkg.sum)"           => Fn("sum")
-    case q"Seq($pkg.avg)"           => Fn("avg")
-    case q"Seq($pkg.median)"        => Fn("median")
-    case q"Seq($pkg.variance)"      => Fn("variance")
-    case q"Seq($pkg.stddev)"        => Fn("stddev")
-    case q"Seq(..$vs)"              =>
+    case q"Seq($pkg.?)"                                          => Qm
+    case q"Seq($pkg.distinct)"                                   => Distinct
+    case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"    => Fn("max", Some(i))
+    case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"    => Fn("min", Some(i))
+    case q"Seq($pkg.rand.apply(${Literal(Constant(i: Int))}))"   => Fn("rand", Some(i))
+    case q"Seq($pkg.sample.apply(${Literal(Constant(i: Int))}))" => Fn("sample", Some(i))
+    case q"Seq($pkg.max)"                                        => Fn("max")
+    case q"Seq($pkg.min)"                                        => Fn("min")
+    case q"Seq($pkg.rand)"                                       => Fn("rand")
+    case q"Seq($pkg.count)"                                      => Fn("count")
+    case q"Seq($pkg.countDistinct)"                              => Fn("count-distinct")
+    case q"Seq($pkg.sum)"                                        => Fn("sum")
+    case q"Seq($pkg.avg)"                                        => Fn("avg")
+    case q"Seq($pkg.median)"                                     => Fn("median")
+    case q"Seq($pkg.variance)"                                   => Fn("variance")
+    case q"Seq($pkg.stddev)"                                     => Fn("stddev")
+    case q"Seq(..$vs)"                                           =>
       vs match {
         case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
           val oldNew: Map[Any, Any] = get.map {
@@ -172,7 +175,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
         case other => vs.flatMap(v => resolveValues(v, att(q"$attr")))
       }
-    case v                          => resolveValues(v, att(q"$attr"))
+    case v                                                       => resolveValues(v, att(q"$attr"))
   }
 
   def extract(t: Tree) = t match {

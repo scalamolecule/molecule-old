@@ -37,7 +37,7 @@ object Model2Query {
             case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), Seq())
             case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), Seq())
             case (_, Lt(arg))                         => q.where(e, a, v, Seq()).compareTo("<", a, v, Val(arg))
-            case (_, Fn("count"))                     => q.where(e, a, v, Seq()).find("count", Seq(), e, Seq())
+            case (_, Fn("count", _))                  => q.where(e, a, v, Seq()) //.find("count", Seq(), e, Seq())
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qvs))                   => q.orRules(v1, a, qvs, Seq()).fulltext(e, a, v, Var(v1))
@@ -63,7 +63,7 @@ object Model2Query {
             case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), tx)
             case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), tx)
             case (_, Lt(arg))                         => q.where(e, a, v, tx).compareTo("<", a, v, Val(arg))
-            case (_, Fn("count"))                     => q.where(e, a, v, tx).find("count", Seq(), e, tx)
+            case (_, Fn("count", _))                  => q.where(e, a, v, tx) //.find("count", Seq(), e, tx)
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qvs))                   => q.orRules(v1, a, qvs, tx).fulltext(e, a, v, Var(v1))
@@ -93,7 +93,9 @@ object Model2Query {
             case (_, Eq(s :: Nil)) if isEnum          => q.find(v2, tx).where(e, a, Val(prefix + s), tx).enum(e, a, v) // todo: can we output a constant value instead?
             case (_, Eq(s :: Nil))                    => q.find(v, tx).where(e, a, Val(s), tx).where(e, a, v, Seq()) // todo: can we output a constant value instead?
             case (_, Lt(arg))                         => q.find(v, tx).where(e, a, v, tx).compareTo("<", a, v, Val(arg))
-            case (_, Fn("count"))                     => q.find("count", Seq(), e, tx) //.where(e, a, v)
+//            case (_, Fn("count", _))                  => q.find("count", Seq(), v, tx).where(e, a, v, tx)
+            case (_, Fn(fn, Some(i)))                 => q.find(fn, Seq(i), v, tx).where(e, a, v, tx)
+            case (_, Fn(fn, _))                       => q.find(fn, Seq(), v, tx).where(e, a, v, tx)
             case (2, Fulltext(qv :: Nil))             => q.find("distinct", Seq(), v, tx).fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qv :: Nil))             => q.find(v, tx).fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qvs))                   => q.find(v, tx).fulltext(e, a, v, Var(v1)).orRules(v1, a, qvs)

@@ -39,7 +39,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case maybe: Distinct.type          => q"Distinct"
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
-    case Fn(value)                     => q"Fn($value)"
+//    case Fn(fn, args)                  => q"Fn($fn, Seq(..$args))"
     case other                         => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
   }
 
@@ -154,7 +154,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case EnumVal          => q"EnumVal"
     case Eq(values)       => q"Eq(Seq(..$values))"
     case Lt(value)        => q"Lt($value)"
-    case Fn(value)        => q"Fn($value)"
+    case Fn(fn, i)        => q"Fn($fn, $i)"
     case Qm               => q"Qm"
     case Distinct         => q"Distinct"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"

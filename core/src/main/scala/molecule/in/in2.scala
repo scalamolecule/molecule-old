@@ -60,11 +60,11 @@ trait In_2_1[In2_1[_,_,_], In2_2[_,_,_,_], In3_1[_,_,_,_], In3_2[_,_,_,_,_], I1,
   def apply(v: rand)    : In2_1[I1, I2, A] = ???
   def apply(v: sample)  : In2_1[I1, I2, A] = ???
 
-  def apply(v: mins)    : In2_1[I1, I2, Seq[A]] = ???
-  def apply(v: maxs)    : In2_1[I1, I2, Seq[A]] = ???
-  def apply(v: distinct): In2_1[I1, I2, Seq[A]] = ???
-  def apply(v: rands)   : In2_1[I1, I2, Seq[A]] = ???
-  def apply(v: samples) : In2_1[I1, I2, Seq[A]] = ???
+  def apply(v: mins)    : In2_1[I1, I2, Vector[A]] = ???
+  def apply(v: maxs)    : In2_1[I1, I2, Vector[A]] = ???
+  def apply(v: distinct): In2_1[I1, I2, Vector[A]] = ???
+  def apply(v: rands)   : In2_1[I1, I2, Stream[A]] = ???
+  def apply(v: samples) : In2_1[I1, I2, Vector[A]] = ???
 
   def apply(v: count)        : In2_1[I1, I2, Long] = ???
   def apply(v: countDistinct): In2_1[I1, I2, Long] = ???
@@ -106,11 +106,11 @@ trait In_2_2[In2_2[_,_,_,_], In2_3[_,_,_,_,_], In3_2[_,_,_,_,_], In3_3[_,_,_,_,_
   def apply(v: rand)    : In2_2[I1, I2, A, B] = ???
   def apply(v: sample)  : In2_2[I1, I2, A, B] = ???
 
-  def apply(v: mins)    : In2_2[I1, I2, A, Seq[B]] = ???
-  def apply(v: maxs)    : In2_2[I1, I2, A, Seq[B]] = ???
-  def apply(v: distinct): In2_2[I1, I2, A, Seq[B]] = ???
-  def apply(v: rands)   : In2_2[I1, I2, A, Seq[B]] = ???
-  def apply(v: samples) : In2_2[I1, I2, A, Seq[B]] = ???
+  def apply(v: mins)    : In2_2[I1, I2, A, Vector[B]] = ???
+  def apply(v: maxs)    : In2_2[I1, I2, A, Vector[B]] = ???
+  def apply(v: distinct): In2_2[I1, I2, A, Vector[B]] = ???
+  def apply(v: rands)   : In2_2[I1, I2, A, Stream[B]] = ???
+  def apply(v: samples) : In2_2[I1, I2, A, Vector[B]] = ???
 
   def apply(v: count)        : In2_2[I1, I2, A, Long] = ???
   def apply(v: countDistinct): In2_2[I1, I2, A, Long] = ???
@@ -152,11 +152,11 @@ trait In_2_3[In2_3[_,_,_,_,_], In2_4[_,_,_,_,_,_], In3_3[_,_,_,_,_,_], In3_4[_,_
   def apply(v: rand)    : In2_3[I1, I2, A, B, C] = ???
   def apply(v: sample)  : In2_3[I1, I2, A, B, C] = ???
 
-  def apply(v: mins)    : In2_3[I1, I2, A, B, Seq[C]] = ???
-  def apply(v: maxs)    : In2_3[I1, I2, A, B, Seq[C]] = ???
-  def apply(v: distinct): In2_3[I1, I2, A, B, Seq[C]] = ???
-  def apply(v: rands)   : In2_3[I1, I2, A, B, Seq[C]] = ???
-  def apply(v: samples) : In2_3[I1, I2, A, B, Seq[C]] = ???
+  def apply(v: mins)    : In2_3[I1, I2, A, B, Vector[C]] = ???
+  def apply(v: maxs)    : In2_3[I1, I2, A, B, Vector[C]] = ???
+  def apply(v: distinct): In2_3[I1, I2, A, B, Vector[C]] = ???
+  def apply(v: rands)   : In2_3[I1, I2, A, B, Stream[C]] = ???
+  def apply(v: samples) : In2_3[I1, I2, A, B, Vector[C]] = ???
 
   def apply(v: count)        : In2_3[I1, I2, A, B, Long] = ???
   def apply(v: countDistinct): In2_3[I1, I2, A, B, Long] = ???
@@ -198,11 +198,11 @@ trait In_2_4[In2_4[_,_,_,_,_,_], In2_5[_,_,_,_,_,_,_], In3_4[_,_,_,_,_,_,_], In3
   def apply(v: rand)    : In2_4[I1, I2, A, B, C, D] = ???
   def apply(v: sample)  : In2_4[I1, I2, A, B, C, D] = ???
 
-  def apply(v: mins)    : In2_4[I1, I2, A, B, C, Seq[D]] = ???
-  def apply(v: maxs)    : In2_4[I1, I2, A, B, C, Seq[D]] = ???
-  def apply(v: distinct): In2_4[I1, I2, A, B, C, Seq[D]] = ???
-  def apply(v: rands)   : In2_4[I1, I2, A, B, C, Seq[D]] = ???
-  def apply(v: samples) : In2_4[I1, I2, A, B, C, Seq[D]] = ???
+  def apply(v: mins)    : In2_4[I1, I2, A, B, C, Vector[D]] = ???
+  def apply(v: maxs)    : In2_4[I1, I2, A, B, C, Vector[D]] = ???
+  def apply(v: distinct): In2_4[I1, I2, A, B, C, Vector[D]] = ???
+  def apply(v: rands)   : In2_4[I1, I2, A, B, C, Stream[D]] = ???
+  def apply(v: samples) : In2_4[I1, I2, A, B, C, Vector[D]] = ???
 
   def apply(v: count)        : In2_4[I1, I2, A, B, C, Long] = ???
   def apply(v: countDistinct): In2_4[I1, I2, A, B, C, Long] = ???
@@ -244,11 +244,11 @@ trait In_2_5[In2_5[_,_,_,_,_,_,_], In2_6[_,_,_,_,_,_,_,_], In3_5[_,_,_,_,_,_,_,_
   def apply(v: rand)    : In2_5[I1, I2, A, B, C, D, E] = ???
   def apply(v: sample)  : In2_5[I1, I2, A, B, C, D, E] = ???
 
-  def apply(v: mins)    : In2_5[I1, I2, A, B, C, D, Seq[E]] = ???
-  def apply(v: maxs)    : In2_5[I1, I2, A, B, C, D, Seq[E]] = ???
-  def apply(v: distinct): In2_5[I1, I2, A, B, C, D, Seq[E]] = ???
-  def apply(v: rands)   : In2_5[I1, I2, A, B, C, D, Seq[E]] = ???
-  def apply(v: samples) : In2_5[I1, I2, A, B, C, D, Seq[E]] = ???
+  def apply(v: mins)    : In2_5[I1, I2, A, B, C, D, Vector[E]] = ???
+  def apply(v: maxs)    : In2_5[I1, I2, A, B, C, D, Vector[E]] = ???
+  def apply(v: distinct): In2_5[I1, I2, A, B, C, D, Vector[E]] = ???
+  def apply(v: rands)   : In2_5[I1, I2, A, B, C, D, Stream[E]] = ???
+  def apply(v: samples) : In2_5[I1, I2, A, B, C, D, Vector[E]] = ???
 
   def apply(v: count)        : In2_5[I1, I2, A, B, C, D, Long] = ???
   def apply(v: countDistinct): In2_5[I1, I2, A, B, C, D, Long] = ???
@@ -290,11 +290,11 @@ trait In_2_6[In2_6[_,_,_,_,_,_,_,_], In2_7[_,_,_,_,_,_,_,_,_], In3_6[_,_,_,_,_,_
   def apply(v: rand)    : In2_6[I1, I2, A, B, C, D, E, F] = ???
   def apply(v: sample)  : In2_6[I1, I2, A, B, C, D, E, F] = ???
 
-  def apply(v: mins)    : In2_6[I1, I2, A, B, C, D, E, Seq[F]] = ???
-  def apply(v: maxs)    : In2_6[I1, I2, A, B, C, D, E, Seq[F]] = ???
-  def apply(v: distinct): In2_6[I1, I2, A, B, C, D, E, Seq[F]] = ???
-  def apply(v: rands)   : In2_6[I1, I2, A, B, C, D, E, Seq[F]] = ???
-  def apply(v: samples) : In2_6[I1, I2, A, B, C, D, E, Seq[F]] = ???
+  def apply(v: mins)    : In2_6[I1, I2, A, B, C, D, E, Vector[F]] = ???
+  def apply(v: maxs)    : In2_6[I1, I2, A, B, C, D, E, Vector[F]] = ???
+  def apply(v: distinct): In2_6[I1, I2, A, B, C, D, E, Vector[F]] = ???
+  def apply(v: rands)   : In2_6[I1, I2, A, B, C, D, E, Stream[F]] = ???
+  def apply(v: samples) : In2_6[I1, I2, A, B, C, D, E, Vector[F]] = ???
 
   def apply(v: count)        : In2_6[I1, I2, A, B, C, D, E, Long] = ???
   def apply(v: countDistinct): In2_6[I1, I2, A, B, C, D, E, Long] = ???
@@ -336,11 +336,11 @@ trait In_2_7[In2_7[_,_,_,_,_,_,_,_,_], In2_8[_,_,_,_,_,_,_,_,_,_], In3_7[_,_,_,_
   def apply(v: rand)    : In2_7[I1, I2, A, B, C, D, E, F, G] = ???
   def apply(v: sample)  : In2_7[I1, I2, A, B, C, D, E, F, G] = ???
 
-  def apply(v: mins)    : In2_7[I1, I2, A, B, C, D, E, F, Seq[G]] = ???
-  def apply(v: maxs)    : In2_7[I1, I2, A, B, C, D, E, F, Seq[G]] = ???
-  def apply(v: distinct): In2_7[I1, I2, A, B, C, D, E, F, Seq[G]] = ???
-  def apply(v: rands)   : In2_7[I1, I2, A, B, C, D, E, F, Seq[G]] = ???
-  def apply(v: samples) : In2_7[I1, I2, A, B, C, D, E, F, Seq[G]] = ???
+  def apply(v: mins)    : In2_7[I1, I2, A, B, C, D, E, F, Vector[G]] = ???
+  def apply(v: maxs)    : In2_7[I1, I2, A, B, C, D, E, F, Vector[G]] = ???
+  def apply(v: distinct): In2_7[I1, I2, A, B, C, D, E, F, Vector[G]] = ???
+  def apply(v: rands)   : In2_7[I1, I2, A, B, C, D, E, F, Stream[G]] = ???
+  def apply(v: samples) : In2_7[I1, I2, A, B, C, D, E, F, Vector[G]] = ???
 
   def apply(v: count)        : In2_7[I1, I2, A, B, C, D, E, F, Long] = ???
   def apply(v: countDistinct): In2_7[I1, I2, A, B, C, D, E, F, Long] = ???
@@ -382,11 +382,11 @@ trait In_2_8[In2_8[_,_,_,_,_,_,_,_,_,_], In2_9[_,_,_,_,_,_,_,_,_,_,_], In3_8[_,_
   def apply(v: rand)    : In2_8[I1, I2, A, B, C, D, E, F, G, H] = ???
   def apply(v: sample)  : In2_8[I1, I2, A, B, C, D, E, F, G, H] = ???
 
-  def apply(v: mins)    : In2_8[I1, I2, A, B, C, D, E, F, G, Seq[H]] = ???
-  def apply(v: maxs)    : In2_8[I1, I2, A, B, C, D, E, F, G, Seq[H]] = ???
-  def apply(v: distinct): In2_8[I1, I2, A, B, C, D, E, F, G, Seq[H]] = ???
-  def apply(v: rands)   : In2_8[I1, I2, A, B, C, D, E, F, G, Seq[H]] = ???
-  def apply(v: samples) : In2_8[I1, I2, A, B, C, D, E, F, G, Seq[H]] = ???
+  def apply(v: mins)    : In2_8[I1, I2, A, B, C, D, E, F, G, Vector[H]] = ???
+  def apply(v: maxs)    : In2_8[I1, I2, A, B, C, D, E, F, G, Vector[H]] = ???
+  def apply(v: distinct): In2_8[I1, I2, A, B, C, D, E, F, G, Vector[H]] = ???
+  def apply(v: rands)   : In2_8[I1, I2, A, B, C, D, E, F, G, Stream[H]] = ???
+  def apply(v: samples) : In2_8[I1, I2, A, B, C, D, E, F, G, Vector[H]] = ???
 
   def apply(v: count)        : In2_8[I1, I2, A, B, C, D, E, F, G, Long] = ???
   def apply(v: countDistinct): In2_8[I1, I2, A, B, C, D, E, F, G, Long] = ???
@@ -428,11 +428,11 @@ trait In_2_9[In2_9[_,_,_,_,_,_,_,_,_,_,_], In2_10[_,_,_,_,_,_,_,_,_,_,_,_], In3_
   def apply(v: rand)    : In2_9[I1, I2, A, B, C, D, E, F, G, H, I] = ???
   def apply(v: sample)  : In2_9[I1, I2, A, B, C, D, E, F, G, H, I] = ???
 
-  def apply(v: mins)    : In2_9[I1, I2, A, B, C, D, E, F, G, H, Seq[I]] = ???
-  def apply(v: maxs)    : In2_9[I1, I2, A, B, C, D, E, F, G, H, Seq[I]] = ???
-  def apply(v: distinct): In2_9[I1, I2, A, B, C, D, E, F, G, H, Seq[I]] = ???
-  def apply(v: rands)   : In2_9[I1, I2, A, B, C, D, E, F, G, H, Seq[I]] = ???
-  def apply(v: samples) : In2_9[I1, I2, A, B, C, D, E, F, G, H, Seq[I]] = ???
+  def apply(v: mins)    : In2_9[I1, I2, A, B, C, D, E, F, G, H, Vector[I]] = ???
+  def apply(v: maxs)    : In2_9[I1, I2, A, B, C, D, E, F, G, H, Vector[I]] = ???
+  def apply(v: distinct): In2_9[I1, I2, A, B, C, D, E, F, G, H, Vector[I]] = ???
+  def apply(v: rands)   : In2_9[I1, I2, A, B, C, D, E, F, G, H, Stream[I]] = ???
+  def apply(v: samples) : In2_9[I1, I2, A, B, C, D, E, F, G, H, Vector[I]] = ???
 
   def apply(v: count)        : In2_9[I1, I2, A, B, C, D, E, F, G, H, Long] = ???
   def apply(v: countDistinct): In2_9[I1, I2, A, B, C, D, E, F, G, H, Long] = ???
@@ -474,11 +474,11 @@ trait In_2_9[In2_9[_,_,_,_,_,_,_,_,_,_,_], In2_10[_,_,_,_,_,_,_,_,_,_,_,_], In3_
     def apply(v: rand)    : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, J] = ???
     def apply(v: sample)  : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, J] = ???
 
-    def apply(v: mins)    : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Seq[J]] = ???
-    def apply(v: maxs)    : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Seq[J]] = ???
-    def apply(v: distinct): In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Seq[J]] = ???
-    def apply(v: rands)   : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Seq[J]] = ???
-    def apply(v: samples) : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Seq[J]] = ???
+    def apply(v: mins)    : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Vector[J]] = ???
+    def apply(v: maxs)    : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Vector[J]] = ???
+    def apply(v: distinct): In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Vector[J]] = ???
+    def apply(v: rands)   : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Stream[J]] = ???
+    def apply(v: samples) : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Vector[J]] = ???
 
     def apply(v: count)        : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Long] = ???
     def apply(v: countDistinct): In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Long] = ???
@@ -520,11 +520,11 @@ trait In_2_11[In2_11[_,_,_,_,_,_,_,_,_,_,_,_,_], In2_12[_,_,_,_,_,_,_,_,_,_,_,_,
   def apply(v: rand)    : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, K] = ???
   def apply(v: sample)  : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, K] = ???
 
-  def apply(v: mins)    : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
-  def apply(v: maxs)    : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
-  def apply(v: distinct): In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
-  def apply(v: rands)   : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
-  def apply(v: samples) : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Seq[K]] = ???
+  def apply(v: mins)    : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Vector[K]] = ???
+  def apply(v: maxs)    : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Vector[K]] = ???
+  def apply(v: distinct): In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Vector[K]] = ???
+  def apply(v: rands)   : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Stream[K]] = ???
+  def apply(v: samples) : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Vector[K]] = ???
 
   def apply(v: count)        : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Long] = ???
   def apply(v: countDistinct): In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Long] = ???
@@ -566,11 +566,11 @@ trait In_2_12[In2_12[_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_13[_,_,_,_,_,_,_,_,_,_,_,
   def apply(v: rand)    : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L] = ???
   def apply(v: sample)  : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L] = ???
 
-  def apply(v: mins)    : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
-  def apply(v: maxs)    : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
-  def apply(v: distinct): In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
-  def apply(v: rands)   : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
-  def apply(v: samples) : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Seq[L]] = ???
+  def apply(v: mins)    : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Vector[L]] = ???
+  def apply(v: maxs)    : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Vector[L]] = ???
+  def apply(v: distinct): In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Vector[L]] = ???
+  def apply(v: rands)   : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Stream[L]] = ???
+  def apply(v: samples) : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Vector[L]] = ???
 
   def apply(v: count)        : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Long] = ???
   def apply(v: countDistinct): In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Long] = ???
@@ -613,11 +613,11 @@ trait In_2_13[In2_13[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_14[_,_,_,_,_,_,_,_,_,_,
   def apply(v: rand)    : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M] = ???
   def apply(v: sample)  : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M] = ???
 
-  def apply(v: mins)    : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
-  def apply(v: maxs)    : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
-  def apply(v: distinct): In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
-  def apply(v: rands)   : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
-  def apply(v: samples) : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Seq[M]] = ???
+  def apply(v: mins)    : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Vector[M]] = ???
+  def apply(v: maxs)    : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Vector[M]] = ???
+  def apply(v: distinct): In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Vector[M]] = ???
+  def apply(v: rands)   : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Stream[M]] = ???
+  def apply(v: samples) : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Vector[M]] = ???
 
   def apply(v: count)        : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
   def apply(v: countDistinct): In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
@@ -659,11 +659,11 @@ trait In_2_14[In2_14[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_15[_,_,_,_,_,_,_,_,_,
   def apply(v: rand)    : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N] = ???
   def apply(v: sample)  : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N] = ???
 
-  def apply(v: mins)    : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
-  def apply(v: maxs)    : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
-  def apply(v: distinct): In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
-  def apply(v: rands)   : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
-  def apply(v: samples) : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Seq[N]] = ???
+  def apply(v: mins)    : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Vector[N]] = ???
+  def apply(v: maxs)    : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Vector[N]] = ???
+  def apply(v: distinct): In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Vector[N]] = ???
+  def apply(v: rands)   : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Stream[N]] = ???
+  def apply(v: samples) : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Vector[N]] = ???
 
   def apply(v: count)        : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
   def apply(v: countDistinct): In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
@@ -705,11 +705,11 @@ trait In_2_15[In2_15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_16[_,_,_,_,_,_,_,_,
   def apply(v: rand)    : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = ???
   def apply(v: sample)  : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = ???
 
-  def apply(v: mins)    : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
-  def apply(v: maxs)    : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
-  def apply(v: distinct): In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
-  def apply(v: rands)   : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
-  def apply(v: samples) : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Seq[O]] = ???
+  def apply(v: mins)    : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Vector[O]] = ???
+  def apply(v: maxs)    : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Vector[O]] = ???
+  def apply(v: distinct): In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Vector[O]] = ???
+  def apply(v: rands)   : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Stream[O]] = ???
+  def apply(v: samples) : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Vector[O]] = ???
 
   def apply(v: count)        : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
   def apply(v: countDistinct): In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
@@ -751,11 +751,11 @@ trait In_2_16[In2_16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_17[_,_,_,_,_,_,_,
   def apply(v: rand)    : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = ???
   def apply(v: sample)  : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = ???
 
-  def apply(v: mins)    : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
-  def apply(v: maxs)    : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
-  def apply(v: distinct): In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
-  def apply(v: rands)   : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
-  def apply(v: samples) : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Seq[P]] = ???
+  def apply(v: mins)    : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Vector[P]] = ???
+  def apply(v: maxs)    : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Vector[P]] = ???
+  def apply(v: distinct): In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Vector[P]] = ???
+  def apply(v: rands)   : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Stream[P]] = ???
+  def apply(v: samples) : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Vector[P]] = ???
 
   def apply(v: count)        : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
   def apply(v: countDistinct): In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
@@ -796,11 +796,11 @@ trait In_2_17[In2_17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_18[_,_,_,_,_,_,
   def apply(v: rand)    : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = ???
   def apply(v: sample)  : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = ???
 
-  def apply(v: mins)    : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
-  def apply(v: maxs)    : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
-  def apply(v: distinct): In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
-  def apply(v: rands)   : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
-  def apply(v: samples) : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Seq[Q]] = ???
+  def apply(v: mins)    : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Vector[Q]] = ???
+  def apply(v: maxs)    : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Vector[Q]] = ???
+  def apply(v: distinct): In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Vector[Q]] = ???
+  def apply(v: rands)   : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Stream[Q]] = ???
+  def apply(v: samples) : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Vector[Q]] = ???
 
   def apply(v: count)        : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
   def apply(v: countDistinct): In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
@@ -840,11 +840,11 @@ trait In_2_18[In2_18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_19[_,_,_,_,_,
   def apply(v: rand)    : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = ???
   def apply(v: sample)  : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = ???
 
-  def apply(v: mins)    : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
-  def apply(v: maxs)    : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
-  def apply(v: distinct): In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
-  def apply(v: rands)   : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
-  def apply(v: samples) : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Seq[R]] = ???
+  def apply(v: mins)    : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Vector[R]] = ???
+  def apply(v: maxs)    : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Vector[R]] = ???
+  def apply(v: distinct): In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Vector[R]] = ???
+  def apply(v: rands)   : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Stream[R]] = ???
+  def apply(v: samples) : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Vector[R]] = ???
 
   def apply(v: count)        : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
   def apply(v: countDistinct): In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
@@ -883,11 +883,11 @@ trait In_2_19[In2_19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_20[_,_,_,_,
   def apply(v: rand)    : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = ???
   def apply(v: sample)  : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = ???
 
-  def apply(v: mins)    : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
-  def apply(v: maxs)    : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
-  def apply(v: distinct): In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
-  def apply(v: rands)   : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
-  def apply(v: samples) : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Seq[S]] = ???
+  def apply(v: mins)    : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Vector[S]] = ???
+  def apply(v: maxs)    : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Vector[S]] = ???
+  def apply(v: distinct): In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Vector[S]] = ???
+  def apply(v: rands)   : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Stream[S]] = ???
+  def apply(v: samples) : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Vector[S]] = ???
 
   def apply(v: count)        : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
   def apply(v: countDistinct): In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
@@ -925,11 +925,11 @@ trait In_2_20[In2_20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_21[_,_,_,
   def apply(v: rand)    : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = ???
   def apply(v: sample)  : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = ???
 
-  def apply(v: mins)    : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
-  def apply(v: maxs)    : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
-  def apply(v: distinct): In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
-  def apply(v: rands)   : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
-  def apply(v: samples) : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Seq[T]] = ???
+  def apply(v: mins)    : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Vector[T]] = ???
+  def apply(v: maxs)    : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Vector[T]] = ???
+  def apply(v: distinct): In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Vector[T]] = ???
+  def apply(v: rands)   : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Stream[T]] = ???
+  def apply(v: samples) : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Vector[T]] = ???
 
   def apply(v: count)        : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
   def apply(v: countDistinct): In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
@@ -966,11 +966,11 @@ trait In_2_21[In2_21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_22[_,_,
   def apply(v: rand)    : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = ???
   def apply(v: sample)  : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = ???
 
-  def apply(v: mins)    : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
-  def apply(v: maxs)    : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
-  def apply(v: distinct): In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
-  def apply(v: rands)   : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
-  def apply(v: samples) : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Seq[U]] = ???
+  def apply(v: mins)    : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Vector[U]] = ???
+  def apply(v: maxs)    : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Vector[U]] = ???
+  def apply(v: distinct): In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Vector[U]] = ???
+  def apply(v: rands)   : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Stream[U]] = ???
+  def apply(v: samples) : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Vector[U]] = ???
 
   def apply(v: count)        : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???
   def apply(v: countDistinct): In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???

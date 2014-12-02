@@ -33,7 +33,7 @@ object query {
   case object Empty extends QueryTerm
 
   trait Output extends QueryExpr
-  case class AggrExpr(fn: String, args: Seq[String], v: Var) extends Output
+  case class AggrExpr(fn: String, args: Seq[Any], v: Var) extends Output
 
   case class KW(ns: String, attr: String, refNs: String = "") extends QueryTerm
 
