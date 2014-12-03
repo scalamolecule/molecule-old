@@ -13,7 +13,7 @@ class BindingQueries extends MoleculeSpec {
     val firstLast = m(User.firstName(?).lastName(?))
 
     // Bind vars / tuples (?)
-    firstLast("Stu", "Halloway").get.head ===("Stu", "Halloway")
+    firstLast("Stu", "Halloway").one ===("Stu", "Halloway")
 
     // Bind collection
     first("Stu", "Ed").get === List("Halloway", "Itor")
