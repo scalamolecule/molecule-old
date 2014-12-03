@@ -11,13 +11,19 @@ object Model2Query {
   def apply(model: Model): Query = {
 
     def resolve(q: Query, e: String, v: String, element: Element) = {
-      val (v1, v2) = (v + 1, v + 2)
+      val (v1, v2, v3) = (v + 1, v + 2, v + 3)
       element match {
         case Atom(_, _, _, _, Replace(_), _, _) => q
         case Atom(_, _, _, _, Remove(_), _, _)  => q
 
-        case Atom("?", "attr", _, _, Distinct, _, tx) => q.find("distinct", Seq(), v2, tx, v).attr(e, v, v1, v2, tx)
-        case Atom("?", "attr", _, _, _, _, tx)        => q.find(v2, tx, v).attr(e, v, v1, v2, tx)
+        case Atom("?", "attr", _, _, value, _, tx) => value match {
+          case Distinct                => q.find("distinct", Seq(), v2, tx, v).attr(e, v, v1, v2, tx)
+          case Fn(fn, Some(i))         => q.find(fn, Seq(i), v2, tx).attr(e, v, v1, v2, tx)
+          case Fn(fn, _)               => q.find(fn, Seq(), v2, tx).attr(e, v, v1, v2, tx)
+          case Length(Some(Fn(fn, _))) => q.find(fn, Seq(), v3, tx).attr(e, v, v1, v2, tx).func("count", Var(v2), v3)
+          case Length(_)               => q.find("count", Seq(), v2, tx).attr(e, v, v1, v2, tx)
+          case _                       => q.find(v2, tx, v).attr(e, v, v1, v2, tx)
+        }
 
         case a0@Atom(_, attr0, _, card, value, enumPrefix, tx) if attr0.last == '_' && tx.isEmpty => {
           val a = a0.copy(name = attr0.init)
@@ -93,20 +99,25 @@ object Model2Query {
             case (_, Eq(s :: Nil)) if isEnum          => q.find(v2, tx).where(e, a, Val(prefix + s), tx).enum(e, a, v) // todo: can we output a constant value instead?
             case (_, Eq(s :: Nil))                    => q.find(v, tx).where(e, a, Val(s), tx).where(e, a, v, Seq()) // todo: can we output a constant value instead?
             case (_, Lt(arg))                         => q.find(v, tx).where(e, a, v, tx).compareTo("<", a, v, Val(arg))
-//            case (_, Fn("count", _))                  => q.find("count", Seq(), v, tx).where(e, a, v, tx)
             case (_, Fn(fn, Some(i)))                 => q.find(fn, Seq(i), v, tx).where(e, a, v, tx)
             case (_, Fn(fn, _))                       => q.find(fn, Seq(), v, tx).where(e, a, v, tx)
             case (2, Fulltext(qv :: Nil))             => q.find("distinct", Seq(), v, tx).fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qv :: Nil))             => q.find(v, tx).fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qvs))                   => q.find(v, tx).fulltext(e, a, v, Var(v1)).orRules(v1, a, qvs)
+            case (_, Length(Some(Fn(fn, Some(i)))))   => q.find(v2, tx).where(e, a, v, tx).cast(v, v1).func("count", Var(v1), v2)
+            case (_, Length(Some(Fn(fn, _))))         => q.find(fn, Seq(), v2, tx).where(e, a, v, tx).cast(v, v1).func("count", Var(v1), v2)
+            case (_, Length(_))                       => q.find(v2, tx).where(e, a, v, tx).cast(v, v1).func("count", Var(v1), v2)
             case (c, va)                              => sys.error(s"[Model2Query:resolve[Atom]] Unresolved Atom with cardinality/value: $c / $va")
           }
         }
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Meta(_, _, _, EntValue) => q.find(e, Seq())
-        case Meta(_, _, _, _)        => q
+        case Meta(_, _, "e", Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
+        case Meta(_, _, "e", Fn("count", _))         => q.find("count", Seq(), e, Seq())
+        case Meta(_, _, "e", Length(Some(Fn(_, _)))) => q.find(e, Seq())
+        case Meta(_, _, _, EntValue)                 => q.find(e, Seq())
+        case Meta(_, _, _, _)                        => q
 
         case unresolved => sys.error("[Model2Query:resolve] Unresolved model: " + unresolved)
       }

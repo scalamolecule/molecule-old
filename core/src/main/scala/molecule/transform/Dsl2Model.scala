@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 20, 30, false)
+  val x = Debug("Dsl2Model", 10, 30, false)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -28,10 +28,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
     case q"$prev.tx[..$t]($txMolecule)"                        => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
 
-    case q"$prev.a.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, getAppliedValue(q"$prev.a", q"Seq(..$values)")))
-    //    case q"$prev.a_.apply($kw0)"                               => traverse(q"$prev", Atom(kw(kw0)._1, kw(kw0)._2 + "_", "", 1, NoValue))
+    //    case q"$prev.a.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, getAppliedValue(q"$prev.a", q"Seq(..$values)")))
 
     case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper => traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(eid)))))
+
+    case q"$prev.$cur.length.apply(..$values)" => traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"count", q"Seq(..$values)"))
+    case q"$prev.$cur.length"                  => traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"count", q"Seq()"))
 
     case q"$prev.$cur.$op(..$values)"   => traverse(q"$prev", atomOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
     case t@q"$prev.$refAttr" if t.isRef => traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
@@ -85,7 +87,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case Bond(ns, attr, _)                 => (ns, attr, "")
       case Group(Bond(ns, attr, _), _)       => (ns, attr, "")
     } getOrElse {
-      x(12, q"$prev", q"$prev".isAttr, prev.name, prev.ns)
+      //      x(12, q"$prev", q"$prev".isAttr, prev.name, prev.ns)
       (prev.name, "", "")
     }
 
@@ -95,7 +97,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case "v"  => Meta(ns1, attr1, "v", EntValue)
       case "ns" => Meta(ns1, attr1, "ns", EntValue)
     }
-    x(10, prev, kind, ns1, attr1, value1, meta1)
+    //    x(10, prev, kind, ns1, attr1, value1, meta1)
     meta1
   }
 
@@ -110,20 +112,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
         case other           => errValue(other)
       }
-      case "$less"    => values match {
-        case qm: Qm.type => Lt(Qm)
-        case vs: Seq[_]  => Lt(vs.head)
-      }
-      case "contains" => values match {
-        case qm: Qm.type => Fulltext(Seq(Qm))
-        case vs: Seq[_]  => Fulltext(vs)
-      }
-      case "add"      => values match {
-        case vs: Seq[_] => Eq(vs)
-      }
-      case "remove"   => values match {
-        case vs: Seq[_] => Remove(vs)
-      }
+      case "count"    => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
+      case "$less"    => values match {case qm: Qm.type => Lt(Qm); case vs: Seq[_] => Lt(vs.head)}
+      case "contains" => values match {case qm: Qm.type => Fulltext(Seq(Qm)); case vs: Seq[_] => Fulltext(vs)}
+      case "add"      => values match {case vs: Seq[_] => Eq(vs)}
+      case "remove"   => values match {case vs: Seq[_] => Remove(vs)}
       case unexpected => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
     }
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
@@ -132,10 +125,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case prev if cur.head.isUpper          => x(1, prev, cur, curTree, modelValue); Atom(attr.name, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
       case prev if cur == "e" && prev.isRef  => x(2, prev, op, cur, curTree, modelValue); Meta(prev.name, prev.refNext, "e", modelValue)
       case prev if cur == "e" && prev.isAttr => x(3, prev, curTree); Atom(prev.ns, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev if cur == "e"                => x(4, prev, op, cur, curTree); Atom(prev.name, cur, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev if attr.isAttr               => x(5, prev, curTree, modelValue); Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev if prev.isAttr               => x(6, prev, curTree, modelValue); Atom(prev.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
-      case prev                              => x(7, prev, curTree, modelValue); Atom(attr.name, cur, "Int", attr.card, modelValue, enumPrefix)
+      case prev if cur == "e"                => x(4, prev, op, cur, curTree); Meta(prev.name, cur, "e", modelValue)
+      case prev if cur == "a"                => x(5, prev, op, cur, curTree); Atom("?", "attr", "String", 1, modelValue)
+      case prev if attr.isAttr               => x(6, prev, curTree, modelValue); Atom(attr.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev if prev.isAttr               => x(7, prev, curTree, modelValue); Atom(prev.ns, attr.name, attr.tpeS, attr.card, modelValue, enumPrefix)
+      case prev                              => x(8, prev, curTree, modelValue); Atom(attr.name, cur, "Int", attr.card, modelValue, enumPrefix)
     }
   }
 
@@ -226,7 +220,8 @@ object Dsl2Model {
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
     val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic]()) { case (element, (es, gs)) =>
       element match {
-        case atom: Atom                => (atom.copy(tx = gs) +: es, Nil)
+        case atom: Atom => (atom.copy(tx = gs) +: es, Nil)
+        //        case bond: Bond => (bond.copy(tx = gs) +: es, Nil)
         case Meta(_, _, _, g: Generic) => (es, g +: gs)
         case other                     => (other +: es, gs)
       }

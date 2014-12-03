@@ -2,9 +2,9 @@ package molecule
 package examples.dayOfDatomic
 import datomic.Peer
 import molecule.examples.dayOfDatomic.dsl.socialNews._
-import molecule.examples.dayOfDatomic.schema._
+//import molecule.examples.dayOfDatomic.schema._
 import molecule.util.MoleculeSpec
-import org.specs2.specification.Scope
+//import org.specs2.specification.Scope
 import scala.language.{existentials, postfixOps}
 
 class QueryTour extends MoleculeSpec {

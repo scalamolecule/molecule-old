@@ -105,6 +105,8 @@ object schemaDSL {
     def <= (value: T) : Ns with Attr = ???
     def >= (value: T) : Ns with Attr = ???
 
+//    def length : Ns with Attr = ???
+
     // Input
     def < (in: ?) : In with Attr = ???
     def > (in: ?) : In with Attr = ???
@@ -124,7 +126,7 @@ object schemaDSL {
     def apply(values: Seq[T]) : Ns with Attr = ???
   }
   trait OneString [Ns, In] extends One[Ns, In, String ]  {
-    def length: Ns with Attr = ???
+//    def length: Ns with Attr = ???
   }
   trait OneInt    [Ns, In] extends One[Ns, In, Int    ]
   trait OneLong   [Ns, In] extends One[Ns, In, Long   ]

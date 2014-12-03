@@ -97,13 +97,15 @@ object QueryOps {
     def kw(v1: String, v2: String) =
       q.func(".getName ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
 
+    def cast(v1: String, v2: String) =
+      q.func(".toString", Seq(Var(v1)), ScalarBinding(Var(v2)))
+
     def compareTo(op: String, a: Atom, v: String, qv: QueryValue): Query =
       q.func(".compareTo ^" + a.tpeS, Seq(Var(v), qv), ScalarBinding(Var(v + 2)))
         .func(op, Seq(Var(v + 2), Val(0)))
 
     def fulltext(e: String, a: Atom, v: String, qv: QueryValue): Query =
-    // todo: Var("a") ??
-      q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var("a"), Var(v))))
+      q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var(e), Var(v))))
 
     def orRules(e: String, a: Atom, args: Seq[Any], tx: Seq[Generic] = Seq()): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
@@ -116,6 +118,9 @@ object QueryOps {
       val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
       q.copy(i = newIn, wh = newWhere)
     }
+
+    def func(name: String, qt: QueryTerm, v: String): Query =
+      q.copy(wh = Where(q.wh.clauses :+ Funct(name, Seq(qt), ScalarBinding(Var(v)))))
 
     def func(name: String, ins: Seq[QueryTerm], outs: Binding = NoBinding): Query =
       q.copy(wh = Where(q.wh.clauses :+ Funct(name, ins, outs)))

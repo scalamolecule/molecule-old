@@ -214,7 +214,6 @@ class SeattleTests extends SeattleSpec {
     //    val beforeC = List("ArtsWest", "All About South Park", "Alki News/Alki Community Council")
     val beforeC = List("ArtsWest", "All About South Park", "Ballard Neighbor Connection")
 
-    //    m(Community.name < "C").debug
     m(Community.name < "C").get(3) === beforeC
     Community.name.<("C").get(3) === beforeC
 

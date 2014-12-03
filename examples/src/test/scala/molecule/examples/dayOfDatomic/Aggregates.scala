@@ -1,4 +1,5 @@
-package molecule.examples.dayOfDatomic.tutorial
+package molecule.examples.dayOfDatomic
+
 import molecule._
 import molecule.examples.dayOfDatomic.dsl.aggregates._
 import molecule.examples.dayOfDatomic.schema.AggregatesSchema
@@ -71,21 +72,12 @@ class Aggregates extends DayOfAtomicSpec {
 
 
   "Schema aggregations" >> {
-    //    import molecule.schemas.Db
-    //
-    //    // What is the average length of a schema name?
-    ////    Db.a(avg.apply(count)).get.head === 5.1
-    ////    Db.a.apply(count).apply(avg).get.head === 5.1
-    //    Db.a(count)(avg).get.head === 5.1
-    //    // or
-    //    val attrs = Db.a.get
-    //    attrs.map(_.length).sum / attrs.size === 5.1
-    //
-    //    // Todo Custom aggregates
-    //    // ...and the mode(s) -
+    import molecule.schemas.Db
 
-    // How many attributes and value types does this; schema use ?
-    //    Db.a(count).valueType(countDistinct).get.head ===(3, 2)
-    ok
+    // What is the average length of a schema name?
+    Db.a.length(avg).get.head === 12.777777777777779
+
+    // How many attributes and value types does this schema use?
+    Db.a(count).valueType(countDistinct).get.head ===(37, 8)
   }
 }

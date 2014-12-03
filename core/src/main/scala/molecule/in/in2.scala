@@ -66,13 +66,15 @@ trait In_2_1[In2_1[_,_,_], In2_2[_,_,_,_], In3_1[_,_,_,_], In3_2[_,_,_,_,_], I1,
   def apply(v: rands)   : In2_1[I1, I2, Stream[A]] = ???
   def apply(v: samples) : In2_1[I1, I2, Vector[A]] = ???
 
-  def apply(v: count)        : In2_1[I1, I2, Long] = ???
-  def apply(v: countDistinct): In2_1[I1, I2, Long] = ???
+  def apply(v: count)        : In2_1[I1, I2, Int] = ???
+  def apply(v: countDistinct): In2_1[I1, I2, Int] = ???
   def apply(v: sum)          : In2_1[I1, I2, Double] = ???
   def apply(v: avg)          : In2_1[I1, I2, Double] = ???
   def apply(v: median)       : In2_1[I1, I2, Double] = ???
   def apply(v: variance)     : In2_1[I1, I2, Double] = ???
   def apply(v: stddev)       : In2_1[I1, I2, Double] = ???
+
+  val length:  In2_1[I1, I2, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_1[I1, I2, A]                                                 = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_2[I1, I2, A, a]                                              = ???
@@ -112,13 +114,15 @@ trait In_2_2[In2_2[_,_,_,_], In2_3[_,_,_,_,_], In3_2[_,_,_,_,_], In3_3[_,_,_,_,_
   def apply(v: rands)   : In2_2[I1, I2, A, Stream[B]] = ???
   def apply(v: samples) : In2_2[I1, I2, A, Vector[B]] = ???
 
-  def apply(v: count)        : In2_2[I1, I2, A, Long] = ???
-  def apply(v: countDistinct): In2_2[I1, I2, A, Long] = ???
+  def apply(v: count)        : In2_2[I1, I2, A, Int] = ???
+  def apply(v: countDistinct): In2_2[I1, I2, A, Int] = ???
   def apply(v: sum)          : In2_2[I1, I2, A, Double] = ???
   def apply(v: avg)          : In2_2[I1, I2, A, Double] = ???
   def apply(v: median)       : In2_2[I1, I2, A, Double] = ???
   def apply(v: variance)     : In2_2[I1, I2, A, Double] = ???
   def apply(v: stddev)       : In2_2[I1, I2, A, Double] = ???
+
+  val length:  In2_2[I1, I2, A, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_2[I1, I2, A, B]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_3[I1, I2, A, B, a]                                    = ???
@@ -158,13 +162,15 @@ trait In_2_3[In2_3[_,_,_,_,_], In2_4[_,_,_,_,_,_], In3_3[_,_,_,_,_,_], In3_4[_,_
   def apply(v: rands)   : In2_3[I1, I2, A, B, Stream[C]] = ???
   def apply(v: samples) : In2_3[I1, I2, A, B, Vector[C]] = ???
 
-  def apply(v: count)        : In2_3[I1, I2, A, B, Long] = ???
-  def apply(v: countDistinct): In2_3[I1, I2, A, B, Long] = ???
+  def apply(v: count)        : In2_3[I1, I2, A, B, Int] = ???
+  def apply(v: countDistinct): In2_3[I1, I2, A, B, Int] = ???
   def apply(v: sum)          : In2_3[I1, I2, A, B, Double] = ???
   def apply(v: avg)          : In2_3[I1, I2, A, B, Double] = ???
   def apply(v: median)       : In2_3[I1, I2, A, B, Double] = ???
   def apply(v: variance)     : In2_3[I1, I2, A, B, Double] = ???
   def apply(v: stddev)       : In2_3[I1, I2, A, B, Double] = ???
+
+  val length:  In2_3[I1, I2, A, B, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_3 [I1, I2, A, B, C]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_4 [I1, I2, A, B, C, a]                                    = ???
@@ -204,13 +210,15 @@ trait In_2_4[In2_4[_,_,_,_,_,_], In2_5[_,_,_,_,_,_,_], In3_4[_,_,_,_,_,_,_], In3
   def apply(v: rands)   : In2_4[I1, I2, A, B, C, Stream[D]] = ???
   def apply(v: samples) : In2_4[I1, I2, A, B, C, Vector[D]] = ???
 
-  def apply(v: count)        : In2_4[I1, I2, A, B, C, Long] = ???
-  def apply(v: countDistinct): In2_4[I1, I2, A, B, C, Long] = ???
+  def apply(v: count)        : In2_4[I1, I2, A, B, C, Int] = ???
+  def apply(v: countDistinct): In2_4[I1, I2, A, B, C, Int] = ???
   def apply(v: sum)          : In2_4[I1, I2, A, B, C, Double] = ???
   def apply(v: avg)          : In2_4[I1, I2, A, B, C, Double] = ???
   def apply(v: median)       : In2_4[I1, I2, A, B, C, Double] = ???
   def apply(v: variance)     : In2_4[I1, I2, A, B, C, Double] = ???
   def apply(v: stddev)       : In2_4[I1, I2, A, B, C, Double] = ???
+
+  val length:  In2_4[I1, I2, A, B, C, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_4 [I1, I2, A, B, C, D]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_5 [I1, I2, A, B, C, D, a]                                    = ???
@@ -250,13 +258,15 @@ trait In_2_5[In2_5[_,_,_,_,_,_,_], In2_6[_,_,_,_,_,_,_,_], In3_5[_,_,_,_,_,_,_,_
   def apply(v: rands)   : In2_5[I1, I2, A, B, C, D, Stream[E]] = ???
   def apply(v: samples) : In2_5[I1, I2, A, B, C, D, Vector[E]] = ???
 
-  def apply(v: count)        : In2_5[I1, I2, A, B, C, D, Long] = ???
-  def apply(v: countDistinct): In2_5[I1, I2, A, B, C, D, Long] = ???
+  def apply(v: count)        : In2_5[I1, I2, A, B, C, D, Int] = ???
+  def apply(v: countDistinct): In2_5[I1, I2, A, B, C, D, Int] = ???
   def apply(v: sum)          : In2_5[I1, I2, A, B, C, D, Double] = ???
   def apply(v: avg)          : In2_5[I1, I2, A, B, C, D, Double] = ???
   def apply(v: median)       : In2_5[I1, I2, A, B, C, D, Double] = ???
   def apply(v: variance)     : In2_5[I1, I2, A, B, C, D, Double] = ???
   def apply(v: stddev)       : In2_5[I1, I2, A, B, C, D, Double] = ???
+
+  val length:  In2_5[I1, I2, A, B, C, D, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_5 [I1, I2, A, B, C, D, E]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_6 [I1, I2, A, B, C, D, E, a]                                    = ???
@@ -296,13 +306,15 @@ trait In_2_6[In2_6[_,_,_,_,_,_,_,_], In2_7[_,_,_,_,_,_,_,_,_], In3_6[_,_,_,_,_,_
   def apply(v: rands)   : In2_6[I1, I2, A, B, C, D, E, Stream[F]] = ???
   def apply(v: samples) : In2_6[I1, I2, A, B, C, D, E, Vector[F]] = ???
 
-  def apply(v: count)        : In2_6[I1, I2, A, B, C, D, E, Long] = ???
-  def apply(v: countDistinct): In2_6[I1, I2, A, B, C, D, E, Long] = ???
+  def apply(v: count)        : In2_6[I1, I2, A, B, C, D, E, Int] = ???
+  def apply(v: countDistinct): In2_6[I1, I2, A, B, C, D, E, Int] = ???
   def apply(v: sum)          : In2_6[I1, I2, A, B, C, D, E, Double] = ???
   def apply(v: avg)          : In2_6[I1, I2, A, B, C, D, E, Double] = ???
   def apply(v: median)       : In2_6[I1, I2, A, B, C, D, E, Double] = ???
   def apply(v: variance)     : In2_6[I1, I2, A, B, C, D, E, Double] = ???
   def apply(v: stddev)       : In2_6[I1, I2, A, B, C, D, E, Double] = ???
+
+  val length:  In2_6[I1, I2, A, B, C, D, E, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_6 [I1, I2, A, B, C, D, E, F]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_7 [I1, I2, A, B, C, D, E, F, a]                                    = ???
@@ -342,13 +354,15 @@ trait In_2_7[In2_7[_,_,_,_,_,_,_,_,_], In2_8[_,_,_,_,_,_,_,_,_,_], In3_7[_,_,_,_
   def apply(v: rands)   : In2_7[I1, I2, A, B, C, D, E, F, Stream[G]] = ???
   def apply(v: samples) : In2_7[I1, I2, A, B, C, D, E, F, Vector[G]] = ???
 
-  def apply(v: count)        : In2_7[I1, I2, A, B, C, D, E, F, Long] = ???
-  def apply(v: countDistinct): In2_7[I1, I2, A, B, C, D, E, F, Long] = ???
+  def apply(v: count)        : In2_7[I1, I2, A, B, C, D, E, F, Int] = ???
+  def apply(v: countDistinct): In2_7[I1, I2, A, B, C, D, E, F, Int] = ???
   def apply(v: sum)          : In2_7[I1, I2, A, B, C, D, E, F, Double] = ???
   def apply(v: avg)          : In2_7[I1, I2, A, B, C, D, E, F, Double] = ???
   def apply(v: median)       : In2_7[I1, I2, A, B, C, D, E, F, Double] = ???
   def apply(v: variance)     : In2_7[I1, I2, A, B, C, D, E, F, Double] = ???
   def apply(v: stddev)       : In2_7[I1, I2, A, B, C, D, E, F, Double] = ???
+
+  val length:  In2_7[I1, I2, A, B, C, D, E, F, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_7 [I1, I2, A, B, C, D, E, F, G]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_8 [I1, I2, A, B, C, D, E, F, G, a]                                    = ???
@@ -388,13 +402,15 @@ trait In_2_8[In2_8[_,_,_,_,_,_,_,_,_,_], In2_9[_,_,_,_,_,_,_,_,_,_,_], In3_8[_,_
   def apply(v: rands)   : In2_8[I1, I2, A, B, C, D, E, F, G, Stream[H]] = ???
   def apply(v: samples) : In2_8[I1, I2, A, B, C, D, E, F, G, Vector[H]] = ???
 
-  def apply(v: count)        : In2_8[I1, I2, A, B, C, D, E, F, G, Long] = ???
-  def apply(v: countDistinct): In2_8[I1, I2, A, B, C, D, E, F, G, Long] = ???
+  def apply(v: count)        : In2_8[I1, I2, A, B, C, D, E, F, G, Int] = ???
+  def apply(v: countDistinct): In2_8[I1, I2, A, B, C, D, E, F, G, Int] = ???
   def apply(v: sum)          : In2_8[I1, I2, A, B, C, D, E, F, G, Double] = ???
   def apply(v: avg)          : In2_8[I1, I2, A, B, C, D, E, F, G, Double] = ???
   def apply(v: median)       : In2_8[I1, I2, A, B, C, D, E, F, G, Double] = ???
   def apply(v: variance)     : In2_8[I1, I2, A, B, C, D, E, F, G, Double] = ???
   def apply(v: stddev)       : In2_8[I1, I2, A, B, C, D, E, F, G, Double] = ???
+
+  val length:  In2_8[I1, I2, A, B, C, D, E, F, G, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_8 [I1, I2, A, B, C, D, E, F, G, H]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_9 [I1, I2, A, B, C, D, E, F, G, H, a]                                    = ???
@@ -434,13 +450,15 @@ trait In_2_9[In2_9[_,_,_,_,_,_,_,_,_,_,_], In2_10[_,_,_,_,_,_,_,_,_,_,_,_], In3_
   def apply(v: rands)   : In2_9[I1, I2, A, B, C, D, E, F, G, H, Stream[I]] = ???
   def apply(v: samples) : In2_9[I1, I2, A, B, C, D, E, F, G, H, Vector[I]] = ???
 
-  def apply(v: count)        : In2_9[I1, I2, A, B, C, D, E, F, G, H, Long] = ???
-  def apply(v: countDistinct): In2_9[I1, I2, A, B, C, D, E, F, G, H, Long] = ???
+  def apply(v: count)        : In2_9[I1, I2, A, B, C, D, E, F, G, H, Int] = ???
+  def apply(v: countDistinct): In2_9[I1, I2, A, B, C, D, E, F, G, H, Int] = ???
   def apply(v: sum)          : In2_9[I1, I2, A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: avg)          : In2_9[I1, I2, A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: median)       : In2_9[I1, I2, A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: variance)     : In2_9[I1, I2, A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: stddev)       : In2_9[I1, I2, A, B, C, D, E, F, G, H, Double] = ???
+
+  val length:  In2_9[I1, I2, A, B, C, D, E, F, G, H, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_9 [I1, I2, A, B, C, D, E, F, G, H, I]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, a]                                    = ???
@@ -480,13 +498,15 @@ trait In_2_9[In2_9[_,_,_,_,_,_,_,_,_,_,_], In2_10[_,_,_,_,_,_,_,_,_,_,_,_], In3_
     def apply(v: rands)   : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Stream[J]] = ???
     def apply(v: samples) : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Vector[J]] = ???
 
-    def apply(v: count)        : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Long] = ???
-    def apply(v: countDistinct): In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Long] = ???
+    def apply(v: count)        : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Int] = ???
+    def apply(v: countDistinct): In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Int] = ???
     def apply(v: sum)          : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Double] = ???
     def apply(v: avg)          : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Double] = ???
     def apply(v: median)       : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Double] = ???
     def apply(v: variance)     : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Double] = ???
     def apply(v: stddev)       : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Double] = ???
+
+  val length:  In2_10[I1, I2, A, B, C, D, E, F, G, H, I, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_10[I1, I2, A, B, C, D, E, F, G, H, I, J]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, a]                                    = ???
@@ -526,13 +546,15 @@ trait In_2_11[In2_11[_,_,_,_,_,_,_,_,_,_,_,_,_], In2_12[_,_,_,_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Stream[K]] = ???
   def apply(v: samples) : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Vector[K]] = ???
 
-  def apply(v: count)        : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Long] = ???
-  def apply(v: countDistinct): In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Long] = ???
+  def apply(v: count)        : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Int] = ???
+  def apply(v: countDistinct): In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Int] = ???
   def apply(v: sum)          : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: avg)          : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: median)       : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: variance)     : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: stddev)       : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Double] = ???
+
+  val length:  In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_11[I1, I2, A, B, C, D, E, F, G, H, I, J, K]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, a]                                    = ???
@@ -572,13 +594,15 @@ trait In_2_12[In2_12[_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_13[_,_,_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Stream[L]] = ???
   def apply(v: samples) : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Vector[L]] = ???
 
-  def apply(v: count)        : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Long] = ???
-  def apply(v: countDistinct): In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Long] = ???
+  def apply(v: count)        : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Int] = ???
+  def apply(v: countDistinct): In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Int] = ???
   def apply(v: sum)          : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: avg)          : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: median)       : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: variance)     : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: stddev)       : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Double] = ???
+
+  val length:  In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, Int] = ???
 
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_12[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L]                                       = ???
@@ -619,13 +643,15 @@ trait In_2_13[In2_13[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_14[_,_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Stream[M]] = ???
   def apply(v: samples) : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Vector[M]] = ???
 
-  def apply(v: count)        : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
-  def apply(v: countDistinct): In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Long] = ???
+  def apply(v: count)        : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Int] = ???
+  def apply(v: countDistinct): In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Int] = ???
   def apply(v: sum)          : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: avg)          : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: median)       : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: variance)     : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: stddev)       : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
+
+  val length:  In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_13[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, a]                                    = ???
@@ -665,13 +691,15 @@ trait In_2_14[In2_14[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_15[_,_,_,_,_,_,_,_,_,
   def apply(v: rands)   : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Stream[N]] = ???
   def apply(v: samples) : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Vector[N]] = ???
 
-  def apply(v: count)        : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
-  def apply(v: countDistinct): In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Long] = ???
+  def apply(v: count)        : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Int] = ???
+  def apply(v: countDistinct): In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Int] = ???
   def apply(v: sum)          : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: avg)          : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: median)       : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: variance)     : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: stddev)       : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
+
+  val length:  In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_14[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, a]                                    = ???
@@ -711,13 +739,15 @@ trait In_2_15[In2_15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_16[_,_,_,_,_,_,_,_,
   def apply(v: rands)   : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Stream[O]] = ???
   def apply(v: samples) : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Vector[O]] = ???
 
-  def apply(v: count)        : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
-  def apply(v: countDistinct): In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Long] = ???
+  def apply(v: count)        : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Int] = ???
+  def apply(v: countDistinct): In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Int] = ???
   def apply(v: sum)          : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: avg)          : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: median)       : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: variance)     : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: stddev)       : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
+
+  val length:  In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_15[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]                                       = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, a]                                    = ???
@@ -757,13 +787,15 @@ trait In_2_16[In2_16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_17[_,_,_,_,_,_,_,
   def apply(v: rands)   : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Stream[P]] = ???
   def apply(v: samples) : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Vector[P]] = ???
 
-  def apply(v: count)        : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
-  def apply(v: countDistinct): In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Long] = ???
+  def apply(v: count)        : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Int] = ???
+  def apply(v: countDistinct): In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Int] = ???
   def apply(v: sum)          : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: avg)          : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: median)       : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: variance)     : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: stddev)       : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
+
+  val length:  In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_16[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]                                    = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, a]                                 = ???
@@ -802,13 +834,15 @@ trait In_2_17[In2_17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_18[_,_,_,_,_,_,
   def apply(v: rands)   : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Stream[Q]] = ???
   def apply(v: samples) : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Vector[Q]] = ???
 
-  def apply(v: count)        : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
-  def apply(v: countDistinct): In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Long] = ???
+  def apply(v: count)        : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Int] = ???
+  def apply(v: countDistinct): In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Int] = ???
   def apply(v: sum)          : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: avg)          : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: median)       : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: variance)     : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: stddev)       : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
+
+  val length:  In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_17[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]                                              = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, a]                                           = ???
@@ -846,13 +880,15 @@ trait In_2_18[In2_18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_19[_,_,_,_,_,
   def apply(v: rands)   : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Stream[R]] = ???
   def apply(v: samples) : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Vector[R]] = ???
 
-  def apply(v: count)        : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
-  def apply(v: countDistinct): In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Long] = ???
+  def apply(v: count)        : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Int] = ???
+  def apply(v: countDistinct): In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Int] = ???
   def apply(v: sum)          : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: avg)          : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: median)       : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: variance)     : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: stddev)       : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
+
+  val length:  In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_18[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]                                              = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, a]                                           = ???
@@ -889,13 +925,15 @@ trait In_2_19[In2_19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_20[_,_,_,_,
   def apply(v: rands)   : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Stream[S]] = ???
   def apply(v: samples) : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Vector[S]] = ???
 
-  def apply(v: count)        : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
-  def apply(v: countDistinct): In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Long] = ???
+  def apply(v: count)        : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Int] = ???
+  def apply(v: countDistinct): In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Int] = ???
   def apply(v: sum)          : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: avg)          : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: median)       : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: variance)     : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: stddev)       : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
+
+  val length:  In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_19[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]                                              = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, a]                                           = ???
@@ -931,13 +969,15 @@ trait In_2_20[In2_20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_21[_,_,_,
   def apply(v: rands)   : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Stream[T]] = ???
   def apply(v: samples) : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Vector[T]] = ???
 
-  def apply(v: count)        : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
-  def apply(v: countDistinct): In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Long] = ???
+  def apply(v: count)        : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Int] = ???
+  def apply(v: countDistinct): In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Int] = ???
   def apply(v: sum)          : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: avg)          : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: median)       : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: variance)     : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: stddev)       : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
+
+  val length:  In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_20[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]                                              = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, a]                                           = ???
@@ -972,13 +1012,15 @@ trait In_2_21[In2_21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], In2_22[_,_,
   def apply(v: rands)   : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Stream[U]] = ???
   def apply(v: samples) : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Vector[U]] = ???
 
-  def apply(v: count)        : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???
-  def apply(v: countDistinct): In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Long] = ???
+  def apply(v: count)        : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Int] = ???
+  def apply(v: countDistinct): In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Int] = ???
   def apply(v: sum)          : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: avg)          : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: median)       : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: variance)     : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: stddev)       : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
+
+  val length:  In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Int] = ???
 
   def tx[ns0               , ns1[_]              , in2_0[_]              , in2_1[_,_]                                   ] (m0: Molecule_0[ns0, ns1, in2_0, in2_1])                     : In2_21[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]                                              = ???
   def tx[ns1[_]            , ns2[_,_]            , in2_1[_,_]            , in2_2[_,_,_]            , a                  ] (m1: Molecule_1[ns1, ns2, in2_1, in2_2, a])                  : In2_22[I1, I2, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, a]                                           = ???

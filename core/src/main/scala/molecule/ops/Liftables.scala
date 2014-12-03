@@ -141,6 +141,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case OpValue        => q"OpValue"
   }
 
+  implicit val liftFn = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
   implicit val liftValue = Liftable[Value] {
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
@@ -155,6 +156,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Eq(values)       => q"Eq(Seq(..$values))"
     case Lt(value)        => q"Lt($value)"
     case Fn(fn, i)        => q"Fn($fn, $i)"
+    case Length(fn)       => q"Length($fn)"
     case Qm               => q"Qm"
     case Distinct         => q"Distinct"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"

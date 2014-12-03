@@ -26,7 +26,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-    //    x(1, dsl.tree, model)
+//        x(1, dsl.tree, model)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
@@ -92,7 +92,6 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       }
     """)
   }
-  //Vector(23).to
 
   def from1attr(dsl: c.Expr[NS], A: Type) = {
     val cast = (data: Tree) => if (A <:< typeOf[Set[_]])

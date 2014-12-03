@@ -39,6 +39,7 @@ object model {
   case class BackValue(backNs: String) extends Value
   case object EnumVal extends Value
 
+  case class Length(fn: Option[Fn] = None) extends Value
   case class Eq(values: Seq[Any]) extends Value
   case class Lt(value: Any) extends Value
   case class Fulltext(search: Seq[Any]) extends Value
