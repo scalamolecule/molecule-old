@@ -40,8 +40,7 @@ object query {
   sealed trait QueryValue extends QueryTerm
 
   case class Var(v: String) extends QueryValue with Output
-//  case class Eid(v: Long) extends QueryValue
-  case class Val(v: Any) extends QueryValue
+  case class Val(v: Any) extends QueryValue with Output
   case object Dummy extends QueryValue
   case object NoVal extends QueryValue with Output
 

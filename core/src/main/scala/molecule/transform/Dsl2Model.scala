@@ -42,9 +42,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.a" => traverse(q"$prev", Atom("?", "attr", "String", 1, NoValue))
 
     // Only allow `v` to attach to a generic attribute `a`
-    case q"$prev.a.v.apply(..$values)" => traverse(q"$prev.a", Meta("", "", "v", modelValue("apply", null, q"Seq(..$values)")))
-    case q"$prev.a.v"                  => traverse(q"$prev.a", Meta("", "", "v", AttrVar("")))
-    case q"$prev.$other.v"             => abort(s"[Dsl2Model:dslStructure] `v` is only allowed right after a generic `a` attribute")
+    case q"$prev.a.v.apply(..$values)"  => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(AttrVar(""))))
+    case q"$prev.a.v_.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(NoValue)))
+    case q"$prev.a.v"                   => traverse(q"$prev", Atom("?", "attr", "String", 1, VarValue, None, List(AttrVar(""))))
+    case q"$prev.a.v_"                  => traverse(q"$prev", Atom("?", "attr", "String", 1, NoValue, None, List(NoValue)))
+    case q"$prev.$other.v"              => abort(s"[Dsl2Model:dslStructure] `v` is only allowed right after a generic `a` attribute")
+    case q"$prev.$other.v_"             => abort(s"[Dsl2Model:dslStructure] `v_` is only allowed right after a generic `a` attribute")
 
 
     // Tx ----------------------------------
@@ -209,7 +212,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     else
       resolve(tree) map extract map validateStaticEnums
     if (values.isEmpty) abort(s"[Dsl2Model:resolveValues] Unexpected empty values for attribute `$at`")
-//    if (values.isEmpty) abort(s"[Dsl2Model:resolveValues] Unexpected empty values for attribute `${at.name}`")
+    //    if (values.isEmpty) abort(s"[Dsl2Model:resolveValues] Unexpected empty values for attribute `${at.name}`")
     values
   }
 }
@@ -232,14 +235,14 @@ object Dsl2Model {
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
     val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic]()) { case (element, (es, gs)) =>
       element match {
-        case atom: Atom => (atom.copy(tx = gs) +: es, Nil)
-        //        case bond: Bond => (bond.copy(tx = gs) +: es, Nil)
+        case atom: Atom if gs.isEmpty  => (atom +: es, Nil)
+        case atom: Atom                => (atom.copy(gs = atom.gs ++ gs) +: es, Nil)
         case Meta(_, _, _, g: Generic) => (es, g +: gs)
         case other                     => (other +: es, gs)
       }
     }._1
     val model = Model(condensedElements)
-    //    inst(c).x(30, dsl, rawElements, condensedElements)
+//    inst(c).x(30, dsl, rawElements, condensedElements)
     model
   }
 }

@@ -16,16 +16,18 @@ object Model2Query {
         case Atom(_, _, _, _, Replace(_), _, _) => q
         case Atom(_, _, _, _, Remove(_), _, _)  => q
 
-        case Atom("?", "attr", _, _, value, _, tx) => value match {
-          case Distinct                => q.find("distinct", Seq(), v2, tx, v).attr(e, v, v1, v2, tx)
-          case Fn(fn, Some(i))         => q.find(fn, Seq(i), v2, tx).attr(e, v, v1, v2, tx)
-          case Fn(fn, _)               => q.find(fn, Seq(), v2, tx).attr(e, v, v1, v2, tx)
-          case Length(Some(Fn(fn, _))) => q.find(fn, Seq(), v3, tx).attr(e, v, v1, v2, tx).func("count", Var(v2), v3)
-          case Length(_)               => q.find("count", Seq(), v2, tx).attr(e, v, v1, v2, tx)
-          case _                       => q.find(v2, tx, v).attr(e, v, v1, v2, tx)
+        case Atom("?", "attr", _, _, value, _, gs) => value match {
+          case Distinct                => q.find("distinct", Seq(), v2, gs, v).attr(e, Var(v), v1, v2, gs)
+          case Fn(fn, Some(i))         => q.find(fn, Seq(i), v2, gs).attr(e, Var(v), v1, v2, gs)
+          case Fn(fn, _)               => q.find(fn, Seq(), v2, gs).attr(e, Var(v), v1, v2, gs)
+          case Length(Some(Fn(fn, _))) => q.find(fn, Seq(), v3, gs).attr(e, Var(v), v1, v2, gs).func("count", Var(v2), v3)
+          case Length(_)               => q.find("count", Seq(), v2, gs).attr(e, Var(v), v1, v2, gs)
+          case Eq(ss) if ss.size > 1   => q.find(v2, gs, v).attr(e, Var(v), v1, v2, gs)
+          case Eq((s: String) :: Nil)  => q.find(v2, gs, v3).attr(e, Var(v3), v1, v2, gs).where(e, "?", "attr", Val(s), "", Seq())
+          case _                       => q.find(v2, gs, v).attr(e, Var(v), v1, v2, gs)
         }
 
-        case a0@Atom(_, attr0, _, card, value, enumPrefix, tx) if attr0.last == '_' && tx.isEmpty => {
+        case a0@Atom(_, attr0, _, card, value, enumPrefix, gs) if attr0.last == '_' && gs.isEmpty => {
           val a = a0.copy(name = attr0.init)
           val (isEnum, prefix) = if (enumPrefix.isDefined) (true, enumPrefix.get) else (false, "")
           (card, value) match {
@@ -51,62 +53,62 @@ object Model2Query {
           }
         }
 
-        case a0@Atom(_, attr0, _, card, value, enumPrefix, tx) if attr0.last == '_' => {
+        case a0@Atom(_, attr0, _, card, value, enumPrefix, gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
           val (isEnum, prefix) = if (enumPrefix.isDefined) (true, enumPrefix.get) else (false, "")
           (card, value) match {
-            case (_, Qm) if isEnum                    => q.in(v, a, enumPrefix, e).where(e, a, v, tx)
-            case (_, Qm)                              => q.where(e, a, v, tx).in(v, a)
-            case (_, Lt(Qm))                          => q.where(e, a, v, tx).compareTo("<", a, v, Var(v1))
+            case (_, Qm) if isEnum                    => q.in(v, a, enumPrefix, e).where(e, a, v, gs)
+            case (_, Qm)                              => q.where(e, a, v, gs).in(v, a)
+            case (_, Lt(Qm))                          => q.where(e, a, v, gs).compareTo("<", a, v, Var(v1))
             case (2, Fulltext(Seq(Qm)))               => q.in(v1, a).fulltext(e, a, v, Var(v1))
             case (_, Fulltext(Seq(Qm)))               => q.in(v1, a).fulltext(e, a, v, Var(v1))
-            case (2, VarValue)                        => q.where(e, a, v, tx)
-            case (_, VarValue)                        => q.find(tx).where(e, a, v, tx)
-            case (2, EnumVal)                         => q.enum(e, a, v, tx)
-            case (_, EnumVal)                         => q.enum(e, a, v, tx)
-            case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), tx)
-            case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss, tx)
-            case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), tx)
-            case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), tx)
-            case (_, Lt(arg))                         => q.where(e, a, v, tx).compareTo("<", a, v, Val(arg))
-            case (_, Fn("count", _))                  => q.where(e, a, v, tx) //.find("count", Seq(), e, tx)
+            case (2, VarValue)                        => q.where(e, a, v, gs)
+            case (_, VarValue)                        => q.find(gs).where(e, a, v, gs)
+            case (2, EnumVal)                         => q.enum(e, a, v, gs)
+            case (_, EnumVal)                         => q.enum(e, a, v, gs)
+            case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), gs)
+            case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss, gs)
+            case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), gs)
+            case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), gs)
+            case (_, Lt(arg))                         => q.where(e, a, v, gs).compareTo("<", a, v, Val(arg))
+            case (_, Fn("count", _))                  => q.where(e, a, v, gs) //.find("count", Seq(), e, gs)
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
-            case (_, Fulltext(qvs))                   => q.orRules(v1, a, qvs, tx).fulltext(e, a, v, Var(v1))
+            case (_, Fulltext(qvs))                   => q.orRules(v1, a, qvs, gs).fulltext(e, a, v, Var(v1))
             case (c, va)                              => sys.error(s"[Model2Query:resolve[Atom_]] Unresolved Atom_ with cardinality/value: $c / $va")
           }
         }
 
-        case a0@Atom(_, _, _, card, value, enumPrefix, tx) => {
+        case a0@Atom(_, _, _, card, value, enumPrefix, gs) => {
           val a = a0
           val (isEnum, prefix) = if (enumPrefix.isDefined) (true, enumPrefix.get) else (false, "")
           (card, value) match {
-            case (_, Qm) if isEnum                    => q.find(v2, tx).in(v, a, enumPrefix).enum(e, a, v, tx)
-            case (_, Qm)                              => q.find(v, tx).in(v, a).where(e, a, v, tx)
-            case (_, Lt(Qm))                          => q.find(v, tx).in(v1, a).where(e, a, v, tx).compareTo("<", a, v, Var(v1))
-            case (2, Fulltext(Seq(Qm)))               => q.find("distinct", Seq(), v, tx).in(v1, a).fulltext(e, a, v, Var(v1))
-            case (_, Fulltext(Seq(Qm)))               => q.find(v, tx).in(v1, a).fulltext(e, a, v, Var(v1))
-            case (_, EntValue)                        => q.find(e, tx)
-            case (2, VarValue)                        => q.find("distinct", Seq(), v, tx).where(e, a, v, tx)
-            case (_, VarValue)                        => q.find(v, tx).where(e, a, v, tx)
-            case (_, NoValue)                         => q.find(NoVal, tx).where(e, a, v, tx)
-            case (_, BackValue(backNs))               => q.find(e, tx).where(v, a.ns, a.name, e, backNs, tx)
-            case (2, EnumVal)                         => q.find("distinct", Seq(), v2, tx).enum(e, a, v, tx)
-            case (_, EnumVal)                         => q.find(v2, tx).enum(e, a, v, tx)
-            case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), tx)
-            case (2, Eq(ss)) if ss.size > 1           => q.find("distinct", Seq(), v, tx).orRules(e, a, ss).where(e, a, v, tx)
-            case (_, Eq(ss)) if ss.size > 1           => q.find(e, tx).orRules(e, a, ss, tx)
-            case (_, Eq(s :: Nil)) if isEnum          => q.find(v2, tx).where(e, a, Val(prefix + s), tx).enum(e, a, v) // todo: can we output a constant value instead?
-            case (_, Eq(s :: Nil))                    => q.find(v, tx).where(e, a, Val(s), tx).where(e, a, v, Seq()) // todo: can we output a constant value instead?
-            case (_, Lt(arg))                         => q.find(v, tx).where(e, a, v, tx).compareTo("<", a, v, Val(arg))
-            case (_, Fn(fn, Some(i)))                 => q.find(fn, Seq(i), v, tx).where(e, a, v, tx)
-            case (_, Fn(fn, _))                       => q.find(fn, Seq(), v, tx).where(e, a, v, tx)
-            case (2, Fulltext(qv :: Nil))             => q.find("distinct", Seq(), v, tx).fulltext(e, a, v, Val(qv))
-            case (_, Fulltext(qv :: Nil))             => q.find(v, tx).fulltext(e, a, v, Val(qv))
-            case (_, Fulltext(qvs))                   => q.find(v, tx).fulltext(e, a, v, Var(v1)).orRules(v1, a, qvs)
-            case (_, Length(Some(Fn(fn, Some(i)))))   => q.find(v2, tx).where(e, a, v, tx).cast(v, v1).func("count", Var(v1), v2)
-            case (_, Length(Some(Fn(fn, _))))         => q.find(fn, Seq(), v2, tx).where(e, a, v, tx).cast(v, v1).func("count", Var(v1), v2)
-            case (_, Length(_))                       => q.find(v2, tx).where(e, a, v, tx).cast(v, v1).func("count", Var(v1), v2)
+            case (_, Qm) if isEnum                    => q.find(v2, gs).in(v, a, enumPrefix).enum(e, a, v, gs)
+            case (_, Qm)                              => q.find(v, gs).in(v, a).where(e, a, v, gs)
+            case (_, Lt(Qm))                          => q.find(v, gs).in(v1, a).where(e, a, v, gs).compareTo("<", a, v, Var(v1))
+            case (2, Fulltext(Seq(Qm)))               => q.find("distinct", Seq(), v, gs).in(v1, a).fulltext(e, a, v, Var(v1))
+            case (_, Fulltext(Seq(Qm)))               => q.find(v, gs).in(v1, a).fulltext(e, a, v, Var(v1))
+            case (_, EntValue)                        => q.find(e, gs)
+            case (2, VarValue)                        => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
+            case (_, VarValue)                        => q.find(v, gs).where(e, a, v, gs)
+            case (_, NoValue)                         => q.find(NoVal, gs).where(e, a, v, gs)
+            case (_, BackValue(backNs))               => q.find(e, gs).where(v, a.ns, a.name, Var(e), backNs, gs)
+            case (2, EnumVal)                         => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs)
+            case (_, EnumVal)                         => q.find(v2, gs).enum(e, a, v, gs)
+            case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), gs)
+            case (2, Eq(ss)) if ss.size > 1           => q.find("distinct", Seq(), v, gs).orRules(e, a, ss).where(e, a, v, gs)
+            case (_, Eq(ss)) if ss.size > 1           => q.find(e, gs).orRules(e, a, ss, gs)
+            case (_, Eq(s :: Nil)) if isEnum          => q.find(v2, gs).where(e, a, Val(prefix + s), gs).enum(e, a, v) // todo: can we output a constant value instead?
+            case (_, Eq(s :: Nil))                    => q.find(v, gs).where(e, a, Val(s), gs).where(e, a, v, Seq()) // todo: can we output a constant value instead?
+            case (_, Lt(arg))                         => q.find(v, gs).where(e, a, v, gs).compareTo("<", a, v, Val(arg))
+            case (_, Fn(fn, Some(i)))                 => q.find(fn, Seq(i), v, gs).where(e, a, v, gs)
+            case (_, Fn(fn, _))                       => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
+            case (2, Fulltext(qv :: Nil))             => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(qv))
+            case (_, Fulltext(qv :: Nil))             => q.find(v, gs).fulltext(e, a, v, Val(qv))
+            case (_, Fulltext(qvs))                   => q.find(v, gs).fulltext(e, a, v, Var(v1)).orRules(v1, a, qvs)
+            case (_, Length(Some(Fn(fn, Some(i)))))   => q.find(v2, gs).where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2)
+            case (_, Length(Some(Fn(fn, _))))         => q.find(fn, Seq(), v2, gs).where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2)
+            case (_, Length(_))                       => q.find(v2, gs).where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2)
             case (c, va)                              => sys.error(s"[Model2Query:resolve[Atom]] Unresolved Atom with cardinality/value: $c / $va")
           }
         }

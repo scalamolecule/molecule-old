@@ -39,8 +39,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case maybe: Distinct.type          => q"Distinct"
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
-//    case Fn(fn, args)                  => q"Fn($fn, Seq(..$args))"
-    case other                         => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
+    //    case Fn(fn, args)                  => q"Fn($fn, Seq(..$args))"
+    case other => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
   }
 
   implicit val liftTuple2 = Liftable[Product] {
@@ -135,18 +135,21 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   implicit val liftGeneric = Liftable[Generic] {
     case AttrVar(v)     => q"AttrVar($v)"
+//    case AttrVal(v)     => q"AttrVal($v)"
     case TxValue        => q"TxValue"
     case TxTValue       => q"TxTValue"
     case TxInstantValue => q"TxInstantValue"
     case OpValue        => q"OpValue"
+    case NoValue        => q"NoValue"
   }
 
-  implicit val liftFn = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
+  implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
   implicit val liftValue = Liftable[Value] {
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
     case NoValue          => q"NoValue"
     case AttrVar(v)       => q"AttrVar($v)"
+//    case AttrVal(v)       => q"AttrVal($v)"
     case TxValue          => q"TxValue"
     case TxTValue         => q"TxTValue"
     case TxInstantValue   => q"TxInstantValue"
@@ -165,7 +168,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
 
-  implicit val liftAtom    = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.tx}))"}
+  implicit val liftAtom    = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))"}
   implicit val liftBond    = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
   implicit val liftMeta    = Liftable[Meta] { a => q"Meta(${a.ns}, ${a.attr}, ${a.kind}, ${a.value})"}
   implicit val liftGroup   = Liftable[Group] { g =>
