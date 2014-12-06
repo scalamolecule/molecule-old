@@ -26,13 +26,13 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-//        x(1, dsl.tree, model)
+    //        x(1, dsl.tree, model)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
         case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _) if ident.startsWith("__ident__")     => Seq(ident -> q"${TermName(ident.substring(9))}")
         case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => Seq(ident -> q"${TermName(ident.substring(9))}")
-        case meta@Meta(_, _, _, Eq(Seq(ident: String))) if ident.startsWith("__ident__")              => Seq(ident -> q"${TermName(ident.substring(9))}")
+        case meta@Meta(_, _, _, _, Eq(Seq(ident: String))) if ident.startsWith("__ident__")           => Seq(ident -> q"${TermName(ident.substring(9))}")
         case Group(_, nestedElements)                                                                 => mapIdentifiers(nestedElements, identifiers0)
         case TxModel(txElements)                                                                      => mapIdentifiers(txElements, identifiers0)
       }).flatten
@@ -55,7 +55,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
         case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _)     if ident.startsWith("__ident__") => atom.copy(value = Eq(Seq($identifiers.get(ident).get)))
         case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => atom.copy(value = Remove(Seq($identifiers.get(ident).get)))
-        case meta@Meta(_, _, _,    Eq(Seq(ident: String)))           if ident.startsWith("__ident__") => meta.copy(value = Eq(Seq($identifiers.get(ident).get)))
+        case meta@Meta(_, _, _, _, Eq(Seq(ident: String)))           if ident.startsWith("__ident__") => meta.copy(value = Eq(Seq($identifiers.get(ident).get)))
         case Group(ns, nestedElements)                                                                => Group(ns, resolveIdentifiers(nestedElements))
         case TxModel(txElements)                                                                      => TxModel(resolveIdentifiers(txElements))
         case other                                                                                    => other

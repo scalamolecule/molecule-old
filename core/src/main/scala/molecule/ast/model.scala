@@ -25,7 +25,7 @@ object model {
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
-  case class Meta(ns: String, attr: String, kind: String, value: Value) extends Element
+  case class Meta(ns: String, attr: String, kind: String, generic: Generic, value: Value = NoValue) extends Element
   case class TxModel(elements: Seq[Element]) extends Element
 
   case object EmptyElement extends Element
@@ -46,7 +46,7 @@ object model {
 
   sealed trait Generic extends Value
   case class AttrVar(v: String) extends Generic
-//  case class AttrVal(v: String) extends Generic
+  //  case class AttrVal(v: String) extends Generic
   case object TxValue extends Generic
   case object TxTValue extends Generic
   case object TxInstantValue extends Generic
@@ -55,7 +55,7 @@ object model {
 
   case object Qm extends Value
   case object Distinct extends Value
-//  case object Maybe extends Value
+  //  case object Maybe extends Value
 
   // Actions
   case class Replace(oldNew: Map[Any, Any]) extends Value
@@ -91,7 +91,7 @@ object model {
     case Atom(ns, _, _, _, _, _, _) => ns
     case Bond(ns, _, _)             => ns
     case Group(Bond(ns, _, _), _)   => ns
-    case Meta(ns, _, _, _)          => ns
+    case Meta(ns, _, _, _, _)       => ns
     case unexpected                 => sys.error("[model:curNs] Unexpected element: " + unexpected)
   }
 

@@ -55,6 +55,7 @@ class Binding extends DayOfAtomicSpec {
     personFirst(List("John", "Stuart")).get === List(stuartSmalley, johnStewart, stuartHalloway)
 
     // Bind relation
-    person(List(("John", "Stewart"), ("Stuart", "Halloway"))).get === List(johnStewart, stuartHalloway)
+    person(("John", "Stewart"), ("Stuart", "Halloway")).get === List(johnStewart, stuartHalloway)
+    person(("John", "Stewart"), ("Stuart", "Hallowey")).get === List(johnStewart)
   }
 }

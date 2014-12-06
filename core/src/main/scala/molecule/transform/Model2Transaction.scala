@@ -22,11 +22,12 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
     def resolveElement(eSlot: Any, stmts: Seq[Statement], element: Element): (Any, Seq[Statement]) = (eSlot, element) match {
       // First
-      case ('_, Meta(ns, "", "e", EntValue))            => ('arg, stmts)
-      case ('_, Meta(ns, "", "e", Eq(Seq(id: Long))))   => (Eid(id), stmts)
-      case ('_, Atom(ns, name, _, _, VarValue, _, _))   => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
-      case ('_, Atom(ns, name, _, _, value, prefix, _)) => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
-      case ('_, Bond(ns, refAttr, _))                   => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
+//      case ('_, Meta(ns, "", "e", EntValue, _))          => ('arg, stmts)
+      case ('_, Meta(ns, "", "e", _, EntValue))          => ('arg, stmts)
+      case ('_, Meta(ns, "", "e", _, Eq(Seq(id: Long)))) => (Eid(id), stmts)
+      case ('_, Atom(ns, name, _, _, VarValue, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
+      case ('_, Atom(ns, name, _, _, value, prefix, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
+      case ('_, Bond(ns, refAttr, _))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
 
       case ('_, Group(Bond(ns, refAttr, _), elements)) =>
         val nested = elements.foldLeft('v: Any, Seq[Statement]()) {
@@ -52,8 +53,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('tx, Atom(ns, name, _, _, VarValue, _, _))                       => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
       case ('tx, Atom(ns, name, _, _, value, prefix, _)) if name.last == '_' => ('tx, stmts :+ Add('tx, s":$ns/${name.init}", Values(value, prefix)))
       case ('tx, Atom(ns, name, _, _, value, prefix, _))                     => ('tx, stmts :+ Add('tx, s":$ns/$name", Values(value, prefix)))
-//      case ('tx, a@Atom(ns, name, _, _, _, _, _))                     =>
-//        sys.error(s"[Model2Transaction:stmtsModel] Please use underscore suffix for tx attribute (`$name` -> `${name}_`}) in:\n$a")
+      //      case ('tx, a@Atom(ns, name, _, _, _, _, _))                     =>
+      //        sys.error(s"[Model2Transaction:stmtsModel] Please use underscore suffix for tx attribute (`$name` -> `${name}_`}) in:\n$a")
 
       // Next namespace
       case ('v, Atom(ns, name, _, _, VarValue, _, _))   => ('e, stmts :+ Add('v, s":$ns/$name", 'arg))
@@ -87,9 +88,9 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
   def splitStmts(): (Seq[Statement], Seq[Statement]) = {
     val (dataStmts0, txStmts0) = stmtsModel.map {
-          case tx@Add('tx, _, Values(vs, prefix)) => (None, Some(tx))
-          case other                              => (Some(other), None)
-        }.unzip
+      case tx@Add('tx, _, Values(vs, prefix)) => (None, Some(tx))
+      case other                              => (Some(other), None)
+    }.unzip
     (dataStmts0.flatten, txStmts0.flatten)
   }
 
@@ -159,10 +160,10 @@ case class Model2Transaction(conn: Connection, model: Model) {
     val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
       val j = i + 1
       stmt match {
-        case Add('e, a, Values(vs, prefix))     => (j, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
-        case Add('e, a, 'tempId)                => (i, resolveStmts(stmts, stmts.last.e, a, tempId()))
-        case Add('v, a, Values(vs, prefix))     => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-        case Add('tx, a, Values(vs, prefix))    => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+        case Add('e, a, Values(vs, prefix))  => (j, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
+        case Add('e, a, 'tempId)             => (i, resolveStmts(stmts, stmts.last.e, a, tempId()))
+        case Add('v, a, Values(vs, prefix))  => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+        case Add('tx, a, Values(vs, prefix)) => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
 
         case Add(e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, e, a, vs, prefix))
         case Retract('e, a, Values(vs, prefix)) => (j, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
@@ -302,7 +303,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
       }
 
 
-      case Meta(ns, _, _, EntValue) => stmts //++ add(ns, attr, None, Some(e))
+//      case Meta(ns, _, _, EntValue, _) => stmts //++ add(ns, attr, None, Some(e))
+      case Meta(ns, _, _, _, EntValue) => stmts //++ add(ns, attr, None, Some(e))
 
       case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
     }

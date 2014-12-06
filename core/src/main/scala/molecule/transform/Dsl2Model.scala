@@ -25,7 +25,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"TermValue.apply($ns)" => resolve(ns)
 
     // Namespace(eid).attr1...
-    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper => traverse(q"$prev", Meta(firstLow(ns), "", "e", Eq(Seq(extract(eid)))))
+    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper => traverse(q"$prev", Meta(firstLow(ns), "", "e", NoValue, Eq(Seq(extract(eid)))))
 
 
     // Functions ---------------------------
@@ -36,18 +36,26 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // EAV -----------------------------
 
-    case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", EntValue))
-
-    //    case q"$prev.a.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, getAppliedValue(q"$prev.a", q"Seq(..$values)")))
+//    case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", EntValue))
+    case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", NoValue, EntValue))
     case q"$prev.a" => traverse(q"$prev", Atom("?", "attr", "String", 1, NoValue))
+    //    case q"$prev.a.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, getAppliedValue(q"$prev.a", q"Seq(..$values)")))
 
     // Only allow `v` to attach to a generic attribute `a`
-    case q"$prev.a.v.apply(..$values)"  => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(AttrVar(""))))
-    case q"$prev.a.v_.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(NoValue)))
-    case q"$prev.a.v"                   => traverse(q"$prev", Atom("?", "attr", "String", 1, VarValue, None, List(AttrVar(""))))
-    case q"$prev.a.v_"                  => traverse(q"$prev", Atom("?", "attr", "String", 1, NoValue, None, List(NoValue)))
-    case q"$prev.$other.v"              => abort(s"[Dsl2Model:dslStructure] `v` is only allowed right after a generic `a` attribute")
-    case q"$prev.$other.v_"             => abort(s"[Dsl2Model:dslStructure] `v_` is only allowed right after a generic `a` attribute")
+    case q"$prev.v.apply(..$values)"  => traverse(q"$prev", Meta("", "", "v", AttrVar(""), modelValue("apply", null, q"Seq(..$values)")))
+    case q"$prev.v_.apply(..$values)" => traverse(q"$prev", Meta("", "", "v", NoValue, modelValue("apply", null, q"Seq(..$values)")))
+    case q"$prev.v"                   => traverse(q"$prev", Meta("", "", "v", AttrVar("")))
+    case q"$prev.v_"                  => traverse(q"$prev", Meta("", "", "v", NoValue))
+
+    //    case q"$prev.a.v" => traverse(q"$prev.a", Meta("", "", "v", AttrVar("")))
+
+
+    //    case q"$prev.a.v.apply(..$values)"  => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(AttrVar(""))))
+    //    case q"$prev.a.v_.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(NoValue)))
+    //    case q"$prev.a.v"                   => traverse(q"$prev", Atom("?", "attr", "String", 1, VarValue, None, List(AttrVar(""))))
+    //    case q"$prev.a.v_"                  => traverse(q"$prev", Atom("?", "attr", "String", 1, NoValue, None, List(NoValue)))
+    //    case q"$prev.$other.v"              => abort(s"[Dsl2Model:dslStructure] `v` is only allowed right after a generic `a` attribute")
+    //    case q"$prev.$other.v_"             => abort(s"[Dsl2Model:dslStructure] `v_` is only allowed right after a generic `a` attribute")
 
 
     // Tx ----------------------------------
@@ -101,6 +109,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val value: Value = modelValue(op.toString(), attr, values0)
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
     val cur = curTree.toString
+    // For debugging...
     previous match {
       case prev if cur.head.isUpper          => x(1, prev, cur, curTree, value)
       case prev if cur == "e" && prev.isRef  => x(2, prev, op, cur, curTree, value)
@@ -113,9 +122,9 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     }
     previous match {
       case prev if cur.head.isUpper          => Atom(attr.name, cur, attr.tpeS, attr.card, value, enumPrefix)
-      case prev if cur == "e" && prev.isRef  => Meta(prev.name, prev.refNext, "e", value)
+      case prev if cur == "e" && prev.isRef  => Meta(prev.name, prev.refNext, "e", NoValue, value)
       case prev if cur == "e" && prev.isAttr => Atom(prev.ns, cur, attr.tpeS, attr.card, value, enumPrefix)
-      case prev if cur == "e"                => Meta(prev.name, cur, "e", value)
+      case prev if cur == "e"                => Meta(prev.name, cur, "e", NoValue, value)
       case prev if cur == "a"                => Atom("?", "attr", "String", 1, value)
       case prev if attr.isAttr               => Atom(attr.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
       case prev if prev.isAttr               => Atom(prev.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
@@ -135,7 +144,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
         case other           => errValue(other)
       }
-      case "count"    => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
+//      case "count"    => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
       case "$less"    => values match {case qm: Qm.type => Lt(Qm); case vs: Seq[_] => Lt(vs.head)}
       case "contains" => values match {case qm: Qm.type => Fulltext(Seq(Qm)); case vs: Seq[_] => Fulltext(vs)}
       case "add"      => values match {case vs: Seq[_] => Eq(vs)}
@@ -224,21 +233,22 @@ object Dsl2Model {
 
     // Sanity check
     rawElements.collectFirst {
-      case a: Atom                      => a
-      case b: Bond                      => b
-      case g: Group                     => g
-      case m@Meta(_, "txInstant", _, _) => m
-      //      case m: Meta => m
+      case a: Atom                         => a
+      case b: Bond                         => b
+      case g: Group                        => g
+      case m@Meta(_, "txInstant", _, _, _) => m
     } getOrElse
       c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$rawElements")
 
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
-    val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic]()) { case (element, (es, gs)) =>
+    val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) { case (element, (es, gs, v)) =>
       element match {
-        case atom: Atom if gs.isEmpty  => (atom +: es, Nil)
-        case atom: Atom                => (atom.copy(gs = atom.gs ++ gs) +: es, Nil)
-        case Meta(_, _, _, g: Generic) => (es, g +: gs)
-        case other                     => (other +: es, gs)
+        case a: Atom if gs.isEmpty       => (a +: es, Nil, NoValue)
+        case a: Atom if a.name == "attr" => (a.copy(gs = a.gs ++ gs, value = v) +: es, Nil, NoValue)
+        case a: Atom                     => (a.copy(gs = a.gs ++ gs) +: es, Nil, NoValue)
+        case m@Meta(_, _, "e", g, v1)    => (m +: es, g +: gs, v1)
+        case Meta(_, _, _, g, v1)        => (es, g +: gs, v1)
+        case other                       => (other +: es, gs, v)
       }
     }._1
     val model = Model(condensedElements)

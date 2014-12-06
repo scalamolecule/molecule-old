@@ -62,7 +62,6 @@ trait Molecule_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]] extends NS0 {
 }
 
 
-//trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A] with Nested2[Ns2, A] {
 trait Molecule_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A] extends NS1[A]  {
 
   val e         : Ns2[A, Long   ] with OneLong   [Ns2[A, Long   ], In1_2[Long   , A, Long   ]] = ???

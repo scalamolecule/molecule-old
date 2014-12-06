@@ -134,8 +134,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   // Liftables for Model --------------------------------------------------------------
 
   implicit val liftGeneric = Liftable[Generic] {
+//    case EntValue       => q"EntValue"
     case AttrVar(v)     => q"AttrVar($v)"
-//    case AttrVal(v)     => q"AttrVal($v)"
     case TxValue        => q"TxValue"
     case TxTValue       => q"TxTValue"
     case TxInstantValue => q"TxInstantValue"
@@ -145,11 +145,10 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
   implicit val liftValue = Liftable[Value] {
-    case EntValue         => q"EntValue"
-    case VarValue         => q"VarValue"
-    case NoValue          => q"NoValue"
-    case AttrVar(v)       => q"AttrVar($v)"
-//    case AttrVal(v)       => q"AttrVal($v)"
+    case EntValue   => q"EntValue"
+    case VarValue   => q"VarValue"
+    case NoValue    => q"NoValue"
+    case AttrVar(v) => q"AttrVar($v)"
     case TxValue          => q"TxValue"
     case TxTValue         => q"TxTValue"
     case TxInstantValue   => q"TxInstantValue"
@@ -170,7 +169,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   implicit val liftAtom    = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))"}
   implicit val liftBond    = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
-  implicit val liftMeta    = Liftable[Meta] { a => q"Meta(${a.ns}, ${a.attr}, ${a.kind}, ${a.value})"}
+  implicit val liftMeta    = Liftable[Meta] { a => q"Meta(${a.ns}, ${a.attr}, ${a.kind}, ${a.generic})"}
   implicit val liftGroup   = Liftable[Group] { g =>
     val es = g.elements map { case q"$e" => e}
     q"Group(${g.ref}, Seq(..$es))"
@@ -195,7 +194,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Atom(ns, name, tpeS, card, value, enumPrefix, tx) => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix, Seq(..$tx))"
     case Bond(ns, refAttr, refNs)                          => q"Bond($ns, $refAttr, $refNs)"
     case Group(ref, elements)                              => q"Group($ref, $elements)"
-    case Meta(ns, attr, kind, value)                       => q"Meta($ns, $attr, $kind, $value)"
+    case Meta(ns, attr, kind, generic, value)              => q"Meta($ns, $attr, $kind, $generic, $value)"
     case TxModel(elements)                                 => q"TxModel($elements)"
     case EmptyElement                                      => q"EmptyElement"
   }

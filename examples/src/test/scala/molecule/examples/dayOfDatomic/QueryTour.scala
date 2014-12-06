@@ -46,7 +46,7 @@ class QueryTour extends MoleculeSpec {
 
 
     // 6. Returning an Aggregate of Comments of some Author
-    Comment.e.apply(count).Author.email_("editor@example.com").get.head === 5
+    Comment.e(count).Author.email_("editor@example.com").get.head === 5
 
     // Or we could simply read the size of the (un-aggregated) result (todo: measure performance differences)
     Comment.e.Author.email("editor@example.com").get.size === 5

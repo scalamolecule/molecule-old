@@ -26,12 +26,12 @@ object QueryOps {
 
     def find(o: Output, gs: Seq[Generic], attrV: String = ""): Query = {
       val genericVars = gs.flatMap {
+        case AttrVar(v)     => Some(Var(attrV))
         case TxValue        => Some(Var("tx"))
         case TxTValue       => Some(Var("txT"))
         case TxInstantValue => Some(Var("txInst"))
         case OpValue        => Some(Var("op"))
-        case AttrVar(v)     => Some(Var(attrV))
-//        case AttrVal(v)     => Some(Val(attrV))
+//        case EntValue       => None
         case NoValue        => None
       }.distinct
       val moreOutputs = o match {

@@ -115,11 +115,12 @@ object Model2Query {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case Meta(_, _, "e", Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
-        case Meta(_, _, "e", Fn("count", _))         => q.find("count", Seq(), e, Seq())
-        case Meta(_, _, "e", Length(Some(Fn(_, _)))) => q.find(e, Seq())
-        case Meta(_, _, _, EntValue)                 => q.find(e, Seq())
-        case Meta(_, _, _, _)                        => q
+        case Meta(_, _, "e", _, Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
+        case Meta(_, _, "e", _, Fn("count", _))         => q.find("count", Seq(), e, Seq())
+        case Meta(_, _, "e", _, Length(Some(Fn(_, _)))) => q.find(e, Seq())
+//        case Meta(_, _, _, EntValue, _)                 => q.find(e, Seq())
+        case Meta(_, _, _, _, EntValue)                 => q.find(e, Seq())
+        case Meta(_, _, _, _, _)                        => q
 
         case unresolved => sys.error("[Model2Query:resolve] Unresolved model: " + unresolved)
       }
@@ -146,8 +147,8 @@ object Model2Query {
           }
           (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
 
-        case Meta(ns, attr, "e", Eq(Seq(id: Long))) => x(2, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
-        case Meta(ns, attr, _, _)                   => x(3, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long))) => x(2, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
+        case Meta(ns, attr, _, _, _)                         => x(3, element); (resolve(query, e, v, element), e, v, ns, attr, "")
 
         case TxModel(elements) =>
           //          val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
