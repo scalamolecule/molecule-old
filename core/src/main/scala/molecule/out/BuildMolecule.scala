@@ -26,7 +26,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-    //        x(1, dsl.tree, model)
+//            x(1, dsl.tree, model)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
@@ -62,7 +62,6 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       }
       val model =  Model(resolveIdentifiers($model.elements))
       val query = Model2Query(model)
-
 
       def debugMolecule(conn: Connection): Unit = {
         val rows = try {
@@ -107,6 +106,8 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A] :: HNil"
     else if (A <:< typeOf[Vector[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A] :: HNil"
+    else if (A <:< typeOf[Stream[_]])
+      q"$data.get(0).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A] :: HNil"
     else
       q"$data.get(0).asInstanceOf[$A] :: HNil"
 
@@ -124,12 +125,14 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     val tplValues = (data: Tree) => OutTypes.zipWithIndex.map {
       case (t, i) if t <:< typeOf[Set[_]]    => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
       case (t, i) if t <:< typeOf[Vector[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Stream[_]] => q"$data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
       case (t, i)                            => q"$data.get($i).asInstanceOf[$t]"
     }
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
     val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
       case ((t, i), hl) if t <:< typeOf[Set[_]]    => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
       case ((t, i), hl) if t <:< typeOf[Vector[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Stream[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t])"
       case ((t, i), hl)                            => q"$hl.::($data.get($i).asInstanceOf[$t])"
     }
     val MoleculeTpe = molecule_o(OutTypes.size)

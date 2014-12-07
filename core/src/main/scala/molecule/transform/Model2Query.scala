@@ -56,6 +56,7 @@ object Model2Query {
         }
 
         case Atom("ns_", "?", _, _, value, _, gs) => value match {
+          case Qm                      => q.ns(e, Var(v), v1, v2, gs).in(v2, "ns", "?", v2)
           case Distinct                => q.ns(e, Var(v), v1, v2, gs)
           case Fn(fn, Some(i))         => q.ns(e, Var(v), v1, v2, gs)
           case Fn(fn, _)               => q.ns(e, Var(v), v1, v2, gs)
