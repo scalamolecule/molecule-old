@@ -10,7 +10,7 @@ trait Molecule_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]] extends NS0 {
   val e          : Ns1[Long   ] with OneLong   [Ns1[Long   ], In1_1[Long   , Long   ]] = ???
   val a          : Ns1[String ] with OneString [Ns1[String ], In1_1[String , String ]] = ???
   val v          : Ns1[Any    ] with OneAny    [Ns1[Any    ], In1_1[Any    , Any    ]] = ???
-//  val ns         : Ns1[String ] with OneString [Ns1[String ], In1_1[String , String ]] = ???
+  val ns         : Ns1[String ] with OneString [Ns1[String ], In1_1[String , String ]] = ???
   val tx         : Ns1[Long   ] with OneLong   [Ns1[Long   ], In1_1[Long   , Long   ]] = ???
   val txT        : Ns1[Long   ] with OneLong   [Ns1[Long   ], In1_1[Long   , Long   ]] = ???
   val txInstant  : Ns1[Date   ] with OneDate   [Ns1[Date   ], In1_1[Date   , Date   ]] = ???
@@ -19,7 +19,7 @@ trait Molecule_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]] extends NS0 {
   val e_         : Ns0 with OneLong   [Ns0, In1_0[Long   ]] = ???
   val a_         : Ns0 with OneString [Ns0, In1_0[String ]] = ???
   val v_         : Ns0 with OneAny    [Ns0, In1_0[Any    ]] = ???
-//  val ns_        : Ns0 with OneString [Ns0, In1_0[String ]] = ???
+  val ns_        : Ns0 with OneString [Ns0, In1_0[String ]] = ???
   val tx_        : Ns0 with OneLong   [Ns0, In1_0[Long   ]] = ???
   val txT_       : Ns0 with OneLong   [Ns0, In1_0[Long   ]] = ???
   val txInstant_ : Ns0 with OneDate   [Ns0, In1_0[Date   ]] = ???

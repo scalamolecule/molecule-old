@@ -34,28 +34,21 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.$cur.length"                  => traverse(q"$prev", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"count", q"Seq()"))
 
 
-    // EAV -----------------------------
+    // EAV + ns -----------------------------
 
-//    case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", EntValue))
     case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", NoValue, EntValue))
-    case q"$prev.a" => traverse(q"$prev", Atom("?", "attr", "String", 1, NoValue))
-    //    case q"$prev.a.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, getAppliedValue(q"$prev.a", q"Seq(..$values)")))
 
-    // Only allow `v` to attach to a generic attribute `a`
+    case q"$prev.a" => traverse(q"$prev", Atom("?", "attr", "a", 1, NoValue))
+
+    case q"$prev.ns.apply(..$values)"  => traverse(q"$prev", Atom("ns", "?", "ns", 1, modelValue("apply", null, q"Seq(..$values)")))
+    case q"$prev.ns_.apply(..$values)" => traverse(q"$prev", Atom("ns_", "?", "ns", 1, modelValue("apply", null, q"Seq(..$values)")))
+    case q"$prev.ns"                   => traverse(q"$prev", Atom("ns", "?", "ns", 1, NoValue))
+    case q"$prev.ns_"                  => abort( s"""[Dsl2Model:dslStructure] Generic namespace value `ns_` can only be used with an applied value i.e. `ns_("someNamespace")`""")
+
     case q"$prev.v.apply(..$values)"  => traverse(q"$prev", Meta("", "", "v", AttrVar(""), modelValue("apply", null, q"Seq(..$values)")))
     case q"$prev.v_.apply(..$values)" => traverse(q"$prev", Meta("", "", "v", NoValue, modelValue("apply", null, q"Seq(..$values)")))
     case q"$prev.v"                   => traverse(q"$prev", Meta("", "", "v", AttrVar("")))
-    case q"$prev.v_"                  => traverse(q"$prev", Meta("", "", "v", NoValue))
-
-    //    case q"$prev.a.v" => traverse(q"$prev.a", Meta("", "", "v", AttrVar("")))
-
-
-    //    case q"$prev.a.v.apply(..$values)"  => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(AttrVar(""))))
-    //    case q"$prev.a.v_.apply(..$values)" => traverse(q"$prev", Atom("?", "attr", "String", 1, modelValue("apply", null, q"Seq(..$values)"), None, List(NoValue)))
-    //    case q"$prev.a.v"                   => traverse(q"$prev", Atom("?", "attr", "String", 1, VarValue, None, List(AttrVar(""))))
-    //    case q"$prev.a.v_"                  => traverse(q"$prev", Atom("?", "attr", "String", 1, NoValue, None, List(NoValue)))
-    //    case q"$prev.$other.v"              => abort(s"[Dsl2Model:dslStructure] `v` is only allowed right after a generic `a` attribute")
-    //    case q"$prev.$other.v_"             => abort(s"[Dsl2Model:dslStructure] `v_` is only allowed right after a generic `a` attribute")
+    case q"$prev.v_"                  => abort( s"""[Dsl2Model:dslStructure] Generic attribute value `v_` can only be used with an applied value i.e. `v_("someValue")`""")
 
 
     // Tx ----------------------------------
@@ -125,7 +118,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case prev if cur == "e" && prev.isRef  => Meta(prev.name, prev.refNext, "e", NoValue, value)
       case prev if cur == "e" && prev.isAttr => Atom(prev.ns, cur, attr.tpeS, attr.card, value, enumPrefix)
       case prev if cur == "e"                => Meta(prev.name, cur, "e", NoValue, value)
-      case prev if cur == "a"                => Atom("?", "attr", "String", 1, value)
+      case prev if cur == "a"                => Atom("?", "attr", "a", 1, value)
+      case prev if cur == "a_"               => Atom("?", "attr_", "a", 1, value)
+      case prev if cur == "ns"               => Atom("ns", "?", "ns", 1, value)
+      case prev if cur == "ns_"              => Atom("ns_", "?", "ns", 1, value)
       case prev if attr.isAttr               => Atom(attr.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
       case prev if prev.isAttr               => Atom(prev.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
       case prev                              => Atom(attr.name, cur, "Int", attr.card, value, enumPrefix)
@@ -144,7 +140,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
         case other           => errValue(other)
       }
-//      case "count"    => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
+      case "count"    => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
       case "$less"    => values match {case qm: Qm.type => Lt(Qm); case vs: Seq[_] => Lt(vs.head)}
       case "contains" => values match {case qm: Qm.type => Fulltext(Seq(Qm)); case vs: Seq[_] => Fulltext(vs)}
       case "add"      => values match {case vs: Seq[_] => Eq(vs)}
@@ -221,7 +217,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     else
       resolve(tree) map extract map validateStaticEnums
     if (values.isEmpty) abort(s"[Dsl2Model:resolveValues] Unexpected empty values for attribute `$at`")
-    //    if (values.isEmpty) abort(s"[Dsl2Model:resolveValues] Unexpected empty values for attribute `${at.name}`")
     values
   }
 }
@@ -243,6 +238,9 @@ object Dsl2Model {
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
     val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) { case (element, (es, gs, v)) =>
       element match {
+        case a: Atom if a.name != "attr" && gs.contains(NsValue) && !gs.contains(AttrVar) =>
+          c.abort(c.enclosingPosition, s"[Dsl2Model:condensedElements] `ns` needs to have a generic `a` before")
+
         case a: Atom if gs.isEmpty       => (a +: es, Nil, NoValue)
         case a: Atom if a.name == "attr" => (a.copy(gs = a.gs ++ gs, value = v) +: es, Nil, NoValue)
         case a: Atom                     => (a.copy(gs = a.gs ++ gs) +: es, Nil, NoValue)
@@ -252,7 +250,7 @@ object Dsl2Model {
       }
     }._1
     val model = Model(condensedElements)
-//    inst(c).x(30, dsl, rawElements, condensedElements)
+    inst(c).x(30, dsl, rawElements, condensedElements)
     model
   }
 }

@@ -134,24 +134,27 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   // Liftables for Model --------------------------------------------------------------
 
   implicit val liftGeneric = Liftable[Generic] {
-//    case EntValue       => q"EntValue"
-    case AttrVar(v)     => q"AttrVar($v)"
-    case TxValue        => q"TxValue"
-    case TxTValue       => q"TxTValue"
-    case TxInstantValue => q"TxInstantValue"
-    case OpValue        => q"OpValue"
-    case NoValue        => q"NoValue"
+    case AttrVar(v)      => q"AttrVar($v)"
+    case TxValue         => q"TxValue"
+    case TxTValue        => q"TxTValue"
+    case TxInstantValue  => q"TxInstantValue"
+    case OpValue         => q"OpValue"
+    case NsValue(values) => q"NsValue(Seq(..$values))"
+    //    case NsValue        => q"NsValue"
+    case NoValue => q"NoValue"
   }
 
   implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
   implicit val liftValue = Liftable[Value] {
-    case EntValue   => q"EntValue"
-    case VarValue   => q"VarValue"
-    case NoValue    => q"NoValue"
-    case AttrVar(v) => q"AttrVar($v)"
-    case TxValue          => q"TxValue"
-    case TxTValue         => q"TxTValue"
-    case TxInstantValue   => q"TxInstantValue"
+    case EntValue        => q"EntValue"
+    case VarValue        => q"VarValue"
+    case NoValue         => q"NoValue"
+    case AttrVar(v)      => q"AttrVar($v)"
+    case TxValue         => q"TxValue"
+    case TxTValue        => q"TxTValue"
+    case TxInstantValue  => q"TxInstantValue"
+    case NsValue(values) => q"NsValue(Seq(..$values))"
+    //    case NsValue          => q"NsValue"
     case OpValue          => q"OpValue"
     case BackValue(value) => q"BackValue($value)"
     case EnumVal          => q"EnumVal"

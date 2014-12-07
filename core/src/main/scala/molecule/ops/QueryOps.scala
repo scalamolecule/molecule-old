@@ -31,8 +31,7 @@ object QueryOps {
         case TxTValue       => Some(Var("txT"))
         case TxInstantValue => Some(Var("txInst"))
         case OpValue        => Some(Var("op"))
-//        case EntValue       => None
-        case NoValue        => None
+        case other          => None
       }.distinct
       val moreOutputs = o match {
         case NoVal                         => genericVars
@@ -81,16 +80,33 @@ object QueryOps {
     def where(e: String, a: Atom, qv: Val, gs: Seq[Generic]): Query =
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(a.ns, a.name), qv, Empty)))
 
-    //    def where(e: String, v: String): Query =
-    //      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW("?", v), NoVal, Empty)))
+
+    // Meta ..........................................
+
+    def attr(e: String, v: QueryValue, v1: String, v2: String, gs: Seq[Generic]) = {
+      // Build on from `ns` ident if it is already there
+      q.wh.clauses.collectFirst {
+        case DataClause(ImplDS, Var("ns"), KW("db", "ident", _), Var(i), _, _) =>
+          q.func(".toString ^clojure.lang.Keyword", Seq(Var(i)), ScalarBinding(Var(v2)))
+      } getOrElse
+        q.where(e, "?", "attr", v, "", gs)
+          .ident("attr", v1)
+          .func(".toString ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
+    }
+
+    def ns(e: String, v: QueryValue, v1: String, v2: String, gs: Seq[Generic]) = {
+      // Build on from `attr` ident if it is already there
+      q.wh.clauses.collectFirst {
+        case DataClause(ImplDS, Var("attr"), KW("db", "ident", _), Var(i), _, _) =>
+          q.func(".getNamespace ^clojure.lang.Keyword", Seq(Var(i)), ScalarBinding(Var(v2)))
+      } getOrElse
+        q.where(e, "?", "ns", v, "", gs)
+          .ident("ns", v1)
+          .func(".getNamespace ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
+    }
 
 
     // Extra ..........................................
-
-    def attr(e: String, v: QueryValue, v1: String, v2: String, gs: Seq[Generic]) =
-      q.where(e, "?", "attr", v, "", gs)
-        .ident("attr", v1)
-        .func(".toString ^clojure.lang.Keyword", Seq(Var(v1)), ScalarBinding(Var(v2)))
 
     def enum(e: String, a: Atom, v: String, gs: Seq[Generic] = Seq()): Query =
       q.where(e, a, v, gs).ident(v, v + 1).kw(v + 1, v + 2)

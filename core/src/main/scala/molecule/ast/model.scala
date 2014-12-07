@@ -51,6 +51,8 @@ object model {
   case object TxTValue extends Generic
   case object TxInstantValue extends Generic
   case object OpValue extends Generic
+//  case object NsValue extends Generic
+  case class NsValue(values: Seq[String]) extends Generic
   case object NoValue extends Generic
 
   case object Qm extends Value

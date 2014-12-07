@@ -10,8 +10,8 @@ case class Query2String(q: Query) {
     case in@In(_, _, _)                  => mkIn(in, false)
     case Where(clauses)                  => ":where " + (clauses map p mkString " ")
     case KW("?", attr, _)                => s"?$attr"
+    case KW(ns, "?", _)                  => s"?$ns"
     case KW(ns, attr, _)                 => s":$ns/$attr"
-//    case AggrExpr(fn, args, v)           => s"($fn " + (((args map Val) :+ p(v)) mkString " ") + ")"
     case AggrExpr(fn, args, v)           => s"($fn " + ((args :+ p(v)) mkString " ") + ")"
     case Var("?")                        => "?"
     case Var(eid) if eid.length > 10     => eid
