@@ -21,13 +21,11 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     def isPartition = tpe <:< typeOf[Partition]
     def isNS = tpe <:< typeOf[NS]
-//        def isNS0 = tpe <:< weakTypeOf[NS0]
-//    def nsS = nsString(tpe.typeSymbol.owner.owner.name.toString.init)
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
 
-    def refThis = firstLow(t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.head.typeSymbol.name.toString)
-    def refNext = firstLow(t.tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name.toString)
+    def refThis = firstLow(tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.head.typeSymbol.name.toString)
+    def refNext = firstLow(tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name.toString)
 
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
     def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
@@ -209,7 +207,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   class nsp(val sym: Symbol) {
     val x = Debug("ModelOps:nsp", 8)
     lazy val nsType = sym match {
-      //      case s: TermSymbol if s.isLazy && s.isPublic    => s.typeSignature.typeSymbol.typeSignature
       case s: TermSymbol if s.isPublic                => s.typeSignature.typeSymbol.typeSignature
       case s: MethodSymbol
         if s.asMethod.returnType <:< weakTypeOf[Attr] => s.asMethod.returnType
@@ -222,7 +219,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
       s.head.toLower + s.tail.takeWhile(_ != '_')
     }
     def attrs = nsType.members.collect {
-      //      case s: TermSymbol if s.isLazy && s.isPublic                       => new att(s)
       case s: TermSymbol if s.isPublic                                   => new att(s)
       case s: MethodSymbol if s.asMethod.returnType <:< weakTypeOf[Attr] => new att(s)
     }.toList.reverse
@@ -263,11 +259,9 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     def name = TermName(toString)
     def fullName = attrType.typeSymbol.fullName
-    //    def owner = attrType.typeSymbol.owner.owner
     def owner = attrType.typeSymbol.owner
     def ns = new nsp(owner)
     def tpeS = if (tpe =:= NoType) "" else tpe.toString
-    //    def tpeS = tpe.toString
     def contentType = tpe
     def isOne = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[OneRefAttr[_, _]]
     def isMany = attrType <:< weakTypeOf[Many[_, _, _, _]] || attrType <:< weakTypeOf[ManyRefAttr[_, _]]
@@ -279,7 +273,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
       .toList.reverse
     def hasEnum(enumCandidate: String) = enumValues.contains(enumCandidate)
-//    def card = if (isOne || attrType <:< weakTypeOf[OneEnum[_, _]]) 1 else 2
     def card = if (isMany || attrType <:< weakTypeOf[ManyEnums[_, _]]) 2 else 1
     def isValue = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[Many[_, _, _, _]] || attrType <:< weakTypeOf[OneEnum[_, _]]
     def keyw = KW(ns.toString, this.toString)

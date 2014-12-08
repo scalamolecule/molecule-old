@@ -3,7 +3,7 @@ package molecule.examples.dayOfDatomic.schema
 import molecule.dsl.schemaDefinition._
 
 @InOut(0, 4)
-trait GraphDefinition {
+trait Graph2Definition {
 
   trait User {
     val name        = oneString.uniqueIdentity
@@ -12,7 +12,7 @@ trait GraphDefinition {
 
   trait RoleInGroup {
     val name  = oneString
-    val role  = one[Role]
+    val roles = many[Role]
     val group = one[Group]
   }
 

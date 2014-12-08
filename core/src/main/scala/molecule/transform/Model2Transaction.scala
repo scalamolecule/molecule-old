@@ -22,18 +22,19 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
     def resolveElement(eSlot: Any, stmts: Seq[Statement], element: Element): (Any, Seq[Statement]) = (eSlot, element) match {
       // First
-//      case ('_, Meta(ns, "", "e", EntValue, _))          => ('arg, stmts)
+      //      case ('_, Meta(ns, "", "e", EntValue, _))          => ('arg, stmts)
       case ('_, Meta(ns, "", "e", _, EntValue))          => ('arg, stmts)
       case ('_, Meta(ns, "", "e", _, Eq(Seq(id: Long)))) => (Eid(id), stmts)
       case ('_, Atom(ns, name, _, _, VarValue, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
       case ('_, Atom(ns, name, _, _, value, prefix, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
       case ('_, Bond(ns, refAttr, _))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
 
-      case ('_, Group(Bond(ns, refAttr, _), elements)) =>
+      case (e, Group(Bond(ns, refAttr, _), elements)) =>
         val nested = elements.foldLeft('v: Any, Seq[Statement]()) {
           case ((eSlot1, stmts1), element1) => resolveElement(eSlot1, stmts1, element1)
         }._2
-        ('e, stmts :+ Add('parentId, s":$ns/$refAttr", nested))
+        val parentId = if (e == '_) 'parentId else 'e
+        ('e, stmts :+ Add(parentId, s":$ns/$refAttr", nested))
 
       // First with id
       case (Eid(id), Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
@@ -63,14 +64,17 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
       case ('arg, Bond(ns, refAttr, _)) => ('v, stmts :+ Add('arg, s":$ns/$refAttr", 'tempId))
 
-      case (e, elem) => sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
+      case (e, elem) =>
+        x(27, model, e, elem)
+        //        throw new RuntimeException(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
+        sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
     }
     model.elements.foldLeft('_: Any, Seq[Statement]()) {
       case ((eSlot, stmts), element) => resolveElement(eSlot, stmts, element)
     }._2
   }
 
-  private def resolveStmts(stmts: Seq[Statement], e: Any, a: String, value: Any, prefix: Option[String] = None) = {
+  private def resolveStmts(stmts: Seq[Statement], e: Any, a: String, value: Any, prefix: Option[String] = None): Seq[Statement] = {
     def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
     stmts ++ (value match {
       case Replace(oldNew)      => oldNew.toSeq.flatMap {
@@ -104,27 +108,31 @@ case class Model2Transaction(conn: Connection, model: Model) {
           (next, stmts)
         else
           stmt match {
-            case Add('tempId, a, 'tempId)                 => (cur, resolveStmts(stmts, tempId(), a, tempId()))
-            case Add('arg, a, 'tempId)                    => (next, resolveStmts(stmts, arg, a, tempId()))
-            case Add('tempId, a, 'arg)                    => (next, resolveStmts(stmts, tempId(), a, arg))
-            case Add('tempId, a, Values(vs, prefix))      => (next, resolveStmts(stmts, tempId(), a, vs, prefix))
-            case Add('e, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.e, a, arg))
-            case Add('e, a, Values(EnumVal, prefix))      => (next, resolveStmts(stmts, stmts.last.e, a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
-            case Add('e, a, 'tempId)                      => (cur, resolveStmts(stmts, stmts.last.e, a, tempId()))
-            case Add('v, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.v, a, arg))
-            case Add('v, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
-            case Add('tx, a, 'arg)                        => (next, resolveStmts(stmts, tempId("tx"), a, arg))
-            case Retract(e, a, v)                         => (cur, stmts)
-            case Add('parentId, ref, nestedStmts: Seq[_]) =>
-              val parentId = tempId()
+            case Add('tempId, a, 'tempId)            => (cur, resolveStmts(stmts, tempId(), a, tempId()))
+            case Add('arg, a, 'tempId)               => (next, resolveStmts(stmts, arg, a, tempId()))
+            case Add('tempId, a, 'arg)               => (next, resolveStmts(stmts, tempId(), a, arg))
+            case Add('tempId, a, Values(vs, prefix)) => (next, resolveStmts(stmts, tempId(), a, vs, prefix))
+            case Add('e, a, 'arg)                    => (next, resolveStmts(stmts, stmts.last.e, a, arg))
+            case Add('e, a, Values(EnumVal, prefix)) => (next, resolveStmts(stmts, stmts.last.e, a, arg, prefix))
+            case Add('e, a, Values(vs, prefix))      => (next, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
+            case Add('e, a, 'tempId)                 => (cur, resolveStmts(stmts, stmts.last.e, a, tempId()))
+            case Add('v, a, 'arg)                    => (next, resolveStmts(stmts, stmts.last.v, a, arg))
+            case Add('v, a, Values(vs, prefix))      => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
+            case Add('tx, a, 'arg)                   => (next, resolveStmts(stmts, tempId("tx"), a, arg))
+            case Retract(e, a, v)                    => (cur, stmts)
+            case Add(e, ref, nestedStmts: Seq[_])    =>
+              val parentId = if (e == 'parentId) tempId() else stmts.last.e
               // Loop nested rows of data
               val nestedInsertStmts: Seq[Statement] = nestedArgss(nestedStmts, arg).flatMap { nestedArgs =>
                 val nestedId = tempId()
-                Add(parentId, ref, nestedId) +: nestedArgs.zip(nestedStmts).map { case (nestedArg, Add(_, a, _)) => Add(nestedId, a, nestedArg)}
+                val nestedStmts1 = nestedArgs.zip(nestedStmts).flatMap { case (nestedArg, Add(_, a, _)) =>
+                  resolveStmts(Seq(), nestedId, a, nestedArg)
+                }
+                val bondStmt = Add(parentId, ref, nestedId)
+                bondStmt +: nestedStmts1
               }
               (next, stmts ++ nestedInsertStmts)
-            case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
+            case unexpected                          => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
           }
       }._2
     }
@@ -155,7 +163,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
   def updateStmts(): Seq[Statement] = {
     val (dataStmts0, txStmts0) = splitStmts()
-    x(26, model, stmtsModel)
+    x(27, model, stmtsModel)
 
     val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
       val j = i + 1
@@ -178,180 +186,11 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (stmts, unexpected)                      => sys.error("[Model2Transaction:insertStmts:txStmts] Unexpected insert statement: " + unexpected)
     }
 
-    x(27, model, stmtsModel, dataStmts0, dataStmts, txStmts0, txStmts)
+    x(28, model, stmtsModel, dataStmts0, dataStmts, txStmts0, txStmts)
 
     dataStmts ++ txStmts
   }
 
-
-  def tx(dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): (Seq[Statement], Seq[Object]) = {
-    if (dataRows.isEmpty) {
-      if (ids.isEmpty)
-        mergeDataWithElements(model.elements)
-      else if (ids.size == 1)
-        mergeDataWithElements(model.elements, Seq(), ids.head)
-      else
-        sys.error("[Model2Transaction:tx] Unexpected ids: " + ids)
-    } else {
-      if (ids.isEmpty) {
-        val (stmtss, tempIdss) = dataRows.map {
-          dataRow =>
-            mergeDataWithElements(model.elements, dataRow, 0L)
-        }.unzip
-        (stmtss.flatten, tempIdss.flatten.distinct)
-      } else {
-        assert(dataRows.size == ids.size)
-        val (stmtss, tempIdss) = dataRows.zip(ids).map {
-          case (dataRow, id: Long) =>
-            mergeDataWithElements(model.elements, dataRow, id)
-        }.unzip
-        (stmtss.flatten, tempIdss.flatten.distinct)
-      }
-    }
-  }
-
-  private def mergeDataWithElements(elements: Seq[Element], dataRow: Seq[Any] = Seq(), id: Long = 0L): (Seq[Statement], Seq[Object]) = {
-    // Start with last element of molecule and go backwards (to be able to reference nested entities)
-    var n = dataRow.size
-    val ((newStmts, tempIds), _, _) = elements.foldRight(((Seq[Statement](), Seq[Object]()), "": Object, "")) {
-      case (element, ((stmts, tempIds), nextId, nextNs)) => {
-        //        val data = if (element.isInstanceOf[Bond] || element.isInstanceOf[SubComponent] || dataRow.isEmpty)
-        val data = if (element.isInstanceOf[Bond] || dataRow.isEmpty)
-          0
-        else {
-          n -= 1
-          dataRow(n)
-        }
-
-        if (data == null) {
-          // When data is null, no fact is asserted (stmts passed unchanged)
-          ((stmts, tempIds), null, null)
-        } else {
-          val (newStmts0, curId) = mkStatements(stmts, element, data, id, nextId, nextNs)
-          ((newStmts0, tempIds :+ curId), curId, curNs(element))
-        }
-      }
-    }
-    (newStmts, tempIds)
-  }
-
-
-  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
-    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
-
-  private def mkStatements(stmts: Seq[Statement], element: Element, arg: Any, id0: Long, nextId: Object, nextNs: String): (Seq[Statement], Object) = {
-    val e = if (curNs(element) == nextNs)
-      nextId
-    else if (id0 > 0L)
-      id0.asInstanceOf[Object]
-    else
-      tempId()
-
-    def addAtoms(ns: String, attr: String, prefix: Option[String] = None, value: Option[Any] = None): Seq[Statement] = {
-      def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
-
-      // Atom value takes precedence over external argument
-      value.getOrElse(arg) match {
-        case Replace(oldNew)            => x(11);
-          oldNew.toSeq.flatMap {
-            case (oldValue, newValue) =>
-              Seq(Retract(e, s":$ns/$attr", p(oldValue)), Add(e, s":$ns/$attr", p(newValue)))
-          }
-        case Remove(Seq())              => x(12, getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v))));
-          getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v)))
-        case Remove(removeValues)       => x(13, removeValues, removeValues.map(v => Retract(e, s":$ns/$attr", p(v))));
-          removeValues.map(v => Retract(e, s":$ns/$attr", p(v)))
-        case vs: Set[_]                 => x(14, vs, vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v))));
-          vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v)))
-        case vs: List[_] if vs.size > 1 => x(15, vs, vs.map(v => Add(e, s":$ns/$attr", p(v))));
-          vs.map(v => Add(e, s":$ns/$attr", p(v)))
-        case v :: Nil                   => x(16, v, Seq(Add(e, s":$ns/$attr", p(v))));
-          Seq(Add(e, s":$ns/$attr", p(v)))
-        case v                          => x(17, v, Seq(Add(e, s":$ns/$attr", p(v))));
-          Seq(Add(e, s":$ns/$attr", p(v)))
-      }
-    }
-
-    val newStmts = element match {
-      case Atom(ns, attr, _, _, VarValue, _, _)                => x(1, s":$ns/$attr");
-        stmts ++ addAtoms(ns, attr)
-      case Atom(ns, attr, _, _, EnumVal, prefix, _)            => stmts ++ addAtoms(ns, attr, prefix)
-      case Atom(ns, attr, _, _, Eq(values), prefix, _)         => stmts ++ addAtoms(ns, attr, prefix, Some(values))
-      case Atom(ns, attr, _, _, replace@Replace(_), prefix, _) => x(4, stmts, addAtoms(ns, attr, prefix, Some(replace)));
-        stmts ++ addAtoms(ns, attr, prefix, Some(replace))
-      case Atom(ns, attr, _, _, remove@Remove(_), prefix, _)   => x(5, stmts, addAtoms(ns, attr, prefix, Some(remove)), stmts ++ addAtoms(ns, attr, prefix, Some(remove)));
-        stmts ++ addAtoms(ns, attr, prefix, Some(remove))
-
-      case Bond(ns, refAttr, refNs) => x(2, s":$ns/$refAttr $nextId");
-        stmts :+ Add(e, s":$ns/$refAttr", nextId)
-
-      case Group(Bond(ns, refAttr, refNs), nestedElements) => {
-        val nestedDataRows = nestedData(nestedElements, arg)
-
-        // Loop nested rows of data
-        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) {
-          case ((elementStmts1, nestedIds), nestedDataRow) =>
-            // Recursively create nested elements
-            val (rowStmts, _) = mergeDataWithElements(nestedElements, nestedDataRow)
-            val lastId = rowStmts.last.e.asInstanceOf[Object]
-            (elementStmts1 ++ rowStmts, nestedIds + lastId)
-        }
-
-        // Add references to nested entities
-        val refStmts = elementIds.map(Add(e, s":$ns/$refAttr", _))
-        elementStmts ++ refStmts
-      }
-
-
-//      case Meta(ns, _, _, EntValue, _) => stmts //++ add(ns, attr, None, Some(e))
-      case Meta(ns, _, _, _, EntValue) => stmts //++ add(ns, attr, None, Some(e))
-
-      case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
-    }
-    (newStmts, e)
-  }
-
-  private def nestedData(elements: Seq[Element], data0: Any) = {
-    val (dataArity, data) = data0 match {
-      case d: Seq[_]  => d.head match {
-        case p: Product => (p.productArity, d)
-        case l: Seq[_]  => (l.size, d)
-      }
-      case unexpected => sys.error("[Model2Transaction:nestedData] Unexpected data: " + unexpected)
-    }
-    assert(dataArity == elements.size, s"[Model2Transaction:nestedData] Arity of attributes and values should match. Found: \n" +
-      s"Elements (arity ${elements.size}): " + elements.mkString("\n  ", "\n  ", "\n") +
-      s"Data (arity $dataArity): " + data.mkString("\n  ", "\n  ", "\n"))
-
-    // Todo: can we convert tuples more elegantly?
-    data map {
-      case t: Tuple1[_]                                                          => Seq(t._1)
-      case t: (_, _)                                                             => Seq(t._1, t._2)
-      case t: (_, _, _)                                                          => Seq(t._1, t._2, t._3)
-      case t: (_, _, _, _)                                                       => Seq(t._1, t._2, t._3, t._4)
-      case t: (_, _, _, _, _)                                                    => Seq(t._1, t._2, t._3, t._4, t._5)
-      case t: (_, _, _, _, _, _)                                                 => Seq(t._1, t._2, t._3, t._4, t._5, t._6)
-      case t: (_, _, _, _, _, _, _)                                              => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7)
-      case t: (_, _, _, _, _, _, _, _)                                           => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8)
-      case t: (_, _, _, _, _, _, _, _, _)                                        => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9)
-      case t: (_, _, _, _, _, _, _, _, _, _)                                     => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10)
-      case t: (_, _, _, _, _, _, _, _, _, _, _)                                  => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _)                               => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _)                            => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _)                         => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                      => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                   => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)             => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)          => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)       => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)    => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21)
-      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21, t._22)
-      case l: Seq[_]                                                             => l
-      case unexpected                                                            =>
-        sys.error("[Model2Transaction:mkStatements] Unexpected nested data: " + unexpected)
-    }
-  }
 
   private def nestedArgss(stmts: Seq[Any], data0: Any): Seq[Seq[Any]] = {
     val (dataArity, data) = data0 match {
@@ -394,4 +233,174 @@ case class Model2Transaction(conn: Connection, model: Model) {
         sys.error("[Model2Transaction:mkStatements] Unexpected nested data: " + unexpected)
     }
   }
+
+
+//  def tx(dataRows: Seq[Seq[Any]] = Seq(), ids: Seq[Long] = Seq()): (Seq[Statement], Seq[Object]) = {
+//    if (dataRows.isEmpty) {
+//      if (ids.isEmpty)
+//        mergeDataWithElements(model.elements)
+//      else if (ids.size == 1)
+//        mergeDataWithElements(model.elements, Seq(), ids.head)
+//      else
+//        sys.error("[Model2Transaction:tx] Unexpected ids: " + ids)
+//    } else {
+//      if (ids.isEmpty) {
+//        val (stmtss, tempIdss) = dataRows.map {
+//          dataRow =>
+//            mergeDataWithElements(model.elements, dataRow, 0L)
+//        }.unzip
+//        (stmtss.flatten, tempIdss.flatten.distinct)
+//      } else {
+//        assert(dataRows.size == ids.size)
+//        val (stmtss, tempIdss) = dataRows.zip(ids).map {
+//          case (dataRow, id: Long) =>
+//            mergeDataWithElements(model.elements, dataRow, id)
+//        }.unzip
+//        (stmtss.flatten, tempIdss.flatten.distinct)
+//      }
+//    }
+//  }
+//
+//  private def mergeDataWithElements(elements: Seq[Element], dataRow: Seq[Any] = Seq(), id: Long = 0L): (Seq[Statement], Seq[Object]) = {
+//    // Start with last element of molecule and go backwards (to be able to reference nested entities)
+//    var n = dataRow.size
+//    val ((newStmts, tempIds), _, _) = elements.foldRight(((Seq[Statement](), Seq[Object]()), "": Object, "")) {
+//      case (element, ((stmts, tempIds), nextId, nextNs)) => {
+//        //        val data = if (element.isInstanceOf[Bond] || element.isInstanceOf[SubComponent] || dataRow.isEmpty)
+//        val data = if (element.isInstanceOf[Bond] || dataRow.isEmpty)
+//          0
+//        else {
+//          n -= 1
+//          dataRow(n)
+//        }
+//
+//        if (data == null) {
+//          // When data is null, no fact is asserted (stmts passed unchanged)
+//          ((stmts, tempIds), null, null)
+//        } else {
+//          val (newStmts0, curId) = mkStatements(stmts, element, data, id, nextId, nextNs)
+//          ((newStmts0, tempIds :+ curId), curId, curNs(element))
+//        }
+//      }
+//    }
+//    (newStmts, tempIds)
+//  }
+//
+//
+//  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
+//    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
+//
+//  private def mkStatements(stmts: Seq[Statement], element: Element, arg: Any, id0: Long, nextId: Object, nextNs: String): (Seq[Statement], Object) = {
+//    val e = if (curNs(element) == nextNs)
+//      nextId
+//    else if (id0 > 0L)
+//      id0.asInstanceOf[Object]
+//    else
+//      tempId()
+//
+//    def addAtoms(ns: String, attr: String, prefix: Option[String] = None, value: Option[Any] = None): Seq[Statement] = {
+//      def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
+//
+//      // Atom value takes precedence over external argument
+//      value.getOrElse(arg) match {
+//        case Replace(oldNew)            => x(11);
+//          oldNew.toSeq.flatMap {
+//            case (oldValue, newValue) =>
+//              Seq(Retract(e, s":$ns/$attr", p(oldValue)), Add(e, s":$ns/$attr", p(newValue)))
+//          }
+//        case Remove(Seq())              => x(12, getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v))));
+//          getValues(conn.db, e, ns, attr).toSeq.map(v => Retract(e, s":$ns/$attr", p(v)))
+//        case Remove(removeValues)       => x(13, removeValues, removeValues.map(v => Retract(e, s":$ns/$attr", p(v))));
+//          removeValues.map(v => Retract(e, s":$ns/$attr", p(v)))
+//        case vs: Set[_]                 => x(14, vs, vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v))));
+//          vs.toSeq.map(v => Add(e, s":$ns/$attr", p(v)))
+//        case vs: List[_] if vs.size > 1 => x(15, vs, vs.map(v => Add(e, s":$ns/$attr", p(v))));
+//          vs.map(v => Add(e, s":$ns/$attr", p(v)))
+//        case v :: Nil                   => x(16, v, Seq(Add(e, s":$ns/$attr", p(v))));
+//          Seq(Add(e, s":$ns/$attr", p(v)))
+//        case v                          => x(17, v, Seq(Add(e, s":$ns/$attr", p(v))));
+//          Seq(Add(e, s":$ns/$attr", p(v)))
+//      }
+//    }
+//
+//    val newStmts = element match {
+//      case Atom(ns, attr, _, _, VarValue, _, _)                => x(1, s":$ns/$attr");
+//        stmts ++ addAtoms(ns, attr)
+//      case Atom(ns, attr, _, _, EnumVal, prefix, _)            => stmts ++ addAtoms(ns, attr, prefix)
+//      case Atom(ns, attr, _, _, Eq(values), prefix, _)         => stmts ++ addAtoms(ns, attr, prefix, Some(values))
+//      case Atom(ns, attr, _, _, replace@Replace(_), prefix, _) => x(4, stmts, addAtoms(ns, attr, prefix, Some(replace)));
+//        stmts ++ addAtoms(ns, attr, prefix, Some(replace))
+//      case Atom(ns, attr, _, _, remove@Remove(_), prefix, _)   => x(5, stmts, addAtoms(ns, attr, prefix, Some(remove)), stmts ++ addAtoms(ns, attr, prefix, Some(remove)));
+//        stmts ++ addAtoms(ns, attr, prefix, Some(remove))
+//
+//      case Bond(ns, refAttr, refNs) => x(2, s":$ns/$refAttr $nextId");
+//        stmts :+ Add(e, s":$ns/$refAttr", nextId)
+//
+//      case Group(Bond(ns, refAttr, refNs), nestedElements) => {
+//        val nestedDataRows = nestedData(nestedElements, arg)
+//
+//        // Loop nested rows of data
+//        val (elementStmts, elementIds) = nestedDataRows.foldLeft((stmts, Set[Object]())) {
+//          case ((elementStmts1, nestedIds), nestedDataRow) =>
+//            // Recursively create nested elements
+//            val (rowStmts, _) = mergeDataWithElements(nestedElements, nestedDataRow)
+//            val lastId = rowStmts.last.e.asInstanceOf[Object]
+//            (elementStmts1 ++ rowStmts, nestedIds + lastId)
+//        }
+//
+//        // Add references to nested entities
+//        val refStmts = elementIds.map(Add(e, s":$ns/$refAttr", _))
+//        elementStmts ++ refStmts
+//      }
+//
+//
+//      //      case Meta(ns, _, _, EntValue, _) => stmts //++ add(ns, attr, None, Some(e))
+//      case Meta(ns, _, _, _, EntValue) => stmts //++ add(ns, attr, None, Some(e))
+//
+//      case unexpected => sys.error("[Model2Transaction:mkStatements] Unexpected molecule element: " + unexpected)
+//    }
+//    (newStmts, e)
+//  }
+//
+//  private def nestedData(elements: Seq[Element], data0: Any) = {
+//    val (dataArity, data) = data0 match {
+//      case d: Seq[_]  => d.head match {
+//        case p: Product => (p.productArity, d)
+//        case l: Seq[_]  => (l.size, d)
+//      }
+//      case unexpected => sys.error("[Model2Transaction:nestedData] Unexpected data: " + unexpected)
+//    }
+//    assert(dataArity == elements.size, s"[Model2Transaction:nestedData] Arity of attributes and values should match. Found: \n" +
+//      s"Elements (arity ${elements.size}): " + elements.mkString("\n  ", "\n  ", "\n") +
+//      s"Data (arity $dataArity): " + data.mkString("\n  ", "\n  ", "\n"))
+//
+//    // Todo: can we convert tuples more elegantly?
+//    data map {
+//      case t: Tuple1[_]                                                          => Seq(t._1)
+//      case t: (_, _)                                                             => Seq(t._1, t._2)
+//      case t: (_, _, _)                                                          => Seq(t._1, t._2, t._3)
+//      case t: (_, _, _, _)                                                       => Seq(t._1, t._2, t._3, t._4)
+//      case t: (_, _, _, _, _)                                                    => Seq(t._1, t._2, t._3, t._4, t._5)
+//      case t: (_, _, _, _, _, _)                                                 => Seq(t._1, t._2, t._3, t._4, t._5, t._6)
+//      case t: (_, _, _, _, _, _, _)                                              => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7)
+//      case t: (_, _, _, _, _, _, _, _)                                           => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8)
+//      case t: (_, _, _, _, _, _, _, _, _)                                        => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9)
+//      case t: (_, _, _, _, _, _, _, _, _, _)                                     => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _)                                  => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _)                               => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _)                            => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _)                         => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                      => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                   => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)             => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)          => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)       => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)    => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21)
+//      case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21, t._22)
+//      case l: Seq[_]                                                             => l
+//      case unexpected                                                            =>
+//        sys.error("[Model2Transaction:mkStatements] Unexpected nested data: " + unexpected)
+//    }
+//  }
 }

@@ -207,7 +207,4 @@ package object molecule {
 
   trait stddev
   object stddev extends stddev
-
-//  case class contains[T](value: T)
-//  case class oldNew[T](from: T, to: T)
 }

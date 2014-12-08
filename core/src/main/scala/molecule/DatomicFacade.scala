@@ -138,22 +138,7 @@ trait DatomicFacade {
 //      case Some(set: Set[_]) =>
 //    }
 
-  /*
-  (defn maybe
-    "Returns the value of attr for e, or if-not if e does not possess
-     any values for attr. Cardinality-many attributes will be
-     returned as a set"
-    [db e attr if-not]
-    (let [result (d/q '[:find ?v
-                        :in $ ?e ?a
-                        :where [?e ?a ?v]]
-                      db e (d/entid db attr))]
-      (if (seq result)
-        (case (schema/cardinality db attr)
-              :db.cardinality/one (ffirst result)
-              :db.cardinality/many (into #{} (map first result)))
-        if-not)))
-*/
+
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
@@ -162,6 +147,7 @@ trait DatomicFacade {
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
+//        x(1, model, transformer.stmtsModel)
     val stmtss = transformer.insertStmts(dataRows)
 //        x(1, model, transformer.stmtsModel, stmtss)
     Tx(conn, transformer, stmtss)
@@ -188,7 +174,9 @@ object DatomicFacade extends DatomicFacade
 case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[Statement]]) {
   private val x = Debug("Tx", 1, 99, false, 3)
 
-  val txResult: jMap[_, _] = conn.transact(stmtss.flatten.map(_.toJava).asJava).get
+  val flatStmts = stmtss.flatten.map(_.toJava).asJava
+//  x(7, stmtss, flatStmts)
+  val txResult: jMap[_, _] = conn.transact(flatStmts).get
 
   def ids: List[Long] = {
     val txData = txResult.get(Connection.TX_DATA)

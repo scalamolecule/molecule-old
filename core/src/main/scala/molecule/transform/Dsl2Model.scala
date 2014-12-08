@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 10, 30, false)
+  val x = Debug("Dsl2Model", 20, 30, false)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -88,12 +88,24 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // Nested group (ManyRef) --------------
 
-    case t@q"$prev.$manyRef.apply[..$types]($nestedMolecule)" =>
-      val nestedElements = resolve(q"$nestedMolecule")
-      val refNs = curNs(nestedElements.head)
-      val group = Group(Bond(prev.name, firstLow(manyRef), refNs.capitalize), nestedElements)
-      //      x(2, t, nestedModel, group, traverse(q"$prev", group))
+    case t@q"$manyRef.apply[..$types]($nestedMolecule)" if !manyRef.isRef => Seq(Group(Bond("", "", ""), resolve(nestedMolecule)))
+
+    case t@q"$prev.$manyRef.apply[..$types]($nestedMolecule)" => {
+      val nestedElements = resolve(nestedMolecule)
+      val refNs = q"$prev.$manyRef".refNext
+      //      val refNs = if(q"$prev.$manyRef".isRef) q"$prev.$manyRef".refNext else firstLow(manyRef)
+      val nestedNs = curNs(nestedElements.head)
+      if (refNs != nestedNs) abort(s"[Dsl2Model:dslStructure(nested)] Nested molecule should start with `${refNs.capitalize}` (now starts with `${nestedNs.capitalize}`)")
+      val parentNs = prev match {
+        case q"$p.apply($value)" if p.isAttr => p.ns
+        case q"$p.apply($value)"             => p.name
+        case q"$p" if p.isAttr               => p.ns
+        case q"$p"                           => p.name
+      }
+      val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNs), nestedElements)
+//      x(20, parentNs, nestedElements, group, refNs, nestedNs, parentNs)
       traverse(q"$prev", group)
+    }
 
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other")
   }
@@ -250,7 +262,7 @@ object Dsl2Model {
       }
     }._1
     val model = Model(condensedElements)
-//    inst(c).x(30, dsl, rawElements, condensedElements)
+    //    inst(c).x(30, dsl, rawElements, condensedElements)
     model
   }
 }
