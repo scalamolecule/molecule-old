@@ -86,28 +86,47 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case a@q"$prev.$cur" if a.isRef || a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
 
 
-    // Nested group (ManyRef) --------------
+    // Nested group ------------------------
 
-    case t@q"$manyRef.apply[..$types]($nestedMolecule)" if !manyRef.isRef => Seq(Group(Bond("", "", ""), resolve(nestedMolecule)))
+    case t@q"$prev.$ns.apply[..$types]($nestedMolecule)" if !q"$prev.$ns".isRef =>
+      Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nestedMolecule)))
 
     case t@q"$prev.$manyRef.apply[..$types]($nestedMolecule)" => {
-      val nestedElements = resolve(nestedMolecule)
-      val refNs = q"$prev.$manyRef".refNext
-      //      val refNs = if(q"$prev.$manyRef".isRef) q"$prev.$manyRef".refNext else firstLow(manyRef)
-      val nestedNs = curNs(nestedElements.head)
-      if (refNs != nestedNs) abort(s"[Dsl2Model:dslStructure(nested)] Nested molecule should start with `${refNs.capitalize}` (now starts with `${nestedNs.capitalize}`)")
+      val refNext = q"$prev.$manyRef".refNext
       val parentNs = prev match {
         case q"$p.apply($value)" if p.isAttr => p.ns
         case q"$p.apply($value)"             => p.name
         case q"$p" if p.isAttr               => p.ns
         case q"$p"                           => p.name
       }
-      val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNs), nestedElements)
-//      x(20, parentNs, nestedElements, group, refNs, nestedNs, parentNs)
+      val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nestedMolecule)
+      val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
+      //      x(20, parentNs, nestedElements, group, refNext, nestedNs, parentNs)
       traverse(q"$prev", group)
     }
 
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other")
+  }
+
+  def nestedElements(manyRef: Tree, refNext: String, nestedMolecule: Tree): Seq[Element] = {
+    val nestedElements0 = resolve(nestedMolecule)
+    val nestedNs = curNs(nestedElements0.head)
+    if (refNext != nestedNs) {
+      // Find refs in `manyRef` namespace and match the target type with the first namespace of the first `nestedMolecule` element
+      val refs = c.typecheck(manyRef).tpe.members.filter(e => e.isMethod && e.asMethod.returnType <:< weakTypeOf[Ref[_, _]])
+      val refPairs = refs.map(r => r.name -> r.typeSignature.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name)
+        .filter(_._2.toString == nestedNs.capitalize)
+
+      if (refPairs.isEmpty)
+        abort(s"[Dsl2Model:dslStructure(nested)] Unrelated namespace `$nestedNs` as nested namespace not implemented yet...")
+      else if (refPairs.size > 1)
+        abort(s"[Dsl2Model:dslStructure(nested)] `$manyRef` has more than one ref pointing to `$nestedNs`:\n${refPairs.mkString("\n")}")
+
+      val (refAttr, refNs) = refPairs.head
+      Bond(refNext, firstLow(refAttr), firstLow(refNs)) +: nestedElements0
+    } else {
+      nestedElements0
+    }
   }
 
   def resolveOp(previous: Tree, curTree: Tree, attr: Tree, op: Tree, values0: Tree): Element = {
@@ -262,7 +281,8 @@ object Dsl2Model {
       }
     }._1
     val model = Model(condensedElements)
-    //    inst(c).x(30, dsl, rawElements, condensedElements)
+//    inst(c).x(30, condensedElements)
+    //        inst(c).x(30, dsl, rawElements, condensedElements)
     model
   }
 }

@@ -31,8 +31,8 @@ class Graph extends DayOfAtomicSpec {
     // User 1's Groups
     User.name_("User1").RoleInGroup.Group.name.get === List("Group2", "Group1")
 
-    // User 1's Roles in Group 2
-    User.name_("User1").RoleInGroup(RoleInGroup.Group.name_("Group2")).Role.name.get === List("Role1")
+    // User 1 Roles in Group 2
+    User.name_("User1").RoleInGroup(Group.name_("Group2")).Role.name.get === List("Role1")
     /* Query in Neo4J:
     MATCH ({ name: 'User1' })-[:hasRoleInGroup]->(hyperEdge)-[:hasGroup]->({ name: 'Group2' }),
       (hyperEdge)-[:hasRole]->(role)
@@ -40,7 +40,7 @@ class Graph extends DayOfAtomicSpec {
     */
 
     // User 1's Groups having Role 1
-    User.name_("User1").RoleInGroup(RoleInGroup.Role.name_("Role1")).Group.name.get === List("Group2")
+    User.name_("User1").RoleInGroup(Role.name_("Role1")).Group.name.get === List("Group2")
 
 
     // Role 1 ............................
@@ -49,13 +49,13 @@ class Graph extends DayOfAtomicSpec {
     User.name.RoleInGroup.Role.name_("Role1").get === List("User1")
 
     // Groups with Role 1
-    RoleInGroup.apply(RoleInGroup.Role.name_("Role1")).Group.name.get === List("Group2")
+    RoleInGroup(Role.name_("Role1")).Group.name.get === List("Group2")
 
     // Users in Group 2 having Role 1
-    User.name.RoleInGroup(RoleInGroup.Group.name_("Group2")).Role.name_("Role1").get === List("User1")
+    User.name.RoleInGroup(Group.name_("Group2")).Role.name_("Role1").get === List("User1")
 
     // Groups where User 1 has Role 1
-    User.name_("User1").RoleInGroup(RoleInGroup.Group.name).Role.name_("Role1").get === List("Group2")
+    User.name_("User1").RoleInGroup(Group.name).Role.name_("Role1").get === List("Group2")
 
 
     // Group 2 ...........................
@@ -64,17 +64,17 @@ class Graph extends DayOfAtomicSpec {
     User.name.RoleInGroup.Group.name_("Group2").get === List("User1")
 
     // Roles of Group 2
-    RoleInGroup(RoleInGroup.Group.name_("Group2")).Role.name.get === List("Role1")
+    RoleInGroup(Group.name_("Group2")).Role.name.get === List("Role1")
 
     // Users with Role 1 in Group 2
-    User.name.RoleInGroup(RoleInGroup.Role.name_("Role1")).Group.name_("Group2").get === List("User1")
+    User.name.RoleInGroup(Role.name_("Role1")).Group.name_("Group2").get === List("User1")
 
     // Roles of User 1 in Group 2
-    User.name_("User1").RoleInGroup(RoleInGroup.Group.name_("Group2")).Role.name.get === List("Role1")
+    User.name_("User1").RoleInGroup(Group.name_("Group2")).Role.name.get === List("Role1")
 
 
     // All groups and the roles a user has, sorted by the name of the role
-    User.name_("User1").RoleInGroup(RoleInGroup.Role.name).Group.name.get.sortBy(_._1) === List(
+    User.name_("User1").RoleInGroup(Role.name).Group.name.get.sortBy(_._1) === List(
       ("Role1", "Group2"),
       ("Role2", "Group1")
     )
@@ -260,5 +260,171 @@ RoleInGroup —— Group2
                     [?d :roleInGroup/role ?f]
                     [?f :role/name ?g]]
            """, conn.db) === 77
+
+
+
+//    User.name_("User1").RoleInGroupx(RoleInGroup.Groupx.name_("Group2")).Rolex.name.debug
+    /*
+[:find ?g
+ :where
+   [?a :user/name "User1"]
+   [?a :user/roleInGroupx ?c]
+   [?c :roleInGroup/groupx ?d]
+   [?d :group/name "Group2"]
+   [?c :roleInGroup/rolex ?f]
+   [?f :role/name ?g]]
+
+Warning:scalac: ##20: Dsl2Model
+1          user
+------------------------------------------------
+2          List(
+  1          Bond(roleInGroup,groupx,group)
+  2          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+------------------------------------------------
+3          Group(
+  1          Bond(user,roleInGroupx,roleInGroup)
+  2          Bond(roleInGroup,groupx,group)
+  3          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+------------------------------------------------
+4          roleInGroup
+------------------------------------------------
+5          roleInGroup
+------------------------------------------------
+6          user
+======================================================
+Warning:scalac: ##30: Dsl2Model
+1          List(
+  1          Atom(user,name_,String,1,Eq(List(User1)),None,List())
+  2          Group(
+    1          Bond(user,roleInGroupx,roleInGroup)
+    2          Bond(roleInGroup,groupx,group)
+    3          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+  3          Bond(roleInGroup,rolex,role)
+  4          Atom(role,name,String,1,VarValue,None,List()))
+======================================================
+
+     */
+
+//    User.name_("User1").RoleInGroup(RoleInGroup.Group.name_("Group2")).Role.name.debug
+    /*
+    [:find ?g
+     :where
+       [?a :user/name "User1"]
+       [?a :user/roleInGroup ?c]
+       [?c :roleInGroup/group ?d]
+       [?d :group/name "Group2"]
+       [?c :roleInGroup/role ?f]
+       [?f :role/name ?g]]
+
+Warning:scalac: ##20: Dsl2Model
+1          user
+------------------------------------------------
+2          List(
+  1          Bond(roleInGroup,group,group)
+  2          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+------------------------------------------------
+3          Group(
+  1          Bond(user,roleInGroup,roleInGroup)
+  2          Bond(roleInGroup,group,group)
+  3          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+------------------------------------------------
+4          roleInGroup
+------------------------------------------------
+5          roleInGroup
+------------------------------------------------
+6          user
+======================================================
+
+Warning:scalac: ##30: Dsl2Model
+1          List(
+  1          Atom(user,name_,String,1,Eq(List(User1)),None,List())
+  2          Group(
+    1          Bond(user,roleInGroup,roleInGroup)
+    2          Bond(roleInGroup,group,group)
+    3          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+  3          Bond(roleInGroup,role,role)
+  4          Atom(role,name,String,1,VarValue,None,List()))
+======================================================
+     */
+
+//    User.name_("User1").RoleInGroupx(Group.name_("Group2")).Rolex.name.debug
+    /*
+    [:find ?g
+     :where
+       [?a :user/name "User1"]
+       [?a :user/roleInGroupx ?c]
+       [?c :roleInGroup/group ?d]
+       [?d :group/name "Group2"]
+       [?c :roleInGroup/rolex ?f]
+       [?f :role/name ?g]]
+
+       Warning:scalac: ##20: Dsl2Model
+       1          user
+       ------------------------------------------------
+       2          List(
+         1          Bond(roleInGroup,group,group)
+         2          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+       ------------------------------------------------
+       3          Group(
+         1          Bond(user,roleInGroupx,roleInGroup)
+         2          Bond(roleInGroup,group,group)
+         3          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+       ------------------------------------------------
+       4          roleInGroup
+       ------------------------------------------------
+       5          group
+       ------------------------------------------------
+       6          user
+       ======================================================
+       Warning:scalac: ##30: Dsl2Model
+       1          List(
+         1          Atom(user,name_,String,1,Eq(List(User1)),None,List())
+         2          Group(
+           1          Bond(user,roleInGroupx,roleInGroup)
+           2          Bond(roleInGroup,group,group)
+           3          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+         3          Bond(roleInGroup,rolex,role)
+         4          Atom(role,name,String,1,VarValue,None,List()))
+       ======================================================
+
+     */
+
+//    User.name_("User1").RoleInGroup(Group.name_("Group2")).Role.name.debug
+    /*
+    [:find ?e
+     :where
+       [?a :user/name "User1"]
+       [?a :user/roleInGroup ?c]
+       [?a :group/name "Group2"]
+       [?c :roleInGroup/role ?d]
+       [?d :role/name ?e]]
+
+Warning:scalac: ##20: Dsl2Model
+1          user
+------------------------------------------------
+2          List(
+  1          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+------------------------------------------------
+3          Group(
+  1          Bond(user,roleInGroup,roleInGroup)
+  2          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+------------------------------------------------
+4          roleInGroup
+------------------------------------------------
+5          group
+------------------------------------------------
+6          user
+======================================================
+
+Warning:scalac: ##30: Dsl2Model
+1          List(
+  1          Atom(user,name_,String,1,Eq(List(User1)),None,List())
+  2          Group(
+    1          Bond(user,roleInGroup,roleInGroup)
+    2          Atom(group,name_,String,1,Eq(List(Group2)),None,List()))
+  3          Bond(roleInGroup,role,role)
+  4          Atom(role,name,String,1,VarValue,None,List()))
+======================================================
+     */
 
 */
