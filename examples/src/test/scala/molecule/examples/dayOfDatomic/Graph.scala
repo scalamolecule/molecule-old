@@ -1,10 +1,9 @@
-package molecule
-package examples.dayOfDatomic.tutorial
+package molecule.examples.dayOfDatomic
 import molecule.examples.dayOfDatomic.schema.{Graph2Schema, GraphSchema}
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import molecule.util.MoleculeSpec
 
 
-class Graph extends DayOfAtomicSpec {
+class Graph extends MoleculeSpec {
 
   // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
 
@@ -106,8 +105,7 @@ class Graph extends DayOfAtomicSpec {
       ("User2", List(
         ("U2G1R25", g1, Set(r2, r5)),
         ("U2G2R34", g2, Set(r3, r4)),
-        ("U2G3R56", g3, Set(r5, r6))))
-    )
+        ("U2G3R56", g3, Set(r5, r6)))))
 
 
 

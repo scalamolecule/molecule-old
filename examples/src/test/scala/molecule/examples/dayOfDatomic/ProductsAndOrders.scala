@@ -2,9 +2,10 @@ package molecule.examples.dayOfDatomic
 import molecule._
 import molecule.examples.dayOfDatomic.dsl.productsOrder._
 import molecule.examples.dayOfDatomic.schema._
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import molecule.util.MoleculeSpec
 
-class ProductsAndOrders extends DayOfAtomicSpec {
+
+class ProductsAndOrders extends MoleculeSpec {
 
 
   "Nested data" >> {
@@ -22,54 +23,9 @@ class ProductsAndOrders extends DayOfAtomicSpec {
 
     // Template for Order with multiple LineItems
     val order = m(Order.LineItems(LineItem.product.price.quantity))
-//    val order = m(Order.orderid.LineItems(LineItem.product.price.quantity))
 
     // Make order with two line items and return created entity id
     val orderId = order.insert(List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).id
-//    val orderId = order.insert(333, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).id
-    /*
-    ## 26: Model2Transaction
-    ========================================================================
-    1          Model(
-      1          Group(
-        1          Bond(order,lineItems,LineItem)
-        2          Atom(lineItem,product,Long,1,VarValue,None,List())
-        3          Atom(lineItem,price,Double,1,VarValue,None,List())
-        4          Atom(lineItem,quantity,Int,1,VarValue,None,List())))
-    ------------------------------------------------
-    2          List(
-      1          :db/add       'parentId                          :order/lineItems           List(
-        1          :db/add       'v                                 :lineItem/product             'arg
-        2          :db/add       'e                                 :lineItem/price               'arg
-        3          :db/add       'e                                 :lineItem/quantity            'arg))
-    ------------------------------------------------
-    3          List(
-      1          :db/add       'parentId                          :order/lineItems           List(
-        1          :db/add       'v                                 :lineItem/product             'arg
-        2          :db/add       'e                                 :lineItem/price               'arg
-        3          :db/add       'e                                 :lineItem/quantity            'arg))
-    ------------------------------------------------
-    4          ArrayBuffer(
-    List(
-    Add(#db/id[:db.part/user -1000009],:order/lineItems,#db/id[:db.part/user -1000010]),
-    Add(#db/id[:db.part/user -1000010],:lineItem/product,17592186045418),
-    Add(#db/id[:db.part/user -1000010],:lineItem/price,48.0),
-    Add(#db/id[:db.part/user -1000010],:lineItem/quantity,1),
-    Add(#db/id[:db.part/user -1000009],:order/lineItems,#db/id[:db.part/user -1000011]),
-    Add(#db/id[:db.part/user -1000011],:lineItem/product,17592186045419),
-    Add(#db/id[:db.part/user -1000011],:lineItem/price,38.0),
-    Add(#db/id[:db.part/user -1000011],:lineItem/quantity,2)))
-    ------------------------------------------------
-    5          List(
-    )
-    ------------------------------------------------
-    6          List(
-      1          List(
-    ))
-    ------------------------------------------------
-    7          ArrayBuffer(List(List((17592186045418,48.0,1), (17592186045419,38.0,2))))
-    ========================================================================
-*/
 
     // Find id of order with chocolate
     Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId

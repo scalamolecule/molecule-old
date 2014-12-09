@@ -1,12 +1,11 @@
 package molecule.examples.dayOfDatomic
-
 import molecule._
 import molecule.examples.dayOfDatomic.dsl.aggregates._
 import molecule.examples.dayOfDatomic.schema.AggregatesSchema
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import molecule.util.MoleculeSpec
 
 
-class Aggregates extends DayOfAtomicSpec {
+class Aggregates extends MoleculeSpec {
 
   implicit val conn = load(AggregatesSchema.tx, "Aggregates")
 

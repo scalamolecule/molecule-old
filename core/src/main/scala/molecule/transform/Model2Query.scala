@@ -155,7 +155,6 @@ object Model2Query {
             case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
               make(query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)
           }
-//          val e2 = if(ns == "") e else w
           (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
 
         case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long))) => x(2, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")

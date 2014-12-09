@@ -47,7 +47,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case q"$prev.v.apply(..$values)"  => traverse(q"$prev", Meta("", "", "v", AttrVar(""), modelValue("apply", null, q"Seq(..$values)")))
     case q"$prev.v_.apply(..$values)" => traverse(q"$prev", Meta("", "", "v", NoValue, modelValue("apply", null, q"Seq(..$values)")))
-    case q"$prev.v"                   => traverse(q"$prev", Meta("", "", "v", AttrVar("")))
+    case q"$prev.v"                   => traverse(q"$prev", Meta("", "", "v", AttrVar(""), NoValue))
     case q"$prev.v_"                  => abort( s"""[Dsl2Model:dslStructure] Generic attribute value `v_` can only be used with an applied value i.e. `v_("someValue")`""")
 
 
@@ -68,10 +68,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.op" if !q"$prev".isAttr        => abort(s"[Dsl2Model:dslStructure] Please add `op` after an attribute or another transaction value")
 
     // ns.attr.txInstant etc.. (transaction related to previous attribute)
-    case q"$prev.tx"        => traverse(q"$prev", Meta("db", "tx", "tx", TxValue))
-    case q"$prev.txT"       => traverse(q"$prev", Meta("db", "txT", "tx", TxTValue))
-    case q"$prev.txInstant" => traverse(q"$prev", Meta("db", "txInstant", "tx", TxInstantValue))
-    case q"$prev.op"        => traverse(q"$prev", Meta("db", "op", "tx", OpValue))
+    case q"$prev.tx"        => traverse(q"$prev", Meta("db", "tx", "tx", TxValue, NoValue))
+    case q"$prev.txT"       => traverse(q"$prev", Meta("db", "txT", "tx", TxTValue, NoValue))
+    case q"$prev.txInstant" => traverse(q"$prev", Meta("db", "txInstant", "tx", TxInstantValue, NoValue))
+    case q"$prev.op"        => traverse(q"$prev", Meta("db", "op", "tx", OpValue, NoValue))
 
 
     // Generic -----------------------------
@@ -87,6 +87,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
 
     // Nested group ------------------------
+
+    case t@q"$prev.e.apply[..$types]($nestedMolecule)" if !q"$prev".isRef =>
+      Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nestedMolecule)))
+
+    case t@q"$prev.e_.apply[..$types]($nestedMolecule)" if !q"$prev".isRef =>
+      Seq(Group(Bond("", "", ""), resolve(nestedMolecule)))
 
     case t@q"$prev.$ns.apply[..$types]($nestedMolecule)" if !q"$prev.$ns".isRef =>
       Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nestedMolecule)))
@@ -109,23 +115,24 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   }
 
   def nestedElements(manyRef: Tree, refNext: String, nestedMolecule: Tree): Seq[Element] = {
-    val nestedElements0 = resolve(nestedMolecule)
-    val nestedNs = curNs(nestedElements0.head)
+    val nestedElements = resolve(nestedMolecule)
+    val nestedNs = curNs(nestedElements.head)
     if (refNext != nestedNs) {
       // Find refs in `manyRef` namespace and match the target type with the first namespace of the first `nestedMolecule` element
       val refs = c.typecheck(manyRef).tpe.members.filter(e => e.isMethod && e.asMethod.returnType <:< weakTypeOf[Ref[_, _]])
       val refPairs = refs.map(r => r.name -> r.typeSignature.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name)
-        .filter(_._2.toString == nestedNs.capitalize)
-
-      if (refPairs.isEmpty)
-        abort(s"[Dsl2Model:dslStructure(nested)] Unrelated namespace `$nestedNs` as nested namespace not implemented yet...")
-      else if (refPairs.size > 1)
+      val refPairsFiltered = refPairs.filter(_._2.toString == nestedNs.capitalize)
+      //      x(23, refs, refPairs, nestedElements, refNext, nestedNs)
+      if (refPairsFiltered.isEmpty) {
+        //        abort(s"[Dsl2Model:dslStructure(nested)] Unrelated namespace `$nestedNs` as nested namespace not implemented yet...")
+        nestedElements
+      } else if (refPairsFiltered.size == 1) {
+        val (refAttr, refNs) = refPairsFiltered.head
+        Bond(refNext, firstLow(refAttr), firstLow(refNs)) +: nestedElements
+      } else
         abort(s"[Dsl2Model:dslStructure(nested)] `$manyRef` has more than one ref pointing to `$nestedNs`:\n${refPairs.mkString("\n")}")
-
-      val (refAttr, refNs) = refPairs.head
-      Bond(refNext, firstLow(refAttr), firstLow(refNs)) +: nestedElements0
     } else {
-      nestedElements0
+      nestedElements
     }
   }
 
@@ -281,8 +288,8 @@ object Dsl2Model {
       }
     }._1
     val model = Model(condensedElements)
-//    inst(c).x(30, condensedElements)
-    //        inst(c).x(30, dsl, rawElements, condensedElements)
+    //    inst(c).x(30, condensedElements)
+    //    inst(c).x(30, dsl, rawElements, condensedElements, model)
     model
   }
 }

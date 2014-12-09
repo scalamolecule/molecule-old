@@ -1,11 +1,11 @@
 package molecule.examples.dayOfDatomic
-
 import molecule._
 import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic.schema._
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import molecule.util.MoleculeSpec
 
-class Binding extends DayOfAtomicSpec {
+
+class Binding extends MoleculeSpec {
 
   implicit val conn = load(SocialNewsSchema.tx, "Binding")
 

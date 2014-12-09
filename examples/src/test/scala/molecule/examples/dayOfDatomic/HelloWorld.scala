@@ -1,10 +1,11 @@
 package molecule.examples.dayOfDatomic
 import datomic.Peer
 import datomic.Util._
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import molecule.util.MoleculeSpec
 import scala.collection.JavaConversions._
 
-class HelloWorld extends DayOfAtomicSpec {
+
+class HelloWorld extends MoleculeSpec {
 
   "Hello World" >> {
 

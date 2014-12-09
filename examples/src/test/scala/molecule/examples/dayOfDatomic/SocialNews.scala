@@ -1,8 +1,9 @@
 package molecule.examples.dayOfDatomic
 import molecule.examples.dayOfDatomic.dsl.socialNews._
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import molecule.util.MoleculeSpec
 
-class SocialNews extends DayOfAtomicSpec {
+
+class SocialNews extends MoleculeSpec {
 
   "Social News" in new SocialNewsSetup {
 

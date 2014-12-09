@@ -26,7 +26,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-//            x(1, dsl.tree, model)
+    //    x(1, dsl.tree, model, model1)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
@@ -60,7 +60,7 @@ trait BuildMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         case TxModel(txElements)                                                                      => TxModel(resolveIdentifiers(txElements))
         case other                                                                                    => other
       }
-      val model =  Model(resolveIdentifiers($model.elements))
+      val model = Model(resolveIdentifiers($model.elements))
       val query = Model2Query(model)
 
       def debugMolecule(conn: Connection): Unit = {

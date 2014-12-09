@@ -1,11 +1,10 @@
 package molecule.examples.dayOfDatomic
-
 import molecule._
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
 import molecule.schemas.Db
+import molecule.util.MoleculeSpec
 
 
-class AttributeGroups extends DayOfAtomicSpec {
+class AttributeGroups extends MoleculeSpec {
 
   "Attribute groups" in new SocialNewsSetup {
 

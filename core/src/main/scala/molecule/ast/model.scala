@@ -5,6 +5,7 @@ object model {
   case class Model(elements: Seq[Element]) {
 
     override def toString = {
+      println(elements)
       val lines = elements.map {
         case Group(bond, nestedElements) =>
           s"""|Group(
@@ -25,7 +26,8 @@ object model {
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
-  case class Meta(ns: String, attr: String, kind: String, generic: Generic, value: Value = NoValue) extends Element
+//  case class Meta(ns: String, attr: String, kind: String, generic: Generic, value: Value = NoValue) extends Element
+  case class Meta(ns: String, attr: String, kind: String, generic: Generic, value: Value) extends Element
   case class TxModel(elements: Seq[Element]) extends Element
 
   case object EmptyElement extends Element

@@ -1,10 +1,10 @@
 package molecule.examples.dayOfDatomic
 import molecule._
 import molecule.examples.dayOfDatomic.dsl.socialNews._
-import molecule.examples.dayOfDatomic.spec.DayOfAtomicSpec
+import molecule.util.MoleculeSpec
 
 
-class Provenance extends DayOfAtomicSpec {
+class Provenance extends MoleculeSpec {
 
   "Transaction meta data" in new SocialNewsSetup {
 

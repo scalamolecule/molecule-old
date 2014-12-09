@@ -5,6 +5,7 @@ import molecule.examples.dayOfDatomic.schema._
 import org.specs2.specification.Scope
 import scala.language.postfixOps
 
+
 class SocialNewsSetup extends Scope with DatomicFacade {
 
   // 1-2. Make db
