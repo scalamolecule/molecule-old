@@ -1,65 +1,57 @@
-package molecule.schemas
+package molecule.schema
 /*
  * AUTO-GENERATED CODE - DON'T CHANGE!
  *
  * Manual changes to this file will likely break molecules!
  * Instead, change the molecule definition files and recompile your project with `sbt compile`.
  */
-import molecule._
-import molecule.dsl.schemaDSL.OneString
 import molecule.dsl.schemaDSL._
-import molecule.in._
-import molecule.out._
-import molecule.dsl.schemaDSL._
+import molecule.dsl._
 
 
 object Db extends Db_0
-//{
-//  def apply(e: Long)       : Db_0      = ???
-//  def apply(c: count.type) : Db_1[Int] = ???
-//}
 
 trait Db {
   class valueType[Ns, In] extends OneString[Ns, In]
 }
 
-trait Db_0 extends Db with Molecule_0[Db_0, Db_1, Db_In_1_0, Db_In_1_1] {
+trait Db_0 extends Db with Out_0[Db_0, Db_1, Db_In_1_0, Db_In_1_1] {
   val valueType  : valueType[Db_1[String], Db_In_1_1[String, String]] with Db_1[String] = ???
 
   val valueType_ : valueType[Db_0, Db_In_1_0[String]] with Db_0 = ???
 }
 
-trait Db_1[A] extends Db with Molecule_1[Db_1, Db_2, Db_In_1_1, Db_In_1_2, A] {
+trait Db_1[A] extends Db with Out_1[Db_1, Db_2, Db_In_1_1, Db_In_1_2, A] {
   val valueType  : valueType[Db_2[A, String], Db_In_1_2[String, A, String]] with Db_2[A, String] = ???
 
   val valueType_ : valueType[Db_1[A], Db_In_1_1[String, A]] with Db_1[A] = ???
 }
 
-trait Db_2[A, B] extends Db with Molecule_2[Db_2, Db_3, Db_In_1_2, Db_In_1_3, A, B] {
+trait Db_2[A, B] extends Db with Out_2[Db_2, Db_3, Db_In_1_2, Db_In_1_3, A, B] {
   val valueType  : valueType[Db_3[A, B, String], Db_In_1_3[String, A, B, String]] with Db_3[A, B, String] = ???
 
   val valueType_ : valueType[Db_2[A, B], Db_In_1_2[String, A, B]] with Db_2[A, B] = ???
 }
 
-trait Db_3[A, B, C] extends Db with Molecule_3[Db_3, Db_4, Db_In_1_3, Db_In_1_4, A, B, C] {
+trait Db_3[A, B, C] extends Db with Out_3[Db_3, Db_4, Db_In_1_3, Db_In_1_4, A, B, C] {
   val valueType  : valueType[Db_4[A, B, C, String], Db_In_1_4[String, A, B, C, String]] with Db_4[A, B, C, String] = ???
 
   val valueType_ : valueType[Db_3[A, B, C], Db_In_1_3[String, A, B, C]] with Db_3[A, B, C] = ???
 }
 
-trait Db_4[A, B, C, D] extends Db with Molecule_4[Db_4, Db_5, Db_In_1_4, Db_In_1_5, A, B, C, D] {
+trait Db_4[A, B, C, D] extends Db with Out_4[Db_4, Db_5, Db_In_1_4, Db_In_1_5, A, B, C, D] {
   val valueType  : valueType[Db_5[A, B, C, D, String], Db_In_1_5[String, A, B, C, D, String]] with Db_5[A, B, C, D, String] = ???
 
   val valueType_ : valueType[Db_4[A, B, C, D], Db_In_1_4[String, A, B, C, D]] with Db_4[A, B, C, D] = ???
 }
 
-trait Db_5[A, B, C, D, E] extends Db with Molecule_5[Db_5, Db_6, Db_In_1_5, Db_In_1_6, A, B, C, D, E] {
+trait Db_5[A, B, C, D, E] extends Db with Out_5[Db_5, Db_6, Db_In_1_5, Db_In_1_6, A, B, C, D, E] {
   val valueType  : valueType[Db_6[A, B, C, D, E, String], Db_In_1_6[String, A, B, C, D, E, String]] with Db_6[A, B, C, D, E, String] = ???
 
   val valueType_ : valueType[Db_5[A, B, C, D, E], Db_In_1_5[String, A, B, C, D, E]] with Db_5[A, B, C, D, E] = ???
 }
 
-trait Db_6[A, B, C, D, E, F] extends Db with Molecule_6[Db_6, P7, Db_In_1_6, P8, A, B, C, D, E, F] {
+trait Db_6[A, B, C, D, E, F] extends Db with Out_6[Db_6, P7, Db_In_1_6, P8, A, B, C, D, E, F] {
   val valueType_ : valueType[Db_6[A, B, C, D, E, F], Db_In_1_6[String, A, B, C, D, E, F]] with Db_6[A, B, C, D, E, F] = ???
 }
 

@@ -1,15 +1,13 @@
-package molecule.in
+package molecule
+
 import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
-import molecule.dsl.schemaDSL
-import molecule.out._
 
 
 // 1 input X outputs
 
 trait InputMolecule_1[I1] extends InputMolecule {
-
 
   def bindValues1(in1: Seq[I1]) = {
     val (vars, Seq(p1)) = varsAndPrefixes.unzip

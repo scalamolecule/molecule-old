@@ -72,14 +72,14 @@ class QueryTour extends MoleculeSpec {
     )
 
     // Attributes of stories having comments
-    Parent(Story.a.title_).Comment.get.sorted === List(
+    Parent(Story.a.title_).Comment.get.flatten.sorted === List(
       ":parent/comment",
       ":story/title",
       ":story/url"
     )
 
     // Attributes of comments having a sub-comment
-    Parent(Comment.a.text_).Comment.get.sorted === List(
+    Parent(Comment.a.text_).Comment.get.flatten.sorted === List(
       ":comment/author",
       ":comment/text",
       ":parent/comment"
@@ -130,7 +130,7 @@ class QueryTour extends MoleculeSpec {
       .flatMap(_(":parent/comment")).asInstanceOf[List[Map[String, Any]]]
       .map(_.head._2) === List(c3, c6, c8, c12)
 
-    // Comments to the editors comments (with `for` loop)
+    // Comments to the editors comments (with `for` comprehension)
     (for {
       editorComment <- editor(":comment/_author").get.asInstanceOf[List[Long]]
       editorCommentComment <- editorComment(":parent/comment").asInstanceOf[Option[Map[String, Any]]]

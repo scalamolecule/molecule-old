@@ -8,7 +8,9 @@ import molecule.ast.model._
 object schemaDSL {
 
   trait NS
-  trait NS0 extends NS
+
+  // Using dummy type parameter to simplify parsing DSL
+  trait NS0[Dummy] extends NS
   trait NS1[A] extends NS
   trait NS2[A, B] extends NS
   trait NS3[A, B, C] extends NS
@@ -31,6 +33,9 @@ object schemaDSL {
   trait NS20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] extends NS
   trait NS21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] extends NS
   trait NS22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] extends NS
+  trait NS23[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X] extends NS
+  trait NS24[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y] extends NS
+  trait NS25[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, Z] extends NS
 
 
   // Dummy types used with generated trait types

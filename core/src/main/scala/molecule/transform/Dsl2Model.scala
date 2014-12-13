@@ -59,7 +59,9 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.Db.txInstant" => traverse(q"$prev", Atom("db", "txInstant", "Long", 1, VarValue))
     case q"$prev.Db.op"        => traverse(q"$prev", Atom("db", "op", "Boolean", 1, VarValue))
 
-    case q"$prev.tx[..$t]($txMolecule)" => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
+    case q"$prev.tx_.apply($txMolecule)"       => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
+    case q"$prev.tx_.apply[..$t]($txMolecule)" => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
+    //    case q"$prev.tx[..$t]($txMolecule)"        => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
 
     // ns.txInstant.attr - `txInstant` doesn't relate to any previous attr
     case q"$prev.tx" if !q"$prev".isAttr        => abort(s"[Dsl2Model:dslStructure] Please add `tx` after an attribute or another transaction value")
@@ -88,37 +90,41 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // Nested group ------------------------
 
-    case t@q"$prev.e.apply[..$types]($nestedMolecule)" if !q"$prev".isRef =>
-      Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nestedMolecule)))
+    //    case t@q"$prev.e.apply($nested)" if !q"$prev".isRef            => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
+    //    case t@q"$prev.e_.apply($nested)" if !q"$prev".isRef           => Seq(Group(Bond("", "", ""), resolve(nested)))
+    //    case t@q"$prev.$ns.apply($nested)" if !q"$prev.$ns".isRef           => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
+    //    case t@q"$prev.$manyRef.apply($nested)"           => x(22, t); traverse(q"$prev", nested1(prev, manyRef, nested))
 
-    case t@q"$prev.e_.apply[..$types]($nestedMolecule)" if !q"$prev".isRef =>
-      Seq(Group(Bond("", "", ""), resolve(nestedMolecule)))
+    case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
+    case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
 
-    case t@q"$prev.$ns.apply[..$types]($nestedMolecule)" if !q"$prev.$ns".isRef =>
-      Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nestedMolecule)))
+//    case t@q"$prev.$ns.*[..$types]($nested)"                            => x(280, t); Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
+    case t@q"$prev.$ns.apply[..$types]($nested)" if !q"$prev.$ns".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
+    case t@q"$prev.$manyRef.apply[..$types]($nested)"                   => x(330, t); traverse(q"$prev", nested1(prev, manyRef, nested))
 
-    case t@q"$prev.$manyRef.apply[..$types]($nestedMolecule)" => {
-      val refNext = q"$prev.$manyRef".refNext
-      val parentNs = prev match {
-        case q"$p.apply($value)" if p.isAttr => p.ns
-        case q"$p.apply($value)"             => p.name
-        case q"$p" if p.isAttr               => p.ns
-        case q"$p"                           => p.name
-      }
-      val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nestedMolecule)
-      val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
-      //      x(20, parentNs, nestedElements, group, refNext, nestedNs, parentNs)
-      traverse(q"$prev", group)
-    }
 
-    case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other")
+    case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
   }
 
-  def nestedElements(manyRef: Tree, refNext: String, nestedMolecule: Tree): Seq[Element] = {
-    val nestedElements = resolve(nestedMolecule)
+  def nested1(prev: Tree, manyRef: TermName, nested: Tree) = {
+    val refNext = q"$prev.$manyRef".refNext
+    val parentNs = prev match {
+      case q"$p.apply($value)" if p.isAttr => p.ns
+      case q"$p.apply($value)"             => p.name
+      case q"$p" if p.isAttr               => p.ns
+      case q"$p"                           => p.name
+    }
+    val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nested)
+    val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
+    //      x(20, parentNs, nestedElements, group, refNext, nestedNs, parentNs)
+    group
+  }
+
+  def nestedElements(manyRef: Tree, refNext: String, nested: Tree): Seq[Element] = {
+    val nestedElements = resolve(nested)
     val nestedNs = curNs(nestedElements.head)
     if (refNext != nestedNs) {
-      // Find refs in `manyRef` namespace and match the target type with the first namespace of the first `nestedMolecule` element
+      // Find refs in `manyRef` namespace and match the target type with the first namespace of the first nested element
       val refs = c.typecheck(manyRef).tpe.members.filter(e => e.isMethod && e.asMethod.returnType <:< weakTypeOf[Ref[_, _]])
       val refPairs = refs.map(r => r.name -> r.typeSignature.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name)
       val refPairsFiltered = refPairs.filter(_._2.toString == nestedNs.capitalize)

@@ -3,6 +3,7 @@ import molecule._
 import molecule.examples.dayOfDatomic.dsl.aggregates._
 import molecule.examples.dayOfDatomic.schema.AggregatesSchema
 import molecule.util.MoleculeSpec
+import scala.language.postfixOps
 
 
 class Aggregates extends MoleculeSpec {
@@ -14,7 +15,8 @@ class Aggregates extends MoleculeSpec {
   val url      = "http://en.wikipedia.org/wiki/List_of_Solar_System_objects_by_size"
 
   // Insert data with tx meta data
-  Obj.name.meanRadius.tx(Data.source_(url)) insert (planets zip radiuses)
+  Obj.name.meanRadius.tx_.apply(Data.source_(url)) insert (planets zip radiuses)
+//  Obj.name.meanRadius.tx_.*(Data.source_(url)) insert (planets zip radiuses)
 
 
   "Aggregated Attributes" >> {
@@ -71,7 +73,7 @@ class Aggregates extends MoleculeSpec {
 
 
   "Schema aggregations" >> {
-    import molecule.schemas.Db
+    import molecule.schema.Db
 
     // What is the average length of a schema name?
     Db.a.length(avg).get.head === 12.777777777777779

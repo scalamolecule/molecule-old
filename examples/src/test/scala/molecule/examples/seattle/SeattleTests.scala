@@ -3,7 +3,7 @@ package examples.seattle
 import java.io.FileReader
 import datomic._
 import molecule.examples.seattle.dsl.seattle._
-import molecule.schemas._
+import molecule.schema._
 import shapeless._
 import scala.language.reflectiveCalls
 

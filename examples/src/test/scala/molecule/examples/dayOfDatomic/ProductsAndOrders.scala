@@ -22,7 +22,7 @@ class ProductsAndOrders extends MoleculeSpec {
     // Insert nested data .................................
 
     // Template for Order with multiple LineItems
-    val order = m(Order.LineItems(LineItem.product.price.quantity))
+    val order = m(Order.LineItems.apply(LineItem.product.price.quantity))
 
     // Make order with two line items and return created entity id
     val orderId = order.insert(List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).id

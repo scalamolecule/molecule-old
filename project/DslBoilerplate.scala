@@ -156,35 +156,57 @@ object DslBoilerplate {
   }
 
   def resolve(definition: Definition) = {
-//    val newNss = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
-//      // Gather OneRefs (ManyRefs are treated as nested data structures)
-//      val refs = ns.attrs.collect {
-//        case ref@Ref(_, refAttr, clazz, _, _, _, refNs) => refAttr -> refNs
-//      }.toMap
-//      // Add BackRefs
-//      nss2.map {
-//        case ns2 if refs.values.toList.contains(ns2.ns) =>
-//          // Back reference is always a ManyRef
-//          //          val attrs2 = ns2.attrs :+ BackRef("_" + firstLow(ns.ns), "_" + firstLow(ns.ns), "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ns.ns)
-//
-//          val attrs2 = refs.foldLeft(ns2.attrs) { case (attrs, ref) =>
-//            val (refAttr, refNs) = (ref._1, ref._2)
-//            //println(refAttr, refNs, ns2.ns, ns.ns)
-//
-//            if (refNs == ns2.ns)
-//            //              attrs :+ BackRef("_" + firstLow(ns.ns), "_" + firstLow(ns.ns), "BackRefAttr", "BackRef", "Long", s"${ns.ns}_$refAttr", ns.ns)
-//              attrs :+ BackRef(s"${firstLow(ns.ns)}_$refAttr", s"${firstLow(ns.ns)}_$refAttr", "BackRefAttr", "BackRef", "Long", "", ns.ns)
-//            else
-//              attrs
-//          }
-//
-//          //          val attrs2 = ns2.attrs :+ BackRef("_" + firstLow(ns.ns), ns, "BackRefAttr", "BackRef", "Long", "", ns.ns)
-//          ns2.copy(attrs = attrs2)
-//        case ns2                                        => ns2
-//      }
-//    }
-//    definition.copy(nss = newNss)
-    definition
+    //        val newNss = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
+    //          // Gather OneRefs (ManyRefs are treated as nested data structures)
+    //          val refs = ns.attrs.collect {
+    //            case ref@Ref(_, refAttr, clazz, _, _, _, refNs) => refAttr -> refNs
+    //          }.toMap
+    //          // Add BackRefs
+    //          nss2.map {
+    //            case ns2 if refs.values.toList.contains(ns2.ns) =>
+    //              // Back reference is always a ManyRef
+    //              //          val attrs2 = ns2.attrs :+ BackRef("_" + firstLow(ns.ns), "_" + firstLow(ns.ns), "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ns.ns)
+    //
+    //              val attrs2 = refs.foldLeft(ns2.attrs) { case (attrs, ref) =>
+    //                val (refAttr, refNs) = (ref._1, ref._2)
+    //                //println(refAttr, refNs, ns2.ns, ns.ns)
+    //
+    //                if (refNs == ns2.ns)
+    //                //              attrs :+ BackRef("_" + firstLow(ns.ns), "_" + firstLow(ns.ns), "BackRefAttr", "BackRef", "Long", s"${ns.ns}_$refAttr", ns.ns)
+    //                  attrs :+ BackRef(s"${firstLow(ns.ns)}_$refAttr", s"${firstLow(ns.ns)}_$refAttr", "BackRefAttr", "BackRef", "Long", "", ns.ns)
+    //                else
+    //                  attrs
+    //              }
+    //
+    //              //          val attrs2 = ns2.attrs :+ BackRef("_" + firstLow(ns.ns), ns, "BackRefAttr", "BackRef", "Long", "", ns.ns)
+    //              ns2.copy(attrs = attrs2)
+    //            case ns2                                        => ns2
+    //          }
+    //        }
+
+    val newNss1 = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
+      // Gather OneRefs (ManyRefs are treated as nested data structures)
+      val refs1 = ns.attrs.collect {
+        case ref@Ref(_, refAttr, clazz, _, _, _, refNs) => refNs -> ref
+      }.toMap
+
+      // Add BackRefs
+      nss2.map {
+        case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
+          //      println(ns2.ns + ": " + refs1)
+
+          val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
+            val (refNs, Ref(_, refAttr, clazz, _, tpe, _, _)) = (ref._1, ref._2)
+            attrs :+ BackRef(s"_${refAttr.capitalize}", s"_${refAttr.capitalize}", s"BackRefAttr", "BackRef", tpe, "", ns.ns)
+          }
+          ns2.copy(attrs = attrs2)
+        case ns2                                                         => ns2
+      }
+    }
+
+    definition.copy(nss = newNss1)
+    //        definition.copy(nss = newNss)
+    //    definition
   }
 
 
@@ -301,38 +323,57 @@ object DslBoilerplate {
     }.unzip
 
 
-    val (maxClazz2, maxRefNs) = attrs.map {
-      case Ref(_, _, _, clazz2, _, _, refNs)       => (clazz2.length, refNs.length)
-      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, backRef.length)
-      case other                                   => (0, 0)
-    }.unzip
+    //    val (maxClazz2, maxRefNs) = attrs.map {
+    //      case Ref(_, _, _, clazz2, _, _, refNs)       => (clazz2.length, refNs.length)
+    //      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, backRef.length)
+    ////      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, ns.length)
+    //      case other                                   => (0, 0)
+    //    }.unzip
+
+    val (maxClazz2, maxRefNs, maxNs) = attrs.map {
+      case Ref(_, _, _, clazz2, _, _, refNs)       => (clazz2.length, refNs.length, 0)
+      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, backRef.length, ns.length)
+      //      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, ns.length, backRef.length)
+      //      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, ns.length, backRef.length)
+      //      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, ns.length)
+      case other => (0, 0, 0)
+    }.unzip3
 
     val refCode = attrs.foldLeft(Seq("")) {
       case (acc, Ref(attr, _, _, clazz2, _, _, refNs)) => {
         val p1 = padS(maxAttr, attr)
         val p2 = padS(maxClazz2.max, clazz2)
         val p3 = padS(maxRefNs.max, refNs)
+        val p4 = padS(maxNs.max, refNs)
         val ref = (in, out) match {
-          case (0, 0) => s"${refNs}_0$p3"
-          case (0, o) => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
-          case (i, o) => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
+          case (0, 0) => s"${refNs}_0$p4"
+          case (0, o) => s"${refNs}_$o$p4[${OutTypes mkString ", "}]"
+          case (i, o) => s"${refNs}_In_${i}_$o$p4[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        if (clazz2 == "OneRef" || out == maxOut)
-          acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
-        else
-          acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref with Nested${out + 1}[${((ns + "_" + (out + 1)) +: OutTypes) mkString ", "}] = ???"
+        acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
+        //        if (clazz2 == "OneRef" || out == maxOut)
+        //          acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
+        //        else
+        //          acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref with Nested${out + 1}[${((ns + "_" + (out + 1)) +: OutTypes) mkString ", "}] = ???"
       }
 
       case (acc, BackRef(backAttr, _, _, _, _, _, backRef)) =>
         val p1 = padS(maxAttr, backAttr)
         val p2 = padS(maxClazz2.max, "BackRef")
         val p3 = padS(maxRefNs.max, backRef)
+        val p4 = padS(maxNs.max, backRef)
+        //        val ref = (in, out) match {
+        //          case (0, 0) => s"${backRef}_0$p3"
+        //          case (0, o) => s"${backRef}_$o$p3[${OutTypes mkString ", "}]"
+        //          case (i, o) => s"${backRef}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
+        //        }
         val ref = (in, out) match {
-          case (0, 0) => s"${backRef}_0$p3"
-          case (0, o) => s"${backRef}_$o$p3[${OutTypes mkString ", "}]"
-          case (i, o) => s"${backRef}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
+          case (0, 0) => s"${ns}_0$p4"
+          case (0, o) => s"${ns}_$o$p4[${OutTypes mkString ", "}]"
+          case (i, o) => s"${ns}_In_${i}_$o$p4[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$ns, $backRef$p3] with $ref = ???"
+        //        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$ns, $backRef$p3] with $ref = ???"
+        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$backRef, $ns$p3] with $ref = ???"
 
       case (acc, _) => acc
     }
@@ -348,7 +389,7 @@ object DslBoilerplate {
       // First output trait
       case (0, 0) =>
         val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_1_0", s"${ns}_In_1_1")
-        s"""trait ${ns}_0 extends $ns with Molecule_0[${ns}_0, ${ns}_1, $thisIn, $nextIn] {
+        s"""trait ${ns}_0 extends $ns with Out_0[${ns}_0, ${ns}_1, $thisIn, $nextIn] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}
          """.stripMargin
@@ -357,7 +398,7 @@ object DslBoilerplate {
       case (0, o) if o == maxOut =>
         val thisIn = if (maxIn == 0 || in == maxIn) "P" + (out + in + 1) else s"${ns}_In_1_$o"
         val types = OutTypes mkString ", "
-        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[${ns}_$o, P${out + in + 1}, $thisIn, P${out + in + 2}, $types] {
+        s"""trait ${ns}_$o[$types] extends $ns with Out_$o[${ns}_$o, P${out + in + 1}, $thisIn, P${out + in + 2}, $types] {
            |  ${(attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}""".stripMargin
 
@@ -365,7 +406,7 @@ object DslBoilerplate {
       case (0, o) =>
         val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_1_$o", s"${ns}_In_1_${o + 1}")
         val types = OutTypes mkString ", "
-        s"""trait ${ns}_$o[$types] extends $ns with Molecule_$o[${ns}_$o, ${ns}_${o + 1}, $thisIn, $nextIn, $types] {
+        s"""trait ${ns}_$o[$types] extends $ns with Out_$o[${ns}_$o, ${ns}_${o + 1}, $thisIn, $nextIn, $types] {
            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}
          """.stripMargin
@@ -426,20 +467,25 @@ object DslBoilerplate {
     val p1 = (s: String) => padS(attrs.map(_.attr.length).max, s)
     val p2 = (s: String) => padS(attrs.map(_.clazz.length).max, s)
 
-    val attrClasses = attrs.map {
+    //    val attrClasses = attrs.map {
+    val attrClasses = attrs.flatMap {
       case Val(attr, _, clazz, _, _, _, options) =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
-        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions"
+        //        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions"
+        Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions")
 
       case Enum(attr, _, clazz, _, _, enums) =>
         val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
-        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }"
+        //        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }"
+        Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }")
 
       case Ref(attr, _, clazz, _, _, _, _) =>
-        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]"
+        //        s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]"
+        Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]")
 
-      case BackRef(backAttr, _, clazz, _, _, _, _) =>
-        s"class $backAttr${p1(backAttr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]"
+      case BackRef(backAttr, _, clazz, _, _, _, _) => None
+      //      case BackRef(backAttr, _, clazz, _, _, _, _) =>
+      //        s"class $backAttr${p1(backAttr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]"
 
     }.mkString("\n  ").trim
 
@@ -450,12 +496,14 @@ object DslBoilerplate {
       out <- 0 to outArity
     } yield nsTrait(namespace, in, out, inArity, outArity, nsArities)).mkString("\n")
 
-    val inImport = if (inArity > 0) "\nimport molecule.in._" else ""
+//    val inImport = if (inArity > 0) "\nimport molecule.in._" else ""
     val extraImports0 = attrs.collect {
       case Val(_, _, _, tpe, _, _, _) if tpe.take(4) == "java" => tpe
     }.distinct
     val extraImports = if (extraImports0.isEmpty) "" else extraImports0.mkString(s"\nimport ", "\nimport ", "")
 
+//        |import molecule._
+//        |import molecule.dsl.schemaDSL._$inImport
     s"""|/*
         | * AUTO-GENERATED CODE - DON'T CHANGE!
         | *
@@ -463,9 +511,8 @@ object DslBoilerplate {
         | * Instead, change the molecule definition files and recompile your project with `sbt compile`.
         | */
         |package ${d.pkg}.dsl.${firstLow(d.domain)}
-        |import molecule._
-        |import molecule.dsl.schemaDSL._$inImport
-        |import molecule.out._$extraImports
+        |import molecule.dsl.schemaDSL._
+        |import molecule.dsl._$extraImports
         |
         |
         |object $Ns extends ${Ns}_0

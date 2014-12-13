@@ -2,7 +2,7 @@ package molecule.examples.dayOfDatomic.schema
 
 import molecule.dsl.schemaDefinition._
 
-@InOut(0, 4)
+@InOut(2, 4)
 trait Graph2Definition {
 
   trait User {

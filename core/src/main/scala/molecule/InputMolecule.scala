@@ -1,4 +1,5 @@
-package molecule.in
+package molecule
+
 import molecule.ast.model.{Model, Or, TermValue}
 import molecule.ast.query.{Placeholder, Query, Var}
 

@@ -3,9 +3,7 @@ import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ast.transaction._
-import molecule.DatomicFacade
-import molecule.in.InputMolecule
-import molecule.out._
+import molecule.{InputMolecule, Molecule, DatomicFacade}
 import molecule.transform.{Model2Transaction, Query2String}
 import org.specs2.mutable._
 
