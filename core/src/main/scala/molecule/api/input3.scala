@@ -1,4 +1,4 @@
-package molecule
+package molecule.api
 
 import datomic.Connection
 import molecule.ast.model._

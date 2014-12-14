@@ -1,10 +1,10 @@
 package molecule.examples.dayOfDatomic
 import molecule._
 import molecule.examples.dayOfDatomic.schema.{Graph2Schema, GraphSchema}
-import molecule.util.MoleculeSpec
+import org.specs2.mutable.Specification
 
 
-class Graph extends MoleculeSpec {
+class Graph extends Specification with DatomicFacade {
 
   // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
 
@@ -37,7 +37,6 @@ class Graph extends MoleculeSpec {
     User.name_("User1").RoleInGroup.Group.name.get === List("Group2", "Group1")
 
     // User 1 Roles in Group 2
-//    User.name_("User1").RoleInGroup.apply(Group.name_("Group2")).Role.name.get === List("Role1")
     User.name_("User1").RoleInGroup.Group.name_("Group2")._Role.name.get === List("Role1")
     /* Query in Neo4J:
     MATCH ({ name: 'User1' })-[:hasRoleInGroup]->(hyperEdge)-[:hasGroup]->({ name: 'Group2' }),
@@ -58,7 +57,6 @@ class Graph extends MoleculeSpec {
     RoleInGroup.Role.name_("Role1")._Group.name.get === List("Group2")
 
     // Users in Group 2 having Role 1
-//    User.name.RoleInGroup(Group.name_("Group2")).Role.name_.apply("Role1").get === List("User1")
     User.name.RoleInGroup.Group.name_("Group2")._Role.name_("Role1").get === List("User1")
 
     // Groups where User 1 has Role 1
@@ -81,7 +79,6 @@ class Graph extends MoleculeSpec {
 
 
     // All groups and the roles a user has, sorted by the name of the role
-//    User.name_("User1").RoleInGroup.apply(Role.name).Group.name.get.sorted === List(
     User.name_("User1").RoleInGroup.Role.name._Group.name.get.sorted === List(
       ("Role1", "Group2"),
       ("Role2", "Group1")

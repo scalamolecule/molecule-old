@@ -11,12 +11,10 @@ class QueryTour extends MoleculeSpec {
 
   "Queries and joins" in new SocialNewsSetup {
 
-    // Created entity ids are simply Long values
+    // Created entity ids are Long values
     (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
     (stu, ed) ===(17592186045422L, 17592186045423L)
-    (c1, c2, c3, c4,
-      c5, c6, c7, c8,
-      c9, c10, c11, c12) ===(
+    (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
       17592186045425L, 17592186045427L, 17592186045429L, 17592186045431L,
       17592186045433L, 17592186045435L, 17592186045437L, 17592186045439L,
       17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L)
@@ -72,14 +70,14 @@ class QueryTour extends MoleculeSpec {
     )
 
     // Attributes of stories having comments
-    Parent(Story.a.title_).Comment.get.flatten.sorted === List(
+    Parent(Story.a.title_).Comment.get.sorted === List(
       ":parent/comment",
       ":story/title",
       ":story/url"
     )
 
     // Attributes of comments having a sub-comment
-    Parent(Comment.a.text_).Comment.get.flatten.sorted === List(
+    Parent(Comment.a.text_).Comment.get.sorted === List(
       ":comment/author",
       ":comment/text",
       ":parent/comment"

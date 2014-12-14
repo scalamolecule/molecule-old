@@ -123,6 +123,8 @@ object Model2Query {
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
+        case ReBond(backRef, refAttr, refNs) => q.ref(e, backRef, refAttr, v, refNs)
+
         case Meta(_, _, "e", _, Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
         case Meta(_, _, "e", _, Fn("count", _))         => q.find("count", Seq(), e, Seq())
         case Meta(_, _, "e", _, Length(Some(Fn(_, _)))) => q.find(e, Seq())
@@ -149,8 +151,16 @@ object Model2Query {
         case Bond(ns, refAttr, refNs) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
         case Bond(ns, refAttr, refNs)                    => (resolve(query, e, v, element), e, v, ns, refAttr, refNs)
 
+        case ReBond(backRef, refAttr, refNs)  => {
+          val backRefVar = query.wh.clauses.reverse.collectFirst {
+            case DataClause(_, backE, a, _, _, _) if a.ns == backRef => backE.v
+          } getOrElse sys.error(s"[Model2Query:make] Can't find back reference `$backRef` in query so far:\n$query")
+
+          (resolve(query, backRefVar, w, element), v, w, backRef, refAttr, refNs)
+        }
+
         case Group(b@Bond(ns, refAttr, refNs), elements) =>
-          val (e2, elements2) = if(ns == "") (e, elements) else (w, b +: elements)
+          val (e2, elements2) = if (ns == "") (e, elements) else (w, b +: elements)
           val (q2, _, v2, ns2, attr2, refNs2) = elements2.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
             case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
               make(query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)

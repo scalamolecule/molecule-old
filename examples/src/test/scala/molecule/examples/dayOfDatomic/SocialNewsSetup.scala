@@ -1,5 +1,5 @@
 package molecule.examples.dayOfDatomic
-import molecule.DatomicFacade
+import molecule._
 import molecule.examples.dayOfDatomic.dsl.socialNews._
 import molecule.examples.dayOfDatomic.schema._
 import org.specs2.specification.Scope

@@ -7,7 +7,8 @@ trait Group
 
 trait Group0[Ns0, Ns1[_]] extends Group {
   def apply[dummy                                                           ] (nested: NS0 [dummy                                                           ]): Ns0                                                                          = ???
-  def apply[a                                                               ] (nested: NS1 [a                                                               ]): Ns1[Seq[(a                                                               )]] = ???
+  def apply[a                                                               ] (nested: NS1 [a                                                               ]): Ns1[a                                                                      ] = ???
+//  def apply[a                                                               ] (nested: NS1 [a                                                               ]): Ns1[Seq[(a                                                               )]] = ???
   def apply[a, b                                                            ] (nested: NS2 [a, b                                                            ]): Ns1[Seq[(a, b                                                            )]] = ???
   def apply[a, b, c                                                         ] (nested: NS3 [a, b, c                                                         ]): Ns1[Seq[(a, b, c                                                         )]] = ???
   def apply[a, b, c, d                                                      ] (nested: NS4 [a, b, c, d                                                      ]): Ns1[Seq[(a, b, c, d                                                      )]] = ???

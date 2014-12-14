@@ -1,9 +1,10 @@
 package molecule.util
 import datomic.Connection
+import molecule.api.{Molecule, InputMolecule}
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ast.transaction._
-import molecule.{InputMolecule, Molecule, DatomicFacade}
+import molecule.DatomicFacade
 import molecule.transform.{Model2Transaction, Query2String}
 import org.specs2.mutable._
 

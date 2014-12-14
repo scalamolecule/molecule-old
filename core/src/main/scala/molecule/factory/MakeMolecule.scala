@@ -1,6 +1,7 @@
-package molecule.make
+package molecule.factory
 
 import molecule._
+import molecule.api._
 import molecule.ast.model._
 import molecule.dsl._
 import molecule.dsl.schemaDSL._
@@ -44,6 +45,8 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     val identifiers = mapIdentifiers(model.elements).toMap
 
     q"""
+      import molecule._
+      import molecule.api._
       import molecule.ast.model._
       import molecule.ast.query._
       import molecule.ops.QueryOps._

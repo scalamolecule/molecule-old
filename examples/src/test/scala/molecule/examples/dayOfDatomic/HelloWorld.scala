@@ -1,6 +1,7 @@
 package molecule.examples.dayOfDatomic
 import datomic.Peer
 import datomic.Util._
+//import molecule._
 import molecule.util.MoleculeSpec
 import scala.collection.JavaConversions._
 

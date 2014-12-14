@@ -1,14 +1,17 @@
-package molecule.in
+package molecule.factory
+import molecule._
+import molecule.api._
 import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
+import molecule.dsl._
 import molecule.transform._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
 
 
-trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
+trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
   val x = Debug("BuildInputMolecule", 1, 60)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
@@ -18,8 +21,7 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     val query = Model2Query(model)
 
     q"""
-    import molecule.in._
-    import molecule.out._
+    import molecule.api._
     import molecule.ast.query._
     import molecule.ast.model._
     import molecule.transform.Model2Transaction._
@@ -171,8 +173,8 @@ trait BuildInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   }
 }
 
-object BuildInputMolecule {
-  def inst(c0: Context) = new {val c: c0.type = c0} with BuildInputMolecule[c0.type]
+object MakeInputMolecule {
+  def inst(c0: Context) = new {val c: c0.type = c0} with MakeInputMolecule[c0.type]
 
   // Input molecules with 0 output (update templates)
 

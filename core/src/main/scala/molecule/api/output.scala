@@ -1,9 +1,10 @@
-package molecule
+package molecule.api
 
 import java.util.Date
 import datomic.Connection
 import molecule.ast.model._
 import molecule.ast.query.Query
+import molecule.{DatomicFacade, Tx}
 import shapeless.{::, HNil}
 
 

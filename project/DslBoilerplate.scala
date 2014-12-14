@@ -193,11 +193,12 @@ object DslBoilerplate {
       // Add BackRefs
       nss2.map {
         case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
-          //      println(ns2.ns + ": " + refs1)
+                println(ns2.ns + ": " + refs1)
 
           val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
             val (refNs, Ref(_, refAttr, clazz, _, tpe, _, _)) = (ref._1, ref._2)
-            attrs :+ BackRef(s"_${refAttr.capitalize}", s"_${refAttr.capitalize}", s"BackRefAttr", "BackRef", tpe, "", ns.ns)
+//            attrs :+ BackRef(s"_${refAttr.capitalize}", s"${ns2.ns}", s"BackRefAttr", "BackRef", tpe, "", ns.ns)
+            attrs :+ BackRef(s"_${refAttr.capitalize}", refNs, "BackRefAttr", "BackRef", tpe, "", ns.ns)
           }
           ns2.copy(attrs = attrs2)
         case ns2                                                         => ns2
@@ -275,7 +276,7 @@ object DslBoilerplate {
 
     //    val (attrVals, attrVals_) = attrs.map { a =>
     val (attrVals, attrVals_) = attrs.flatMap {
-      case BackRef(_, _, _, clazz2, _, _, backRef) => None
+      case BackRef(_, _, _, _, _, _, _) => None
       case a                                       =>
         val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
         val p3 = padS(maxTpe, tpe)
@@ -343,7 +344,8 @@ object DslBoilerplate {
       case (acc, Ref(attr, _, _, clazz2, _, _, refNs)) => {
         val p1 = padS(maxAttr, attr)
         val p2 = padS(maxClazz2.max, clazz2)
-        val p3 = padS(maxRefNs.max, refNs)
+        val p3 = padS(maxRefNs.max, attr)
+//        val p3 = padS(maxRefNs.max, refNs)
         val p4 = padS(maxNs.max, refNs)
         val ref = (in, out) match {
           case (0, 0) => s"${refNs}_0$p4"
@@ -357,23 +359,24 @@ object DslBoilerplate {
         //          acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref with Nested${out + 1}[${((ns + "_" + (out + 1)) +: OutTypes) mkString ", "}] = ???"
       }
 
-      case (acc, BackRef(backAttr, _, _, _, _, _, backRef)) =>
+      case (acc, BackRef(backAttr, refNs, _, _, _, _, backRef)) =>
         val p1 = padS(maxAttr, backAttr)
         val p2 = padS(maxClazz2.max, "BackRef")
         val p3 = padS(maxRefNs.max, backRef)
-        val p4 = padS(maxNs.max, backRef)
+        val p4 = padS(maxNs.max, refNs)
         //        val ref = (in, out) match {
         //          case (0, 0) => s"${backRef}_0$p3"
         //          case (0, o) => s"${backRef}_$o$p3[${OutTypes mkString ", "}]"
         //          case (i, o) => s"${backRef}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
         //        }
         val ref = (in, out) match {
-          case (0, 0) => s"${ns}_0$p4"
-          case (0, o) => s"${ns}_$o$p4[${OutTypes mkString ", "}]"
-          case (i, o) => s"${ns}_In_${i}_$o$p4[${(InTypes ++ OutTypes) mkString ", "}]"
+          case (0, 0) => s"${refNs}_0$p4"
+          case (0, o) => s"${refNs}_$o$p4[${OutTypes mkString ", "}]"
+          case (i, o) => s"${refNs}_In_${i}_$o$p4[${(InTypes ++ OutTypes) mkString ", "}]"
         }
         //        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$ns, $backRef$p3] with $ref = ???"
-        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$backRef, $ns$p3] with $ref = ???"
+//        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$backRef, $refNs$p3] with $ref = ???"
+        acc :+ s"def $backAttr $p1 : BackRef$p2[$backRef, $refNs$p3] with $ref = ???"
 
       case (acc, _) => acc
     }

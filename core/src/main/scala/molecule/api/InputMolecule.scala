@@ -1,4 +1,4 @@
-package molecule
+package molecule.api
 
 import molecule.ast.model.{Model, Or, TermValue}
 import molecule.ast.query.{Placeholder, Query, Var}

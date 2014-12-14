@@ -172,6 +172,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   implicit val liftAtom    = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))"}
   implicit val liftBond    = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
+  implicit val liftReBond  = Liftable[ReBond] { r => q"ReBond(${r.backRef}, ${r.refAttr}, ${r.refNs})"}
   implicit val liftMeta    = Liftable[Meta] { m => q"Meta(${m.ns}, ${m.attr}, ${m.kind}, ${m.generic}, ${m.value})"}
   implicit val liftGroup   = Liftable[Group] { g =>
     val es = g.elements map { case q"$e" => e}
@@ -186,6 +187,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     val es = elements map {
       case a: Atom    => q"$a"
       case b: Bond    => q"$b"
+      case r: ReBond  => q"$r"
       case g: Group   => q"$g"
       case m: Meta    => q"$m"
       case t: TxModel => q"$t"
@@ -196,6 +198,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftElement = Liftable[Element] {
     case Atom(ns, name, tpeS, card, value, enumPrefix, tx) => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix, Seq(..$tx))"
     case Bond(ns, refAttr, refNs)                          => q"Bond($ns, $refAttr, $refNs)"
+    case ReBond(backRef, refAttr, refNs)                   => q"ReBond($backRef, $refAttr, $refNs)"
     case Group(ref, elements)                              => q"Group($ref, $elements)"
     case Meta(ns, attr, kind, generic, value)              => q"Meta($ns, $attr, $kind, $generic, $value)"
     case TxModel(elements)                                 => q"TxModel($elements)"

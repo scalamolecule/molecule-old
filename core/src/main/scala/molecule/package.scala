@@ -2,9 +2,10 @@
 import java.net.URI
 import java.util.{Date, UUID}
 import datomic._
+import molecule.api._
 import molecule.dsl._
 import molecule.ast.model._
-import molecule.make._
+import molecule.factory._
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.language.higherKinds

@@ -2,6 +2,7 @@ package molecule
 package examples.seattle
 import java.io.FileReader
 import datomic._
+import molecule._
 import molecule.examples.seattle.dsl.seattle._
 import molecule.schema._
 import shapeless._

@@ -8,7 +8,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 20, 30, false)
+  val x = Debug("Dsl2Model", 230, 30, false)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -61,7 +61,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case q"$prev.tx_.apply($txMolecule)"       => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
     case q"$prev.tx_.apply[..$t]($txMolecule)" => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
-    //    case q"$prev.tx[..$t]($txMolecule)"        => traverse(q"$prev", TxModel(resolve(q"$txMolecule")))
 
     // ns.txInstant.attr - `txInstant` doesn't relate to any previous attr
     case q"$prev.tx" if !q"$prev".isAttr        => abort(s"[Dsl2Model:dslStructure] Please add `tx` after an attribute or another transaction value")
@@ -80,9 +79,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
 
-    case q"$prev.$cur.$op(..$values)"   => traverse(q"$prev", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
-    case t@q"$prev.$refAttr" if t.isRef => traverse(q"$prev", Bond(t.refThis, t.name, t.refNext))
+    case q"$prev.$cur.$op(..$values)" => traverse(q"$prev", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
+    case r@q"$prev.$backRefAttr" if r.isBackRef    => traverse(q"$prev", ReBond(r.refThis, firstLow(r.name.tail), r.refNext))
+    case r@q"$prev.$refAttr" if r.isRef            => traverse(q"$prev", Bond(r.refThis, r.name, r.refNext))
     case a@q"$prev.$cur" if a.isEnum               => traverse(q"$prev", Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix)))
     case a@q"$prev.$cur" if a.isValueAttr          => traverse(q"$prev", Atom(a.ns, a.name, a.tpeS, a.card, VarValue))
     case a@q"$prev.$cur" if a.isRef || a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
@@ -98,7 +98,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
     case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
 
-//    case t@q"$prev.$ns.*[..$types]($nested)"                            => x(280, t); Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
+    //    case t@q"$prev.$ns.*[..$types]($nested)"                            => x(280, t); Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
     case t@q"$prev.$ns.apply[..$types]($nested)" if !q"$prev.$ns".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
     case t@q"$prev.$manyRef.apply[..$types]($nested)"                   => x(330, t); traverse(q"$prev", nested1(prev, manyRef, nested))
 
