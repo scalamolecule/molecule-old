@@ -8,7 +8,8 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 230, 30, false)
+  //  val x = Debug("Dsl2Model", 30, 31, false)
+  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -98,7 +99,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
     case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
 
-    //    case t@q"$prev.$ns.*[..$types]($nested)"                            => x(280, t); Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
+    case t@q"$prev.$manyRef.*[..$types]($nested)"                       => x(280, t); traverse(q"$prev", nested1(prev, manyRef, nested))
+    case t@q"$prev.$ns.*[..$types]($nested)"                            => x(280, t); Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
     case t@q"$prev.$ns.apply[..$types]($nested)" if !q"$prev.$ns".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
     case t@q"$prev.$manyRef.apply[..$types]($nested)"                   => x(330, t); traverse(q"$prev", nested1(prev, manyRef, nested))
 
@@ -147,16 +149,16 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
     val cur = curTree.toString
     // For debugging...
-    previous match {
-      case prev if cur.head.isUpper          => x(1, prev, cur, curTree, value)
-      case prev if cur == "e" && prev.isRef  => x(2, prev, op, cur, curTree, value)
-      case prev if cur == "e" && prev.isAttr => x(3, prev, curTree)
-      case prev if cur == "e"                => x(4, prev, op, cur, curTree)
-      case prev if cur == "a"                => x(5, prev, op, cur, curTree)
-      case prev if attr.isAttr               => x(6, prev, curTree, value)
-      case prev if prev.isAttr               => x(7, prev, curTree, value)
-      case prev                              => x(8, prev, curTree, value)
-    }
+    //    previous match {
+    //      case prev if cur.head.isUpper          => x(1, prev, cur, curTree, value)
+    //      case prev if cur == "e" && prev.isRef  => x(2, prev, op, cur, curTree, value)
+    //      case prev if cur == "e" && prev.isAttr => x(3, prev, curTree)
+    //      case prev if cur == "e"                => x(4, prev, op, cur, curTree)
+    //      case prev if cur == "a"                => x(5, prev, op, cur, curTree)
+    //      case prev if attr.isAttr               => x(6, prev, curTree, value)
+    //      case prev if prev.isAttr               => x(7, prev, curTree, value)
+    //      case prev                              => x(8, prev, curTree, value)
+    //    }
     previous match {
       case prev if cur.head.isUpper          => Atom(attr.name, cur, attr.tpeS, attr.card, value, enumPrefix)
       case prev if cur == "e" && prev.isRef  => Meta(prev.name, prev.refNext, "e", NoValue, value)
@@ -216,6 +218,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"Seq($pkg.median)"                                     => Fn("median")
     case q"Seq($pkg.variance)"                                   => Fn("variance")
     case q"Seq($pkg.stddev)"                                     => Fn("stddev")
+    case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
     case q"Seq(..$vs)"                                           =>
       vs match {
         case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
@@ -242,7 +245,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   def resolveValues(tree: Tree, at: att = null) = {
     def resolve(tree0: Tree, values: Seq[Tree] = Seq()): Seq[Tree] = tree0 match {
-      case q"$a.or($b)"             => resolve(b, resolve(a, values))
+      case q"$a.or($b)" => resolve(b, resolve(a, values))
+      //      case q"$a.and[$t2]($b)"       => x(31, a, b, resolve(b, resolve(a, values))); values :+ resolve(b, resolve(a, values))
       case q"${_}.string2Model($v)" => values :+ v
       case Apply(_, vs)             => values ++ vs.flatMap(resolve(_))
       case v                        => values :+ v

@@ -19,12 +19,12 @@ object DslBoilerplate {
   case class Namespace(ns: String, opt: Option[Extension] = None, attrs: Seq[Attr] = Seq())
 
   sealed trait Extension
-  case class Tree() extends Extension {
-    override def toString = " (Tree)"
-  }
-  case class HyperEdge(edges: Seq[String]) extends Extension {
-    override def toString = s" (HyperEdge to ${edges.mkString(", ")})"
-  }
+//  case class Tree() extends Extension {
+//    override def toString = " (Tree)"
+//  }
+//  case class HyperEdge(edges: Seq[String]) extends Extension {
+//    override def toString = s" (HyperEdge to ${edges.mkString(", ")})"
+//  }
 
   sealed trait Attr {
     val attr     : String
@@ -143,8 +143,8 @@ object DslBoilerplate {
         case "import molecule.dsl.schemaDefinition._"         => d
         case r"@InOut\((\d+)$inS, (\d+)$outS\)"               => d.copy(in = inS.toString.toInt, out = outS.toString.toInt)
         case r"trait (.*)${dmn}Definition \{"                 => d.copy(domain = dmn)
-        case r"trait (\w*)$ns\s*extends\s*Tree\s*\{"          => d.copy(nss = d.nss :+ Namespace(ns, Some(Tree())))
-        case r"trait (\w*)$ns\s*extends\s*HyperEdge\s*\{"     => d.copy(nss = d.nss :+ Namespace(ns, Some(HyperEdge(Seq()))))
+//        case r"trait (\w*)$ns\s*extends\s*Tree\s*\{"          => d.copy(nss = d.nss :+ Namespace(ns, Some(Tree())))
+//        case r"trait (\w*)$ns\s*extends\s*HyperEdge\s*\{"     => d.copy(nss = d.nss :+ Namespace(ns, Some(HyperEdge(Seq()))))
         case r"trait (\w*)$ns\s*\{"                           => d.copy(nss = d.nss :+ Namespace(ns))
         case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$str" => d.addAttr(parseAttr(q1 + a + q2, a, str))
         case "}"                                              => d
@@ -462,11 +462,11 @@ object DslBoilerplate {
     val outArity = d.out
     val Ns = namespace.ns
     val attrs = namespace.attrs
-    val extension = namespace.opt match {
-      case Some(t: Tree)      => "extends Tree "
-      case Some(h: HyperEdge) => "extends HyperEdge "
-      case None               => ""
-    }
+//    val extension = namespace.opt match {
+////      case Some(t: Tree)      => "extends Tree "
+////      case Some(h: HyperEdge) => "extends HyperEdge "
+//      case None               => ""
+//    }
     val p1 = (s: String) => padS(attrs.map(_.attr.length).max, s)
     val p2 = (s: String) => padS(attrs.map(_.clazz.length).max, s)
 
@@ -520,11 +520,12 @@ object DslBoilerplate {
         |
         |object $Ns extends ${Ns}_0
         |
-        |trait $Ns $extension{
+        |trait $Ns {
         |  $attrClasses
         |}
         |
         |$nsTraits""".stripMargin
+//        |trait $Ns $extension{
   }
 
   def generate(srcManaged: File, domainDirs: Seq[String]): Seq[File] = {

@@ -20,9 +20,6 @@ class SeattleTests extends SeattleSpec {
     communities.get.size === 150
   }
 
-  // Todo: Getting an entity's attribute values
-  // (have focused on queries only for now)
-
 
   "Querying _for_ attribute values" >> {
 
@@ -120,7 +117,7 @@ class SeattleTests extends SeattleSpec {
     val communitiesOfType = m(Community.name.type_(?))
 
     // Re-use input molecules to create new molecules with different community types
-    val twitterCommunities = communitiesOfType.apply("twitter")
+    val twitterCommunities = communitiesOfType("twitter")
     val facebookCommunities = communitiesOfType("facebook_page")
 
     // Only the `name` attribute is returned since `type` is the same for all results

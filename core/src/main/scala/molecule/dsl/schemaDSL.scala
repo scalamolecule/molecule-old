@@ -77,8 +77,8 @@ object schemaDSL {
 
   // todo?
   trait Partition
-  trait Tree
-  trait HyperEdge
+//  trait Tree
+//  trait HyperEdge
 //  trait ChildRef[Ns1] extends Ref[Ns1, Ns1]
 //  trait HyperRef[Ns1] extends Ref[Ns1, Ns1]
 
@@ -91,8 +91,8 @@ object schemaDSL {
     def apply(value: Long): Ns with Attr = ???
   }
   trait ManyRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
-    def apply(value: Long*): Ns with Attr = ???
-    def add(value: Long): Ns with Attr = ???
+    def apply(values: Long*) : Ns with Attr = ???
+    def add(value: Long)     : Ns with Attr = ???
     def remove(values: Long*): Ns with Attr = ???
 
 //    def apply(test: maybe) : Ns with Attr = ???
@@ -102,19 +102,20 @@ object schemaDSL {
   }
 
   sealed trait ValueAttr[Ns, In, T] extends Attr {
-    def apply(expr: Exp1[T]) : Ns with Attr = ???
-    def eq(value: T) : Ns with Attr = ???
+    def apply(expr: Exp1[T])    : Ns with Attr = ???
+    def apply(expr: Exp2[T, T]) : Ns with Attr = ???
+    def eq(value: T)            : Ns with Attr = ???
 
-    def < (value: T) : Ns with Attr = ???
-    def > (value: T) : Ns with Attr = ???
+    def < (value: T)  : Ns with Attr = ???
+    def > (value: T)  : Ns with Attr = ???
     def <= (value: T) : Ns with Attr = ???
     def >= (value: T) : Ns with Attr = ???
 
 //    def length : Ns with Attr = ???
 
     // Input
-    def < (in: ?) : In with Attr = ???
-    def > (in: ?) : In with Attr = ???
+    def < (in: ?)  : In with Attr = ???
+    def > (in: ?)  : In with Attr = ???
     def <= (in: ?) : In with Attr = ???
     def >= (in: ?) : In with Attr = ???
 
@@ -126,8 +127,8 @@ object schemaDSL {
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
     def apply(one: T, more: T*): Ns with Attr = ???
 
-    // Request to delete values!
-    def apply(): Ns with Attr = ???
+    // Empty `apply` is a request to delete values!
+    def apply()               : Ns with Attr = ???
     def apply(values: Seq[T]) : Ns with Attr = ???
   }
   trait OneString [Ns, In] extends One[Ns, In, String ]  {
@@ -145,10 +146,10 @@ object schemaDSL {
 
   // Many-cardinality
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
-    def apply(value: T*): Ns with Attr = ???
-    def apply(oldNew: (T, T), oldNewMore: (T, T)*): Ns with Attr = ???
-    def add(value: T): Ns with Attr = ???
+    def apply(values: T*) : Ns with Attr = ???
+    def add(value: T)     : Ns with Attr = ???
     def remove(values: T*): Ns with Attr = ???
+    def apply(oldNew: (T, T), oldNewMore: (T, T)*): Ns with Attr = ???
   }
   trait ManyString[Ns, In] extends Many[Ns, In, Set[String], String]
   trait ManyInt   [Ns, In] extends Many[Ns, In, Set[Int]   , Int   ]

@@ -7,7 +7,9 @@ import scala.language.higherKinds
 trait Out_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]]
   extends NS0[Nothing]
   with Generic0[Ns0, Ns1, In1_0, In1_1]
-  with Group0[Ns0, Ns1] {
+  with Group0[Ns0, Ns1]
+  with Branch0[Ns0, Ns1]
+{
 
   // Build on from entity id
   def apply(e: Long): Ns0 = ???
@@ -18,19 +20,21 @@ trait Out_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A]
   with Generic1[Ns1, Ns2, In1_1, In1_2, A]
   with Aggregate1[Ns1, A]
   with Group1[Ns1, Ns2, A]
-
+  with Branch1[Ns1, Ns2, A]
 
 trait Out_2[Ns2[_,_], Ns3[_,_,_], In1_2[_,_,_], In1_3[_,_,_,_], A, B]
   extends NS2[A, B]
   with Generic2[Ns2, Ns3, In1_2, In1_3, A, B]
   with Aggregate2[Ns2, A, B]
   with Group2[Ns2, Ns3, A, B]
+  with Branch2[Ns2, Ns3, A, B]
 
 trait Out_3[Ns3[_,_,_], Ns4[_,_,_,_], In1_3[_,_,_,_], In1_4[_,_,_,_,_], A, B, C]
   extends NS3[A, B, C]
   with Generic3[Ns3, Ns4, In1_3, In1_4, A, B, C]
   with Aggregate3[Ns3, A, B, C]
   with Group3[Ns3, Ns4, A, B, C]
+  with Branch3[Ns3, Ns4, A, B, C]
 
 trait Out_4[Ns4[_,_,_,_], Ns5[_,_,_,_,_], In1_4[_,_,_,_,_], In1_5[_,_,_,_,_,_], A, B, C, D]
   extends NS4[A, B, C, D]

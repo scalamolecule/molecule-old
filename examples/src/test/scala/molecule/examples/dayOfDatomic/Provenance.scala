@@ -30,7 +30,7 @@ class Provenance extends MoleculeSpec {
     Story.url_(ecURL).title.asOf(tx1.inst).get.head === "ElastiCache in 6 minutes"
 
     // Who changed the title and when?
-    Story.url_(ecURL).title.tx.op.tx_.apply(Source.User.email_).history.get.reverse === List(
+    Story.url_(ecURL).title.tx.op.tx_(Source.User.email_).history.get.reverse === List(
       ("ElastiCache in 6 minutes", 13194139534344L, true),
       ("ElastiCache in 6 minutes", 13194139534347L, false),
       ("ElastiCache in 5 minutes", 13194139534347L, true))

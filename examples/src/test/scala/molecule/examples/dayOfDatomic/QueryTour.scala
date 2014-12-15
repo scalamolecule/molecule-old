@@ -135,7 +135,7 @@ class QueryTour extends MoleculeSpec {
     } yield editorCommentComment.head._2) === List(c3, c6, c8, c12)
 
     // Comments to the editors comments (with query)
-    Parent.e_.apply(Comment.author_(editor)).comment.get.sorted === List(c3, c6, c8, c12)
+    Parent.e_(Comment.author_(editor)).comment.get.sorted === List(c3, c6, c8, c12)
 
     // Editors comments and responses (note that c4 wasn't commented on)
     Parent.e(Comment.author_(editor)).comment.get.sorted === List(

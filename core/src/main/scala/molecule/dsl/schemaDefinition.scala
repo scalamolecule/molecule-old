@@ -15,10 +15,10 @@ object schemaDefinition {
 
   // Adjacency List Model
   // See https://github.com/tinkerpop/gremlin/wiki/Tree-Pattern
-  trait Tree
+//  trait Tree
 
   // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
-  trait HyperEdge
+//  trait HyperEdge
 
 
   private[molecule] sealed trait scalarAttr[T] {

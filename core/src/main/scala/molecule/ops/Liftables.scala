@@ -140,25 +140,28 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case TxInstantValue  => q"TxInstantValue"
     case OpValue         => q"OpValue"
     case NsValue(values) => q"NsValue(Seq(..$values))"
-    //    case NsValue        => q"NsValue"
-    case NoValue => q"NoValue"
+    case NoValue         => q"NoValue"
   }
+
+
+  //  implicit def liftExp1[T: Liftable]: Liftable[Exp1[T]] = Liftable { e1 => q"Exp1($e1)"}
+  //  implicit def liftTermValue[T: Liftable]: Liftable[TermValue[T]] = Liftable { tv => q"TermValue(${tv.v})"}
 
   implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
   implicit val liftValue = Liftable[Value] {
-    case EntValue        => q"EntValue"
-    case VarValue        => q"VarValue"
-    case NoValue         => q"NoValue"
-    case AttrVar(v)      => q"AttrVar($v)"
-    case TxValue         => q"TxValue"
-    case TxTValue        => q"TxTValue"
-    case TxInstantValue  => q"TxInstantValue"
-    case NsValue(values) => q"NsValue(Seq(..$values))"
-    //    case NsValue          => q"NsValue"
+    case EntValue         => q"EntValue"
+    case VarValue         => q"VarValue"
+    case NoValue          => q"NoValue"
+    case AttrVar(v)       => q"AttrVar($v)"
+    case TxValue          => q"TxValue"
+    case TxTValue         => q"TxTValue"
+    case TxInstantValue   => q"TxInstantValue"
+    case NsValue(values)  => q"NsValue(Seq(..$values))"
     case OpValue          => q"OpValue"
     case BackValue(value) => q"BackValue($value)"
     case EnumVal          => q"EnumVal"
     case Eq(values)       => q"Eq(Seq(..$values))"
+    case And(values)      => q"And(Seq(..$values))"
     case Lt(value)        => q"Lt($value)"
     case Fn(fn, i)        => q"Fn($fn, $i)"
     case Length(fn)       => q"Length($fn)"

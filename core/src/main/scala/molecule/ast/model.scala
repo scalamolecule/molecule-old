@@ -43,6 +43,7 @@ object model {
 
   case class Length(fn: Option[Fn] = None) extends Value
   case class Eq(values: Seq[Any]) extends Value
+  case class And(values: Seq[Any]) extends Value
   case class Lt(value: Any) extends Value
   case class Fulltext(search: Seq[Any]) extends Value
   case class Fn(name: String, i: Option[Int] = None) extends Value
