@@ -78,6 +78,7 @@ object Model2Query {
             case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss, gs)
             case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), gs)
             case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), gs)
+            case (_, And(vs))                         => q.where(e, a, Val(vs.head), gs)
             case (_, Lt(arg))                         => q.where(e, a, v, gs).compareTo("<", a, v, Val(arg))
             case (_, Fn("count", _))                  => q.where(e, a, v, gs)
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
@@ -151,7 +152,7 @@ object Model2Query {
         case Bond(ns, refAttr, refNs) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
         case Bond(ns, refAttr, refNs)                    => (resolve(query, e, v, element), e, v, ns, refAttr, refNs)
 
-        case ReBond(backRef, refAttr, refNs)  => {
+        case ReBond(backRef, refAttr, refNs) => {
           val backRefVar = query.wh.clauses.reverse.collectFirst {
             case DataClause(_, backE, a, _, _, _) if a.ns == backRef => backE.v
           } getOrElse sys.error(s"[Model2Query:make] Can't find back reference `$backRef` in query so far:\n$query")
@@ -181,8 +182,65 @@ object Model2Query {
       }
     }
 
-    model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query, e, v, prevNs, prevAttr, prevRefNs), element) =>
+    def postProcess(q: Query) = {
+      // Consider And-semantics (self-joins)
+      val andAtoms: Seq[Atom] = model.elements.collect { case a@Atom(_, _, _, _, And(andValues), _, _) => a}
+      if (andAtoms.size > 1) sys.error("[Model2Query] For now, only 1 And-expressions can be used. Found: " + andAtoms)
+      if (andAtoms.size == 1) {
+        val clauses = q.wh.clauses
+        val andAtom = andAtoms.head
+        val Atom(ns, attr0, _, _, And(andValues), _, _) = andAtom
+        val attr = if (attr0.last == '_') attr0.init else attr0
+        val unifyAttrs = model.elements.collect {
+          case a@Atom(ns1, attr1, _, _, _, _, _) if a != andAtom => (ns1, if (attr1.last == '_') attr1.init else attr1)
+        }
+        val selfJoinClauses = andValues.zipWithIndex.tail.flatMap { case (andValue, i) =>
+
+          // Todo: complete matches...
+          def vi(v0: Var) = Var(v0.v + "_" + i)
+          def queryValue(qv: QueryValue): QueryValue = qv match {
+            case Var(v) => vi(Var(v))
+            case _      => qv
+          }
+          def queryTerm(qt: QueryTerm): QueryTerm = qt match {
+            case Rule(name, args, cls) => Rule(name, args map queryValue, cls map dataCls)
+            case other                 => qt
+          }
+          def binding(b: Binding) = b match {
+            case ScalarBinding(v)     => ScalarBinding(vi(v))
+            case CollectionBinding(v) => CollectionBinding(vi(v))
+            case TupleBinding(vs)     => TupleBinding(vs map vi)
+            case RelationBinding(vs)  => RelationBinding(vs map vi)
+            case _                    => b
+          }
+          def dataCls(dc: DataClause) = dc match {
+            case DataClause(ds, e, a@KW(ns2, attr2, _), v, tx, op) if (ns, attr) ==(ns2, attr2) =>
+              // Add next And-value
+              DataClause(ds, vi(e), a, Val(andValue), queryTerm(tx), queryTerm(op))
+
+            case DataClause(ds, e, a@KW(ns2, attr2, _), v, tx, op) if unifyAttrs.contains((ns2, attr2)) =>
+              // Keep value-position value to unify
+              DataClause(ds, vi(e), a, v, queryTerm(tx), queryTerm(op))
+
+            case DataClause(ds, e, a, v, tx, op) =>
+              // Add i to variables
+              DataClause(ds, vi(e), a, queryValue(v), queryTerm(tx), queryTerm(op))
+          }
+          def resolve(expr: QueryExpr): Clause = expr match {
+            case dc@DataClause(ds, e, a, v, tx, op) => dataCls(dc)
+            case RuleInvocation(name, args)         => RuleInvocation(name, args map queryValue)
+            case Funct(name, ins, outs)             => Funct(name, ins map queryTerm, binding(outs))
+          }
+          clauses map resolve
+        }
+        q.copy(wh = Where(q.wh.clauses ++ selfJoinClauses))
+      } else q
+    }
+
+    val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query, e, v, prevNs, prevAttr, prevRefNs), element) =>
       make(query, element, e, v, prevNs, prevAttr, prevRefNs)
     }._1
+
+    postProcess(query)
   }
 }

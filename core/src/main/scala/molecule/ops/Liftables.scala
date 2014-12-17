@@ -120,7 +120,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftClause = Liftable[Clause] {
     case DataClause(ds, e, a, v, tx, op) => q"DataClause($ds, $e, $a, $v, $tx, $op)"
     case RuleInvocation(name, args)      => q"RuleInvocation($name, Seq(..$args))"
-    case Predicate(name, args)           => q"Predicate($name, Seq(..$args))"
+//    case Predicate(name, args)           => q"Predicate($name, Seq(..$args))"
     case Funct(name, ins, outs)          => q"Funct($name, Seq(..$ins), $outs)"
   }
 

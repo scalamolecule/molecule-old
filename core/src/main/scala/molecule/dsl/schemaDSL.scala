@@ -102,8 +102,9 @@ object schemaDSL {
   }
 
   sealed trait ValueAttr[Ns, In, T] extends Attr {
-    def apply(expr: Exp1[T])    : Ns with Attr = ???
-    def apply(expr: Exp2[T, T]) : Ns with Attr = ???
+    def apply(expr1: Exp1[T])    : Ns with Attr = ???
+    def apply(expr2: Exp2[T, T]) : Ns with Attr = ???
+    def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
     def eq(value: T)            : Ns with Attr = ???
 
     def < (value: T)  : Ns with Attr = ???

@@ -71,7 +71,7 @@ object query {
   case class RuleInvocation(name: String, args: Seq[QueryValue]) extends Clause
 
   sealed trait ExpressionClause extends Clause
-  case class Predicate(name: String, args: Seq[QueryTerm]) extends ExpressionClause
+//  case class Predicate(name: String, args: Seq[QueryTerm]) extends ExpressionClause
   case class Funct(name: String, ins: Seq[QueryTerm], outs: Binding) extends ExpressionClause
 
 

@@ -90,6 +90,7 @@ class SeattleTests extends SeattleSpec {
       "Discover SLU")
   }
 
+
   "Querying across references" >> {
 
     // Communities in north eastern region
@@ -386,6 +387,7 @@ class SeattleTests extends SeattleSpec {
     // 4 new categories added (these are facts, not entities)
     Community.category.get.head.size === 92
   }
+
 
   "Manipulating data - update/retract" in new SeattleSetup {
 
