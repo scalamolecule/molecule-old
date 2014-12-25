@@ -84,15 +84,15 @@ transformations of molecules
 
 ### Dependency in your project
 
-Molecule 0.1.1 for Scala 2.11.1 is available at 
+Molecule 0.2.0 for Scala 2.11.4 is available at
 [Sonatype](https://oss.sonatype.org/content/repositories/releases/com/marcgrue/molecule_2.11/)
- so that you can add a dependency in your sbt file to `"com.marcgrue" % "molecule_2.11.1" % "0.1.1"`.
+ so that you can add a dependency in your sbt file to `"com.marcgrue" % "molecule_2.11.4" % "0.2.0"`.
 
 Since Molecule generates boilerplate code from your definitions it also needs to have the `DslBoilerplate.scala` file in your project folder. Please have a look at how the sbt build file
  of the Molecule project itself puts things together and simply copy that to your own project:
 
 2. Setup your sbt build file [as in Molecule][moleculesbt]: 
-    - Add library dependency `"com.marcgrue" % "molecule_2.11.1" % "0.1.1"`
+    - Add library dependency `"com.marcgrue" % "molecule_2.11.4" % "0.2.0"`
     - List directories where you have your [definition file(s)][setup]
 3. Define your domain schema in a [schema definition file][setup]
 4. `sbt compile`
