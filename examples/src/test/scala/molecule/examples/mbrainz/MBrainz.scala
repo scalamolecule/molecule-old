@@ -9,6 +9,7 @@ class MBrainz extends MoleculeSpec {
 
   implicit val conn = Peer.connect("datomic:free://localhost:4334/mbrainz-1968-1973")
 
+
   "Queries" >> {
 
     // What are the titles of all the tracks John Lennon played on?
