@@ -66,7 +66,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "com.marcgrue",
-    version := "0.1.2",
+    version := "0.2.0",
     scalaVersion := "2.11.4",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
 //    scalacOptions := Seq("-feature", "-language:implicitConversions"),
