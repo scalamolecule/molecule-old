@@ -19,15 +19,9 @@ trait DatomicFacade {
 
   // Create database and load schema ========================================
 
-  def load(tx: java.util.List[_], identifier: String = "test"): Connection = {
-    val uri = "datomic:mem://" + randomUUID()
-    //    val uri = "datomic:mem://" + identifier
-    //    Peer.deleteDatabase(uri)
-    //    Peer.createDatabase(uri)
-    //    val conn = Peer.connect(uri)
-    //    conn.transact(tx).get()
-    //    conn
-    //    val conn = try {
+  def load(tx: java.util.List[_], identifier: String = "", protocol: String = "mem"): Connection = {
+    val id = if (identifier == "") randomUUID() else identifier
+    val uri = s"datomic:$protocol://$id"
     try {
       Peer.deleteDatabase(uri)
       Peer.createDatabase(uri)
@@ -66,7 +60,7 @@ trait DatomicFacade {
     case InVar(CollectionBinding(_), argss) => Util.list(argss.head.map(_.asInstanceOf[Object]): _*)
     case InVar(_, argss)                    => argss.head.head
     case InDataSource(_, argss)             => argss.head.head
-    case args                               => sys.error(s"[DatomicFacade] UNRESOLVED input args: $args")
+    case other                              => sys.error(s"[DatomicFacade] UNEXPECTED inputs: $other")
   }
 
   def results(query: Query, conn: Connection): jCollection[jList[AnyRef]] = {
@@ -87,15 +81,6 @@ trait DatomicFacade {
 
     val first = if (query.i.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
-
-    //    println(query)
-    //    println("##############################################################################")
-    //    println(query.datalog)
-    //    println("------------------------------------------------ ")
-    //    println("RULES: " + (if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")))
-    //    println("------------------------------------------------ ")
-    //    println("INPUTS: " + allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1) + "\n")
-    //    println("###########################################################################################\n")
 
     //    Peer.q(s"""
     //       [:find ?a ?b
@@ -125,19 +110,13 @@ trait DatomicFacade {
     }
   }
 
-  //  def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
-
-  //  def getValues(db: Database, id: Any, ns: Any, attr: Any) =
-  //    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$ns/$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
-  //
   def getValues1(db: Database, id: Any, attr: String) =
     Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
   //
-//  def maybe(db: Database, e: Any, attr: String, ifNot: Any) =
-//    Peer.q(s"[:find ?v :in $$ ?e ?a :where [?e ?a ?v]]", db, e.asInstanceOf[Object], attr).map(_.get(0)).headOption match {
-//      case Some(set: Set[_]) =>
-//    }
-
+  //  def maybe(db: Database, e: Any, attr: String, ifNot: Any) =
+  //    Peer.q(s"[:find ?v :in $$ ?e ?a :where [?e ?a ?v]]", db, e.asInstanceOf[Object], attr).map(_.get(0)).headOption match {
+  //      case Some(set: Set[_]) =>
+  //    }
 
 
   def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
@@ -147,9 +126,9 @@ trait DatomicFacade {
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
-//        x(1, model, transformer.stmtsModel)
+    //        x(1, model, transformer.stmtsModel)
     val stmtss = transformer.insertStmts(dataRows)
-//        x(1, model, transformer.stmtsModel, stmtss)
+    //        x(1, model, transformer.stmtsModel, stmtss)
     Tx(conn, transformer, stmtss)
   }
 
@@ -163,7 +142,7 @@ trait DatomicFacade {
   protected[molecule] def update(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmts = transformer.updateStmts
-//        x(3, model, transformer.stmtsModel, stmts)
+    //        x(3, model, transformer.stmtsModel, stmts)
     Tx(conn, transformer, Seq(stmts))
   }
 }
@@ -174,8 +153,8 @@ object DatomicFacade extends DatomicFacade
 case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[Statement]]) {
   private val x = Debug("Tx", 1, 99, false, 3)
 
-  val flatStmts = stmtss.flatten.map(_.toJava).asJava
-//  x(7, stmtss, flatStmts)
+  val flatStmts            = stmtss.flatten.map(_.toJava).asJava
+  //  x(7, stmtss, flatStmts)
   val txResult: jMap[_, _] = conn.transact(flatStmts).get
 
   def ids: List[Long] = {
@@ -211,7 +190,6 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
   def touch: Map[String, Any] = toMap map { case (k, v) =>
     val sortedValue = v match {
-      // Todo: presuming
       case vs: List[Any] => vs.sortBy(_.asInstanceOf[Map[String, Any]].head._2.asInstanceOf[Long])
       case other         => other
     }
@@ -221,8 +199,7 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
   def apply(kw: String): Option[Any] = entity.get(kw) match {
     case null                                    => None
     case results: clojure.lang.PersistentHashSet => Some(results.toList.map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]).sorted)
-//    case results: datomic.query.EntityMap => Some(results.head.getClass)
-    case result                                  => Some(toScala(result))
+    case result => Some(toScala(result))
   }
 
   def apply(kw1: String, kw2: String, kwx: String*): Seq[Option[Any]] = {
@@ -230,15 +207,12 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
   }
 
 
-
   def retract = conn.transact(Util.list(Util.list(":db.fn/retractEntity", id))).get()
 
 
   def toMap: Map[String, Any] = {
-    //  def toMap = {
     val builder = Map.newBuilder[String, Any]
     val iter = entity.keySet.toList.sorted.asJava.iterator()
-    //    val iter = entity.keySet.iterator
 
     // Add id also
     builder += ":db/id" -> entity.get(":db/id")

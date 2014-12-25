@@ -140,7 +140,6 @@ class SeattleTests extends SeattleSpec {
       ("Fremont Universe", "facebook_page"),
       ("Fauntleroy Community Association", "facebook_page"),
       ("Magnolia Voice", "twitter"))
-    //        ("Discover SLU", "twitter"))
 
     // Notation variations with OR-semantics for multiple inputs:
 
@@ -247,7 +246,7 @@ class SeattleTests extends SeattleSpec {
   "Querying with rules (logical OR)" >> {
 
     // Social media
-    Community.name.type_("twitter" or "facebook_page").get(3) === List(
+    Community.name.type_.apply("twitter" or "facebook_page").get(3) === List(
       "Discover SLU", "Blogging Georgetown", "Fremont Universe")
 
     // NE and SW regions
@@ -438,10 +437,12 @@ class SeattleTests extends SeattleSpec {
     Community(belltown).name("belltown 3").url().category().update
 
     // Belltown has no longer a url or any categories
-    Community.name_("belltown 3").name.`type`.url.category.hl === List()
+    Community.name("belltown 3").`type`.url.category.hl === List()
+//    Community.name_("belltown 3").name.`type`.url.category.hl === List()
 
     // ..but we still have a belltown with a name and type
-    Community.name_("belltown 3").name.`type`.hl === List("belltown 3" :: "blog" :: HNil)
+    Community.name("belltown 3").`type`.hl === List("belltown 3" :: "blog" :: HNil)
+//    Community.name_("belltown 3").name.`type`.hl === List("belltown 3" :: "blog" :: HNil)
 
 
     // Retract entities ...................................

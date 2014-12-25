@@ -8,8 +8,8 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  //  val x = Debug("Dsl2Model", 30, 31, false)
-  val x = Debug("Dsl2Model", 30, 32, true)
+  val x = Debug("Dsl2Model", 30, 32, false)
+  //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
@@ -80,33 +80,55 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
 
-    case q"$prev.$cur.$op(..$values)" => traverse(q"$prev", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
+    case t@q"$prev.$cur.$op(..$values)" => walk(q"$prev", q"$prev.$cur".ns, q"$cur", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
     case r@q"$prev.$backRefAttr" if r.isBackRef    => traverse(q"$prev", ReBond(r.refThis, firstLow(r.name.tail), r.refNext))
     case r@q"$prev.$refAttr" if r.isRef            => traverse(q"$prev", Bond(r.refThis, r.name, r.refNext))
     case a@q"$prev.$cur" if a.isEnum               => traverse(q"$prev", Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix)))
-    case a@q"$prev.$cur" if a.isValueAttr          => traverse(q"$prev", Atom(a.ns, a.name, a.tpeS, a.card, VarValue))
+    case a@q"$prev.$cur" if a.isValueAttr          => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, a.tpeS, a.card, VarValue))
     case a@q"$prev.$cur" if a.isRef || a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
 
 
     // Nested group ------------------------
 
-    //    case t@q"$prev.e.apply($nested)" if !q"$prev".isRef            => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
-    //    case t@q"$prev.e_.apply($nested)" if !q"$prev".isRef           => Seq(Group(Bond("", "", ""), resolve(nested)))
-    //    case t@q"$prev.$ns.apply($nested)" if !q"$prev.$ns".isRef           => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
-    //    case t@q"$prev.$manyRef.apply($nested)"           => x(22, t); traverse(q"$prev", nested1(prev, manyRef, nested))
-
     case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
     case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
 
-    case t@q"$prev.$manyRef.*[..$types]($nested)"                       => x(280, t); traverse(q"$prev", nested1(prev, manyRef, nested))
-    case t@q"$prev.$ns.*[..$types]($nested)"                            => x(280, t); Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
+    case t@q"$prev.$manyRef.*[..$types]($nested)"                       => traverse(q"$prev", nested1(prev, manyRef, nested))
+    case t@q"$prev.$ns.*[..$types]($nested)"                            => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
     case t@q"$prev.$ns.apply[..$types]($nested)" if !q"$prev.$ns".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
-    case t@q"$prev.$manyRef.apply[..$types]($nested)"                   => x(330, t); traverse(q"$prev", nested1(prev, manyRef, nested))
+    case t@q"$prev.$manyRef.apply[..$types]($nested)"                   => traverse(q"$prev", nested1(prev, manyRef, nested))
 
 
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
   }
+
+  def walk(prev: Tree, ns: String, cur: Tree, thisElement: Element) = {
+    val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
+    val attr = cur.toString
+    val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) { case (e, (previous, atoms, trans)) =>
+      e match {
+        // Find similar Atoms
+        case a@Atom(ns1, attr1, _, _, _, _, _) if ns1 == ns && clean(attr1) == clean(attr) =>
+          val t = previous.init.reverse.collectFirst {
+            // Find first previous Bond (relating to this attribute)
+            case Bond(ns2, refAttr, refNs) => Transitive(ns2, refAttr, refNs, 0)
+          } getOrElse Transitive(ns1, attr1, ns1, 0)
+          (previous.init, atoms :+ a, Some(t))
+        case _                                                                             => (previous.init, atoms, trans)
+      }
+    }
+    if (transitive.isDefined)
+      similarAtoms.size match {
+        case 1 => prevElements :+ transitive.get.copy(depth = 1) :+ thisElement
+        case 2 => prevElements :+ transitive.get.copy(depth = 2) :+ thisElement
+        case n => abort(s"[Dsl2Model:xx(Transitive)] Unsupported transitive arity: $n")
+      }
+    else
+      traverse(q"$prev", thisElement)
+  }
+
+  def clean(a: String) = if (a.last == '_') firstLow(a.init) else firstLow(a)
 
   def nested1(prev: Tree, manyRef: TermName, nested: Tree) = {
     val refNext = q"$prev.$manyRef".refNext
@@ -130,9 +152,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val refs = c.typecheck(manyRef).tpe.members.filter(e => e.isMethod && e.asMethod.returnType <:< weakTypeOf[Ref[_, _]])
       val refPairs = refs.map(r => r.name -> r.typeSignature.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name)
       val refPairsFiltered = refPairs.filter(_._2.toString == nestedNs.capitalize)
-      //      x(23, refs, refPairs, nestedElements, refNext, nestedNs)
       if (refPairsFiltered.isEmpty) {
-        //        abort(s"[Dsl2Model:dslStructure(nested)] Unrelated namespace `$nestedNs` as nested namespace not implemented yet...")
         nestedElements
       } else if (refPairsFiltered.size == 1) {
         val (refAttr, refNs) = refPairsFiltered.head
@@ -181,17 +201,22 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     def errValue(v: Any) = abort(s"[Dsl2Model:modelValue] Unexpected resolved model value for `${attr.name}.$op`: $v")
     val values = getValues(values0, attr)
     op match {
-      case "apply"    => values match {
+      case "apply"       => values match {
         case resolved: Value => resolved
         case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
         case other           => errValue(other)
       }
-      case "count"    => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
-      case "$less"    => values match {case qm: Qm.type => Lt(Qm); case vs: Seq[_] => Lt(vs.head)}
-      case "contains" => values match {case qm: Qm.type => Fulltext(Seq(Qm)); case vs: Seq[_] => Fulltext(vs)}
-      case "add"      => values match {case vs: Seq[_] => Eq(vs)}
-      case "remove"   => values match {case vs: Seq[_] => Remove(vs)}
-      case unexpected => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
+      case "count"       => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
+      case "not"         => values match {case qm: Qm.type => Neq(Seq(Qm)); case vs: Seq[_] => Neq(vs)}
+      case "$bang$eq"    => values match {case qm: Qm.type => Neq(Seq(Qm)); case vs: Seq[_] => Neq(vs)}
+      case "$less"       => values match {case qm: Qm.type => Lt(Qm); case vs: Seq[_] => Lt(vs.head)}
+      case "$greater"    => values match {case qm: Qm.type => Gt(Qm); case vs: Seq[_] => Gt(vs.head)}
+      case "$less$eq"    => values match {case qm: Qm.type => Le(Qm); case vs: Seq[_] => Le(vs.head)}
+      case "$greater$eq" => values match {case qm: Qm.type => Ge(Qm); case vs: Seq[_] => Ge(vs.head)}
+      case "contains"    => values match {case qm: Qm.type => Fulltext(Seq(Qm)); case vs: Seq[_] => Fulltext(vs)}
+      case "add"         => values match {case vs: Seq[_] => Eq(vs)}
+      case "remove"      => values match {case vs: Seq[_] => Remove(vs)}
+      case unexpected    => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
     }
   }
 
@@ -220,34 +245,35 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"Seq($pkg.stddev)"                                     => Fn("stddev")
     case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
     case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
-    case q"Seq(..$vs)"                                           =>
-      vs match {
-        case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
-          val oldNew: Map[Any, Any] = get.map {
-            case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
-          }.toMap
-          Replace(oldNew)
+    case q"Seq(..$vs)"                                           => vs match {
+      case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
+        val oldNew: Map[Any, Any] = get.map {
+          case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
+        }.toMap
+        Replace(oldNew)
 
-        case other if attr == null => vs.flatMap(v => resolveValues(v))
-        case other                 => vs.flatMap(v => resolveValues(v, att(q"$attr")))
-      }
+      case other if attr == null => vs.flatMap(v => resolveValues(v))
+      case other                 => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+    }
 
     case other if attr == null => resolveValues(other)
     case other                 => resolveValues(other, att(q"$attr"))
   }
 
-  def extract(t: Tree) = t match {
-    case Constant(v: String)                            => v
-    case Literal(Constant(v: String))                   => v
-    case Ident(TermName(v: String))                     => "__ident__" + v
-    case Select(This(TypeName(_)), TermName(v: String)) => "__ident__" + v
-    case v                                              => v
+  def extract(t: Tree) = {
+    //    x(31, t.raw)
+    t match {
+      case Constant(v: String)                            => v
+      case Literal(Constant(v: String))                   => v
+      case Ident(TermName(v: String))                     => "__ident__" + v
+      case Select(This(TypeName(_)), TermName(v: String)) => "__ident__" + v
+      case v                                              => v
+    }
   }
 
   def resolveValues(tree: Tree, at: att = null) = {
     def resolve(tree0: Tree, values: Seq[Tree] = Seq()): Seq[Tree] = tree0 match {
-      case q"$a.or($b)" => resolve(b, resolve(a, values))
-      //      case q"$a.and[$t2]($b)"       => x(31, a, b, resolve(b, resolve(a, values))); values :+ resolve(b, resolve(a, values))
+      case q"$a.or($b)"             => resolve(b, resolve(a, values))
       case q"${_}.string2Model($v)" => values :+ v
       case Apply(_, vs)             => values ++ vs.flatMap(resolve(_))
       case v                        => values :+ v
@@ -300,7 +326,7 @@ object Dsl2Model {
     }._1
     val model = Model(condensedElements)
     //    inst(c).x(30, condensedElements)
-    //    inst(c).x(30, dsl, rawElements, condensedElements, model)
+    //        inst(c).x(30, dsl, rawElements, condensedElements, model)
     model
   }
 }

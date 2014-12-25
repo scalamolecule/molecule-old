@@ -24,10 +24,10 @@ object model {
 
   case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None, gs: Seq[Generic] = Seq()) extends Element
   case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
-  case class ReBond(backRef: String, refAttr: String, refNs: String = "") extends Element
+  case class ReBond(backRef: String, refAttr: String, refNs: String = "", distinct: Boolean = false, prevVar: String = "") extends Element
+  case class Transitive(backRef: String, refAttr: String, refNs: String, depth: Int = 1, prevVar: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
 
-//  case class Meta(ns: String, attr: String, kind: String, generic: Generic, value: Value = NoValue) extends Element
   case class Meta(ns: String, attr: String, kind: String, generic: Generic, value: Value) extends Element
   case class TxModel(elements: Seq[Element]) extends Element
 
@@ -36,26 +36,34 @@ object model {
 
   sealed trait Value
 
+  // Value
   case object EntValue extends Value
   case object VarValue extends Value
   case class BackValue(backNs: String) extends Value
   case object EnumVal extends Value
 
-  case class Length(fn: Option[Fn] = None) extends Value
-  case class Eq(values: Seq[Any]) extends Value
-  case class And(values: Seq[Any]) extends Value
-  case class Lt(value: Any) extends Value
+  // Function
   case class Fulltext(search: Seq[Any]) extends Value
   case class Fn(name: String, i: Option[Int] = None) extends Value
+  case class Length(fn: Option[Fn] = None) extends Value
+
+  // Logic
+  case class And(values: Seq[Any]) extends Value
+
+  // Comparison (== != < > <= >=)
+  case class Eq(values: Seq[Any]) extends Value
+  case class Neq(values: Seq[Any]) extends Value
+  case class Lt(value: Any) extends Value
+  case class Gt(value: Any) extends Value
+  case class Le(value: Any) extends Value
+  case class Ge(value: Any) extends Value
 
   sealed trait Generic extends Value
   case class AttrVar(v: String) extends Generic
-  //  case class AttrVal(v: String) extends Generic
   case object TxValue extends Generic
   case object TxTValue extends Generic
   case object TxInstantValue extends Generic
   case object OpValue extends Generic
-//  case object NsValue extends Generic
   case class NsValue(values: Seq[String]) extends Generic
   case object NoValue extends Generic
 
@@ -63,7 +71,7 @@ object model {
   case object Distinct extends Value
   //  case object Maybe extends Value
 
-  // Actions
+  // Action
   case class Replace(oldNew: Map[Any, Any]) extends Value
   case class Remove(value: Seq[Any]) extends Value
 
@@ -100,34 +108,5 @@ object model {
     case Meta(ns, _, _, _, _)       => ns
     case unexpected                 => sys.error("[model:curNs] Unexpected element: " + unexpected)
   }
-
-
-  // From sqltyped...
-
-  //  sealed trait Comparison[T] extends Expression
-  //  case class Comparison1[T](t: TermValue[T], op: Operator1) extends Comparison[T]
-  //  case class Comparison2[T](t1: TermValue[T], op: Operator2, t2: TermValue[T]) extends Comparison[T]
-  //  case class Comparison3[T](t1: TermValue[T], op: Operator3, t2: TermValue[T], t3: TermValue[T]) extends Comparison[T]
-  //
-  //  sealed trait Operator1
-  //  case object IsNull extends Operator1
-  //  case object IsNotNull extends Operator1
-  //  case object Exists extends Operator1
-  //  case object NotExists extends Operator1
-  //
-  //  sealed trait Operator2
-  //  case object Eq extends Operator2
-  //  case object Neq extends Operator2
-  //  case object Lt extends Operator2
-  //  case object Gt extends Operator2
-  //  case object Le extends Operator2
-  //  case object Ge extends Operator2
-  //  case object Inx extends Operator2
-  //  case object NotIn extends Operator2
-  //  case object Like extends Operator2
-  //
-  //  sealed trait Operator3
-  //  case object Between extends Operator3
-  //  case object NotBetween extends Operator3
 }
 

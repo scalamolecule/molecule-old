@@ -29,7 +29,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
   def bindValues1(inputTuples: Seq[(I1, I2)]) = {
     val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
     val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
-    _query.copy(i = In(Seq(InVar(RelationBinding(vars), values))))
+    _query.copy(i = In(Seq(InVar(RelationBinding(vars), values)), _query.i.rules, _query.i.ds))
   }
 
   def bindValues2(inputLists: (Seq[I1], Seq[I2])) = {
@@ -38,7 +38,7 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
     val varsAndPrefixes = _query.i.inputs.collect {
       case Placeholder(_, kw, enumPrefix, e) => (kw, enumPrefix, e)
     }
-    val query1 = _query.copy(i = In(Seq()))
+    val query1 = _query.copy(i = In(Seq(), _query.i.rules, _query.i.ds))
 
     if (varsAndPrefixes.size != 2)
       sys.error(s"[InputMolecule_2] Query should expect exactly 2 inputs:\nQuery: ${_query.datalog}")

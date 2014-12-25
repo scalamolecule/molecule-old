@@ -1,5 +1,4 @@
-import java.io.File
-import sbt._
+
 
 // Generate molecule dsl from definition files
 
@@ -19,12 +18,12 @@ object DslBoilerplate {
   case class Namespace(ns: String, opt: Option[Extension] = None, attrs: Seq[Attr] = Seq())
 
   sealed trait Extension
-//  case class Tree() extends Extension {
-//    override def toString = " (Tree)"
-//  }
-//  case class HyperEdge(edges: Seq[String]) extends Extension {
-//    override def toString = s" (HyperEdge to ${edges.mkString(", ")})"
-//  }
+  //  case class Tree() extends Extension {
+  //    override def toString = " (Tree)"
+  //  }
+  //  case class HyperEdge(edges: Seq[String]) extends Extension {
+  //    override def toString = s" (HyperEdge to ${edges.mkString(", ")})"
+  //  }
 
   sealed trait Attr {
     val attr     : String
@@ -143,8 +142,6 @@ object DslBoilerplate {
         case "import molecule.dsl.schemaDefinition._"         => d
         case r"@InOut\((\d+)$inS, (\d+)$outS\)"               => d.copy(in = inS.toString.toInt, out = outS.toString.toInt)
         case r"trait (.*)${dmn}Definition \{"                 => d.copy(domain = dmn)
-//        case r"trait (\w*)$ns\s*extends\s*Tree\s*\{"          => d.copy(nss = d.nss :+ Namespace(ns, Some(Tree())))
-//        case r"trait (\w*)$ns\s*extends\s*HyperEdge\s*\{"     => d.copy(nss = d.nss :+ Namespace(ns, Some(HyperEdge(Seq()))))
         case r"trait (\w*)$ns\s*\{"                           => d.copy(nss = d.nss :+ Namespace(ns))
         case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$str" => d.addAttr(parseAttr(q1 + a + q2, a, str))
         case "}"                                              => d
@@ -183,6 +180,33 @@ object DslBoilerplate {
     //            case ns2                                        => ns2
     //          }
     //        }
+    //
+    //    val newNss1 = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
+    //      // Gather OneRefs (ManyRefs are treated as nested data structures)
+    //      val refs1 = ns.attrs.collect {
+    //        case ref@Ref(_, refAttr, clazz, _, _, _, refNs) => refNs -> ref
+    //      }.toMap
+    //
+    //      // Add BackRefs
+    //      nss2.map {
+    //        case ns2 if refs1.size > 0 && refs1.keys.toList.contains(ns2.ns) =>
+    //          //        case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
+    //          println(ns2.ns + ": " + refs1)
+    //
+    //          val attrs2 = refs1.foldLeft(ns2.attrs) { case (attrs, ref) =>
+    //            //          val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
+    //            val (refNs, Ref(_, refAttr, clazz, _, tpe, _, _)) = (ref._1, ref._2)
+    //            if (ref._1 == ns2.ns)
+    //              attrs :+ BackRef(s"_${ns.ns}", refNs, "BackRefAttr", "BackRef", tpe, "", ns.ns)
+    ////              attrs :+ BackRef(s"${ns.ns}_${refAttr.capitalize}", refNs, "BackRefAttr", "BackRef", tpe, "", ns.ns)
+    //            else
+    //              attrs :+ BackRef(s"_${ns.ns}_${refAttr.capitalize}", refNs, "BackRefAttr", "BackRef", tpe, "", ns.ns)
+    ////              attrs :+ BackRef(s"_${refAttr.capitalize}", refNs, "BackRefAttr", "BackRef", tpe, "", ns.ns)
+    //          }
+    //          ns2.copy(attrs = attrs2)
+    //        case ns2                                                         => ns2
+    //      }
+    //    }
 
     val newNss1 = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
       // Gather OneRefs (ManyRefs are treated as nested data structures)
@@ -193,21 +217,15 @@ object DslBoilerplate {
       // Add BackRefs
       nss2.map {
         case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
-                println(ns2.ns + ": " + refs1)
-
           val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
             val (refNs, Ref(_, refAttr, clazz, _, tpe, _, _)) = (ref._1, ref._2)
-//            attrs :+ BackRef(s"_${refAttr.capitalize}", s"${ns2.ns}", s"BackRefAttr", "BackRef", tpe, "", ns.ns)
             attrs :+ BackRef(s"_${refAttr.capitalize}", refNs, "BackRefAttr", "BackRef", tpe, "", ns.ns)
           }
           ns2.copy(attrs = attrs2)
         case ns2                                                         => ns2
       }
     }
-
     definition.copy(nss = newNss1)
-    //        definition.copy(nss = newNss)
-    //    definition
   }
 
 
@@ -277,7 +295,7 @@ object DslBoilerplate {
     //    val (attrVals, attrVals_) = attrs.map { a =>
     val (attrVals, attrVals_) = attrs.flatMap {
       case BackRef(_, _, _, _, _, _, _) => None
-      case a                                       =>
+      case a                            =>
         val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
         val p3 = padS(maxTpe, tpe)
 
@@ -345,7 +363,7 @@ object DslBoilerplate {
         val p1 = padS(maxAttr, attr)
         val p2 = padS(maxClazz2.max, clazz2)
         val p3 = padS(maxRefNs.max, attr)
-//        val p3 = padS(maxRefNs.max, refNs)
+        //        val p3 = padS(maxRefNs.max, refNs)
         val p4 = padS(maxNs.max, refNs)
         val ref = (in, out) match {
           case (0, 0) => s"${refNs}_0$p4"
@@ -375,7 +393,7 @@ object DslBoilerplate {
           case (i, o) => s"${refNs}_In_${i}_$o$p4[${(InTypes ++ OutTypes) mkString ", "}]"
         }
         //        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$ns, $backRef$p3] with $ref = ???"
-//        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$backRef, $refNs$p3] with $ref = ???"
+        //        acc :+ s"def ${backAttr.capitalize} $p1 : BackRef$p2[$backRef, $refNs$p3] with $ref = ???"
         acc :+ s"def $backAttr $p1 : BackRef$p2[$backRef, $refNs$p3] with $ref = ???"
 
       case (acc, _) => acc
@@ -462,11 +480,11 @@ object DslBoilerplate {
     val outArity = d.out
     val Ns = namespace.ns
     val attrs = namespace.attrs
-//    val extension = namespace.opt match {
-////      case Some(t: Tree)      => "extends Tree "
-////      case Some(h: HyperEdge) => "extends HyperEdge "
-//      case None               => ""
-//    }
+    //    val extension = namespace.opt match {
+    ////      case Some(t: Tree)      => "extends Tree "
+    ////      case Some(h: HyperEdge) => "extends HyperEdge "
+    //      case None               => ""
+    //    }
     val p1 = (s: String) => padS(attrs.map(_.attr.length).max, s)
     val p2 = (s: String) => padS(attrs.map(_.clazz.length).max, s)
 
@@ -499,14 +517,14 @@ object DslBoilerplate {
       out <- 0 to outArity
     } yield nsTrait(namespace, in, out, inArity, outArity, nsArities)).mkString("\n")
 
-//    val inImport = if (inArity > 0) "\nimport molecule.in._" else ""
+    //    val inImport = if (inArity > 0) "\nimport molecule.in._" else ""
     val extraImports0 = attrs.collect {
       case Val(_, _, _, tpe, _, _, _) if tpe.take(4) == "java" => tpe
     }.distinct
     val extraImports = if (extraImports0.isEmpty) "" else extraImports0.mkString(s"\nimport ", "\nimport ", "")
 
-//        |import molecule._
-//        |import molecule.dsl.schemaDSL._$inImport
+    //        |import molecule._
+    //        |import molecule.dsl.schemaDSL._$inImport
     s"""|/*
         | * AUTO-GENERATED CODE - DON'T CHANGE!
         | *
@@ -525,7 +543,7 @@ object DslBoilerplate {
         |}
         |
         |$nsTraits""".stripMargin
-//        |trait $Ns $extension{
+    //        |trait $Ns $extension{
   }
 
   def generate(srcManaged: File, domainDirs: Seq[String]): Seq[File] = {

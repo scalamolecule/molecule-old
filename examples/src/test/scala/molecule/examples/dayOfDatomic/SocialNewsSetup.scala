@@ -9,7 +9,8 @@ import scala.language.postfixOps
 class SocialNewsSetup extends Scope with DatomicFacade {
 
   // 1-2. Make db
-  implicit val conn = load(SocialNewsSchema.tx, "SocialNews")
+  implicit val conn = load(SocialNewsSchema.tx)
+//  implicit val conn = load(SocialNewsSchema.tx, "SocialNews")
 
   // Add Stories
   val List(s1, s2, s3) = Story.title.url insert List(

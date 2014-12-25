@@ -69,17 +69,26 @@ object Model2Query {
             case (_, Qm)                              => q.where(e, a, v, gs).in(v, a)
             case (2, Fulltext(Seq(Qm)))               => q.fulltext(e, a, v, Var(v1)).in(v1, a)
             case (_, Fulltext(Seq(Qm)))               => q.fulltext(e, a, v, Var(v1)).in(v1, a)
+            case (_, Neq(Seq(Qm)))                    => q.where(e, a, v, gs).compareTo("!=", a, v, Var(v1))
             case (_, Lt(Qm))                          => q.where(e, a, v, gs).compareTo("<", a, v, Var(v1))
+            case (_, Gt(Qm))                          => q.where(e, a, v, gs).compareTo(">", a, v, Var(v1))
+            case (_, Le(Qm))                          => q.where(e, a, v, gs).compareTo("<=", a, v, Var(v1))
+            case (_, Ge(Qm))                          => q.where(e, a, v, gs).compareTo(">=", a, v, Var(v1))
             case (2, VarValue)                        => q.where(e, a, v, gs)
             case (_, VarValue)                        => q.find(gs).where(e, a, v, gs)
             case (2, EnumVal)                         => q.enum(e, a, v, gs)
             case (_, EnumVal)                         => q.enum(e, a, v, gs)
             case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), gs)
             case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss, gs)
+            case (_, Eq((ss: Seq[_]) :: Nil))         => q.orRules(e, a, ss, gs)
             case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), gs)
             case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), gs)
             case (_, And(vs))                         => q.where(e, a, Val(vs.head), gs)
+            case (_, Neq(args))                       => q.where(e, a, v, gs).compareTo("!=", a, v, args map Val)
             case (_, Lt(arg))                         => q.where(e, a, v, gs).compareTo("<", a, v, Val(arg))
+            case (_, Gt(arg))                         => q.where(e, a, v, gs).compareTo(">", a, v, Val(arg))
+            case (_, Le(arg))                         => q.where(e, a, v, gs).compareTo("<=", a, v, Val(arg))
+            case (_, Ge(arg))                         => q.where(e, a, v, gs).compareTo(">=", a, v, Val(arg))
             case (_, Fn("count", _))                  => q.where(e, a, v, gs)
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
@@ -97,7 +106,11 @@ object Model2Query {
             case (2, Fulltext(Seq(Qm)))               => q.fulltext(e, a, v, Var(v1)).in(v1, a).find("distinct", Seq(), v, gs)
             case (_, Fulltext(Seq(Qm)))               => q.fulltext(e, a, v, Var(v1)).in(v1, a).find(v, gs)
             case (_, EntValue)                        => q.find(e, gs)
+            case (_, Neq(Seq(Qm)))                    => q.where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).find(v, gs).in(v1, a)
             case (_, Lt(Qm))                          => q.where(e, a, v, gs).compareTo("<", a, v, Var(v1)).find(v, gs).in(v1, a)
+            case (_, Gt(Qm))                          => q.where(e, a, v, gs).compareTo(">", a, v, Var(v1)).find(v, gs).in(v1, a)
+            case (_, Le(Qm))                          => q.where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).find(v, gs).in(v1, a)
+            case (_, Ge(Qm))                          => q.where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).find(v, gs).in(v1, a)
             case (2, VarValue)                        => q.where(e, a, v, gs).find("distinct", Seq(), v, gs)
             case (_, VarValue)                        => q.where(e, a, v, gs).find(v, gs)
             case (_, NoValue)                         => q.where(e, a, v, gs).find(NoVal, gs)
@@ -106,10 +119,15 @@ object Model2Query {
             case (_, EnumVal)                         => q.enum(e, a, v, gs).find(v2, gs)
             case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), gs)
             case (2, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss).where(e, a, v, gs).find("distinct", Seq(), v, gs)
-            case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss, gs).find(e, gs)
-            case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), gs).enum(e, a, v).find(v2, gs) // todo: can we output a constant value instead?
-            case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find(v, gs) // todo: can we output a constant value instead?
+            case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss, gs).where(e, a, v, gs).find(v, gs)
+            case (_, Eq((ss: Seq[_]) :: Nil))         => q.orRules(e, a, ss, gs).where(e, a, v, gs).find(v, gs)
+            case (_, Eq(s :: Nil)) if isEnum          => q.where(e, a, Val(prefix + s), gs).enum(e, a, v).find(v2, gs)
+            case (_, Eq(s :: Nil))                    => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find(v, gs)
+            case (_, Neq(args))                       => q.where(e, a, v, gs).compareTo("!=", a, v, args map Val).find(v, gs)
             case (_, Lt(arg))                         => q.where(e, a, v, gs).compareTo("<", a, v, Val(arg)).find(v, gs)
+            case (_, Gt(arg))                         => q.where(e, a, v, gs).compareTo(">", a, v, Val(arg)).find(v, gs)
+            case (_, Le(arg))                         => q.where(e, a, v, gs).compareTo("<=", a, v, Val(arg)).find(v, gs)
+            case (_, Ge(arg))                         => q.where(e, a, v, gs).compareTo(">=", a, v, Val(arg)).find(v, gs)
             case (_, Fn(fn, Some(i)))                 => q.where(e, a, v, gs).find(fn, Seq(i), v, gs)
             case (_, Fn(fn, _))                       => q.where(e, a, v, gs).find(fn, Seq(), v, gs)
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv)).find("distinct", Seq(), v, gs)
@@ -118,13 +136,15 @@ object Model2Query {
             case (_, Length(Some(Fn(fn, Some(i)))))   => q.where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2).find(v2, gs)
             case (_, Length(Some(Fn(fn, _))))         => q.where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2).find(fn, Seq(), v2, gs)
             case (_, Length(_))                       => q.where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2).find(v2, gs)
-            case (c, va)                              => sys.error(s"[Model2Query:resolve[Atom]] Unresolved Atom with cardinality/value: $c / $va")
+            case (c, otherValue)                      => sys.error(s"[Model2Query:resolve[Atom]] Unresolved Atom with cardinality/value: $c / $otherValue")
           }
         }
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
-        case ReBond(backRef, refAttr, refNs) => q.ref(e, backRef, refAttr, v, refNs)
+        case Transitive(backRef, refAttr, refNs, depth, prevVar) => q.transitive(backRef, refAttr, prevVar, v, depth)
+
+        case ReBond(backRef, refAttr, refNs, _, _) => q.ref(e, backRef, refAttr, v, refNs)
 
         case Meta(_, _, "e", _, Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
         case Meta(_, _, "e", _, Fn("count", _))         => q.find("count", Seq(), e, Seq())
@@ -152,12 +172,20 @@ object Model2Query {
         case Bond(ns, refAttr, refNs) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
         case Bond(ns, refAttr, refNs)                    => (resolve(query, e, v, element), e, v, ns, refAttr, refNs)
 
-        case ReBond(backRef, refAttr, refNs) => {
-          val backRefVar = query.wh.clauses.reverse.collectFirst {
-            case DataClause(_, backE, a, _, _, _) if a.ns == backRef => backE.v
-          } getOrElse sys.error(s"[Model2Query:make] Can't find back reference `$backRef` in query so far:\n$query")
+        case transitive@Transitive(backRef, refAttr, refNs, _, _) => {
+          val (backRefE, backRefV) = query.wh.clauses.reverse.collectFirst {
+            case DataClause(_, backE, a, Var(backV), _, _) if a.ns == backRef => (backE.v, backV)
+          } getOrElse sys.error(s"[Model2Query:make(Transitive)] Can't find back reference `$backRef` in query so far:\n$query")
+          val backRefElement = transitive.copy(prevVar = backRefV)
+          (resolve(query, backRefE, w, backRefElement), v, w, backRef, refAttr, refNs)
+        }
 
-          (resolve(query, backRefVar, w, element), v, w, backRef, refAttr, refNs)
+        case rbe@ReBond(backRef, refAttr, refNs, _, _) => {
+          val (backRefE, backRefV) = query.wh.clauses.reverse.collectFirst {
+            case DataClause(_, backE, a, Var(backV), _, _) if a.ns == backRef => (backE.v, backV)
+          } getOrElse sys.error(s"[Model2Query:make(ReBond)] Can't find back reference `$backRef` in query so far:\n$query")
+          val backRefElement = rbe.copy(prevVar = backRefV)
+          (resolve(query, backRefE, w, backRefElement), v, w, backRef, refAttr, refNs)
         }
 
         case Group(b@Bond(ns, refAttr, refNs), elements) =>
@@ -203,8 +231,12 @@ object Model2Query {
             case _      => qv
           }
           def queryTerm(qt: QueryTerm): QueryTerm = qt match {
-            case Rule(name, args, cls) => Rule(name, args map queryValue, cls map dataCls)
-            case other                 => qt
+            case Rule(name, args, cls) => Rule(name, args map queryValue, cls map clause)
+            //            case Rule(name, args, cls) => Rule(name, args map queryValue, cls map dataCls)
+            case InVar(b, argss) => InVar(binding(b), argss)
+            case qv: QueryValue  => queryValue(qv)
+            case other           => qt
+            //            case Placeholder(v, _, _, e) =>
           }
           def binding(b: Binding) = b match {
             case ScalarBinding(v)     => ScalarBinding(vi(v))
@@ -212,6 +244,10 @@ object Model2Query {
             case TupleBinding(vs)     => TupleBinding(vs map vi)
             case RelationBinding(vs)  => RelationBinding(vs map vi)
             case _                    => b
+          }
+          def clause(cl: Clause) = cl match {
+            case dc: DataClause => dataCls(dc)
+            case other          => resolve(other)
           }
           def dataCls(dc: DataClause) = dc match {
             case DataClause(ds, e, a@KW(ns2, attr2, _), v, tx, op) if (ns, attr) ==(ns2, attr2) =>
@@ -228,7 +264,7 @@ object Model2Query {
           }
           def resolve(expr: QueryExpr): Clause = expr match {
             case dc@DataClause(ds, e, a, v, tx, op) => dataCls(dc)
-            case RuleInvocation(name, args)         => RuleInvocation(name, args map queryValue)
+            case RuleInvocation(name, args)         => RuleInvocation(name, args map queryTerm)
             case Funct(name, ins, outs)             => Funct(name, ins map queryTerm, binding(outs))
           }
           clauses map resolve

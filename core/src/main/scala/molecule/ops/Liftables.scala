@@ -107,9 +107,6 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     q"DataClause(${cl.ds}, ${cl.e}, ${cl.a}, ${cl.v}, ${cl.tx}, ${cl.op})"
   }
 
-  implicit val liftRule = Liftable[Rule] { rd =>
-    q"Rule(${rd.name}, Seq(..${rd.args}), Seq(..${rd.clauses}))"
-  }
 
   implicit val liftInput = Liftable[Input] {
     case InDataSource(ds, argss)           => q"InDataSource($ds, Seq(...$argss))"
@@ -120,8 +117,11 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftClause = Liftable[Clause] {
     case DataClause(ds, e, a, v, tx, op) => q"DataClause($ds, $e, $a, $v, $tx, $op)"
     case RuleInvocation(name, args)      => q"RuleInvocation($name, Seq(..$args))"
-//    case Predicate(name, args)           => q"Predicate($name, Seq(..$args))"
     case Funct(name, ins, outs)          => q"Funct($name, Seq(..$ins), $outs)"
+  }
+
+  implicit val liftRule = Liftable[Rule] { rd =>
+    q"Rule(${rd.name}, Seq(..${rd.args}), Seq(..${rd.clauses}))"
   }
 
   implicit val liftIn    = Liftable[In] { in => q"In(Seq(..${in.inputs}), Seq(..${in.rules}), Seq(..${in.ds}))"}
@@ -143,10 +143,6 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case NoValue         => q"NoValue"
   }
 
-
-  //  implicit def liftExp1[T: Liftable]: Liftable[Exp1[T]] = Liftable { e1 => q"Exp1($e1)"}
-  //  implicit def liftTermValue[T: Liftable]: Liftable[TermValue[T]] = Liftable { tv => q"TermValue(${tv.v})"}
-
   implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
   implicit val liftValue = Liftable[Value] {
     case EntValue         => q"EntValue"
@@ -160,9 +156,13 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case OpValue          => q"OpValue"
     case BackValue(value) => q"BackValue($value)"
     case EnumVal          => q"EnumVal"
-    case Eq(values)       => q"Eq(Seq(..$values))"
     case And(values)      => q"And(Seq(..$values))"
+    case Eq(values)       => q"Eq(Seq(..$values))"
+    case Neq(values)      => q"Neq(Seq(..$values))"
     case Lt(value)        => q"Lt($value)"
+    case Gt(value)        => q"Gt($value)"
+    case Le(value)        => q"Le($value)"
+    case Ge(value)        => q"Ge($value)"
     case Fn(fn, i)        => q"Fn($fn, $i)"
     case Length(fn)       => q"Length($fn)"
     case Qm               => q"Qm"
@@ -172,40 +172,42 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Remove(values)   => q"Remove(Seq(..$values))"
   }
 
-
-  implicit val liftAtom    = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))"}
-  implicit val liftBond    = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
-  implicit val liftReBond  = Liftable[ReBond] { r => q"ReBond(${r.backRef}, ${r.refAttr}, ${r.refNs})"}
-  implicit val liftMeta    = Liftable[Meta] { m => q"Meta(${m.ns}, ${m.attr}, ${m.kind}, ${m.generic}, ${m.value})"}
-  implicit val liftGroup   = Liftable[Group] { g =>
+  implicit val liftAtom       = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))"}
+  implicit val liftBond       = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
+  implicit val liftReBond     = Liftable[ReBond] { r => q"ReBond(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.distinct}, ${r.prevVar})"}
+  implicit val liftTransitive = Liftable[Transitive] { r => q"Transitive(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.depth}, ${r.prevVar})"}
+  implicit val liftMeta       = Liftable[Meta] { m => q"Meta(${m.ns}, ${m.attr}, ${m.kind}, ${m.generic}, ${m.value})"}
+  implicit val liftGroup      = Liftable[Group] { g =>
     val es = g.elements map { case q"$e" => e}
     q"Group(${g.ref}, Seq(..$es))"
   }
-  implicit val liftTxModel = Liftable[TxModel] { g =>
+  implicit val liftTxModel    = Liftable[TxModel] { g =>
     val es = g.elements map { case q"$e" => e}
     q"TxModel(Seq(..$es))"
   }
 
   implicit val liftListOfElements = Liftable[Seq[Element]] { elements =>
     val es = elements map {
-      case a: Atom    => q"$a"
-      case b: Bond    => q"$b"
-      case r: ReBond  => q"$r"
-      case g: Group   => q"$g"
-      case m: Meta    => q"$m"
-      case t: TxModel => q"$t"
+      case a: Atom       => q"$a"
+      case b: Bond       => q"$b"
+      case r: ReBond     => q"$r"
+      case r: Transitive => q"$r"
+      case g: Group      => q"$g"
+      case m: Meta       => q"$m"
+      case t: TxModel    => q"$t"
     }
     q"Seq(..$es)"
   }
 
   implicit val liftElement = Liftable[Element] {
-    case Atom(ns, name, tpeS, card, value, enumPrefix, tx) => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix, Seq(..$tx))"
-    case Bond(ns, refAttr, refNs)                          => q"Bond($ns, $refAttr, $refNs)"
-    case ReBond(backRef, refAttr, refNs)                   => q"ReBond($backRef, $refAttr, $refNs)"
-    case Group(ref, elements)                              => q"Group($ref, $elements)"
-    case Meta(ns, attr, kind, generic, value)              => q"Meta($ns, $attr, $kind, $generic, $value)"
-    case TxModel(elements)                                 => q"TxModel($elements)"
-    case EmptyElement                                      => q"EmptyElement"
+    case Atom(ns, name, tpeS, card, value, enumPrefix, tx)   => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix, Seq(..$tx))"
+    case Bond(ns, refAttr, refNs)                            => q"Bond($ns, $refAttr, $refNs)"
+    case ReBond(backRef, refAttr, refNs, distinct, prevVar)  => q"ReBond($backRef, $refAttr, $refNs, $distinct, $prevVar)"
+    case Transitive(backRef, refAttr, refNs, level, prevVar) => q"Transitive($backRef, $refAttr, $refNs, $level, $prevVar)"
+    case Group(ref, elements)                                => q"Group($ref, $elements)"
+    case Meta(ns, attr, kind, generic, value)                => q"Meta($ns, $attr, $kind, $generic, $value)"
+    case TxModel(elements)                                   => q"TxModel($elements)"
+    case EmptyElement                                        => q"EmptyElement"
   }
 
   implicit val liftModel = Liftable[Model] { model => q"Model(Seq(..${model.elements}))"}

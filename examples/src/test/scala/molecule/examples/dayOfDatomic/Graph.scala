@@ -12,7 +12,7 @@ class Graph extends Specification with DatomicFacade {
 
     import molecule.examples.dayOfDatomic.dsl.graph._
 
-    implicit val conn = load(GraphSchema.tx, "Graph")
+    implicit val conn = load(GraphSchema.tx)
 
     val List(r1, r2) = Role.name insert List("Role1", "Role2") ids
 
@@ -100,7 +100,7 @@ class Graph extends Specification with DatomicFacade {
     import molecule.examples.dayOfDatomic.dsl.graph2._
 
     // Load graph 2 where RoleInGroup references multiple Roles
-    implicit val conn = load(Graph2Schema.tx, "Graph")
+    implicit val conn = load(Graph2Schema.tx, "Graph2")
 
     val List(r1, r2, r3, r4, r5, r6) = Role.name insert List("Role1", "Role2", "Role3", "Role4", "Role5", "Role6") ids
     val List(g1, g2, g3) = Group.name.roles insert List(

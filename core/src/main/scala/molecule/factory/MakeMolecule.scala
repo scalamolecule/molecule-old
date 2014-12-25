@@ -50,8 +50,7 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import molecule.ast.model._
       import molecule.ast.query._
       import molecule.ops.QueryOps._
-      import molecule.transform.Model2Query
-      import molecule.transform.Model2Transaction._
+      import molecule.transform.{Model2Query, Model2Transaction, Query2String}
       import scala.collection.JavaConversions._
       import scala.collection.JavaConverters._
       import datomic.Connection
@@ -68,6 +67,8 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       val model = Model(resolveIdentifiers($model.elements))
       val query = Model2Query(model)
 
+
+      val p = (expr: QueryExpr) => Query2String(query).p(expr)
       def debugMolecule(conn: Connection): Unit = {
         val rows = try {
           results(query, conn)
@@ -80,7 +81,7 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
           model + "\n\n" +
           query + "\n\n" +
           query.datalog + "\n\n" +
-          (if (query.i.rules.isEmpty) "" else query.i.rules.mkString("RULES: [\n ", "\n ", "\n]\n\n")) +
+          "RULES: " + (if (query.i.rules.isEmpty) "none\n\n" else query.i.rules map p mkString("[\n ", "\n ", "\n]\n\n")) +
           "OUTPUTS:\n" + rows.toList.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n") +
           "\n--------------------------------------------------------------------------\n"
         )

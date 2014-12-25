@@ -25,6 +25,8 @@ object schemaDefinition {
     def doc(s: String): T = ???
     val indexed  : T = ???
     val noHistory: T = ???
+    val uniqueValue   : oneString = ???
+    val uniqueIdentity: oneString = ???
   }
 
 
@@ -32,8 +34,6 @@ object schemaDefinition {
   object oneString extends oneString
   trait oneString extends scalarAttr[oneString] {
     val fullTextSearch: oneString = ???
-    val uniqueValue   : oneString = ???
-    val uniqueIdentity: oneString = ???
   }
   object manyString extends manyString
   trait manyString extends scalarAttr[manyString] {

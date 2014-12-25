@@ -50,7 +50,7 @@ object query {
   case object DS extends DataSource
   case object ImplDS extends DataSource
 
-  case class Rule(name: String, args: Seq[QueryValue], clauses: Seq[DataClause]) extends QueryTerm
+  case class Rule(name: String, args: Seq[QueryValue], clauses: Seq[Clause]) extends QueryTerm
 
   trait Input extends QueryTerm
   case class InDataSource(ds: DataSource, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input
@@ -68,7 +68,7 @@ object query {
   sealed trait Clause extends QueryExpr
 
   case class DataClause(ds: DataSource, e: Var, a: KW, v: QueryValue, tx: QueryTerm, op: QueryTerm = NoBinding) extends Clause
-  case class RuleInvocation(name: String, args: Seq[QueryValue]) extends Clause
+  case class RuleInvocation(name: String, args: Seq[QueryTerm]) extends Clause
 
   sealed trait ExpressionClause extends Clause
 //  case class Predicate(name: String, args: Seq[QueryTerm]) extends ExpressionClause

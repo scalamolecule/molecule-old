@@ -16,7 +16,6 @@ class Aggregates extends MoleculeSpec {
 
   // Insert data with tx meta data
   Obj.name.meanRadius.tx_(Data.source_(url)) insert (planets zip radiuses)
-//  Obj.name.meanRadius.tx_.*(Data.source_(url)) insert (planets zip radiuses)
 
 
   "Aggregated Attributes" >> {

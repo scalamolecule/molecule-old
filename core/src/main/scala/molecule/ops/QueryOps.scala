@@ -50,8 +50,8 @@ object QueryOps {
     def in(v: String, ns: String, attr: String, e: String): Query =
       q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(ns, attr), None, e)))
 
-//    def placeholder(v: String, a: Atom, enumPrefix: Option[String] = None, e: String = ""): Query =
-//      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(a.ns, a.name), enumPrefix, e)))
+    //    def placeholder(v: String, a: Atom, enumPrefix: Option[String] = None, e: String = ""): Query =
+    //      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(a.ns, a.name), enumPrefix, e)))
 
 
     // Where ..........................................
@@ -123,22 +123,48 @@ object QueryOps {
     def cast(v1: String, v2: String) =
       q.func(".toString", Seq(Var(v1)), ScalarBinding(Var(v2)))
 
-    def compareTo(op: String, a: Atom, v: String, qv: QueryValue): Query =
-      q.func(".compareTo ^" + a.tpeS, Seq(Var(v), qv), ScalarBinding(Var(v + 2)))
-        .func(op, Seq(Var(v + 2), Val(0)))
+    def compareTo(op: String, a: Atom, v: String, qvs: Seq[QueryValue]): Query =
+      qvs.zipWithIndex.foldLeft(q) { case (q1, (qv, i)) => q1.compareTo(op, a, v, qv, i + 1)}
 
+    def compareTo(op: String, a: Atom, v: String, qv: QueryValue, i: Int = 0): Query = {
+      val n = if (i > 0) "_" + i else ""
+      q.func(".compareTo ^" + a.tpeS, Seq(Var(v), qv), ScalarBinding(Var(v + 2 + n)))
+        .func(op, Seq(Var(v + 2 + n), Val(0)))
+    }
     def fulltext(e: String, a: Atom, v: String, qv: QueryValue): Query =
       q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var(e), Var(v))))
 
     def orRules(e: String, a: Atom, args: Seq[Any], gs: Seq[Generic] = Seq()): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
       val newRules = args.foldLeft(q.i.rules) { case (rules, arg) =>
-        val dataClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg), Empty)
+        val arg1 = arg match {
+          case s: String => s.replaceAll("\"", "\\\\\"")
+          case other     => other
+        }
+        val dataClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg1), Empty)
         val rule = Rule(ruleName, Seq(Var(e)), Seq(dataClause))
         rules :+ rule
       }
       val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = newRules)
       val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
+      q.copy(i = newIn, wh = newWhere)
+    }
+
+    def transitive(ns: String, attr: String, v1: String, v2: String, depth: Int): Query = {
+      val ruleName = "transitive" + depth
+      val newRules: Seq[Rule] = 1 to depth map {
+        case 1 => Rule("transitive1", Seq(Var("attr"), Var("v1"), Var("v2")), Seq(
+          DataClause(ImplDS, Var("x"), KW("?", "attr"), Var("v1"), Empty),
+          DataClause(ImplDS, Var("x"), KW("?", "attr"), Var("v2"), Empty),
+          Funct("!=", Seq(Var("v1"), Var("v2")), NoBinding)))
+        case n => Rule(s"transitive$n", Seq(Var("attr"), Var("v1"), Var("v2")), Seq(
+          RuleInvocation(s"transitive${n - 1}", Seq(KW("?", "attr"), Var("v1"), Var("x"))),
+          RuleInvocation(s"transitive${n - 1}", Seq(KW("?", "attr"), Var("x"), Var("v2"))),
+          Funct("!=", Seq(Var("v1"), Var("v2")), NoBinding)))
+      }
+
+      val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = (q.i.rules ++ newRules).distinct)
+      val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(KW(ns, attr), Var(v1), Var(v2))))
       q.copy(i = newIn, wh = newWhere)
     }
 
