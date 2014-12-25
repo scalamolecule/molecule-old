@@ -1,3 +1,5 @@
+import java.io.File
+import sbt._
 
 
 // Generate molecule dsl from definition files
