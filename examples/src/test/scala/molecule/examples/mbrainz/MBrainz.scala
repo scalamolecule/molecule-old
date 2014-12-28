@@ -5,6 +5,11 @@ import molecule.examples.mbrainz.dsl.mBrainz._
 import molecule.util.MoleculeSpec
 import scala.language.postfixOps
 
+// Start Datomic transactor first:
+// /PATH/TO/datomic/datomic-pro-0.9.5078/bin/transactor /PATH/TO/mbrainz-1968-1973/dev-transactor-template.properties
+// Remember to add -Xmx2g -server to IDE compiler settings ("Additional build process VM options
+// Also, ensure the same java version is used in IDE
+
 class MBrainz extends MoleculeSpec {
 
   implicit val conn = Peer.connect("datomic:free://localhost:4334/mbrainz-1968-1973")

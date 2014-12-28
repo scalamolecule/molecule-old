@@ -9,14 +9,15 @@ object model {
       val lines = elements.map {
         case Group(bond, nestedElements) =>
           s"""|Group(
-              |    $bond
-              |    ${nestedElements.mkString("\n    ")})""".stripMargin
+              |    $bond,
+              |    List(
+              |     ${nestedElements.mkString(",\n      ")}))""".stripMargin
         case TxModel(nestedElements)     =>
-          s"""|TxModel(
-              |    ${nestedElements.mkString("\n    ")})""".stripMargin
+          s"""|TxModel(List(
+              |    ${nestedElements.mkString(",\n    ")}))""".stripMargin
         case other                       => other
       }
-      "Model(\n  " + lines.mkString("\n  ") + ")"
+      "Model(List(\n  " + lines.mkString(",\n  ") + "))"
     }
   }
 

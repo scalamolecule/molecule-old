@@ -1,3 +1,6 @@
-baseurl = "http://yourSiteHere"
+baseurl = "http://marcgrue.githup.io/"
 languageCode = "en-us"
-title = "my new hugo site"
+title = "Molecule"
+contentdir = "content"
+layoutdir = "layouts"
+publishdir = "public"

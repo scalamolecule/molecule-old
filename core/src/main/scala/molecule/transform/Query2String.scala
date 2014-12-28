@@ -5,8 +5,8 @@ case class Query2String(q: Query) {
 
   def p(expr: QueryExpr): String = expr match {
     case Query(find, widh, in, where)    => pp(find, widh, in, where)
-    case Find(outputs)                   => ":find " + (outputs map p mkString " ")
-    case With(variables)                 => if (variables.isEmpty) "" else ":with " + (variables map s mkString " ")
+    case Find(outputs)                   => ":find  " + (outputs map p mkString " ")
+    case With(variables)                 => if (variables.isEmpty) "" else ":with  " + (variables map s mkString " ")
     case in@In(_, _, _)                  => mkIn(in, false)
     case Where(clauses)                  => ":where " + (clauses map p mkString " ")
     case KW("?", attr, _)                => s"?$attr"
@@ -45,7 +45,7 @@ case class Query2String(q: Query) {
   def s(str: String) = "?" + str
 
   def mkIn(in: In, bracket: Boolean) = {
-    val (l, r) = if (bracket) (":in [ ", " ]") else (":in ", "")
+    val (l, r) = if (bracket) (":in    [ ", " ]") else (":in    ", "")
     if (in.inputs.isEmpty && in.rules.isEmpty) ""
     else
       l + ((in.ds map p mkString("", " ", " "))
@@ -68,7 +68,7 @@ case class Query2String(q: Query) {
     if (queryString.length > maxLength) {
       firstParts.mkString("[", "\n ", "\n ") +
         (if (where.length > maxLength)
-          q.wh.clauses.map(p).mkString(":where\n   ", "\n   ", "")
+          q.wh.clauses.map(p).mkString(":where ", "\n        ", "")
         else where) + "]"
     } else {
       queryString

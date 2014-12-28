@@ -13,14 +13,14 @@ object query {
     def datalog: String = datalog(30)
 
     override def toString = {
-      val sep = "\n    "
-      val widh = if (wi.variables.isEmpty) "" else wi.variables.mkString("\n  With(\n    ", sep, ")")
-      val in = if (i.inputs.isEmpty) "" else i.inputs.mkString("\n  In(\n    ", sep, ")")
+      val sep = ",\n    "
+      val widh = if (wi.variables.isEmpty) "" else wi.variables.mkString("\n  With(List(\n    ", sep, ")),")
+      val in = if (i.inputs.isEmpty) "" else i.inputs.mkString("\n  In(List(\n    ", sep, ")),")
       s"""|Query(
-          |  Find(
-          |    ${f.outputs.mkString(sep)})$widh$in
-          |  Where(
-          |    ${wh.clauses.mkString(sep)}))""".stripMargin
+          |  Find(List(
+          |    ${f.outputs.mkString(sep)})),$widh$in
+          |  Where(List(
+          |    ${wh.clauses.mkString(sep)})))""".stripMargin
     }
   }
 
