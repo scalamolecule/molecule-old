@@ -29,7 +29,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-//        "coretest/src/main/scala/molecule/util"
+        "coretest/src/main/scala/molecule/util"
       ),
       publish :=(),
       publishLocal :=()
@@ -86,7 +86,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       "org.specs2" %% "specs2" % "2.4.11" % "test"
     ),
     fork := true,
-    javaOptions += "-Xmx16G -Xss1G -XX:MaxPermSize=3000m -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
+    javaOptions += "-Xmx16G -Xss1G -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
   )
 }
 
@@ -144,8 +144,8 @@ trait Publishing {
         </license>
       </licenses>
       <scm>
-        <url>git@github.com:marcgrue/molecule.git</url>
-        <connection>scm:git:git@github.com:marcgrue/molecule.git</connection>
+        <url>git@github.com:scalamolecule/molecule.git</url>
+        <connection>scm:git:git@github.com:scalamolecule/molecule.git</connection>
       </scm>
       <developers>
         <developer>

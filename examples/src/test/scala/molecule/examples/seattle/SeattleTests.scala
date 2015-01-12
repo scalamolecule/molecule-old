@@ -16,8 +16,39 @@ class SeattleTests extends SeattleSpec {
     val communities = m(Community.e.name_)
 
     // Community entity ids
-    communities.get.take(3) === List(17592186045520L, 17592186045519L, 17592186045517L)
+    communities.get(3) === List(17592186045520L, 17592186045519L, 17592186045517L)
     communities.get.size === 150
+  }
+
+
+  "Getting an entity's attribute values" >> {
+
+    // Using the entity api
+
+    // Get a community id
+    val communityId: Long = Community.e.name_.get.head
+
+    // Use the community id to touch all the entity's attribute values
+    communityId.touch === Map(
+      ":community/type" -> ":community.type/blog",
+      ":community/url" -> "http://eastballard.wordpress.com/",
+      ":community/category" -> List("news", "events", "meeting", "community association"),
+      ":community/orgtype" -> ":community.orgtype/community",
+      ":db/id" -> 17592186045520L,
+      ":community/name" -> "East Ballard Community Association Blog",
+      ":community/neighborhood" -> Map(
+        ":db/id" -> 17592186045456L,
+        ":neighborhood/district" -> Map(
+          ":db/id" -> 17592186045457L,
+          ":district/name" -> "Ballard",
+          ":district/region" -> ":district.region/nw"),
+        ":neighborhood/name" -> "Ballard"))
+
+    // We can also retrive a single attribute value
+    communityId(":community/name") === Some("East Ballard Community Association Blog")
+    communityId(":community/url") === Some("http://eastballard.wordpress.com/")
+    communityId(":community/category") === Some(List("news", "events", "meeting", "community association"))
+    communityId(":community/emptyOrBogusAttribute") === None
   }
 
 
@@ -209,7 +240,6 @@ class SeattleTests extends SeattleSpec {
 
   "Invoking functions in queries" >> {
 
-    //    val beforeC = List("ArtsWest", "All About South Park", "Alki News/Alki Community Council")
     val beforeC = List("ArtsWest", "All About South Park", "Ballard Neighbor Connection")
 
     m(Community.name < "C").get(3) === beforeC
@@ -246,7 +276,7 @@ class SeattleTests extends SeattleSpec {
   "Querying with rules (logical OR)" >> {
 
     // Social media
-    Community.name.type_.apply("twitter" or "facebook_page").get(3) === List(
+    Community.name.type_("twitter" or "facebook_page").get(3) === List(
       "Discover SLU", "Blogging Georgetown", "Fremont Universe")
 
     // NE and SW regions
@@ -438,11 +468,11 @@ class SeattleTests extends SeattleSpec {
 
     // Belltown has no longer a url or any categories
     Community.name("belltown 3").`type`.url.category.hl === List()
-//    Community.name_("belltown 3").name.`type`.url.category.hl === List()
+    //    Community.name_("belltown 3").name.`type`.url.category.hl === List()
 
     // ..but we still have a belltown with a name and type
     Community.name("belltown 3").`type`.hl === List("belltown 3" :: "blog" :: HNil)
-//    Community.name_("belltown 3").name.`type`.hl === List("belltown 3" :: "blog" :: HNil)
+    //    Community.name_("belltown 3").name.`type`.hl === List("belltown 3" :: "blog" :: HNil)
 
 
     // Retract entities ...................................

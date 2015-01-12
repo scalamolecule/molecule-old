@@ -1,6 +1,6 @@
 package molecule
 import java.util.UUID._
-import java.util.{Date, UUID, Collection => jCollection, List => jList, Map => jMap}
+import java.util.{Collection => jCollection, Date, List => jList, Map => jMap, UUID}
 import datomic._
 import datomic.db.Db
 import molecule.ast.model._
@@ -187,18 +187,16 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
 // From Datomisca...
 
 case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
+  private val x = Debug("EntityFacade", 1, 99, false, 3)
 
-  def touch: Map[String, Any] = toMap map { case (k, v) =>
-    val sortedValue = v match {
-      case vs: List[Any] => vs.sortBy(_.asInstanceOf[Map[String, Any]].head._2.asInstanceOf[Long])
-      case other         => other
-    }
-    k -> sortedValue
-  }
+  def touch: Map[String, Any] = toMap
 
   def apply(kw: String): Option[Any] = entity.get(kw) match {
     case null                                    => None
-    case results: clojure.lang.PersistentHashSet => Some(results.toList.map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]).sorted)
+    case results: clojure.lang.PersistentHashSet => results.head match {
+      case ent: datomic.Entity => Some(results.toList.map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]).sorted)
+      case _                   => Some(results.toList map toScala)
+    }
     case result => Some(toScala(result))
   }
 
