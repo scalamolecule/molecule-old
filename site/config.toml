@@ -1,6 +1,0 @@
-baseurl = "http://marcgrue.githup.io/"
-languageCode = "en-us"
-title = "Molecule"
-contentdir = "content"
-layoutdir = "layouts"
-publishdir = "public"
