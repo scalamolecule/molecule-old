@@ -7,7 +7,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
   lazy val molecule = Project(
     id = "molecule",
     base = file("."),
-    aggregate = Seq(moleculeCore, moleculeCoretest, moleculeDemo, moleculeExamples),
+    aggregate = Seq(moleculeCore, moleculeCoretest, moleculeExamples),
     settings = commonSettings ++ Seq(
       moduleName := "molecule-root",
       publish :=(),
@@ -36,19 +36,6 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     )
   )
 
-  lazy val moleculeDemo = Project(
-    id = "molecule-demo",
-    base = file("demo"),
-    dependencies = Seq(moleculeCore),
-    settings = commonSettings ++ Seq(
-      moleculeDefinitionDirectories(
-        "demo/src/main/scala/demo"
-      ),
-      publish :=(),
-      publishLocal :=()
-    )
-  )
-
   lazy val moleculeExamples = Project(
     id = "molecule-examples",
     base = file("examples"),
@@ -65,11 +52,10 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
   )
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
-    organization := "com.marcgrue",
-    version := "0.2.0",
+    organization := "org.scalamolecule",
+    version := "0.2.1",
     scalaVersion := "2.11.4",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
-//    scalacOptions := Seq("-feature", "-language:implicitConversions"),
     resolvers ++= Seq(
       "datomic" at "http://files.datomic.com/maven",
       "clojars" at "http://clojars.org/repo",
