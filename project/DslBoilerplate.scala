@@ -47,7 +47,7 @@ object DslBoilerplate {
   def pad(longest: Int, shorter: Int) = if (longest > shorter) " " * (longest - shorter) else ""
   def firstLow(str: Any) = str.toString.head.toLower + str.toString.tail
   implicit class Regex(sc: StringContext) {
-    def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
+    def r = new scala.util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
 
 
@@ -551,7 +551,7 @@ object DslBoilerplate {
   def generate(srcManaged: File, domainDirs: Seq[String]): Seq[File] = {
     // Loop domain directories
     val files = domainDirs flatMap { domainDir =>
-      val definitionFiles = IO.listFiles(new File(domainDir) / "schema").filter(f => f.isFile && f.name.endsWith("Definition.scala"))
+      val definitionFiles = sbt.IO.listFiles(new File(domainDir) / "schema").filter(f => f.isFile && f.getName.endsWith("Definition.scala"))
       assert(definitionFiles.size > 0, "Found no definition files in path: " + domainDir)
 
       // Loop definition files in each domain directory
@@ -561,12 +561,12 @@ object DslBoilerplate {
 
 
         // Write schema file
-        val schemaFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((file, pkg) => file / pkg) / "schema" / s"${d.domain}Schema.scala"
+        val schemaFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((dir, pkg) => dir / pkg) / "schema" / s"${d.domain}Schema.scala"
         IO.write(schemaFile, schemaBody(d))
 
         // Write namespace files
         val namespaceFiles = d.nss.map { ns =>
-          val nsFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((file, pkg) => file / pkg) / "dsl" / firstLow(d.domain) / s"${ns.ns}.scala"
+          val nsFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((dir, pkg) => dir / pkg) / "dsl" / firstLow(d.domain) / s"${ns.ns}.scala"
           val nsBody = namespaceBody(d, ns)
           IO.write(nsFile, nsBody)
           nsFile

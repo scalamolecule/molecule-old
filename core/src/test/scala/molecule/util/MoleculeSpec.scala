@@ -14,7 +14,7 @@ trait MoleculeSpec extends Specification with DatomicFacade {
   def typed[T](t: => T) {}
 
   implicit class Regex(sc: StringContext) {
-    def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
+    def r = new scala.util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
 
   def formatTx(tx: Seq[Statement]) = {

@@ -1,8 +1,9 @@
+
 import sbt.Keys._
 import sbt._
 
-
 object MoleculeBuild extends Build with Boilerplate with Publishing {
+//object MoleculeBuild extends Build with Publishing {
 
   lazy val molecule = Project(
     id = "molecule",
@@ -29,7 +30,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-        "coretest/src/main/scala/molecule/util"
+        //        "coretest/src/main/scala/molecule/util"
       ),
       publish :=(),
       publishLocal :=()
@@ -42,9 +43,9 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       moleculeDefinitionDirectories(
-        "examples/src/main/scala/molecule/examples/dayOfDatomic",
-        "examples/src/main/scala/molecule/examples/seattle",
-        "examples/src/main/scala/molecule/examples/mbrainz"
+        //        "examples/src/main/scala/molecule/examples/dayOfDatomic",
+        "examples/src/main/scala/molecule/examples/seattle"
+        //        "examples/src/main/scala/molecule/examples/mbrainz"
       ),
       publish :=(),
       publishLocal :=()
@@ -66,23 +67,40 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     ),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.scala-sbt" % "io" % "0.13.7",
       "commons-codec" % "commons-codec" % "1.10",
       "com.datomic" % "datomic-free" % "0.9.5067",
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.specs2" %% "specs2" % "2.4.11" % "test"
-    ),
-    fork := true,
-    javaOptions += "-Xmx16G -Xss1G -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
+    )
+//    fork := true,
+//    javaOptions += "-Xmx16G -Xss1G -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled",
+
+//    moleculeTask <<= moleculeCodeGenTask, // register manual sbt command
+//    sourceGenerators in Compile <+= moleculeCodeGenTask // register automatic code generation on every compile, remove for only manual use
   )
+
+
+//  // code generation task
+//  lazy val moleculeTask        = TaskKey[Seq[File]]("gen-schemas")
+//  lazy val moleculeCodeGenTask = (sourceManaged in Compile, dependencyClasspath in Compile, runner in Compile, streams) map { (sourceDir, cp, r, s) =>
+//    val inputDirs: Seq[String] = Seq(
+//      "examples/src/main/scala/molecule/examples/seattle"
+//    )
+//    // Generate files
+//    toError(r.run("molecule.util.BoilerplateGenerator", cp.files, (sourceDir.getPath +: inputDirs).toArray[String], s.log))
+//    // Return dummy dir
+//    Seq(sourceDir)
+//  }
 }
 
 trait Boilerplate {
 
-  def moleculeDefinitionDirectories(inputDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {
+  def moleculeDefinitionDirectories(domainDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {
     val sourceDir = (sourceManaged in Compile).value
 
     // generate source files
-    val sourceFiles = DslBoilerplate.generate(sourceDir, inputDirs.toSeq)
+    val sourceFiles = DslBoilerplate.generate(sourceDir, domainDirs.toSeq)
 
     // Avoid re-generating boilerplate if nothing has changed when running `sbt compile`
     val cache = FileFunction.cached(
@@ -95,17 +113,17 @@ trait Boilerplate {
     cache(sourceFiles.toSet).toSeq
   }.taskValue
 
-//  // Format file data for jar creation - if we want to jar the generated class files for speedier project rebuilds during development...
-//  def files2TupleRec(pathPrefix: String, dir: File): Seq[Tuple2[File, String]] = {
-//    sbt.IO.listFiles(dir) flatMap {
-//      f => {
-//        if (f.isFile && !f.name.endsWith(".DS_Store") && (f.name.endsWith(".scala") || f.name.endsWith(".class")))
-//          Seq((f, s"${pathPrefix}${f.getName}"))
-//        else
-//          files2TupleRec(s"${pathPrefix}${f.getName}/", f)
-//      }
-//    }
-//  }
+  //  // Format file data for jar creation - if we want to jar the generated class files for speedier project rebuilds during development...
+  //  def files2TupleRec(pathPrefix: String, dir: File): Seq[Tuple2[File, String]] = {
+  //    sbt.IO.listFiles(dir) flatMap {
+  //      f => {
+  //        if (f.isFile && !f.name.endsWith(".DS_Store") && (f.name.endsWith(".scala") || f.name.endsWith(".class")))
+  //          Seq((f, s"${pathPrefix}${f.getName}"))
+  //        else
+  //          files2TupleRec(s"${pathPrefix}${f.getName}/", f)
+  //      }
+  //    }
+  //  }
 }
 
 trait Publishing {
