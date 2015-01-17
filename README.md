@@ -3,6 +3,36 @@
 Molecule is a type safe and intuitive Scala query/modelling DSL for 
 [Datomic][datomic] - the immutable database of facts. 
 
+Visit [ScalaMolecule.org](http://ScalaMolecule.org) to learn more or visit the [Molecule forum](https://groups.google.com/forum/#!forum/molecule-dsl)
+
+
+### Try demo
+
+1. `git clone https://github.com/scalamolecule/molecule-demo.git`
+2. `sbt compile`
+3. Open in your IDE
+4. Run tests and poke around...
+
+   
+### Read more
+
+- [Introduction](http://scalamolecule.org/home/introduction) to Datomic/Molecule
+- [Setup Database](http://scalamolecule.org/manual/database-setup): initiate a Datomic database and create a database schema with Molecule
+- [Populate Database](http://scalamolecule.org/manual/populate-database): populate a Datomic database with Molecule
+- [Molecule Seattle tutorial](http://scalamolecule.org/tutorials/seattle) examples of using Molecule (based on the 
+[Datomic Seattle tutorial](http://docs.datomic.com/tutorial.html))
+
+
+### Download and test
+
+1. `git clone https://github.com/scalamolecule/molecule.git`
+2. `sbt compile`
+3. Open in your IDE
+4. Run tests and poke around...
+
+
+# What Molecule does
+
 As an example: to find
 
 _Names of twitter/facebook_page communities in neighborhoods of southern districts_
@@ -39,8 +69,6 @@ List(
 )
 </pre>
 
-#### Benefits
-
 By not having to write such complex Datalog queries and rules "by hand", Molecule 
 allows you to
 
@@ -51,38 +79,9 @@ allows you to
 - Reduce syntactic noise
 - Focus more on your domain and less on queries
 
-#### Possible drawbacks
-
-We still need to explore how far Molecule can match the expressive powers
- of Datalog. So far, all 
- examples in the
-[Seattle tutorial][seattle] have been 
-"molecularized" succesfully (see the 
-[Molecule Seattle tutorial][tutorial] and 
-[code][tutorialcode]). So as a proof-of-concept it looks promising...
-
-## Getting started
-
-- [Quick introduction][intro] to Datomic/Molecule
-- [Setup Database][setup]: initiate a Datomic database and create a database schema with Molecule
-- [Populate Database][populate]: populate a Datomic database with Molecule
-- [Molecule Seattle tutorial][tutorial] examples of using Molecule (based on the 
-[Datomic Seattle tutorial][seattle])
-- Tests in [SeattleQueries][tutorialqueries] shows the queries produced by the molecules in the tutorial
-- Tests in [SeattleTransformations][tutorialtransformations] shows the full dsl -> model -> query -> query string 
-transformations of molecules
-
-## Using Molecule
-
-### Download code
-
-1. `git clone https://github.com/marcgrue/molecule.git`
-2. `sbt compile`
-3. Import into your IDE
-4. Run tests and poke around...
 
 
-### Dependency in your project
+## Dependency in your project
 
 Molecule 0.2.1 for Scala 2.11.4 is available at
 [Sonatype](https://oss.sonatype.org/content/repositories/releases/org/scalamolecule/molecule_2.11/)
@@ -91,23 +90,15 @@ Molecule 0.2.1 for Scala 2.11.4 is available at
 Since Molecule generates boilerplate code from your definitions it also needs to have the `DslBoilerplate.scala` file in your project folder. Please have a look at how the sbt build file
  of the Molecule project itself puts things together and simply copy that to your own project:
 
-2. Setup your sbt build file [as in Molecule][moleculesbt]: 
+2. Setup your sbt build file [as in Molecule](https://scalamolecule.org/molecule/blob/master/project/build.scala):
     - Add library dependency `"org.scalamolecule" % "molecule_2.11" % "0.2.1"`
     - List directories where you have your [definition file(s)][setup]
-3. Define your domain schema in a [schema definition file][setup]
+3. [Define schema][schema]
 4. `sbt compile`
-5. Import into your IDE
+5. Open in your IDE
 6. [Setup your database][setup]
 7. [Populate your database][populate] with data
 8. [Make molecule queries][tutorial]
-
-
-## Resources
-- [Molecule google list][moleculegroup] for questions and discussions about Molecule and other Scala-based Datomic resources
-- [Issues][issues] - please feel free to raise issues/report bugs
-- [Pull requests][pullrequests] are welcome
-- [Datomic][datomic] website
-- [Datomisca](https://github.com/pellucidanalytics/datomisca), a Scala API for Datomic
 
 
 #### Author
@@ -126,16 +117,15 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 [datomic]: http://www.datomic.com
 [seattle]: http://docs.datomic.com/tutorial.html
 [moleculegroup]: https://groups.google.com/forum/#!forum/molecule-dsl
-[pullrequests]: https://github.com/marcgrue/molecule/pulls
-[issues]: https://github.com/marcgrue/molecule/issues
-[moleculesbt]: https://github.com/marcgrue/molecule/blob/master/project/build.scala
+[pullrequests]: https://github.com/scalamolecule/molecule/pulls
+[issues]: https://github.com/scalamolecule/molecule/issues
+[moleculesbt]: https://github.com/scalamolecule/molecule/blob/master/project/build.scala
 
-[intro]: https://github.com/marcgrue/molecule/wiki/Quick-introduction-to-Datomic-and-Molecule
-[setup]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database
-[scheme]: https://github.com/marcgrue/molecule/wiki/Setup-a-Datomic-database#defining-a-schema
-[deffile]: https://github.com/marcgrue/molecule/blob/master/examples/src/main/scala/molecule/examples/seattle/schema/SeattleDefinition.scala
-[populate]: https://github.com/marcgrue/molecule/wiki/Populate-the-database
-[tutorial]: https://github.com/marcgrue/molecule/wiki/Molecule-Seattle-tutorial
-[tutorialcode]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
-[tutorialqueries]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
-[tutorialtransformations]: https://github.com/marcgrue/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTransformationTests.scala
+[setup]: http://scalamolecule.org/manual/database-setup
+[schema]: https://scalamolecule.org/manual/schema-definition
+[deffile]: https://scalamolecule.org/molecule/blob/master/examples/src/main/scala/molecule/examples/seattle/schema/SeattleDefinition.scala
+[populate]: https://scalamolecule.org/manual/populate-database
+[tutorial]: https://scalamolecule.org/tutorials/seattle
+[tutorialcode]: https://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
+[tutorialqueries]: https://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
+[tutorialtransformations]: https://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTransformationTests.scala
