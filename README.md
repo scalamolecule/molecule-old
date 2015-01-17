@@ -90,7 +90,7 @@ Molecule 0.2.1 for Scala 2.11.4 is available at
 Since Molecule generates boilerplate code from your definitions it also needs to have the `DslBoilerplate.scala` file in your project folder. Please have a look at how the sbt build file
  of the Molecule project itself puts things together and simply copy that to your own project:
 
-2. Setup your sbt build file [as in Molecule](https://scalamolecule.org/molecule/blob/master/project/build.scala):
+2. Setup your sbt build file [as in Molecule](https://github.com/scalamolecule/molecule/blob/master/project/build.scala):
     - Add library dependency `"org.scalamolecule" % "molecule_2.11" % "0.2.1"`
     - List directories where you have your [definition file(s)][setup]
 3. [Define schema][schema]
