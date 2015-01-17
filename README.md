@@ -122,10 +122,10 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 [moleculesbt]: https://github.com/scalamolecule/molecule/blob/master/project/build.scala
 
 [setup]: http://scalamolecule.org/manual/database-setup
-[schema]: https://scalamolecule.org/manual/schema-definition
-[deffile]: https://scalamolecule.org/molecule/blob/master/examples/src/main/scala/molecule/examples/seattle/schema/SeattleDefinition.scala
-[populate]: https://scalamolecule.org/manual/populate-database
-[tutorial]: https://scalamolecule.org/tutorials/seattle
-[tutorialcode]: https://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
-[tutorialqueries]: https://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
+[schema]: http://scalamolecule.org/manual/schema-definition
+[deffile]: http://scalamolecule.org/molecule/blob/master/examples/src/main/scala/molecule/examples/seattle/schema/SeattleDefinition.scala
+[populate]: http://scalamolecule.org/manual/populate-database
+[tutorial]: http://scalamolecule.org/tutorials/seattle
+[tutorialcode]: http://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
+[tutorialqueries]: http://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
 [tutorialtransformations]: https://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTransformationTests.scala
