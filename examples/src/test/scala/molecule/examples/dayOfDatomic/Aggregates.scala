@@ -79,8 +79,6 @@ class Aggregates extends MoleculeSpec {
 
     // How many attributes and value types does this schema use?
     Db.a(count).valueType(countDistinct).one ===(37, 8)
-
-    ok
   }
 
 
@@ -93,5 +91,26 @@ class Aggregates extends MoleculeSpec {
       ("Chimera", 1))
 
     Monster.heads(sum).one === 6
+
+    Monster.name.heads(sum).get === List(
+      ("Cerberus", 3),
+      ("Chimera", 1),
+      ("Cyclops", 1),
+      ("Medusa", 1))
+
+
+    // Testing group by...
+
+    // Adding a twin Cyclop with 4 heads (not factual!)
+    Monster.name.heads insert ("Cyclops", 4)
+
+    Monster.heads(sum).one === 10
+
+    // Note how the query group by name so that we get 1 + 4 = 5 Cyclopes heads
+    Monster.name.heads(sum).get === List(
+      ("Cerberus", 3),
+      ("Chimera", 1),
+      ("Cyclops", 5),
+      ("Medusa", 1))
   }
 }

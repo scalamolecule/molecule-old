@@ -238,10 +238,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"Seq($pkg.rand)"                                       => Fn("rand")
     case q"Seq($pkg.count)"                                      => Fn("count")
     case q"Seq($pkg.countDistinct)"                              => Fn("count-distinct")
-    case q"Seq($pkg.sum)"                                        =>
-//      if (attr.tpeS == "Int") abort(s"[Dsl2Model:getValues] Datomic return sums of whole numbers as Longs. " +
-//        s"So to use the `sum` function, please define the attribute `:${attr.ns}/${attr.name}` as a Long in your schema definition.")
-      Fn("sum")
+    case q"Seq($pkg.sum)"                                        => Fn("sum")
     case q"Seq($pkg.avg)"                                        => Fn("avg")
     case q"Seq($pkg.median)"                                     => Fn("median")
     case q"Seq($pkg.variance)"                                   => Fn("variance")
