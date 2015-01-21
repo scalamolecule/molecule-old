@@ -54,6 +54,11 @@ object QueryOps {
     //      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(a.ns, a.name), enumPrefix, e)))
 
 
+    // With ...........................................
+
+    def widh(v: String): Query = q.copy(wi = With(q.wi.variables :+ v))
+
+
     // Where ..........................................
 
     def where(e: String, ns: String, attr: String, v: QueryValue, refNs: String, gs: Seq[Generic]): Query = {

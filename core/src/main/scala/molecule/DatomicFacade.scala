@@ -134,14 +134,14 @@ trait DatomicFacade {
 
   protected[molecule] def save(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
-    val stmts = transformer.saveStmts
+    val stmts = transformer.saveStmts()
     //    x(2, model, transformer.stmtsModel, stmts)
     Tx(conn, transformer, Seq(stmts))
   }
 
   protected[molecule] def update(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
-    val stmts = transformer.updateStmts
+    val stmts = transformer.updateStmts()
     //        x(3, model, transformer.stmtsModel, stmts)
     Tx(conn, transformer, Seq(stmts))
   }

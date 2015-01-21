@@ -1,8 +1,15 @@
 package molecule.dsl
+//package molecule
+//package dsl
 
 import molecule._
 import scala.language.higherKinds
 
+
+trait Aggregate0[Ns0] {
+
+  def apply(v: groupBy) : Ns0 = ???
+}
 
 trait Aggregate1[Ns1[_], A] {
 
@@ -19,11 +26,13 @@ trait Aggregate1[Ns1[_], A] {
 
   def apply(v: count)        : Ns1[Int] = ???
   def apply(v: countDistinct): Ns1[Int] = ???
-  def apply(v: sum)          : Ns1[Double] = ???
+  def apply(v: sum)          : Ns1[A] = ???
   def apply(v: avg)          : Ns1[Double] = ???
   def apply(v: median)       : Ns1[Double] = ???
   def apply(v: variance)     : Ns1[Double] = ???
   def apply(v: stddev)       : Ns1[Double] = ???
+
+  def apply(v: groupBy) : Ns1[A] = ???
 
   val length: Ns1[Int] = ???
 }
@@ -44,11 +53,14 @@ trait Aggregate2[Ns2[_,_], A, B] {
 
   def apply(v: count)        : Ns2[A, Int] = ???
   def apply(v: countDistinct): Ns2[A, Int] = ???
-  def apply(v: sum)          : Ns2[A, Double] = ???
+  def apply(v: sum)          : Ns2[A, B] = ???
   def apply(v: avg)          : Ns2[A, Double] = ???
   def apply(v: median)       : Ns2[A, Double] = ???
   def apply(v: variance)     : Ns2[A, Double] = ???
   def apply(v: stddev)       : Ns2[A, Double] = ???
+
+//  def sum
+
 
   val length: Ns2[A, Int] = ???
 }
@@ -69,7 +81,7 @@ trait Aggregate3[Ns3[_,_,_], A, B, C] {
 
   def apply(v: count)        : Ns3[A, B, Int] = ???
   def apply(v: countDistinct): Ns3[A, B, Int] = ???
-  def apply(v: sum)          : Ns3[A, B, Double] = ???
+  def apply(v: sum)          : Ns3[A, B, C] = ???
   def apply(v: avg)          : Ns3[A, B, Double] = ???
   def apply(v: median)       : Ns3[A, B, Double] = ???
   def apply(v: variance)     : Ns3[A, B, Double] = ???
@@ -94,7 +106,7 @@ trait Aggregate4[Ns4[_,_,_,_], A, B, C, D] {
 
   def apply(v: count)        : Ns4[A, B, C, Int] = ???
   def apply(v: countDistinct): Ns4[A, B, C, Int] = ???
-  def apply(v: sum)          : Ns4[A, B, C, Double] = ???
+  def apply(v: sum)          : Ns4[A, B, C, D] = ???
   def apply(v: avg)          : Ns4[A, B, C, Double] = ???
   def apply(v: median)       : Ns4[A, B, C, Double] = ???
   def apply(v: variance)     : Ns4[A, B, C, Double] = ???
@@ -119,7 +131,7 @@ trait Aggregate5[Ns5[_,_,_,_,_], A, B, C, D, E] {
 
   def apply(v: count)        : Ns5[A, B, C, D, Int] = ???
   def apply(v: countDistinct): Ns5[A, B, C, D, Int] = ???
-  def apply(v: sum)          : Ns5[A, B, C, D, Double] = ???
+  def apply(v: sum)          : Ns5[A, B, C, D, E] = ???
   def apply(v: avg)          : Ns5[A, B, C, D, Double] = ???
   def apply(v: median)       : Ns5[A, B, C, D, Double] = ???
   def apply(v: variance)     : Ns5[A, B, C, D, Double] = ???
@@ -144,7 +156,7 @@ trait Aggregate6[Ns6[_,_,_,_,_,_], A, B, C, D, E, F] {
 
   def apply(v: count)        : Ns6[A, B, C, D, E, Int] = ???
   def apply(v: countDistinct): Ns6[A, B, C, D, E, Int] = ???
-  def apply(v: sum)          : Ns6[A, B, C, D, E, Double] = ???
+  def apply(v: sum)          : Ns6[A, B, C, D, E, F] = ???
   def apply(v: avg)          : Ns6[A, B, C, D, E, Double] = ???
   def apply(v: median)       : Ns6[A, B, C, D, E, Double] = ???
   def apply(v: variance)     : Ns6[A, B, C, D, E, Double] = ???
@@ -169,7 +181,7 @@ trait Aggregate7[Ns7[_,_,_,_,_,_,_], A, B, C, D, E, F, G] {
 
   def apply(v: count)        : Ns7[A, B, C, D, E, F, Int] = ???
   def apply(v: countDistinct): Ns7[A, B, C, D, E, F, Int] = ???
-  def apply(v: sum)          : Ns7[A, B, C, D, E, F, Double] = ???
+  def apply(v: sum)          : Ns7[A, B, C, D, E, F, G] = ???
   def apply(v: avg)          : Ns7[A, B, C, D, E, F, Double] = ???
   def apply(v: median)       : Ns7[A, B, C, D, E, F, Double] = ???
   def apply(v: variance)     : Ns7[A, B, C, D, E, F, Double] = ???
@@ -194,7 +206,7 @@ trait Aggregate8[Ns8[_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H] {
 
   def apply(v: count)        : Ns8[A, B, C, D, E, F, G, Int] = ???
   def apply(v: countDistinct): Ns8[A, B, C, D, E, F, G, Int] = ???
-  def apply(v: sum)          : Ns8[A, B, C, D, E, F, G, Double] = ???
+  def apply(v: sum)          : Ns8[A, B, C, D, E, F, G, H] = ???
   def apply(v: avg)          : Ns8[A, B, C, D, E, F, G, Double] = ???
   def apply(v: median)       : Ns8[A, B, C, D, E, F, G, Double] = ???
   def apply(v: variance)     : Ns8[A, B, C, D, E, F, G, Double] = ???
@@ -219,7 +231,7 @@ trait Aggregate9[Ns9[_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I] {
 
   def apply(v: count)        : Ns9[A, B, C, D, E, F, G, H, Int] = ???
   def apply(v: countDistinct): Ns9[A, B, C, D, E, F, G, H, Int] = ???
-  def apply(v: sum)          : Ns9[A, B, C, D, E, F, G, H, Double] = ???
+  def apply(v: sum)          : Ns9[A, B, C, D, E, F, G, H, I] = ???
   def apply(v: avg)          : Ns9[A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: median)       : Ns9[A, B, C, D, E, F, G, H, Double] = ???
   def apply(v: variance)     : Ns9[A, B, C, D, E, F, G, H, Double] = ???
@@ -244,7 +256,7 @@ trait Aggregate10[Ns10[_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J] {
 
   def apply(v: count)        : Ns10[A, B, C, D, E, F, G, H, I, Int] = ???
   def apply(v: countDistinct): Ns10[A, B, C, D, E, F, G, H, I, Int] = ???
-  def apply(v: sum)          : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
+  def apply(v: sum)          : Ns10[A, B, C, D, E, F, G, H, I, J] = ???
   def apply(v: avg)          : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
   def apply(v: median)       : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
   def apply(v: variance)     : Ns10[A, B, C, D, E, F, G, H, I, Double] = ???
@@ -269,7 +281,7 @@ trait Aggregate11[Ns11[_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K] 
 
   def apply(v: count)        : Ns11[A, B, C, D, E, F, G, H, I, J, Int] = ???
   def apply(v: countDistinct): Ns11[A, B, C, D, E, F, G, H, I, J, Int] = ???
-  def apply(v: sum)          : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
+  def apply(v: sum)          : Ns11[A, B, C, D, E, F, G, H, I, J, K] = ???
   def apply(v: avg)          : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: median)       : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
   def apply(v: variance)     : Ns11[A, B, C, D, E, F, G, H, I, J, Double] = ???
@@ -294,7 +306,7 @@ trait Aggregate12[Ns12[_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J, K
 
   def apply(v: count)        : Ns12[A, B, C, D, E, F, G, H, I, J, K, Int] = ???
   def apply(v: countDistinct): Ns12[A, B, C, D, E, F, G, H, I, J, K, Int] = ???
-  def apply(v: sum)          : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
+  def apply(v: sum)          : Ns12[A, B, C, D, E, F, G, H, I, J, K, L] = ???
   def apply(v: avg)          : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: median)       : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
   def apply(v: variance)     : Ns12[A, B, C, D, E, F, G, H, I, J, K, Double] = ???
@@ -319,7 +331,7 @@ trait Aggregate13[Ns13[_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, J,
 
   def apply(v: count)        : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Int] = ???
   def apply(v: countDistinct): Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Int] = ???
-  def apply(v: sum)          : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
+  def apply(v: sum)          : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, M] = ???
   def apply(v: avg)          : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: median)       : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
   def apply(v: variance)     : Ns13[A, B, C, D, E, F, G, H, I, J, K, L, Double] = ???
@@ -344,7 +356,7 @@ trait Aggregate14[Ns14[_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I, 
 
   def apply(v: count)        : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Int] = ???
   def apply(v: countDistinct): Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Int] = ???
-  def apply(v: sum)          : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
+  def apply(v: sum)          : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, N] = ???
   def apply(v: avg)          : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: median)       : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
   def apply(v: variance)     : Ns14[A, B, C, D, E, F, G, H, I, J, K, L, M, Double] = ???
@@ -369,7 +381,7 @@ trait Aggregate15[Ns15[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H, I
 
   def apply(v: count)        : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Int] = ???
   def apply(v: countDistinct): Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Int] = ???
-  def apply(v: sum)          : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
+  def apply(v: sum)          : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = ???
   def apply(v: avg)          : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: median)       : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
   def apply(v: variance)     : Ns15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, Double] = ???
@@ -394,7 +406,7 @@ trait Aggregate16[Ns16[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, H,
 
   def apply(v: count)        : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Int] = ???
   def apply(v: countDistinct): Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Int] = ???
-  def apply(v: sum)          : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
+  def apply(v: sum)          : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = ???
   def apply(v: avg)          : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: median)       : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
   def apply(v: variance)     : Ns16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Double] = ???
@@ -419,7 +431,7 @@ trait Aggregate17[Ns17[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G, 
 
   def apply(v: count)        : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Int] = ???
   def apply(v: countDistinct): Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Int] = ???
-  def apply(v: sum)          : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
+  def apply(v: sum)          : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = ???
   def apply(v: avg)          : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: median)       : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
   def apply(v: variance)     : Ns17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Double] = ???
@@ -444,7 +456,7 @@ trait Aggregate18[Ns18[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F, G
 
   def apply(v: count)        : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Int] = ???
   def apply(v: countDistinct): Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Int] = ???
-  def apply(v: sum)          : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
+  def apply(v: sum)          : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = ???
   def apply(v: avg)          : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: median)       : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
   def apply(v: variance)     : Ns18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, Double] = ???
@@ -469,7 +481,7 @@ trait Aggregate19[Ns19[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, F,
 
   def apply(v: count)        : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Int] = ???
   def apply(v: countDistinct): Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Int] = ???
-  def apply(v: sum)          : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
+  def apply(v: sum)          : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = ???
   def apply(v: avg)          : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: median)       : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
   def apply(v: variance)     : Ns19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, Double] = ???
@@ -494,7 +506,7 @@ trait Aggregate20[Ns20[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E, 
 
   def apply(v: count)        : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Int] = ???
   def apply(v: countDistinct): Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Int] = ???
-  def apply(v: sum)          : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
+  def apply(v: sum)          : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = ???
   def apply(v: avg)          : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: median)       : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
   def apply(v: variance)     : Ns20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Double] = ???
@@ -519,7 +531,7 @@ trait Aggregate21[Ns21[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D, E
 
   def apply(v: count)        : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Int] = ???
   def apply(v: countDistinct): Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Int] = ???
-  def apply(v: sum)          : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
+  def apply(v: sum)          : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = ???
   def apply(v: avg)          : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: median)       : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
   def apply(v: variance)     : Ns21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, Double] = ???
@@ -544,7 +556,7 @@ trait Aggregate22[Ns22[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_], A, B, C, D,
 
   def apply(v: count)        : Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, Int] = ???
   def apply(v: countDistinct): Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, Int] = ???
-  def apply(v: sum)          : Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, Double] = ???
+  def apply(v: sum)          : Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = ???
   def apply(v: avg)          : Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, Double] = ???
   def apply(v: median)       : Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, Double] = ???
   def apply(v: variance)     : Ns22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, Double] = ???

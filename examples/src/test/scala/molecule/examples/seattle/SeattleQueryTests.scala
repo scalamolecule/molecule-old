@@ -45,7 +45,7 @@ class SeattleQueryTests extends SeattleSpec {
 
 
     // Names of news or arts communities - transforms to a query using Rules
-    m(Community.name.category_("news", "arts")) -->
+    m(Community.name.category_("news" or "arts")) -->
       """[:find  ?b
         | :in    $ %
         | :where [?a :community/name ?b]
@@ -173,7 +173,7 @@ class SeattleQueryTests extends SeattleSpec {
 
     /** ******* Multiple input parameters **************************/
 
-    // Single tuple of input values - AND-semantics ------------------------
+    // Single tuple of input values - logical AND ------------------------
 
     m(Community.name.type_(?).orgtype_(?)) -->
       """[:find  ?b
@@ -467,6 +467,11 @@ class SeattleQueryTests extends SeattleSpec {
 
 
     /** Use molecule as template to insert matching data sets ********************************************/
+
+//    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert List(
+//      ("DDD Blogging Georgetown", "http://www.blogginggeorgetown.com/", "blog", "commercial", Set("DD cat 1", "DD cat 2"), "DD Georgetown", "Greater Duwamish", "s"),
+//      ("DDD Interbay District Blog", "http://interbayneighborhood.neighborlogs.com/", "blog", "community", Set("DD cat 3"), "DD Interbay", "Magnolia/Queen Anne", "w")
+//    )
 
     m(Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region) -->
       List(

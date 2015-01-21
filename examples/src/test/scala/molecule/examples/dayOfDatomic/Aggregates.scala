@@ -21,26 +21,26 @@ class Aggregates extends MoleculeSpec {
   "Aggregated Attributes" >> {
 
     // Maximum value(s)
-    Obj.meanRadius(max).get.head === 696000.0
-    Obj.meanRadius(max(3)).get.head === List(696000.0, 69911.0, 58232.0)
+    Obj.meanRadius(max).one === 696000.0
+    Obj.meanRadius(max(3)).one === List(696000.0, 69911.0, 58232.0)
 
 
     // Minimum value(s)
-    Obj.meanRadius(min).get.head === 1163.0
-    Obj.meanRadius(min(3)).get.head === List(1163.0, 1353.4, 1561.0)
+    Obj.meanRadius(min).one === 1163.0
+    Obj.meanRadius(min(3)).one === List(1163.0, 1353.4, 1561.0)
 
 
     // Random value(s) - duplicates possible
-    val random = Obj.meanRadius(rand).get.head
+    val random = Obj.meanRadius(rand).one
     radiuses must contain(random)
 
-    val randoms = Obj.meanRadius(rand(5)).get.head.toList
+    val randoms = Obj.meanRadius(rand(5)).one
     randoms.size === 5
     randoms.map(radiuses.contains(_)).reduce(_ && _) === true
 
 
     // Sample values - no duplicates
-    val samples = Obj.meanRadius(sample(5)).get.head.toList
+    val samples = Obj.meanRadius(sample(5)).one
     samples.size === 5
     samples.distinct.size === 5
     samples.map(radiuses.contains(_)).reduce(_ && _) === true
@@ -55,19 +55,19 @@ class Aggregates extends MoleculeSpec {
 
   "Aggregate Calculations" >> {
 
-    Obj.name(count).get.head === 17
+    Obj.name.apply(count).one === 17
 
-    Obj.name(countDistinct).get.head === 17
+    Obj.name(countDistinct).one === 17
 
-    Obj.meanRadius(sum).get.head === 907633.0
+    Obj.meanRadius(sum).one === 907633.0
 
-    Obj.meanRadius(avg).get.head === 53390.17647058824
+    Obj.meanRadius(avg).one === 53390.17647058824
 
-    Obj.meanRadius(median).get.head === 2631.2
+    Obj.meanRadius(median).one === 2631.2
 
-    Obj.meanRadius(variance).get.head === 2.6212428511091217E10
+    Obj.meanRadius(variance).one === 2.6212428511091217E10
 
-    Obj.meanRadius(stddev).get.head === 161902.5278094546
+    Obj.meanRadius(stddev).one === 161902.5278094546
   }
 
 
@@ -75,9 +75,23 @@ class Aggregates extends MoleculeSpec {
     import molecule.schema.Db
 
     // What is the average length of a schema name?
-    Db.a.length(avg).get.head === 12.777777777777779
+    Db.a.length(avg).one === 12.9
 
     // How many attributes and value types does this schema use?
-    Db.a(count).valueType(countDistinct).get.head ===(37, 8)
+    Db.a(count).valueType(countDistinct).one ===(37, 8)
+
+    ok
+  }
+
+
+  "Monsters" >> {
+
+    Monster.name.heads insert List(
+      ("Cerberus", 3),
+      ("Medusa", 1),
+      ("Cyclops", 1),
+      ("Chimera", 1))
+
+    Monster.heads(sum).one === 6
   }
 }

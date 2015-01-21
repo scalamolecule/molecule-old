@@ -17,7 +17,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def traverse(prev: Tree, element: Element): Seq[Element] =
     if (prev.isAttr || prev.symbol.isMethod) resolve(prev) :+ element else Seq(element)
 
-  def kw(kwTree: Tree): (String, String) = (kwTree.toString: String) match {
+  def kw(kwTree: Tree): (String, String) = (kwTree.toString(): String) match {
     case r""""\:(\w*)$ns0/(\w*)$attr0"""" => (ns0, attr0)
     case otherKw                          => abort("[Dsl2Model:kw] Unrecognized attribute keyword: " + otherKw)
   }
@@ -105,7 +105,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
   def walk(prev: Tree, ns: String, cur: Tree, thisElement: Element) = {
     val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
-    val attr = cur.toString
+    val attr = cur.toString()
     val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) { case (e, (previous, atoms, trans)) =>
       e match {
         // Find similar Atoms
@@ -167,7 +167,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def resolveOp(previous: Tree, curTree: Tree, attr: Tree, op: Tree, values0: Tree): Element = {
     val value: Value = modelValue(op.toString(), attr, values0)
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
-    val cur = curTree.toString
+    val cur = curTree.toString()
     // For debugging...
     //    previous match {
     //      case prev if cur.head.isUpper          => x(1, prev, cur, curTree, value)
@@ -238,11 +238,15 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"Seq($pkg.rand)"                                       => Fn("rand")
     case q"Seq($pkg.count)"                                      => Fn("count")
     case q"Seq($pkg.countDistinct)"                              => Fn("count-distinct")
-    case q"Seq($pkg.sum)"                                        => Fn("sum")
+    case q"Seq($pkg.sum)"                                        =>
+//      if (attr.tpeS == "Int") abort(s"[Dsl2Model:getValues] Datomic return sums of whole numbers as Longs. " +
+//        s"So to use the `sum` function, please define the attribute `:${attr.ns}/${attr.name}` as a Long in your schema definition.")
+      Fn("sum")
     case q"Seq($pkg.avg)"                                        => Fn("avg")
     case q"Seq($pkg.median)"                                     => Fn("median")
     case q"Seq($pkg.variance)"                                   => Fn("variance")
     case q"Seq($pkg.stddev)"                                     => Fn("stddev")
+    case q"Seq($pkg.groupBy)"                                    => Fn("groupBy")
     case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
     case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
     case q"Seq(..$vs)"                                           => vs match {

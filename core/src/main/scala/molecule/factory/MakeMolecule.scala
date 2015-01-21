@@ -100,13 +100,24 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
   def from1attr(dsl: c.Expr[NS], A: Type) = {
     val cast = (data: Tree) => if (A <:< typeOf[Set[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
+      q"$data.asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
     else if (A <:< typeOf[Vector[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
+      q"$data.asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
     else if (A <:< typeOf[Stream[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
-    else
-      q"$data.get(0).asInstanceOf[$A]"
+      q"$data.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
+    else{
+      // Steer Clojure boxings
+      q"""
+         query.f.outputs.head match {
+           case AggrExpr("sum",_,_) => ${A.toString} match {
+             case "Float" => $data.asInstanceOf[Double].toFloat
+             case "Int"   => $data.asInstanceOf[Long].toInt
+             case _       => $data
+           }
+           case _ => $data
+         }
+        """
+    }
 
     val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A] :: HNil"
@@ -120,7 +131,7 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new Molecule1[$A](model, query) {
-        def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${cast(q"data")})
+        def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${cast(q"data.get(0)")}.asInstanceOf[$A])
         def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query, conn).toList.map(data => ${hlist(q"data")})
         def debug(implicit conn: Connection): Unit          = debugMolecule(conn)
       }
@@ -132,7 +143,19 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case (t, i) if t <:< typeOf[Set[_]]    => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
       case (t, i) if t <:< typeOf[Vector[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
       case (t, i) if t <:< typeOf[Stream[_]] => q"$data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
-      case (t, i)                            => q"$data.get($i).asInstanceOf[$t]"
+      case (t, i)                            =>
+        // Steer Clojure boxings
+        q"""
+           query.f.outputs($i) match {
+             case AggrExpr("sum",_,_) => ${t.toString} match {
+               case "Float" => $data.get($i).asInstanceOf[Double].toFloat.asInstanceOf[$t]
+               case "Int"   => $data.get($i).asInstanceOf[Long].toInt.asInstanceOf[$t]
+               case _       => $data.get($i).asInstanceOf[$t]
+             }
+             case _ => $data.get($i).asInstanceOf[$t]
+           }
+          """
+        //q"$data.get($i).asInstanceOf[$t]"
     }
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
     val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {

@@ -2,7 +2,7 @@ package molecule.examples.dayOfDatomic.schema
 
 import molecule.dsl.schemaDefinition._
 
-@InOut(0, 3)
+@InOut(0, 5)
 trait AggregatesDefinition {
 
   trait Obj {
@@ -12,5 +12,11 @@ trait AggregatesDefinition {
 
   trait Data {
     val source = oneString.indexed.doc("Source of the data in a transaction.")
+  }
+
+
+  trait Monster {
+    val name    = oneString
+    val heads   = oneInt
   }
 }

@@ -163,6 +163,7 @@ package object molecule {
   //  object o extends o
 
 
+
   // Aggregates ==========================================================
 
   // Aggregate attribute (singular/multiple)
@@ -209,4 +210,8 @@ package object molecule {
 
   trait stddev
   object stddev extends stddev
+
+
+  trait groupBy
+  object groupBy extends groupBy
 }

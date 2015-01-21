@@ -77,11 +77,6 @@ object schemaDSL {
 
   // todo?
   trait Partition
-//  trait Tree
-//  trait HyperEdge
-//  trait ChildRef[Ns1] extends Ref[Ns1, Ns1]
-//  trait HyperRef[Ns1] extends Ref[Ns1, Ns1]
-
 
   trait Attr
 
@@ -133,9 +128,7 @@ object schemaDSL {
     def apply()               : Ns with Attr = ???
     def apply(values: Seq[T]) : Ns with Attr = ???
   }
-  trait OneString [Ns, In] extends One[Ns, In, String ]  {
-//    def length: Ns with Attr = ???
-  }
+  trait OneString [Ns, In] extends One[Ns, In, String ]
   trait OneInt    [Ns, In] extends One[Ns, In, Int    ]
   trait OneLong   [Ns, In] extends One[Ns, In, Long   ]
   trait OneFloat  [Ns, In] extends One[Ns, In, Float  ]

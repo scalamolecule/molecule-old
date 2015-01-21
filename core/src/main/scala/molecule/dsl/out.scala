@@ -1,4 +1,5 @@
-package molecule.dsl
+package molecule
+package dsl
 
 import molecule.dsl.schemaDSL._
 import scala.language.higherKinds
@@ -7,6 +8,7 @@ import scala.language.higherKinds
 trait Out_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]]
   extends NS0[Nothing]
   with Generic0[Ns0, Ns1, In1_0, In1_1]
+  with Aggregate0[Ns0]
   with Group0[Ns0, Ns1]
   with Branch0[Ns0, Ns1]
 {
