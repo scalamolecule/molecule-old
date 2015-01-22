@@ -39,8 +39,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case maybe: Distinct.type          => q"Distinct"
     case entValue: EntValue.type       => q"EntValue"
     case varValue: VarValue.type       => q"VarValue"
-    //    case Fn(fn, args)                  => q"Fn($fn, Seq(..$args))"
-    case other => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
+    case other                         => abort("[Liftables:liftAny] Can't lift unexpected Any type: " + other.getClass)
   }
 
   implicit val liftTuple2 = Liftable[Product] {
@@ -143,7 +142,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case NoValue         => q"NoValue"
   }
 
-  implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.i})"}
+  implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.value})"}
   implicit val liftValue = Liftable[Value] {
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
@@ -163,7 +162,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Gt(value)        => q"Gt($value)"
     case Le(value)        => q"Le($value)"
     case Ge(value)        => q"Ge($value)"
-    case Fn(fn, i)        => q"Fn($fn, $i)"
+    case Fn(fn, value)    => q"Fn($fn, $value)"
     case Length(fn)       => q"Length($fn)"
     case Qm               => q"Qm"
     case Distinct         => q"Distinct"

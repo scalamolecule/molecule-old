@@ -89,11 +89,11 @@ object Model2Query {
             case (_, Gt(arg))                         => q.where(e, a, v, gs).compareTo(">", a, v, Val(arg))
             case (_, Le(arg))                         => q.where(e, a, v, gs).compareTo("<=", a, v, Val(arg))
             case (_, Ge(arg))                         => q.where(e, a, v, gs).compareTo(">=", a, v, Val(arg))
-            case (_, Fn("count", _))                  => q.where(e, a, v, gs)
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv))
             case (_, Fulltext(qvs))                   => q.orRules(v1, a, qvs, gs).fulltext(e, a, v, Var(v1))
             case (c, va)                              => sys.error(s"[Model2Query:resolve[Atom_]] Unresolved Atom_ with cardinality/value: $c / $va")
+//            case (_, Fn("count", _))                  => q.where(e, a, v, gs)
           }
         }
 
@@ -129,6 +129,7 @@ object Model2Query {
             case (_, Le(arg))                         => q.where(e, a, v, gs).compareTo("<=", a, v, Val(arg)).find(v, gs)
             case (_, Ge(arg))                         => q.where(e, a, v, gs).compareTo(">=", a, v, Val(arg)).find(v, gs)
             case (_, Fn("sum", _))                    => q.where(e, a, v, gs).find("sum", Seq(), v, gs).widh(e)
+            case (_, Fn("avg", _))                    => q.where(e, a, v, gs).find("avg", Seq(), v, gs).widh(e)
             case (_, Fn(fn, Some(i)))                 => q.where(e, a, v, gs).find(fn, Seq(i), v, gs)
             case (_, Fn(fn, _))                       => q.where(e, a, v, gs).find(fn, Seq(), v, gs)
             case (2, Fulltext(qv :: Nil))             => q.fulltext(e, a, v, Val(qv)).find("distinct", Seq(), v, gs)

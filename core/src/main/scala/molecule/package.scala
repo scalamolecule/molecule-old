@@ -210,8 +210,4 @@ package object molecule {
 
   trait stddev
   object stddev extends stddev
-
-
-  trait groupBy
-  object groupBy extends groupBy
 }

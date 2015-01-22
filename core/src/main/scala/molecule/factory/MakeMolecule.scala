@@ -1,6 +1,5 @@
 package molecule.factory
 
-import molecule._
 import molecule.api._
 import molecule.ast.model._
 import molecule.dsl._
@@ -105,7 +104,7 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       q"$data.asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
     else if (A <:< typeOf[Stream[_]])
       q"$data.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
-    else{
+    else {
       // Steer Clojure boxings
       q"""
          query.f.outputs.head match {
@@ -114,9 +113,16 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
              case "Int"   => $data.asInstanceOf[Long].toInt
              case _       => $data
            }
+           case AggrExpr("median",_,_) => ${A.toString} match {
+             case "Float" => $data.asInstanceOf[Double].toFloat
+             //case "Long"  => data.asInstanceOf[Long].toInt
+             case "Int"   => if($data.isInstanceOf[Long]) $data.asInstanceOf[Long].toInt else $data.asInstanceOf[Int]
+             case _       => $data
+           }
            case _ => $data
          }
         """
+      //println(" X " + ${A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long]);
     }
 
     val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])
@@ -146,16 +152,27 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case (t, i)                            =>
         // Steer Clojure boxings
         q"""
-           query.f.outputs($i) match {
-             case AggrExpr("sum",_,_) => ${t.toString} match {
-               case "Float" => $data.get($i).asInstanceOf[Double].toFloat.asInstanceOf[$t]
-               case "Int"   => $data.get($i).asInstanceOf[Long].toInt.asInstanceOf[$t]
-               case _       => $data.get($i).asInstanceOf[$t]
-             }
+          query.f.outputs($i) match {
+            case AggrExpr("sum",_,_) =>
+              ${t.toString} match {
+                case "Float" => $data.get($i).asInstanceOf[Double].toFloat.asInstanceOf[$t]
+                case "Int"   => $data.get($i).asInstanceOf[Long].toInt.asInstanceOf[$t]
+                case _       => $data.get($i).asInstanceOf[$t]
+              }
+
+            case AggrExpr("median",_,_) =>
+              ${t.toString} match {
+                case "Float" => $data.get($i).asInstanceOf[Double].toFloat.asInstanceOf[$t]
+                case "Int"   => if($data.get($i).isInstanceOf[Long]) $data.get($i).asInstanceOf[Long].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
+                case _       => $data.get($i).asInstanceOf[$t]
+              }
+
              case _ => $data.get($i).asInstanceOf[$t]
            }
           """
-        //q"$data.get($i).asInstanceOf[$t]"
+      //              println(" X " + ${t.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long]);
+      //              println(" Y " + ${t.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long])
+      //q"$data.get($i).asInstanceOf[$t]"
     }
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
     val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {

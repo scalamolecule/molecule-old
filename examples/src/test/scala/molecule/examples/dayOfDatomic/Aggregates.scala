@@ -55,7 +55,7 @@ class Aggregates extends MoleculeSpec {
 
   "Aggregate Calculations" >> {
 
-    Obj.name.apply(count).one === 17
+    Obj.name(count).one === 17
 
     Obj.name(countDistinct).one === 17
 
@@ -90,27 +90,38 @@ class Aggregates extends MoleculeSpec {
       ("Cyclops", 1),
       ("Chimera", 1))
 
-    Monster.heads(sum).one === 6
+    Monster.heads(sum).one === 6 // 3 + 1 + 1 + 1
 
-    Monster.name.heads(sum).get === List(
-      ("Cerberus", 3),
+    // Other aggregations
+    Monster.heads(avg).one === 1.5 // 6 / 4
+    Monster.heads(median).one === 2
+    Monster.heads(variance).one === 1.0
+    Monster.heads(stddev).one === 1.0
+
+
+    // Add a twin Cyclop with 4 heads (not factual!)
+    Monster.name.heads insert("Cyclops", 4)
+
+    // Now we have a different set to aggregate over and compare
+    Monster.name.heads.get === List(
       ("Chimera", 1),
       ("Cyclops", 1),
-      ("Medusa", 1))
+      ("Cerberus", 3),
+      ("Medusa", 1),
+      ("Cyclops", 4))
 
-
-    // Testing group by...
-
-    // Adding a twin Cyclop with 4 heads (not factual!)
-    Monster.name.heads insert ("Cyclops", 4)
-
-    Monster.heads(sum).one === 10
+    Monster.heads(sum).one === 10 // 3 + 1 + 1 + 1 + 4
+    Monster.heads(avg).one === 2.0 // 10 / 5
+    Monster.heads(median).one === 3
+    Monster.heads(variance).one === 1.5555555555555554
+    Monster.heads(stddev).one === 1.247219128924647
 
     // Note how the query group by name so that we get 1 + 4 = 5 Cyclopes heads
     Monster.name.heads(sum).get === List(
       ("Cerberus", 3),
       ("Chimera", 1),
-      ("Cyclops", 5),
+      ("Cyclops", 5), // <-- 1 + 4
       ("Medusa", 1))
+
   }
 }

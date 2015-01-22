@@ -45,7 +45,7 @@ object model {
 
   // Function
   case class Fulltext(search: Seq[Any]) extends Value
-  case class Fn(name: String, i: Option[Int] = None) extends Value
+  case class Fn(name: String, value: Option[Int] = None) extends Value
   case class Length(fn: Option[Fn] = None) extends Value
 
   // Logic

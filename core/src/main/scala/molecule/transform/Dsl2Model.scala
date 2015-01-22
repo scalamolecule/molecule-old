@@ -226,39 +226,46 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case other           => abort(s"[Dsl2Model:getAppliedModelValue] Unexpected applied value for `${attr.name}`: $other")
   }
 
-  def getValues(values: Tree, attr: Tree = null): Any = values match {
-    case q"Seq($pkg.?)"                                          => Qm
-    case q"Seq($pkg.distinct)"                                   => Distinct
-    case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"    => Fn("max", Some(i))
-    case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"    => Fn("min", Some(i))
-    case q"Seq($pkg.rand.apply(${Literal(Constant(i: Int))}))"   => Fn("rand", Some(i))
-    case q"Seq($pkg.sample.apply(${Literal(Constant(i: Int))}))" => Fn("sample", Some(i))
-    case q"Seq($pkg.max)"                                        => Fn("max")
-    case q"Seq($pkg.min)"                                        => Fn("min")
-    case q"Seq($pkg.rand)"                                       => Fn("rand")
-    case q"Seq($pkg.count)"                                      => Fn("count")
-    case q"Seq($pkg.countDistinct)"                              => Fn("count-distinct")
-    case q"Seq($pkg.sum)"                                        => Fn("sum")
-    case q"Seq($pkg.avg)"                                        => Fn("avg")
-    case q"Seq($pkg.median)"                                     => Fn("median")
-    case q"Seq($pkg.variance)"                                   => Fn("variance")
-    case q"Seq($pkg.stddev)"                                     => Fn("stddev")
-    case q"Seq($pkg.groupBy)"                                    => Fn("groupBy")
-    case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
-    case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
-    case q"Seq(..$vs)"                                           => vs match {
-      case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
-        val oldNew: Map[Any, Any] = get.map {
-          case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
-        }.toMap
-        Replace(oldNew)
+  def getValues(values: Tree, attr: Tree = null): Any = {
+    def aggr(fn: String, value: Option[Int] = None) = if (attr.name.last == '_')
+      abort(s"[Dsl2Model:getValues] Aggregated values need to be returned. " +
+        s"Please omit underscore from attribute `:${attr.ns}/${attr.name}`")
+    else
+      Fn(fn, value)
 
-      case other if attr == null => vs.flatMap(v => resolveValues(v))
-      case other                 => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+    values match {
+      case q"Seq($pkg.?)"                                          => Qm
+      case q"Seq($pkg.distinct)"                                   => Distinct
+      case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"    => aggr("max", Some(i))
+      case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"    => aggr("min", Some(i))
+      case q"Seq($pkg.rand.apply(${Literal(Constant(i: Int))}))"   => aggr("rand", Some(i))
+      case q"Seq($pkg.sample.apply(${Literal(Constant(i: Int))}))" => aggr("sample", Some(i))
+      case q"Seq($pkg.max)"                                        => aggr("max")
+      case q"Seq($pkg.min)"                                        => aggr("min")
+      case q"Seq($pkg.rand)"                                       => aggr("rand")
+      case q"Seq($pkg.count)"                                      => aggr("count")
+      case q"Seq($pkg.countDistinct)"                              => aggr("count-distinct")
+      case q"Seq($pkg.sum)"                                        => aggr("sum")
+      case q"Seq($pkg.avg)"                                        => aggr("avg")
+      case q"Seq($pkg.median)"                                     => aggr("median")
+      case q"Seq($pkg.variance)"                                   => aggr("variance")
+      case q"Seq($pkg.stddev)"                                     => aggr("stddev")
+      case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
+      case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
+      case q"Seq(..$vs)"                                           => vs match {
+        case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
+          val oldNew: Map[Any, Any] = get.map {
+            case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
+          }.toMap
+          Replace(oldNew)
+
+        case other if attr == null => vs.flatMap(v => resolveValues(v))
+        case other                 => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+      }
+
+      case other if attr == null => resolveValues(other)
+      case other                 => resolveValues(other, att(q"$attr"))
     }
-
-    case other if attr == null => resolveValues(other)
-    case other                 => resolveValues(other, att(q"$attr"))
   }
 
   def extract(t: Tree) = {
