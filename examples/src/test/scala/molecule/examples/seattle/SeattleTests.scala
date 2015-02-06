@@ -254,6 +254,8 @@ class SeattleTests extends SeattleSpec {
   "Querying with fulltext search" >> {
 
     // (postfix notation)
+    Community.name.contains("Wallingford").get === List("KOMO Communities - Wallingford")
+    Community.name.contains("Wallingford").debug
     (Community.name contains "Wallingford" get 3) === List("KOMO Communities - Wallingford")
 
     val communitiesWith = m(Community.name contains ?)

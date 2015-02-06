@@ -29,8 +29,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     base = file("coretest"),
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
-      moleculeDefinitionDirectories(
-        "coretest/src/main/scala/molecule/util"
+      definitionDirectories(
+        "coretest/src/main/scala/molecule/semantics"
       ),
       publish :=(),
       publishLocal :=()
@@ -41,15 +41,15 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     id = "molecule-examples",
     base = file("examples"),
     dependencies = Seq(moleculeCore),
-    settings = commonSettings ++ Seq(
-      moleculeDefinitionDirectories(
-        "examples/src/main/scala/molecule/examples/dayOfDatomic",
-        "examples/src/main/scala/molecule/examples/seattle",
-        "examples/src/main/scala/molecule/examples/mbrainz"
-      ),
-      publish :=(),
-      publishLocal :=()
-    )
+settings = commonSettings ++ Seq(
+  definitionDirectories(
+    "examples/src/main/scala/molecule/examples/dayOfDatomic",
+    "examples/src/main/scala/molecule/examples/seattle",
+    "examples/src/main/scala/molecule/examples/mbrainz"
+  ),
+  publish :=(),
+  publishLocal :=()
+)
   )
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
@@ -96,7 +96,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 
 trait Boilerplate {
 
-  def moleculeDefinitionDirectories(domainDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {
+  def definitionDirectories(domainDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {
     val sourceDir = (sourceManaged in Compile).value
 
     // generate source files

@@ -102,13 +102,13 @@ object schemaDSL {
     def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
 //    def eq(value: T)                : Ns with Attr = ???
 
-    def not(value: T) : Ns with Attr = ???
-    def != (value: T) : Ns with Attr = ???
+    def not(value: T)         : Ns with Attr = ???
+    def != (value: T)         : Ns with Attr = ???
     def != (one: T, more: T*) : Ns with Attr = ???
-    def < (value: T)  : Ns with Attr = ???
-    def > (value: T)  : Ns with Attr = ???
-    def <= (value: T) : Ns with Attr = ???
-    def >= (value: T) : Ns with Attr = ???
+    def < (value: T)          : Ns with Attr = ???
+    def > (value: T)          : Ns with Attr = ???
+    def <= (value: T)         : Ns with Attr = ???
+    def >= (value: T)         : Ns with Attr = ???
 
     // Input
     def < (in: ?)  : In with Attr = ???

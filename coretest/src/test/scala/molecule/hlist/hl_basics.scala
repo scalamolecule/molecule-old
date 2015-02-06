@@ -1,4 +1,4 @@
-//package molecule.semantics.hlist
+//package molecule.hlist
 //import molecule.dsl.coreTest._
 //import molecule.{CoreSetup, CoreSpec}
 //import shapeless._

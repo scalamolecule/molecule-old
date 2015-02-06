@@ -7,6 +7,7 @@ import molecule.dsl.schemaDSL._
 import molecule.ops.QueryOps._
 import molecule.ops.TreeOps
 import molecule.transform._
+
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
@@ -104,9 +105,14 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       q"$data.asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
     else if (A <:< typeOf[Stream[_]])
       q"$data.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
+    else if (A <:< typeOf[Int])
+      q""" $data.asInstanceOf[java.lang.Long].toInt.asInstanceOf[$A]"""
+    else if (A <:< typeOf[Float])
+      q""" $data.asInstanceOf[java.lang.Double].toFloat.asInstanceOf[$A]"""
     else {
       // Steer Clojure boxings
       q"""
+
          query.f.outputs.head match {
            case AggrExpr("sum",_,_) => ${A.toString} match {
              case "Float" => $data.asInstanceOf[Double].toFloat
@@ -116,13 +122,16 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
            case AggrExpr("median",_,_) => ${A.toString} match {
              case "Float" => $data.asInstanceOf[Double].toFloat
              //case "Long"  => data.asInstanceOf[Long].toInt
-             case "Int"   => if($data.isInstanceOf[Long]) $data.asInstanceOf[Long].toInt else $data.asInstanceOf[Int]
+             case "Int"   => if($data.isInstanceOf[Long]) $data.asInstanceOf[Long].toInt else $data
              case _       => $data
            }
            case _ => $data
          }
         """
-      //println(" X " + ${A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long]);
+      //      println(" X " + ${A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long]);
+      //      println(" Y " + ${A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long])
+      //      println(" Z " + ${A.toString} + " Double: " + $data.isInstanceOf[Double] + " Float: " + $data.isInstanceOf[Float])
+      //      println(" W " + ${A.toString} + " Double: " + $data.isInstanceOf[Double] + " Float: " + $data.isInstanceOf[Float])
     }
 
     val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])

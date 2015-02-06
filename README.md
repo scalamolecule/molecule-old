@@ -9,9 +9,10 @@ Visit [ScalaMolecule.org](http://ScalaMolecule.org) to learn more or visit the [
 ### Try demo
 
 1. `git clone https://github.com/scalamolecule/molecule-demo.git`
-2. `sbt compile`
-3. Open in your IDE
-4. Run tests and poke around...
+2. `cd molecule-demo`
+3. `sbt compile`
+4. Open in your IDE
+5. Run tests and poke around...
 
    
 ### Read more
@@ -26,9 +27,10 @@ Visit [ScalaMolecule.org](http://ScalaMolecule.org) to learn more or visit the [
 ### Download and test
 
 1. `git clone https://github.com/scalamolecule/molecule.git`
-2. `sbt compile`
-3. Open in your IDE
-4. Run tests and poke around...
+2. `cd molecule`
+3. `sbt compile`
+4. Open in your IDE
+5. Run tests and poke around...
 
 
 # What Molecule does

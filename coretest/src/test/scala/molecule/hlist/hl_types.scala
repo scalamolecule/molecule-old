@@ -1,4 +1,4 @@
-//package molecule.semantics.hlist
+//package molecule.hlist
 //import java.net.URI
 //import java.util.{Date, UUID}
 //import molecule.{CoreSetup, CoreSpec}

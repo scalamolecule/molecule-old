@@ -1,6 +1,7 @@
 package molecule
 import java.util.UUID._
 import java.util.{Collection => jCollection, Date, List => jList, Map => jMap, UUID}
+
 import datomic._
 import datomic.db.Db
 import molecule.ast.model._
@@ -9,6 +10,7 @@ import molecule.ast.transaction.{Statement, _}
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.Debug
+
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.language.{existentials, higherKinds}
@@ -97,15 +99,15 @@ trait DatomicFacade {
         s"""
            |#############################################################################
            |$e
-           |
-           |$query
-           |
-           |${query.datalog}
-           |
-           |RULES: ${if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")}
-           |
-           |INPUTS: ${allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1)}
-           |#############################################################################
+            |
+            |$query
+            |
+            |${query.datalog}
+            |
+            |RULES: ${if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")}
+            |
+            |INPUTS: ${allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1)}
+            |#############################################################################
          """.stripMargin)
     }
   }
@@ -153,8 +155,15 @@ object DatomicFacade extends DatomicFacade
 case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[Statement]]) {
   private val x = Debug("Tx", 1, 99, false, 3)
 
-  val flatStmts            = stmtss.flatten.map(_.toJava).asJava
+  val flatStmts = stmtss.flatten.map {
+    case Add(e, a, i: Int)   => Add(e, a, i.toLong: java.lang.Long).toJava
+    case Add(e, a, f: Float) => Add(e, a, f.toDouble: java.lang.Double).toJava
+    case other               => other.toJava
+  }.asJava
+
+  //  val xx = Util.list(Util.list(":db/add", Peer.tempid(":db.part/user"), ":ns/float", 1f.toDouble: java.lang.Double))
   //  x(7, stmtss, flatStmts)
+
   val txResult: jMap[_, _] = conn.transact(flatStmts).get
 
   def ids: List[Long] = {
@@ -197,7 +206,7 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
       case ent: datomic.Entity => Some(results.toList.map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]).sorted)
       case _                   => Some(results.toList map toScala)
     }
-    case result => Some(toScala(result))
+    case result                                  => Some(toScala(result))
   }
 
   def apply(kw1: String, kw2: String, kwx: String*): Seq[Option[Any]] = {

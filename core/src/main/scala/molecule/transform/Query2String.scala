@@ -18,6 +18,8 @@ case class Query2String(q: Query) {
     case Var(v)                          => "?" + v
     case Val(v: Int)                     => v.toString
     case Val(v: Long)                    => v.toString
+    case Val(v: Float)                   => v.toString
+    case Val(v: Double)                  => v.toString
     case Val(v)                          => "\"" + v + "\""
     case Dummy                           => "_"
     case NoVal                           => ""

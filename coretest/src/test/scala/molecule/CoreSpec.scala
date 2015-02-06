@@ -1,23 +1,26 @@
 package molecule
+
 import java.net.URI
-import java.util.{Date, UUID}
+import java.util.UUID._
+import java.util.Date
 import molecule.util.MoleculeSpec
-import molecule.util.schema.CoreTestSchema
+import molecule.semantics.schema.CoreTestSchema
 import org.specs2.specification.Scope
 
 class CoreSetup extends Scope with DatomicFacade {
-  implicit val conn = load(CoreTestSchema.tx, "core")
+  implicit val conn = load(CoreTestSchema.tx)
+//  implicit val conn = load(CoreTestSchema.tx, "core")
 }
 
 class CoreSpec extends MoleculeSpec with DatomicFacade {
 
   // Sample data
 
-  lazy val List(uuid0, uuid1, uuid2) = List(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).sortBy(_.toString)
+  lazy val List(uuid0, uuid1, uuid2) = List(randomUUID(), randomUUID(), randomUUID()).sortBy(_.toString)
   lazy val List(uri0, uri1, uri2)    = List(new URI(""), new URI("uri1"), new URI("uri2")).sortBy(_.toString)
   lazy val (date0, date1, date2)     = (new Date(0L), new Date(1L), new Date(2L))
 
-  lazy val (str0, int0, long0, float0, double0, bool0, enum0) = ("", 0, 0L, 0.0f, 0.0, false, "enum0")
+  lazy val (str0, int0, long0, float0, double0, bool0, enum0) = (" ", 0, 0L, 0.0f, 0.0, false, "enum0")
   lazy val (str1, int1, long1, float1, double1, bool1, enum1) = ("str1", 1, 1L, 1.1f, 1.1, true, "enum1")
   lazy val (str2, int2, long2, float2, double2, bool2, enum2) = ("str2", 2, 2L, 2.2f, 2.2, false, "enum2")
 
