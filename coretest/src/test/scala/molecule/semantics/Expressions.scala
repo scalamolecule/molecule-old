@@ -5,22 +5,25 @@ import molecule.semantics.dsl.coreTest._
 
 class Expressions extends CoreSpec {
 
-  class StringSetup extends CoreSetup {
+
+  class BaseSetup extends CoreSetup {
     Ns.str insert List("", " ", ",", ".", "?", "A", "B", "a", "b")
-  }
-  class NumberSetup extends CoreSetup {
     Ns.int insert List(-2, -1, 0, 1, 2)
     Ns.long insert List(-2L, -1L, 0L, 1L, 2L)
     Ns.float insert List(-2f, -1f, 0f, 1f, 2f)
     Ns.double insert List(-2.0, -1.0, 0.0, 1.0, 2.0)
+    Ns.bool insert List(true, false)
+    Ns.date insert List(date1, date2)
+
   }
 
-  "Apply string" in new StringSetup {
+  "Apply value" in new BaseSetup {
+
+    // strings
 
     // Empty strings are saved too
     Ns.str.get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
 
-    // Apply value
     Ns.str("").get === List("") // same as Ns.str.apply("").get
     Ns.str(" ").get === List(" ")
     Ns.str(",").get === List(",")
@@ -30,9 +33,8 @@ class Expressions extends CoreSpec {
     Ns.str("B").get === List("B")
     Ns.str("a").get === List("a")
     Ns.str("b").get === List("b")
-  }
 
-  "Apply number" in new NumberSetup {
+    // numbers
 
     Ns.int(1).get === List(1)
     Ns.int(0).get === List(0)
@@ -49,10 +51,15 @@ class Expressions extends CoreSpec {
     Ns.double(1.0).get === List(1.0)
     Ns.double(0.0).get === List(0.0)
     Ns.double(-1.0).get === List(-1.0)
+
+    Ns.bool(true).get === List(true)
+    Ns.bool(false).get === List(false)
+
+    Ns.date(date1).get === List(date1)
+    Ns.date(date2).get === List(date2)
   }
 
-
-  "Range of strings" in new StringSetup {
+  "Range of strings" in new BaseSetup {
 
     Ns.str.<("").get.sorted === List()
     Ns.str.<(" ").get.sorted === List("")
@@ -100,7 +107,7 @@ class Expressions extends CoreSpec {
   }
 
 
-  "Negate string" in new StringSetup {
+  "Negate string" in new BaseSetup {
 
     Ns.str.not("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
     Ns.str.not(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
