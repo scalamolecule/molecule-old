@@ -1,4 +1,5 @@
 package molecule
+import java.net.URI
 import java.util.UUID._
 import java.util.{Collection => jCollection, Date, List => jList, Map => jMap, UUID}
 
@@ -128,9 +129,9 @@ trait DatomicFacade {
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
-    //        x(1, model, transformer.stmtsModel)
+//            x(1, model, transformer.stmtsModel, dataRows)
     val stmtss = transformer.insertStmts(dataRows)
-    //        x(1, model, transformer.stmtsModel, stmtss)
+//            x(1, model, transformer.stmtsModel, stmtss, dataRows)
     Tx(conn, transformer, stmtss)
   }
 
@@ -159,6 +160,8 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
     case Add(e, a, i: Int)   => Add(e, a, i.toLong: java.lang.Long).toJava
     case Add(e, a, f: Float) => Add(e, a, f.toDouble: java.lang.Double).toJava
     case Add(e, a, d: Date)  => Add(e, a, d).toJava
+    case Add(e, a, v: UUID)  => Add(e, a, v).toJava
+//    case Add(e, a, v: URI)   => Add(e, a, v).toJava
     case other               => other.toJava
   }.asJava
   //  x(7, stmtss, flatStmts)

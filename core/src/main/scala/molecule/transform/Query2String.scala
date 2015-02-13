@@ -1,6 +1,7 @@
 package molecule.transform
 import java.text.SimpleDateFormat
-import java.util.{Date, TimeZone}
+import java.util.{Date, TimeZone, UUID}
+import java.net.URI
 
 import molecule.ast.query._
 
@@ -30,7 +31,11 @@ case class Query2String(q: Query) {
     case Val(v: Float)                   => v.toString
     case Val(v: Double)                  => v.toString
     case Val(v: Boolean)                 => v.toString
-    case Val(date: java.util.Date)       => format(date)
+    case Val(date: Date)                 => format(date)
+    case Val(v: UUID)                    => "#uuid \"" + v + "\""
+//    case Val(v: URI)                     => "#uri \"" + v + "\""
+//    case Val(v: URI)                     => "#<uri \"" + v + "\">"
+    case Val(v: URI)                     => "#<URI \"" + v + "\">"
     case Val(v)                          => "\"" + v + "\""
     case Dummy                           => "_"
     case NoVal                           => ""

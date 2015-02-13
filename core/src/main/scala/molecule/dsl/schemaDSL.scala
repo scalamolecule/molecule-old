@@ -122,11 +122,10 @@ object schemaDSL {
 
   // One-cardinality
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
-    def apply(one: T, more: T*): Ns with Attr = ???
-
     // Empty `apply` is a request to delete values!
-    def apply()               : Ns with Attr = ???
-    def apply(values: Seq[T]) : Ns with Attr = ???
+    def apply()                 : Ns with Attr = ???
+    def apply(one: T, more: T*) : Ns with Attr = ???
+    def apply(values: Seq[T])   : Ns with Attr = ???
   }
   trait OneString [Ns, In] extends One[Ns, In, String ]
   trait OneInt    [Ns, In] extends One[Ns, In, Int    ]
@@ -142,9 +141,11 @@ object schemaDSL {
   // Many-cardinality
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
     def apply(values: T*) : Ns with Attr = ???
-    def add(value: T)     : Ns with Attr = ???
-    def remove(values: T*): Ns with Attr = ???
-    def apply(oldNew: (T, T), oldNewMore: (T, T)*): Ns with Attr = ???
+//    def apply(one: T, more: T*)                    : Ns with Attr = ???
+    def apply(oneSet: S, moreSets: S*)             : Ns with Attr = ???
+    def add(value: T)                              : Ns with Attr = ???
+    def remove(values: T*)                         : Ns with Attr = ???
+    def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
   }
   trait ManyString[Ns, In] extends Many[Ns, In, Set[String], String]
   trait ManyInt   [Ns, In] extends Many[Ns, In, Set[Int]   , Int   ]

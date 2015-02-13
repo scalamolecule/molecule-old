@@ -1,10 +1,12 @@
 package molecule.transform
 import java.util.{List => jList}
+
 import datomic.{Connection, Database, Peer}
 //import molecule.DatomicFacade
 import molecule.ast.model._
 import molecule.ast.transaction._
 import molecule.util.Debug
+
 import scala.collection.JavaConversions._
 
 
@@ -108,19 +110,20 @@ case class Model2Transaction(conn: Connection, model: Model) {
           (next, stmts)
         else
           stmt match {
-            case Add('tempId, a, 'tempId)            => (cur, resolveStmts(stmts, tempId(), a, tempId()))
-            case Add('arg, a, 'tempId)               => (next, resolveStmts(stmts, arg, a, tempId()))
-            case Add('tempId, a, 'arg)               => (next, resolveStmts(stmts, tempId(), a, arg))
-            case Add('tempId, a, Values(vs, prefix)) => (next, resolveStmts(stmts, tempId(), a, vs, prefix))
-            case Add('e, a, 'arg)                    => (next, resolveStmts(stmts, stmts.last.e, a, arg))
-            case Add('e, a, Values(EnumVal, prefix)) => (next, resolveStmts(stmts, stmts.last.e, a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))      => (next, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
-            case Add('e, a, 'tempId)                 => (cur, resolveStmts(stmts, stmts.last.e, a, tempId()))
-            case Add('v, a, 'arg)                    => (next, resolveStmts(stmts, stmts.last.v, a, arg))
-            case Add('v, a, Values(vs, prefix))      => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
-            case Add('tx, a, 'arg)                   => (next, resolveStmts(stmts, tempId("tx"), a, arg))
-            case Retract(e, a, v)                    => (cur, stmts)
-            case Add(e, ref, nestedStmts: Seq[_])    =>
+            case Add('tempId, a, 'tempId)                 => (cur, resolveStmts(stmts, tempId(), a, tempId()))
+            case Add('arg, a, 'tempId)                    => (next, resolveStmts(stmts, arg, a, tempId()))
+            case Add('tempId, a, 'arg)                    => (next, resolveStmts(stmts, tempId(), a, arg))
+            case Add('tempId, a, Values(EnumVal, prefix)) => (next, resolveStmts(stmts, tempId(), a, arg, prefix))
+            case Add('tempId, a, Values(vs, prefix))      => (next, resolveStmts(stmts, tempId(), a, vs, prefix))
+            case Add('e, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.e, a, arg))
+            case Add('e, a, Values(EnumVal, prefix))      => (next, resolveStmts(stmts, stmts.last.e, a, arg, prefix))
+            case Add('e, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
+            case Add('e, a, 'tempId)                      => (cur, resolveStmts(stmts, stmts.last.e, a, tempId()))
+            case Add('v, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.v, a, arg))
+            case Add('v, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
+            case Add('tx, a, 'arg)                        => (next, resolveStmts(stmts, tempId("tx"), a, arg))
+            case Retract(e, a, v)                         => (cur, stmts)
+            case Add(e, ref, nestedStmts: Seq[_])         =>
               val parentId = if (e == 'parentId) tempId() else stmts.last.e
               // Loop nested rows of data
               val nestedInsertStmts: Seq[Statement] = nestedArgss(nestedStmts, arg).flatMap { nestedArgs =>
@@ -132,7 +135,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
                 bondStmt +: nestedStmts1
               }
               (next, stmts ++ nestedInsertStmts)
-            case unexpected                          => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
+            case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
           }
       }._2
     }

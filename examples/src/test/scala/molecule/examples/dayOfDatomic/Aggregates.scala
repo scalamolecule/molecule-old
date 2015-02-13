@@ -122,6 +122,5 @@ class Aggregates extends MoleculeSpec {
       ("Chimera", 1),
       ("Cyclops", 5), // <-- 1 + 4
       ("Medusa", 1))
-
   }
 }

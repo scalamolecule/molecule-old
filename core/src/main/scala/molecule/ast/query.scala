@@ -15,7 +15,9 @@ object query {
     override def toString = {
       val sep = ",\n    "
       val widh = if (wi.variables.isEmpty) "" else wi.variables.mkString("\n  With(List(\n    ", sep, ")),")
-      val in = if (i.inputs.isEmpty) "" else i.inputs.mkString("\n  In(List(\n    ", sep, ")),")
+      val in = if (i.inputs.isEmpty && i.rules.isEmpty) "" else "\n  In(" +
+        "\n    List(" + (if(i.inputs.isEmpty) ")," else i.inputs.mkString("\n      ", "\n      ", "),")) +
+        "\n    List(" + (if(i.rules.isEmpty) ")," else i.rules.mkString("\n      ", "\n      ", "),"))
       s"""|Query(
           |  Find(List(
           |    ${f.outputs.mkString(sep)})),$widh$in

@@ -117,7 +117,7 @@ object Model2Query {
             case (_, BackValue(backNs))               => q.where(v, a.ns, a.name, Var(e), backNs, gs).find(e, gs)
             case (2, EnumVal)                         => q.enum(e, a, v, gs).find("distinct", Seq(), v2, gs)
             case (_, EnumVal)                         => q.enum(e, a, v, gs).find(v2, gs)
-            case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), gs)
+            case (_, Eq(ss)) if isEnum && ss.size > 1 => q.orRules(e, a, ss.map(prefix + _), gs).enum(e, a, v, gs).find(v2, gs)
             case (2, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss).where(e, a, v, gs).find("distinct", Seq(), v, gs)
             case (_, Eq(ss)) if ss.size > 1           => q.orRules(e, a, ss, gs).where(e, a, v, gs).find(v, gs)
             case (_, Eq((ss: Seq[_]) :: Nil))         => q.orRules(e, a, ss, gs).where(e, a, v, gs).find(v, gs)

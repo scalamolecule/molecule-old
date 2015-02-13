@@ -4,6 +4,7 @@ import molecule.ast.model._
 import molecule.ast.query._
 //import molecule.dsl.DbSchema._
 import molecule.examples.seattle.dsl.seattle._
+
 import scala.language.reflectiveCalls
 
 
@@ -804,24 +805,31 @@ class SeattleTransformationTests extends SeattleSpec {
       ) -->
       Query(
         Find(List(
-          Var("b"))),
+          Var("b"),
+          Var("e2"))),
         In(List(), List(
           Rule("rule1", List(Var("d")), List(
             DataClause(ImplDS, Var("d"), KW("district", "region"), Val(":district.region/ne"), Empty))),
           Rule("rule1", List(Var("d")), List(
             DataClause(ImplDS, Var("d"), KW("district", "region"), Val(":district.region/sw"), Empty)))), List(DS)),
         Where(List(
-          DataClause(ImplDS, Var("a"), KW("community", "name"), Var("b"), Empty),
+          DataClause(ImplDS, Var("a"), KW("community", "name"), Var("b"), Empty, NoBinding),
           DataClause(ImplDS, Var("a"), KW("community", "neighborhood", "neighborhood"), Var("c"), Empty, NoBinding),
           DataClause(ImplDS, Var("c"), KW("neighborhood", "district", "district"), Var("d"), Empty, NoBinding),
-          RuleInvocation("rule1", List(Var("d")))))
+          RuleInvocation("rule1", List(Var("d"))),
+          DataClause(ImplDS, Var("d"), KW("district", "region"), Var("e"), Empty, NoBinding),
+          DataClause(ImplDS, Var("e"), KW("db", "ident"), Var("e1"), Empty, NoBinding),
+          Funct(".getName ^clojure.lang.Keyword", List(Var("e1")), ScalarBinding(Var("e2")))))
       ) -->
-      """[:find  ?b
+      """[:find  ?b ?e2
         | :in    $ %
         | :where [?a :community/name ?b]
         |        [?a :community/neighborhood ?c]
         |        [?c :neighborhood/district ?d]
-        |        (rule1 ?d)]
+        |        (rule1 ?d)
+        |        [?d :district/region ?e]
+        |        [?e :db/ident ?e1]
+        |        [(.getName ^clojure.lang.Keyword ?e1) ?e2]]
         |
         |INPUTS:
         |List(

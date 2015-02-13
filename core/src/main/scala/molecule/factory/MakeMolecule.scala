@@ -11,6 +11,7 @@ import molecule.transform._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
+import java.lang.{Long => jLong, Double => jDouble}
 
 trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
@@ -30,11 +31,19 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-    //    x(1, dsl.tree, model, model1)
+    //    x(1, dsl.tree, model)
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
-        case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _) if ident.startsWith("__ident__")     => Seq(ident -> q"${TermName(ident.substring(9))}")
+        case atom@Atom(_, _, _, _, Eq(Seq(i1: String)), _, _)
+          if i1.startsWith("__ident__")                                                               =>
+          Seq(i1 -> q"${TermName(i1.substring(9))}")
+        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String)), _, _)
+          if i1.startsWith("__ident__") && i2.startsWith("__ident__")                                 =>
+          Seq(i1 -> q"${TermName(i1.substring(9))}", i2 -> q"${TermName(i2.substring(9))}")
+        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String, i3: String)), _, _)
+          if i1.startsWith("__ident__") && i2.startsWith("__ident__") && i3.startsWith("__ident__")   =>
+          Seq(i1 -> q"${TermName(i1.substring(9))}", i2 -> q"${TermName(i2.substring(9))}", i3 -> q"${TermName(i3.substring(9))}")
         case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => Seq(ident -> q"${TermName(ident.substring(9))}")
         case meta@Meta(_, _, _, _, Eq(Seq(ident: String))) if ident.startsWith("__ident__")           => Seq(ident -> q"${TermName(ident.substring(9))}")
         case Group(_, nestedElements)                                                                 => mapIdentifiers(nestedElements, identifiers0)
@@ -43,6 +52,7 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       (identifiers0 ++ newIdentifiers).distinct
     }
     val identifiers = mapIdentifiers(model.elements).toMap
+
 
     q"""
       import molecule._
@@ -55,9 +65,18 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import scala.collection.JavaConverters._
       import datomic.Connection
       import shapeless._
+      import java.lang.{Long => jLong, Double => jDouble}
 
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
-        case atom@Atom(_, _, _, _, Eq(Seq(ident: String)), _, _)     if ident.startsWith("__ident__") => atom.copy(value = Eq(Seq($identifiers.get(ident).get)))
+        case atom@Atom(_, _, _, _, Eq(Seq(i1: String)), _, _)
+          if i1.startsWith("__ident__") =>
+          atom.copy(value = Eq(Seq($identifiers.get(i1).get)))
+        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String)), _, _)
+          if i1.startsWith("__ident__") && i2.startsWith("__ident__") =>
+          atom.copy(value = Eq(Seq($identifiers.get(i1).get, $identifiers.get(i2).get)))
+        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String, i3: String)), _, _)
+          if i1.startsWith("__ident__") && i2.startsWith("__ident__") && i3.startsWith("__ident__") =>
+          atom.copy(value = Eq(Seq($identifiers.get(i1).get, $identifiers.get(i2).get, $identifiers.get(i3).get)))
         case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => atom.copy(value = Remove(Seq($identifiers.get(ident).get)))
         case meta@Meta(_, _, _, _, Eq(Seq(ident: String)))           if ident.startsWith("__ident__") => meta.copy(value = Eq(Seq($identifiers.get(ident).get)))
         case Group(ns, nestedElements)                                                                => Group(ns, resolveIdentifiers(nestedElements))
@@ -98,6 +117,7 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     """)
   }
 
+
   def from1attr(dsl: c.Expr[NS], A: Type) = {
     val cast = (data: Tree) => if (A <:< typeOf[Set[_]])
       q"$data.asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
@@ -106,32 +126,38 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     else if (A <:< typeOf[Stream[_]])
       q"$data.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
     else if (A <:< typeOf[Int])
-      q""" $data.asInstanceOf[java.lang.Long].toInt.asInstanceOf[$A]"""
+      q""" if($data.isInstanceOf[jLong]) $data.asInstanceOf[jLong].toInt.asInstanceOf[$A] else $data.asInstanceOf[$A] """
     else if (A <:< typeOf[Float])
-      q""" $data.asInstanceOf[java.lang.Double].toFloat.asInstanceOf[$A]"""
+      q""" if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat.asInstanceOf[$A] else $data.asInstanceOf[$A] """
     else {
       // Steer Clojure boxings
       q"""
-
          query.f.outputs.head match {
            case AggrExpr("sum",_,_) => ${A.toString} match {
-             case "Float" => $data.asInstanceOf[Double].toFloat
-             case "Int"   => $data.asInstanceOf[Long].toInt
+             case "Float" => if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat else $data.asInstanceOf[$A]
+             case "Int"   => if($data.isInstanceOf[jLong]) $data.asInstanceOf[jLong].toInt else $data.asInstanceOf[$A]
              case _       => $data
            }
            case AggrExpr("median",_,_) => ${A.toString} match {
-             case "Float" => $data.asInstanceOf[Double].toFloat
-             //case "Long"  => data.asInstanceOf[Long].toInt
-             case "Int"   => if($data.isInstanceOf[Long]) $data.asInstanceOf[Long].toInt else $data
+             case "Float" => if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat else $data.asInstanceOf[$A]
+             case "Int"   => if($data.isInstanceOf[jLong]) $data.asInstanceOf[jLong].toInt else $data.asInstanceOf[$A]
              case _       => $data
            }
-           case _ => $data
+           case _ =>
+        $data
          }
         """
-      //      println(" X " + ${A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long]);
-      //      println(" Y " + ${A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long])
-      //      println(" Z " + ${A.toString} + " Double: " + $data.isInstanceOf[Double] + " Float: " + $data.isInstanceOf[Float])
-      //      println(" W " + ${A.toString} + " Double: " + $data.isInstanceOf[Double] + " Float: " + $data.isInstanceOf[Float])
+
+      //      case AggrExpr("count",_,_) => ${A.toString} match {
+      //        case "Float" => $data.asInstanceOf[Double].toFloat
+      //        //case "Long"  => data.asInstanceOf[Long].toInt
+      //        case "Int"   => if($data.isInstanceOf[Long]) $data.asInstanceOf[Long].toInt else $data
+      //        case _       => $data
+      //      }
+      //      println(" X " + $ {A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long]);
+      //      println(" Y " + $ {A.toString} + " Int: " + $data.isInstanceOf[Int] + " Long: " + $data.isInstanceOf[Long])
+      //      println(" Z " + $ {A.toString} + " Double: " + $data.isInstanceOf[Double] + " Float: " + $data.isInstanceOf[Float])
+      //      println(" W " + $ {A.toString} + " Double: " + $data.isInstanceOf[Double] + " Float: " + $data.isInstanceOf[Float])
     }
 
     val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])
@@ -140,6 +166,10 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A] :: HNil"
     else if (A <:< typeOf[Stream[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A] :: HNil"
+    else if (A <:< typeOf[Int])
+      q""" if($data.get(0).isInstanceOf[jLong]) $data.get(0).asInstanceOf[jLong].toInt.asInstanceOf[$A] :: HNil else $data.get(0).asInstanceOf[$A] :: HNil """
+    else if (A <:< typeOf[Float])
+      q""" if($data.get(0).isInstanceOf[jDouble]) $data.get(0).asInstanceOf[jDouble].toFloat.asInstanceOf[$A] :: HNil else $data.get(0).asInstanceOf[$A] :: HNil """
     else
       q"$data.get(0).asInstanceOf[$A] :: HNil"
 
@@ -158,21 +188,23 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case (t, i) if t <:< typeOf[Set[_]]    => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
       case (t, i) if t <:< typeOf[Vector[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
       case (t, i) if t <:< typeOf[Stream[_]] => q"$data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Int]       => q""" if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t] """
+      case (t, i) if t <:< typeOf[Float]     => q""" if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t] """
       case (t, i)                            =>
         // Steer Clojure boxings
         q"""
           query.f.outputs($i) match {
             case AggrExpr("sum",_,_) =>
               ${t.toString} match {
-                case "Float" => $data.get($i).asInstanceOf[Double].toFloat.asInstanceOf[$t]
-                case "Int"   => $data.get($i).asInstanceOf[Long].toInt.asInstanceOf[$t]
+                case "Float" => if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
+                case "Int"   => if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
                 case _       => $data.get($i).asInstanceOf[$t]
               }
 
             case AggrExpr("median",_,_) =>
               ${t.toString} match {
-                case "Float" => $data.get($i).asInstanceOf[Double].toFloat.asInstanceOf[$t]
-                case "Int"   => if($data.get($i).isInstanceOf[Long]) $data.get($i).asInstanceOf[Long].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
+                case "Float" => if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
+                case "Int"   => if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
                 case _       => $data.get($i).asInstanceOf[$t]
               }
 
@@ -188,6 +220,8 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       case ((t, i), hl) if t <:< typeOf[Set[_]]    => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
       case ((t, i), hl) if t <:< typeOf[Vector[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t])"
       case ((t, i), hl) if t <:< typeOf[Stream[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Int]       => q"""if($data.get($i).isInstanceOf[jLong]) $hl.::($data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t]) else $hl.::($data.get($i).asInstanceOf[$t])"""
+      case ((t, i), hl) if t <:< typeOf[Float]     => q"""if($data.get($i).isInstanceOf[jDouble]) $hl.::($data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t]) else $hl.::($data.get($i).asInstanceOf[$t])"""
       case ((t, i), hl)                            => q"$hl.::($data.get($i).asInstanceOf[$t])"
     }
     val MoleculeTpe = molecule_o(OutTypes.size)
