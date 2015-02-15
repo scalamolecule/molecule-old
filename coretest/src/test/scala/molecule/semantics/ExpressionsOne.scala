@@ -375,123 +375,77 @@ class ExpressionsOne extends CoreSpec {
     //    Ns.uri.<=(uri1).get.sorted === List(uri0, uri1)
     //    Ns.uri.>=(uri1).get.sorted === List(uri1, uri2)
 
-    /*
-    * --------------------------------------------------------------------------
-    molecule.semantics.dsl.coreTest.Ns.enum.apply("enum1")
 
-    Model(List(
-      Atom(ns,enum,String,1,Eq(List(enum1)),Some(:ns.enum/),List())))
+    Ns.enum.<("enum1").get.sorted === List("enum0")
+    Ns.enum.>("enum1").get.sorted === List("enum2")
+    Ns.enum.<=("enum1").get.sorted === List("enum0", "enum1")
+    Ns.enum.>=("enum1").get.sorted === List("enum1", "enum2")
 
-    Query(
-      Find(List(
-        Var(b2))),
-      Where(List(
-        DataClause(ImplDS,Var(a),KW(ns,enum,),Val(:ns.enum/enum1),Empty,NoBinding),
-        DataClause(ImplDS,Var(a),KW(ns,enum,),Var(b),Empty,NoBinding),
-        DataClause(ImplDS,Var(b),KW(db,ident,),Var(b1),Empty,NoBinding),
-        Funct(.getName ^clojure.lang.Keyword,List(Var(b1)),ScalarBinding(Var(b2))))))
-
-    [:find  ?b2
-     :where [?a :ns/enum ":ns.enum/enum1"]
-            [?a :ns/enum ?b]
-            [?b :db/ident ?b1]
-            [(.getName ^clojure.lang.Keyword ?b1) ?b2]]
-
-    RULES: none
-
-    OUTPUTS:
-    1  ["enum1"]
-    --------------------------------------------------------------------------
-    molecule.semantics.dsl.coreTest.Ns.str.<("b")
-
-    Model(List(
-      Atom(ns,str,String,1,Lt(b),None,List())))
-
-    Query(
-      Find(List(
-        Var(b))),
-      Where(List(
-        DataClause(ImplDS,Var(a),KW(ns,str,),Var(b),Empty,NoBinding),
-        Funct(.compareTo ^String,List(Var(b), Val(b)),ScalarBinding(Var(b2))),
-        Funct(<,List(Var(b2), Val(0)),NoBinding))))
-
-    [:find  ?b
-     :where [?a :ns/str ?b]
-            [(.compareTo ^String ?b "b") ?b2]
-            [(< ?b2 0)]]
-
-            */
-
-//    Ns.str.<("b").debug
-
-
-//    Ns.enum.<("enum1").debug
-//    Ns.enum.<("enum1").get.sorted === List("enum0")
-//    Ns.enum.>("enum1").get.sorted === List("enum2")
-//    Ns.enum.<=("enum1").get.sorted === List("enum0", "enum1")
-//    Ns.enum.>=("enum1").get.sorted === List("enum1", "enum2")
-//
-//    Ns.enum.<(enum1).get.sorted === List("enum0")
-//    Ns.enum.>(enum1).get.sorted === List("enum2")
-//    Ns.enum.<=(enum1).get.sorted === List("enum0", "enum1")
-//    Ns.enum.>=(enum1).get.sorted === List("enum1", "enum2")
+    Ns.enum.<(enum1).get.sorted === List("enum0")
+    Ns.enum.>(enum1).get.sorted === List("enum2")
+    Ns.enum.<=(enum1).get.sorted === List("enum0", "enum1")
+    Ns.enum.>=(enum1).get.sorted === List("enum1", "enum2")
   }
 
 
-    "Negation" in new Setup {
+  "Negation" in new Setup {
 
-      Ns.str.not("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
-      Ns.str.not(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
-      Ns.str.not(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
-      Ns.str.not(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
-      Ns.str.not("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
-      Ns.str.not("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
-      Ns.str.not("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
-      Ns.str.not("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
-      Ns.str.not("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
-      Ns.str.not("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-      Ns.str.not("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
+    Ns.str.not(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
+    Ns.str.not("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
+    Ns.str.not("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
+    Ns.str.not("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
+    Ns.str.not("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
+    Ns.str.not("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
+    Ns.str.not("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
 
-      Ns.str.!=("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
-      Ns.str.!=(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
-      Ns.str.!=(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
-      Ns.str.!=(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
-      Ns.str.!=("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
-      Ns.str.!=("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
-      Ns.str.!=("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
-      Ns.str.!=("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
-      Ns.str.!=("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
-      Ns.str.!=("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-      Ns.str.!=("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-
-
-    }
+    // Same as
+    Ns.str.!=("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
+    Ns.str.!=("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
+    Ns.str.!=("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
+    Ns.str.!=("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
+    Ns.str.!=("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
+    Ns.str.!=("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
+    Ns.str.!=("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
 
 
-    "Search string (fulltext search)" in new CoreSetup {
+    Ns.int.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.int.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.int.not(int1).get.sorted === List(-2, -1, 0, 2)
+  }
 
-      Ns.str insert List("The quick fox jumps", "Ten slow monkeys")
 
-      // Trivial words like "The" not indexed
-      Ns.str.contains("The").get === List()
-      Ns.str.contains("Ten").get === List("Ten slow monkeys")
+  "Fulltext search" in new CoreSetup {
 
-      // Only full words counted
-      Ns.str.contains("jumps").get === List("The quick fox jumps")
-      Ns.str.contains("jump").get === List()
+    Ns.str insert List("The quick fox jumps", "Ten slow monkeys")
 
-      // Empty spaces ignored
-      Ns.str.contains("slow ").get === List("Ten slow monkeys")
-      Ns.str.contains(" slow").get === List("Ten slow monkeys")
-      Ns.str.contains(" slow ").get === List("Ten slow monkeys")
-      Ns.str.contains("  slow  ").get === List("Ten slow monkeys")
+    // Trivial words like "The" not indexed
+    Ns.str.contains("The").get === List()
+    Ns.str.contains("Ten").get === List("Ten slow monkeys")
 
-      // Words are searched individually - order and spaces ignored
-      Ns.str.contains("slow     monkeys").get === List("Ten slow monkeys")
-      Ns.str.contains("monkeys slow").get === List("Ten slow monkeys")
-      Ns.str.contains("monkeys quick").get === List("Ten slow monkeys", "The quick fox jumps")
-      Ns.str.contains("quick monkeys").get === List("Ten slow monkeys", "The quick fox jumps")
-    }
+    // Only full words counted
+    Ns.str.contains("jumps").get === List("The quick fox jumps")
+    Ns.str.contains("jump").get === List()
+
+    // Empty spaces ignored
+    Ns.str.contains("slow ").get === List("Ten slow monkeys")
+    Ns.str.contains(" slow").get === List("Ten slow monkeys")
+    Ns.str.contains(" slow ").get === List("Ten slow monkeys")
+    Ns.str.contains("  slow  ").get === List("Ten slow monkeys")
+
+    // Words are searched individually - order and spaces ignored
+    Ns.str.contains("slow     monkeys").get === List("Ten slow monkeys")
+    Ns.str.contains("monkeys slow").get === List("Ten slow monkeys")
+    Ns.str.contains("monkeys quick").get === List("Ten slow monkeys", "The quick fox jumps")
+    Ns.str.contains("quick monkeys").get === List("Ten slow monkeys", "The quick fox jumps")
+  }
 
 
   //  "String logic" in new CoreSetup {

@@ -132,10 +132,11 @@ object QueryOps {
       qvs.zipWithIndex.foldLeft(q) { case (q1, (qv, i)) => q1.compareTo(op, a, v, qv, i + 1)}
 
     def compareTo(op: String, a: Atom, v: String, qv: QueryValue, i: Int = 0): Query = {
-      val n = if (i > 0) "_" + i else ""
-      q.func(".compareTo ^" + a.tpeS, Seq(Var(v), qv), ScalarBinding(Var(v + 2 + n)))
-        .func(op, Seq(Var(v + 2 + n), Val(0)))
+      val w = if (i > 0) v + "_" + i else v + 2
+      q.func(".compareTo ^" + a.tpeS, Seq(Var(v), qv), ScalarBinding(Var(w)))
+        .func(op, Seq(Var(w), Val(0)))
     }
+
     def fulltext(e: String, a: Atom, v: String, qv: QueryValue): Query =
       q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var(e), Var(v))))
 

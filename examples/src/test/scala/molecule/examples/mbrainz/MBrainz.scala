@@ -73,9 +73,10 @@ class MBrainz extends MoleculeSpec {
 
     // Which artists have songs that might be covers of The Who (or vice versa)?
 
+    // 2-step querying:
     // First get songs of The Who
     val whoSongs = Track.name.!=("Outro", "[outro]", "Intro", "[intro]").Artists.name_("The Who").get
-    // Then get songs with same titles by other artists
+    // Then get songs with same titles by other artists (using output from first query)
     Track.name(whoSongs).Artists.name.!=("The Who").get(5) === List(
       ("Amazing Journey", "London Symphony Orchestra"),
       ("Shakin' All Over", "Suzi Quatro"),
