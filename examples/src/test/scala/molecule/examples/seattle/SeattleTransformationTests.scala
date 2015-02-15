@@ -816,20 +816,20 @@ class SeattleTransformationTests extends SeattleSpec {
           DataClause(ImplDS, Var("a"), KW("community", "name"), Var("b"), Empty, NoBinding),
           DataClause(ImplDS, Var("a"), KW("community", "neighborhood", "neighborhood"), Var("c"), Empty, NoBinding),
           DataClause(ImplDS, Var("c"), KW("neighborhood", "district", "district"), Var("d"), Empty, NoBinding),
-          RuleInvocation("rule1", List(Var("d"))),
           DataClause(ImplDS, Var("d"), KW("district", "region"), Var("e"), Empty, NoBinding),
           DataClause(ImplDS, Var("e"), KW("db", "ident"), Var("e1"), Empty, NoBinding),
-          Funct(".getName ^clojure.lang.Keyword", List(Var("e1")), ScalarBinding(Var("e2")))))
+          Funct(".getName ^clojure.lang.Keyword", List(Var("e1")), ScalarBinding(Var("e2"))),
+          RuleInvocation("rule1", List(Var("d")))))
       ) -->
       """[:find  ?b ?e2
         | :in    $ %
         | :where [?a :community/name ?b]
         |        [?a :community/neighborhood ?c]
         |        [?c :neighborhood/district ?d]
-        |        (rule1 ?d)
         |        [?d :district/region ?e]
         |        [?e :db/ident ?e1]
-        |        [(.getName ^clojure.lang.Keyword ?e1) ?e2]]
+        |        [(.getName ^clojure.lang.Keyword ?e1) ?e2]
+        |        (rule1 ?d)]
         |
         |INPUTS:
         |List(

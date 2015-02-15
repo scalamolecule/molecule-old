@@ -82,8 +82,8 @@ class SeattleTests extends SeattleSpec {
 
     // Find attributes with a certain applied value
     Community.name.`type`("twitter").get(3) === List(
-      ("Discover SLU", "twitter"),
       ("Magnolia Voice", "twitter"),
+      ("Discover SLU", "twitter"),
       ("MyWallingford", "twitter"))
 
     // Append underscore to omit applied value from output (the same anyway)
