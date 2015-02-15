@@ -1,5 +1,8 @@
 package molecule
 package semantics
+import java.util.Date
+import java.util.UUID._
+
 import molecule.semantics.dsl.coreTest._
 
 class ExpressionsOne extends CoreSpec {
@@ -61,8 +64,12 @@ class ExpressionsOne extends CoreSpec {
     Ns.bool(false).get === List(false)
     Ns.bool(bool1).get === List(true)
 
+    val now = new Date()
+    Ns.date(now).get === List()
     Ns.date(date1).get === List(date1)
     Ns.date(date2).get === List(date2)
+    // Todo Can we allow runtime constructs for compile time build-up?
+//    Ns.date(new Date()).get === List()
 
     Ns.uuid(uuid1).get === List(uuid1)
     Ns.uuid(uuid2).get === List(uuid2)
@@ -80,312 +87,312 @@ class ExpressionsOne extends CoreSpec {
     // Applying a non-existing enum value ("enum3") won't compile!
     // Ns.enum("enum3").get === List("enum3")
   }
-
-  "OR" in new Setup {
-
-    // 3 ways of applying (the same) OR-semantics:
-
-    // 1. `or`-separated expression
-    Ns.str("c" or "a").get === List("a")
-
-    // 2. Comma-separated values
-    Ns.str("c", "a").get === List("a")
-
-    // 3. List of values
-    Ns.str(List("c", "a")).get.sorted === List("a")
-
-
-    // order of values not relevant
-    Ns.str("a", "c").get === List("a")
-    Ns.str("a" or "c").get === List("a")
-    Ns.str(List("a", "c")).get === List("a")
-
-    // No limit on number of applied values
-    Ns.str("a", "b", "c", "d").get.sorted === List("a", "b")
-    Ns.str("a" or "b" or "c" or "d").get.sorted === List("a", "b")
-    Ns.str(List("a", "b", "c", "d")).get.sorted === List("a", "b")
-
-    // Applying same value returns single value
-    Ns.str("a", "a").get === List("a")
-    Ns.str("a" or "a").get === List("a")
-    Ns.str(List("a", "a")).get === List("a")
-
-    // Applying non-matching values returns empty result
-    Ns.str("c", "d").get === List()
-    Ns.str("c" or "d").get === List()
-    Ns.str(List("c", "d")).get === List()
-
-    // Empty/space character values treated as strings too
-    Ns.str("", "    ").get === List("")
-    Ns.str("", " ").get.sorted === List("", " ")
-
-    // We can apply values assigned to variables
-    Ns.str(str1 or str2).get.sorted === List("a", "b")
-    Ns.str(str1, str2).get.sorted === List("a", "b")
-    Ns.str(List(str1, str2)).get.sorted === List("a", "b")
-    val needles = List(str1, str2)
-    Ns.str(needles).get.sorted === List("a", "b")
-
-    // We can even mix variables and static values
-    Ns.str(str1 or "b").get.sorted === List("a", "b")
-    Ns.str("a", str2).get.sorted === List("a", "b")
-    Ns.str(List(str1, "b")).get.sorted === List("a", "b")
-    val needlesMixed = List("a", str2)
-    Ns.str(needlesMixed).get.sorted === List("a", "b")
-
-
-    Ns.int(-1, 0, 1).get.sorted === List(-1, 0, 1)
-    Ns.int(0, 1, 2).get.sorted === List(0, 1, 2)
-    Ns.int(1, 2, 3).get.sorted === List(1, 2)
-    Ns.int(2, 3, 4).get.sorted === List(2)
-    Ns.int(3, 4, 5).get.sorted === List()
-    Ns.int(int1, int2).get.sorted === List(1, 2)
-    Ns.int(int1 or int2).get.sorted === List(1, 2)
-    Ns.int(List(int1, int2)).get.sorted === List(1, 2)
-
-    Ns.long(-1L, 0L, 1L).get.sorted === List(-1L, 0L, 1L)
-    Ns.long(0L, 1L, 2L).get.sorted === List(0L, 1L, 2L)
-    Ns.long(1L, 2L, 3L).get.sorted === List(1L, 2L)
-    Ns.long(2L, 3L, 4L).get.sorted === List(2L)
-    Ns.long(3L, 4L, 5L).get.sorted === List()
-    Ns.long(long1, long2).get.sorted === List(1L, 2L)
-    Ns.long(long1 or long2).get.sorted === List(1L, 2L)
-    Ns.long(List(long1, long2)).get.sorted === List(1L, 2L)
-
-    Ns.float(-1f, 0f, 1f).get.sorted === List(-1f, 0f, 1f)
-    Ns.float(0f, 1f, 2f).get.sorted === List(0f, 1f, 2f)
-    Ns.float(1f, 2f, 3f).get.sorted === List(1f, 2f)
-    Ns.float(2f, 3f, 4f).get.sorted === List(2f)
-    Ns.float(3f, 4f, 5f).get.sorted === List()
-    Ns.float(float1, float2).get.sorted === List(1f, 2f)
-    Ns.float(float1 or float2).get.sorted === List(1f, 2f)
-    Ns.float(List(float1, float2)).get.sorted === List(1f, 2f)
-
-    Ns.double(-1.0, 0.0, 1.0).get.sorted === List(-1.0, 0.0, 1.0)
-    Ns.double(0.0, 1.0, 2.0).get.sorted === List(0.0, 1.0, 2.0)
-    Ns.double(1.0, 2.0, 3.0).get.sorted === List(1.0, 2.0)
-    Ns.double(2.0, 3.0, 4.0).get.sorted === List(2.0)
-    Ns.double(3.0, 4.0, 5.0).get.sorted === List()
-    Ns.double(double1, double2).get.sorted === List(1.0, 2.0)
-    Ns.double(double1 or double2).get.sorted === List(1.0, 2.0)
-    Ns.double(List(double1, double2)).get.sorted === List(1.0, 2.0)
-
-    // Weird case though to apply OR-semantics to Boolean attribute...
-    Ns.bool(true or false).get === List(false, true)
-    Ns.bool(true, false).get === List(false, true)
-    Ns.bool(bool0, bool1).get === List(false, true)
-    Ns.bool(bool0 or bool1).get === List(false, true)
-    Ns.bool(List(bool0, bool1)).get === List(false, true)
-
-    val now = new java.util.Date()
-    Ns.date(date1, now).get === List(date1)
-    Ns.date(date1, date2).get.sorted === List(date1, date2)
-    Ns.date(date1 or date2).get.sorted === List(date1, date2)
-    Ns.date(List(date1, date2)).get.sorted === List(date1, date2)
-
-    //    Ns.uuid(uuid1, uuid2).get === List(uuid1, uuid2)
-    //    Ns.uuid(uuid1 or uuid2).get === List(uuid1, uuid2)
-    //    Ns.uuid(List(uuid1, uuid2)).get === List(uuid1, uuid2)
-
-    Ns.uuid(uuid1, uuid2).get.sortBy(_.toString) === List(uuid1, uuid2)
-    Ns.uuid(uuid1 or uuid2).get.sortBy(_.toString) === List(uuid1, uuid2)
-    Ns.uuid(List(uuid1, uuid2)).get.sortBy(_.toString) === List(uuid1, uuid2)
-
-    //    Ns.uri.debug
-    //    Ns.uri(uri1).debug
-    //    Ns.uri(uri1).get === List(uri1)
-    //    Ns.uri(uri2).get === List(uri2)
-
-    Ns.enum("enum1", "enum2").get.sorted === List("enum1", "enum2")
-    Ns.enum(enum1, enum2).get.sorted === List("enum1", "enum2")
-    Ns.enum(enum1 or enum2).get.sorted === List("enum1", "enum2")
-    Ns.enum(List(enum1, enum2)).get.sorted === List("enum1", "enum2")
-  }
-
-
-  "Range" in new Setup {
-
-    Ns.str.<("").get.sorted === List()
-    Ns.str.<(" ").get.sorted === List("")
-    Ns.str.<(",").get.sorted === List("", " ")
-    Ns.str.<(".").get.sorted === List("", " ", ",")
-    Ns.str.<("?").get.sorted === List("", " ", ",", ".")
-    Ns.str.<("A").get.sorted === List("", " ", ",", ".", "?")
-    Ns.str.<("B").get.sorted === List("", " ", ",", ".", "?", "A")
-    Ns.str.<("a").get.sorted === List("", " ", ",", ".", "?", "A", "B")
-    Ns.str.<("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
-    Ns.str.<("d").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.<(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B")
-
-    Ns.str.>("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.>(" ").get.sorted === List(",", ".", "?", "A", "B", "a", "b")
-    Ns.str.>(",").get.sorted === List(".", "?", "A", "B", "a", "b")
-    Ns.str.>(".").get.sorted === List("?", "A", "B", "a", "b")
-    Ns.str.>("?").get.sorted === List("A", "B", "a", "b")
-    Ns.str.>("A").get.sorted === List("B", "a", "b")
-    Ns.str.>("B").get.sorted === List("a", "b")
-    Ns.str.>("C").get.sorted === List("a", "b")
-    Ns.str.>("a").get.sorted === List("b")
-    Ns.str.>("b").get.sorted === List()
-    Ns.str.>(str1).get.sorted === List("b")
-
-    Ns.str.<=("").get.sorted === List("")
-    Ns.str.<=(" ").get.sorted === List("", " ")
-    Ns.str.<=(",").get.sorted === List("", " ", ",")
-    Ns.str.<=(".").get.sorted === List("", " ", ",", ".")
-    Ns.str.<=("?").get.sorted === List("", " ", ",", ".", "?")
-    Ns.str.<=("A").get.sorted === List("", " ", ",", ".", "?", "A")
-    Ns.str.<=("B").get.sorted === List("", " ", ",", ".", "?", "A", "B")
-    Ns.str.<=("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
-    Ns.str.<=("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.<=(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
-
-    Ns.str.>=("").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.>=(" ").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.>=(",").get.sorted === List(",", ".", "?", "A", "B", "a", "b")
-    Ns.str.>=(".").get.sorted === List(".", "?", "A", "B", "a", "b")
-    Ns.str.>=("?").get.sorted === List("?", "A", "B", "a", "b")
-    Ns.str.>=("A").get.sorted === List("A", "B", "a", "b")
-    Ns.str.>=("B").get.sorted === List("B", "a", "b")
-    Ns.str.>=("a").get.sorted === List("a", "b")
-    Ns.str.>=("b").get.sorted === List("b")
-    Ns.str.>=("c").get.sorted === List()
-    Ns.str.>=(str1).get.sorted === List("a", "b")
-
-
-    Ns.int.<(-2).get.sorted === List()
-    Ns.int.<(0).get.sorted === List(-2, -1)
-    Ns.int.<(2).get.sorted === List(-2, -1, 0, 1)
-    Ns.int.<(int1).get.sorted === List(-2, -1, 0)
-
-    Ns.int.>(2).get.sorted === List()
-    Ns.int.>(0).get.sorted === List(1, 2)
-    Ns.int.>(-2).get.sorted === List(-1, 0, 1, 2)
-    Ns.int.>(int1).get.sorted === List(2)
-
-    Ns.int.<=(-2).get.sorted === List(-2)
-    Ns.int.<=(0).get.sorted === List(-2, -1, 0)
-    Ns.int.<=(2).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.int.<=(int1).get.sorted === List(-2, -1, 0, 1)
-
-    Ns.int.>=(2).get.sorted === List(2)
-    Ns.int.>=(0).get.sorted === List(0, 1, 2)
-    Ns.int.>=(-2).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.int.>=(int1).get.sorted === List(1, 2)
-
-
-    Ns.long.<(-2L).get.sorted === List()
-    Ns.long.<(0L).get.sorted === List(-2L, -1L)
-    Ns.long.<(2L).get.sorted === List(-2L, -1L, 0L, 1L)
-    Ns.long.<(long1).get.sorted === List(-2L, -1L, 0L)
-
-    Ns.long.>(2L).get.sorted === List()
-    Ns.long.>(0L).get.sorted === List(1L, 2L)
-    Ns.long.>(-2L).get.sorted === List(-1L, 0L, 1L, 2L)
-    Ns.long.>(long1).get.sorted === List(2L)
-
-    Ns.long.<=(-2L).get.sorted === List(-2L)
-    Ns.long.<=(0L).get.sorted === List(-2L, -1L, 0L)
-    Ns.long.<=(2L).get.sorted === List(-2L, -1L, 0L, 1L, 2L)
-    Ns.long.<=(long1).get.sorted === List(-2L, -1L, 0L, 1L)
-
-    Ns.long.>=(2L).get.sorted === List(2L)
-    Ns.long.>=(0L).get.sorted === List(0L, 1L, 2L)
-    Ns.long.>=(-2L).get.sorted === List(-2L, -1L, 0L, 1L, 2L)
-    Ns.long.>=(long1).get.sorted === List(1L, 2L)
-
-
-    Ns.float.<(-2f).get.sorted === List()
-    Ns.float.<(0f).get.sorted === List(-2f, -1f)
-    Ns.float.<(2f).get.sorted === List(-2f, -1f, 0f, 1f)
-    Ns.float.<(float1).get.sorted === List(-2f, -1f, 0f)
-
-    Ns.float.>(2f).get.sorted === List()
-    Ns.float.>(0f).get.sorted === List(1f, 2f)
-    Ns.float.>(-2f).get.sorted === List(-1f, 0f, 1f, 2f)
-    Ns.float.>(float1).get.sorted === List(2f)
-
-    Ns.float.<=(-2f).get.sorted === List(-2f)
-    Ns.float.<=(0f).get.sorted === List(-2f, -1f, 0f)
-    Ns.float.<=(2f).get.sorted === List(-2f, -1f, 0f, 1f, 2f)
-    Ns.float.<=(float1).get.sorted === List(-2f, -1f, 0f, 1f)
-
-    Ns.float.>=(2f).get.sorted === List(2f)
-    Ns.float.>=(0f).get.sorted === List(0f, 1f, 2f)
-    Ns.float.>=(float1).get.sorted === List(1f, 2f)
-
-
-    Ns.double.<(-2.0).get.sorted === List()
-    Ns.double.<(0.0).get.sorted === List(-2.0, -1.0)
-    Ns.double.<(2.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0)
-    Ns.double.<(double1).get.sorted === List(-2.0, -1.0, 0.0)
-
-    Ns.double.>(2.0).get.sorted === List()
-    Ns.double.>(0.0).get.sorted === List(1.0, 2.0)
-    Ns.double.>(-2.0).get.sorted === List(-1.0, 0.0, 1.0, 2.0)
-    Ns.double.>(double1).get.sorted === List(2.0)
-
-    Ns.double.<=(-2.0).get.sorted === List(-2.0)
-    Ns.double.<=(0.0).get.sorted === List(-2.0, -1.0, 0.0)
-    Ns.double.<=(2.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0, 2.0)
-    Ns.double.<=(double1).get.sorted === List(-2.0, -1.0, 0.0, 1.0)
-
-    Ns.double.>=(2.0).get.sorted === List(2.0)
-    Ns.double.>=(0.0).get.sorted === List(0.0, 1.0, 2.0)
-    Ns.double.>=(-2.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0, 2.0)
-    Ns.double.>=(double1).get.sorted === List(1.0, 2.0)
-
-
-    Ns.bool.<(true).get.sorted === List(false)
-    Ns.bool.<(false).get.sorted === List()
-    Ns.bool.<(bool0).get.sorted === List()
-
-    Ns.bool.>(true).get.sorted === List()
-    Ns.bool.>(false).get.sorted === List(true)
-    Ns.bool.>(bool0).get.sorted === List(true)
-
-    Ns.bool.<=(true).get.sorted === List(false, true)
-    Ns.bool.<=(false).get.sorted === List(false)
-    Ns.bool.<=(bool0).get.sorted === List(false)
-
-    Ns.bool.>=(true).get.sorted === List(true)
-    Ns.bool.>=(false).get.sorted === List(false, true)
-    Ns.bool.>=(bool0).get.sorted === List(false, true)
-
-
-    Ns.date.<(date1).get.sorted === List(date0)
-    Ns.date.<(date2).get.sorted === List(date0, date1)
-
-    Ns.date.>(date1).get.sorted === List(date2)
-    Ns.date.>(date0).get.sorted === List(date1, date2)
-
-    Ns.date.<=(date1).get.sorted === List(date0, date1)
-    Ns.date.<=(date2).get.sorted === List(date0, date1, date2)
-
-    Ns.date.>=(date1).get.sorted === List(date1, date2)
-    Ns.date.>=(date0).get.sorted === List(date0, date1, date2)
-
-
-    // Comparison of random UUIDs omitted...
-
-
-    // todo
-    //    Ns.uri.<(uri1).get.sorted === List(uri0)
-    //    Ns.uri.>(uri1).get.sorted === List(uri2)
-    //    Ns.uri.<=(uri1).get.sorted === List(uri0, uri1)
-    //    Ns.uri.>=(uri1).get.sorted === List(uri1, uri2)
-
-
-    Ns.enum.<("enum1").get.sorted === List("enum0")
-    Ns.enum.>("enum1").get.sorted === List("enum2")
-    Ns.enum.<=("enum1").get.sorted === List("enum0", "enum1")
-    Ns.enum.>=("enum1").get.sorted === List("enum1", "enum2")
-
-    Ns.enum.<(enum1).get.sorted === List("enum0")
-    Ns.enum.>(enum1).get.sorted === List("enum2")
-    Ns.enum.<=(enum1).get.sorted === List("enum0", "enum1")
-    Ns.enum.>=(enum1).get.sorted === List("enum1", "enum2")
-  }
+  //
+  //  "OR" in new Setup {
+  //
+  //    // 3 ways of applying (the same) OR-semantics:
+  //
+  //    // 1. `or`-separated expression
+  //    Ns.str("c" or "a").get === List("a")
+  //
+  //    // 2. Comma-separated values
+  //    Ns.str("c", "a").get === List("a")
+  //
+  //    // 3. List of values
+  //    Ns.str(List("c", "a")).get.sorted === List("a")
+  //
+  //
+  //    // order of values not relevant
+  //    Ns.str("a", "c").get === List("a")
+  //    Ns.str("a" or "c").get === List("a")
+  //    Ns.str(List("a", "c")).get === List("a")
+  //
+  //    // No limit on number of applied values
+  //    Ns.str("a", "b", "c", "d").get.sorted === List("a", "b")
+  //    Ns.str("a" or "b" or "c" or "d").get.sorted === List("a", "b")
+  //    Ns.str(List("a", "b", "c", "d")).get.sorted === List("a", "b")
+  //
+  //    // Applying same value returns single value
+  //    Ns.str("a", "a").get === List("a")
+  //    Ns.str("a" or "a").get === List("a")
+  //    Ns.str(List("a", "a")).get === List("a")
+  //
+  //    // Applying non-matching values returns empty result
+  //    Ns.str("c", "d").get === List()
+  //    Ns.str("c" or "d").get === List()
+  //    Ns.str(List("c", "d")).get === List()
+  //
+  //    // Empty/space character values treated as strings too
+  //    Ns.str("", "    ").get === List("")
+  //    Ns.str("", " ").get.sorted === List("", " ")
+  //
+  //    // We can apply values assigned to variables
+  //    Ns.str(str1 or str2).get.sorted === List("a", "b")
+  //    Ns.str(str1, str2).get.sorted === List("a", "b")
+  //    Ns.str(List(str1, str2)).get.sorted === List("a", "b")
+  //    val needles = List(str1, str2)
+  //    Ns.str(needles).get.sorted === List("a", "b")
+  //
+  //    // We can even mix variables and static values
+  //    Ns.str(str1 or "b").get.sorted === List("a", "b")
+  //    Ns.str("a", str2).get.sorted === List("a", "b")
+  //    Ns.str(List(str1, "b")).get.sorted === List("a", "b")
+  //    val needlesMixed = List("a", str2)
+  //    Ns.str(needlesMixed).get.sorted === List("a", "b")
+  //
+  //
+  //    Ns.int(-1, 0, 1).get.sorted === List(-1, 0, 1)
+  //    Ns.int(0, 1, 2).get.sorted === List(0, 1, 2)
+  //    Ns.int(1, 2, 3).get.sorted === List(1, 2)
+  //    Ns.int(2, 3, 4).get.sorted === List(2)
+  //    Ns.int(3, 4, 5).get.sorted === List()
+  //    Ns.int(int1, int2).get.sorted === List(1, 2)
+  //    Ns.int(int1 or int2).get.sorted === List(1, 2)
+  //    Ns.int(List(int1, int2)).get.sorted === List(1, 2)
+  //
+  //    Ns.long(-1L, 0L, 1L).get.sorted === List(-1L, 0L, 1L)
+  //    Ns.long(0L, 1L, 2L).get.sorted === List(0L, 1L, 2L)
+  //    Ns.long(1L, 2L, 3L).get.sorted === List(1L, 2L)
+  //    Ns.long(2L, 3L, 4L).get.sorted === List(2L)
+  //    Ns.long(3L, 4L, 5L).get.sorted === List()
+  //    Ns.long(long1, long2).get.sorted === List(1L, 2L)
+  //    Ns.long(long1 or long2).get.sorted === List(1L, 2L)
+  //    Ns.long(List(long1, long2)).get.sorted === List(1L, 2L)
+  //
+  //    Ns.float(-1f, 0f, 1f).get.sorted === List(-1f, 0f, 1f)
+  //    Ns.float(0f, 1f, 2f).get.sorted === List(0f, 1f, 2f)
+  //    Ns.float(1f, 2f, 3f).get.sorted === List(1f, 2f)
+  //    Ns.float(2f, 3f, 4f).get.sorted === List(2f)
+  //    Ns.float(3f, 4f, 5f).get.sorted === List()
+  //    Ns.float(float1, float2).get.sorted === List(1f, 2f)
+  //    Ns.float(float1 or float2).get.sorted === List(1f, 2f)
+  //    Ns.float(List(float1, float2)).get.sorted === List(1f, 2f)
+  //
+  //    Ns.double(-1.0, 0.0, 1.0).get.sorted === List(-1.0, 0.0, 1.0)
+  //    Ns.double(0.0, 1.0, 2.0).get.sorted === List(0.0, 1.0, 2.0)
+  //    Ns.double(1.0, 2.0, 3.0).get.sorted === List(1.0, 2.0)
+  //    Ns.double(2.0, 3.0, 4.0).get.sorted === List(2.0)
+  //    Ns.double(3.0, 4.0, 5.0).get.sorted === List()
+  //    Ns.double(double1, double2).get.sorted === List(1.0, 2.0)
+  //    Ns.double(double1 or double2).get.sorted === List(1.0, 2.0)
+  //    Ns.double(List(double1, double2)).get.sorted === List(1.0, 2.0)
+  //
+  //    // Weird case though to apply OR-semantics to Boolean attribute...
+  //    Ns.bool(true or false).get === List(false, true)
+  //    Ns.bool(true, false).get === List(false, true)
+  //    Ns.bool(bool0, bool1).get === List(false, true)
+  //    Ns.bool(bool0 or bool1).get === List(false, true)
+  //    Ns.bool(List(bool0, bool1)).get === List(false, true)
+  //
+  //    val now = new java.util.Date()
+  //    Ns.date(date1, now).get === List(date1)
+  //    Ns.date(date1, date2).get.sorted === List(date1, date2)
+  //    Ns.date(date1 or date2).get.sorted === List(date1, date2)
+  //    Ns.date(List(date1, date2)).get.sorted === List(date1, date2)
+  //
+  //    //    Ns.uuid(uuid1, uuid2).get === List(uuid1, uuid2)
+  //    //    Ns.uuid(uuid1 or uuid2).get === List(uuid1, uuid2)
+  //    //    Ns.uuid(List(uuid1, uuid2)).get === List(uuid1, uuid2)
+  //
+  //    Ns.uuid(uuid1, uuid2).get.sortBy(_.toString) === List(uuid1, uuid2)
+  //    Ns.uuid(uuid1 or uuid2).get.sortBy(_.toString) === List(uuid1, uuid2)
+  //    Ns.uuid(List(uuid1, uuid2)).get.sortBy(_.toString) === List(uuid1, uuid2)
+  //
+  //    //    Ns.uri.debug
+  //    //    Ns.uri(uri1).debug
+  //    //    Ns.uri(uri1).get === List(uri1)
+  //    //    Ns.uri(uri2).get === List(uri2)
+  //
+  //    Ns.enum("enum1", "enum2").get.sorted === List("enum1", "enum2")
+  //    Ns.enum(enum1, enum2).get.sorted === List("enum1", "enum2")
+  //    Ns.enum(enum1 or enum2).get.sorted === List("enum1", "enum2")
+  //    Ns.enum(List(enum1, enum2)).get.sorted === List("enum1", "enum2")
+  //  }
+  //
+  //
+  //  "Range" in new Setup {
+  //
+  //    Ns.str.<("").get.sorted === List()
+  //    Ns.str.<(" ").get.sorted === List("")
+  //    Ns.str.<(",").get.sorted === List("", " ")
+  //    Ns.str.<(".").get.sorted === List("", " ", ",")
+  //    Ns.str.<("?").get.sorted === List("", " ", ",", ".")
+  //    Ns.str.<("A").get.sorted === List("", " ", ",", ".", "?")
+  //    Ns.str.<("B").get.sorted === List("", " ", ",", ".", "?", "A")
+  //    Ns.str.<("a").get.sorted === List("", " ", ",", ".", "?", "A", "B")
+  //    Ns.str.<("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
+  //    Ns.str.<("d").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+  //    Ns.str.<(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B")
+  //
+  //    Ns.str.>("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
+  //    Ns.str.>(" ").get.sorted === List(",", ".", "?", "A", "B", "a", "b")
+  //    Ns.str.>(",").get.sorted === List(".", "?", "A", "B", "a", "b")
+  //    Ns.str.>(".").get.sorted === List("?", "A", "B", "a", "b")
+  //    Ns.str.>("?").get.sorted === List("A", "B", "a", "b")
+  //    Ns.str.>("A").get.sorted === List("B", "a", "b")
+  //    Ns.str.>("B").get.sorted === List("a", "b")
+  //    Ns.str.>("C").get.sorted === List("a", "b")
+  //    Ns.str.>("a").get.sorted === List("b")
+  //    Ns.str.>("b").get.sorted === List()
+  //    Ns.str.>(str1).get.sorted === List("b")
+  //
+  //    Ns.str.<=("").get.sorted === List("")
+  //    Ns.str.<=(" ").get.sorted === List("", " ")
+  //    Ns.str.<=(",").get.sorted === List("", " ", ",")
+  //    Ns.str.<=(".").get.sorted === List("", " ", ",", ".")
+  //    Ns.str.<=("?").get.sorted === List("", " ", ",", ".", "?")
+  //    Ns.str.<=("A").get.sorted === List("", " ", ",", ".", "?", "A")
+  //    Ns.str.<=("B").get.sorted === List("", " ", ",", ".", "?", "A", "B")
+  //    Ns.str.<=("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
+  //    Ns.str.<=("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+  //    Ns.str.<=(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
+  //
+  //    Ns.str.>=("").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+  //    Ns.str.>=(" ").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
+  //    Ns.str.>=(",").get.sorted === List(",", ".", "?", "A", "B", "a", "b")
+  //    Ns.str.>=(".").get.sorted === List(".", "?", "A", "B", "a", "b")
+  //    Ns.str.>=("?").get.sorted === List("?", "A", "B", "a", "b")
+  //    Ns.str.>=("A").get.sorted === List("A", "B", "a", "b")
+  //    Ns.str.>=("B").get.sorted === List("B", "a", "b")
+  //    Ns.str.>=("a").get.sorted === List("a", "b")
+  //    Ns.str.>=("b").get.sorted === List("b")
+  //    Ns.str.>=("c").get.sorted === List()
+  //    Ns.str.>=(str1).get.sorted === List("a", "b")
+  //
+  //
+  //    Ns.int.<(-2).get.sorted === List()
+  //    Ns.int.<(0).get.sorted === List(-2, -1)
+  //    Ns.int.<(2).get.sorted === List(-2, -1, 0, 1)
+  //    Ns.int.<(int1).get.sorted === List(-2, -1, 0)
+  //
+  //    Ns.int.>(2).get.sorted === List()
+  //    Ns.int.>(0).get.sorted === List(1, 2)
+  //    Ns.int.>(-2).get.sorted === List(-1, 0, 1, 2)
+  //    Ns.int.>(int1).get.sorted === List(2)
+  //
+  //    Ns.int.<=(-2).get.sorted === List(-2)
+  //    Ns.int.<=(0).get.sorted === List(-2, -1, 0)
+  //    Ns.int.<=(2).get.sorted === List(-2, -1, 0, 1, 2)
+  //    Ns.int.<=(int1).get.sorted === List(-2, -1, 0, 1)
+  //
+  //    Ns.int.>=(2).get.sorted === List(2)
+  //    Ns.int.>=(0).get.sorted === List(0, 1, 2)
+  //    Ns.int.>=(-2).get.sorted === List(-2, -1, 0, 1, 2)
+  //    Ns.int.>=(int1).get.sorted === List(1, 2)
+  //
+  //
+  //    Ns.long.<(-2L).get.sorted === List()
+  //    Ns.long.<(0L).get.sorted === List(-2L, -1L)
+  //    Ns.long.<(2L).get.sorted === List(-2L, -1L, 0L, 1L)
+  //    Ns.long.<(long1).get.sorted === List(-2L, -1L, 0L)
+  //
+  //    Ns.long.>(2L).get.sorted === List()
+  //    Ns.long.>(0L).get.sorted === List(1L, 2L)
+  //    Ns.long.>(-2L).get.sorted === List(-1L, 0L, 1L, 2L)
+  //    Ns.long.>(long1).get.sorted === List(2L)
+  //
+  //    Ns.long.<=(-2L).get.sorted === List(-2L)
+  //    Ns.long.<=(0L).get.sorted === List(-2L, -1L, 0L)
+  //    Ns.long.<=(2L).get.sorted === List(-2L, -1L, 0L, 1L, 2L)
+  //    Ns.long.<=(long1).get.sorted === List(-2L, -1L, 0L, 1L)
+  //
+  //    Ns.long.>=(2L).get.sorted === List(2L)
+  //    Ns.long.>=(0L).get.sorted === List(0L, 1L, 2L)
+  //    Ns.long.>=(-2L).get.sorted === List(-2L, -1L, 0L, 1L, 2L)
+  //    Ns.long.>=(long1).get.sorted === List(1L, 2L)
+  //
+  //
+  //    Ns.float.<(-2f).get.sorted === List()
+  //    Ns.float.<(0f).get.sorted === List(-2f, -1f)
+  //    Ns.float.<(2f).get.sorted === List(-2f, -1f, 0f, 1f)
+  //    Ns.float.<(float1).get.sorted === List(-2f, -1f, 0f)
+  //
+  //    Ns.float.>(2f).get.sorted === List()
+  //    Ns.float.>(0f).get.sorted === List(1f, 2f)
+  //    Ns.float.>(-2f).get.sorted === List(-1f, 0f, 1f, 2f)
+  //    Ns.float.>(float1).get.sorted === List(2f)
+  //
+  //    Ns.float.<=(-2f).get.sorted === List(-2f)
+  //    Ns.float.<=(0f).get.sorted === List(-2f, -1f, 0f)
+  //    Ns.float.<=(2f).get.sorted === List(-2f, -1f, 0f, 1f, 2f)
+  //    Ns.float.<=(float1).get.sorted === List(-2f, -1f, 0f, 1f)
+  //
+  //    Ns.float.>=(2f).get.sorted === List(2f)
+  //    Ns.float.>=(0f).get.sorted === List(0f, 1f, 2f)
+  //    Ns.float.>=(float1).get.sorted === List(1f, 2f)
+  //
+  //
+  //    Ns.double.<(-2.0).get.sorted === List()
+  //    Ns.double.<(0.0).get.sorted === List(-2.0, -1.0)
+  //    Ns.double.<(2.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0)
+  //    Ns.double.<(double1).get.sorted === List(-2.0, -1.0, 0.0)
+  //
+  //    Ns.double.>(2.0).get.sorted === List()
+  //    Ns.double.>(0.0).get.sorted === List(1.0, 2.0)
+  //    Ns.double.>(-2.0).get.sorted === List(-1.0, 0.0, 1.0, 2.0)
+  //    Ns.double.>(double1).get.sorted === List(2.0)
+  //
+  //    Ns.double.<=(-2.0).get.sorted === List(-2.0)
+  //    Ns.double.<=(0.0).get.sorted === List(-2.0, -1.0, 0.0)
+  //    Ns.double.<=(2.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0, 2.0)
+  //    Ns.double.<=(double1).get.sorted === List(-2.0, -1.0, 0.0, 1.0)
+  //
+  //    Ns.double.>=(2.0).get.sorted === List(2.0)
+  //    Ns.double.>=(0.0).get.sorted === List(0.0, 1.0, 2.0)
+  //    Ns.double.>=(-2.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0, 2.0)
+  //    Ns.double.>=(double1).get.sorted === List(1.0, 2.0)
+  //
+  //
+  //    Ns.bool.<(true).get.sorted === List(false)
+  //    Ns.bool.<(false).get.sorted === List()
+  //    Ns.bool.<(bool0).get.sorted === List()
+  //
+  //    Ns.bool.>(true).get.sorted === List()
+  //    Ns.bool.>(false).get.sorted === List(true)
+  //    Ns.bool.>(bool0).get.sorted === List(true)
+  //
+  //    Ns.bool.<=(true).get.sorted === List(false, true)
+  //    Ns.bool.<=(false).get.sorted === List(false)
+  //    Ns.bool.<=(bool0).get.sorted === List(false)
+  //
+  //    Ns.bool.>=(true).get.sorted === List(true)
+  //    Ns.bool.>=(false).get.sorted === List(false, true)
+  //    Ns.bool.>=(bool0).get.sorted === List(false, true)
+  //
+  //
+  //    Ns.date.<(date1).get.sorted === List(date0)
+  //    Ns.date.<(date2).get.sorted === List(date0, date1)
+  //
+  //    Ns.date.>(date1).get.sorted === List(date2)
+  //    Ns.date.>(date0).get.sorted === List(date1, date2)
+  //
+  //    Ns.date.<=(date1).get.sorted === List(date0, date1)
+  //    Ns.date.<=(date2).get.sorted === List(date0, date1, date2)
+  //
+  //    Ns.date.>=(date1).get.sorted === List(date1, date2)
+  //    Ns.date.>=(date0).get.sorted === List(date0, date1, date2)
+  //
+  //
+  //    // Comparison of random UUIDs omitted...
+  //
+  //
+  //    // todo
+  //    //    Ns.uri.<(uri1).get.sorted === List(uri0)
+  //    //    Ns.uri.>(uri1).get.sorted === List(uri2)
+  //    //    Ns.uri.<=(uri1).get.sorted === List(uri0, uri1)
+  //    //    Ns.uri.>=(uri1).get.sorted === List(uri1, uri2)
+  //
+  //
+  //    Ns.enum.<("enum1").get.sorted === List("enum0")
+  //    Ns.enum.>("enum1").get.sorted === List("enum2")
+  //    Ns.enum.<=("enum1").get.sorted === List("enum0", "enum1")
+  //    Ns.enum.>=("enum1").get.sorted === List("enum1", "enum2")
+  //
+  //    Ns.enum.<(enum1).get.sorted === List("enum0")
+  //    Ns.enum.>(enum1).get.sorted === List("enum2")
+  //    Ns.enum.<=(enum1).get.sorted === List("enum0", "enum1")
+  //    Ns.enum.>=(enum1).get.sorted === List("enum1", "enum2")
+  //  }
 
 
   "Negation" in new Setup {
@@ -419,33 +426,72 @@ class ExpressionsOne extends CoreSpec {
     Ns.int.not(7).get.sorted === List(-2, -1, 0, 1, 2)
     Ns.int.not(1).get.sorted === List(-2, -1, 0, 2)
     Ns.int.not(int1).get.sorted === List(-2, -1, 0, 2)
+
+
+    Ns.long.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.long.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.long.not(long1).get.sorted === List(-2, -1, 0, 2)
+
+
+    Ns.float.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.float.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.float.not(float1).get.sorted === List(-2, -1, 0, 2)
+
+
+    Ns.double.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.double.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.double.not(double1).get.sorted === List(-2, -1, 0, 2)
+
+
+    Ns.bool.not(true).get === List(false)
+    Ns.bool.not(false).get === List(true)
+
+    val now = new Date()
+    Ns.date.not(now).get.sorted === List(date0, date1, date2)
+    Ns.date.not(date1).get.sorted === List(date0, date2)
+    // Todo?
+//    Ns.date.not(new Date()).get.sorted === List(date0, date1, date2)
+
+    val uuid3 = randomUUID()
+    Ns.uuid.not(uuid3).get.sortBy(_.toString) === List(uuid0, uuid1, uuid2)
+    Ns.uuid.not(uuid1).get.sortBy(_.toString) === List(uuid0, uuid2)
+    // Todo?
+//    Ns.uuid.not(randomUUID()).get.sortBy(_.toString) === List(uuid0, uuid1, uuid2)
+
+    // todo
+    //    Ns.uri.not(new URI("other")).get.sortBy(_.toString) === List(uri0, uri1, uri2)
+    //    Ns.uri.not(uri1).get.sortBy(_.toString) === List(uri0, uri2)
+
+    Ns.enum.not("enum1").get.sorted === List(enum0, enum2)
+    Ns.enum.not(enum1).get.sorted === List(enum0, enum2)
   }
 
 
-  "Fulltext search" in new CoreSetup {
 
-    Ns.str insert List("The quick fox jumps", "Ten slow monkeys")
-
-    // Trivial words like "The" not indexed
-    Ns.str.contains("The").get === List()
-    Ns.str.contains("Ten").get === List("Ten slow monkeys")
-
-    // Only full words counted
-    Ns.str.contains("jumps").get === List("The quick fox jumps")
-    Ns.str.contains("jump").get === List()
-
-    // Empty spaces ignored
-    Ns.str.contains("slow ").get === List("Ten slow monkeys")
-    Ns.str.contains(" slow").get === List("Ten slow monkeys")
-    Ns.str.contains(" slow ").get === List("Ten slow monkeys")
-    Ns.str.contains("  slow  ").get === List("Ten slow monkeys")
-
-    // Words are searched individually - order and spaces ignored
-    Ns.str.contains("slow     monkeys").get === List("Ten slow monkeys")
-    Ns.str.contains("monkeys slow").get === List("Ten slow monkeys")
-    Ns.str.contains("monkeys quick").get === List("Ten slow monkeys", "The quick fox jumps")
-    Ns.str.contains("quick monkeys").get === List("Ten slow monkeys", "The quick fox jumps")
-  }
+  //  "Fulltext search" in new CoreSetup {
+  //
+  //    Ns.str insert List("The quick fox jumps", "Ten slow monkeys")
+  //
+  //    // Trivial words like "The" not indexed
+  //    Ns.str.contains("The").get === List()
+  //    Ns.str.contains("Ten").get === List("Ten slow monkeys")
+  //
+  //    // Only full words counted
+  //    Ns.str.contains("jumps").get === List("The quick fox jumps")
+  //    Ns.str.contains("jump").get === List()
+  //
+  //    // Empty spaces ignored
+  //    Ns.str.contains("slow ").get === List("Ten slow monkeys")
+  //    Ns.str.contains(" slow").get === List("Ten slow monkeys")
+  //    Ns.str.contains(" slow ").get === List("Ten slow monkeys")
+  //    Ns.str.contains("  slow  ").get === List("Ten slow monkeys")
+  //
+  //    // Words are searched individually - order and spaces ignored
+  //    Ns.str.contains("slow     monkeys").get === List("Ten slow monkeys")
+  //    Ns.str.contains("monkeys slow").get === List("Ten slow monkeys")
+  //    Ns.str.contains("monkeys quick").get === List("Ten slow monkeys", "The quick fox jumps")
+  //    Ns.str.contains("quick monkeys").get === List("Ten slow monkeys", "The quick fox jumps")
+  //  }
 
 
   //  "String logic" in new CoreSetup {
