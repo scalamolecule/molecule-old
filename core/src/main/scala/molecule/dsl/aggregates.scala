@@ -21,7 +21,6 @@ trait Aggregate1[Ns1[_], A] {
   def apply(v: rands)   : Ns1[Stream[A]] = ???
   def apply(v: samples) : Ns1[Vector[A]] = ???
 
-//  def apply(v: count)        : Ns1[Long] = ???
   def apply(v: count)        : Ns1[Int] = ???
   def apply(v: countDistinct): Ns1[Int] = ???
   def apply(v: sum)          : Ns1[A] = ???

@@ -3,6 +3,7 @@ package transform
 import molecule.ast.model._
 import molecule.dsl.schemaDSL._
 import molecule.ops.TreeOps
+
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
@@ -84,8 +85,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case r@q"$prev.$backRefAttr" if r.isBackRef    => traverse(q"$prev", ReBond(r.refThis, firstLow(r.name.tail), r.refNext))
     case r@q"$prev.$refAttr" if r.isRef            => traverse(q"$prev", Bond(r.refThis, r.name, r.refNext))
-    case a@q"$prev.$cur" if a.isEnum               => traverse(q"$prev", Atom(a.ns, a.name, a.tpeS, a.card, EnumVal, Some(a.enumPrefix)))
-    case a@q"$prev.$cur" if a.isValueAttr          => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, a.tpeS, a.card, VarValue))
+    case a@q"$prev.$cur" if a.isEnum               => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
+    case a@q"$prev.$cur" if a.isValueAttr          => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
     case a@q"$prev.$cur" if a.isRef || a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
 
 
@@ -101,6 +102,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
 
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
+  }
+
+  def cast(atom: Tree) = atom.tpeS match {
+    case "Int"   => "Long"
+    case "Float" => "Double"
+    case other   => other
   }
 
   def walk(prev: Tree, ns: String, cur: Tree, thisElement: Element) = {
@@ -180,16 +187,16 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     //      case prev                              => x(8, prev, curTree, value)
     //    }
     previous match {
-      case prev if cur.head.isUpper          => Atom(attr.name, cur, attr.tpeS, attr.card, value, enumPrefix)
+      case prev if cur.head.isUpper          => Atom(attr.name, cur, cast(attr), attr.card, value, enumPrefix)
       case prev if cur == "e" && prev.isRef  => Meta(prev.name, prev.refNext, "e", NoValue, value)
-      case prev if cur == "e" && prev.isAttr => Atom(prev.ns, cur, attr.tpeS, attr.card, value, enumPrefix)
+      case prev if cur == "e" && prev.isAttr => Atom(prev.ns, cur, cast(attr), attr.card, value, enumPrefix)
       case prev if cur == "e"                => Meta(prev.name, cur, "e", NoValue, value)
       case prev if cur == "a"                => Atom("?", "attr", "a", 1, value)
       case prev if cur == "a_"               => Atom("?", "attr_", "a", 1, value)
       case prev if cur == "ns"               => Atom("ns", "?", "ns", 1, value)
       case prev if cur == "ns_"              => Atom("ns_", "?", "ns", 1, value)
-      case prev if attr.isAttr               => Atom(attr.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
-      case prev if prev.isAttr               => Atom(prev.ns, attr.name, attr.tpeS, attr.card, value, enumPrefix)
+      case prev if attr.isAttr               => Atom(attr.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
+      case prev if prev.isAttr               => Atom(prev.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
       case prev                              => Atom(attr.name, cur, "Int", attr.card, value, enumPrefix)
     }
   }

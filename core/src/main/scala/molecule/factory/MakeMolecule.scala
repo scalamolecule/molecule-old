@@ -1,5 +1,7 @@
 package molecule.factory
 
+import java.lang.{Double => jDouble, Long => jLong}
+
 import molecule.api._
 import molecule.ast.model._
 import molecule.dsl._
@@ -11,7 +13,6 @@ import molecule.transform._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
-import java.lang.{Long => jLong, Double => jDouble}
 
 trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
@@ -33,26 +34,27 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
     //    x(1, dsl.tree, model)
 
+    def keyValues(idents: Seq[Any]) = idents.flatMap {
+      case ident: String if ident.startsWith("__ident__") => Some(ident -> q"${TermName(ident.substring(9))}")
+      case _                                              => None
+    }
+
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
-        case atom@Atom(_, _, _, _, Eq(Seq(i1: String)), _, _)
-          if i1.startsWith("__ident__")                                                               =>
-          Seq(i1 -> q"${TermName(i1.substring(9))}")
-        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String)), _, _)
-          if i1.startsWith("__ident__") && i2.startsWith("__ident__")                                 =>
-          Seq(i1 -> q"${TermName(i1.substring(9))}", i2 -> q"${TermName(i2.substring(9))}")
-        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String, i3: String)), _, _)
-          if i1.startsWith("__ident__") && i2.startsWith("__ident__") && i3.startsWith("__ident__")   =>
-          Seq(i1 -> q"${TermName(i1.substring(9))}", i2 -> q"${TermName(i2.substring(9))}", i3 -> q"${TermName(i3.substring(9))}")
-        case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => Seq(ident -> q"${TermName(ident.substring(9))}")
-        case meta@Meta(_, _, _, _, Eq(Seq(ident: String))) if ident.startsWith("__ident__")           => Seq(ident -> q"${TermName(ident.substring(9))}")
-        case Group(_, nestedElements)                                                                 => mapIdentifiers(nestedElements, identifiers0)
-        case TxModel(txElements)                                                                      => mapIdentifiers(txElements, identifiers0)
+        case atom@Atom(_, _, _, _, Eq(idents), _, _)     => keyValues(idents)
+        case atom@Atom(_, _, _, _, Neq(idents), _, _)    => keyValues(idents)
+        case atom@Atom(_, _, _, _, Lt(ident), _, _)      => keyValues(Seq(ident))
+        case atom@Atom(_, _, _, _, Gt(ident), _, _)      => keyValues(Seq(ident))
+        case atom@Atom(_, _, _, _, Le(ident), _, _)      => keyValues(Seq(ident))
+        case atom@Atom(_, _, _, _, Ge(ident), _, _)      => keyValues(Seq(ident))
+        case atom@Atom(_, _, _, _, Remove(idents), _, _) => keyValues(idents)
+        case meta@Meta(_, _, _, _, Eq(idents))           => keyValues(idents)
+        case Group(_, nestedElements)                    => mapIdentifiers(nestedElements, identifiers0)
+        case TxModel(txElements)                         => mapIdentifiers(txElements, identifiers0)
       }).flatten
       (identifiers0 ++ newIdentifiers).distinct
     }
-    val identifiers = mapIdentifiers(model.elements).toMap
-
+    val identMap = mapIdentifiers(model.elements).toMap
 
     q"""
       import molecule._
@@ -67,21 +69,23 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       import shapeless._
       import java.lang.{Long => jLong, Double => jDouble}
 
+      def getValues(idents: Seq[Any]) = idents.map {
+        case ident: String if ident.startsWith("__ident__") => $identMap.get(ident).get
+        case other                                          => other
+      }
+
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
-        case atom@Atom(_, _, _, _, Eq(Seq(i1: String)), _, _)
-          if i1.startsWith("__ident__") =>
-          atom.copy(value = Eq(Seq($identifiers.get(i1).get)))
-        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String)), _, _)
-          if i1.startsWith("__ident__") && i2.startsWith("__ident__") =>
-          atom.copy(value = Eq(Seq($identifiers.get(i1).get, $identifiers.get(i2).get)))
-        case atom@Atom(_, _, _, _, Eq(Seq(i1: String, i2: String, i3: String)), _, _)
-          if i1.startsWith("__ident__") && i2.startsWith("__ident__") && i3.startsWith("__ident__") =>
-          atom.copy(value = Eq(Seq($identifiers.get(i1).get, $identifiers.get(i2).get, $identifiers.get(i3).get)))
-        case atom@Atom(_, _, _, _, Remove(Seq(ident: String)), _, _) if ident.startsWith("__ident__") => atom.copy(value = Remove(Seq($identifiers.get(ident).get)))
-        case meta@Meta(_, _, _, _, Eq(Seq(ident: String)))           if ident.startsWith("__ident__") => meta.copy(value = Eq(Seq($identifiers.get(ident).get)))
-        case Group(ns, nestedElements)                                                                => Group(ns, resolveIdentifiers(nestedElements))
-        case TxModel(txElements)                                                                      => TxModel(resolveIdentifiers(txElements))
-        case other                                                                                    => other
+        case atom@Atom(_, _, _, _, Eq(idents), _, _)         => atom.copy(value = Eq(getValues(idents)))
+        case atom@Atom(_, _, _, _, Neq(idents), _, _)        => atom.copy(value = Neq(getValues(idents)))
+        case atom@Atom(_, _, _, _, Lt(ident), _, _)          => atom.copy(value = Lt(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Gt(ident), _, _)          => atom.copy(value = Gt(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Le(ident), _, _)          => atom.copy(value = Le(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Ge(ident), _, _)          => atom.copy(value = Ge(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Remove(Seq(ident)), _, _) => atom.copy(value = Remove(getValues(Seq(ident))))
+        case meta@Meta(_, _, _, _, Eq(Seq(ident)))           => meta.copy(value = Eq(getValues(Seq(ident))))
+        case Group(ns, nestedElements)                       => Group(ns, resolveIdentifiers(nestedElements))
+        case TxModel(txElements)                             => TxModel(resolveIdentifiers(txElements))
+        case other                                           => other
       }
       val model = Model(resolveIdentifiers($model.elements))
       val query = Model2Query(model)
@@ -134,13 +138,13 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       q"""
          query.f.outputs.head match {
            case AggrExpr("sum",_,_) => ${A.toString} match {
-             case "Float" => if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat else $data.asInstanceOf[$A]
              case "Int"   => if($data.isInstanceOf[jLong]) $data.asInstanceOf[jLong].toInt else $data.asInstanceOf[$A]
+             case "Float" => if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat else $data.asInstanceOf[$A]
              case _       => $data
            }
            case AggrExpr("median",_,_) => ${A.toString} match {
-             case "Float" => if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat else $data.asInstanceOf[$A]
              case "Int"   => if($data.isInstanceOf[jLong]) $data.asInstanceOf[jLong].toInt else $data.asInstanceOf[$A]
+             case "Float" => if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat else $data.asInstanceOf[$A]
              case _       => $data
            }
            case _ =>
@@ -196,15 +200,15 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
           query.f.outputs($i) match {
             case AggrExpr("sum",_,_) =>
               ${t.toString} match {
-                case "Float" => if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
                 case "Int"   => if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
+                case "Float" => if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
                 case _       => $data.get($i).asInstanceOf[$t]
               }
 
             case AggrExpr("median",_,_) =>
               ${t.toString} match {
-                case "Float" => if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
                 case "Int"   => if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
+                case "Float" => if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
                 case _       => $data.get($i).asInstanceOf[$t]
               }
 
