@@ -89,26 +89,41 @@ object schemaDSL {
     def apply(values: Long*) : Ns with Attr = ???
     def add(value: Long)     : Ns with Attr = ???
     def remove(values: Long*): Ns with Attr = ???
-
-//    def apply(test: maybe) : Ns with Attr = ???
+    // def apply(test: maybe) : Ns with Attr = ???
   }
   trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns with Attr = ???
   }
 
+  //  trait Range
+  //  trait Compare[Ns, In, T] extends Range {
+  //    def < (value: T)          : Ns with Range with Attr = ???
+  //    def > (value: T)          : Ns with Range with Attr = ???
+  //    def <= (value: T)         : Ns with Range with Attr = ???
+  //    def >= (value: T)         : Ns with Range with Attr = ???
+  //
+  //    // Input
+  //    def < (in: ?)  : In with Range with Attr = ???
+  //    def > (in: ?)  : In with Range with Attr = ???
+  //    def <= (in: ?) : In with Range with Attr = ???
+  //    def >= (in: ?) : In with Range with Attr = ???
+  //  }
+
   sealed trait ValueAttr[Ns, In, T] extends Attr {
     def apply(expr1: Exp1[T])       : Ns with Attr = ???
     def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
     def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
-//    def eq(value: T)                : Ns with Attr = ???
 
-    def not(value: T)         : Ns with Attr = ???
+    def not(one: T, more: T*)         : Ns with Attr = ???
+    // Todo: remove this when Intellij can infer from the next method alone...
     def != (value: T)         : Ns with Attr = ???
     def != (one: T, more: T*) : Ns with Attr = ???
-    def < (value: T)          : Ns with Attr = ???
-    def > (value: T)          : Ns with Attr = ???
-    def <= (value: T)         : Ns with Attr = ???
-    def >= (value: T)         : Ns with Attr = ???
+
+    // def > (value: T)          : Ns with Compare[Ns, In, T] with Attr = ???
+    def < (value: T)  : Ns with Attr = ???
+    def > (value: T)  : Ns with Attr = ???
+    def <= (value: T) : Ns with Attr = ???
+    def >= (value: T) : Ns with Attr = ???
 
     // Input
     def < (in: ?)  : In with Attr = ???
@@ -117,7 +132,7 @@ object schemaDSL {
     def >= (in: ?) : In with Attr = ???
 
     def apply(in: ?) : In with Attr = ???
-//    def apply(test: maybe) : Ns with Attr = ???
+    // def apply(test: maybe) : Ns with Attr = ???
   }
 
   // One-cardinality
@@ -141,8 +156,9 @@ object schemaDSL {
   // Many-cardinality
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
     def apply(values: T*) : Ns with Attr = ???
-//    def apply(one: T, more: T*)                    : Ns with Attr = ???
+    // def apply(one: T, more: T*)                    : Ns with Attr = ???
     def apply(oneSet: S, moreSets: S*)             : Ns with Attr = ???
+
     def add(value: T)                              : Ns with Attr = ???
     def remove(values: T*)                         : Ns with Attr = ???
     def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???

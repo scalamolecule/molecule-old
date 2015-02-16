@@ -159,12 +159,12 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
   val flatStmts = stmtss.flatten.map {
     case Add(e, a, i: Int)   => Add(e, a, i.toLong: java.lang.Long).toJava
     case Add(e, a, f: Float) => Add(e, a, f.toDouble: java.lang.Double).toJava
-    case Add(e, a, d: Date)  => Add(e, a, d).toJava
-    case Add(e, a, v: UUID)  => Add(e, a, v).toJava
+//    case Add(e, a, d: Date)  => Add(e, a, d).toJava
+//    case Add(e, a, v: UUID)  => Add(e, a, v).toJava
 //    case Add(e, a, v: URI)   => Add(e, a, v).toJava
     case other               => other.toJava
   }.asJava
-  //  x(7, stmtss, flatStmts)
+//    x(7, stmtss, flatStmts)
 
   //  val xx = Util.list(Util.list(":db/add", Peer.tempid(":db.part/user"), ":ns/float", 1f.toDouble: java.lang.Double))
   //  val txResult: jMap[_, _] = conn.transact(xx).get

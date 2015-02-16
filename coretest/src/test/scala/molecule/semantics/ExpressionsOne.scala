@@ -7,7 +7,7 @@ import molecule.semantics.dsl.coreTest._
 
 class ExpressionsOne extends CoreSpec {
 
-  class Setup extends CoreSetup {
+  class OneSetup extends CoreSetup {
     Ns.str insert List("", " ", ",", ".", "?", "A", "B", "a", "b")
     Ns.int insert List(-2, -1, 0, 1, 2)
     Ns.long insert List(-2L, -1L, 0L, 1L, 2L)
@@ -16,12 +16,13 @@ class ExpressionsOne extends CoreSpec {
     Ns.bool insert List(true, false)
     Ns.date insert List(date0, date1, date2)
     Ns.uuid insert List(uuid0, uuid1, uuid2)
+    Ns.uri insert List(uri1, uri2)
     Ns.uri insert List(uri0, uri1, uri2)
     Ns.enum insert List("enum0", "enum1", "enum2")
   }
 
 
-  "Equals" in new Setup {
+  "Match 1 value" in new OneSetup {
 
     Ns.str("").get === List("") // same as Ns.str.apply("").get
     Ns.str(" ").get === List(" ")
@@ -35,7 +36,6 @@ class ExpressionsOne extends CoreSpec {
 
     // Apply value assigned to a variable
     Ns.str(str1).get === List("a")
-
 
     Ns.int(1).get === List(1)
     Ns.int(0).get === List(0)
@@ -75,7 +75,15 @@ class ExpressionsOne extends CoreSpec {
     Ns.uuid(uuid1).get === List(uuid1)
     Ns.uuid(uuid2).get === List(uuid2)
 
-    // todo
+    import datomic._
+
+    //Peer.q(s"""[:find ?a ?b :where [?a :ns/uri ?b]]""", conn.db)
+    // [[17592186045436 #<URI uri1>], [17592186045437 #<URI uri2>]]
+
+    // Both give empty result set
+    //    Peer.q( s"""[:find ?a :where [?a :ns/uri "uri1"]]""", conn.db) === 42
+    //    Peer.q( s"""[:find ?a :where [?a :ns/uri (java.net.URI. "uri1")]]""", conn.db) === 42
+
     //    Ns.uri.debug
     //    Ns.uri(uri1).debug
     //    Ns.uri(uri1).get === List(uri1)
@@ -90,7 +98,7 @@ class ExpressionsOne extends CoreSpec {
   }
 
 
-  "OR" in new Setup {
+  "Match 1 or more values" in new OneSetup {
 
     // 3 ways of applying (the same) OR-semantics:
 
@@ -216,7 +224,103 @@ class ExpressionsOne extends CoreSpec {
   }
 
 
-  "Range" in new Setup {
+  "Exclude 1 or more values" in new OneSetup {
+
+    Ns.str.not("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
+    Ns.str.not(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
+    Ns.str.not("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
+    Ns.str.not("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
+    Ns.str.not("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
+    Ns.str.not("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
+    Ns.str.not("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
+    Ns.str.not("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+
+    // Same as
+    Ns.str.!=("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
+    Ns.str.!=("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
+    Ns.str.!=("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
+    Ns.str.!=("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
+    Ns.str.!=("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
+    Ns.str.!=("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
+    Ns.str.!=("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+    Ns.str.!=("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
+
+    Ns.str.not(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
+    Ns.str.!=(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
+
+    // Negate multiple values ("NOR"-logic: not 'a AND not 'b AND ...)
+    Ns.str.not("", " ").get.sorted === List(",", ".", "?", "A", "B", "a", "b")
+    Ns.str.not("", " ", ",", ".", "?").get.sorted === List("A", "B", "a", "b")
+    Ns.str.not("", " ", ",", ".", "?", "A", "B").get.sorted === List("a", "b")
+    Ns.str.not("", " ", ",", ".", "?", "A", "B", "a", "b").get.sorted === List()
+
+
+    Ns.int.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.int.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.int.not(-1, 0, 1).get.sorted === List(-2, 2)
+    Ns.int.not(int1).get.sorted === List(-2, -1, 0, 2)
+    Ns.int.not(int1, int2).get.sorted === List(-2, -1, 0)
+
+
+    Ns.long.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.long.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.long.not(-1, 0, 1).get.sorted === List(-2, 2)
+    Ns.long.not(long1).get.sorted === List(-2, -1, 0, 2)
+    Ns.long.not(long1, long1).get.sorted === List(-2, -1, 0, 2)
+
+
+    Ns.float.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.float.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.float.not(-1, 0, 1).get.sorted === List(-2, 2)
+    Ns.float.not(float1).get.sorted === List(-2, -1, 0, 2)
+    Ns.float.not(float1, float1).get.sorted === List(-2, -1, 0, 2)
+    Ns.float.not(float1, float2).get.sorted === List(-2, -1, 0)
+
+
+    Ns.double.not(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.double.not(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.double.not(-1, 0, 1).get.sorted === List(-2, 2)
+    Ns.double.not(double1).get.sorted === List(-2, -1, 0, 2)
+    Ns.double.not(double1, double2).get.sorted === List(-2, -1, 0)
+
+
+    Ns.bool.not(true).get === List(false)
+    Ns.bool.not(false).get === List(true)
+    Ns.bool.not(false, true).get === List()
+
+
+    val now = new Date()
+    Ns.date.not(now).get.sorted === List(date0, date1, date2)
+    Ns.date.not(date0).get.sorted === List(date1, date2)
+    Ns.date.not(date0, date1).get.sorted === List(date2)
+    Ns.date.not(date0, date1, date2).get.sorted === List()
+
+
+    val uuid3 = randomUUID()
+    Ns.uuid.not(uuid3).get.sortBy(_.toString) === List(uuid0, uuid1, uuid2)
+    Ns.uuid.not(uuid0).get.sortBy(_.toString) === List(uuid1, uuid2)
+    Ns.uuid.not(uuid0, uuid1).get.sortBy(_.toString) === List(uuid2)
+    Ns.uuid.not(uuid0, uuid1, uuid2).get.sortBy(_.toString) === List()
+
+    // todo
+    //    Ns.uri.not(new URI("other")).get.sortBy(_.toString) === List(uri0, uri1, uri2)
+    //    Ns.uri.not(uri1).get.sortBy(_.toString) === List(uri0, uri2)
+
+    Ns.enum.not("enum0").get.sorted === List(enum1, enum2)
+    Ns.enum.not("enum0", "enum1").get.sorted === List(enum2)
+    Ns.enum.not("enum0", "enum1", "enum2").get.sorted === List()
+    Ns.enum.not(enum0).get.sorted === List(enum1, enum2)
+    Ns.enum.not(enum0, enum1).get.sorted === List(enum2)
+  }
+
+
+  "Compare values" in new OneSetup {
 
     Ns.str.<("").get.sorted === List()
     Ns.str.<(" ").get.sorted === List("")
@@ -401,77 +505,7 @@ class ExpressionsOne extends CoreSpec {
   }
 
 
-  "Negation" in new Setup {
-
-    Ns.str.not("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.not(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.not(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
-    Ns.str.not(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
-    Ns.str.not("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
-    Ns.str.not("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
-    Ns.str.not("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
-    Ns.str.not("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
-    Ns.str.not("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
-    Ns.str.not("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.not("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-
-    // Same as
-    Ns.str.!=("").get.sorted === List(" ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.!=(" ").get.sorted === List("", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.!=(",").get.sorted === List("", " ", ".", "?", "A", "B", "a", "b")
-    Ns.str.!=(".").get.sorted === List("", " ", ",", "?", "A", "B", "a", "b")
-    Ns.str.!=("?").get.sorted === List("", " ", ",", ".", "A", "B", "a", "b")
-    Ns.str.!=("A").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
-    Ns.str.!=("B").get.sorted === List("", " ", ",", ".", "?", "A", "a", "b")
-    Ns.str.!=("a").get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
-    Ns.str.!=("b").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a")
-    Ns.str.!=("C").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-    Ns.str.!=("c").get.sorted === List("", " ", ",", ".", "?", "A", "B", "a", "b")
-
-
-    Ns.int.not(7).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.int.not(1).get.sorted === List(-2, -1, 0, 2)
-    Ns.int.not(int1).get.sorted === List(-2, -1, 0, 2)
-
-
-    Ns.long.not(7).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.long.not(1).get.sorted === List(-2, -1, 0, 2)
-    Ns.long.not(long1).get.sorted === List(-2, -1, 0, 2)
-
-
-    Ns.float.not(7).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.float.not(1).get.sorted === List(-2, -1, 0, 2)
-    Ns.float.not(float1).get.sorted === List(-2, -1, 0, 2)
-
-
-    Ns.double.not(7).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.double.not(1).get.sorted === List(-2, -1, 0, 2)
-    Ns.double.not(double1).get.sorted === List(-2, -1, 0, 2)
-
-
-    Ns.bool.not(true).get === List(false)
-    Ns.bool.not(false).get === List(true)
-
-
-    val now = new Date()
-    Ns.date.not(now).get.sorted === List(date0, date1, date2)
-    Ns.date.not(date1).get.sorted === List(date0, date2)
-
-
-    val uuid3 = randomUUID()
-    Ns.uuid.not(uuid3).get.sortBy(_.toString) === List(uuid0, uuid1, uuid2)
-    Ns.uuid.not(uuid1).get.sortBy(_.toString) === List(uuid0, uuid2)
-
-    // todo
-    //    Ns.uri.not(new URI("other")).get.sortBy(_.toString) === List(uri0, uri1, uri2)
-    //    Ns.uri.not(uri1).get.sortBy(_.toString) === List(uri0, uri2)
-
-    Ns.enum.not("enum1").get.sorted === List(enum0, enum2)
-    Ns.enum.not(enum1).get.sorted === List(enum0, enum2)
-  }
-
-
-  "Fulltext search" in new CoreSetup {
+  "Search text" in new CoreSetup {
 
     Ns.str insert List("The quick fox jumps", "Ten slow monkeys")
 
