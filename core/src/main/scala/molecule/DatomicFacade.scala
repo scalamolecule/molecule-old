@@ -130,6 +130,7 @@ trait DatomicFacade {
     val transformer = Model2Transaction(conn, model)
 //    x(1, model, transformer.stmtsModel, dataRows)
     val stmtss = transformer.insertStmts(dataRows)
+//    x(2,  stmtss)
 //    x(2, model, transformer.stmtsModel, dataRows, stmtss)
     Tx(conn, transformer, stmtss)
   }

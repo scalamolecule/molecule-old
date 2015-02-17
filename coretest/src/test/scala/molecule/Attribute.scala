@@ -6,7 +6,7 @@ import shapeless._
 
 class Attribute extends CoreSpec {
 
-  "One attribute" in new CoreSetup {
+  "Single cardinality-1 attribute - one entity" in new CoreSetup {
 
     // Insert single value for one cardinality-1 attribute
     Ns.str insert str1

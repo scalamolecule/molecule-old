@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 
 
 case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 30, 30, false, 6)
+  val x = Debug("Model2Transaction", 30, 33, false, 6)
 
   private def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
 
@@ -108,17 +108,18 @@ case class Model2Transaction(conn: Connection, model: Model) {
         val next = cur + 1
         if (arg == null)
           (next, stmts)
-        else
+        else {
+          def lastE = if (stmts.isEmpty) tempId() else stmts.last.e
           stmt match {
             case Add('tempId, a, 'tempId)                 => (cur, resolveStmts(stmts, tempId(), a, tempId()))
             case Add('arg, a, 'tempId)                    => (next, resolveStmts(stmts, arg, a, tempId()))
             case Add('tempId, a, 'arg)                    => (next, resolveStmts(stmts, tempId(), a, arg))
             case Add('tempId, a, Values(EnumVal, prefix)) => (next, resolveStmts(stmts, tempId(), a, arg, prefix))
             case Add('tempId, a, Values(vs, prefix))      => (next, resolveStmts(stmts, tempId(), a, vs, prefix))
-            case Add('e, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.e, a, arg))
-            case Add('e, a, Values(EnumVal, prefix))      => (next, resolveStmts(stmts, stmts.last.e, a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
-            case Add('e, a, 'tempId)                      => (cur, resolveStmts(stmts, stmts.last.e, a, tempId()))
+            case Add('e, a, 'arg)                         => (next, resolveStmts(stmts, lastE, a, arg))
+            case Add('e, a, Values(EnumVal, prefix))      => (next, resolveStmts(stmts, lastE, a, arg, prefix))
+            case Add('e, a, Values(vs, prefix))           => (next, resolveStmts(stmts, lastE, a, vs, prefix))
+            case Add('e, a, 'tempId)                      => (cur, resolveStmts(stmts, lastE, a, tempId()))
             case Add('v, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.v, a, arg))
             case Add('v, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
             case Add('tx, a, 'arg)                        => (next, resolveStmts(stmts, tempId("tx"), a, arg))
@@ -137,6 +138,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
               (next, stmts ++ nestedInsertStmts)
             case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
           }
+        }
       }._2
     }
     val txId = tempId("tx")
