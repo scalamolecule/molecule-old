@@ -34,6 +34,8 @@ class ExpressionsMany extends CoreSpec {
       (2.0, Set(2.0, 3.0)),
       (3.0, Set(2.0, 4.0)))
 
+    // Set of boolean values not relevant
+
     Ns.date.dates insert List(
       (date1, Set(date1, date2)),
       (date2, Set(date2, date3)),
@@ -43,6 +45,11 @@ class ExpressionsMany extends CoreSpec {
       (uuid1, Set(uuid1, uuid2)),
       (uuid2, Set(uuid2, uuid3)),
       (uuid3, Set(uuid2, uuid4)))
+
+    //    Ns.uri.uris insert List(
+    //      (uri1, Set(uri1, uri2)),
+    //      (uri2, Set(uri2, uri3)),
+    //      (uri3, Set(uri2, uri4)))
 
     Ns.enum.enums insert List(
       ("enum1", Set("enum1", "enum2")),
@@ -243,6 +250,23 @@ class ExpressionsMany extends CoreSpec {
   }
 
 
+  "Exclude 1 or more values" in new ManySetup {
+
+//    Ns.strs.not("a").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
+
+  }
+
+  "Compare values" in new ManySetup {
+
+    ok
+  }
+
+  "Search text" in new ManySetup {
+
+    ok
+  }
+
+
   "Group by other attribute" in new ManySetup {
 
     // Card-many values can group by card-one attributes
@@ -252,16 +276,69 @@ class ExpressionsMany extends CoreSpec {
     Ns.str.strs("d").get === List(("str3", Set("d", "b")))
     Ns.str.strs(d).get === List(("str3", Set("d", "b")))
 
+
+    Ns.int.ints(1).get === List((1, Set(1, 2)))
+    Ns.int.ints(2).get === List((1, Set(1, 2)), (2, Set(3, 2)), (3, Set(4, 2)))
+    Ns.int.ints(3).get === List((2, Set(3, 2)))
+    Ns.int.ints(4).get === List((3, Set(4, 2)))
+    Ns.int.ints(int3).get === List((2, Set(3, 2)))
+
+
+    Ns.long.longs(1L).get === List((1L, Set(1L, 2L)))
+    Ns.long.longs(2L).get === List((1L, Set(1L, 2L)), (2L, Set(3L, 2L)), (3L, Set(4L, 2L)))
+    Ns.long.longs(3L).get === List((2L, Set(3L, 2L)))
+    Ns.long.longs(4L).get === List((3L, Set(4L, 2L)))
+    Ns.long.longs(long3).get === List((2L, Set(3L, 2L)))
+
+
+    Ns.float.floats(1.0f).get === List((1.0f, Set(1.0f, 2.0f)))
+    Ns.float.floats(2.0f).get === List((1.0f, Set(1.0f, 2.0f)), (2.0f, Set(3.0f, 2.0f)), (3.0f, Set(4.0f, 2.0f)))
+    Ns.float.floats(3.0f).get === List((2.0f, Set(3.0f, 2.0f)))
+    Ns.float.floats(4.0f).get === List((3.0f, Set(4.0f, 2.0f)))
+    Ns.float.floats(float3).get === List((2.0f, Set(3.0f, 2.0f)))
+
+
+    Ns.double.doubles(1.0).get === List((1.0, Set(1.0, 2.0)))
+    Ns.double.doubles(2.0).get === List((1.0, Set(1.0, 2.0)), (2.0, Set(3.0, 2.0)), (3.0, Set(4.0, 2.0)))
+    Ns.double.doubles(3.0).get === List((2.0, Set(3.0, 2.0)))
+    Ns.double.doubles(4.0).get === List((3.0, Set(4.0, 2.0)))
+    Ns.double.doubles(double3).get === List((2.0, Set(3.0, 2.0)))
+
+
+    Ns.date.dates(date1).get === List((date1, Set(date1, date2)))
+    Ns.date.dates(date2).get === List((date1, Set(date1, date2)), (date2, Set(date3, date2)), (date3, Set(date4, date2)))
+    Ns.date.dates(date3).get === List((date2, Set(date3, date2)))
+    Ns.date.dates(date4).get === List((date3, Set(date4, date2)))
+
+
+    Ns.uuid.uuids(uuid1).get.sortBy(_.toString) === List((uuid1, Set(uuid1, uuid2)))
+    Ns.uuid.uuids(uuid2).get.sortBy(_.toString) === List((uuid1, Set(uuid2, uuid1)), (uuid2, Set(uuid3, uuid2)), (uuid3, Set(uuid4, uuid2)))
+    Ns.uuid.uuids(uuid3).get.sortBy(_.toString) === List((uuid2, Set(uuid2, uuid3)))
+    Ns.uuid.uuids(uuid4).get.sortBy(_.toString) === List((uuid3, Set(uuid2, uuid4)))
+
+
+    //    Ns.ur.urs(ur1).get === List((ur1, Set(ur1, ur2)))
+    //    Ns.ur.urs(ur2).get === List((ur1, Set(ur1, ur2)), (ur2, Set(ur3, ur2)), (ur3, Set(ur4, ur2)))
+    //    Ns.ur.urs(ur3).get === List((ur2, Set(ur3, ur2)))
+    //    Ns.ur.urs(ur4).get === List((ur3, Set(ur4, ur2)))
+
+
+    Ns.enum.enums("enum1").get === List(("enum1", Set("enum1", "enum2")))
+    Ns.enum.enums("enum2").get === List(("enum1", Set("enum1", "enum2")), ("enum2", Set("enum3", "enum2")), ("enum3", Set("enum4", "enum2")))
+    Ns.enum.enums(enum3).get === List((enum2, Set(enum3, enum2)))
+    Ns.enum.enums(enum4).get === List((enum3, Set(enum4, enum2)))
   }
 
 
-  "Group and search by other attribute" in new ManySetup {
+  "Group by other attribute value" in new ManySetup {
 
     // We could also match the card-one value to get the corresponding card-many set of values
-    Ns.str("str3").strs.get === List(("str3", Set("d", "b")))
+    Ns.str("str1").strs.get === List(("str1", Set("a", "b")))
+    Ns.str("str2").strs.get === List(("str2", Set("b", "c")))
+    Ns.str("str3").strs.get === List(("str3", Set("b", "d")))
 
 
-    //    Ns.ints(2).get === List(Set(1, 2), Set(2, 3), Set(2, 4))
+    //    Ns.longs(2).get === List(Set(1, 2), Set(2, 3), Set(2, 4))
 
 
     //    Ns.int(1).get === List(1)
@@ -292,7 +369,7 @@ class ExpressionsMany extends CoreSpec {
     //    Ns.bool(false).get === List(false)
     //    Ns.bool(bool1).get === List(true)
     //
-    //    Ns.uuid(date1).get === List(date1)
+    //    Ns.date(date1).get === List(date1)
     //    Ns.date(date2).get === List(date2)
     //
     //    Ns.uuid(uuid1).get === List(uuid1)
