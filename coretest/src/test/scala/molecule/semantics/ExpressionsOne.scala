@@ -104,9 +104,9 @@ class ExpressionsOne extends CoreSpec {
 
   "Match multiple values" in new OneSetup {
 
-    // 3 ways of applying (the same) OR-semantics:
+    // 3 ways of applying the same OR-semantics:
 
-    // 1. `or`-separated expression
+    // 1. `or`-separated values
     Ns.str("c" or "a").get === List("a")
 
     // 2. Comma-separated values
@@ -129,6 +129,8 @@ class ExpressionsOne extends CoreSpec {
     // Applying same value returns single value
     Ns.str("a", "a").get === List("a")
     Ns.str("a" or "a").get === List("a")
+
+    // Multiple search strings in a list are treated with OR-semantics
     Ns.str(List("a", "a")).get === List("a")
 
     // Applying non-matching values returns empty result
@@ -144,15 +146,15 @@ class ExpressionsOne extends CoreSpec {
     Ns.str(str1 or str2).get.sorted === List("a", "b")
     Ns.str(str1, str2).get.sorted === List("a", "b")
     Ns.str(List(str1, str2)).get.sorted === List("a", "b")
-    val needles = List(str1, str2)
-    Ns.str(needles).get.sorted === List("a", "b")
+    val strList = List(str1, str2)
+    Ns.str(strList).get.sorted === List("a", "b")
 
     // We can mix variables and static values
     Ns.str(str1 or "b").get.sorted === List("a", "b")
     Ns.str("a", str2).get.sorted === List("a", "b")
     Ns.str(List(str1, "b")).get.sorted === List("a", "b")
-    val needlesMixed = List("a", str2)
-    Ns.str(needlesMixed).get.sorted === List("a", "b")
+    val strListMixed = List("a", str2)
+    Ns.str(strListMixed).get.sorted === List("a", "b")
 
 
     Ns.int(-1, 0, 1).get.sorted === List(-1, 0, 1)
@@ -163,6 +165,8 @@ class ExpressionsOne extends CoreSpec {
     Ns.int(int1, int2).get.sorted === List(1, 2)
     Ns.int(int1 or int2).get.sorted === List(1, 2)
     Ns.int(List(int1, int2)).get.sorted === List(1, 2)
+    val intList = List(int1, int2)
+    Ns.int(intList).get.sorted === List(1, 2)
 
 
     Ns.long(-1L, 0L, 1L).get.sorted === List(-1L, 0L, 1L)
@@ -173,6 +177,8 @@ class ExpressionsOne extends CoreSpec {
     Ns.long(long1, long2).get.sorted === List(1L, 2L)
     Ns.long(long1 or long2).get.sorted === List(1L, 2L)
     Ns.long(List(long1, long2)).get.sorted === List(1L, 2L)
+    val longList = List(long1, long2)
+    Ns.long(longList).get.sorted === List(1L, 2L)
 
 
     Ns.float(-1f, 0f, 1f).get.sorted === List(-1f, 0f, 1f)
@@ -183,6 +189,8 @@ class ExpressionsOne extends CoreSpec {
     Ns.float(float1, float2).get.sorted === List(1f, 2f)
     Ns.float(float1 or float2).get.sorted === List(1f, 2f)
     Ns.float(List(float1, float2)).get.sorted === List(1f, 2f)
+    val floatList = List(float1, float2)
+    Ns.float(floatList).get.sorted === List(1.0f, 2.0f)
 
 
     Ns.double(-1.0, 0.0, 1.0).get.sorted === List(-1.0, 0.0, 1.0)
@@ -193,6 +201,8 @@ class ExpressionsOne extends CoreSpec {
     Ns.double(double1, double2).get.sorted === List(1.0, 2.0)
     Ns.double(double1 or double2).get.sorted === List(1.0, 2.0)
     Ns.double(List(double1, double2)).get.sorted === List(1.0, 2.0)
+    val doubleList = List(double1, double2)
+    Ns.double(doubleList).get.sorted === List(1.0, 2.0)
 
 
     // Weird case though to apply OR-semantics to Boolean attribute...
@@ -201,6 +211,8 @@ class ExpressionsOne extends CoreSpec {
     Ns.bool(bool0, bool1).get === List(false, true)
     Ns.bool(bool0 or bool1).get === List(false, true)
     Ns.bool(List(bool0, bool1)).get === List(false, true)
+    val boolList = List(bool1, bool2)
+    Ns.bool(boolList).get.sorted === List(false, true)
 
 
     val now = new java.util.Date()
@@ -208,23 +220,30 @@ class ExpressionsOne extends CoreSpec {
     Ns.date(date1, date2).get.sorted === List(date1, date2)
     Ns.date(date1 or date2).get.sorted === List(date1, date2)
     Ns.date(List(date1, date2)).get.sorted === List(date1, date2)
+    val dateList = List(date1, date2)
+    Ns.date(dateList).get.sorted === List(date1, date2)
 
 
     Ns.uuid(uuid1, uuid2).get.sortBy(_.toString) === List(uuid1, uuid2)
     Ns.uuid(uuid1 or uuid2).get.sortBy(_.toString) === List(uuid1, uuid2)
     Ns.uuid(List(uuid1, uuid2)).get.sortBy(_.toString) === List(uuid1, uuid2)
+    val uuidList = List(uuid1, uuid2)
+    Ns.uuid(uuidList).get.sorted === List(uuid1, uuid2)
 
 
-    //    Ns.uri.debug
-    //    Ns.uri(uri1).debug
-    //    Ns.uri(uri1).get === List(uri1)
-    //    Ns.uri(uri2).get === List(uri2)
+    //    Ns.uri(uri1, uri2).get.sortBy(_.toString) === List(uri1, uri2)
+    //    Ns.uri(uri1 or uri2).get.sortBy(_.toString) === List(uri1, uri2)
+    //    Ns.uri(List(uri1, uri2)).get.sortBy(_.toString) === List(uri1, uri2)
+    //    val uriList = List(uri1, uri2)
+    //    Ns.uri(uriList).get.sorted === List(uri1, uri2)
 
 
     Ns.enum("enum1", "enum2").get.sorted === List("enum1", "enum2")
     Ns.enum(enum1, enum2).get.sorted === List("enum1", "enum2")
     Ns.enum(enum1 or enum2).get.sorted === List("enum1", "enum2")
     Ns.enum(List(enum1, enum2)).get.sorted === List("enum1", "enum2")
+    val enumList = List(enum1, enum2)
+    Ns.enum(enumList).get.sorted === List(enum1, enum2)
   }
 
 

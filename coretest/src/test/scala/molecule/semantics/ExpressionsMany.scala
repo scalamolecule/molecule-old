@@ -1,7 +1,5 @@
 package molecule
 package semantics
-import java.util.Date
-
 import molecule.semantics.dsl.coreTest._
 
 class ExpressionsMany extends CoreSpec {
@@ -124,16 +122,124 @@ class ExpressionsMany extends CoreSpec {
 
   "Match multiple values" in new ManySetup {
 
-    // Multiple sets are coalesced to one set with unique values
-    Ns.strs("a", "c").get === List(Set("a", "b", "c")) // Set("a", "b") + Set("b", "c")
+    // Multiple sets are coalesced to one set with unique values:
+    // Set("a", "b") + Set("b", "c") -> Set("a", "b", "c")
+
+    // 3 ways of applying the same OR-semantics:
+
+    // 1. `or`-separated values
     Ns.strs("a" or "c").get === List(Set("a", "b", "c"))
+
+    // 2. Comma-separated values
+    Ns.strs("a", "b").get === List(Set("d", "a", "b", "c"))
+    Ns.strs("a", "c").get === List(Set("a", "b", "c"))
+    Ns.strs("a", "d").get === List(Set("a", "b", "d"))
+
+    // 3. Set of values (note that this differs from card-one attributes that use Seq/List)
     Ns.strs(Set("a", "c")).get === List(Set("a", "b", "c"))
 
-    // Using variables
-    Ns.strs(Set(a, c)).get === List(Set("a", "b", "c"))
-    val set = Set(a, c)
-    Ns.strs(set).get === List(Set("a", "b", "c"))
 
+
+    // Using variables
+    Ns.strs(a or c).get === List(Set("a", "b", "c"))
+    Ns.strs(a, c).get === List(Set("a", "b", "c"))
+    Ns.strs(Set(a, c)).get === List(Set("a", "b", "c"))
+    val strSet = Set(a, c)
+    Ns.strs(strSet).get === List(Set("a", "b", "c"))
+
+    // We can even supply multiple comma-separated Sets of search values
+    Ns.strs.apply(Set(a, c), Set(d)).get === List(Set("d", "a", "b", "c"))
+
+
+    Ns.ints(1 or 3).get === List(Set(1, 2, 3))
+    Ns.ints(Set(1, 3)).get === List(Set(1, 2, 3))
+    Ns.ints(1, 2).get === List(Set(1, 4, 3, 2))
+    Ns.ints(1, 3).get === List(Set(1, 2, 3))
+    Ns.ints(1, 4).get === List(Set(1, 2, 4))
+
+    Ns.ints(int1 or int3).get === List(Set(1, 2, 3))
+    Ns.ints(Set(int1, int3)).get === List(Set(1, 2, 3))
+    Ns.ints(int1, int3).get === List(Set(1, 2, 3))
+    val intSet = Set(int1, int3)
+    Ns.ints(intSet).get === List(Set(1, 2, 3))
+
+
+    Ns.longs(1L or 3L).get === List(Set(1L, 2L, 3L))
+    Ns.longs(Set(1L, 3L)).get === List(Set(1L, 2L, 3L))
+    Ns.longs(1L, 2L).get === List(Set(1L, 4L, 3L, 2L))
+    Ns.longs(1L, 3L).get === List(Set(1L, 2L, 3L))
+    Ns.longs(1L, 4L).get === List(Set(1L, 2L, 4L))
+
+    Ns.longs(long1 or long3).get === List(Set(1L, 2L, 3L))
+    Ns.longs(Set(long1, long3)).get === List(Set(1L, 2L, 3L))
+    Ns.longs(long1, long3).get === List(Set(1L, 2L, 3L))
+    val longSet = Set(long1, long3)
+    Ns.longs(longSet).get === List(Set(1L, 2L, 3L))
+
+
+    Ns.floats(1.0f or 3.0f).get === List(Set(1.0f, 2.0f, 3.0f))
+    Ns.floats(Set(1.0f, 3.0f)).get === List(Set(1.0f, 2.0f, 3.0f))
+    Ns.floats(1.0f, 2.0f).get === List(Set(1.0f, 4.0f, 3.0f, 2.0f))
+    Ns.floats(1.0f, 3.0f).get === List(Set(1.0f, 2.0f, 3.0f))
+    Ns.floats(1.0f, 4.0f).get === List(Set(1.0f, 2.0f, 4.0f))
+
+    Ns.floats(float1 or float3).get === List(Set(1.0f, 2.0f, 3.0f))
+    Ns.floats(Set(float1, float3)).get === List(Set(1.0f, 2.0f, 3.0f))
+    Ns.floats(float1, float3).get === List(Set(1.0f, 2.0f, 3.0f))
+    val floatSet = Set(float1, float3)
+    Ns.floats(floatSet).get === List(Set(1.0f, 2.0f, 3.0f))
+
+
+    Ns.doubles(1.0 or 3.0).get === List(Set(1.0, 2.0, 3.0))
+    Ns.doubles(Set(1.0, 3.0)).get === List(Set(1.0, 2.0, 3.0))
+    Ns.doubles(1.0, 2.0).get === List(Set(1.0, 4.0, 3.0, 2.0))
+    Ns.doubles(1.0, 3.0).get === List(Set(1.0, 2.0, 3.0))
+    Ns.doubles(1.0, 4.0).get === List(Set(1.0, 2.0, 4.0))
+
+    Ns.doubles(double1 or double3).get === List(Set(1.0, 2.0, 3.0))
+    Ns.doubles(Set(double1, double3)).get === List(Set(1.0, 2.0, 3.0))
+    Ns.doubles(double1, double3).get === List(Set(1.0, 2.0, 3.0))
+    val doubleSet = Set(double1, double3)
+    Ns.doubles(doubleSet).get === List(Set(1.0, 2.0, 3.0))
+
+
+    // Cardinality-many attribute for boolean values not implemented (doesn't make sense)
+
+
+    Ns.dates(date1 or date3).get === List(Set(date1, date2, date3))
+    Ns.dates(Set(date1, date3)).get === List(Set(date1, date2, date3))
+    Ns.dates(date1, date2).get === List(Set(date1, date4, date3, date2))
+    Ns.dates(date1, date3).get === List(Set(date1, date2, date3))
+    Ns.dates(date1, date4).get === List(Set(date1, date2, date4))
+    val dateSet = Set(date1, date3)
+    Ns.dates(dateSet).get === List(Set(date1, date2, date3))
+
+
+    //    Ns.uris(uri1 or uri2).get === List(Set(uri1, uri4, uri3, uri2))
+    //    Ns.uris(Set(uri1, uri2)).get === List(Set(uri1, uri4, uri3, uri2))
+    //    Ns.uris(uri1, uri2).get === List(Set(uri1, uri4, uri3, uri2))
+    //    Ns.uris(uri1, uri3).get === List(Set(uri1, uri2, uri3))
+    //    Ns.uris(uri1, uri4).get === List(Set(uri1, uri2, uri4))
+    //    val uriSet = Set(uri1, uri3)
+    //    Ns.uris(uriSet).get === List(Set(uri1, uri2, uri3))
+
+
+    Ns.uuids(uuid1 or uuid3).get === List(Set(uuid1, uuid2, uuid3))
+    Ns.uuids(Set(uuid1, uuid3)).get === List(Set(uuid1, uuid2, uuid3))
+    Ns.uuids(uuid1, uuid2).get === List(Set(uuid1, uuid4, uuid3, uuid2))
+    Ns.uuids(uuid1, uuid3).get === List(Set(uuid1, uuid2, uuid3))
+    Ns.uuids(uuid1, uuid4).get === List(Set(uuid1, uuid2, uuid4))
+    val uuidSet = Set(uuid1, uuid3)
+    Ns.uuids(uuidSet).get === List(Set(uuid1, uuid2, uuid3))
+
+
+    Ns.enums("enum1" or "enum3").get === List(Set("enum1", "enum3", "enum2"))
+    Ns.enums(Set("enum1", "enum3")).get === List(Set("enum1", "enum3", "enum2"))
+    Ns.enums(enum1, enum2).get === List(Set(enum1, enum4, enum3, enum2))
+    Ns.enums(enum1, enum3).get === List(Set(enum1, enum2, enum3))
+    Ns.enums(enum1, enum4).get === List(Set(enum1, enum2, enum4))
+    val enumSet = Set(enum1, enum3)
+    Ns.enums(enumSet).get === List(Set(enum1, enum2, enum3))
   }
 
 
@@ -155,7 +261,7 @@ class ExpressionsMany extends CoreSpec {
     Ns.str("str3").strs.get === List(("str3", Set("d", "b")))
 
 
-    Ns.ints(2).get === List(Set(1, 2), Set(2, 3), Set(2, 4))
+    //    Ns.ints(2).get === List(Set(1, 2), Set(2, 3), Set(2, 4))
 
 
     //    Ns.int(1).get === List(1)

@@ -137,23 +137,26 @@ object Model2Query {
         // Enum Atom ------------------------------------------------------------
 
         case a@Atom(_, _, _, 2, value, Some(prefix), gs) => value match {
-          case EnumVal => q.enum(e, a, v, gs).find("distinct", Seq(), v2, gs)
-          case other   => sys.error(s"[Model2Query:resolve[Atom]] Unresolved cardinality 2 enum Atom:\nAtom   : $a\nElement: $other")
+          case EnumVal                 => q.enum(e, a, v, gs).find("distinct", Seq(), v2, gs)
+          case Eq((ss: Set[_]) :: Nil) => q.enum(e, a, v, gs).orRules(e, a, ss.toSeq.map(prefix + _), gs).find("distinct", Seq(), v2, gs)
+          case Eq(ss)                  => q.enum(e, a, v, gs).orRules(e, a, ss.map(prefix + _), gs).find("distinct", Seq(), v2, gs)
+          case other                   => sys.error(s"[Model2Query:resolve[Enum Atom 2]] Unresolved cardinality 2 enum Atom:\nAtom   : $a\nElement: $other")
         }
 
         case a@Atom(_, _, _, 1, value, Some(prefix), gs) => value match {
-          case Qm                    => q.enum(e, a, v, gs).in(v, a, Some(prefix)).find(v2, gs)
-          case Lt(Qm)                => q.enum(e, a, v, gs).where(e, a, v, gs).find(v2, gs).compareTo("<", a, v, Var(v1)).find(v, gs).in(v1, a)
-          case Gt(Qm)                => q.enum(e, a, v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).find(v, gs).in(v1, a)
-          case EnumVal               => q.enum(e, a, v, gs).find(v2, gs)
-          case Eq(ss) if ss.size > 1 => q.enum(e, a, v, gs).orRules(e, a, ss.map(prefix + _), gs).find(v2, gs)
-          case Eq(s :: Nil)          => q.enum(e, a, v, gs).where(e, a, Val(prefix + s), gs).find(v2, gs)
-          case Neq(args)             => q.enum(e, a, v, gs).compareTo("!=", a, v2, args map Val).find(v2, gs)
-          case Lt(arg)               => q.enum(e, a, v, gs).compareTo("<", a, v2, Val(arg), 1).find(v2, gs)
-          case Gt(arg)               => q.enum(e, a, v, gs).compareTo(">", a, v2, Val(arg), 1).find(v2, gs)
-          case Le(arg)               => q.enum(e, a, v, gs).compareTo("<=", a, v2, Val(arg), 1).find(v2, gs)
-          case Ge(arg)               => q.enum(e, a, v, gs).compareTo(">=", a, v2, Val(arg), 1).find(v2, gs)
-          case other                 => sys.error(s"[Model2Query:resolve[Atom]] Unresolved cardinality 1 enum Atom:\nAtom   : $a\nElement: $other")
+          case Qm                      => q.enum(e, a, v, gs).in(v, a, Some(prefix)).find(v2, gs)
+          case Lt(Qm)                  => q.enum(e, a, v, gs).where(e, a, v, gs).find(v2, gs).compareTo("<", a, v, Var(v1)).find(v, gs).in(v1, a)
+          case Gt(Qm)                  => q.enum(e, a, v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).find(v, gs).in(v1, a)
+          case EnumVal                 => q.enum(e, a, v, gs).find(v2, gs)
+          case Eq((ss: Seq[_]) :: Nil) => q.enum(e, a, v, gs).orRules(e, a, ss.map(prefix + _), gs).find(v2, gs)
+          case Eq(s :: Nil)            => q.enum(e, a, v, gs).where(e, a, Val(prefix + s), gs).find(v2, gs)
+          case Eq(ss)                  => q.enum(e, a, v, gs).orRules(e, a, ss.map(prefix + _), gs).find(v2, gs)
+          case Neq(args)               => q.enum(e, a, v, gs).compareTo("!=", a, v2, args map Val).find(v2, gs)
+          case Lt(arg)                 => q.enum(e, a, v, gs).compareTo("<", a, v2, Val(arg), 1).find(v2, gs)
+          case Gt(arg)                 => q.enum(e, a, v, gs).compareTo(">", a, v2, Val(arg), 1).find(v2, gs)
+          case Le(arg)                 => q.enum(e, a, v, gs).compareTo("<=", a, v2, Val(arg), 1).find(v2, gs)
+          case Ge(arg)                 => q.enum(e, a, v, gs).compareTo(">=", a, v2, Val(arg), 1).find(v2, gs)
+          case other                   => sys.error(s"[Model2Query:resolve[Enum Atom 1]] Unresolved cardinality 1 enum Atom:\nAtom   : $a\nElement: $other")
         }
 
 
@@ -162,14 +165,11 @@ object Model2Query {
         case a@Atom(_, _, _, 2, value, _, gs) => value match {
           case Fulltext(Seq(Qm))       => q.fulltext(e, a, v, Var(v1)).in(v1, a).find("distinct", Seq(), v, gs)
           case VarValue                => q.where(e, a, v, gs).find("distinct", Seq(), v, gs)
-          case EnumVal                 => q.enum(e, a, v, gs).find("distinct", Seq(), v2, gs)
-          case Eq(ss) if ss.size > 1   => q.orRules(e, a, ss).where(e, a, v, gs).find("distinct", Seq(), v, gs)
           case Eq((ss: Set[_]) :: Nil) => q.orRules(e, a, ss.toSeq, gs).where(e, a, v, gs).find("distinct", Seq(), v, gs)
-//          case Eq((ss: Seq[_]) :: Nil) => q.orRules(e, a, ss, gs).where(e, a, v, gs).find("distinct", Seq(), v, gs)
           case Eq(s :: Nil)            => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find("distinct", Seq(), v, gs)
-//          case Eq(s :: Nil)            => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find(v, gs)
+          case Eq(ss)                  => q.orRules(e, a, ss).where(e, a, v, gs).find("distinct", Seq(), v, gs)
           case Fulltext(qv :: Nil)     => q.fulltext(e, a, v, Val(qv)).find("distinct", Seq(), v, gs)
-          case other                   => sys.error(s"[Model2Query:resolve[Atom]] Unresolved cardinality 2 Atom:\nAtom   : $a\nElement: $other")
+          case other                   => sys.error(s"[Model2Query:resolve[Atom 2]] Unresolved cardinality 2 Atom:\nAtom   : $a\nElement: $other")
         }
 
         case a@Atom(_, _, _, 1, value, _, gs) => value match {
@@ -184,9 +184,9 @@ object Model2Query {
           case VarValue                      => q.where(e, a, v, gs).find(v, gs)
           case NoValue                       => q.where(e, a, v, gs).find(NoVal, gs)
           case BackValue(backNs)             => q.where(v, a.ns, a.name, Var(e), backNs, gs).find(e, gs)
-          case Eq(ss) if ss.size > 1         => q.where(e, a, v, gs).orRules(e, a, ss, gs).find(v, gs)
           case Eq((ss: Seq[_]) :: Nil)       => q.where(e, a, v, gs).orRules(e, a, ss, gs).find(v, gs)
           case Eq(s :: Nil)                  => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find(v, gs)
+          case Eq(ss)                        => q.where(e, a, v, gs).orRules(e, a, ss, gs).find(v, gs)
           case Neq(args)                     => q.where(e, a, v, gs).compareTo("!=", a, v, args map Val).find(v, gs)
           case Lt(arg)                       => q.where(e, a, v, gs).compareTo("<", a, v, Val(arg)).find(v, gs)
           case Gt(arg)                       => q.where(e, a, v, gs).compareTo(">", a, v, Val(arg)).find(v, gs)
@@ -201,7 +201,7 @@ object Model2Query {
           case Length(Some(Fn(fn, Some(i)))) => q.where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2).find(v2, gs)
           case Length(Some(Fn(fn, _)))       => q.where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2).find(fn, Seq(), v2, gs)
           case Length(_)                     => q.where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2).find(v2, gs)
-          case other                         => sys.error(s"[Model2Query:resolve[Atom]] Unresolved cardinality 1 Atom:\nAtom   : $a\nElement: $other")
+          case other                         => sys.error(s"[Model2Query:resolve[Atom 1]] Unresolved cardinality 1 Atom:\nAtom   : $a\nElement: $other")
         }
 
 
