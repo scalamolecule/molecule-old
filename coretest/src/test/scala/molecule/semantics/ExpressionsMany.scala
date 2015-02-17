@@ -57,6 +57,7 @@ class ExpressionsMany extends CoreSpec {
       ("enum3", Set("enum2", "enum4")))
   }
 
+
   "Match one value" in new ManySetup {
 
     // Coalesce all sets having a value into one set (no order guaranteed)
@@ -252,19 +253,27 @@ class ExpressionsMany extends CoreSpec {
 
   "Exclude 1 or more values" in new ManySetup {
 
-//    Ns.strs.not("a").get.sorted === List("", " ", ",", ".", "?", "B", "a", "b")
+    // Negation of a cardinality-many attribute value is rather useless since it
+    // will just return the coalesced set minus the excluded value
+    Ns.strs.not("b").get === List(Set("d", "a", "c"))
 
+    // What we probably want to do instead is to group by another attribute and
+    // then filter out the sets having the value to exclude:
+    Ns.str.strs.get.filter(!_._2.contains("a")) === List(("str2", Set("b", "c")), ("str3", Set("d", "b")))
+    Ns.str.strs.get.filter(!_._2.contains("b")) === List()
+    Ns.str.strs.get.filter(!_._2.contains("c")) === List(("str1", Set("a", "b")), ("str3", Set("d", "b")))
+    Ns.str.strs.get.filter(!_._2.contains("d")) === List(("str1", Set("a", "b")), ("str2", Set("b", "c")))
   }
 
   "Compare values" in new ManySetup {
 
     ok
   }
-
-  "Search text" in new ManySetup {
-
-    ok
-  }
+  //
+  //  "Search text" in new ManySetup {
+  //
+  //    ok
+  //  }
 
 
   "Group by other attribute" in new ManySetup {
@@ -329,64 +338,64 @@ class ExpressionsMany extends CoreSpec {
     Ns.enum.enums(enum4).get === List((enum3, Set(enum4, enum2)))
   }
 
-
-  "Group by other attribute value" in new ManySetup {
-
-    // We could also match the card-one value to get the corresponding card-many set of values
-    Ns.str("str1").strs.get === List(("str1", Set("a", "b")))
-    Ns.str("str2").strs.get === List(("str2", Set("b", "c")))
-    Ns.str("str3").strs.get === List(("str3", Set("b", "d")))
-
-
-    //    Ns.longs(2).get === List(Set(1, 2), Set(2, 3), Set(2, 4))
-
-
-    //    Ns.int(1).get === List(1)
-    //    Ns.int(0).get === List(0)
-    //    Ns.int(-1).get === List(-1)
-    //    Ns.int(int1).get === List(1)
-    //
-    //
-    //    Ns.long(1L).get === List(1L)
-    //    Ns.long(0L).get === List(0L)
-    //    Ns.long(-1L).get === List(-1L)
-    //    Ns.long(long1).get === List(1L)
-    //
-    //    // We can also apply Int values to a Long Attribute
-    //    Ns.long(1).get === List(1)
-    //
-    //    Ns.float(1f).get === List(1f)
-    //    Ns.float(0f).get === List(0f)
-    //    Ns.float(-1f).get === List(-1f)
-    //    Ns.float(float1).get === List(1f)
-    //
-    //    Ns.double(1.0).get === List(1.0)
-    //    Ns.double(0.0).get === List(0.0)
-    //    Ns.double(-1.0).get === List(-1.0)
-    //    Ns.double(double1).get === List(1.0)
-    //
-    //    Ns.bool(true).get === List(true)
-    //    Ns.bool(false).get === List(false)
-    //    Ns.bool(bool1).get === List(true)
-    //
-    //    Ns.date(date1).get === List(date1)
-    //    Ns.date(date2).get === List(date2)
-    //
-    //    Ns.uuid(uuid1).get === List(uuid1)
-    //    Ns.uuid(uuid2).get === List(uuid2)
-    //
-    ////    Ns.uri.debug
-    ////    Ns.uri(uri1).debug
-    ////    Ns.uri(uri1).get === List(uri1)
-    ////    Ns.uri(uri2).get === List(uri2)
-    //
-    //    Ns.enum("enum1").get === List("enum1")
-    //    Ns.enum("enum2").get === List("enum2")
-    //    Ns.enum(enum2).get === List("enum2")
-
-    // Applying a non-existing enum value ("enum3") won't compile!
-    // Ns.enum("enum3").get === List("enum3")
-  }
+  //
+  //  "Group by other attribute value" in new ManySetup {
+  //
+  //    // We could also match the card-one value to get the corresponding card-many set of values
+  //    Ns.str("str1").strs.get === List(("str1", Set("a", "b")))
+  //    Ns.str("str2").strs.get === List(("str2", Set("b", "c")))
+  //    Ns.str("str3").strs.get === List(("str3", Set("b", "d")))
+  //
+  //
+  //    //    Ns.longs(2).get === List(Set(1, 2), Set(2, 3), Set(2, 4))
+  //
+  //
+  //    //    Ns.int(1).get === List(1)
+  //    //    Ns.int(0).get === List(0)
+  //    //    Ns.int(-1).get === List(-1)
+  //    //    Ns.int(int1).get === List(1)
+  //    //
+  //    //
+  //    //    Ns.long(1L).get === List(1L)
+  //    //    Ns.long(0L).get === List(0L)
+  //    //    Ns.long(-1L).get === List(-1L)
+  //    //    Ns.long(long1).get === List(1L)
+  //    //
+  //    //    // We can also apply Int values to a Long Attribute
+  //    //    Ns.long(1).get === List(1)
+  //    //
+  //    //    Ns.float(1f).get === List(1f)
+  //    //    Ns.float(0f).get === List(0f)
+  //    //    Ns.float(-1f).get === List(-1f)
+  //    //    Ns.float(float1).get === List(1f)
+  //    //
+  //    //    Ns.double(1.0).get === List(1.0)
+  //    //    Ns.double(0.0).get === List(0.0)
+  //    //    Ns.double(-1.0).get === List(-1.0)
+  //    //    Ns.double(double1).get === List(1.0)
+  //    //
+  //    //    Ns.bool(true).get === List(true)
+  //    //    Ns.bool(false).get === List(false)
+  //    //    Ns.bool(bool1).get === List(true)
+  //    //
+  //    //    Ns.date(date1).get === List(date1)
+  //    //    Ns.date(date2).get === List(date2)
+  //    //
+  //    //    Ns.uuid(uuid1).get === List(uuid1)
+  //    //    Ns.uuid(uuid2).get === List(uuid2)
+  //    //
+  //    ////    Ns.uri.debug
+  //    ////    Ns.uri(uri1).debug
+  //    ////    Ns.uri(uri1).get === List(uri1)
+  //    ////    Ns.uri(uri2).get === List(uri2)
+  //    //
+  //    //    Ns.enum("enum1").get === List("enum1")
+  //    //    Ns.enum("enum2").get === List("enum2")
+  //    //    Ns.enum(enum2).get === List("enum2")
+  //
+  //    // Applying a non-existing enum value ("enum3") won't compile!
+  //    // Ns.enum("enum3").get === List("enum3")
+  //  }
 }
 //import datomic._
 //Peer.q(
