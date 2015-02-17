@@ -1,12 +1,12 @@
-package molecule.semantics
+package molecule
 
-import molecule.semantics.dsl.coreTest._
-import molecule.{CoreSpec, CoreSetup}
+import molecule.util.dsl.coreTest._
+import molecule.util.{CoreSetup, CoreSpec}
 import shapeless._
 
-class a_Basics extends CoreSpec {
+class Attribute extends CoreSpec {
 
-  "Single cardinality-1 attribute - one entity" in new CoreSetup {
+  "One attribute" in new CoreSetup {
 
     // Insert single value for one cardinality-1 attribute
     Ns.str insert str1
@@ -20,7 +20,10 @@ class a_Basics extends CoreSpec {
     Ns.uri insert uri1
     Ns.enum insert enum1
 
-    // Get list of values
+    // Calling `get` on explicit molecule
+    m(Ns.str).get === List(str1)
+
+    // Calling `get` on implicit molecule
     Ns.str.get === List(str1)
     Ns.str.get(1) === List(str1)
 

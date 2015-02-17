@@ -30,7 +30,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       definitionDirectories(
-        "coretest/src/main/scala/molecule/semantics"
+        "coretest/src/main/scala/molecule/util"
       ),
       publish :=(),
       publishLocal :=()

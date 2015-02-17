@@ -1,4 +1,4 @@
-package molecule.semantics.schema
+package molecule.util.schema
 
 import molecule.dsl.schemaDefinition._
 
@@ -16,7 +16,7 @@ trait CoreTestDefinition {
     val uuid   = oneUUID
     val uri    = oneURI
     val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
-    val ref    = one[Ref1]
+    val ref1   = one[Ref1]
 
     val strs    = manyString.fullTextSearch
     val ints    = manyInt
@@ -27,7 +27,7 @@ trait CoreTestDefinition {
     val uuids   = manyUUID
     val uris    = manyURI
     val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
-    val refs    = many[Ref1]
+    val refs1   = many[Ref1]
   }
 
   trait Ref1 {
@@ -41,7 +41,7 @@ trait CoreTestDefinition {
     val uuid   = oneUUID
     val uri    = oneURI
     val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
-    val ref    = one[Ref2]
+    val ref2   = one[Ref2]
 
     val strs    = manyString.fullTextSearch
     val ints    = manyInt
@@ -52,7 +52,7 @@ trait CoreTestDefinition {
     val uuids   = manyUUID
     val uris    = manyURI
     val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
-    val refs    = many[Ref2]
+    val refs2   = many[Ref2]
   }
 
   trait Ref2 {

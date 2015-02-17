@@ -1,6 +1,6 @@
 package molecule
-package semantics
-import molecule.semantics.dsl.coreTest._
+import molecule.util.dsl.coreTest._
+import molecule.util.{CoreSetup, CoreSpec}
 
 class ExpressionsMany extends CoreSpec {
 

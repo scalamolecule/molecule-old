@@ -1,10 +1,11 @@
-package molecule
+package molecule.util
 
 import java.net.URI
-import java.util.UUID._
 import java.util.Date
-import molecule.util.MoleculeSpec
-import molecule.semantics.schema.CoreTestSchema
+import java.util.UUID._
+
+import molecule.DatomicFacade
+import molecule.util.schema.CoreTestSchema
 import org.specs2.specification.Scope
 
 class CoreSetup extends Scope with DatomicFacade {
