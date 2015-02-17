@@ -41,15 +41,15 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     id = "molecule-examples",
     base = file("examples"),
     dependencies = Seq(moleculeCore),
-settings = commonSettings ++ Seq(
-  definitionDirectories(
-    "examples/src/main/scala/molecule/examples/dayOfDatomic",
-    "examples/src/main/scala/molecule/examples/seattle",
-    "examples/src/main/scala/molecule/examples/mbrainz"
-  ),
-  publish :=(),
-  publishLocal :=()
-)
+    settings = commonSettings ++ Seq(
+      definitionDirectories(
+        "examples/src/main/scala/molecule/examples/dayOfDatomic",
+        "examples/src/main/scala/molecule/examples/seattle",
+        "examples/src/main/scala/molecule/examples/mbrainz"
+      ),
+      publish :=(),
+      publishLocal :=()
+    )
   )
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(

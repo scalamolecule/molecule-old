@@ -22,9 +22,9 @@ class ExpressionsOne extends CoreSpec {
   }
 
 
-  "Match 1 value" in new OneSetup {
+  "Match one value" in new OneSetup {
 
-    Ns.str("").get === List("") // same as Ns.str.apply("").get
+    Ns.str("").get === List("") // same as `Ns.str.apply("").get`
     Ns.str(" ").get === List(" ")
     Ns.str(",").get === List(",")
     Ns.str(".").get === List(".")
@@ -51,19 +51,23 @@ class ExpressionsOne extends CoreSpec {
     // We can also apply Int values to a Long Attribute (using Scala's implicit conversions?)
     Ns.long(1).get === List(1)
 
+
     Ns.float(1f).get === List(1f)
     Ns.float(0f).get === List(0f)
     Ns.float(-1f).get === List(-1f)
     Ns.float(float1).get === List(1f)
+
 
     Ns.double(1.0).get === List(1.0)
     Ns.double(0.0).get === List(0.0)
     Ns.double(-1.0).get === List(-1.0)
     Ns.double(double1).get === List(1.0)
 
+
     Ns.bool(true).get === List(true)
     Ns.bool(false).get === List(false)
     Ns.bool(bool1).get === List(true)
+
 
     val now = new Date()
     Ns.date(now).get === List()
@@ -72,10 +76,10 @@ class ExpressionsOne extends CoreSpec {
     // Todo Can we allow runtime constructs for compile time build-up?
     //    Ns.date(new Date()).get === List()
 
+
     Ns.uuid(uuid1).get === List(uuid1)
     Ns.uuid(uuid2).get === List(uuid2)
 
-    import datomic._
 
     //Peer.q(s"""[:find ?a ?b :where [?a :ns/uri ?b]]""", conn.db)
     // [[17592186045436 #<URI uri1>], [17592186045437 #<URI uri2>]]
@@ -98,7 +102,7 @@ class ExpressionsOne extends CoreSpec {
   }
 
 
-  "Match 1 or more values" in new OneSetup {
+  "Match multiple values" in new OneSetup {
 
     // 3 ways of applying (the same) OR-semantics:
 
@@ -143,7 +147,7 @@ class ExpressionsOne extends CoreSpec {
     val needles = List(str1, str2)
     Ns.str(needles).get.sorted === List("a", "b")
 
-    // We can even mix variables and static values
+    // We can mix variables and static values
     Ns.str(str1 or "b").get.sorted === List("a", "b")
     Ns.str("a", str2).get.sorted === List("a", "b")
     Ns.str(List(str1, "b")).get.sorted === List("a", "b")

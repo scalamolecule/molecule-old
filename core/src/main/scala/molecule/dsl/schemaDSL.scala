@@ -156,7 +156,8 @@ object schemaDSL {
   // Many-cardinality
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
     def apply(values: T*) : Ns with Attr = ???
-    // def apply(one: T, more: T*)                    : Ns with Attr = ???
+//    def apply(one: T, more: T*)                    : Ns with Attr = ???
+//    def apply(oneSet: S)                           : Ns with Attr = ???
     def apply(oneSet: S, moreSets: S*)             : Ns with Attr = ???
 
     def add(value: T)                              : Ns with Attr = ???

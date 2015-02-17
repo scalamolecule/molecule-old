@@ -164,8 +164,10 @@ object Model2Query {
           case VarValue                => q.where(e, a, v, gs).find("distinct", Seq(), v, gs)
           case EnumVal                 => q.enum(e, a, v, gs).find("distinct", Seq(), v2, gs)
           case Eq(ss) if ss.size > 1   => q.orRules(e, a, ss).where(e, a, v, gs).find("distinct", Seq(), v, gs)
-          case Eq((ss: Seq[_]) :: Nil) => q.orRules(e, a, ss, gs).where(e, a, v, gs).find(v, gs)
-          case Eq(s :: Nil)            => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find(v, gs)
+          case Eq((ss: Set[_]) :: Nil) => q.orRules(e, a, ss.toSeq, gs).where(e, a, v, gs).find("distinct", Seq(), v, gs)
+//          case Eq((ss: Seq[_]) :: Nil) => q.orRules(e, a, ss, gs).where(e, a, v, gs).find("distinct", Seq(), v, gs)
+          case Eq(s :: Nil)            => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find("distinct", Seq(), v, gs)
+//          case Eq(s :: Nil)            => q.where(e, a, Val(s), gs).where(e, a, v, Seq()).find(v, gs)
           case Fulltext(qv :: Nil)     => q.fulltext(e, a, v, Val(qv)).find("distinct", Seq(), v, gs)
           case other                   => sys.error(s"[Model2Query:resolve[Atom]] Unresolved cardinality 2 Atom:\nAtom   : $a\nElement: $other")
         }
