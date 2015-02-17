@@ -19,34 +19,34 @@ class Relations extends CoreSpec {
   }
 
 
-  "Related attributes" in new RelSetup {
-
-    // Get attribute values from 2 namespaces
-    Ns.str.Ref1.str.get === List(
-      ("b0", "b1"),
-      ("c0", "c1"),
-      ("a0", "a1"))
-
-    // Get attribute values from all 3 namespaces
-    Ns.str.Ref1.str.Ref2.str.get === List(
-      ("b0", "b1", "b2"),
-      ("c0", "c1", "c2"),
-      ("a0", "a1", "a2")
-    )
-  }
-
-
-  "Implicit namespaces" in new RelSetup {
-
-    Ns.str.Ref1.Ref2.str.get === List(
-      ("a0", "a2"),
-      ("b0", "b2"),
-      ("c0", "c2"))
-
-    Ns.Ref1.str.Ref2.str.get === List(
-      ("b0", "b1", "b2"),
-      ("c0", "c1", "c2"),
-      ("a0", "a1", "a2"))
-  }
+//  "Related attributes" in new RelSetup {
+//
+//    // Get attribute values from 2 namespaces
+//    Ns.str.Ref1.str.get === List(
+//      ("b0", "b1"),
+//      ("c0", "c1"),
+//      ("a0", "a1"))
+//
+//    // Get attribute values from all 3 namespaces
+//    Ns.str.Ref1.str.Ref2.str.get === List(
+//      ("b0", "b1", "b2"),
+//      ("c0", "c1", "c2"),
+//      ("a0", "a1", "a2")
+//    )
+//  }
+//
+//
+//  "Implicit namespaces" in new RelSetup {
+//
+//    Ns.str.Ref1.Ref2.str.get === List(
+//      ("a0", "a2"),
+//      ("b0", "b2"),
+//      ("c0", "c2"))
+//
+//    Ns.Ref1.str.Ref2.str.get === List(
+//      ("b0", "b1", "b2"),
+//      ("c0", "c1", "c2"),
+//      ("a0", "a1", "a2"))
+//  }
 
 }

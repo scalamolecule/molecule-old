@@ -28,7 +28,7 @@ class Insert extends CoreSpec {
     Ns.str.insert.apply(List("a" :: HNil))
 
     Ns.str.int.insert.apply(List(("b", 1)))
-    Ns.str.int.insert.apply(List(("b", null.asInstanceOf[Int])))
+//    Ns.str.int.insert.apply(List(("b", null.asInstanceOf[Int])))
 
 //    Ns.str.int.insert.apply(null, 1)
 //    Ns.str.int.insert.apply(List((null, 1)))
