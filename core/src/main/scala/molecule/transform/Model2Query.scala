@@ -7,6 +7,8 @@ import molecule.util.Debug
 
 object Model2Query {
   val x = Debug("Model2Query", 5, 60, false)
+  def uri(t: String) = t == "java.net.URI"
+  def u(t: String, v: String) = if (t == "java.net.URI") v else ""
 
   def apply(model: Model): Query = {
 
@@ -162,19 +164,20 @@ object Model2Query {
 
         // Atom -----------------------------------------------------------------
 
-        case a@Atom(_, _, _, 2, value, _, gs) => value match {
+
+        case a@Atom(_, _, t, 2, value, _, gs) => value match {
           case Fulltext(Seq(Qm))        => q.fulltext(e, a, v, Var(v1)).in(v1, a).find("distinct", Seq(), v, gs)
           case VarValue                 => q.where(e, a, v, gs).find("distinct", Seq(), v, gs)
-          case Eq((set: Set[_]) :: Nil) => q.orRules(e, a, set.toSeq, gs).where(e, a, v, gs).find("distinct", Seq(), v, gs)
+          case Eq((set: Set[_]) :: Nil) => q.orRules(e, a, set.toSeq, gs, u(t, v)).where(e, a, v, gs).find("distinct", Seq(), v, gs)
           case Eq(arg :: Nil)           => q.where(e, a, Val(arg), gs).where(e, a, v, Seq()).find("distinct", Seq(), v, gs)
-          case Eq(args)                 => q.orRules(e, a, args).where(e, a, v, gs).find("distinct", Seq(), v, gs)
+          case Eq(args)                 => q.orRules(e, a, args, Nil, u(t, v)).where(e, a, v, gs).find("distinct", Seq(), v, gs)
           case Neq(args)                => q.where(e, a, v, gs).compareTo("!=", a, v, args map Val).find("distinct", Seq(), v, gs)
           case Gt(arg)                  => q.where(e, a, v, gs).compareTo(">", a, v, Val(arg)).find("distinct", Seq(), v, gs)
           case Fulltext(arg :: Nil)     => q.fulltext(e, a, v, Val(arg)).find("distinct", Seq(), v, gs)
           case other                    => sys.error(s"[Model2Query:resolve[Atom 2]] Unresolved cardinality-many Atom:\nAtom   : $a\nElement: $other")
         }
 
-        case a@Atom(_, _, _, 1, value, _, gs) => value match {
+        case a@Atom(_, _, t, 1, value, _, gs) => value match {
           case Qm                            => q.where(e, a, v, gs).in(v, a).find(v, gs)
           case Fulltext(Seq(Qm))             => q.fulltext(e, a, v, Var(v1)).in(v1, a).find(v, gs)
           case EntValue                      => q.find(e, gs)
@@ -186,9 +189,10 @@ object Model2Query {
           case VarValue                      => q.where(e, a, v, gs).find(v, gs)
           case NoValue                       => q.where(e, a, v, gs).find(NoVal, gs)
           case BackValue(backNs)             => q.where(v, a.ns, a.name, Var(e), backNs, gs).find(e, gs)
-          case Eq((seq: Seq[_]) :: Nil)      => q.where(e, a, v, gs).orRules(e, a, seq, gs).find(v, gs)
+          case Eq((seq: Seq[_]) :: Nil)      => q.where(e, a, v, gs).orRules(e, a, seq, gs, u(t, v)).find(v, gs)
+          case Eq(arg :: Nil) if uri(t)      => q.func( s"""ground (java.net.URI. "$arg")""", Empty, v).where(e, a, v, Seq()).find(v, gs)
           case Eq(arg :: Nil)                => q.where(e, a, Val(arg), gs).where(e, a, v, Seq()).find(v, gs)
-          case Eq(args)                      => q.where(e, a, v, gs).orRules(e, a, args, gs).find(v, gs)
+          case Eq(args)                      => q.where(e, a, v, gs).orRules(e, a, args, gs, u(t, v)).find(v, gs)
           case Neq(args)                     => q.where(e, a, v, gs).compareTo("!=", a, v, args map Val).find(v, gs)
           case Lt(arg)                       => q.where(e, a, v, gs).compareTo("<", a, v, Val(arg)).find(v, gs)
           case Gt(arg)                       => q.where(e, a, v, gs).compareTo(">", a, v, Val(arg)).find(v, gs)

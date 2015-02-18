@@ -1,6 +1,7 @@
 package molecule
 import java.util.Date
 import java.util.UUID._
+import java.net.URI
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 
@@ -15,7 +16,6 @@ class ExpressionsOne extends CoreSpec {
     Ns.bool insert List(true, false)
     Ns.date insert List(date0, date1, date2)
     Ns.uuid insert List(uuid0, uuid1, uuid2)
-    Ns.uri insert List(uri1, uri2)
     Ns.uri insert List(uri0, uri1, uri2)
     Ns.enum insert List("enum0", "enum1", "enum2")
   }
@@ -72,7 +72,8 @@ class ExpressionsOne extends CoreSpec {
     Ns.date(now).get === List()
     Ns.date(date1).get === List(date1)
     Ns.date(date2).get === List(date2)
-    // Todo Can we allow runtime constructs for compile time build-up?
+
+    // Todo Allow runtime constructs
     //    Ns.date(new Date()).get === List()
 
 
@@ -80,19 +81,9 @@ class ExpressionsOne extends CoreSpec {
     Ns.uuid(uuid2).get === List(uuid2)
 
 
-    //    import datomic._
-    //    Peer.q(s"""[:find ?a ?b :where [?a :ns/uri ?b]]""", conn.db) === 76
-    // [[17592186045436 #<URI uri1>], [17592186045437 #<URI uri2>]]
+    Ns.uri(uri1).get === List(uri1)
+    Ns.uri(uri2).get === List(uri2)
 
-    // Both give empty result set
-    //        Peer.q( s"""[:find ?b :where [17592186045493 :ns/uri ?b]]""", conn.db) === 42
-    //        Peer.q( s"""[:find ?a :where [?a :ns/uri #java.net.URI["uri1"]]]""", conn.db) === 42
-    //        Peer.q( s"""[:find ?a :where [?a :ns/uri (java.net.URI. "uri1")]]""", conn.db) === 42
-
-    //    Ns.uri.debug
-    //    Ns.uri(uri1).debug
-    //    Ns.uri(uri1).get === List(uri1)
-    //    Ns.uri(uri2).get === List(uri2)
 
     Ns.enum("enum1").get === List("enum1")
     Ns.enum("enum2").get === List("enum2")
@@ -229,14 +220,14 @@ class ExpressionsOne extends CoreSpec {
     Ns.uuid(uuid1 or uuid2).get.sortBy(_.toString) === List(uuid1, uuid2)
     Ns.uuid(List(uuid1, uuid2)).get.sortBy(_.toString) === List(uuid1, uuid2)
     val uuidList = List(uuid1, uuid2)
-    Ns.uuid(uuidList).get.sorted === List(uuid1, uuid2)
+    Ns.uuid(uuidList).get.sortBy(_.toString) === List(uuid1, uuid2)
 
 
-    //    Ns.uri(uri1, uri2).get.sortBy(_.toString) === List(uri1, uri2)
-    //    Ns.uri(uri1 or uri2).get.sortBy(_.toString) === List(uri1, uri2)
-    //    Ns.uri(List(uri1, uri2)).get.sortBy(_.toString) === List(uri1, uri2)
-    //    val uriList = List(uri1, uri2)
-    //    Ns.uri(uriList).get.sorted === List(uri1, uri2)
+    Ns.uri(uri1, uri2).get.sortBy(_.toString) === List(uri1, uri2)
+    Ns.uri(uri1 or uri2).get.sortBy(_.toString) === List(uri1, uri2)
+    Ns.uri(List(uri1, uri2)).get.sortBy(_.toString) === List(uri1, uri2)
+    val uriList = List(uri1, uri2)
+    Ns.uri(uriList).get.sortBy(_.toString) === List(uri1, uri2)
 
 
     Ns.enum("enum1", "enum2").get.sorted === List("enum1", "enum2")
@@ -332,8 +323,9 @@ class ExpressionsOne extends CoreSpec {
     Ns.uuid.not(uuid0, uuid1).get.sortBy(_.toString) === List(uuid2)
     Ns.uuid.not(uuid0, uuid1, uuid2).get.sortBy(_.toString) === List()
 
-    // todo
-    //    Ns.uri.not(new URI("other")).get.sortBy(_.toString) === List(uri0, uri1, uri2)
+    // todo when we get a string representation #uri
+    //    val uri = new URI("other")
+    //    Ns.uri.not(uri).get.sortBy(_.toString) === List(uri0, uri1, uri2)
     //    Ns.uri.not(uri1).get.sortBy(_.toString) === List(uri0, uri2)
 
     Ns.enum.not("enum0").get.sorted === List(enum1, enum2)
@@ -510,7 +502,7 @@ class ExpressionsOne extends CoreSpec {
     // Comparison of random UUIDs omitted...
 
 
-    // todo
+    // todo when we get a string representation #uri
     //    Ns.uri.<(uri1).get.sorted === List(uri0)
     //    Ns.uri.>(uri1).get.sorted === List(uri2)
     //    Ns.uri.<=(uri1).get.sorted === List(uri0, uri1)
@@ -554,3 +546,62 @@ class ExpressionsOne extends CoreSpec {
     Ns.str.contains("quick monkeys").get === List("Ten slow monkeys", "The quick fox jumps")
   }
 }
+
+//import datomic._
+//import java.net.URI
+//    Peer.q( s"""[:find ?a ?b :where [?a :ns/uri ?b]]""", conn.db) === 76
+//      [[ 17592186045436 #< URI uri1 >], [17592186045437 #< URI uri2 >]]
+//
+//    Both give empty result set
+//    Peer.q( s"""[:find ?b :where [17592186045493 :ns/uri ?b]]""", conn.db) === 42
+
+//        Peer.q( """[:find ?a :where [?a :ns/uri (ground (java.net.URI. "uri1")) ?uri]]""".stripMargin, conn.db) === 42
+
+//    Peer.q(
+//          """
+//[:find  ?b
+// :in    $ %
+// :where [?a :ns/uri ?b]
+//        (rule1 ?a)]
+//          """.stripMargin, conn.db, """[
+//       [(rule1 ?a) [(ground (java.net.URI. "uri1")) ?b][?a :ns/uri ?b]]
+//       [(rule1 ?a) [(ground (java.net.URI. "uri2")) ?b][?a :ns/uri ?b]]
+//                                                ]""") === 42
+//    Peer.q(
+//          """[:find  ?a
+//              :where [(ground (java.net.URI. "uri1")) ?uri]
+//                     [?a :ns/uri ?uri]]
+//                     ]""".stripMargin, conn.db) === 42
+
+
+//import datomic._
+//import java.net.URI
+//    Peer.q( s"""[:find ?a ?b :where [?a :ns/uri ?b]]""", conn.db) === 76
+//      [[ 17592186045436 #< URI uri1 >], [17592186045437 #< URI uri2 >]]
+//
+//    Both give empty result set
+//    Peer.q( s"""[:find ?b :where [17592186045493 :ns/uri ?b]]""", conn.db) === 42
+//
+//        Peer.q( """[:find ?a :where [?a :ns/uri (ground (java.net.URI. "uri1")) ?uri]]""".stripMargin, conn.db) === 42
+//        Peer.q(
+//          """[:find  ?a
+//              :where [(ground (java.net.URI. "uri1")) ?uri]
+//                     [?a :ns/uri ?uri]]
+//                     ]""".stripMargin, conn.db) === 42
+//        Peer.q( """[:find ?a :where [?a :ns/uri #java.net.URI["uri1"]]]""", conn.db) === 42
+//
+//    Peer.q( s"""[:find ?a :where [?a :ns/uri (java.net.URI. "uri1")]]""", conn.db) === 42
+//
+//    Peer.q("[:find ?a :in $ ?b :where [?a :ns/uri ?b]]", conn.db, "(java.net.URI. \"uri1\")") === 42
+//    Peer.q("[:find ?a :in $ ?b :where [?a :ns/uri ?b]]", conn.db, "uri1") === 42
+//    Peer.q("[:find ?a :in $ ?b :where [?a :ns/uri ?b]]", conn.db, new URI("uri1")) === List(17592186045494L)
+//    java.lang.UnsupportedOperationException: nth not supported on this type: IndexSet
+//
+//    java.lang.UnsupportedOperationException: nth not supported on this type: IndexSet
+//
+//    java.lang.UnsupportedOperationException: nth not supported on this type: IndexSet
+
+//    Ns.uri.debug
+//    Ns.uri(uri1).debug
+//        Ns.uri.apply("uri1").get === List(uri1)
+//        Ns.uri(uri1).debug

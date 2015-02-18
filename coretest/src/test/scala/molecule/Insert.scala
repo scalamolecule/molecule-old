@@ -1,8 +1,11 @@
 package molecule
 
+import java.net.URI
+import java.util.{Date, UUID}
+
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
-import shapeless.HNil
+import shapeless._
 
 class Insert extends CoreSpec {
 
@@ -107,15 +110,15 @@ class Insert extends CoreSpec {
     Ns.uuid.get.sortBy(_.toString) === List(uuid1, uuid2, uuid3, uuid4)
 
 
-    //    Ns.uri.insert(uri1)
-    //    Ns.uri.insert(uri2, uri3)
-    //    Ns.uri.insert(List(uri4))
-    //    Ns.uri.insert(List(uri3, uri4))
-    //    Ns.uri.insert(uri1 :: HNil)
-    //    Ns.uri.insert(List(uri2 :: HNil))
-    //    Ns.uri.insert(List(uri3 :: HNil, uri4 :: HNil))
-    //    // Unique values coalesced
-    //    Ns.uri.get.sorted === List(uri1, uri2, uri3, uri4)
+    Ns.uri.insert(uri1)
+    Ns.uri.insert(uri2, uri3)
+    Ns.uri.insert(List(uri4))
+    Ns.uri.insert(List(uri3, uri4))
+    Ns.uri.insert(uri1 :: HNil)
+    Ns.uri.insert(List(uri2 :: HNil))
+    Ns.uri.insert(List(uri3 :: HNil, uri4 :: HNil))
+    // Unique values coalesced
+    Ns.uri.get.sorted === List(uri1, uri2, uri3, uri4)
 
 
     Ns.enum.insert("enum1")
@@ -130,19 +133,138 @@ class Insert extends CoreSpec {
   }
 
 
-  "Add molecule to insert" in new CoreSetup {
+  "Data-molecule, 1 attr" in new CoreSetup {
+
+    // Construct a "Data-Molecule" with an attribute value and add it to the database
 
     Ns.str("a").add
+    Ns.int(1).add
+    Ns.long(1L).add
+    Ns.float(1.0f).add
+    Ns.double(1.0).add
+    Ns.bool(true).add
+    Ns.date(date1).add
+    Ns.uuid(uuid1).add
+    Ns.uri(uri1).add
+    Ns.enum("enum1").add
 
-    Ns.str.get === List("a")
-
+    Ns.str.one === "a"
+    Ns.int.one === 1
+    Ns.long.one === 1L
+    Ns.float.one === 1.0f
+    Ns.double.one === 1.0
+    Ns.bool.one === true
+    Ns.date.one === date1
+    Ns.uuid.one === uuid1
+    Ns.uri.one === uri1
+    Ns.enum.one === enum1
   }
 
 
-  "Insert Molecule (2-step insertion)" in new CoreSetup {
+  "Data-molecule, n attrs" in new CoreSetup {
+
+    // Construct a "Data-Molecule" with multiple attributes populated with data and add it to the database
+
+    Ns.str("a").int(1).long(1L).float(1.0f).double(1.0).bool(true).date(date1).uuid(uuid1).uri(uri1).enum("enum1").add
+
+    Ns.str.int.long.float.double.bool.date.uuid.uri.enum.one ===(
+      "a", 1, 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1")
+  }
+
+
+  " Insert-Molecule n attributes" in new CoreSetup {
+
+    // Insert 3 entities as tuples of values
+    // Note that values are typechecked against the attribute types of the molecule
+    Ns.str.int.long.float.double.bool.date.uuid.uri.enum insert List(
+      (" ", 0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0"),
+      ("a", 1, 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1"),
+      ("b", 2, 2L, 2.0f, 2.0, false, date2, uuid2, uri2, "enum2")
+    )
+
+    Ns.str.int.long.float.double.bool.date.uuid.uri.enum.get.sortBy(_._1) === List(
+      (" ", 0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0"),
+      ("a", 1, 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1"),
+      ("b", 2, 2L, 2.0f, 2.0, false, date2, uuid2, uri2, "enum2")
+    )
+  }
+
+
+  " Insert-Molecule n attributes + null" in new CoreSetup {
+
+    // If we have an inconsistent data set we can use typed `null` as
+    // a placeholder for a missing value. When Molecule encounters a null
+    // value it won't assert a fact about that attribute (simply skipping it is
+    // different from for instance in SQL where a NULL value could be inserted).
+
+    Ns.str.int.long.float.double.bool.date.uuid.uri.enum insert List(
+      (null.asInstanceOf[String], 0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0"),
+      ("a", null.asInstanceOf[Int], 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1"),
+      ("b", 2, null.asInstanceOf[Long], 2.0f, 2.0, false, date2, uuid2, uri2, "enum2"),
+      ("c", 3, 3L, null.asInstanceOf[Float], 3.0, true, date3, uuid3, uri3, "enum3"),
+      ("d", 4, 4L, 4.0f, null.asInstanceOf[Double], false, date4, uuid4, uri4, "enum4"),
+      ("e", 5, 5L, 5.0f, 5.0, null.asInstanceOf[Boolean], date5, uuid5, uri5, "enum5"),
+      ("f", 6, 6L, 6.0f, 6.0, false, null.asInstanceOf[Date], uuid6, uri6, "enum6"),
+      ("g", 7, 7L, 7.0f, 7.0, true, date7, null.asInstanceOf[UUID], uri7, "enum7"),
+      ("h", 8, 8L, 8.0f, 8.0, false, date8, uuid8, null.asInstanceOf[URI], "enum8"),
+      ("i", 9, 9L, 9.0f, 9.0, true, date9, uuid9, uri9, null.asInstanceOf[String])
+    )
+
+    // Null values haven't been asserted:
+
+    // View created entities:
+
+    // Without str
+    Ns.int.long.float.double.bool.date.uuid.uri.enum.one ===(0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0")
+    // Without int
+    Ns.str.long.float.double.bool.date.uuid.uri.enum.one ===("a", 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1")
+    // Without long
+    Ns.str.int.float.double.bool.date.uuid.uri.enum.one ===("b", 2, 2.0f, 2.0, false, date2, uuid2, uri2, "enum2")
+    // Without float
+    Ns.str.int.long.double.bool.date.uuid.uri.enum.one ===("c", 3, 3L, 3.0, true, date3, uuid3, uri3, "enum3")
+    // Without double
+    Ns.str.int.long.float.bool.date.uuid.uri.enum.one ===("d", 4, 4L, 4.0f, false, date4, uuid4, uri4, "enum4")
+    // Without bool
+    Ns.str.int.long.float.double.date.uuid.uri.enum.one ===("e", 5, 5L, 5.0f, 5.0, date5, uuid5, uri5, "enum5")
+    // Without date
+    Ns.str.int.long.float.double.bool.uuid.uri.enum.one ===("f", 6, 6L, 6.0f, 6.0, false, uuid6, uri6, "enum6")
+    // Without uuid
+    Ns.str.int.long.float.double.bool.date.uri.enum.one ===("g", 7, 7L, 7.0f, 7.0, true, date7, uri7, "enum7")
+    // Without uri
+    Ns.str.int.long.float.double.bool.date.uuid.enum.one ===("h", 8, 8L, 8.0f, 8.0, false, date8, uuid8, "enum8")
+    // Without enum
+    Ns.str.int.long.float.double.bool.date.uuid.uri.one ===("i", 9, 9L, 9.0f, 9.0, true, date9, uuid9, uri9)
+
+
+    // View attributes:
+
+    // No value " "
+    Ns.str.get.sorted === List("a", "b", "c", "d", "e", "f", "g", "h", "i")
+    // No value 1
+    Ns.int.get.sorted === List(0, 2, 3, 4, 5, 6, 7, 8, 9)
+    // No value 2L
+    Ns.long.get.sorted === List(0L, 1L, 3L, 4L, 5L, 6L, 7L, 8L, 9L)
+    // No value 3.0f
+    Ns.float.get.sorted === List(0.0f, 1.0f, 2.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f)
+    // No value 4.0
+    Ns.double.get.sorted === List(0.0, 1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 8.0, 9.0)
+    // (Coalesced values)
+    Ns.bool.get.sorted === List(false, true)
+    // No value date6
+    Ns.date.get.sorted === List(date0, date1, date2, date3, date4, date5, date7, date8, date9)
+    // No value uuid7
+    Ns.uuid.get.sortBy(_.toString) === List(uuid0, uuid1, uuid2, uuid3, uuid4, uuid5, uuid6, uuid8, uuid9)
+    // No value uri8
+    Ns.uri.get.sortBy(_.toString) === List(uri0, uri1, uri2, uri3, uri4, uri5, uri6, uri7, uri9)
+    // No value enum9
+    Ns.enum.get.sorted === List(enum0, enum1, enum2, enum3, enum4, enum5, enum6, enum7, enum8)
+  }
+
+
+  "Insert-Molecule (2-step insertion)" in new CoreSetup {
 
     // 1. Define Insert Molecule
-    val strInsertMolecule = Ns.str("a").insert
+    val strInsertMolecule = Ns.str.insert
 
     // 2. Apply value to Insert Molecule
     strInsertMolecule("a")
@@ -150,31 +272,31 @@ class Insert extends CoreSpec {
     Ns.str.get === List("a")
 
   }
-
-
-
-  "Missing values / inconsistent data set" in new CoreSetup {
-
-    Ns.str.insert.apply(null.asInstanceOf[String])
-    Ns.str.get === List()
-
-    //    Ns.str.insert.apply("a")
-    //    Ns.str.insert.apply(List("a"))
-    //    Ns.str.insert.apply("a" :: HNil)
-    //    Ns.str.insert.apply(List("a" :: HNil))
-    //
-    //    Ns.str.int.insert.apply(List(("b", 1)))
-    //    Ns.str.int.insert.apply(List(("b", null.asInstanceOf[Int])))
-    //    Ns.str.get === List("b")
-    //    Ns.int.get === List()
-
-    //    Ns.str.int.bool.insert.apply(List(("b", null.asInstanceOf[Int], true)))
-    Ns.str.int.bool.insert.apply(List((null, null.asInstanceOf[Int], true)))
-    //    Ns.str.int.bool.insert.apply(List((null, 7, true)))
-    Ns.str.get === List()
-    Ns.int.get === List()
-    Ns.bool.get === List(true)
-  }
+  //
+  //
+  //
+  //  "Missing values / inconsistent data set" in new CoreSetup {
+  //
+  //    Ns.str.insert.apply(null.asInstanceOf[String])
+  //    Ns.str.get === List()
+  //
+  //    //    Ns.str.insert.apply("a")
+  //    //    Ns.str.insert.apply(List("a"))
+  //    //    Ns.str.insert.apply("a" :: HNil)
+  //    //    Ns.str.insert.apply(List("a" :: HNil))
+  //    //
+  //    //    Ns.str.int.insert.apply(List(("b", 1)))
+  //    //    Ns.str.int.insert.apply(List(("b", null.asInstanceOf[Int])))
+  //    //    Ns.str.get === List("b")
+  //    //    Ns.int.get === List()
+  //
+  //    //    Ns.str.int.bool.insert.apply(List(("b", null.asInstanceOf[Int], true)))
+  //    Ns.str.int.bool.insert.apply(List((null, null.asInstanceOf[Int], true)))
+  //    //    Ns.str.int.bool.insert.apply(List((null, 7, true)))
+  //    Ns.str.get === List()
+  //    Ns.int.get === List()
+  //    Ns.bool.get === List(true)
+  //  }
 
 
   //  "Populate molecule" in new InsertSetup {

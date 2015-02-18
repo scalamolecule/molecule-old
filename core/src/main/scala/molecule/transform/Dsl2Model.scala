@@ -104,12 +104,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
   }
 
-  def cast(atom: Tree) = atom.tpeS match {
-    case "Int"   => "Long"
-    case "Float" => "Double"
-    case other   => other
-  }
-
   def walk(prev: Tree, ns: String, cur: Tree, thisElement: Element) = {
     val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
     val attr = cur.toString()
@@ -169,6 +163,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     } else {
       nestedElements
     }
+  }
+
+  def cast(atom: Tree) = atom.tpeS match {
+    case "Int"   => "Long"
+    case "Float" => "Double"
+    case other   => other
   }
 
   def resolveOp(previous: Tree, curTree: Tree, attr: Tree, op: Tree, values0: Tree): Element = {
@@ -265,13 +265,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
             case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
           }.toMap
           Replace(oldNew)
-
-        case other if attr == null => vs.flatMap(v => resolveValues(v))
-        case other                 => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+        case other if attr == null                                      => vs.flatMap(v => resolveValues(v))
+        case other                                                      => vs.flatMap(v => resolveValues(v, att(q"$attr")))
       }
-
-      case other if attr == null => resolveValues(other)
-      case other                 => resolveValues(other, att(q"$attr"))
+      case other if attr == null                                   => resolveValues(other)
+//      case other if attr.isOneURI || attr.isManyURI                => Fn("URI", resolveValues(other))
+      case other                                                   => resolveValues(other, att(q"$attr"))
     }
   }
 

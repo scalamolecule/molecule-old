@@ -1,7 +1,6 @@
 package molecule.transform
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone, UUID}
-import java.net.URI
 
 import molecule.ast.query._
 
@@ -33,10 +32,6 @@ case class Query2String(q: Query) {
     case Val(v: Boolean)                 => v.toString
     case Val(date: Date)                 => format(date)
     case Val(v: UUID)                    => "#uuid \"" + v + "\""
-//    case Val(v: URI)                     => "#uri \"" + v + "\""
-//    case Val(v: URI)                     => "#<uri \"" + v + "\">"
-//    case Val(v: URI)                     => "#<URI \"" + v + "\">"
-    case Val(v: URI)                     => "(java.net.URI. \"" + v + "\")"
     case Val(v)                          => "\"" + v + "\""
     case Dummy                           => "_"
     case NoVal                           => ""
@@ -53,7 +48,7 @@ case class Query2String(q: Query) {
     case TupleBinding(vs)                => "[ " + (vs map p mkString " ") + " ]"
     case RelationBinding(vs)             => "[[ " + (vs map p mkString " ") + " ]]"
     case DataClause(ds, e, a, v, tx, op) => pp(ds, e, a, v, tx, op)
-    case Funct(name, ins, outs)          => s"[($name " + ((ins map p mkString " ") + ") " + p(outs)).trim + "]"
+    case Funct(name, ins, outs)          => ((s"[($name " + (ins map p mkString " ")).trim + ") " + p(outs)).trim + "]"
     case Rule(name, args, clauses)       => s"[($name " + (args map p mkString " ") + ") " + (clauses map p mkString " ") + "]"
     case RuleInvocation(name, args)      => s"($name " + (args map p mkString " ") + ")"
     case unresolvedQuery                 => sys.error(s"\n[Query2String] UNRESOLVED query expression: $unresolvedQuery")

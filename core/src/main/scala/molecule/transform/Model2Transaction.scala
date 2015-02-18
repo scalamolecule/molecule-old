@@ -100,6 +100,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
     (dataStmts0.flatten, txStmts0.flatten)
   }
 
+  def lastE(stmts: Seq[Statement]) = if (stmts.isEmpty) tempId() else stmts.last.e
+
   def insertStmts(dataRows: Seq[Seq[Any]]): Seq[Seq[Statement]] = {
     val (dataStmts, txStmts) = splitStmts()
     val dataStmtss: Seq[Seq[Statement]] = dataRows.map { args =>
@@ -108,18 +110,17 @@ case class Model2Transaction(conn: Connection, model: Model) {
         val next = cur + 1
         if (arg == null)
           (next, stmts)
-        else {
-          def lastE = if (stmts.isEmpty) tempId() else stmts.last.e
+        else
           stmt match {
             case Add('tempId, a, 'tempId)                 => (cur, resolveStmts(stmts, tempId(), a, tempId()))
             case Add('arg, a, 'tempId)                    => (next, resolveStmts(stmts, arg, a, tempId()))
             case Add('tempId, a, 'arg)                    => (next, resolveStmts(stmts, tempId(), a, arg))
             case Add('tempId, a, Values(EnumVal, prefix)) => (next, resolveStmts(stmts, tempId(), a, arg, prefix))
             case Add('tempId, a, Values(vs, prefix))      => (next, resolveStmts(stmts, tempId(), a, vs, prefix))
-            case Add('e, a, 'arg)                         => (next, resolveStmts(stmts, lastE, a, arg))
-            case Add('e, a, Values(EnumVal, prefix))      => (next, resolveStmts(stmts, lastE, a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))           => (next, resolveStmts(stmts, lastE, a, vs, prefix))
-            case Add('e, a, 'tempId)                      => (cur, resolveStmts(stmts, lastE, a, tempId()))
+            case Add('e, a, 'arg)                         => (next, resolveStmts(stmts, lastE(stmts), a, arg))
+            case Add('e, a, Values(EnumVal, prefix))      => (next, resolveStmts(stmts, lastE(stmts), a, arg, prefix))
+            case Add('e, a, Values(vs, prefix))           => (next, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
+            case Add('e, a, 'tempId)                      => (cur, resolveStmts(stmts, lastE(stmts), a, tempId()))
             case Add('v, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.v, a, arg))
             case Add('v, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
             case Add('tx, a, 'arg)                        => (next, resolveStmts(stmts, tempId("tx"), a, arg))
@@ -138,7 +139,6 @@ case class Model2Transaction(conn: Connection, model: Model) {
               (next, stmts ++ nestedInsertStmts)
             case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
           }
-        }
       }._2
     }
     val txId = tempId("tx")
@@ -156,8 +156,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
     val j = i + 1
     stmt match {
       case Add('tempId, a, Values(vs, prefix)) => (j, resolveStmts(stmts, tempId(), a, vs, prefix))
-      case Add('e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
-      case Add('e, a, 'tempId)                 => (i, resolveStmts(stmts, stmts.last.e, a, tempId()))
+      case Add('e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
+      case Add('e, a, 'tempId)                 => (i, resolveStmts(stmts, lastE(stmts), a, tempId()))
       case Add('v, a, Values(vs, prefix))      => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
       case Retract(e, a, v)                    => (i, stmts)
       case Add(_, a, 'arg)                     => sys.error(s"[Model2Transaction:saveStmts] Attribute `$a` needs a value applied")
@@ -173,13 +173,12 @@ case class Model2Transaction(conn: Connection, model: Model) {
     val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
       val j = i + 1
       stmt match {
-        case Add('e, a, Values(vs, prefix))  => (j, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
-        case Add('e, a, 'tempId)             => (i, resolveStmts(stmts, stmts.last.e, a, tempId()))
-        case Add('v, a, Values(vs, prefix))  => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-        case Add('tx, a, Values(vs, prefix)) => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-
+        case Add('e, a, Values(vs, prefix))     => (j, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
+        case Add('e, a, 'tempId)                => (i, resolveStmts(stmts, lastE(stmts), a, tempId()))
+        case Add('v, a, Values(vs, prefix))     => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+        case Add('tx, a, Values(vs, prefix))    => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
         case Add(e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, e, a, vs, prefix))
-        case Retract('e, a, Values(vs, prefix)) => (j, resolveStmts(stmts, stmts.last.e, a, vs, prefix))
+        case Retract('e, a, Values(vs, prefix)) => (j, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
         case Retract(e, a, Values(vs, prefix))  => (j, resolveStmts(stmts, e, a, vs, prefix))
         case Add(_, a, 'arg)                    => sys.error(s"[Model2Transaction:updateStmts] Attribute `$a` needs a value applied")
         case unexpected                         => sys.error("[Model2Transaction:updateStmts] Unexpected update statement: " + unexpected)

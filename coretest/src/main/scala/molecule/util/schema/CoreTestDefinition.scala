@@ -15,7 +15,7 @@ trait CoreTestDefinition {
     val date   = oneDate
     val uuid   = oneUUID
     val uri    = oneURI
-    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
+    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
     val ref1   = one[Ref1]
 
     val strs    = manyString.fullTextSearch
@@ -26,7 +26,7 @@ trait CoreTestDefinition {
     val dates   = manyDate
     val uuids   = manyUUID
     val uris    = manyURI
-    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
+    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
     val refs1   = many[Ref1]
   }
 
@@ -40,7 +40,7 @@ trait CoreTestDefinition {
     val date   = oneDate
     val uuid   = oneUUID
     val uri    = oneURI
-    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
+    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
     val ref2   = one[Ref2]
 
     val strs    = manyString.fullTextSearch
@@ -51,7 +51,7 @@ trait CoreTestDefinition {
     val dates   = manyDate
     val uuids   = manyUUID
     val uris    = manyURI
-    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
+    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
     val refs2   = many[Ref2]
   }
 
@@ -65,7 +65,7 @@ trait CoreTestDefinition {
     val date   = oneDate
     val uuid   = oneUUID
     val uri    = oneURI
-    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
+    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
 
     val strs    = manyString.fullTextSearch
     val ints    = manyInt
@@ -75,6 +75,6 @@ trait CoreTestDefinition {
     val dates   = manyDate
     val uuids   = manyUUID
     val uris    = manyURI
-    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4)
+    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
   }
 }

@@ -45,6 +45,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isEnum = tpe <:< weakTypeOf[Enum]
     def isOneEnum = tpe <:< weakTypeOf[OneEnum[_, _]]
     def isManyEnum = tpe <:< weakTypeOf[ManyEnums[_, _]]
+    def isOneURI = tpe <:< weakTypeOf[OneURI[_, _]]
+    def isManyURI = tpe <:< weakTypeOf[ManyURI[_, _]]
     override def toString = t.tpe.typeSymbol.name.toString
   }
   def nsString(ns: String): String = ns.head.toLower + ns.tail
