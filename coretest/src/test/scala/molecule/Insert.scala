@@ -190,7 +190,36 @@ class Insert extends CoreSpec {
   }
 
 
-  " Insert-Molecule n attributes + null" in new CoreSetup {
+  " Insert-Molecule (2-step insertion)" in new CoreSetup {
+
+    // 1. Define "Insert-Molecule"
+    val insertStr = Ns.str.insert
+
+    // 2. Re-use Insert-Molecule to insert values
+    insertStr("a")
+    insertStr("b")
+    insertStr("c")
+
+    Ns.str.get.sorted === List("a", "b", "c")
+
+
+    val insertAll = Ns.str.int.long.float.double.bool.date.uuid.uri.enum.insert
+
+    insertAll(" ", 0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0")
+    insertAll(List(
+      ("a", 1, 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1"),
+      ("b", 2, 2L, 2.0f, 2.0, false, date2, uuid2, uri2, "enum2")
+    ))
+
+    Ns.str.int.long.float.double.bool.date.uuid.uri.enum.get.sortBy(_._1) === List(
+      (" ", 0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0"),
+      ("a", 1, 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1"),
+      ("b", 2, 2L, 2.0f, 2.0, false, date2, uuid2, uri2, "enum2")
+    )
+  }
+
+
+  " Insert inconsistent data sets" in new CoreSetup {
 
     // If we have an inconsistent data set we can use typed `null` as
     // a placeholder for a missing value. When Molecule encounters a null
@@ -259,91 +288,4 @@ class Insert extends CoreSpec {
     // No value enum9
     Ns.enum.get.sorted === List(enum0, enum1, enum2, enum3, enum4, enum5, enum6, enum7, enum8)
   }
-
-
-  "Insert-Molecule (2-step insertion)" in new CoreSetup {
-
-    // 1. Define Insert Molecule
-    val strInsertMolecule = Ns.str.insert
-
-    // 2. Apply value to Insert Molecule
-    strInsertMolecule("a")
-
-    Ns.str.get === List("a")
-
-  }
-  //
-  //
-  //
-  //  "Missing values / inconsistent data set" in new CoreSetup {
-  //
-  //    Ns.str.insert.apply(null.asInstanceOf[String])
-  //    Ns.str.get === List()
-  //
-  //    //    Ns.str.insert.apply("a")
-  //    //    Ns.str.insert.apply(List("a"))
-  //    //    Ns.str.insert.apply("a" :: HNil)
-  //    //    Ns.str.insert.apply(List("a" :: HNil))
-  //    //
-  //    //    Ns.str.int.insert.apply(List(("b", 1)))
-  //    //    Ns.str.int.insert.apply(List(("b", null.asInstanceOf[Int])))
-  //    //    Ns.str.get === List("b")
-  //    //    Ns.int.get === List()
-  //
-  //    //    Ns.str.int.bool.insert.apply(List(("b", null.asInstanceOf[Int], true)))
-  //    Ns.str.int.bool.insert.apply(List((null, null.asInstanceOf[Int], true)))
-  //    //    Ns.str.int.bool.insert.apply(List((null, 7, true)))
-  //    Ns.str.get === List()
-  //    Ns.int.get === List()
-  //    Ns.bool.get === List(true)
-  //  }
-
-
-  //  "Populate molecule" in new InsertSetup {
-  //
-  //    Ns.str("str1").add
-  //
-  //  }
-  //
-  //  "Input molecule" in new InsertSetup {
-  //
-  //    // 2 steps
-  //    val insertString = Ns.str.insert
-  //    insertString("str1")
-  //
-  //    // With variable
-  //    insertString(str1)
-  //
-  //  }
-  //
-  //  "Input molecule" in new InsertSetup {
-  //
-  //    // Insert single value for one cardinality-1 attribute
-  //
-  //    Ns.str insert "str1"
-  //    Ns.str.insert("str1")
-  //
-  //    // card 2
-  //    Ns.ints insert Set(1, 2)
-  //
-  //    // Use variable a value
-  //    val foo = "foo"
-  //    Ns.str insert foo
-  //    Ns.str.insert(foo)
-  //
-  //
-  //    // 2 steps
-  //    val insertString = Ns.str.insert
-  //    insertString("str1")
-  //
-  //    // With variable
-  //    insertString(foo)
-  //
-  //
-  //
-  //    // Insert several values
-  //
-  //    Ns.str.get === List()
-  //  }
-
 }
