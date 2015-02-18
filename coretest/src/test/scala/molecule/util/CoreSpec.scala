@@ -20,9 +20,15 @@ class CoreSpec extends MoleculeSpec with DatomicFacade {
   def ur(i: Int) = new URI("uri" + i)
   def da(s: Int) = new Date(1000L * s)
 
-  lazy val List(uuid0, uuid1, uuid2, uuid3, uuid4, uuid5, uuid6, uuid7, uuid8, uuid9) = List(uu, uu, uu, uu, uu, uu, uu, uu, uu, uu).sortBy(_.toString)
-  lazy val List(uri0, uri1, uri2, uri3, uri4, uri5, uri6, uri7, uri8, uri9)           = List(ur(0), ur(1), ur(2), ur(3), ur(4), ur(5), ur(6), ur(7), ur(8), ur(9)).sortBy(_.toString)
-  lazy val (date0, date1, date2, date3, date4, date5, date6, date7, date8, date9)     = (da(0), da(1), da(2), da(3), da(4), da(5), da(6), da(7), da(8), da(9))
+
+  lazy val (date0, date1, date2, date3, date4, date5, date6, date7, date8, date9, date10, date11, date12, date13, date14, date15, date16, date17, date18)     =
+    (da(0), da(1), da(2), da(3), da(4), da(5), da(6), da(7), da(8), da(9), da(10), da(11), da(12), da(13), da(14), da(15), da(16), da(17), da(18))
+
+  lazy val List(uuid0, uuid1, uuid2, uuid3, uuid4, uuid5, uuid6, uuid7, uuid8, uuid9, uuid10, uuid11, uuid12, uuid13, uuid14, uuid15, uuid16, uuid17, uuid18) =
+    List(uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu, uu).sortBy(_.toString)
+
+  lazy val List(uri0, uri1, uri2, uri3, uri4, uri5, uri6, uri7, uri8, uri9, uri10, uri11, uri12, uri13, uri14, uri15, uri16, uri17, uri18)                    =
+    List(ur(0), ur(1), ur(2), ur(3), ur(4), ur(5), ur(6), ur(7), ur(8), ur(9), ur(10), ur(11), ur(12), ur(13), ur(14), ur(15), ur(16), ur(17), ur(18)).sortBy(_.toString)
 
   lazy val (str0, int0, long0, float0, double0, bool0, enum0) = (" ", 0, 0L, 0.0f, 0.0, false, "enum0")
   lazy val (str1, int1, long1, float1, double1, bool1, enum1) = ("a", 1, 1L, 1.0f, 1.0, true, "enum1")

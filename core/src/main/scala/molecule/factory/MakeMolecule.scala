@@ -123,16 +123,20 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
 
   def from1attr(dsl: c.Expr[NS], A: Type) = {
-    val cast = (data: Tree) => if (A <:< typeOf[Set[_]])
-      q"$data.asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
+    val cast = (data: Tree) => if (A <:< typeOf[Set[Int]])
+      q""" $data.asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$A]"""
+    else if (A <:< typeOf[Set[Float]])
+      q""" $data.asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$A]"""
+    else if (A <:< typeOf[Set[_]])
+      q""" $data.asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"""
     else if (A <:< typeOf[Vector[_]])
-      q"$data.asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
+      q""" $data.asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"""
     else if (A <:< typeOf[Stream[_]])
-      q"$data.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
+      q""" $data.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"""
     else if (A <:< typeOf[Int])
-      q""" if($data.isInstanceOf[jLong]) $data.asInstanceOf[jLong].toInt.asInstanceOf[$A] else $data.asInstanceOf[$A] """
+      q""" if($data.isInstanceOf[jLong]) $data.asInstanceOf[jLong].toInt.asInstanceOf[$A] else $data.asInstanceOf[$A]"""
     else if (A <:< typeOf[Float])
-      q""" if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat.asInstanceOf[$A] else $data.asInstanceOf[$A] """
+      q""" if($data.isInstanceOf[jDouble]) $data.asInstanceOf[jDouble].toFloat.asInstanceOf[$A] else $data.asInstanceOf[$A]"""
     else {
       // Steer Clojure boxings
       q"""
@@ -148,7 +152,7 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
              case _       => $data
            }
            case _ =>
-        $data
+        $data.asInstanceOf[$A]
          }
         """
 
@@ -164,7 +168,11 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
       //      println(" W " + $ {A.toString} + " Double: " + $data.isInstanceOf[Double] + " Float: " + $data.isInstanceOf[Float])
     }
 
-    val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])
+    val hlist = (data: Tree) => if (A <:< typeOf[Set[Int]])
+      q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$A] :: HNil"
+    else if (A <:< typeOf[Set[Float]])
+      q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$A] :: HNil"
+    else if (A <:< typeOf[Set[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A] :: HNil"
     else if (A <:< typeOf[Vector[_]])
       q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A] :: HNil"
@@ -189,12 +197,21 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
   def fromXattrs(dsl: c.Expr[NS], OutTypes: Type*) = {
     val tplValues = (data: Tree) => OutTypes.zipWithIndex.map {
-      case (t, i) if t <:< typeOf[Set[_]]    => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
-      case (t, i) if t <:< typeOf[Vector[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
-      case (t, i) if t <:< typeOf[Stream[_]] => q"$data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
-      case (t, i) if t <:< typeOf[Int]       => q""" if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t] """
-      case (t, i) if t <:< typeOf[Float]     => q""" if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t] """
-      case (t, i)                            =>
+      case (t, i) if t <:< typeOf[Set[Int]]   =>
+        q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Set[Float]] =>
+        q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Set[_]]     =>
+        q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Vector[_]]  =>
+        q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Stream[_]]  =>
+        q"$data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
+      case (t, i) if t <:< typeOf[Int]        =>
+        q""" if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t] """
+      case (t, i) if t <:< typeOf[Float]      =>
+        q""" if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t] """
+      case (t, i)                             =>
         // Steer Clojure boxings
         q"""
           query.f.outputs($i) match {
@@ -221,12 +238,22 @@ trait MakeMolecule[Ctx <: Context] extends TreeOps[Ctx] {
     }
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
     val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
-      case ((t, i), hl) if t <:< typeOf[Set[_]]    => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
-      case ((t, i), hl) if t <:< typeOf[Vector[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t])"
-      case ((t, i), hl) if t <:< typeOf[Stream[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t])"
-      case ((t, i), hl) if t <:< typeOf[Int]       => q"""if($data.get($i).isInstanceOf[jLong]) $hl.::($data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t]) else $hl.::($data.get($i).asInstanceOf[$t])"""
-      case ((t, i), hl) if t <:< typeOf[Float]     => q"""if($data.get($i).isInstanceOf[jDouble]) $hl.::($data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t]) else $hl.::($data.get($i).asInstanceOf[$t])"""
-      case ((t, i), hl)                            => q"$hl.::($data.get($i).asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Set[Int]]   =>
+        q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Set[Float]] =>
+        q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Set[_]]     =>
+        q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Vector[_]]  =>
+        q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Stream[_]]  =>
+        q"$hl.::($data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t])"
+      case ((t, i), hl) if t <:< typeOf[Int]        =>
+        q"""if($data.get($i).isInstanceOf[jLong]) $hl.::($data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t]) else $hl.::($data.get($i).asInstanceOf[$t])"""
+      case ((t, i), hl) if t <:< typeOf[Float]      =>
+        q"""if($data.get($i).isInstanceOf[jDouble]) $hl.::($data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t]) else $hl.::($data.get($i).asInstanceOf[$t])"""
+      case ((t, i), hl)                             =>
+        q"$hl.::($data.get($i).asInstanceOf[$t])"
     }
     val MoleculeTpe = molecule_o(OutTypes.size)
 

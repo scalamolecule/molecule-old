@@ -7,7 +7,7 @@ import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 import shapeless._
 
-class Insert extends CoreSpec {
+class InsertOne extends CoreSpec {
 
 
   "1 attribute" in new CoreSetup {
