@@ -172,7 +172,7 @@ class InsertOne extends CoreSpec {
   }
 
 
-  " Insert-Molecule n attributes" in new CoreSetup {
+  " Insert-molecule n attrs" in new CoreSetup {
 
     // Insert 3 entities as tuples of values
     // Note that values are typechecked against the attribute types of the molecule
@@ -190,12 +190,12 @@ class InsertOne extends CoreSpec {
   }
 
 
-  " Insert-Molecule (2-step insertion)" in new CoreSetup {
+  " Insert-molecule (2-step insertion)" in new CoreSetup {
 
-    // 1. Define "Insert-Molecule"
+    // 1. Define "Insert-molecule"
     val insertStr = Ns.str.insert
 
-    // 2. Re-use Insert-Molecule to insert values
+    // 2. Re-use Insert-molecule to insert values
     insertStr("a")
     insertStr("b")
     insertStr("c")

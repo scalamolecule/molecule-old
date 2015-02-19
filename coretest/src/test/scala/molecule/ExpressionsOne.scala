@@ -572,8 +572,9 @@ class ExpressionsOne extends CoreSpec {
 //              :where [(ground (java.net.URI. "uri1")) ?uri]
 //                     [?a :ns/uri ?uri]]
 //                     ]""".stripMargin, conn.db) === 42
-
-
+//
+//           Peer.q( """[:find ?a :where [?a :ns/uri #java.net.URI "uri1"]]""", conn.db) === 42
+//
 //import datomic._
 //import java.net.URI
 //    Peer.q( s"""[:find ?a ?b :where [?a :ns/uri ?b]]""", conn.db) === 76
