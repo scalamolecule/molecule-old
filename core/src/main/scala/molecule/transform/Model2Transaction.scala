@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 
 
 case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 30, 33, false, 6)
+  val x = Debug("Model2Transaction", 33, 33, false, 6)
 
   private def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
 
@@ -67,7 +67,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('arg, Bond(ns, refAttr, _)) => ('v, stmts :+ Add('arg, s":$ns/$refAttr", 'tempId))
 
       case (e, elem) =>
-        x(27, model, e, elem)
+//        x(27, model, e, elem)
         //        throw new RuntimeException(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
         sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
     }
@@ -105,26 +105,30 @@ case class Model2Transaction(conn: Connection, model: Model) {
   def insertStmts(dataRows: Seq[Seq[Any]]): Seq[Seq[Statement]] = {
     val (dataStmts, txStmts) = splitStmts()
     val dataStmtss: Seq[Seq[Statement]] = dataRows.map { args =>
+      x(30, args)
       dataStmts.foldLeft(0, Seq[Statement]()) { case ((cur, stmts), stmt) =>
-        val arg = args(cur)
-        val next = cur + 1
-        if (arg == null)
+        x(31, s"$cur - $stmt")
+        val arg = args.get(cur)
+        val next = if((cur + 1) < args.size) cur + 1 else cur
+        if (arg == null) {
+          x(20, s"$cur - $next - $stmt")
           (next, stmts)
-        else
+        } else
           stmt match {
-            case Add('tempId, a, 'tempId)                 => (cur, resolveStmts(stmts, tempId(), a, tempId()))
-            case Add('arg, a, 'tempId)                    => (next, resolveStmts(stmts, arg, a, tempId()))
-            case Add('tempId, a, 'arg)                    => (next, resolveStmts(stmts, tempId(), a, arg))
-            case Add('tempId, a, Values(EnumVal, prefix)) => (next, resolveStmts(stmts, tempId(), a, arg, prefix))
-            case Add('tempId, a, Values(vs, prefix))      => (next, resolveStmts(stmts, tempId(), a, vs, prefix))
-            case Add('e, a, 'arg)                         => (next, resolveStmts(stmts, lastE(stmts), a, arg))
-            case Add('e, a, Values(EnumVal, prefix))      => (next, resolveStmts(stmts, lastE(stmts), a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))           => (next, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
-            case Add('e, a, 'tempId)                      => (cur, resolveStmts(stmts, lastE(stmts), a, tempId()))
-            case Add('v, a, 'arg)                         => (next, resolveStmts(stmts, stmts.last.v, a, arg))
-            case Add('v, a, Values(vs, prefix))           => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
-            case Add('tx, a, 'arg)                        => (next, resolveStmts(stmts, tempId("tx"), a, arg))
-            case Retract(e, a, v)                         => (cur, stmts)
+            case Add('tempId, a, 'tempId)                 => x(1, s"$cur - $stmt - $arg");(cur, resolveStmts(stmts, tempId(), a, tempId()))
+            case Add('arg, a, 'tempId)                    => x(2, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, arg, a, tempId()))
+            case Add('tempId, a, 'arg)                    => x(3, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId(), a, arg))
+            case Add('tempId, a, Values(EnumVal, prefix)) => x(4, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId(), a, arg, prefix))
+            case Add('tempId, a, Values(vs, prefix))      => x(5, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId(), a, vs, prefix))
+            case Add('e, a, 'arg)                         => x(6, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, lastE(stmts), a, arg))
+            case Add('e, a, 'tempId)                      => x(7, s"$cur - $stmt - $arg");(cur, resolveStmts(stmts, lastE(stmts), a, tempId()))
+            case Add('e, a, Values(EnumVal, prefix))      => x(8, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, lastE(stmts), a, arg, prefix))
+            case Add('e, a, Values(vs, prefix))           => x(9, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
+            case Add('v, a, 'arg)                         => x(10, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, stmts.last.v, a, arg))
+            case Add('v, a, 'tempId)                      => x(11, s"$cur - $stmt - $arg");(cur, resolveStmts(stmts, stmts.last.v, a, tempId()))
+            case Add('v, a, Values(vs, prefix))           => x(12, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
+            case Add('tx, a, 'arg)                        => x(13, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId("tx"), a, arg))
+            case Retract(e, a, v)                         => x(14, s"$cur - $stmt - $arg");(cur, stmts)
             case Add(e, ref, nestedStmts: Seq[_])         =>
               val parentId = if (e == 'parentId) tempId() else stmts.last.e
               // Loop nested rows of data
@@ -146,9 +150,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (stmts, Add('tx, a, Values(vs, prefix))) => resolveStmts(stmts, txId, a, vs, prefix)
       case (stmts, unexpected)                      => sys.error("[Model2Transaction:insertStmts:txStmts] Unexpected insert statement: " + unexpected)
     })
-
-    x(26, model, stmtsModel, dataStmts, dataStmtss, txStmts, txStmtss, dataRows)
-
+//    x(26, model, stmtsModel, dataStmts, dataStmtss, txStmts, txStmtss, dataRows)
     dataStmtss ++ txStmtss
   }
 
@@ -169,7 +171,6 @@ case class Model2Transaction(conn: Connection, model: Model) {
   def updateStmts(): Seq[Statement] = {
     val (dataStmts0, txStmts0) = splitStmts()
     x(27, model, stmtsModel)
-
     val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
       val j = i + 1
       stmt match {
@@ -189,9 +190,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (stmts, Add('tx, a, Values(vs, prefix))) => resolveStmts(stmts, txId, a, vs, prefix)
       case (stmts, unexpected)                      => sys.error("[Model2Transaction:insertStmts:txStmts] Unexpected insert statement: " + unexpected)
     }
-
     x(28, model, stmtsModel, dataStmts0, dataStmts, txStmts0, txStmts)
-
     dataStmts ++ txStmts
   }
 
@@ -201,6 +200,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case d: Seq[_]  => d.head match {
         case p: Product => (p.productArity, d)
         case l: Seq[_]  => (l.size, d)
+        case _          => (1, d)
       }
       case unexpected => sys.error("[Model2Transaction:nestedData] Unexpected data: " + unexpected)
     }
@@ -210,7 +210,6 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
     // Todo: can we convert tuples more elegantly?
     data map {
-      case t: Tuple1[_]                                                          => Seq(t._1)
       case t: (_, _)                                                             => Seq(t._1, t._2)
       case t: (_, _, _)                                                          => Seq(t._1, t._2, t._3)
       case t: (_, _, _, _)                                                       => Seq(t._1, t._2, t._3, t._4)
@@ -233,8 +232,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)    => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21)
       case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21, t._22)
       case l: Seq[_]                                                             => l
-      case unexpected                                                            =>
-        sys.error("[Model2Transaction:mkStatements] Unexpected nested data: " + unexpected)
+      case d                                                                     => Seq(d)
     }
   }
 }

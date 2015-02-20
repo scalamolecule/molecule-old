@@ -338,6 +338,7 @@ object Dsl2Model {
         case other                       => (other +: es, gs, v)
       }
     }._1
+
     val model = Model(condensedElements)
     //    inst(c).x(30, condensedElements)
     //        inst(c).x(30, dsl, rawElements, condensedElements, model)

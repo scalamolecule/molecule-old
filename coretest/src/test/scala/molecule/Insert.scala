@@ -317,7 +317,6 @@ class Insert extends CoreSpec {
       )
     }
 
-
     "Card many" in new CoreSetup {
 
       // Insert 3 entities as tuples of values
@@ -360,17 +359,17 @@ class Insert extends CoreSpec {
 
   "Relationships" >> {
 
-    "References between namespaces" in new CoreSetup {
+    "Basics" in new CoreSetup {
 
       // Asserting a fact in the `Ref1` namespace is the same as creating
       // one in the `Ns` namespace (no references between the two are made):
 
-      val a0 = Ns.str.insert(List("a0")).id
+      val a0 = Ns.str.insert("a0").id
       a0.touch === Map(
         ":db/id" -> 17592186045478L,
         ":ns/str" -> "a0")
 
-      val b0 = Ref1.str.insert(List("b0")).id
+      val b0 = Ref1.str.insert("b0").id
       b0.touch === Map(
         ":db/id" -> 17592186045480L,
         ":ref1/str" -> "b0")
@@ -378,22 +377,23 @@ class Insert extends CoreSpec {
 
       // If we start from `Ns` and use `Ref1` as a reference to the
       // `Ref1` namespace then a `:ns/ref1` reference we will also be
-      // created to linke from `Ns` to `Ref1`. Note how no other attributes
+      // created to link from `Ns` to `Ref1`. Note how no other attributes
       // are asserted in the `Ns` namespace.
 
-      val b1 = Ns.Ref1.str.insert(List("b1")).id
+      val b1 = Ns.Ref1.str.insert("b1").id
       b1.touch === Map(
-        ":db/id" -> 17592186045482L,
-        ":ns/ref1" -> Map(
-          ":db/id" -> 17592186045483L,
+        ":db/id" -> 17592186045482L, // base entity id
+        ":ns/ref1" -> Map(// ref to "ref1" namespace
+          ":db/id" -> 17592186045483L, // ref entity id
           ":ref1/str" -> "b1"))
+      // ref attribute value
 
 
       // If we also assert a fact in `Ns` we will get an entity with
-      // a str assertion ("a0") of namespace `Ns` and a reference to an entity
-      // with another str assertion ("b1") in namespace `Ref1`:
+      // a :ns/str assertion ("a0") of namespace `Ns` and a reference to an entity
+      // with another :ref1/str assertion ("b1") in namespace `Ref1`:
 
-      val a0b1 = Ns.str.Ref1.str.insert(List(("a0", "b1"))).id
+      val a0b1 = Ns.str.Ref1.str.insert("a0", "b1").id
       a0b1.touch === Map(
         ":db/id" -> 17592186045485L,
         ":ns/str" -> "a0",
@@ -404,7 +404,7 @@ class Insert extends CoreSpec {
 
       // We can expand our graph one level deeper
 
-      val a0b1c2 = Ns.str.Ref1.str.Ref2.str.insert(List(("a0", "b1", "c2"))).id
+      val a0b1c2 = Ns.str.Ref1.str.Ref2.str.insert("a0", "b1", "c2").id
       a0b1c2.touch === Map(
         ":db/id" -> 17592186045488L,
         ":ns/ref1" -> Map(
@@ -415,6 +415,100 @@ class Insert extends CoreSpec {
           ":ref1/str" -> "b1"),
         ":ns/str" -> "a0")
 
+
+      // We don't have to assert values in all namespaces
+
+      val a0c2 = Ns.str.Ref1.Ref2.str.insert("a0", "c2").id
+      a0c2.touch === Map(
+        ":db/id" -> 17592186045492L,
+        ":ns/ref1" -> Map(
+          ":db/id" -> 17592186045493L,
+          ":ref1/ref2" -> Map(
+            ":db/id" -> 17592186045494L,
+            ":ref2/str" -> "c2")),
+        ":ns/str" -> "a0")
+
+      val c2 = Ns.Ref1.Ref2.str.insert("c2").id
+      c2.touch === Map(
+        ":db/id" -> 17592186045496L,
+        ":ns/ref1" -> Map(
+          ":db/id" -> 17592186045497L,
+          ":ref1/ref2" -> Map(
+            ":db/id" -> 17592186045498L,
+            ":ref2/str" -> "c2")))
+    }
+
+    "Multiple values across namespaces" in new CoreSetup {
+
+      Ns.str.int.Ref1.str.int.Ref2.str.int.insert("a0", 0, "b1", 1, "c2", 2)
+      Ns.str.int.Ref1.str.int.Ref2.str.int.one ===("a0", 0, "b1", 1, "c2", 2)
+
+      Ns.strs.ints.Ref1.strs.ints.Ref2.strs.ints.insert(Set("a0"), Set(0), Set("b1"), Set(1), Set("c2"), Set(2))
+      Ns.strs.ints.Ref1.strs.ints.Ref2.strs.ints.one ===(Set("a0"), Set(0), Set("b1"), Set(1), Set("c2"), Set(2))
+
+      // Address example
+      val address = Ns.str.Ref1.int.str.Ref2.str.insert("273 Broadway", 10700, "New York", "USA").id
+      address.touch === Map(
+        ":db/id" -> 17592186045486L,
+        ":ns/ref1" -> Map(
+          ":db/id" -> 17592186045487L,
+          ":ref1/int" -> 10700,
+          ":ref1/ref2" -> Map(":db/id" -> 17592186045488L, ":ref2/str" -> "USA"),
+          ":ref1/str" -> "New York"),
+        ":ns/str" -> "273 Broadway")
+    }
+
+    "Card many references" in new CoreSetup {
+
+      // Even with a cardinality-many reference we can still make
+      // a single reference
+      val id = Ns.Refs1.str.insert("r").id
+      id.touch === Map(
+        ":db/id" -> 17592186045478L,
+        ":ns/refs1" -> List(// <-- notice we have a list of references now (with one ref here)
+          Map(":db/id" -> 17592186045479L, ":ref1/str" -> "r")))
+
+
+      // Note that applying multiple values creates multiple base entities with a
+      // reference to each new `:ref1/str` assertion, so that we get the following:
+
+      val List(id1, ref1, id2, ref2) = Ns.Refs1.str.insert.apply("r", "s").ids
+      id1.touch === Map(
+        ":db/id" -> id1,
+        ":ns/refs1" -> List(
+          Map(":db/id" -> ref1, ":ref1/str" -> "r")))
+      id2.touch === Map(
+        ":db/id" -> id2,
+        ":ns/refs1" -> List(
+          Map(":db/id" -> ref2, ":ref1/str" -> "s")))
+    }
+
+    "Sub-molecules" in new CoreSetup {
+
+      // If we want to create two references from the same base entity we
+      // can us "group" notation `*` after our cardinality-many reference
+      // and then define what sub-attributes we want to add.
+
+      // Note that the "sub-molecule" we apply is treated as a single type
+      // - when more than 1 attribute, like a tuple.
+
+      Ns.Refs1.*(Ref1.str).insert(List("r1", "r2")).id.touch === Map(
+        ":db/id" -> 17592186045478L,
+        ":ns/refs1" -> List(
+          Map(":db/id" -> 17592186045479L, ":ref1/str" -> "r1"),
+          Map(":db/id" -> 17592186045480L, ":ref1/str" -> "r2")))
+
+      // Like the classical order/products example
+      // Note how our "sub-molecule" `Ref1.int.str` is regarded as
+      // one type `Seq[(Int, String)]` by the outer molecule
+
+      val order = m(Ns.str.Refs1 * Ref1.int.str).insert("order", List((4, "product1"), (7, "product2"))).id
+      order.touch === Map(
+        ":db/id" -> 17592186045482L,
+        ":ns/refs1" -> List(
+          Map(":db/id" -> 17592186045483L, ":ref1/int" -> 4, ":ref1/str" -> "product1"),
+          Map(":db/id" -> 17592186045484L, ":ref1/int" -> 7, ":ref1/str" -> "product2")),
+        ":ns/str" -> "order")
     }
   }
 
@@ -528,9 +622,19 @@ class Insert extends CoreSpec {
     }
 
     "Relationships" in new CoreSetup {
-      ok
-    }
 
+      val address = Ns.str("273 Broadway").Ref1.int(10700).str("New York").Ref2.str("USA").add.id
+      address.touch === Map(
+        ":db/id" -> 17592186045478L,
+        ":ns/ref1" -> Map(
+          ":db/id" -> 17592186045479L,
+          ":ref1/int" -> 10700,
+          ":ref1/ref2" -> Map(":db/id" -> 17592186045480L, ":ref2/str" -> "USA"),
+          ":ref1/str" -> "New York"),
+        ":ns/str" -> "273 Broadway")
+
+      Ns.str.Ref1.int.str.Ref2.str.one ===("273 Broadway", 10700, "New York", "USA")
+    }
   }
 
 
@@ -598,9 +702,19 @@ class Insert extends CoreSpec {
     }
 
     "Relationships" in new CoreSetup {
-      ok
-    }
 
+      // 1. Define Input-molecule
+      val insertAddress = Ns.str.Ref1.int.str.Ref2.str.insert
+
+      // 2. Insert data usint Input-molecule as template
+      insertAddress("273 Broadway", 10700, "New York", "USA")
+      insertAddress("2054, 5th Ave", 10800, "New York", "USA")
+
+      Ns.str.Ref1.int.str.Ref2.str.get === List(
+        ("273 Broadway", 10700, "New York", "USA"),
+        ("2054, 5th Ave", 10800, "New York", "USA")
+      )
+    }
   }
 
 
@@ -748,7 +862,16 @@ class Insert extends CoreSpec {
     }
 
     "Relationships" in new CoreSetup {
-      ok
+
+      Ns.str.Ref1.int.str.Ref2.str insert List(
+        (null, 10700, "New York", "USA"),
+        ("2054, 5th Ave", 10800, "New York", null),
+        ("Gotaplatsen 1", 41256, null, "Sweden")
+      )
+
+      Ns.Ref1.int.str.Ref2.str.one ===(10700, "New York", "USA")
+      Ns.str.Ref1.int.str.one ===("2054, 5th Ave", 10800, "New York")
+      Ns.str.Ref1.int.Ref2.str.one ===("Gotaplatsen 1", 41256, "Sweden")
     }
   }
 }

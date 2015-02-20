@@ -128,17 +128,18 @@ trait DatomicFacade {
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
-//    x(1, model, transformer.stmtsModel, dataRows)
+//        x(1, model, transformer.stmtsModel, dataRows)
+//        x(1, transformer.stmtsModel, dataRows)
     val stmtss = transformer.insertStmts(dataRows)
-//    x(2,  stmtss)
-//    x(2, model, transformer.stmtsModel, dataRows, stmtss)
+//        x(2,  stmtss)
+//        x(2, model, transformer.stmtsModel, dataRows, stmtss)
     Tx(conn, transformer, stmtss)
   }
 
   protected[molecule] def save(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmts = transformer.saveStmts()
-//        x(2, model, transformer.stmtsModel, stmts)
+    //        x(2, model, transformer.stmtsModel, stmts)
     Tx(conn, transformer, Seq(stmts))
   }
 
@@ -204,6 +205,17 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
 
   def touch: Map[String, Any] = toMap
 
+  // Format touch output for tests...
+  def touch2: Map[_, _] = toMap.map(p => s"""\n"${p._1}"""" -> formatEntity(p._2)).toMap
+  def formatEntity(value: Any): Any = value match {
+    case s: String               => s""""$s""""
+    case l: Long                 => if (l > Int.MaxValue) s"${l}L" else l // presuming we used Int... - how to get Int from touch?
+    case l: Seq[_]               => l map formatEntity
+    case m: Map[_, _]            => "\n" + m.map(p => s""""${p._1}"""" -> formatEntity(p._2))
+    case (s: String, value: Any) => s""""$s"""" -> formatEntity(value)
+    case other                   => other
+  }
+
   def apply(kw: String): Option[Any] = entity.get(kw) match {
     case null                                    => None
     case results: clojure.lang.PersistentHashSet => results.head match {
@@ -231,7 +243,25 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
       val key = iter.next()
       builder += (key -> toScala(entity.get(key)))
     }
-    builder.result()
+    builder.result().toList.map {
+      case (s: String, refs: List[_]) => refs.head match {
+        case ref1: Map[_, _] => ref1.head match {
+          case (attr: String, id: Long) => {
+            // Presuming we now have a map of referenced entities we can sort the referenced maps by ref ids
+            val indexedRefMaps: List[(Long, Map[String, Any])] = refs.map {
+              case ref2: Map[_, _] => ref2.head match {
+                case (attr: String, id: Long) => {
+                  id -> ref2.asInstanceOf[Map[String, Any]]
+                }
+              }
+            }
+            s -> indexedRefMaps.sortBy(_._1).map(_._2)
+          }
+        }
+        //        case other           => s -> refs
+      }
+      case other                      => other
+    }.toMap
   }
 
   private[molecule] def toScala(v: Any): Any = v match {
