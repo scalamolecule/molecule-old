@@ -11,42 +11,10 @@ import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
 
 
-trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
+trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
   import c.universe._
   val x = Debug("BuildInputMolecule", 1, 60)
-  type KeepQueryOpsWhenFormatting = KeepQueryOps
 
-  def basics(inputDsl: c.Expr[NS]) = {
-    val model = Dsl2Model(c)(inputDsl)
-    val query = Model2Query(model)
-
-    q"""
-    import molecule.api._
-    import molecule.ast.query._
-    import molecule.ast.model._
-    import molecule.transform.Model2Transaction._
-    import molecule.DatomicFacade._
-    import shapeless._
-    import scala.collection.JavaConversions._
-    import scala.collection.JavaConverters._
-    import datomic.Connection
-    import molecule.ops.QueryOps._
-
-    val model = $model
-    val query = $query
-
-    def debugMolecule(q: Query, args: String, rows: java.util.Collection[java.util.List[java.lang.Object]]): Unit = sys.error(
-      "\n--------------------------------------------------------------------------\n" +
-      ${show(inputDsl.tree)} + "\n\n" +
-      model + "\n\n" +
-      q + "\n\n" +
-      q.datalog + "\n\n" +
-      (if (q.i.rules.isEmpty) "" else q.i.rules.mkString("RULES: [\n ", "\n ", "\n]\n\n")) +
-      "INPUTS:\n" + args + "\n\n" +
-      "OUTPUTS:\n" + rows.toList.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n") +
-      "\n--------------------------------------------------------------------------\n"
-    )"""
-  }
 
   def await_in_x_out_0(inputDsl: c.Expr[NS], InTypes: Type*) = {
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, 1)
@@ -57,7 +25,7 @@ trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule0 = {
           val query1 = bindValues1(args)
           new Molecule0(model, query1) {
-            def debug(implicit conn: Connection): Unit = debugMolecule(query1, inputValues1(args), results(query1, conn))
+            def debug(implicit conn: Connection): Unit = debugMolecule(conn, query1, inputValues1(args))
           }
         }
       }
@@ -66,25 +34,6 @@ trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
 
   def await_in_x_out_1(inputDsl: c.Expr[NS], A: Type, InTypes: Type*) = {
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, 1)
-
-    val cast = (data: Tree) => if (A <:< typeOf[Set[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A]"
-    else if (A <:< typeOf[Vector[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A]"
-    else if (A <:< typeOf[Stream[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A]"
-    else
-      q"$data.get(0).asInstanceOf[$A]"
-
-    val hlist = (data: Tree) => if (A <:< typeOf[Set[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$A] :: HNil"
-    else if (A <:< typeOf[Vector[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$A] :: HNil"
-    else if (A <:< typeOf[Stream[_]])
-      q"$data.get(0).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$A] :: HNil"
-    else
-      q"$data.get(0).asInstanceOf[$A] :: HNil"
-
     val InputTypes = if (InTypes.length == 1) tq"Seq[..$InTypes]" else tq"Seq[(..$InTypes)]"
 
     val bindValues2 = if (InTypes.size > 1) {
@@ -97,8 +46,8 @@ trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         def apply(..$inParams)(implicit conn: Connection): Molecule1[$A] = {
           val query2 = bindValues2(..$inTerms)
           new Molecule1[$A](model, query2) {
-            def get(implicit conn: Connection): Seq[$A]         = results(query2, conn).toList.map(data => ${cast(q"data")})
-            def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query2, conn).toList.map(data => ${hlist(q"data")})
+            def get(implicit conn: Connection): Seq[$A]         = results(query2, conn).toList.map(data => ${castTpl(q"data", A, 0)}.asInstanceOf[$A])
+            def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query2, conn).toList.map(data => ${castHList(q"data", A, 0, q"shapeless.HList()")})
             def debug(implicit conn: Connection): Unit          = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
           }
         }
@@ -111,9 +60,9 @@ trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule1[$A] = {
           val query1 = bindValues1(args)
           new Molecule1[$A](model, query1) {
-            def get(implicit conn: Connection): Seq[$A]         = results(query1, conn).toList.map(data => ${cast(q"data")})
-            def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query1, conn).toList.map(data => ${hlist(q"data")})
-            def debug(implicit conn: Connection): Unit          = debugMolecule(query1, inputValues1(args), results(query1, conn))
+            def get(implicit conn: Connection): Seq[$A]         = results(query1, conn).toList.map(data => ${castTpl(q"data", A, 0)}.asInstanceOf[$A])
+            def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query1, conn).toList.map(data => ${castHList(q"data", A, 0, q"shapeless.HList()")})
+            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, query1, inputValues1(args))
           }
         }
         $bindValues2
@@ -124,19 +73,7 @@ trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
   def await(inputDsl: c.Expr[NS], InTypes: Type*)(OutTypes: Type*) = {
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
     val MoleculeTpe = molecule_o(OutTypes.size)
-    val tplValues = (data: Tree) => OutTypes.zipWithIndex.map {
-      case (t, i) if t <:< typeOf[Set[_]]    => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
-      case (t, i) if t <:< typeOf[Vector[_]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
-      case (t, i) if t <:< typeOf[Stream[_]] => q"$data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
-      case (t, i)                            => q"$data.get($i).asInstanceOf[$t]"
-    }
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
-    val hlist = (data: Tree) => OutTypes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
-      case ((t, i), hl) if t <:< typeOf[Set[_]]    => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t])"
-      case ((t, i), hl) if t <:< typeOf[Vector[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t])"
-      case ((t, i), hl) if t <:< typeOf[Stream[_]] => q"$hl.::($data.get($i).asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t])"
-      case ((t, i), hl)                            => q"$hl.::($data.get($i).asInstanceOf[$t])"
-    }
 
     val bindValues2 = if (InTypes.size > 1) {
       val (inTerms, inParams) = InTypes.zipWithIndex.map { case (t, i) =>
@@ -148,8 +85,8 @@ trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         def apply(..$inParams)(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
           val query2 = bindValues2(..$inTerms)
           new $MoleculeTpe[..$OutTypes](model, query2) {
-            def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query2, conn).toList.map(data => (..${tplValues(q"data")}))
-            def hl(implicit conn: Connection): Seq[$HListType]     = results(query2, conn).toList.map(data => ${hlist(q"data")})
+            def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query2, conn).toList.map(data => (..${castTpls(q"data", OutTypes)}))
+            def hl(implicit conn: Connection): Seq[$HListType]     = results(query2, conn).toList.map(data => ${castHLists(q"data", OutTypes)})
             def debug(implicit conn: Connection): Unit             = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
           }
         }
@@ -162,9 +99,9 @@ trait MakeInputMolecule[Ctx <: Context] extends TreeOps[Ctx] {
         def apply(args: Seq[(..$InTypes)])(implicit conn: Connection): $MoleculeTpe[..$OutTypes] = {
           val query1 = bindValues1(args)
           new $MoleculeTpe[..$OutTypes](model, query1) {
-            def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query1, conn).toList.map(data => (..${tplValues(q"data")}))
-            def hl(implicit conn: Connection): Seq[$HListType]     = results(query1, conn).toList.map(data => ${hlist(q"data")})
-            def debug(implicit conn: Connection): Unit             = debugMolecule(query1, inputValues1(args), results(query1, conn))
+            def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query1, conn).toList.map(data => (..${castTpls(q"data", OutTypes)}))
+            def hl(implicit conn: Connection): Seq[$HListType]     = results(query1, conn).toList.map(data => ${castHLists(q"data", OutTypes)})
+            def debug(implicit conn: Connection): Unit             = debugMolecule(conn, query1, inputValues1(args))
           }
         }
         $bindValues2

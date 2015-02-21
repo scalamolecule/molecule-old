@@ -128,11 +128,11 @@ trait DatomicFacade {
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
-//        x(1, model, transformer.stmtsModel, dataRows)
-//        x(1, transformer.stmtsModel, dataRows)
+    //        x(1, model, transformer.stmtsModel, dataRows)
+    //        x(1, transformer.stmtsModel, dataRows)
     val stmtss = transformer.insertStmts(dataRows)
-//        x(2,  stmtss)
-//        x(2, model, transformer.stmtsModel, dataRows, stmtss)
+    //        x(2,  stmtss)
+    //        x(2, model, transformer.stmtsModel, dataRows, stmtss)
     Tx(conn, transformer, stmtss)
   }
 
@@ -258,7 +258,7 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
             s -> indexedRefMaps.sortBy(_._1).map(_._2)
           }
         }
-        //        case other           => s -> refs
+        case other           => s -> refs
       }
       case other                      => other
     }.toMap

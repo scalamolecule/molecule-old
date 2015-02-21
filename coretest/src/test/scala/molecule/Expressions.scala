@@ -25,6 +25,7 @@ class Expressions extends CoreSpec {
     val (a, b, c, d) = ("a", "b", "c", "d")
 
     // We pair cardinality many attribute values with card-one's too to be able to group by cardinality one values
+//    Ns.str.strs.debug
     Ns.str.strs insert List(
       ("str1", Set("a", "b")),
       ("str2", Set("b", "c")),

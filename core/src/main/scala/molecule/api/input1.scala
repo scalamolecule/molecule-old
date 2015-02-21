@@ -20,8 +20,9 @@ trait InputMolecule_1[I1] extends InputMolecule {
 
   def inputValues1(in1: Seq[I1]) = {
     val (vars, Seq(p1)) = varsAndPrefixes.unzip
-    val values = getValues(p1, in1)
-    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
+    getValues(p1, in1)
+//    val values = getValues(p1, in1)
+//    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
   }
 }
 
