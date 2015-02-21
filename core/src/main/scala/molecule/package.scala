@@ -152,8 +152,8 @@ package object molecule {
   trait ?
   object ? extends ?
 
-  object v1
-  object v2
+//  object v1
+//  object v2
 
   //  trait maybe
   //  object maybe extends maybe

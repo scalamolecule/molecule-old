@@ -126,10 +126,12 @@ object schemaDSL {
     def >= (value: T) : Ns with Attr = ???
 
     // Input
-    def < (in: ?)  : In with Attr = ???
-    def > (in: ?)  : In with Attr = ???
-    def <= (in: ?) : In with Attr = ???
-    def >= (in: ?) : In with Attr = ???
+    def < (in: ?)   : In with Attr = ???
+    def > (in: ?)   : In with Attr = ???
+    def <= (in: ?)  : In with Attr = ???
+    def >= (in: ?)  : In with Attr = ???
+    def != (in: ?)  : In with Attr = ???
+    def not (in: ?) : In with Attr = ???
 
     def apply(in: ?) : In with Attr = ???
     // def apply(test: maybe) : Ns with Attr = ???
