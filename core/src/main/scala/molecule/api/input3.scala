@@ -39,8 +39,9 @@ trait InputMolecule_3[I1, I2, I3] extends InputMolecule {
 
   def inputValues1(inputTuples: Seq[(I1, I2, I3)]) = {
     val (vars, Seq(p1 ,p2,p3)) = varsAndPrefixes.unzip
-    val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2, p3 + tpl._3))
-    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
+    inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2, p3 + tpl._3))
+//    val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2, p3 + tpl._3))
+//    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
   }
 }
 

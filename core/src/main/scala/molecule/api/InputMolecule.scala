@@ -18,8 +18,12 @@ trait InputMolecule {
     traverse(or)
   }
 
-  def varsAndPrefixes = _query.i.inputs.collect {
-    case Placeholder(v, kw, enumPrefix, _) => (Var(v), enumPrefix.getOrElse(""))
+  def varsAndPrefixes = {
+//    println(_model)
+//    println(_query)
+    _query.i.inputs.collect {
+      case Placeholder(v, kw, enumPrefix, _) => (Var(v), enumPrefix.getOrElse(""))
+    }
   }
 
   def getValues(prefix: String, rawValues: Seq[Any]) = if (prefix != "") {

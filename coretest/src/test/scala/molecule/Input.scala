@@ -38,17 +38,12 @@ class Input extends CoreSpec {
 
     val personsYoungerThan = m(Ns.str.int_.<(?))
 
-    // Expressions
-//    personsYoungerThan.apply(30).debug
-//    personsYoungerThan.apply(30).get === List("Ben", "Lisa")
-//
-//    // We don't have to assign an input-molecule to a variable
-//    m(Ns.str.int_.<(?))(30).get === List("Lisa", "Ben")
-//    // Although then it would be easier to just say
-//    Ns.str.int_.<(30).get === List("Lisa", "Ben")
+    // Apply expression value
+    personsYoungerThan(30).get === List("Ben", "Lisa")
 
-    ok
+    // We don't have to assign an input-molecule to a variable
+    m(Ns.str.int_.<(?))(30).get === List("Ben", "Lisa")
+    // Although then it would be easier to just say
+    Ns.str.int_.<(30).get === List("Ben", "Lisa")
   }
-
-
 }

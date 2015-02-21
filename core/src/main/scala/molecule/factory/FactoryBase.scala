@@ -97,7 +97,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           q + "\n\n" +
           q.datalog + "\n\n" +
           "RULES: " + (if (q.i.rules.isEmpty) "none\n\n" else q.i.rules.map(Query2String(q).p(_)).mkString("[\n ", "\n ", "\n]\n\n")) +
-          "INPUTS: " + (if (args.isEmpty) "none\n\n" else args.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")) +
+          "INPUTS: " + (if (args.isEmpty) "none\n\n" else args.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n", "\n", "\n\n")) +
           "OUTPUTS:\n" + rows.toList.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n") +
           "\n--------------------------------------------------------------------------\n"
         )

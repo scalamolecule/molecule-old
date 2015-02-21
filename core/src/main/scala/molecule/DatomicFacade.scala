@@ -93,7 +93,12 @@ trait DatomicFacade {
     //       """, conn.db)
 
     try {
-      Peer.q(query.toMap, allInputs.map(_.asInstanceOf[Object]): _*)
+      val castedInputs = allInputs map {
+        case i: Int => i.toLong.asInstanceOf[Object]
+        case other => other.asInstanceOf[Object]
+      }
+      Peer.q(query.toMap, castedInputs: _*)
+//      Peer.q(query.toMap, allInputs.map(_.asInstanceOf[Object]): _*)
     } catch {
       case e: Throwable => throw new RuntimeException(
         s"""
