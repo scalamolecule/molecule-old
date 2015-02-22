@@ -72,22 +72,6 @@ object Model2Query {
 
         // Enum Atom_ ------------------------------------------------------------
 
-//        case a0@Atom(_, attr0, _, 2, value, Some(prefix), gs) if attr0.last == '_' => {
-//          val a = a0.copy(name = attr0.init)
-//          value match {
-//            case Qm                        => q.where(e, a, v, gs).in(v, a, Some(prefix), e)
-//            case Neq(Seq(Qm))              => q.enum(e, a, v, gs).compareTo("!=", a, v2, Var(v3), 1).in(v3, a)
-//            case Lt(Qm)                    => q.enum(e, a, v, gs).compareTo("<", a, v2, Var(v3), 1).in(v3, a)
-//            case Gt(Qm)                    => q.enum(e, a, v, gs).compareTo(">", a, v2, Var(v3), 1).in(v3, a)
-//            case Le(Qm)                    => q.enum(e, a, v, gs).compareTo("<=", a, v2, Var(v3), 1).in(v3, a)
-//            case Ge(Qm)                    => q.enum(e, a, v, gs).compareTo(">=", a, v2, Var(v3), 1).in(v3, a)
-//            case EnumVal => q.enum(e, a, v, gs)
-//            case other   =>
-//              sys.error(s"[Model2Query:resolve[Atom_]] Unresolved cardinality 2 enum Atom_:\nAtom_  : $a\nElement: $other")
-//          }
-//        }
-
-//        case a0@Atom(_, attr0, _, 1, value, Some(prefix), gs) if attr0.last == '_' => {
         case a0@Atom(_, attr0, _, _, value, Some(prefix), gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
           value match {
@@ -107,25 +91,6 @@ object Model2Query {
 
         // Atom_ -----------------------------------------------------------------
 
-//        case a0@Atom(_, attr0, _, 2, value, _Prefix, gs) if attr0.last == '_' => {
-//          val a = a0.copy(name = attr0.init)
-//          value match {
-//            case Qm                        => q.where(e, a, v, gs).in(v, a)
-//            case Neq(Seq(Qm))              => q.where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
-//            case Lt(Qm)                    => q.where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
-//            case Gt(Qm)                    => q.where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
-//            case Le(Qm)                    => q.where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
-//            case Ge(Qm)                    => q.where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
-//            case Fulltext(Seq(Qm))         => q.fulltext(e, a, v, Var(v1)).in(v1, a)
-//            case Fulltext(qv :: Nil)       => q.fulltext(e, a, v, Val(qv))
-//            case VarValue                  => q.where(e, a, v, gs)
-//            case Eq(args) if args.size > 1 => q.orRules(e, a, args, gs)
-//            case other                     =>
-//              sys.error(s"[Model2Query:resolve[Atom_]] Unresolved cardinality 2 Atom_:\nAtom_  : $a\nElement: $other")
-//          }
-//        }
-
-//        case a0@Atom(_, attr0, _, 1, value, _, gs) if attr0.last == '_' => {
         case a0@Atom(_, attr0, _, _, value, _, gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
           value match {
