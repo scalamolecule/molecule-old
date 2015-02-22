@@ -166,14 +166,15 @@ object schemaDSL {
     def remove(values: T*)                         : Ns with Attr = ???
     def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
   }
-  trait ManyString[Ns, In] extends Many[Ns, In, Set[String], String]
-  trait ManyInt   [Ns, In] extends Many[Ns, In, Set[Int]   , Int   ]
-  trait ManyLong  [Ns, In] extends Many[Ns, In, Set[Long]  , Long  ]
-  trait ManyFloat [Ns, In] extends Many[Ns, In, Set[Float] , Float ]
-  trait ManyDouble[Ns, In] extends Many[Ns, In, Set[Double], Double]
-  trait ManyDate  [Ns, In] extends Many[Ns, In, Set[Date]  , Date  ]
-  trait ManyUUID  [Ns, In] extends Many[Ns, In, Set[UUID]  , UUID  ]
-  trait ManyURI   [Ns, In] extends Many[Ns, In, Set[URI]   , URI   ]
+  trait ManyString [Ns, In] extends Many[Ns, In, Set[String] , String ]
+  trait ManyInt    [Ns, In] extends Many[Ns, In, Set[Int]    , Int    ]
+  trait ManyLong   [Ns, In] extends Many[Ns, In, Set[Long]   , Long   ]
+  trait ManyFloat  [Ns, In] extends Many[Ns, In, Set[Float]  , Float  ]
+  trait ManyDouble [Ns, In] extends Many[Ns, In, Set[Double] , Double ]
+  trait ManyBoolean[Ns, In] extends Many[Ns, In, Set[Boolean], Boolean]
+  trait ManyDate   [Ns, In] extends Many[Ns, In, Set[Date]   , Date   ]
+  trait ManyUUID   [Ns, In] extends Many[Ns, In, Set[UUID]   , UUID   ]
+  trait ManyURI    [Ns, In] extends Many[Ns, In, Set[URI]    , URI    ]
 
   // Enums
   trait Enum

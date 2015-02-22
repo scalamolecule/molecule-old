@@ -45,7 +45,6 @@ trait DatomicFacade {
 
   sealed trait DbOp
   case class AsOf(tx: TxType) extends DbOp
-  //  case class AsOf(date: Date) extends DbOp
   case class Since(date: Date) extends DbOp
   case class Imagine(tx: java.util.List[Object]) extends DbOp
   case object History extends DbOp
@@ -57,11 +56,17 @@ trait DatomicFacade {
     "[" + (query.i.rules map p mkString " ") + "]"
   }
 
+  def cast(a: Any) = a match {
+    case i: Int   => i.toLong.asInstanceOf[Object]
+    case f: Float => f.toDouble.asInstanceOf[Object]
+    case other    => other.asInstanceOf[Object]
+  }
+
   def inputs(query: Query) = query.i.inputs.map {
-    case InVar(RelationBinding(_), argss)   => Util.list(argss.map(args => Util.list(args.map(_.asInstanceOf[Object]): _*)).asJava: _*)
-    case InVar(CollectionBinding(_), argss) => Util.list(argss.head.map(_.asInstanceOf[Object]): _*)
-    case InVar(_, argss)                    => argss.head.head
-    case InDataSource(_, argss)             => argss.head.head
+    case InVar(RelationBinding(_), argss)   => Util.list(argss.map(args => Util.list(args map cast: _*)).asJava: _*)
+    case InVar(CollectionBinding(_), argss) => Util.list(argss.head map cast: _*)
+    case InVar(_, argss)                    => cast(argss.head.head)
+    case InDataSource(_, argss)             => cast(argss.head.head)
     case other                              => sys.error(s"[DatomicFacade] UNEXPECTED inputs: $other")
   }
 
@@ -84,35 +89,22 @@ trait DatomicFacade {
     val first = if (query.i.rules.isEmpty) Seq(db) else Seq(db, rules)
     val allInputs = first ++ inputs(query)
 
-    //    Peer.q(s"""
-    //       [:find ?a ?b
-    //        :where
-    //          [?ent :ns/str ?a]
-    //          [?ent :ns/int 28]
-    //          [?ent :ns/int ?b]]
-    //       """, conn.db)
-
     try {
-      val castedInputs = allInputs map {
-        case i: Int => i.toLong.asInstanceOf[Object]
-        case other => other.asInstanceOf[Object]
-      }
-      Peer.q(query.toMap, castedInputs: _*)
-//      Peer.q(query.toMap, allInputs.map(_.asInstanceOf[Object]): _*)
+      Peer.q(query.toMap, allInputs: _*)
     } catch {
       case e: Throwable => throw new RuntimeException(
         s"""
            |#############################################################################
            |$e
-            |
-            |$query
-            |
-            |${query.datalog}
-            |
-            |RULES: ${if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")}
-            |
-            |INPUTS: ${allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1)}
-            |#############################################################################
+           |
+           |$query
+           |
+           |${query.datalog}
+           |
+           |RULES: ${if (query.i.rules.isEmpty) "none" else query.i.rules map p mkString("[\n ", "\n ", "\n]")}
+           |
+           |INPUTS: ${allInputs.zipWithIndex.map(e => "\n" + (e._2 + 1) + " " + e._1)}
+           |#############################################################################
          """.stripMargin)
     }
   }
@@ -134,9 +126,9 @@ trait DatomicFacade {
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
     //        x(1, model, transformer.stmtsModel, dataRows)
-    //        x(1, transformer.stmtsModel, dataRows)
+    //            x(1, transformer.stmtsModel, dataRows)
     val stmtss = transformer.insertStmts(dataRows)
-    //        x(2,  stmtss)
+    //            x(2,  stmtss)
     //        x(2, model, transformer.stmtsModel, dataRows, stmtss)
     Tx(conn, transformer, stmtss)
   }

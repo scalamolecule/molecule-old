@@ -89,6 +89,9 @@ object schemaDefinition {
   object oneBoolean extends oneBoolean
   trait oneBoolean extends scalarAttr[oneBoolean]
 
+  object manyBoolean extends manyBoolean
+  trait manyBoolean extends scalarAttr[manyBoolean]
+
   // Date
   object oneDate extends oneDate
   trait oneDate extends scalarAttr[oneDate]

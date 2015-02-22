@@ -34,11 +34,11 @@ class CoreSpec extends MoleculeSpec with DatomicFacade {
   lazy val (str2, int2, long2, float2, double2, bool2, enum2) = ("b", 2, 2L, 2.0f, 2.0, false, "enum2")
   lazy val (str3, int3, long3, float3, double3, bool3, enum3) = ("c", 3, 3L, 3.0f, 3.0, true, "enum3")
   lazy val (str4, int4, long4, float4, double4, bool4, enum4) = ("d", 4, 4L, 4.0f, 4.0, false, "enum4")
-  lazy val (str5, int5, long5, float5, double5, bool5, enum5) = ("e", 4, 4L, 4.0f, 4.0, true, "enum5")
-  lazy val (str6, int6, long6, float6, double6, bool6, enum6) = ("f", 4, 4L, 4.0f, 4.0, false, "enum6")
-  lazy val (str7, int7, long7, float7, double7, bool7, enum7) = ("g", 4, 4L, 4.0f, 4.0, true, "enum7")
-  lazy val (str8, int8, long8, float8, double8, bool8, enum8) = ("h", 4, 4L, 4.0f, 4.0, false, "enum8")
-  lazy val (str9, int9, long9, float9, double9, bool9, enum9) = ("i", 4, 4L, 4.0f, 4.0, true, "enum9")
+  lazy val (str5, int5, long5, float5, double5, bool5, enum5) = ("e", 5, 5L, 5.0f, 5.0, true, "enum5")
+  lazy val (str6, int6, long6, float6, double6, bool6, enum6) = ("f", 6, 6L, 6.0f, 6.0, false, "enum6")
+  lazy val (str7, int7, long7, float7, double7, bool7, enum7) = ("g", 7, 7L, 7.0f, 7.0, true, "enum7")
+  lazy val (str8, int8, long8, float8, double8, bool8, enum8) = ("h", 8, 8L, 8.0f, 8.0, false, "enum8")
+  lazy val (str9, int9, long9, float9, double9, bool9, enum9) = ("i", 9, 9L, 9.0f, 9.0, true, "enum9")
 
 
   lazy val (strs0, ints0, longs0, floats0, doubles0, dates0, uuids0, uris0, enums0) = (

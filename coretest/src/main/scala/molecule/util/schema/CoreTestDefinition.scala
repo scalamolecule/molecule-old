@@ -23,6 +23,7 @@ trait CoreTestDefinition {
     val longs   = manyLong
     val floats  = manyFloat
     val doubles = manyDouble
+    val bools   = manyBoolean
     val dates   = manyDate
     val uuids   = manyUUID
     val uris    = manyURI
@@ -48,6 +49,7 @@ trait CoreTestDefinition {
     val longs   = manyLong
     val floats  = manyFloat
     val doubles = manyDouble
+    val bools   = manyBoolean
     val dates   = manyDate
     val uuids   = manyUUID
     val uris    = manyURI
@@ -72,6 +74,7 @@ trait CoreTestDefinition {
     val longs   = manyLong
     val floats  = manyFloat
     val doubles = manyDouble
+    val bools   = manyBoolean
     val dates   = manyDate
     val uuids   = manyUUID
     val uris    = manyURI

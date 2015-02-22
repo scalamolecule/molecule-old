@@ -25,7 +25,7 @@ class Expressions extends CoreSpec {
     val (a, b, c, d) = ("a", "b", "c", "d")
 
     // We pair cardinality many attribute values with card-one's too to be able to group by cardinality one values
-//    Ns.str.strs.debug
+    //    Ns.str.strs.debug
     Ns.str.strs insert List(
       ("str1", Set("a", "b")),
       ("str2", Set("b", "c")),
@@ -675,8 +675,14 @@ class Expressions extends CoreSpec {
       // will just return the coalesced set minus the excluded value
       Ns.strs.not("b").get === List(Set("d", "a", "c"))
 
-      // What we probably want to do instead is to group by another attribute and
-      // then filter out the sets having the value to exclude:
+      // We could group by another attribute ut that still leave us with filtered sets
+      //      Ns.str.strs.not("a").debug
+      Ns.str.strs.not("a").get === List(("str1", Set("b")), ("str2", Set("b", "c")), ("str3", Set("d", "b")))
+      Ns.str.strs.not("b").get === List(("str1", Set("a")), ("str2", Set("c")), ("str3", Set("d")))
+      Ns.str.strs.not("c").get === List(("str1", Set("a", "b")), ("str2", Set("b")), ("str3", Set("d", "b")))
+      Ns.str.strs.not("d").get === List(("str1", Set("a", "b")), ("str2", Set("b", "c")), ("str3", Set("b")))
+
+      // What we probably want to do is to filter out full sets having the negation value:
       Ns.str.strs.get.filter(!_._2.contains("a")) === List(("str2", Set("b", "c")), ("str3", Set("d", "b")))
       Ns.str.strs.get.filter(!_._2.contains("b")) === List()
       Ns.str.strs.get.filter(!_._2.contains("c")) === List(("str1", Set("a", "b")), ("str3", Set("d", "b")))
