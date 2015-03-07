@@ -10,7 +10,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  //  val x = Debug("BuildMolecule", 1, 20, false)
+    val x = Debug("BuildMolecule", 1, 20, false)
 
   def basics(dsl: c.Expr[NS]) = {
     val model = Dsl2Model(c)(dsl)
@@ -24,8 +24,8 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       case r".*[\.|\s]*update.*" => "check update..."
       case _                     => "other..."
     }
-    //        x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-    //    x(1, dsl.tree, model)
+//            x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
+//        x(1, dsl.tree, model)
 
     def keyValues(idents: Seq[Any]) = idents.flatMap {
       case ident: String if ident.startsWith("__ident__") => Some(ident -> q"${TermName(ident.substring(9))}")

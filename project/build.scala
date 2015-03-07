@@ -55,43 +55,21 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "org.scalamolecule",
     version := "0.2.1",
-    scalaVersion := "2.11.4",
+    scalaVersion := "2.11.6",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
     resolvers ++= Seq(
       "datomic" at "http://files.datomic.com/maven",
       "clojars" at "http://clojars.org/repo",
       Resolver.sonatypeRepo("releases"),
-      Resolver.sonatypeRepo("snapshots"),
-      "Typesafe Simple Repository" at "http://repo.typesafe.com/typesafe/simple/maven-releases/",
-      "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
+      Resolver.sonatypeRepo("snapshots")
     ),
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "org.scala-sbt" % "io" % "0.13.7",
-      "commons-codec" % "commons-codec" % "1.10",
-      "com.datomic" % "datomic-free" % "0.9.5067",
+     "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "com.datomic" % "datomic-free" % "0.9.5130",
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.specs2" %% "specs2" % "2.4.11" % "test"
     )
-//        fork := true,
-//        javaOptions += "-Xmx16G -Xss1G -Xms500m -Xmn5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
-
-    //    moleculeTask <<= moleculeCodeGenTask, // register manual sbt command
-    //    sourceGenerators in Compile <+= moleculeCodeGenTask // register automatic code generation on every compile, remove for only manual use
   )
-
-
-  //  // code generation task
-  //  lazy val moleculeTask        = TaskKey[Seq[File]]("gen-schemas")
-  //  lazy val moleculeCodeGenTask = (sourceManaged in Compile, dependencyClasspath in Compile, runner in Compile, streams) map { (sourceDir, cp, r, s) =>
-  //    val inputDirs: Seq[String] = Seq(
-  //      "examples/src/main/scala/molecule/examples/seattle"
-  //    )
-  //    // Generate files
-  //    toError(r.run("molecule.util.BoilerplateGenerator", cp.files, (sourceDir.getPath +: inputDirs).toArray[String], s.log))
-  //    // Return dummy dir
-  //    Seq(sourceDir)
-  //  }
 }
 
 trait Boilerplate {
@@ -100,7 +78,7 @@ trait Boilerplate {
     val sourceDir = (sourceManaged in Compile).value
 
     // generate source files
-    val sourceFiles = DslBoilerplate.generate(sourceDir, domainDirs.toSeq)
+    val sourceFiles = MoleculeBoilerplate.generate(sourceDir, domainDirs.toSeq)
 
     // Avoid re-generating boilerplate if nothing has changed when running `sbt compile`
     val cache = FileFunction.cached(

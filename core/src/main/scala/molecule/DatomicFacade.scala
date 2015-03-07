@@ -162,7 +162,7 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
     //    case Add(e, a, v: URI)   => Add(e, a, v).toJava
     case other => other.toJava
   }.asJava
-  //    x(7, stmtss, flatStmts)
+//      x(7, stmtss, flatStmts)
 
   //  val xx = Util.list(Util.list(":db/add", Peer.tempid(":db.part/user"), ":ns/float", 1f.toDouble: java.lang.Double))
   //  val txResult: jMap[_, _] = conn.transact(xx).get

@@ -22,10 +22,10 @@ class ProductsAndOrders extends MoleculeSpec {
     // Insert nested data .................................
 
     // Template for Order with multiple LineItems
-    val order = m(Order.LineItems * LineItem.product.price.quantity)
+    val order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
 
     // Make order with two line items and return created entity id
-    val orderId = order.insert(List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).id
+    val orderId = order.insert( 23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).id
 
     // Find id of order with chocolate
     Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId
@@ -50,7 +50,8 @@ class ProductsAndOrders extends MoleculeSpec {
           ":lineItem/product" -> Map(
             ":db/id" -> 17592186045419L,
             ":product/description" -> "Cheap Whisky"),
-          ":lineItem/quantity" -> 2)))
+          ":lineItem/quantity" -> 2)),
+      ":order/orderid" -> 23)
 
 
     // Retract nested data ............................

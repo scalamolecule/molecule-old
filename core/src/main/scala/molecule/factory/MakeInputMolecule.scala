@@ -13,7 +13,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
   import c.universe._
-  val x = Debug("BuildInputMolecule", 1, 60)
+//  val x = Debug("BuildInputMolecule", 1, 60)
 
 
   def await_in_x_out_0(inputDsl: c.Expr[NS], InTypes: Type*) = {

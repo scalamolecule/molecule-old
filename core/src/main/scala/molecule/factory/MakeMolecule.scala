@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
   import c.universe._
-  val x = Debug("BuildMolecule", 1, 20, false)
+//  val x = Debug("BuildMolecule", 1, 20, false)
 
   def from0attr(dsl: c.Expr[NS]) = {
     expr( q"""

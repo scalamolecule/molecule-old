@@ -5,7 +5,7 @@ import sbt._
 // Generate molecule dsl from definition files
 
 
-object DslBoilerplate {
+object MoleculeBoilerplate {
 
   // Definition AST .......................................
 
@@ -451,7 +451,7 @@ object DslBoilerplate {
        |object $Ns extends ${Ns}_0
        |
        |trait $Ns {
-       | $attrClasses
+       |  $attrClasses
        |}
        |
        |$nsTraits""".stripMargin

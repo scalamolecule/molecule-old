@@ -20,7 +20,7 @@ class TypeInference extends CoreSpec {
     typed[UUID :: HNil](Ns.uuid.hl.head)
     typed[URI :: HNil](Ns.uri.hl.head)
     typed[String :: HNil](Ns.enum.hl.head)
-    typed[String :: HNil](Ns.Ref1.str.hl.head)
+    typed[String :: HNil](Ns.Ref1.str1.hl.head)
 
     // Arity 2
     typed[String :: Int :: HNil](Ns.str.int.hl.head)
@@ -130,7 +130,7 @@ class TypeInference extends CoreSpec {
     typed[Set[UUID] :: HNil](Ns.uuids.hl.head)
     typed[Set[URI] :: HNil](Ns.uris.hl.head)
     typed[Set[String] :: HNil](Ns.enums.hl.head)
-    typed[String :: HNil](Ns.Refs1.str.hl.head)
+    typed[String :: HNil](Ns.Refs1.str1.hl.head)
 
     // Arity 2
     typed[Set[String] :: Set[Int] :: HNil](Ns.strs.ints.hl.head)

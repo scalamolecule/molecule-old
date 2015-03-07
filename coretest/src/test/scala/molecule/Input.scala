@@ -77,9 +77,9 @@ class Input extends CoreSpec {
     Ns.int.enums insert List((1, Set("enum1", "enum2")), (2, Set("enum2", "enum3")), (3, Set("enum3", "enum4")))
   }
 
-  
+
   "1 input parameter" >> {
-    
+
     "Tacet expressions" in new OneSetup {
       m(Ns.int.str_(?))("b").get === List(2)
       m(Ns.int.str_.<(?))("b").get === List(1)

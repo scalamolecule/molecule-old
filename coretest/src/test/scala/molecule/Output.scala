@@ -9,14 +9,17 @@ class Output extends CoreSpec {
 
   class Setup extends CoreSetup {
     // Persons with ages (except Ben)
-    Ns.str.int insert List(("John", 37), ("Lisa", 28), ("Ben", null.asInstanceOf[Int]))
+    Ns.str.int insert List(
+      ("John", 37),
+      ("Lisa", 28),
+      ("Mona", null.asInstanceOf[Int]))
   }
 
 
   "Tacet assertion" in new Setup {
 
     // All persons
-    Ns.str.get === List("Ben", "John", "Lisa")
+    Ns.str.get === List("Mona", "John", "Lisa")
 
     // Tacet assertion
     // All persons _with an age_
