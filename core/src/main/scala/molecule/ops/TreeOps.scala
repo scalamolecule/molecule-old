@@ -30,14 +30,12 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
     def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
     def isManyRef = tpe <:< weakTypeOf[ManyRef[_, _]]
-    def isBackRef = tpe <:< weakTypeOf[BackRef[_, _]]
 
     def isAttr = tpe <:< typeOf[Attr]
 
     def isRefAttr = tpe <:< weakTypeOf[RefAttr[_, _]]
     def isOneRefAttr = tpe <:< weakTypeOf[OneRefAttr[_, _]]
     def isManyRefAttr = tpe <:< weakTypeOf[ManyRefAttr[_, _]]
-    def isBackRefAttr = tpe <:< weakTypeOf[BackRefAttr[_, _]]
 
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]

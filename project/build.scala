@@ -3,7 +3,6 @@ import sbt.Keys._
 import sbt._
 
 object MoleculeBuild extends Build with Boilerplate with Publishing {
-  //object MoleculeBuild extends Build with Publishing {
 
   lazy val molecule = Project(
     id = "molecule",
@@ -54,7 +53,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "org.scalamolecule",
-    version := "0.2.1",
+    version := "0.2.2",
     scalaVersion := "2.11.6",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
     resolvers ++= Seq(
@@ -64,11 +63,14 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       Resolver.sonatypeRepo("snapshots")
     ),
     libraryDependencies ++= Seq(
-     "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.datomic" % "datomic-free" % "0.9.5130",
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.specs2" %% "specs2" % "2.4.11" % "test"
-    )
+    ),
+    // Remove Java directories
+    unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_)),
+    unmanagedSourceDirectories in Test <<= (scalaSource in Test)(Seq(_))
   )
 }
 

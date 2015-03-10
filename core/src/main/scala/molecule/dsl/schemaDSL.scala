@@ -72,10 +72,9 @@ object schemaDSL {
   trait Ref[This, Next]
   trait OneRef[This, Next] extends Ref[This, Next]
   trait ManyRef[This, Next] extends Ref[This, Next]
-  trait BackRef[This, Prev] extends Ref[This, Prev]
 
 
-  // todo?
+  // todo
   trait Partition
 
   trait Attr
@@ -94,20 +93,6 @@ object schemaDSL {
   trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns with Attr = ???
   }
-
-  //  trait Range
-  //  trait Compare[Ns, In, T] extends Range {
-  //    def < (value: T)          : Ns with Range with Attr = ???
-  //    def > (value: T)          : Ns with Range with Attr = ???
-  //    def <= (value: T)         : Ns with Range with Attr = ???
-  //    def >= (value: T)         : Ns with Range with Attr = ???
-  //
-  //    // Input
-  //    def < (in: ?)  : In with Range with Attr = ???
-  //    def > (in: ?)  : In with Range with Attr = ???
-  //    def <= (in: ?) : In with Range with Attr = ???
-  //    def >= (in: ?) : In with Range with Attr = ???
-  //  }
 
   sealed trait ValueAttr[Ns, In, T] extends Attr {
     def apply(expr1: Exp1[T])       : Ns with Attr = ???

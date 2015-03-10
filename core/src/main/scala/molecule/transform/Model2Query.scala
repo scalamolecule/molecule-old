@@ -253,12 +253,11 @@ object Model2Query {
           (resolve(query, backRefE, w, backRefElement), v, w, backRef, refAttr, refNs)
         }
 
-        case rbe@ReBond(backRef, refAttr, refNs, _, _) => {
-          val (backRefE, backRefV) = query.wh.clauses.reverse.collectFirst {
-            case DataClause(_, backE, a, Var(backV), _, _) if a.ns == backRef => (backE.v, backV)
+        case rbe@ReBond(backRef, _, _, _, _) => {
+          val backRefE = query.wh.clauses.reverse.collectFirst {
+            case DataClause(_, backE, a, Var(backV), _, _) if a.ns == backRef => backE.v
           } getOrElse sys.error(s"[Model2Query:make(ReBond)] Can't find back reference `$backRef` in query so far:\n$query")
-          val backRefElement = rbe.copy(prevVar = backRefV)
-          (resolve(query, backRefE, w, backRefElement), v, w, backRef, refAttr, refNs)
+          (query, backRefE, v, backRef, "", "")
         }
 
         case Group(b@Bond(ns, refAttr, refNs), elements) =>

@@ -40,7 +40,9 @@ class Graph extends Specification with DatomicFacade {
     User.name_("User1").RoleInGroup.Group.name.get === List("Group2", "Group1")
 
     // User 1 Roles in Group 2
-    User.name_("User1").RoleInGroup.Group.name_("Group2")._Role.name.get === List("Role1")
+    User.name_("User1")
+      .RoleInGroup.Group.name_("Group2")
+      ._RoleInGroup.Role.name.get === List("Role1")
     /* Query in Neo4J:
     MATCH ({ name: 'User1' })-[:hasRoleInGroup]->(hyperEdge)-[:hasGroup]->({ name: 'Group2' }),
       (hyperEdge)-[:hasRole]->(role)
@@ -48,7 +50,9 @@ class Graph extends Specification with DatomicFacade {
     */
 
     // User 1's Groups having Role 1
-    User.name_("User1").RoleInGroup.Role.name_("Role1")._Group.name.get === List("Group2")
+    User.name_("User1")
+      .RoleInGroup.Role.name_("Role1")
+      ._RoleInGroup.Group.name.get === List("Group2")
 
 
     // Role 1 ............................
@@ -57,13 +61,18 @@ class Graph extends Specification with DatomicFacade {
     User.name.RoleInGroup.Role.name_("Role1").get === List("User1")
 
     // Groups with Role 1
-    RoleInGroup.Role.name_("Role1")._Group.name.get === List("Group2")
+    RoleInGroup.Role.name_("Role1")
+      ._RoleInGroup.Group.name.get === List("Group2")
 
     // Users in Group 2 having Role 1
-    User.name.RoleInGroup.Group.name_("Group2")._Role.name_("Role1").get === List("User1")
+    User.name
+      .RoleInGroup.Group.name_("Group2")
+      ._RoleInGroup.Role.name_("Role1").get === List("User1")
 
     // Groups where User 1 has Role 1
-    User.name_("User1").RoleInGroup.Group.name._Role.name_("Role1").get === List("Group2")
+    User.name_("User1")
+      .RoleInGroup.Group.name
+      ._RoleInGroup.Role.name_("Role1").get === List("Group2")
 
 
     // Group 2 ...........................
@@ -72,17 +81,24 @@ class Graph extends Specification with DatomicFacade {
     User.name.RoleInGroup.Group.name_("Group2").get === List("User1")
 
     // Roles of Group 2
-    RoleInGroup.Group.name_("Group2")._Role.name.get === List("Role1")
+    RoleInGroup.Group.name_("Group2")
+      ._RoleInGroup.Role.name.get === List("Role1")
 
     // Users with Role 1 in Group 2
-    User.name.RoleInGroup.Role.name_("Role1")._Group.name_("Group2").get === List("User1")
+    User.name
+      .RoleInGroup.Role.name_("Role1")
+      ._RoleInGroup.Group.name_("Group2").get === List("User1")
 
     // Roles of User 1 in Group 2
-    User.name_("User1").RoleInGroup.Group.name_("Group2")._Role.name.get === List("Role1")
+    User.name_("User1")
+      .RoleInGroup.Group.name_("Group2")
+      ._RoleInGroup.Role.name.get === List("Role1")
 
 
     // All groups and the roles a user has, sorted by the name of the role
-    User.name_("User1").RoleInGroup.Role.name._Group.name.get.sorted === List(
+    User.name_("User1")
+      .RoleInGroup.Role.name
+      ._RoleInGroup.Group.name.get.sorted === List(
       ("Role1", "Group2"),
       ("Role2", "Group1")
     )
@@ -119,7 +135,9 @@ class Graph extends Specification with DatomicFacade {
       ("User2", "U2G3R56", g3, Set(r5, r6)))
 
     // Users and their Roles in Groups
-    User.name.RoleInGroup.Roles.name._Group.name.get.sorted === List(
+    User.name
+      .RoleInGroup.Roles.name
+      ._RoleInGroup.Group.name.get.sorted === List(
       ("User1", "Role1", "Group1"),
       ("User1", "Role2", "Group1"), // Sharing Role2 in Group 1
       ("User1", "Role2", "Group2"),
@@ -134,7 +152,9 @@ class Graph extends Specification with DatomicFacade {
       ("User2", "Role6", "Group3"))
 
     // Common groups based on shared roles of User1 and User2, counting shared roles (a self-join)
-    User.name_("User1" and "User2").RoleInGroup.Group.name._Roles.name(count).get === List(
+    User.name_("User1" and "User2")
+      .RoleInGroup.Group.name
+      ._RoleInGroup.Roles.name(count).get === List(
       ("Group1", 1),
       ("Group2", 1))
 

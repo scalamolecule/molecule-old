@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = Debug("Dsl2Model", 30, 32, false)
+  val x = Debug("Dsl2Model", 30, 32, true)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -83,7 +83,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case t@q"$prev.$cur.$op(..$values)" => walk(q"$prev", q"$prev.$cur".ns, q"$cur", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
-    case r@q"$prev.$backRefAttr" if r.isBackRef    => traverse(q"$prev", ReBond(r.refThis, firstLow(r.name.tail), r.refNext))
+    case r@q"$prev.$backRefAttr" if backRefAttr.toString.head == '_'  => traverse(q"$prev", ReBond(firstLow(backRefAttr.toString.tail), ""))
+
     case r@q"$prev.$refAttr" if r.isRef            => traverse(q"$prev", Bond(r.refThis, r.name, r.refNext))
     case a@q"$prev.$cur" if a.isEnum               => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
     case a@q"$prev.$cur" if a.isValueAttr          => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))

@@ -81,8 +81,8 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         case other                                           => other
       }
 
-      val model = Model(resolveIdentifiers($model.elements))
-      val query = Model2Query(model)
+      val model: Model = Model(resolveIdentifiers($model.elements))
+      val query: Query = Model2Query(model)
 
       def debugMolecule(conn: Connection, q: Query, args: Seq[Any] = Seq()): Unit = {
         val rows = try {

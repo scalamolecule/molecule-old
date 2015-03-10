@@ -37,6 +37,7 @@ object MoleculeBoilerplate {
   case class Enum(attr: String, attrClean: String, clazz: String, tpe: String, baseTpe: String, enums: Seq[String]) extends Attr
   case class Ref(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, refNs: String) extends Attr
   case class BackRef(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, backRef: String) extends Attr
+//  case class BackRef1(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, backRef: String) extends Attr
 
   case class Optional(datomicKeyValue: String, clazz: String)
 
@@ -168,8 +169,9 @@ object MoleculeBoilerplate {
         case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
           val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
             val (refNs, Ref(_, refAttr, clazz, _, tpe, _, _)) = (ref._1, ref._2)
-            attrs :+ BackRef(s"_${refAttr.capitalize}", refNs, "BackRefAttr", "BackRef", tpe, "", ns.ns)
-          }
+            val backRef = BackRef(s"_${ns.ns}", ns.ns, "BackRefAttr", "BackRef", tpe, "", ns.ns)
+            attrs :+ backRef
+          }.distinct
           ns2.copy(attrs = attrs2)
         case ns2                                                         => ns2
       }
@@ -294,7 +296,7 @@ object MoleculeBoilerplate {
 
     val (maxClazz2, maxRefNs, maxNs) = attrs.map {
       case Ref(_, _, _, clazz2, _, _, refNs)       => (clazz2.length, refNs.length, 0)
-      case BackRef(_, _, _, clazz2, _, _, backRef) => (clazz2.length, backRef.length, ns.length)
+      case BackRef(_, clazz2, _, _, _, _, backRef) => (clazz2.length, backRef.length, ns.length)
       case other => (0, 0, 0)
     }.unzip3
 
@@ -303,7 +305,6 @@ object MoleculeBoilerplate {
         val p1 = padS(maxAttr, attr)
         val p2 = padS(maxClazz2.max, clazz2)
         val p3 = padS(maxRefNs.max, attr)
-        //        val p3 = padS(maxRefNs.max, refNs)
         val p4 = padS(maxNs.max, refNs)
         val ref = (in, out) match {
           case (0, 0) => s"${refNs}_0$p4"
@@ -313,20 +314,18 @@ object MoleculeBoilerplate {
         acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
       }
 
-      case (acc, BackRef(backAttr, refNs, _, _, _, _, backRef)) =>
+      case (acc, BackRef(backAttr, backRef, _, _, _, _, _)) =>
         val p1 = padS(maxAttr, backAttr)
-        val p2 = padS(maxClazz2.max, "BackRef")
-        val p3 = padS(maxRefNs.max, backRef)
-        val p4 = padS(maxNs.max, refNs)
+        val p2 = padS(maxClazz2.max, backRef)
         val ref = (in, out) match {
-          case (0, 0) => s"${refNs}_0$p4"
-          case (0, o) => s"${refNs}_$o$p4[${OutTypes mkString ", "}]"
-          case (i, o) => s"${refNs}_In_${i}_$o$p4[${(InTypes ++ OutTypes) mkString ", "}]"
+          case (0, 0) => s"${backRef}_0$p2"
+          case (0, o) => s"${backRef}_$o$p2[${OutTypes mkString ", "}]"
+          case (i, o) => s"${backRef}_In_${i}_$o$p2[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        acc :+ s"def $backAttr $p1 : BackRef$p2[$backRef, $refNs$p3] with $ref = ???"
+        acc :+ s"def $backAttr $p1 : $ref = ???"
 
       case (acc, _) => acc
-    }
+    }.distinct
 
     val optional = option match {
       case _ => Nil
@@ -408,7 +407,6 @@ object MoleculeBoilerplate {
     val p1 = (s: String) => padS(attrs.map(_.attr.length).max, s)
     val p2 = (s: String) => padS(attrs.map(_.clazz.length).max, s)
 
-    //    val attrClasses = attrs.map {
     val attrClasses = attrs.flatMap {
       case Val(attr, _, clazz, _, _, _, options) =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")

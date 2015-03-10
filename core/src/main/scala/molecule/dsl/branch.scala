@@ -33,6 +33,7 @@ trait Branch0[Ns0, Ns1[_]] extends Branch {
 }
 
 trait Branch1[Ns1[_], Ns2[_,_], A] extends Branch {
+//  def apply (nested: NS0x): Ns1[A                                                                                      ] = ???
   def apply[dummy                                                           ] (nested: NS0 [dummy                                                           ]): Ns1[A                                                                                      ] = ???
   def apply[a                                                               ] (nested: NS1 [a                                                               ]): Ns2[A, a                                                                                   ] = ???
   def apply[a, b                                                            ] (nested: NS2 [a, b                                                            ]): Out_3[P3, P4, P4, P5, A, a, b                                                              ] = ???
