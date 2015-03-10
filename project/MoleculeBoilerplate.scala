@@ -161,7 +161,7 @@ object MoleculeBoilerplate {
       nss2.map {
         case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
           val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
-            val (refNs, Ref(_, refAttr, clazz, _, tpe, _, _)) = (ref._1, ref._2)
+            val Ref(_, refAttr, clazz, _, tpe, _, _) = ref._2
             val backRef = BackRef(s"_${ns.ns}", ns.ns, "BackRefAttr", "BackRef", tpe, "", "")
             attrs :+ backRef
           }.distinct
@@ -204,8 +204,9 @@ object MoleculeBoilerplate {
       val attrs = ns.attrs.flatMap { a =>
         val attr = attrStmts(ns.ns, a)
         a match {
-          case e: Enum => Seq(attr, enums(ns.ns, a.attrClean, e.enums))
-          case _       => Seq(attr)
+          case e: Enum     => Seq(attr, enums(ns.ns, a.attrClean, e.enums))
+          case br: BackRef => Nil
+          case _           => Seq(attr)
         }
       }
       header + "\n\n    " + attrs.mkString(",\n\n    ")
