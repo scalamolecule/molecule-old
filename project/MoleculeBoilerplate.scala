@@ -20,12 +20,6 @@ object MoleculeBoilerplate {
   case class Namespace(ns: String, opt: Option[Extension] = None, attrs: Seq[Attr] = Seq())
 
   sealed trait Extension
-  //  case class Tree() extends Extension {
-  //    override def toString = " (Tree)"
-  //  }
-  //  case class HyperEdge(edges: Seq[String]) extends Extension {
-  //    override def toString = s" (HyperEdge to ${edges.mkString(", ")})"
-  //  }
 
   sealed trait Attr {
     val attr     : String
@@ -37,7 +31,6 @@ object MoleculeBoilerplate {
   case class Enum(attr: String, attrClean: String, clazz: String, tpe: String, baseTpe: String, enums: Seq[String]) extends Attr
   case class Ref(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, refNs: String) extends Attr
   case class BackRef(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, backRef: String) extends Attr
-//  case class BackRef1(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, backRef: String) extends Attr
 
   case class Optional(datomicKeyValue: String, clazz: String)
 
@@ -169,7 +162,7 @@ object MoleculeBoilerplate {
         case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
           val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
             val (refNs, Ref(_, refAttr, clazz, _, tpe, _, _)) = (ref._1, ref._2)
-            val backRef = BackRef(s"_${ns.ns}", ns.ns, "BackRefAttr", "BackRef", tpe, "", ns.ns)
+            val backRef = BackRef(s"_${ns.ns}", ns.ns, "BackRefAttr", "BackRef", tpe, "", "")
             attrs :+ backRef
           }.distinct
           ns2.copy(attrs = attrs2)
@@ -291,9 +284,6 @@ object MoleculeBoilerplate {
           s"val ${attrClean}_ $p2: $attr$p1[$thisNS, $thisIn] with $thisNS = ???"))
     }.unzip
 
-
-
-
     val (maxClazz2, maxRefNs, maxNs) = attrs.map {
       case Ref(_, _, _, clazz2, _, _, refNs)       => (clazz2.length, refNs.length, 0)
       case BackRef(_, clazz2, _, _, _, _, backRef) => (clazz2.length, backRef.length, ns.length)
@@ -303,13 +293,12 @@ object MoleculeBoilerplate {
     val refCode = attrs.foldLeft(Seq("")) {
       case (acc, Ref(attr, _, _, clazz2, _, _, refNs)) => {
         val p1 = padS(maxAttr, attr)
-        val p2 = padS(maxClazz2.max, clazz2)
-        val p3 = padS(maxRefNs.max, attr)
-        val p4 = padS(maxNs.max, refNs)
+        val p2 = padS("ManyRef".length, clazz2)
+        val p3 = padS(maxRefNs.max, refNs)
         val ref = (in, out) match {
-          case (0, 0) => s"${refNs}_0$p4"
-          case (0, o) => s"${refNs}_$o$p4[${OutTypes mkString ", "}]"
-          case (i, o) => s"${refNs}_In_${i}_$o$p4[${(InTypes ++ OutTypes) mkString ", "}]"
+          case (0, 0) => s"${refNs}_0$p3"
+          case (0, o) => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
+          case (i, o) => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
         }
         acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
       }
