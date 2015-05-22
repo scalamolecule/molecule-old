@@ -15,8 +15,8 @@ class Provenance extends MoleculeSpec {
       ("ElastiCache in 6 minutes", ecURL),
       ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html")
     )
-    tx1.ids === List(17592186045449L, 17592186045450L, 13194139534344L)
-    val storyId = tx1.id
+    tx1.eids === List(17592186045449L, 17592186045450L, 13194139534344L)
+    val storyId = tx1.eid
 
     storyId === 17592186045449L
 
@@ -31,8 +31,8 @@ class Provenance extends MoleculeSpec {
 
     // Who changed the title and when?
     Story.url_(ecURL).title.tx.op.tx_(Source.User.email_).history.get.reverse === List(
-      ("ElastiCache in 6 minutes", 13194139534344L, true),
       ("ElastiCache in 6 minutes", 13194139534347L, false),
+      ("ElastiCache in 6 minutes", 13194139534344L, true),
       ("ElastiCache in 5 minutes", 13194139534347L, true))
 
     // (un-comment and run test to see data with current date...)
@@ -46,8 +46,8 @@ class Provenance extends MoleculeSpec {
     Story(storyId).a.v.tx.op.history.get.reverse === List(
       (":story/title", "ElastiCache in 6 minutes", 13194139534344L, true),
       (":story/title", "ElastiCache in 6 minutes", 13194139534347L, false),
-      (":story/title", "ElastiCache in 5 minutes", 13194139534347L, true),
-      (":story/url", "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html", 13194139534344L, true)
+      (":story/url", "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html", 13194139534344L, true),
+      (":story/title", "ElastiCache in 5 minutes", 13194139534347L, true)
     )
   }
 }

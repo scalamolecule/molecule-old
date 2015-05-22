@@ -78,7 +78,7 @@ class Aggregates extends MoleculeSpec {
     Db.a.length(avg).one === 12.9
 
     // How many attributes and value types does this schema use?
-    Db.a(count).valueType(countDistinct).one ===(37, 8)
+    Db.a(count).valueType(countDistinct).one ===(38, 8)
   }
 
 
@@ -104,11 +104,11 @@ class Aggregates extends MoleculeSpec {
 
     // Now we have a different set to aggregate over and compare
     Monster.name.heads.get === List(
-      ("Chimera", 1),
-      ("Cyclops", 1),
       ("Cerberus", 3),
-      ("Medusa", 1),
-      ("Cyclops", 4))
+      ("Chimera", 1),
+      ("Cyclops", 4),
+      ("Cyclops", 1),
+      ("Medusa", 1))
 
     Monster.heads(sum).one === 10 // 3 + 1 + 1 + 1 + 4
     Monster.heads(avg).one === 2.0 // 10 / 5

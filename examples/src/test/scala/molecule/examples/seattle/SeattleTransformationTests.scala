@@ -1106,13 +1106,13 @@ class SeattleTransformationTests extends SeattleSpec {
       Community(belltownId).name("belltown 2").url("url 2")
     ) -->
       Model(List(
-        Meta("community", "", "e", NoValue, Eq(List(17592186045649L))),
+        Meta("community", "", "e", NoValue, Eq(List(17592186045650L))),
         Atom("community", "name", "String", 1, Eq(List("belltown 2")), None),
         Atom("community", "url", "String", 1, Eq(List("url 2")), None))
       ) -->
       """List(
-        |  List(  :db/add,   17592186045649,   :community/name,   belltown 2  )
-        |  List(  :db/add,   17592186045649,   :community/url ,   url 2       )
+        |  List(  :db/add,   17592186045650,   :community/name,   belltown 2  )
+        |  List(  :db/add,   17592186045650,   :community/url ,   url 2       )
         |)""".stripMargin
 
 
@@ -1123,12 +1123,12 @@ class SeattleTransformationTests extends SeattleSpec {
       Community(belltownId).category("news" -> "Cool news")
     ) -->
       Model(List(
-        Meta("community", "", "e", NoValue, Eq(List(17592186045649L))),
+        Meta("community", "", "e", NoValue, Eq(List(17592186045650L))),
         Atom("community", "category", "String", 2, Replace(Map("news" -> "Cool news")), None))
       ) -->
       """List(
-        |  List(  :db/retract,   17592186045649,   :community/category,   news       )
-        |  List(  :db/add    ,   17592186045649,   :community/category,   Cool news  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   news       )
+        |  List(  :db/add    ,   17592186045650,   :community/category,   Cool news  )
         |)""".stripMargin
 
 
@@ -1140,16 +1140,16 @@ class SeattleTransformationTests extends SeattleSpec {
       )
     ) -->
       Model(List(
-        Meta("community", "", "e", NoValue, Eq(List(17592186045649L))),
+        Meta("community", "", "e", NoValue, Eq(List(17592186045650L))),
         Atom("community", "category", "String", 2, Replace(Map(
           "Cool news" -> "Super cool news",
           "events" -> "Super cool events")), None))
       ) -->
       """List(
-        |  List(  :db/retract,   17592186045649,   :community/category,   Cool news          )
-        |  List(  :db/add    ,   17592186045649,   :community/category,   Super cool news    )
-        |  List(  :db/retract,   17592186045649,   :community/category,   events             )
-        |  List(  :db/add    ,   17592186045649,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   Cool news          )
+        |  List(  :db/add    ,   17592186045650,   :community/category,   Super cool news    )
+        |  List(  :db/retract,   17592186045650,   :community/category,   events             )
+        |  List(  :db/add    ,   17592186045650,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -1158,11 +1158,11 @@ class SeattleTransformationTests extends SeattleSpec {
       Community(belltownId).category.add("extra category")
     ) -->
       Model(List(
-        Meta("community", "", "e", NoValue, Eq(List(17592186045649L))),
+        Meta("community", "", "e", NoValue, Eq(List(17592186045650L))),
         Atom("community", "category", "String", 2, Eq(List("extra category")), None))
       ) -->
       """List(
-        |  List(  :db/add,   17592186045649,   :community/category,   extra category  )
+        |  List(  :db/add,   17592186045650,   :community/category,   extra category  )
         |)""".stripMargin
 
 
@@ -1171,11 +1171,11 @@ class SeattleTransformationTests extends SeattleSpec {
       Community(belltownId).category.remove("Super cool events")
     ) -->
       Model(List(
-        Meta("community", "", "e", NoValue, Eq(List(17592186045649L))),
+        Meta("community", "", "e", NoValue, Eq(List(17592186045650L))),
         Atom("community", "category", "String", 2, Remove(List("Super cool events")), None))
       ) -->
       """List(
-        |  List(  :db/retract,   17592186045649,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -1187,16 +1187,16 @@ class SeattleTransformationTests extends SeattleSpec {
       Community(belltownId).name("belltown 3").url().category()
     ) -->
       Model(List(
-        Meta("community", "", "e", NoValue, Eq(List(17592186045649L))),
+        Meta("community", "", "e", NoValue, Eq(List(17592186045650L))),
         Atom("community", "name", "String", 1, Eq(List("belltown 3")), None),
         Atom("community", "url", "String", 1, Remove(List()), None),
         Atom("community", "category", "String", 2, Remove(List()), None))
       ) -->
       """List(
-        |  List(  :db/add    ,   17592186045649,   :community/name    ,   belltown 3                      )
-        |  List(  :db/retract,   17592186045649,   :community/url     ,   http://www.belltownpeople.com/  )
-        |  List(  :db/retract,   17592186045649,   :community/category,   events                          )
-        |  List(  :db/retract,   17592186045649,   :community/category,   news                            )
+        |  List(  :db/add    ,   17592186045650,   :community/name    ,   belltown 3                      )
+        |  List(  :db/retract,   17592186045650,   :community/url     ,   http://www.belltownpeople.com/  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   news                            )
+        |  List(  :db/retract,   17592186045650,   :community/category,   events                          )
         |)""".stripMargin
   }
 }

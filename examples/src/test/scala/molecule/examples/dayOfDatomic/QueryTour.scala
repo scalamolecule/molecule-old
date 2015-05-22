@@ -190,9 +190,9 @@ class QueryTour extends MoleculeSpec {
 
     // 20. Querying Across All time
     User(ed).firstName.tx.op.history.get.reverse === List(
-      ("Ed", 13194139534317L, true),
+      ("Edward", 13194139534344L, true),
       ("Ed", 13194139534344L, false),
-      ("Edward", 13194139534344L, true)
+      ("Ed", 13194139534317L, true)
     )
 
     // 21. Querying Plain Java Data - not supported by Molecule

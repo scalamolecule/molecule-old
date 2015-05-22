@@ -16,7 +16,7 @@ class ProductsAndOrders extends MoleculeSpec {
     implicit val conn = load(ProductsOrderSchema.tx, "Orders")
 
     // Insert 2 products
-    val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky").ids
+    val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky").eids
 
 
     // Insert nested data .................................
@@ -25,7 +25,7 @@ class ProductsAndOrders extends MoleculeSpec {
     val order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
 
     // Make order with two line items and return created entity id
-    val orderId = order.insert( 23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).id
+    val orderId = order.insert( 23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).eid
 
     // Find id of order with chocolate
     Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId

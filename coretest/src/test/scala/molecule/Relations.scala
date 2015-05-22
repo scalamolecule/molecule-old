@@ -26,7 +26,7 @@ class Relations extends CoreSpec {
     val List(id1, ref1, id2, ref2, id3, ref3) = Ns.str.Ref1.str1 insert List(
       ("a0", "a1"),
       ("b0", "b1"),
-      ("c0", "c1")) ids
+      ("c0", "c1")) eids
 
     // Get attribute values from 2 namespaces
     // Namespace references like `Ref1` starts with Capital letter
@@ -46,7 +46,7 @@ class Relations extends CoreSpec {
 
   "Referenced entity ids" in new CoreSetup {
 
-    val List(orderLine1, orderLine2, orderLine3) = Ref1.str1 insert List("item1", "item2", "item3") ids
+    val List(orderLine1, orderLine2, orderLine3) = Ref1.str1 insert List("item1", "item2", "item3") eids
 
     // We can insert ref entity ids
     Ns.str.ref1 insert List(

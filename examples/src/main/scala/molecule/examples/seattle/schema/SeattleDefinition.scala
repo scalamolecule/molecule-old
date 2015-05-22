@@ -9,7 +9,7 @@ trait SeattleDefinition {
     val url          = oneString
     val category     = manyString.fullTextSearch
     val orgtype      = oneEnum('community, 'commercial, 'nonprofit, 'personal)
-    val `type`       = oneEnum('email_list, 'twitter, 'facebook_page, 'blog, 'website, 'wiki, 'myspace, 'ning)
+    val `type`       = oneEnum('email_list, 'twitter, 'facebook_page, 'blog, 'website, 'wiki, 'myspace, 'ning, 'hej)
     val neighborhood = one[Neighborhood]
   }
 

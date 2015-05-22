@@ -168,7 +168,7 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
   //  val txResult: jMap[_, _] = conn.transact(xx).get
   val txResult: jMap[_, _] = conn.transact(flatStmts).get
 
-  def ids: List[Long] = {
+  def eids: List[Long] = {
     val txData = txResult.get(Connection.TX_DATA)
 
     // Omit first transaction datom
@@ -187,7 +187,7 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
     ids.toList
   }
 
-  def id = ids.head
+  def eid = eids.head
   def db = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
   def t = db.basisT()
   def tx = db.entity(Peer.toTx(t))

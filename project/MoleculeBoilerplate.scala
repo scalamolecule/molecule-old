@@ -37,9 +37,9 @@ object MoleculeBoilerplate {
 
   // Helpers ..........................................
 
-  def padS(longest: Int, str: String) = pad(longest, str.length)
-  def pad(longest: Int, shorter: Int) = if (longest > shorter) " " * (longest - shorter) else ""
-  def firstLow(str: Any) = str.toString.head.toLower + str.toString.tail
+  private def padS(longest: Int, str: String) = pad(longest, str.length)
+  private def pad(longest: Int, shorter: Int) = if (longest > shorter) " " * (longest - shorter) else ""
+  private def firstLow(str: Any) = str.toString.head.toLower + str.toString.tail
   implicit class Regex(sc: StringContext) {
     def r = new scala.util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
@@ -47,7 +47,7 @@ object MoleculeBoilerplate {
 
   // Parse ..........................................
 
-  def parse(defFile: File) = {
+  private def parse(defFile: File, allIndexed: Boolean) = {
     val raw = IO.readLines(defFile) filterNot (_.isEmpty) map (_.trim)
 
     // Check package statement
@@ -88,17 +88,21 @@ object MoleculeBoilerplate {
     }
 
 
-    def parseOptions(str: String, acc: Seq[Optional] = Seq()): Seq[Optional] = str match {
-      case r"\.doc\((.*)$msg\)(.*)$str" => parseOptions(str, acc :+ Optional( s"""":db/doc"               , $msg""", ""))
-      case r"\.fullTextSearch(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/fulltext"          , true.asInstanceOf[Object]""", "FulltextSearch[Ns, In]"))
-      case r"\.uniqueValue(.*)$str"     => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/value"""", "UniqueValue"))
-      case r"\.uniqueIdentity(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/identity"""", "UniqueIdentity"))
-      case r"\.indexed(.*)$str"         => parseOptions(str, acc :+ Optional( """":db/index"             , true.asInstanceOf[Object]""", "Indexed"))
-      case r"\.subComponents(.*)$str"   => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
-      case r"\.subComponent(.*)$str"    => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
-      case r"\.noHistory(.*)$str"       => parseOptions(str, acc :+ Optional( """":db/noHistory"         , true.asInstanceOf[Object]""", "NoHistory"))
-      case ""                           => acc
-      case unexpected                   => sys.error(s"Unexpected options code in ${defFile.getName}:\n" + unexpected)
+    def parseOptions(str: String, acc: Seq[Optional] = Seq()): Seq[Optional] = {
+      val indexed = Optional( """":db/index"             , true.asInstanceOf[Object]""", "Indexed")
+      val options = str match {
+        case r"\.doc\((.*)$msg\)(.*)$str" => parseOptions(str, acc :+ Optional( s"""":db/doc"               , $msg""", ""))
+        case r"\.fullTextSearch(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/fulltext"          , true.asInstanceOf[Object]""", "FulltextSearch[Ns, In]"))
+        case r"\.uniqueValue(.*)$str"     => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/value"""", "UniqueValue"))
+        case r"\.uniqueIdentity(.*)$str"  => parseOptions(str, acc :+ Optional( """":db/unique"            , ":db.unique/identity"""", "UniqueIdentity"))
+        case r"\.subComponents(.*)$str"   => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
+        case r"\.subComponent(.*)$str"    => parseOptions(str, acc :+ Optional( """":db/isComponent"       , true.asInstanceOf[Object]""", "IsComponent"))
+        case r"\.noHistory(.*)$str"       => parseOptions(str, acc :+ Optional( """":db/noHistory"         , true.asInstanceOf[Object]""", "NoHistory"))
+        case r"\.indexed(.*)$str"         => parseOptions(str, acc :+ indexed)
+        case ""                           => acc
+        case unexpected                   => sys.error(s"Unexpected options code in ${defFile.getName}:\n" + unexpected)
+      }
+      if(allIndexed) (options :+ indexed).distinct else options
     }
 
     def parseAttr(attr: String, attrClean: String, str: String) = str match {
@@ -159,11 +163,12 @@ object MoleculeBoilerplate {
 
       // Add BackRefs
       nss2.map {
-        case ns2 if refs1.size > 1 && refs1.keys.toList.contains(ns2.ns) =>
-          val attrs2 = refs1.filter(_._1 != ns2.ns).foldLeft(ns2.attrs) { case (attrs, ref) =>
+        case ns2 if refs1.nonEmpty && refs1.keys.toList.contains(ns2.ns) =>
+          val attrs2 = refs1.foldLeft(ns2.attrs) { case (attrs, ref) =>
             val Ref(_, refAttr, clazz, _, tpe, _, _) = ref._2
             val backRef = BackRef(s"_${ns.ns}", ns.ns, "BackRefAttr", "BackRef", tpe, "", "")
-            attrs :+ backRef
+            // Exclude self-references (?)
+            if (ns.ns == ns2.ns) attrs else attrs :+ backRef
           }.distinct
           ns2.copy(attrs = attrs2)
         case ns2                                                         => ns2
@@ -445,7 +450,7 @@ object MoleculeBoilerplate {
        |$nsTraits""".stripMargin
   }
 
-  def generate(srcManaged: File, domainDirs: Seq[String]): Seq[File] = {
+  def generate(srcManaged: File, domainDirs: Seq[String], allIndexed: Boolean = true): Seq[File] = {
     // Loop domain directories
     val files = domainDirs flatMap { domainDir =>
       val definitionFiles = sbt.IO.listFiles(new File(domainDir) / "schema").filter(f => f.isFile && f.getName.endsWith("Definition.scala"))
@@ -453,7 +458,7 @@ object MoleculeBoilerplate {
 
       // Loop definition files in each domain directory
       definitionFiles flatMap { definitionFile =>
-        val d0 = parse(definitionFile)
+        val d0 = parse(definitionFile, allIndexed)
         val d = resolve(d0)
 
 

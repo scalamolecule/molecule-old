@@ -1,7 +1,10 @@
 package molecule
 package examples.seattle
-import molecule.schema._
+import java.io.FileReader
+
 import molecule.examples.seattle.dsl.seattle._
+import molecule.schema._
+
 import scala.language.reflectiveCalls
 
 
@@ -420,7 +423,6 @@ class SeattleQueryTests extends SeattleSpec {
 
     implicit val conn = loadFromFiles("seattle-schema1a.dtm", "seattle-data0a.dtm", 2)
 
-
     m(Db.txInstant) -->
       """[:find  ?b
         | :where [?a :db/txInstant ?b]]""".stripMargin
@@ -468,10 +470,10 @@ class SeattleQueryTests extends SeattleSpec {
 
     /** Use molecule as template to insert matching data sets ********************************************/
 
-//    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert List(
-//      ("DDD Blogging Georgetown", "http://www.blogginggeorgetown.com/", "blog", "commercial", Set("DD cat 1", "DD cat 2"), "DD Georgetown", "Greater Duwamish", "s"),
-//      ("DDD Interbay District Blog", "http://interbayneighborhood.neighborlogs.com/", "blog", "community", Set("DD cat 3"), "DD Interbay", "Magnolia/Queen Anne", "w")
-//    )
+    //    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert List(
+    //      ("DDD Blogging Georgetown", "http://www.blogginggeorgetown.com/", "blog", "commercial", Set("DD cat 1", "DD cat 2"), "DD Georgetown", "Greater Duwamish", "s"),
+    //      ("DDD Interbay District Blog", "http://interbayneighborhood.neighborlogs.com/", "blog", "community", Set("DD cat 3"), "DD Interbay", "Magnolia/Queen Anne", "w")
+    //    )
 
     m(Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region) -->
       List(
@@ -519,8 +521,8 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).name("belltown 2").url("url 2")
     ) -->
       """List(
-        |  List(  :db/add,   17592186045649,   :community/name,   belltown 2  )
-        |  List(  :db/add,   17592186045649,   :community/url ,   url 2       )
+        |  List(  :db/add,   17592186045650,   :community/name,   belltown 2  )
+        |  List(  :db/add,   17592186045650,   :community/url ,   url 2       )
         |)""".stripMargin
 
 
@@ -531,8 +533,8 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).category("news" -> "Cool news")
     ) -->
       """List(
-        |  List(  :db/retract,   17592186045649,   :community/category,   news       )
-        |  List(  :db/add    ,   17592186045649,   :community/category,   Cool news  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   news       )
+        |  List(  :db/add    ,   17592186045650,   :community/category,   Cool news  )
         |)""".stripMargin
 
 
@@ -544,10 +546,10 @@ class SeattleQueryTests extends SeattleSpec {
       )
     ) -->
       """List(
-        |  List(  :db/retract,   17592186045649,   :community/category,   Cool news          )
-        |  List(  :db/add    ,   17592186045649,   :community/category,   Super cool news    )
-        |  List(  :db/retract,   17592186045649,   :community/category,   events             )
-        |  List(  :db/add    ,   17592186045649,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   Cool news          )
+        |  List(  :db/add    ,   17592186045650,   :community/category,   Super cool news    )
+        |  List(  :db/retract,   17592186045650,   :community/category,   events             )
+        |  List(  :db/add    ,   17592186045650,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -556,7 +558,7 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).category.add("extra category")
     ) -->
       """List(
-        |  List(  :db/add,   17592186045649,   :community/category,   extra category  )
+        |  List(  :db/add,   17592186045650,   :community/category,   extra category  )
         |)""".stripMargin
 
 
@@ -565,7 +567,7 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).category.remove("Super cool events")
     ) -->
       """List(
-        |  List(  :db/retract,   17592186045649,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -577,10 +579,10 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).name("belltown 3").url().category()
     ) -->
       """List(
-        |  List(  :db/add    ,   17592186045649,   :community/name    ,   belltown 3                      )
-        |  List(  :db/retract,   17592186045649,   :community/url     ,   http://www.belltownpeople.com/  )
-        |  List(  :db/retract,   17592186045649,   :community/category,   events                          )
-        |  List(  :db/retract,   17592186045649,   :community/category,   news                            )
+        |  List(  :db/add    ,   17592186045650,   :community/name    ,   belltown 3                      )
+        |  List(  :db/retract,   17592186045650,   :community/url     ,   http://www.belltownpeople.com/  )
+        |  List(  :db/retract,   17592186045650,   :community/category,   news                            )
+        |  List(  :db/retract,   17592186045650,   :community/category,   events                          )
         |)""".stripMargin
   }
 }

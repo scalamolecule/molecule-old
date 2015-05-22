@@ -1,11 +1,13 @@
 package molecule
 package examples.seattle
 import java.io.FileReader
+
 import datomic._
 import molecule._
 import molecule.examples.seattle.dsl.seattle._
 import molecule.schema._
 import shapeless._
+
 import scala.language.reflectiveCalls
 
 
@@ -16,7 +18,7 @@ class SeattleTests extends SeattleSpec {
     val communities = m(Community.e.name_)
 
     // Community entity ids
-    communities.get(3) === List(17592186045520L, 17592186045519L, 17592186045517L)
+    communities.get(3) === List(17592186045439L, 17592186045442L, 17592186045445L)
     communities.get.size === 150
   }
 
@@ -30,24 +32,24 @@ class SeattleTests extends SeattleSpec {
 
     // Use the community id to touch all the entity's attribute values
     communityId.touch === Map(
-      ":community/type" -> ":community.type/blog",
-      ":community/url" -> "http://eastballard.wordpress.com/",
-      ":community/category" -> List("news", "events", "meeting", "community association"),
+      ":community/type" -> ":community.type/email_list",
+      ":community/url" -> "http://groups.yahoo.com/group/15thAve_Community/",
+      ":community/category" -> List("15th avenue residents"),
       ":community/orgtype" -> ":community.orgtype/community",
-      ":db/id" -> 17592186045520L,
-      ":community/name" -> "East Ballard Community Association Blog",
+      ":db/id" -> 17592186045439L,
+      ":community/name" -> "15th Ave Community",
       ":community/neighborhood" -> Map(
-        ":db/id" -> 17592186045456L,
+        ":db/id" -> 17592186045440L,
         ":neighborhood/district" -> Map(
-          ":db/id" -> 17592186045457L,
-          ":district/name" -> "Ballard",
-          ":district/region" -> ":district.region/nw"),
-        ":neighborhood/name" -> "Ballard"))
+          ":db/id" -> 17592186045441L,
+          ":district/name" -> "East",
+          ":district/region" -> ":district.region/e"),
+        ":neighborhood/name" -> "Capitol Hill"))
 
     // We can also retrive a single attribute value
-    communityId(":community/name") === Some("East Ballard Community Association Blog")
-    communityId(":community/url") === Some("http://eastballard.wordpress.com/")
-    communityId(":community/category") === Some(List("news", "events", "meeting", "community association"))
+    communityId(":community/name") === Some("15th Ave Community")
+    communityId(":community/url") === Some("http://groups.yahoo.com/group/15thAve_Community/")
+    communityId(":community/category") === Some(List("15th avenue residents"))
     communityId(":community/emptyOrBogusAttribute") === None
   }
 
@@ -58,43 +60,43 @@ class SeattleTests extends SeattleSpec {
 
     // Single attribute
     Community.name.get(3) === List(
-      "Capitol Hill Triangle",
-      "Miller Park Neighborhood Association",
-      "Capitol Hill Community Council")
+      "KOMO Communities - Ballard",
+      "Ballard Blog",
+      "Ballard Historical Society")
 
     // Multiple attributes
 
     // Output as tuples
     Community.name.url.get(3) === List(
-      ("Chinatown/International District", "http://www.cidbia.org/"),
-      ("All About Belltown", "http://www.belltown.org/"),
-      ("Friends of Discovery Park", "http://www.friendsdiscoverypark.org/"))
+      ("Broadview Community Council", "http://groups.google.com/group/broadview-community-council"),
+      ("KOMO Communities - Wallingford", "http://wallingford.komonews.com"),
+      ("Aurora Seattle", "http://www.auroraseattle.com/"))
 
     // Output as HLists
     Community.name.url.hl(3) === List(
-      "Chinatown/International District" :: "http://www.cidbia.org/" :: HNil,
-      "All About Belltown" :: "http://www.belltown.org/" :: HNil,
-      "Friends of Discovery Park" :: "http://www.friendsdiscoverypark.org/" :: HNil)
+      "Broadview Community Council" :: "http://groups.google.com/group/broadview-community-council" :: HNil,
+      "KOMO Communities - Wallingford" :: "http://wallingford.komonews.com" :: HNil,
+      "Aurora Seattle" :: "http://www.auroraseattle.com/" :: HNil)
   }
 
 
   "Querying _by_ attribute values" >> {
 
     // Find attributes with a certain applied value
-    Community.name.`type`("twitter").get(3) === List(
-      ("Magnolia Voice", "twitter"),
+    Community.name.`type`("twitter").get(3).sortBy(_._1) === List(
+      ("Columbia Citizens", "twitter"),
       ("Discover SLU", "twitter"),
-      ("MyWallingford", "twitter"))
+      ("Fremont Universe", "twitter"))
 
     // Append underscore to omit applied value from output (the same anyway)
     // (different results now since order is not guaranteed)
     Community.name.type_("twitter").get(3) === List(
-      "Discover SLU", "Fremont Universe", "Columbia Citizens")
+      "Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
     // Applying values with variables is also possible (form inputs etc)
     val tw = "twitter"
     Community.name.type_(tw).get(3) === List(
-      "Discover SLU", "Fremont Universe", "Columbia Citizens")
+      "Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
 
     // Many-cardinality attributes
@@ -110,15 +112,15 @@ class SeattleTests extends SeattleSpec {
 
     // We can omit the category values
     Community.name.category_("news" or "arts").get(3) === List(
-      "Capitol Hill Community Council",
-      "KOMO Communities - Rainier Valley",
-      "Discover SLU")
+      "Beach Drive Blog",
+      "KOMO Communities - Ballard",
+      "Ballard Blog")
 
     // We can also apply arguments as a list (OR-semantics as using `or`)
     Community.name.category_("news", "arts").get(3) === List(
-      "Capitol Hill Community Council",
-      "KOMO Communities - Rainier Valley",
-      "Discover SLU")
+      "Beach Drive Blog",
+      "KOMO Communities - Ballard",
+      "Ballard Blog")
   }
 
 
@@ -126,15 +128,15 @@ class SeattleTests extends SeattleSpec {
 
     // Communities in north eastern region
     Community.name.Neighborhood.District.region_("ne").get(3) === List(
-      "KOMO Communities - U-District",
       "Maple Leaf Community Council",
+      "Hawthorne Hills Community Website",
       "KOMO Communities - View Ridge")
 
     // Communities and their region
     Community.name.Neighborhood.District.region.get(3) === List(
-      ("Broadview Community Council", "sw"),
-      ("KOMO Communities - Green Lake", "sw"),
-      ("Friends of Frink Park", "e"))
+      ("KOMO Communities - North Seattle", "n"),
+      ("Morgan Junction Community Association", "sw"),
+      ("Friends of Seward Park", "se"))
   }
 
 
@@ -153,24 +155,24 @@ class SeattleTests extends SeattleSpec {
     val facebookCommunities = communitiesOfType("facebook_page")
 
     // Only the `name` attribute is returned since `type` is the same for all results
-    twitterCommunities.get(3) === List("Discover SLU", "Fremont Universe", "Columbia Citizens")
-    facebookCommunities.get(3) === List("Discover SLU", "Blogging Georgetown", "Fremont Universe")
+    twitterCommunities.get(3) === List("Magnolia Voice", "Columbia Citizens", "Discover SLU")
+    facebookCommunities.get(3) === List("Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
     // If we omit the underscore we can get the type too
     val communitiesWithType = m(Community.name.`type`(?))
     communitiesWithType("twitter").get(3) === List(
       ("Discover SLU", "twitter"),
-      ("Magnolia Voice", "twitter"),
-      ("MyWallingford", "twitter"))
+      ("Fremont Universe", "twitter"),
+      ("Columbia Citizens", "twitter"))
 
 
     // Multiple input values for an attribute - logical OR ------------------------
 
     // Finding communities of type "facebook_page" OR "twitter"
     val facebookOrTwitterCommunities = List(
-      ("Fremont Universe", "facebook_page"),
-      ("Fauntleroy Community Association", "facebook_page"),
-      ("Magnolia Voice", "twitter"))
+      ("Eastlake Community Council", "facebook_page"),
+      ("Discover SLU", "twitter"),
+      ("MyWallingford", "facebook_page"))
 
     // Notation variations with OR-semantics for multiple inputs:
 
@@ -195,9 +197,9 @@ class SeattleTests extends SeattleSpec {
 
     // Finding communities of type "email_list" AND orgtype "community"
     val emailListCommunities = List(
-      "Greenwood Community Council Announcements",
-      "Madrona Moms",
-      "Ballard Neighbor Connection")
+      "Admiral Neighborhood Association",
+      "Ballard Moms",
+      "15th Ave Community")
 
     // Notation variations with AND-semantics for a single tuple of inputs:
 
@@ -220,11 +222,11 @@ class SeattleTests extends SeattleSpec {
     val typeAndOrgtype2 = m(Community.name.`type`(?).orgtype(?))
 
     val emailListORcommercialWebsites = List(
-      ("Madrona Moms", "email_list", "community"),
+      ("Fremont Arts Council", "email_list", "community"),
+      ("Greenwood Community Council Announcements", "email_list", "community"),
       ("Broadview Community Council", "email_list", "community"),
-      ("Greenwood Community Council Discussion", "email_list", "community"),
       ("Alki News", "email_list", "community"),
-      ("Discover SLU", "website", "commercial"))
+      ("Beacon Hill Burglaries", "email_list", "community"))
 
 
     // Logic AND pairs separated by OR
@@ -240,14 +242,14 @@ class SeattleTests extends SeattleSpec {
 
   "Invoking functions in queries" >> {
 
-    val beforeC = List("ArtsWest", "All About South Park", "Ballard Neighbor Connection")
+    val beforeC = List("Ballard Blog", "Beach Drive Blog", "Beacon Hill Blog")
 
-    m(Community.name < "C").get(3) === beforeC
-    Community.name.<("C").get(3) === beforeC
+    m(Community.name < "C").get(3).sorted === beforeC
+    Community.name.<("C").get(3).sorted === beforeC
 
     val communitiesBefore = m(Community.name < ?)
-    communitiesBefore("C").get(3) === beforeC
-    communitiesBefore("A").get(3) === List("15th Ave Community")
+    communitiesBefore("C").get(3).sorted === beforeC
+    communitiesBefore("A").get(3).sorted === List("15th Ave Community")
   }
 
 
@@ -277,17 +279,17 @@ class SeattleTests extends SeattleSpec {
 
     // Social media
     Community.name.type_("twitter" or "facebook_page").get(3) === List(
-      "Discover SLU", "Blogging Georgetown", "Fremont Universe")
+      "Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
     // NE and SW regions
     Community.name.Neighborhood.District.region_("ne" or "sw").get(3) === List(
-      "Greenwood Community Council Announcements", "Maple Leaf Community Council", "Genesee-Schmitz Neighborhood Council")
+      "Beach Drive Blog", "KOMO Communities - Green Lake", "Delridge Produce Cooperative")
 
     val southernSocialMedia = List(
-      "Blogging Georgetown",
       "Columbia Citizens",
+      "Fauntleroy Community Association",
       "MyWallingford",
-      "Fauntleroy Community Association")
+      "Blogging Georgetown")
 
     Community.name.type_("twitter" or "facebook_page").Neighborhood.District.region_("sw" or "s" or "se").get === southernSocialMedia
 
@@ -353,7 +355,7 @@ class SeattleTests extends SeattleSpec {
       .orgtype("personal")
       .category("my", "favorites") // many cardinality allows multiple values
       .Neighborhood.name("myNeighborhood")
-      .District.name("myDistrict").region("nw").add.ids === List(17592186045651L, 17592186045652L, 17592186045653L)
+      .District.name("myDistrict").region("nw").add.eids === List(17592186045652L, 17592186045653L, 17592186045654L)
 
     // Confirm all data is inserted
     Community.name.contains("AAA").url.`type`.orgtype.category.Neighborhood.name.District.name.region.get(1) === List(
@@ -368,21 +370,21 @@ class SeattleTests extends SeattleSpec {
     val insertCommunity = Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert
 
     // 2. Apply data to the InsertMolecule
-    insertCommunity("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s").ids === List(
-      17592186045655L, 17592186045656L, 17592186045657L)
+    insertCommunity("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s").eids === List(
+      17592186045656L, 17592186045657L, 17592186045658L)
 
     // Insert data as HList
-    insertCommunity("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil).ids === List(
-      17592186045659L, 17592186045660L, 17592186045661L)
+    insertCommunity("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil).eids === List(
+      17592186045660L, 17592186045661L, 17592186045662L)
 
 
     // Add multiple molecules..........................
 
     // Data as list of tuples
-    Community.name.url.insert(Seq(("Com A", "A.com"), ("Com B", "B.com"))).ids === Seq(17592186045663L, 17592186045664L)
+    Community.name.url.insert(Seq(("Com A", "A.com"), ("Com B", "B.com"))).eids === Seq(17592186045664L, 17592186045665L)
 
     // Data as list of HLists
-    Community.name.url.insert(Seq("Com C" :: "C.com" :: HNil, "Com D" :: "D.com" :: HNil)).ids === Seq(17592186045666L, 17592186045667L)
+    Community.name.url.insert(Seq("Com C" :: "C.com" :: HNil, "Com D" :: "D.com" :: HNil)).eids === Seq(17592186045667L, 17592186045668L)
 
     // Confirm that new entities have been inserted
     Community.name.contains("Com").get.sorted === List("Com A", "Com B", "Com C", "Com D")
@@ -404,10 +406,10 @@ class SeattleTests extends SeattleSpec {
     Community.category.get.head.size === 88
 
     // Re-use insert molecule to insert 3 new communities with 3 new neighborhoods and references to 3 existing Districts
-    insertCommunity(newCommunitiesData).ids === List(
-      17592186045669L, 17592186045670L, 17592186045452L,
-      17592186045671L, 17592186045672L, 17592186045540L,
-      17592186045673L, 17592186045674L, 17592186045443L)
+    insertCommunity(newCommunitiesData).eids === List(
+      17592186045670L, 17592186045671L, 17592186045453L,
+      17592186045672L, 17592186045673L, 17592186045541L,
+      17592186045674L, 17592186045675L, 17592186045444L)
 
     // Data has been added
     Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.get === newCommunitiesData

@@ -20,7 +20,7 @@ class Binding extends MoleculeSpec {
     ("John", "Stewart"),
     ("Stuart", "Smalley"),
     ("Stuart", "Halloway")
-  ) ids
+  ) eids
 
 
   "Binding queries" >> {
@@ -52,7 +52,7 @@ class Binding extends MoleculeSpec {
     person(("John", "Stewart")).get === List(johnStewart)
 
     // Bind collection
-    personFirst(List("John", "Stuart")).get === List(stuartSmalley, johnStewart, stuartHalloway)
+    personFirst(List("John", "Stuart")).get === List(johnStewart, stuartSmalley,  stuartHalloway)
 
     // Bind relation
     person(("John", "Stewart"), ("Stuart", "Halloway")).get === List(johnStewart, stuartHalloway)

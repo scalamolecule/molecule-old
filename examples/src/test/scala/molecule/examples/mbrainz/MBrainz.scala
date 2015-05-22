@@ -3,6 +3,7 @@ import datomic.Peer
 import molecule._
 import molecule.examples.mbrainz.dsl.mBrainz._
 import molecule.util.MoleculeSpec
+
 import scala.language.postfixOps
 
 // Start Datomic transactor first:
@@ -18,41 +19,41 @@ class MBrainz extends MoleculeSpec {
   "Queries" >> {
 
     // What are the titles of all the tracks John Lennon played on?
-    Track.name.Artists.name_("John Lennon").get(3) === List("Meat City", "Intuition", "Dizzy Miss Lizzy")
+    Track.name.Artists.name_("John Lennon").get(3) === List("Baby's Heartbeat", "John & Yoko", "Nutopian International Anthem")
 
     // What are the titles, album names, and release years of John Lennon's tracks?
     Release.year.name.Media.Tracks.name.Artists.name_("John Lennon").get(5) === List(
-      (1971, "Happy Xmas (War Is Over)", "Listen, the Snow Is Falling"),
-      (1969, "Live Peace in Toronto 1969", "Dizzy Miss Lizzy"),
-      (1972, "Some Time in New York City", "Sunday Bloody Sunday"),
-      (1971, "Imagine", "How Do You Sleep?"),
-      (1969, "Live Peace in Toronto 1969", "John John (Let's Hope for Peace)")
+      (1969, "Unfinished Music No. 3: Wedding Album", "Amsterdam"),
+      (1973, "Some Time in New York City", "Sunday Bloody Sunday"),
+      (1973, "Some Time in New York City", "The Luck of the Irish"),
+      (1971, "Power to the People", "Open Your Box"),
+      (1969, "Live Peace in Toronto 1969", "Cold Turkey")
     )
 
     // What are the titles, album names, and release years of the John Lennon tracks released before or during 1970?
     Release.year.<=(1970).name.Media.Tracks.name.Artists.name_("John Lennon").get(5) === List(
-      (1969, "Unfinished Music No. 3: Wedding Album", "Don't Worry Kyoko (Mummy's Only Looking for Her Hand in the Snow)"),
-      (1969, "Live Peace in Toronto 1969", "Dizzy Miss Lizzy"),
-      (1969, "Unfinished Music No. 3: Wedding Album", "Who Has Seen the Wind?"),
-      (1969, "Live Peace in Toronto 1969", "John John (Let's Hope for Peace)"),
-      (1970, "John Lennon/Plastic Ono Band", "Hold On")
+      (1969, "Unfinished Music No. 3: Wedding Album", "Amsterdam"),
+      (1969, "Live Peace in Toronto 1969", "Cold Turkey"),
+      (1970, "Instant Karma! / Who Has Seen the Wind?", "Instant Karma!"),
+      (1969, "Unfinished Music No. 2: Life With the Lions", "Two Minutes Silence"),
+      (1969, "Unfinished Music No. 2: Life With the Lions", "Baby's Heartbeat")
     )
 
     // What are the titles, artists, album names, and release years of all tracks having the word "always" in their titles?
     Release.year.name.Media.Tracks.name.contains("always").Artists.name.get(5) === List(
-      (1972, "Orange", "Once an Orange, Always an Orange", "Al Stewart"),
-      (1969, "Always Something There", "Always Something There", "Stanley Turrentine"),
-      (1972, "Pledging My Love", "I Will Always Love You", "John Holt"),
-      (1972, "Phantasmagoria", "Once a Ghost, Always a Ghost", "Curved Air"),
-      (1970, "You Always Hurt the One You Love", "You Always Hurt the One You Love", "Hank Thompson"))
+      (1972, "You'll Always Be a Friend", "You'll Always Be a Friend", "Hot Chocolate"),
+      (1971, "Hot Rocks 1964-1971", "You Can’t Always Get What You Want", "The Rolling Stones"),
+      (1972, "Always on My Mind / That Ain't Right", "Always on My Mind", "Brenda Lee"),
+      (1970, "Check Out Your Mind!", "You'll Always Be Mine", "The Impressions"),
+      (1968, "Signed, Sealed and Delivered", "I Want to Be With You Always", "Lefty Frizzell"))
 
     // Who collaborated with one of the Beatles?
     // Repeated attributes are translated to transitive lookups
     Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.get === List(
       ("John Lennon", "The Plastic Ono Band"),
-      ("George Harrison", "Ravi Shankar"),
-      ("John Lennon", "Yoko Ono"),
       ("George Harrison", "Bob Dylan"),
+      ("John Lennon", "Yoko Ono"),
+      ("George Harrison", "Ravi Shankar"),
       ("Paul McCartney", "Linda McCartney"))
 
     // Who directly collaborated with George Harrison,
@@ -78,11 +79,11 @@ class MBrainz extends MoleculeSpec {
     val whoSongs = Track.name.!=("Outro", "[outro]", "Intro", "[intro]").Artists.name_("The Who").get
     // Then get songs with same titles by other artists (using output from first query)
     Track.name(whoSongs).Artists.name.!=("The Who").get(5) === List(
-      ("Amazing Journey", "London Symphony Orchestra"),
-      ("Shakin' All Over", "Suzi Quatro"),
-      ("Overture", "Jule Styne"),
-      ("Tommy Can You Hear Me?", "London Symphony Orchestra"),
-      ("Underture", "London Symphony Orchestra")
+      ("The Last Time", "The Rolling Stones"),
+      ("Overture", "Lionel Bart"),
+      ("Sensation", "London Symphony Orchestra"),
+      ("Miracle Cure", "London Symphony Orchestra"),
+      ("Sensation", "Neon Rose")
     )
   }
 }

@@ -9,6 +9,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     base = file("."),
     aggregate = Seq(moleculeCore, moleculeCoretest, moleculeExamples),
     settings = commonSettings ++ Seq(
+//      exportJars := true,
       moduleName := "molecule-root",
       publish :=(),
       publishLocal :=()
@@ -41,6 +42,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     base = file("examples"),
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
+
       definitionDirectories(
         "examples/src/main/scala/molecule/examples/dayOfDatomic",
         "examples/src/main/scala/molecule/examples/seattle",
@@ -48,6 +50,13 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       ),
       publish :=(),
       publishLocal :=()
+
+
+//    ,mappings in (Compile, packageSrc) ++= {
+//      val allGeneratedFiles = ((sourceManaged in Compile).value ** "*") filter { _.isFile }
+//        println("@@@@@@@@@@ allGeneratedFiles: " + allGeneratedFiles.toString)
+//      allGeneratedFiles.get pair relativeTo((sourceManaged in Compile).value)
+//    }
     )
   )
 

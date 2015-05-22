@@ -15,7 +15,7 @@ class SocialNews extends MoleculeSpec {
     // Add John and let him upvote all stories
     val john = User.email.firstName.lastName.upVotes insert List(
       ("john@example.com", "John", "Doe", allStories.toSet)
-    ) id
+    ) eid
 
     // Users with upvotes
     User.email.upVotes.get === List(("john@example.com", Set(s1, s2, s3)))

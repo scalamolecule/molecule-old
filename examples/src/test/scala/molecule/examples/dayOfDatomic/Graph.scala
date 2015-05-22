@@ -14,12 +14,12 @@ class Graph extends Specification with DatomicFacade {
 
     implicit val conn = load(GraphSchema.tx)
 
-    val List(r1, r2) = Role.name insert List("Role1", "Role2") ids
+    val List(r1, r2) = Role.name insert List("Role1", "Role2") eids
 
     // Each Group has 2 Roles
     val List(g1, g2) = Group.name.roles insert List(
       ("Group1", Set(r1, r2)),
-      ("Group2", Set(r1, r2))) ids
+      ("Group2", Set(r1, r2))) eids
 
     // User with Roles in Groups
     User.name.RoleInGroup.name.group.role insert List(
@@ -34,7 +34,7 @@ class Graph extends Specification with DatomicFacade {
     // User 1 ..........................
 
     // User 1's Roles
-    User.name_("User1").RoleInGroup.Role.name.get === List("Role1", "Role2")
+    User.name_("User1").RoleInGroup.Role.name.get === List("Role2", "Role1")
 
     // User 1's Groups
     User.name_("User1").RoleInGroup.Group.name.get === List("Group2", "Group1")
@@ -118,12 +118,12 @@ class Graph extends Specification with DatomicFacade {
     // Load graph 2 where RoleInGroup references multiple Roles
     implicit val conn = load(Graph2Schema.tx, "Graph2")
 
-    val List(r1, r2, r3, r4, r5, r6) = Role.name insert List("Role1", "Role2", "Role3", "Role4", "Role5", "Role6") ids
+    val List(r1, r2, r3, r4, r5, r6) = Role.name insert List("Role1", "Role2", "Role3", "Role4", "Role5", "Role6") eids
     val List(g1, g2, g3) = Group.name.roles insert List(
       ("Group1", Set(r1, r2, r5)),
       ("Group2", Set(r2, r3, r4)),
       ("Group3", Set(r3, r4, r5, r6))
-    ) ids
+    ) eids
 
     // Users with various Roles in various Groups
     User.name.RoleInGroup.name.group.roles insert List(
