@@ -163,8 +163,8 @@ package object molecule {
   //  object o extends o
 
 
-  trait not
-  object not extends not
+  trait nil
+  object nil extends nil
 
 
   // Aggregates ==========================================================

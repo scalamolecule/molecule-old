@@ -85,6 +85,7 @@ object Model2Query {
             case Eq(args) if args.size > 1 => q.orRules(e, a, args.map(prefix + _), gs)
             case Eq(arg :: Nil)            => q.where(e, a, Val(prefix + arg), gs)
             case Neq(args)                 => q.enum(e, a, v, gs).compareTo("!=", a, v2, args map Val)
+            case Fn("not", _)              => q.not(e, a, v, gs)
             case other                     =>
               sys.error(s"[Model2Query:resolve[Atom_]] Unresolved enum Atom_:\nAtom_  : $a\nElement: $other")
           }
@@ -108,6 +109,7 @@ object Model2Query {
             case Eq(args)                 => q.orRules(e, a, args, gs)
             case And(args)                => q.where(e, a, Val(args.head), gs)
             case Neq(args)                => q.where(e, a, v, gs).compareTo("!=", a, v, args map Val)
+            case Fn("not", _)             => q.not(e, a, v, gs)
             case Lt(arg)                  => q.where(e, a, v, gs).compareTo("<", a, v, Val(arg))
             case Gt(arg)                  => q.where(e, a, v, gs).compareTo(">", a, v, Val(arg))
             case Le(arg)                  => q.where(e, a, v, gs).compareTo("<=", a, v, Val(arg))
@@ -132,6 +134,7 @@ object Model2Query {
           case EnumVal                  => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs)
           case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs).orRules(e, a, set.toSeq.map(prefix + _), gs)
           case Eq(args)                 => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs).orRules(e, a, args.map(prefix + _), gs)
+          case Fn("not", _)             => q.not(e, a, v, gs)
           case other                    => sys.error(s"[Model2Query:resolve[Enum Atom 2]] Unresolved cardinality-many enum Atom:\nAtom   : $a\nElement: $other")
         }
 
@@ -147,6 +150,7 @@ object Model2Query {
           case Eq(arg :: Nil)           => q.find(v2, gs).enum(e, a, v, gs).where(e, a, Val(prefix + arg), gs)
           case Eq(args)                 => q.find(v2, gs).enum(e, a, v, gs).orRules(e, a, args.map(prefix + _), gs)
           case Neq(args)                => q.find(v2, gs).enum(e, a, v, gs).compareTo("!=", a, v2, args map Val)
+          case Fn("not", _)             => q.not(e, a, v, gs)
           case Lt(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo("<", a, v2, Val(arg), 1)
           case Gt(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo(">", a, v2, Val(arg), 1)
           case Le(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo("<=", a, v2, Val(arg), 1)
@@ -170,6 +174,7 @@ object Model2Query {
           case Eq(arg :: Nil)           => q.find("distinct", Seq(), v, gs).where(e, a, Val(arg), gs).where(e, a, v, Seq())
           case Eq(args)                 => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, args, Nil, u(t, v))
           case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
+          case Fn("not", _)             => q.not(e, a, v, gs)
           case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
           case Fulltext(arg :: Nil)     => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(arg))
           case other                    => sys.error(s"[Model2Query:resolve[Atom 2]] Unresolved cardinality-many Atom:\nAtom   : $a\nElement: $other")
@@ -196,6 +201,7 @@ object Model2Query {
           case Gt(arg)                       => q.find(v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
           case Le(arg)                       => q.find(v, gs).where(e, a, v, gs).compareTo("<=", a, v, Val(arg))
           case Ge(arg)                       => q.find(v, gs).where(e, a, v, gs).compareTo(">=", a, v, Val(arg))
+          case Fn("not", _)                  => q.not(e, a, v, gs)
           case Fn("sum", _)                  => q.find("sum", Seq(), v, gs).where(e, a, v, gs).widh(e)
           case Fn("avg", _)                  => q.find("avg", Seq(), v, gs).where(e, a, v, gs).widh(e)
           case Fn(fn, Some(i))               => q.find(fn, Seq(i), v, gs).where(e, a, v, gs)
@@ -285,7 +291,7 @@ object Model2Query {
 
     // Consider And-semantics (self-joins)
     def postProcess(q: Query) = {
-      val andAtoms: Seq[Atom] = model.elements.collect { case a@Atom(_, _, _, _, And(andValues), _, _) => a}
+      val andAtoms: Seq[Atom] = model.elements.collect { case a@Atom(_, _, _, _, And(andValues), _, _) => a }
       if (andAtoms.size > 1) sys.error("[Model2Query:postProcess] For now, only 1 And-expression can be used. Found: " + andAtoms)
       if (andAtoms.size == 1) {
         val clauses = q.wh.clauses

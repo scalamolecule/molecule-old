@@ -274,6 +274,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case q"Seq($pkg.median)"                                     => aggr("median")
       case q"Seq($pkg.variance)"                                   => aggr("variance")
       case q"Seq($pkg.stddev)"                                     => aggr("stddev")
+      case q"Seq($pkg.nil)"                                        => Fn("not")
       case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
       case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
       case q"Seq(..$vs)"                                           => vs match {

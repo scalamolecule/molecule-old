@@ -2,6 +2,7 @@ package molecule
 import java.util.Date
 import java.util.UUID._
 import java.net.URI
+import datomic.Peer
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 
@@ -572,6 +573,20 @@ class Expressions extends CoreSpec {
 
 
   "Negation" >> {
+
+    "Include entities with non-asserted datoms (null values)" in new OneSetup {
+      Ns.str.int.long insert List(
+        ("foo", 1, 1L),
+        ("bar", 2, 2L),
+        ("baz", 3, null.asInstanceOf[Long])
+      )
+
+      // "baz" not returned since that entity has no long datom asserted
+      Ns.str.int_.long_.not(1L).get === List("bar")
+
+      // Entities where long is not asserted (is null)
+      Ns.str.int_.long(nil).get === List("baz")
+    }
 
     "Exclude 1 or more card one values" in new OneSetup {
 

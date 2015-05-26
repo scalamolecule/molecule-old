@@ -48,6 +48,7 @@ case class Query2String(q: Query) {
     case TupleBinding(vs)                => "[ " + (vs map p mkString " ") + " ]"
     case RelationBinding(vs)             => "[[ " + (vs map p mkString " ") + " ]]"
     case DataClause(ds, e, a, v, tx, op) => pp(ds, e, a, v, tx, op)
+    case NotClause(ds, e, a)             => s"(not [" + p(e) + " " + p(a) + "])"
     case Funct(name, ins, outs)          => ((s"[($name " + (ins map p mkString " ")).trim + ") " + p(outs)).trim + "]"
     case Rule(name, args, clauses)       => s"[($name " + (args map p mkString " ") + ") " + (clauses map p mkString " ") + "]"
     case RuleInvocation(name, args)      => s"($name " + (args map p mkString " ") + ")"

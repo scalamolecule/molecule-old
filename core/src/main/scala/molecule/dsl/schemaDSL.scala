@@ -74,7 +74,7 @@ object schemaDSL {
   trait ManyRef[This, Next] extends Ref[This, Next]
 
 
-  // todo
+  // todo?
   trait Partition
 
   trait Attr
@@ -99,8 +99,10 @@ object schemaDSL {
     def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
     def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
 
-//    def not(one: T, more: T*)         : Ns with Attr = ???
-    def not(args: T*)         : Ns with Attr = ???
+    // Null (datom not asserted)
+    def apply(noValue: nil): Ns with Attr = ???
+
+    def not(one: T, more: T*)         : Ns with Attr = ???
     // Todo: remove this when Intellij can infer from the next method alone...
     def != (value: T)         : Ns with Attr = ???
     def != (one: T, more: T*) : Ns with Attr = ???

@@ -89,6 +89,12 @@ object QueryOps {
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(a.ns, a.name), qv, Empty)))
 
 
+    // Null ..........................................
+
+    def not(e: String, a: Atom, v: String, gs: Seq[Generic]): Query =
+      q.copy(wh = Where(q.wh.clauses :+ NotClause(DS(), Var(e), KW(a.ns, a.name))))
+
+
     // Meta ..........................................
 
     def attr(e: String, v: QueryValue, v1: String, v2: String, gs: Seq[Generic]) = {
@@ -129,7 +135,7 @@ object QueryOps {
       q.func(".toString", Seq(Var(v1)), ScalarBinding(Var(v2)))
 
     def compareTo(op: String, a: Atom, v: String, qvs: Seq[QueryValue]): Query =
-      qvs.zipWithIndex.foldLeft(q) { case (q1, (qv, i)) => q1.compareTo(op, a, v, qv, i + 1)}
+      qvs.zipWithIndex.foldLeft(q) { case (q1, (qv, i)) => q1.compareTo(op, a, v, qv, i + 1) }
 
     def compareTo(op: String, a: Atom, v: String, qv: QueryValue, i: Int = 0): Query = {
       val w = if (i > 0) v + "_" + i else v + 2
@@ -149,7 +155,7 @@ object QueryOps {
         }
         val dataClauses = if (v.nonEmpty)
           Seq(
-            Funct(s"""ground (java.net.URI. "$arg1")""", Nil, ScalarBinding(Var(v))),
+            Funct( s"""ground (java.net.URI. "$arg1")""", Nil, ScalarBinding(Var(v))),
             DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty))
         else
           Seq(DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg1), Empty))
@@ -168,8 +174,8 @@ object QueryOps {
           DataClause(ImplDS, Var("x"), KW("?", "attr"), Var("v2"), Empty),
           Funct("!=", Seq(Var("v1"), Var("v2")), NoBinding)))
         case n => Rule(s"transitive$n", Seq(Var("attr"), Var("v1"), Var("v2")), Seq(
-          RuleInvocation(s"transitive${n - 1}", Seq(KW("?", "attr"), Var("v1"), Var("x"))),
-          RuleInvocation(s"transitive${n - 1}", Seq(KW("?", "attr"), Var("x"), Var("v2"))),
+          RuleInvocation(s"transitive${n - 1 }", Seq(KW("?", "attr"), Var("v1"), Var("x"))),
+          RuleInvocation(s"transitive${n - 1 }", Seq(KW("?", "attr"), Var("x"), Var("v2"))),
           Funct("!=", Seq(Var("v1"), Var("v2")), NoBinding)))
       }
       val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = (q.i.rules ++ newRules).distinct)
