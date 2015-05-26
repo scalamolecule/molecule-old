@@ -27,7 +27,7 @@ class Output extends CoreSpec {
     Ns.str.int_.get === List("John", "Lisa")
 
     // Same query with age returned too
-    Ns.str.int.get === List(("John", 37), ("Lisa", 28))
+    Ns.str.int.get === List(("Lisa", 28), ("John", 37))
   }
 
 

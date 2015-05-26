@@ -163,6 +163,9 @@ package object molecule {
   //  object o extends o
 
 
+  trait not
+  object not extends not
+
 
   // Aggregates ==========================================================
 

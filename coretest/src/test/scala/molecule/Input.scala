@@ -35,20 +35,20 @@ class Input extends CoreSpec {
     val personsYoungerThan = m(Ns.str.int_.<(?))
 
     // Apply expression value
-    personsYoungerThan(30).get === List("Ben", "Ann", "Lisa")
+    personsYoungerThan(30).get === List("Ann", "Ben", "Lisa")
 
     // We don't have to assign an input-molecule to a variable
-    m(Ns.str.int_.<(?))(30).get === List("Ben", "Ann", "Lisa")
+    m(Ns.str.int_.<(?))(30).get === List("Ann", "Ben", "Lisa")
     // Although then it would be easier to just say
-    Ns.str.int_.<(30).get === List("Ben", "Ann", "Lisa")
+    Ns.str.int_.<(30).get === List("Ann", "Ben", "Lisa")
 
     // For brevity we test some more expressions in the short form
     m(Ns.str.int_.>(?))(30).get === List("John")
-    m(Ns.str.int_.<=(?))(28).get === List("Ben", "Ann", "Lisa")
-    m(Ns.str.int_.>=(?))(28).get === List("Ben", "John", "Lisa")
-    m(Ns.str.int_.!=(?))(30).get === List("Ben", "John", "Ann", "Lisa")
-    m(Ns.str.int_.!=(?))(28).get === List("John", "Ann")
-    m(Ns.str.int_.not(?))(28).get === List("John", "Ann")
+    m(Ns.str.int_.<=(?))(28).get === List("Ann", "Ben", "Lisa")
+    m(Ns.str.int_.>=(?))(28).get === List("John", "Ben", "Lisa")
+    m(Ns.str.int_.!=(?))(30).get === List("Ann", "John", "Ben", "Lisa")
+    m(Ns.str.int_.!=(?))(28).get === List("Ann", "John")
+    m(Ns.str.int_.not(?))(28).get === List("Ann", "John")
   }
 
   class OneSetup extends CoreSetup {
@@ -174,7 +174,7 @@ class Input extends CoreSpec {
       m(Ns.int_.str(?))("b").get === List("b")
       m(Ns.int_.str.<(?))("b").get === List("a")
       m(Ns.int_.str.>(?))("b").get === List("c")
-      m(Ns.int_.str.<=(?))("b").get === List("b", "a")
+      m(Ns.int_.str.<=(?))("b").get === List("a", "b")
       m(Ns.int_.str.>=(?))("b").get === List("b", "c")
       m(Ns.int_.str.!=(?))("b").get === List("a", "c")
       m(Ns.int_.str.not(?))("b").get === List("a", "c")

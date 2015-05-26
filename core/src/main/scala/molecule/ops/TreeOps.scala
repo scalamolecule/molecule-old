@@ -205,7 +205,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
   class nsp(val sym: Symbol) {
-    val x = Debug("ModelOps:nsp", 8)
+    val x = DebugMacro("ModelOps:nsp", 8)
     lazy val nsType = sym match {
       case s: TermSymbol if s.isPublic                => s.typeSignature.typeSymbol.typeSignature
       case s: MethodSymbol
@@ -233,7 +233,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
   class att(val sym: Symbol) {
-    val x = Debug("TreeOps:att", 1)
+    val x = DebugMacro("TreeOps:att", 1)
 
     lazy val attrType = sym match {
       case t: TermSymbol                                                 => sym.typeSignature.typeSymbol.typeSignature

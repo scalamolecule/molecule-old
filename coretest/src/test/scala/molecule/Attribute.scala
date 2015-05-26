@@ -97,15 +97,15 @@ class Attribute extends CoreSpec {
     Ns.enum insert List(enum1, enum2)
 
     // Get attribute values as tuples (order not guaranteed)
-    Ns.str.get === List(str2, str1)
+    Ns.str.get === List(str1, str2)
     Ns.int.get === List(int1, int2)
     Ns.long.get === List(long1, long2)
-    Ns.float.get === List(float2, float1)
-    Ns.double.get === List(double2, double1)
+    Ns.float.get === List(float1, float2)
+    Ns.double.get === List(double1, double2)
     Ns.bool.get === List(bool2, bool1)
     Ns.date.get.sorted === List(date1, date2)
     Ns.uuid.get.sortBy(_.toString) === List(uuid1, uuid2)
-    Ns.uri.get === List(uri2, uri1)
+    Ns.uri.get === List(uri1, uri2)
     Ns.enum.get === List(enum2, enum1)
   }
 

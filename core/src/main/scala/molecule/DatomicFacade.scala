@@ -9,7 +9,7 @@ import molecule.ast.query._
 import molecule.ast.transaction.{Statement, _}
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
-import molecule.util.Debug
+import molecule.util.{Helpers, Debug}
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._

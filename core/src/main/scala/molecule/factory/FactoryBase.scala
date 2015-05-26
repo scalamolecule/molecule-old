@@ -10,7 +10,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-    val x = Debug("BuildMolecule", 1, 20, false)
+    val x = DebugMacro("BuildMolecule", 1, 20, false)
 
   def basics(dsl: c.Expr[NS]) = {
     val model = Dsl2Model(c)(dsl)

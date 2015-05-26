@@ -441,7 +441,9 @@ object MoleculeBoilerplate {
        |import molecule.dsl._$extraImports
        |
        |
-       |object $Ns extends ${Ns}_0
+       |object $Ns extends ${Ns}_0 {
+       |  def apply(e: Long): ${Ns}_0 = ???
+       |}
        |
        |trait $Ns {
        |  $attrClasses

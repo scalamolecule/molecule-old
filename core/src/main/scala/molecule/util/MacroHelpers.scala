@@ -24,6 +24,10 @@ trait MacroHelpers[Ctx <: Context] {
     val j = if (i > 0) s"($i) " else ""
     c.abort(c.enclosingPosition, j + t.toString.trim)
   }
+  def warn(t: Any, i: Int = 0) = {
+    val j = if (i > 0) s"($i) " else ""
+    c.warning(c.enclosingPosition, j + t.toString.trim)
+  }
 
   def abortTree(tree: Tree, msg: String, debug: Boolean = true) = {
     val e = Thread.currentThread.getStackTrace.tail.find(mth => mth.getMethodName != "abortTree").getOrElse {
@@ -38,10 +42,11 @@ trait MacroHelpers[Ctx <: Context] {
     def r = new scala.util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
 
-  protected case class Debug(clazz: String, threshold: Int, max: Int = 9999, debug: Boolean = false) {
+  protected case class DebugMacro(clazz: String, threshold: Int, max: Int = 9999, showStackTrace: Boolean = false) {
 
     def apply(id: Int, params: Any*): Unit = {
-      val stackTrace = if (debug) Thread.currentThread.getStackTrace mkString "\n" else ""
+      val stackTrace = if (showStackTrace) Thread.currentThread.getStackTrace mkString "\n" else ""
+
       if (id >= threshold && id <= max) {
 
         def traverse(x: Any, level: Int, i: Int): String = {
@@ -62,7 +67,8 @@ trait MacroHelpers[Ctx <: Context] {
           }
         }
 
-        println(s"##$id: $clazz \n" +
+        c.warning(c.enclosingPosition, s"##$id: $clazz \n" +
+//        println(s"##$id: $clazz \n" +
           params.toList.zipWithIndex.map { case (e, i) => traverse(e, 0, i + 1)}
             .mkString("\n------------------------------------------------\n") +
           s"\n====================================================== \n$stackTrace")

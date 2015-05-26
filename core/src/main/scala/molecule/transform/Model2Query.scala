@@ -84,6 +84,7 @@ object Model2Query {
             case EnumVal                   => q.enum(e, a, v, gs)
             case Eq(args) if args.size > 1 => q.orRules(e, a, args.map(prefix + _), gs)
             case Eq(arg :: Nil)            => q.where(e, a, Val(prefix + arg), gs)
+            case Neq(args)                 => q.enum(e, a, v, gs).compareTo("!=", a, v2, args map Val)
             case other                     =>
               sys.error(s"[Model2Query:resolve[Atom_]] Unresolved enum Atom_:\nAtom_  : $a\nElement: $other")
           }

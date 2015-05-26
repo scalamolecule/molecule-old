@@ -31,8 +31,8 @@ class Relations extends CoreSpec {
     // Get attribute values from 2 namespaces
     // Namespace references like `Ref1` starts with Capital letter
     Ns.str.Ref1.str1.get === List(
-      ("a0", "a1"),
       ("b0", "b1"),
+      ("a0", "a1"),
       ("c0", "c1"))
 
     // We can also retrieve the referenced entity id
@@ -57,9 +57,9 @@ class Relations extends CoreSpec {
     // Get attribute values from 2 namespaces
     // Namespace references like `Ref1` starts with Capital letter
     Ns.str.Ref1.str1.get === List(
+      ("c0", "item3"),
       ("b0", "item2"),
-      ("a0", "item1"),
-      ("c0", "item3"))
+      ("a0", "item1"))
 
     // We can also retrieve the referenced entity id
     // Referenced entity id `ref1` starts with lower case letter

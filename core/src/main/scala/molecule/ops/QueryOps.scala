@@ -162,7 +162,6 @@ object QueryOps {
     }
 
     def transitive(ns: String, attr: String, v1: String, v2: String, depth: Int): Query = {
-      val ruleName = "transitive" + depth
       val newRules: Seq[Rule] = 1 to depth map {
         case 1 => Rule("transitive1", Seq(Var("attr"), Var("v1"), Var("v2")), Seq(
           DataClause(ImplDS, Var("x"), KW("?", "attr"), Var("v1"), Empty),
@@ -173,9 +172,8 @@ object QueryOps {
           RuleInvocation(s"transitive${n - 1}", Seq(KW("?", "attr"), Var("x"), Var("v2"))),
           Funct("!=", Seq(Var("v1"), Var("v2")), NoBinding)))
       }
-
       val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = (q.i.rules ++ newRules).distinct)
-      val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(KW(ns, attr), Var(v1), Var(v2))))
+      val newWhere = Where(q.wh.clauses :+ RuleInvocation("transitive" + depth, Seq(KW(ns, attr), Var(v1), Var(v2))))
       q.copy(i = newIn, wh = newWhere)
     }
 

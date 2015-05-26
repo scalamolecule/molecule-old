@@ -49,6 +49,9 @@ class MBrainz extends MoleculeSpec {
 
     // Who collaborated with one of the Beatles?
     // Repeated attributes are translated to transitive lookups
+
+//    Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.debug === 7
+
     Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.get === List(
       ("John Lennon", "The Plastic Ono Band"),
       ("George Harrison", "Bob Dylan"),
@@ -86,4 +89,38 @@ class MBrainz extends MoleculeSpec {
       ("Sensation", "Neon Rose")
     )
   }
+
+//  "Transitive tests" >> {
+//    "No Bonds" >> {
+//      Artist.name.name.debug === 7
+//
+//      Artist.sortName.name.name.debug === 7
+//      Artist.name.sortName.name.debug === 7
+//      Artist.name.name.sortName.debug === 7
+//    }
+//
+//    "One Bond" >> {
+//      Track.Artists.name.name.debug === 7
+//
+//      Track.Artists.sortName.name.name.debug === 7
+//      Track.Artists.name.sortName.name.debug === 7
+//      Track.Artists.name.name.sortName.debug === 7
+//    }
+//
+//    "Two Bond" >> {
+//      Track.Artists.sortName.name._Track.Artists.name.debug === 7
+//      Track.Artists.name.sortName._Track.Artists.name.debug === 7
+//      Track.Artists.name._Track.Artists.sortName.name.debug === 7
+//      Track.Artists.name._Track.Artists.name.sortName.debug === 7
+//
+//      Track.Artists.sortName.name._Track.Artists.name.debug === 7
+//      Track.Artists.name.sortName._Track.Artists.name.debug === 7
+//      Track.Artists.name._Track.Artists.sortName.name.debug === 7
+//      Track.Artists.name._Track.Artists.name.sortName.debug === 7
+//
+//      //    Track.Artists.name.name.debug === 7
+//
+//      Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.debug === 7
+//    }
+//  }
 }

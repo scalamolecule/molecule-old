@@ -24,15 +24,15 @@ class Attribute extends CoreSpec {
     Ns.int insert List(1 :: HNil, 2 :: HNil, 3 :: HNil)
 
     // Get single value encoded in an HList
-    Ns.int.hl.head === 3 :: HNil
+    Ns.int.hl.head === 1 :: HNil
 
     // Get some values as HLists (order not guaranteed)
-    Ns.int.hl(1) === List(3 :: HNil)
-    Ns.int.hl(2) === List(3 :: HNil, 1 :: HNil)
-    Ns.int.hl(3) === List(3 :: HNil, 1 :: HNil, 2 :: HNil)
+    Ns.int.hl(1) === List(1 :: HNil)
+    Ns.int.hl(2) === List(1 :: HNil, 2 :: HNil)
+    Ns.int.hl(3) === List(1 :: HNil, 2 :: HNil, 3 :: HNil)
 
     // Get all values as HLists (order not guaranteed)
-    Ns.int.hl === List(3 :: HNil, 1 :: HNil, 2 :: HNil)
+    Ns.int.hl === List(1 :: HNil, 2 :: HNil, 3 :: HNil)
   }
 
 

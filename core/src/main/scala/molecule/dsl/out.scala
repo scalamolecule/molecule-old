@@ -14,7 +14,8 @@ trait Out_0[Ns0, Ns1[_], In1_0[_], In1_1[_, _]]
 {
 
   // Build on from entity id
-  def apply(e: Long): Ns0 = ???
+//  def apply(e: Long): Ns0 = ???
+//  def apply(e: Long, overloadHack: String = "foo"): Ns0 = ???
 }
 
 trait Out_1[Ns1[_], Ns2[_,_], In1_1[_,_], In1_2[_,_,_], A]

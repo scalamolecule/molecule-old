@@ -6,23 +6,23 @@ import molecule.dsl.schemaDefinition._
 trait MBrainzDefinition {
 
   trait AbstractRelease {
-    val name         = oneString.indexed
+    val name         = oneString
     val artistCredit = oneString.fullTextSearch
-    val gid          = oneUUID.uniqueIdentity.indexed
+    val gid          = oneUUID.uniqueIdentity
     val `type`       = oneEnum('album, 'single, 'ep, 'audiobook, 'other)
     val artists      = many[Artist]
   }
 
   trait Artist {
-    val startYear  = oneLong.indexed
+    val startYear  = oneLong
     val startMonth = oneLong
     val startDay   = oneLong
     val endYear    = oneLong
     val endMonth   = oneLong
     val endDay     = oneLong
-    val sortName   = oneString.indexed
-    val name       = oneString.indexed.fullTextSearch
-    val gid        = oneUUID.uniqueIdentity.indexed
+    val sortName   = oneString
+    val name       = oneString.fullTextSearch
+    val gid        = oneUUID.uniqueIdentity
     val `type`     = oneEnum('person, 'group, 'other)
     val gender     = oneEnum('male, 'female, 'other)
     val country    = one[Country]
@@ -33,15 +33,15 @@ trait MBrainzDefinition {
   }
 
   trait Label {
-    val startYear  = oneLong.indexed
+    val startYear  = oneLong
     val startMonth = oneLong
     val startDay   = oneLong
     val endYear    = oneLong
     val endMonth   = oneLong
     val endDay     = oneLong
-    val sortName   = oneString.indexed
-    val name       = oneString.indexed.fullTextSearch
-    val gid        = oneUUID.uniqueIdentity.indexed
+    val sortName   = oneString
+    val name       = oneString.fullTextSearch
+    val gid        = oneUUID.uniqueIdentity
     val `type`     = oneEnum('distributor, 'holding, 'production, 'originalProduction, 'bootlegProduction, 'reissueProduction, 'publisher)
     val country    = one[Country]
   }
@@ -58,14 +58,14 @@ trait MBrainzDefinition {
   }
 
   trait Release {
-    val year            = oneLong.indexed
+    val year            = oneLong
     val month           = oneLong
     val day             = oneLong
     val artistCredit    = oneString.fullTextSearch
-    val status          = oneString.indexed
+    val status          = oneString
     val barcode         = oneString
-    val name            = oneString.indexed.fullTextSearch
-    val gid             = oneUUID.uniqueIdentity.indexed
+    val name            = oneString.fullTextSearch
+    val gid             = oneUUID.uniqueIdentity
     val artists         = many[Artist]
     val abstractRelease = one[AbstractRelease]
     val language        = one[Language]
@@ -83,9 +83,8 @@ trait MBrainzDefinition {
 
   trait Track {
     val position     = oneLong
-    val duration     = oneLong.indexed
+    val duration     = oneLong
     val artistCredit = oneString.fullTextSearch
-//    val name         = oneString.indexed.fullTextSearch
     val name         = oneString.fullTextSearch
     val artists      = many[Artist]
   }
