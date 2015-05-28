@@ -25,8 +25,8 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule0 = {
           val query1 = bindValues1(args)
           new Molecule0(model, query1) {
-            def debug(implicit conn: Connection): Unit = debugMolecule(conn, query1, inputValues1(args))
-            def debugE(implicit conn: Connection): Unit = debugMolecule(conn, query1, inputValues1(args))
+            def debug(implicit conn: Connection): Unit = debugMolecule(conn, model, query1, inputValues1(args))
+            def debugE(implicit conn: Connection): Unit = debugMolecule(conn, model, query1, inputValues1(args))
           }
         }
       }
@@ -54,7 +54,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[$A]         = results(query2, conn).toList.map(data => ${castTpl(q"query", q"data", A, 0)}.asInstanceOf[$A])
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query2, conn).toList.map(data => ${castHList(q"query", q"data", A, 0, q"shapeless.HList()")})
-            def debug(implicit conn: Connection): Unit          = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
+            def debug(implicit conn: Connection): Unit          = ??? //debugMolecule(conn, model, query2, inputValues2(..inTerms), results(query2, conn))
           }
         }
       """
@@ -72,7 +72,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[$A]         = results(query1, conn).toList.map(data => ${castTpl(q"query", q"data", A, 0)}.asInstanceOf[$A])
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query1, conn).toList.map(data => ${castHList(q"query", q"data", A, 0, q"shapeless.HList()")})
-            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, query1, inputValues1(args))
+            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query1, inputValues1(args))
           }
         }
         $bindValues2
@@ -84,7 +84,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
     val MoleculeTpe = molecule_o(OutTypes.size)
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
-    val OutTypes2 = c.typeOf[Long] +: OutTypes
+    val OutTypes2 = if(OutTypes.size == 22) OutTypes else c.typeOf[Long] +: OutTypes
 
     val bindValues2 = if (InTypes.size > 1) {
       val (inTerms, inParams) = InTypes.zipWithIndex.map { case (t, i) =>
@@ -102,7 +102,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query2, conn).toList.map(data => (..${castTpls(q"query", q"data", OutTypes)}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(query2, conn).toList.map(data => ${castHLists(q"query", q"data", OutTypes)})
-            def debug(implicit conn: Connection): Unit             = ??? //debugMolecule(query2, inputValues2(..inTerms), results(query2, conn))
+            def debug(implicit conn: Connection): Unit             = ??? //debugMolecule(conn, model, query2, inputValues2(..inTerms), results(query2, conn))
           }
         }
       """

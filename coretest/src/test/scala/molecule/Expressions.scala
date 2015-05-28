@@ -585,7 +585,7 @@ class Expressions extends CoreSpec {
       Ns.str.int_.long_.not(1L).get === List("bar")
 
       // Entities where long is not asserted (is null)
-      Ns.str.int_.long(nil).get === List("baz")
+      Ns.str.int_.long_(nil).get === List("baz")
     }
 
     "Exclude 1 or more card one values" in new OneSetup {

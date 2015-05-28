@@ -26,7 +26,6 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new Molecule1[$A](model, query) {
-
         def getE(implicit conn: Connection): Seq[(..$OutTypes2)] = results(queryE, conn).toList.map(data => (..${castTpls(q"queryE", q"data", OutTypes2)}))
         def debugE(implicit conn: Connection): Unit              = debugMolecule(conn, modelE, queryE)
 
@@ -40,12 +39,11 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
   def fromXattrs(dsl: c.Expr[NS], OutTypes: Type*) = {
     val MoleculeTpe = molecule_o(OutTypes.size)
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
-    val OutTypes2 = c.typeOf[Long] +: OutTypes
+    val OutTypes2 = if(OutTypes.size == 22) OutTypes else c.typeOf[Long] +: OutTypes
 
     expr( q"""
       ..${basics(dsl)}
       new $MoleculeTpe[..$OutTypes](model, query) {
-
         def getE(implicit conn: Connection): Seq[(..$OutTypes2)] = results(queryE, conn).toList.map(data => (..${castTpls(q"queryE", q"data", OutTypes2)}))
         def debugE(implicit conn: Connection): Unit              = debugMolecule(conn, modelE, queryE)
 
