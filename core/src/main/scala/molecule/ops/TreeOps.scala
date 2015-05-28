@@ -1,6 +1,7 @@
 package molecule.ops
 import molecule.ast.query._
 import molecule.dsl.schemaDSL._
+
 import scala.language.existentials
 //import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
@@ -37,7 +38,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isOneRefAttr = tpe <:< weakTypeOf[OneRefAttr[_, _]]
     def isManyRefAttr = tpe <:< weakTypeOf[ManyRefAttr[_, _]]
 
-    def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _]]
+    def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _, _]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
     def isMany = tpe <:< weakTypeOf[Many[_, _, _, _]]
     def isEnum = tpe <:< weakTypeOf[Enum]
@@ -243,17 +244,17 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
 
     lazy val tpe = sym match {
-      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]          =>
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[Ref[_, _]]             =>
         typeOf[Long]
-      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]]      =>
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[RefAttr[_, _]]         =>
         typeOf[Long]
-      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[ValueAttr[_, _, _]] =>
-        t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _]].typeSymbol).typeArgs.last
-      case t: TermSymbol if t.isPublic                                                                                =>
+      case t: TermSymbol if t.isPublic && t.typeSignature.typeSymbol.asType.toType <:< weakTypeOf[ValueAttr[_, _, _, _]] =>
+        t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _, _]].typeSymbol).typeArgs.init.last
+      case t: TermSymbol if t.isPublic                                                                                   =>
         NoType
-      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]]                                         =>
+      case t: MethodSymbol if t.asMethod.returnType <:< weakTypeOf[Ref[_, _]]                                            =>
         typeOf[Long]
-      case unexpected                                                                                                 =>
+      case unexpected                                                                                                    =>
         abortTree(q"$unexpected", s"[TreeOps:tpe] ModelOps.att(sym) can only take an Attr symbol")
     }
 

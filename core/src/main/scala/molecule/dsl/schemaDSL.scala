@@ -94,7 +94,11 @@ object schemaDSL {
     def apply(value: Long): Ns with Attr = ???
   }
 
-  sealed trait ValueAttr[Ns, In, T] extends Attr {
+  sealed trait ValueAttr[Ns, In, T, U] extends Attr {
+
+    // Keyword for entity api
+    val _kw: String = ""
+
     def apply(expr1: Exp1[T])       : Ns with Attr = ???
     def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
     def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
@@ -126,7 +130,7 @@ object schemaDSL {
   }
 
   // One-cardinality
-  trait One[Ns, In, T] extends ValueAttr[Ns, In, T] {
+  trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
     // Empty `apply` is a request to delete values!
     def apply()                 : Ns with Attr = ???
     def apply(one: T, more: T*) : Ns with Attr = ???
@@ -144,7 +148,7 @@ object schemaDSL {
   trait OneAny    [Ns, In] extends One[Ns, In, Any    ]
 
   // Many-cardinality
-  trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T] {
+  trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T, S] {
     def apply(values: T*) : Ns with Attr = ???
 //    def apply(one: T, more: T*)                    : Ns with Attr = ???
 //    def apply(oneSet: S)                           : Ns with Attr = ???

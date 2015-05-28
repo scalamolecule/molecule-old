@@ -15,18 +15,24 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
     expr( q"""
       ..${basics(dsl)}
       new Molecule0(model, query) {
-        def debug(implicit conn: Connection): Unit = debugMolecule(conn, query)
+        def debug(implicit conn: Connection): Unit = debugMolecule(conn, model, query)
+        def debugE(implicit conn: Connection): Unit = debugMolecule(conn, model, query)
       }
     """)
   }
 
   def from1attr(dsl: c.Expr[NS], A: Type) = {
+    val OutTypes2 = Seq(c.typeOf[Long], A)
     expr( q"""
       ..${basics(dsl)}
       new Molecule1[$A](model, query) {
-        def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${castTpl(q"data", A, 0)}.asInstanceOf[$A])
-        def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query, conn).toList.map(data => ${castHList(q"data", A, 0, q"shapeless.HList()")})
-        def debug(implicit conn: Connection): Unit          = debugMolecule(conn, query)
+
+        def getE(implicit conn: Connection): Seq[(..$OutTypes2)] = results(queryE, conn).toList.map(data => (..${castTpls(q"queryE", q"data", OutTypes2)}))
+        def debugE(implicit conn: Connection): Unit              = debugMolecule(conn, modelE, queryE)
+
+        def get(implicit conn: Connection): Seq[$A]         = results(query, conn).toList.map(data => ${castTpl(q"query", q"data", A, 0)}.asInstanceOf[$A])
+        def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query, conn).toList.map(data => ${castHList(q"query", q"data", A, 0, q"shapeless.HList()")})
+        def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query)
       }
     """)
   }
@@ -34,12 +40,18 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
   def fromXattrs(dsl: c.Expr[NS], OutTypes: Type*) = {
     val MoleculeTpe = molecule_o(OutTypes.size)
     val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
+    val OutTypes2 = c.typeOf[Long] +: OutTypes
+
     expr( q"""
       ..${basics(dsl)}
       new $MoleculeTpe[..$OutTypes](model, query) {
-        def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query, conn).toList.map(data => (..${castTpls(q"data", OutTypes)}))
-        def hl(implicit conn: Connection) : Seq[$HListType]    = results(query, conn).toList.map(data => ${castHLists(q"data", OutTypes)})
-        def debug(implicit conn: Connection): Unit             = debugMolecule(conn, query)
+
+        def getE(implicit conn: Connection): Seq[(..$OutTypes2)] = results(queryE, conn).toList.map(data => (..${castTpls(q"queryE", q"data", OutTypes2)}))
+        def debugE(implicit conn: Connection): Unit              = debugMolecule(conn, modelE, queryE)
+
+        def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query, conn).toList.map(data => (..${castTpls(q"query", q"data", OutTypes)}))
+        def hl(implicit conn: Connection) : Seq[$HListType]    = results(query, conn).toList.map(data => ${castHLists(q"query", q"data", OutTypes)})
+        def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query)
       }
     """)
   }

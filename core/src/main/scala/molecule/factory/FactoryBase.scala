@@ -84,7 +84,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       val model: Model = Model(resolveIdentifiers($model.elements))
       val query: Query = Model2Query(model)
 
-      def debugMolecule(conn: Connection, q: Query, args: Seq[Any] = Seq()): Unit = {
+      val modelE = Model(Meta("", "", "e", NoValue, EntValue) +: model.elements)
+      val queryE = Model2Query(modelE)
+
+      def debugMolecule(conn: Connection, m: Model, q: Query, args: Seq[Any] = Seq()): Unit = {
         val rows = try {
           results(q, conn)
         } catch {
@@ -93,7 +96,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         sys.error(
           "\n--------------------------------------------------------------------------\n" +
           ${show(dsl.tree)} + "\n\n" +
-          model + "\n\n" +
+          m + "\n\n" +
           q + "\n\n" +
           q.datalog + "\n\n" +
           "RULES: " + (if (q.i.rules.isEmpty) "none\n\n" else q.i.rules.map(Query2String(q).p(_)).mkString("[\n ", "\n ", "\n]\n\n")) +
@@ -105,7 +108,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
     """
   }
 
-  def castTpl(data: Tree, tpe: Type, i: Int) = tpe match {
+  def castTpl(query: Tree, data: Tree, tpe: Type, i: Int) = tpe match {
     case t if t <:< typeOf[Set[Int]]   => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t]"
     case t if t <:< typeOf[Set[Float]] => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t]"
     case t if t <:< typeOf[Set[_]]     => q"$data.get($i).asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
@@ -117,7 +120,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       q""" if($data.get($i).isInstanceOf[jDouble]) $data.get($i).asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t] """
     case t                             =>
       q"""
-       query.f.outputs($i) match {
+       $query.f.outputs($i) match {
          case AggrExpr("sum",_,_) =>
            ${t.toString} match {
              case "Int"   => if($data.get($i).isInstanceOf[jLong]) $data.get($i).asInstanceOf[jLong].toInt.asInstanceOf[$t] else $data.get($i).asInstanceOf[$t]
@@ -137,10 +140,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
        """
   }
 
-  def castTpls(data: Tree, ts: Seq[Type]) = ts.zipWithIndex.map { case (tpe, i) => castTpl(data, tpe, i)}
+  def castTpls(query: Tree, data: Tree, ts: Seq[Type]) = ts.zipWithIndex.map { case (tpe, i) => castTpl(query, data, tpe, i)}
 
-  def castHList(data: Tree, tpe: Type, i: Int, hl: Tree) = q"$hl.::(${castTpl(data, tpe, i)})"
-  def castHLists(data: Tree, tpes: Seq[Type]) = tpes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
-    case ((tpe, i), hl) => castHList(data, tpe, i, hl)
+  def castHList(query: Tree, data: Tree, tpe: Type, i: Int, hl: Tree) = q"$hl.::(${castTpl(query, data, tpe, i)})"
+  def castHLists(query: Tree, data: Tree, tpes: Seq[Type]) = tpes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
+    case ((tpe, i), hl) => castHList(query, data, tpe, i, hl)
   }
 }

@@ -112,10 +112,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) { case (prevElement, (previous, similarAtoms, trans)) =>
       prevElement match {
         // Find similar Atoms
-//        case b@Bond(ns, refAttr, refNs) if refNs == ns && clean(refAttr) == clean(attr) =>
-//        case b@Bond(_, refAttr, refNs)=>
-//          x(2, prev, b, attr, refAttr, ns, refNs)
-//          (previous.init, atoms, trans)
+        //        case b@Bond(ns, refAttr, refNs) if refNs == ns && clean(refAttr) == clean(attr) =>
+        //        case b@Bond(_, refAttr, refNs)=>
+        //          x(2, prev, b, attr, refAttr, ns, refNs)
+        //          (previous.init, atoms, trans)
 
         case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
           val t = previous.init.reverse.collectFirst {
@@ -125,13 +125,13 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
               Transitive(ns2, refAttr, refNs, 0)
           } getOrElse {
-//            abort("[Dsl2Model:walk] ")
-//            x(6, curNs, cur)
+            //            abort("[Dsl2Model:walk] ")
+            //            x(6, curNs, cur)
             Transitive(prevNs, prevAttr, prevNs, 0)
           }
-          x(3,  prevElements.last, prevNs, prevAttr)
+          x(3, prevElements.last, prevNs, prevAttr)
           (previous.init, similarAtoms :+ prevAtom, Some(t))
-        case _                                                                             => (previous.init, similarAtoms, trans)
+        case _                                                                                                   => (previous.init, similarAtoms, trans)
       }
     }
 
@@ -274,7 +274,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case q"Seq($pkg.median)"                                     => aggr("median")
       case q"Seq($pkg.variance)"                                   => aggr("variance")
       case q"Seq($pkg.stddev)"                                     => aggr("stddev")
-      case q"Seq($pkg.nil)"                                        => Fn("not")
+      case q"Seq($pkg.nil)" if attr.name.last == '_'               => Fn("not")
+      case q"Seq($pkg.nil)"                                        => abort(s"[Dsl2Model:getValues] Please add underscore to attribute: `${attr.name}_(nil)`")
       case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
       case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
       case q"Seq(..$vs)"                                           => vs match {

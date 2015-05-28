@@ -1,4 +1,5 @@
 import java.io.File
+
 import sbt._
 
 
@@ -286,8 +287,19 @@ object MoleculeBoilerplate {
 
         val p1 = padS(maxAttr, attr)
         val p2 = padS(maxAttr, attrClean)
-        Some((s"val $attr  $p1: $attr$p1[$nextNS, $nextIn] with $nextNS = ???",
-          s"val ${attrClean}_ $p2: $attr$p1[$thisNS, $thisIn] with $thisNS = ???"))
+        val t1 = s"$attr$p1[$nextNS, $nextIn] with $nextNS"
+        val xx = a match {
+          case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns) }/$attr" }"""
+          case enumAttr: Enum if in == 0 && out == 0  => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns) }/$attr" }"""
+          case _                                     => s"""lazy val $attr  $p1: $t1 = ???"""
+        }
+
+//        if(in == 0 && out == 0)
+//          Some((s"lazy val $attr  $p1: $t1 = new $t1", s"lazy val ${attrClean}_ $p2: $t2 = ???"))
+//        else
+//          Some((s"lazy val $attr  $p1: $t1 = ???", s"lazy val ${attrClean}_ $p2: $t2 = ???"))
+
+        Some((xx, s"lazy val ${attrClean}_ $p2: $attr$p1[$thisNS, $thisIn] with $thisNS = ???"))
     }.unzip
 
     val (maxClazz2, maxRefNs, maxNs) = attrs.map {
@@ -306,7 +318,11 @@ object MoleculeBoilerplate {
           case (0, o) => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
           case (i, o) => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
+//        if(in == 0 && out == 0)
+//          acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = null.asInstanceOf[$clazz2$p2[$ns, $refNs$p3] with $ref]"
+//        else
+          acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
+
       }
 
       case (acc, BackRef(backAttr, backRef, _, _, _, _, _)) =>
@@ -317,7 +333,11 @@ object MoleculeBoilerplate {
           case (0, o) => s"${backRef}_$o$p2[${OutTypes mkString ", "}]"
           case (i, o) => s"${backRef}_In_${i}_$o$p2[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        acc :+ s"def $backAttr $p1 : $ref = ???"
+
+//        if(in == 0 && out == 0)
+//          acc :+ s"def $backAttr $p1 : $ref = null.asInstanceOf[$ref]"
+//        else
+          acc :+ s"def $backAttr $p1 : $ref = ???"
 
       case (acc, _) => acc
     }.distinct
@@ -405,11 +425,15 @@ object MoleculeBoilerplate {
     val attrClasses = attrs.flatMap {
       case Val(attr, _, clazz, _, _, _, options) =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
+//        Some(s"""class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions { override val _kw = ":${firstLow(Ns)}/$attr" }""")
         Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions")
 
       case Enum(attr, _, clazz, _, _, enums) =>
         val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
-        Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }")
+        Some(
+          s"""class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }""")
+//          s"""class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { override val _kw = ":${firstLow(Ns)}/$attr"
+//           |    $enumValues }""".stripMargin)
 
       case Ref(attr, _, clazz, _, _, _, _) =>
         Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]")

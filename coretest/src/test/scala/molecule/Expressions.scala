@@ -896,12 +896,12 @@ class Expressions extends CoreSpec {
 
     "Card many" in new ManySetup {
 
-      // Comparing cardinality-many attribute values is also rather useless since
-      // the comparison is performed against the coalesced set of values
+      // Comparing cardinality-many attribute values is performed
+      // against the coalesced set of all (!) values:
       Ns.strs.>("b").get === List(Set("d", "c"))
 
-      // Instead we probably want to group by another attribute and then
-      // compare the values of each set of cardinality-many values:
+      // Often we probably instead want to _group by another attribute_ and
+      // then compare each set of cardinality-many values:
       Ns.str.strs.get.filter(_._2.forall(_ > "a")) === List(("str2", Set("b", "c")), ("str3", Set("d", "b")))
       // etc...
     }

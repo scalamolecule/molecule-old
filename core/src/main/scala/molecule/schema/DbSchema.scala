@@ -12,7 +12,7 @@ import molecule.dsl._
 object Db extends Db_0
 
 trait Db {
-  class valueType[Ns, In] extends OneString[Ns, In]
+  class valueType[Ns, In] extends OneString[Ns, In] { override val _kw = ":db/valueType" }
 }
 
 trait Db_0 extends Db with Out_0[Db_0, Db_1, Db_In_1_0, Db_In_1_1] {
