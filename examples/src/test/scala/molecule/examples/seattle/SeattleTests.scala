@@ -49,7 +49,7 @@ class SeattleTests extends SeattleSpec {
     // We can also retrive a single attribute value
     communityId(":community/name") === Some("15th Ave Community")
     communityId(":community/url") === Some("http://groups.yahoo.com/group/15thAve_Community/")
-    communityId(":community/category") === Some(List("15th avenue residents"))
+    communityId(":community/category") === Some(Set("15th avenue residents"))
     communityId(":community/emptyOrBogusAttribute") === None
   }
 
