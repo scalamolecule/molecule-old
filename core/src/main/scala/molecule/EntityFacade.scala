@@ -22,12 +22,12 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
   def touch: Map[String, Any] = toMap
 
   // Format touch output for tests...
-  def touch2: Map[_, _] = toMap.map(p => s"""\n"${p._1}"""" -> formatEntity(p._2)).toMap
+  def touch2: Map[_, _] = toMap.map(p => s"""\n"${p._1 }"""" -> formatEntity(p._2)).toMap
   def formatEntity(value: Any): Any = value match {
     case s: String               => s""""$s""""
-    case l: Long                 => if (l > Int.MaxValue) s"${l}L" else l // presuming we used Int... - how to get Int from touch?
+    case l: Long                 => if (l > Int.MaxValue) s"${l }L" else l // presuming we used Int... - todo: how to get Int from touch?
     case l: Seq[_]               => l map formatEntity
-    case m: Map[_, _]            => "\n" + m.map(p => s""""${p._1}"""" -> formatEntity(p._2))
+    case m: Map[_, _]            => "\n" + m.map(p => s""""${p._1 }"""" -> formatEntity(p._2))
     case (s: String, value: Any) => s""""$s"""" -> formatEntity(value)
     case other                   => other
   }
@@ -42,27 +42,28 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
       val key = iter.next()
       builder += (key -> toScala(entity.get(key)))
     }
-    builder.result().toList.map {
-      case (s: String, refs: List[_]) => refs.head match {
-        case ref1: Map[_, _] => ref1.head match {
-          case (attr: String, id: Long) => {
-            // Presuming we now have a map of referenced entities we can sort the referenced maps by ref ids
-            val indexedRefMaps: List[(Long, Map[String, Any])] = refs.map {
-              case ref2: Map[_, _] => ref2.head match {
-                case (attr: String, id: Long) => {
-                  id -> ref2.asInstanceOf[Map[String, Any]]
-                }
-              }
-            }
-            s -> indexedRefMaps.sortBy(_._1).map(_._2)
-          }
-        }
-        case other           => s -> refs
-      }
-      case other                      => other
-    }.toMap
+    builder.result().toMap
+//      .toList.map {
+//      case (s: String, refs: List[_]) =>
+////        refs.head match {
+//////        case ref1: Map[_, _] => ref1.head match {
+//////          case (attr: String, id: Long) => {
+//////            // Presuming we now have a map of referenced entities we can sort the referenced maps by ref ids
+//////            val indexedRefMaps: List[(Long, Map[String, Any])] = refs.map {
+//////              case ref2: Map[_, _] => ref2.head match {
+//////                case (attr: String, id: Long) => {
+//////                  id -> ref2.asInstanceOf[Map[String, Any]]
+//////                }
+//////              }
+//////            }
+//////            s -> indexedRefMaps.sortBy(_._1).map(_._2)
+//////          }
+//////        }
+////        case other           => s -> refs
+////      }
+//      case other                      => other
+//    }.toMap
   }
-
 
   // Entity api from ValueAttribute (typed) .................................................................
 
@@ -73,14 +74,14 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
   // Single value
   def apply[A](attr: W[A]): Option[A] = attr match {
     case oneInt: OneInt[_, _]     => entity.get(attr._kw) match {
-      case null   => None
-      case oneInt => Some(toScala(oneInt).asInstanceOf[Long].toInt.asInstanceOf[A])
+      case null    => None
+      case oneInt_ => Some(toScala(oneInt_).asInstanceOf[Long].toInt.asInstanceOf[A])
     }
     case oneFloat: OneFloat[_, _] => entity.get(attr._kw) match {
-      case null     => None
-      case oneFloat => Some(toScala(oneFloat).asInstanceOf[Double].toFloat.asInstanceOf[A])
+      case null      => None
+      case oneFloat_ => Some(toScala(oneFloat_).asInstanceOf[Double].toFloat.asInstanceOf[A])
     }
-    case otherOne: One[_, _, _]   => entity.get(attr._kw) match {
+    case oneOther: One[_, _, _]   => entity.get(attr._kw) match {
       case null     => None
       case oneValue => Some(toScala(oneValue).asInstanceOf[A])
     }
@@ -90,7 +91,7 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
         case ent: datomic.Entity => Some(results.toList.map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]).sorted.asInstanceOf[A])
         case manySet             => Some((results.toList map toScala).toSet.asInstanceOf[A])
       }
-      case shouldWeEverGetHere                     => Some(toScala(shouldWeEverGetHere).asInstanceOf[A])
+      case shouldWeEverGetHere_?                   => Some(toScala(shouldWeEverGetHere_?).asInstanceOf[A])
     }
   }
 
@@ -129,7 +130,7 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
       case ent: datomic.Entity => Some(results.toList.map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]).sorted.asInstanceOf[T])
       case manyValue           => Some((results.toList map toScala).toSet.asInstanceOf[T])
     }
-    case result => Some(toScala(result).asInstanceOf[T])
+    case result                                  => Some(toScala(result).asInstanceOf[T])
   }
 
   // Entity api from string (untyped) .................................................................

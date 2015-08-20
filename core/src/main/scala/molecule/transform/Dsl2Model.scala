@@ -140,6 +140,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       similarAtoms.size match {
         case 1 => prevElements :+ transitive.get.copy(depth = 1) :+ thisElement
         case 2 => prevElements :+ transitive.get.copy(depth = 2) :+ thisElement
+        case 3 => prevElements :+ transitive.get.copy(depth = 3) :+ thisElement
         case n => abort(s"[Dsl2Model:walk] Unsupported transitive arity: $n")
       }
     } else

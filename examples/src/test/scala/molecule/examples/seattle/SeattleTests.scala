@@ -46,7 +46,7 @@ class SeattleTests extends SeattleSpec {
           ":district/region" -> ":district.region/e"),
         ":neighborhood/name" -> "Capitol Hill"))
 
-    // We can also retrive a single attribute value
+    // We can also retrive a single (optional) attribute value
     communityId(":community/name") === Some("15th Ave Community")
     communityId(":community/url") === Some("http://groups.yahoo.com/group/15thAve_Community/")
     communityId(":community/category") === Some(Set("15th avenue residents"))

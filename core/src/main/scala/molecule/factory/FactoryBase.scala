@@ -84,8 +84,8 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       val model: Model = Model(resolveIdentifiers($model.elements))
       val query: Query = Model2Query(model)
 
-      val modelE = Model(Meta("", "", "e", NoValue, EntValue) +: model.elements)
-      val queryE = Model2Query(modelE)
+      lazy val modelE = Model(Meta("", "", "e", NoValue, EntValue) +: model.elements)
+      lazy val queryE = Model2Query(modelE)
 
       def debugMolecule(conn: Connection, m: Model, q: Query, args: Seq[Any] = Seq()): Unit = {
         val rows = try {

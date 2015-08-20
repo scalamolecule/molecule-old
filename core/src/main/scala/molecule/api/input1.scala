@@ -24,6 +24,9 @@ trait InputMolecule_1[I1] extends InputMolecule {
 //    val values = getValues(p1, in1)
 //    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
   }
+
+//  def debug(implicit conn: Connection): Unit
+//  def debugE(implicit conn: Connection): Unit
 }
 
 abstract class InputMolecule_1_0[I1](val _model: Model, val _query: Query) extends InputMolecule_1[I1] {

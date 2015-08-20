@@ -85,7 +85,9 @@ object schemaDSL {
     def apply(value: Long): Ns with Attr = ???
   }
   trait ManyRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
-    def apply(values: Long*) : Ns with Attr = ???
+    def apply(values: Long*)                          : Ns with Attr = ???
+    def apply(oneSet: Set[Long], moreSets: Set[Long]*): Ns with Attr = ??? // Todo: not implemented yet
+
     def add(value: Long)     : Ns with Attr = ???
     def remove(values: Long*): Ns with Attr = ???
     // def apply(test: maybe) : Ns with Attr = ???

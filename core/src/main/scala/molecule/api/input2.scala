@@ -32,6 +32,14 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
     _query.copy(i = In(Seq(InVar(RelationBinding(vars), values)), _query.i.rules, _query.i.ds))
   }
 
+  def inputValues1(inputTuples: Seq[(I1, I2)]) = {
+    val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
+    inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
+//    val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
+//    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
+  }
+
+
   def bindValues2(inputLists: (Seq[I1], Seq[I2])) = {
 
     // Extract placeholder info and discard placeholders
@@ -60,13 +68,6 @@ trait InputMolecule_2[I1, I2] extends InputMolecule {
       }
     }
     query2
-  }
-
-  def inputValues1(inputTuples: Seq[(I1, I2)]) = {
-    val (vars, Seq(p1, p2)) = varsAndPrefixes.unzip
-    inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
-//    val values = inputTuples.map(tpl => Seq(p1 + tpl._1, p2 + tpl._2))
-//    values.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n")
   }
 
 //  def inputValues2(inputLists: (Seq[I1], Seq[I2])) = {

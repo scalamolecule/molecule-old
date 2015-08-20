@@ -6,7 +6,7 @@ import molecule.ops.QueryOps._
 import molecule.util.Debug
 
 object Model2Query {
-  val x = Debug("Model2Query", 5, 60, false)
+  val x = Debug("Model2Query", 70, 60, false)
   def uri(t: String) = t == "java.net.URI"
   def u(t: String, v: String) = if (t == "java.net.URI") v else ""
 
@@ -235,6 +235,7 @@ object Model2Query {
     def make(query: Query, element: Element, e: String, v: String, prevNs: String, prevAttr: String, prevRefNs: String)
     : (Query, String, String, String, String, String) = {
       val w = (v.toCharArray.head + 1).toChar.toString
+      x(7, query, element, e, v, prevNs, prevAttr, prevRefNs)
       element match {
         case Atom(ns, attr, "a", _, _, _, _)                  => (resolve(query, e, v, element), e, w, ns, attr, "")
         case Atom(ns, attr, "ns", _, _, _, _)                 => (resolve(query, e, v, element), e, w, ns, attr, "")
@@ -271,8 +272,10 @@ object Model2Query {
           }
           (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
 
-        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long))) => x(2, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
-        case Meta(ns, attr, _, _, _)                         => x(3, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))    => x(2, query, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "" => x(3, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _)                    => x(4, query, element); (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Meta(ns, attr, _, _, _)                            => x(5, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
 
         case TxModel(elements) =>
           val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, "tx", w, prevNs, prevAttr, prevRefNs)) {
@@ -346,9 +349,11 @@ object Model2Query {
       } else q
     }
 
-    val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query, e, v, prevNs, prevAttr, prevRefNs), element) =>
-      make(query, element, e, v, prevNs, prevAttr, prevRefNs)
+    val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) =>
+      make(query_, element, e, v, prevNs, prevAttr, prevRefNs)
     }._1
+
+    x(8, query)
 
     postProcess(query)
   }

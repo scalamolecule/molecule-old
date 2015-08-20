@@ -54,7 +54,8 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[$A]         = results(query2, conn).toList.map(data => ${castTpl(q"query", q"data", A, 0)}.asInstanceOf[$A])
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(query2, conn).toList.map(data => ${castHList(q"query", q"data", A, 0, q"shapeless.HList()")})
-            def debug(implicit conn: Connection): Unit          = ??? //debugMolecule(conn, model, query2, inputValues2(..inTerms), results(query2, conn))
+            //def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query2, inputValues2(..inTerms))
+            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query2, Seq(..$inTerms))
           }
         }
       """
@@ -102,7 +103,8 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(query2, conn).toList.map(data => (..${castTpls(q"query", q"data", OutTypes)}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(query2, conn).toList.map(data => ${castHLists(q"query", q"data", OutTypes)})
-            def debug(implicit conn: Connection): Unit             = ??? //debugMolecule(conn, model, query2, inputValues2(..inTerms), results(query2, conn))
+            //def debug(implicit conn: Connection): Unit           = debugMolecule(conn, model, query2, inputValues2(..inTerms))
+            def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query2, Seq(..$inTerms))
           }
         }
       """
