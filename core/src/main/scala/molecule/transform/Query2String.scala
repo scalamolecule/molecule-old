@@ -53,6 +53,7 @@ case class Query2String(q: Query) {
     case Rule(name, args, clauses)       => s"[($name " + (args map p mkString " ") + ") " + (clauses map p mkString " ") + "]"
     case RuleInvocation(name, args)      => s"($name " + (args map p mkString " ") + ")"
     case unresolvedQuery                 => sys.error(s"\n[Query2String] UNRESOLVED query expression: $unresolvedQuery")
+    //    case KW(ns, attr, _)                 => ":" + ns.head.toLower + ns.tail + "/" + attr
   }
 
   def pp(es: QueryExpr*): String = es.toList.map(p).filter(_.trim.nonEmpty).mkString("[", " ", "]")

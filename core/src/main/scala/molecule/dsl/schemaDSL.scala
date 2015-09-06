@@ -73,6 +73,12 @@ object schemaDSL {
   trait OneRef[This, Next] extends Ref[This, Next]
   trait ManyRef[This, Next] extends Ref[This, Next]
 
+  import scalaz._
+  trait ManyRefSelf2[A, B]
+  {
+    def tree(levels: Int): Seq[Tree[(A, B)]] = ???
+  }
+
 
   // todo?
   trait Partition
@@ -92,6 +98,11 @@ object schemaDSL {
     def remove(values: Long*): Ns with Attr = ???
     // def apply(test: maybe) : Ns with Attr = ???
   }
+
+  trait ManyRefAttrSelf[Ns, In] extends ManyRefAttr[Ns, In] {
+    def recurse(levels: Int): Ns with Attr = ???
+  }
+
   trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns with Attr = ???
   }

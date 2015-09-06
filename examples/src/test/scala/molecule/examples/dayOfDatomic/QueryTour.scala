@@ -12,12 +12,12 @@ class QueryTour extends MoleculeSpec {
   "Queries and joins" in new SocialNewsSetup {
 
     // Created entity ids are Long values
-    (s1, s2, s3) ===(17592186045418L, 17592186045419L, 17592186045420L)
-    (stu, ed) ===(17592186045422L, 17592186045423L)
+    (s1, s2, s3) ===(17592186045419L, 17592186045420L, 17592186045421L)
+    (stu, ed) ===(17592186045423L, 17592186045424L)
     (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) ===(
-      17592186045425L, 17592186045427L, 17592186045429L, 17592186045431L,
-      17592186045433L, 17592186045435L, 17592186045437L, 17592186045439L,
-      17592186045441L, 17592186045443L, 17592186045445L, 17592186045447L)
+      17592186045426L, 17592186045428L, 17592186045430L, 17592186045432L,
+      17592186045434L, 17592186045436L, 17592186045438L, 17592186045440L,
+      17592186045442L, 17592186045444L, 17592186045446L, 17592186045448L)
 
 
     // 3. Finding All Users with a first name
@@ -102,7 +102,7 @@ class QueryTour extends MoleculeSpec {
     // 13. Touching an entity
     // Get all attributes/values of this entity. Sub-component values are recursively retrieved
     editor.touch === Map(
-      ":db/id" -> 17592186045423L,
+      ":db/id" -> 17592186045424L,
       ":user/email" -> "editor@example.com",
       ":user/firstName" -> "Ed",
       ":user/lastName" -> "Itor"
@@ -158,12 +158,12 @@ class QueryTour extends MoleculeSpec {
 
     // 16. Querying for a Transaction
     val tx = User(ed).firstName_.tx.get.head
-    tx === 13194139534344L
+    tx === 13194139534345L
 
 
     // 17. Converting Transacting to T
     val t = datomic.Peer.toT(tx)
-    t === 1032
+    t === 1033
 
     // Or query for relative system time directly
     User(ed).firstName_.txT.get.head === t
@@ -188,11 +188,11 @@ class QueryTour extends MoleculeSpec {
 
     // Auditing ................................................................
 
-    // 20. Querying Across All time
-    User(ed).firstName.tx.op.history.get.reverse === List(
-      ("Edward", 13194139534344L, true),
-      ("Ed", 13194139534344L, false),
-      ("Ed", 13194139534317L, true)
+    // 20. Querying Across All time (sort by transactions)
+    User(ed).firstName.tx.op.history.get.sortBy(_._2) === List(
+      ("Ed", 13194139534318L, true),
+      ("Ed", 13194139534345L, false),
+      ("Edward", 13194139534345L, true)
     )
 
     // 21. Querying Plain Java Data - not supported by Molecule

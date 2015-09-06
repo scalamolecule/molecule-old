@@ -144,13 +144,13 @@ class EntityAPI extends CoreSpec {
 
     // Get optional values
     Ns.int.<=(4).maybe(str) === List(
-      (1, Some("a")),
       (2, None),
+      (1, Some("a")),
       (4, Some("d")))
 
     Ns.int.<=(4).maybe(str, long) === List(
-      (1, Some("a"), Some(1L)),
       (2, None, Some(1L)),
+      (1, Some("a"), Some(1L)),
       (4, Some("d"), None))
 
     Ns.int.<=(4).str.maybe(long) === List(

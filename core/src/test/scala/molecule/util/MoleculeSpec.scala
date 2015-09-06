@@ -28,6 +28,8 @@ trait MoleculeSpec extends Specification with DatomicFacade {
       rawId match {
         case r"#db/id\[:db.part/user -\d{7}\]" =>
           if (ids.contains(rawId)) ids else ids + (rawId -> ("#db/id[:db.part/user -" + (1000001 + ids.size) + "]"))
+        case r"#db/id\[:(\w+)$part -\d{7}\]" =>
+          if (ids.contains(rawId)) ids else ids + (rawId -> (s"#db/id[:$part -" + (1000001 + ids.size) + "]"))
         case other                             => ids + (other.toString -> other.toString)
       }
     }
@@ -135,7 +137,6 @@ trait MoleculeSpec extends Specification with DatomicFacade {
     }
 
     def -->(txString: String) = {
-      //      val t = Model2Transaction
       val tx = Model2Transaction(conn, molecule._model).saveStmts()
       formatTx(tx) === txString
     }

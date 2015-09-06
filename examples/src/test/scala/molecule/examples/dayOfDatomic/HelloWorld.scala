@@ -15,7 +15,7 @@ class HelloWorld extends MoleculeSpec {
     val txData = list(list(
       ":db/add", tempid,
       ":db/doc", "Hello world"))
-    val conn = load(txData, "hello-world")
+    val conn = loadList(txData, "hello-world")
 
     // Transaction result is data
     val txresult = conn.transact(txData)

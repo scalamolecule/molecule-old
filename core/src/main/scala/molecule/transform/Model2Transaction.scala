@@ -13,7 +13,23 @@ import scala.collection.JavaConversions._
 case class Model2Transaction(conn: Connection, model: Model) {
   val x = Debug("Model2Transaction", 33, 33, false, 6)
 
-  private def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+//  println(model)
+
+  //  private def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
+  private def tempId(attr: String) = {
+//      println(attr)
+//      println(attr.substring(1).split("(?=_)").head)
+//      println("---------")
+      val first = attr.split("_(\\d+|In.*)").head
+
+      attr match {
+        case "tx"                     => Peer.tempid(s":db.part/tx")
+        case s if s.contains('_') => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
+//        case s if s.tail.head.isLower => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
+        case _                        => Peer.tempid(s":db.part/user")
+      }
+    }
+
 
   private def getValues1(db: Database, id: Any, attr: String) = {
     val query = s"[:find ?values :in $$ ?id :where [?id $attr ?values]]"
@@ -29,7 +45,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('_, Meta(ns, "", "e", _, Eq(Seq(id: Long)))) => (Eid(id), stmts)
       case ('_, Atom(ns, name, _, _, VarValue, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
       case ('_, Atom(ns, name, _, _, value, prefix, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
-      case ('_, Bond(ns, refAttr, _))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
+      case ('_, Bond(ns, refAttr, refNs))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", s":$refNs"))
+//      case ('_, Bond(ns, refAttr, _))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
 
       case (e, Group(Bond(ns, refAttr, _), elements)) =>
         val nested = elements.foldLeft('v: Any, Seq[Statement]()) {
@@ -46,7 +63,9 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('e, Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
       case ('e, Atom(ns, name, _, _, VarValue, _, _))             => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
       case ('e, Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
-      case ('e, Bond(ns, refAttr, _))                             => ('v, stmts :+ Add('e, s":$ns/$refAttr", 'tempId))
+//      case ('e, Bond(ns, refAttr, _))                             => ('v, stmts :+ Add('e, s":$ns/$refAttr", 'tempId))
+      case ('e, Bond(ns, refAttr, refNs))                    => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
+
 
       case ('e, TxModel(elements)) => ('e, stmts ++ elements.foldLeft('tx: Any, Seq[Statement]()) {
         case ((eSlot1, stmts1), element1) => resolveElement(eSlot1, stmts1, element1)
@@ -67,7 +86,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('arg, Bond(ns, refAttr, _)) => ('v, stmts :+ Add('arg, s":$ns/$refAttr", 'tempId))
 
       case (e, elem) =>
-//        x(27, model, e, elem)
+        //        x(27, model, e, elem)
         //        throw new RuntimeException(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
         sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
     }
@@ -100,41 +119,43 @@ case class Model2Transaction(conn: Connection, model: Model) {
     (dataStmts0.flatten, txStmts0.flatten)
   }
 
-  def lastE(stmts: Seq[Statement]) = if (stmts.isEmpty) tempId() else stmts.last.e
+  def lastE(stmts: Seq[Statement], attr: String) = if (stmts.isEmpty) tempId(attr) else stmts.last.e
 
   def insertStmts(dataRows: Seq[Seq[Any]]): Seq[Seq[Statement]] = {
     val (dataStmts, txStmts) = splitStmts()
-    val dataStmtss: Seq[Seq[Statement]] = dataRows.map { args =>
+    val dataStmtss: Seq[Seq[Statement]] = dataRows.map {args =>
       x(30, args)
-      dataStmts.foldLeft(0, Seq[Statement]()) { case ((cur, stmts), stmt) =>
+      dataStmts.foldLeft(0, Seq[Statement]()) {case ((cur, stmts), stmt) =>
         x(31, s"$cur - $stmt")
         val arg = args.get(cur)
-        val next = if((cur + 1) < args.size) cur + 1 else cur
+        val next = if ((cur + 1) < args.size) cur + 1 else cur
         if (arg == null) {
           x(20, s"$cur - $next - $stmt")
           (next, stmts)
         } else
           stmt match {
-            case Add('tempId, a, 'tempId)                 => x(1, s"$cur - $stmt - $arg");(cur, resolveStmts(stmts, tempId(), a, tempId()))
-            case Add('arg, a, 'tempId)                    => x(2, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, arg, a, tempId()))
-            case Add('tempId, a, 'arg)                    => x(3, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId(), a, arg))
-            case Add('tempId, a, Values(EnumVal, prefix)) => x(4, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId(), a, arg, prefix))
-            case Add('tempId, a, Values(vs, prefix))      => x(5, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId(), a, vs, prefix))
-            case Add('e, a, 'arg)                         => x(6, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, lastE(stmts), a, arg))
-            case Add('e, a, 'tempId)                      => x(7, s"$cur - $stmt - $arg");(cur, resolveStmts(stmts, lastE(stmts), a, tempId()))
-            case Add('e, a, Values(EnumVal, prefix))      => x(8, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, lastE(stmts), a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))           => x(9, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
-            case Add('v, a, 'arg)                         => x(10, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, stmts.last.v, a, arg))
-            case Add('v, a, 'tempId)                      => x(11, s"$cur - $stmt - $arg");(cur, resolveStmts(stmts, stmts.last.v, a, tempId()))
-            case Add('v, a, Values(vs, prefix))           => x(12, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
-            case Add('tx, a, 'arg)                        => x(13, s"$cur - $stmt - $arg");(next, resolveStmts(stmts, tempId("tx"), a, arg))
-            case Retract(e, a, v)                         => x(14, s"$cur - $stmt - $arg");(cur, stmts)
+//            case Add('tempId, a, 'tempId)                 => x(1, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(a)))
+            case Add('tempId, a, 'arg)                    => x(3, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg))
+            case Add('tempId, a, Values(EnumVal, prefix)) => x(4, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg, prefix))
+            case Add('tempId, a, Values(vs, prefix))      => x(5, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, vs, prefix))
+            case Add('tempId, a, refNs: String)           => x(1, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(refNs)))
+            case Add('arg, a, 'tempId)                    => x(2, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, arg, a, tempId(a)))
+            case Add('e, a, 'arg)                         => x(6, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg))
+//            case Add('e, a, 'tempId)                      => x(7, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
+            case Add('e, a, refNs: String)                      => x(7, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
+            case Add('e, a, Values(EnumVal, prefix))      => x(8, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg, prefix))
+            case Add('e, a, Values(vs, prefix))           => x(9, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
+            case Add('v, a, 'arg)                         => x(10, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, arg))
+            case Add('v, a, 'tempId)                      => x(11, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, stmts.last.v, a, tempId(a)))
+            case Add('v, a, Values(vs, prefix))           => x(12, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
+            case Add('tx, a, 'arg)                        => x(13, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId("tx"), a, arg))
+            case Retract(e, a, v)                         => x(14, s"$cur - $stmt - $arg"); (cur, stmts)
             case Add(e, ref, nestedStmts: Seq[_])         =>
-              val parentId = if (e == 'parentId) tempId() else stmts.last.e
-              // Loop nested rows of data
-              val nestedInsertStmts: Seq[Statement] = nestedArgss(nestedStmts, arg).flatMap { nestedArgs =>
-                val nestedId = tempId()
-                val nestedStmts1 = nestedArgs.zip(nestedStmts).flatMap { case (nestedArg, Add(_, a, _)) =>
+              val parentId = if (e == 'parentId) tempId(ref) else stmts.last.e // todo: check that 'ref' is always in the right partition...
+            // Loop nested rows of data
+            val nestedInsertStmts: Seq[Statement] = nestedArgss(nestedStmts, arg).flatMap {nestedArgs =>
+                val nestedId = tempId(ref)
+                val nestedStmts1 = nestedArgs.zip(nestedStmts).flatMap {case (nestedArg, Add(_, a, _)) =>
                   resolveStmts(Seq(), nestedId, a, nestedArg)
                 }
                 val bondStmt = Add(parentId, ref, nestedId)
@@ -150,16 +171,17 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (stmts, Add('tx, a, Values(vs, prefix))) => resolveStmts(stmts, txId, a, vs, prefix)
       case (stmts, unexpected)                      => sys.error("[Model2Transaction:insertStmts:txStmts] Unexpected insert statement: " + unexpected)
     })
-//    x(26, model, stmtsModel, dataStmts, dataStmtss, txStmts, txStmtss, dataRows)
+    //    x(26, model, stmtsModel, dataStmts, dataStmtss, txStmts, txStmtss, dataRows)
     dataStmtss ++ txStmtss
   }
 
-  def saveStmts(): Seq[Statement] = stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+  def saveStmts(): Seq[Statement] = stmtsModel.foldLeft(0, Seq[Statement]()) {case ((i, stmts), stmt) =>
     val j = i + 1
     stmt match {
-      case Add('tempId, a, Values(vs, prefix)) => (j, resolveStmts(stmts, tempId(), a, vs, prefix))
-      case Add('e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
-      case Add('e, a, 'tempId)                 => (i, resolveStmts(stmts, lastE(stmts), a, tempId()))
+      case Add('tempId, a, Values(vs, prefix)) => (j, resolveStmts(stmts, tempId(a), a, vs, prefix))
+      case Add('e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
+      case Add('e, a, 'tempId)                 => (i, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
+      case Add('e, a, refNs: String)           => (i, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
       case Add('v, a, Values(vs, prefix))      => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
       case Retract(e, a, v)                    => (i, stmts)
       case Add(_, a, 'arg)                     => sys.error(s"[Model2Transaction:saveStmts] Attribute `$a` needs a value applied")
@@ -171,15 +193,15 @@ case class Model2Transaction(conn: Connection, model: Model) {
   def updateStmts(): Seq[Statement] = {
     val (dataStmts0, txStmts0) = splitStmts()
     x(27, model, stmtsModel)
-    val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+    val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) {case ((i, stmts), stmt) =>
       val j = i + 1
       stmt match {
-        case Add('e, a, Values(vs, prefix))     => (j, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
-        case Add('e, a, 'tempId)                => (i, resolveStmts(stmts, lastE(stmts), a, tempId()))
+        case Add('e, a, Values(vs, prefix))     => (j, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
+        case Add('e, a, 'tempId)                => (i, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
         case Add('v, a, Values(vs, prefix))     => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
         case Add('tx, a, Values(vs, prefix))    => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
         case Add(e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, e, a, vs, prefix))
-        case Retract('e, a, Values(vs, prefix)) => (j, resolveStmts(stmts, lastE(stmts), a, vs, prefix))
+        case Retract('e, a, Values(vs, prefix)) => (j, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
         case Retract(e, a, Values(vs, prefix))  => (j, resolveStmts(stmts, e, a, vs, prefix))
         case Add(_, a, 'arg)                    => sys.error(s"[Model2Transaction:updateStmts] Attribute `$a` needs a value applied")
         case unexpected                         => sys.error("[Model2Transaction:updateStmts] Unexpected update statement: " + unexpected)

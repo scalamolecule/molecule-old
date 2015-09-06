@@ -10,6 +10,7 @@ import molecule.ast.transaction.{Statement, _}
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.{Helpers, Debug}
+import dsl.Transaction
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -21,14 +22,29 @@ trait DatomicFacade {
 
   // Create database and load schema ========================================
 
-  def load(tx: java.util.List[_], identifier: String = "", protocol: String = "mem"): Connection = {
+  def load(tx: Transaction, identifier: String = "", protocol: String = "mem"): Connection = {
     val id = if (identifier == "") randomUUID() else identifier
     val uri = s"datomic:$protocol://$id"
     try {
       Peer.deleteDatabase(uri)
       Peer.createDatabase(uri)
       val conn = Peer.connect(uri)
-      conn.transact(tx).get()
+      conn.transact(tx.partitions) //.get()
+      conn.transact(tx.namespaces) //.get()
+      conn
+    } catch {
+      case e: Throwable => sys.error("@@@@@@@@@@ " + e.getCause)
+    }
+  }
+
+  def loadList(txlist: java.util.List[_], identifier: String = "", protocol: String = "mem"): Connection = {
+    val id = if (identifier == "") randomUUID() else identifier
+    val uri = s"datomic:$protocol://$id"
+    try {
+      Peer.deleteDatabase(uri)
+      Peer.createDatabase(uri)
+      val conn = Peer.connect(uri)
+      conn.transact(txlist).get()
       conn
     } catch {
       case e: Throwable => sys.error("@@@@@@@@@@ " + e.getCause)
@@ -129,7 +145,7 @@ trait DatomicFacade {
     //            x(1, transformer.stmtsModel, dataRows)
     val stmtss = transformer.insertStmts(dataRows)
     //            x(2,  stmtss)
-    //        x(2, model, transformer.stmtsModel, dataRows, stmtss)
+//            x(2, model, transformer.stmtsModel, dataRows, stmtss)
     Tx(conn, transformer, stmtss)
   }
 

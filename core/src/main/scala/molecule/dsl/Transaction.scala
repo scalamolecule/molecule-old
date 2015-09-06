@@ -1,5 +1,6 @@
 package molecule.dsl
 
 trait Transaction {
-  val tx: java.util.List[_]
+  val partitions: java.util.List[_]
+  val namespaces: java.util.List[_]
 }

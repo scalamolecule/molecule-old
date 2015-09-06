@@ -25,6 +25,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
 
+//    def refThis = tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.head.typeSymbol.name.toString
+//    def refNext = tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name.toString
     def refThis = firstLow(tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.head.typeSymbol.name.toString)
     def refNext = firstLow(tpe.baseType(weakTypeOf[Ref[_, _]].typeSymbol).typeArgs.last.typeSymbol.name.toString)
 
@@ -48,7 +50,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isManyURI = tpe <:< weakTypeOf[ManyURI[_, _]]
     override def toString = t.tpe.typeSymbol.name.toString
   }
-  def nsString(ns: String): String = ns.head.toLower + ns.tail
+//  def nsString(ns: String): String = ns.head.toLower + ns.tail
+  def nsString(ns: String): String = ns
   def nsString(ns: Tree): String = nsString(ns.symbol.name.toString)
   def nsString(ns: Name): String = nsString(ns.decodedName.toString)
 
@@ -217,7 +220,14 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     }
     override def toString = {
       val s = sym.name.toString
-      s.head.toLower + s.tail.takeWhile(_ != '_')
+      val test = s.head.toLower + s.tail.takeWhile(_ != '_')
+//      s
+//      s.split("_(\\d+|In.*)").head
+      val first = s.split("_(\\d+|In.*)").head
+      val result = first.head.toLower + first.tail
+//      x(8, s, test, result)
+      result
+//      test
     }
     def attrs = nsType.members.collect {
       case s: TermSymbol if s.isPublic                                   => new att(s)
@@ -277,6 +287,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def card = if (isMany || attrType <:< weakTypeOf[ManyEnums[_, _]]) 2 else 1
     def isValue = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[Many[_, _, _, _]] || attrType <:< weakTypeOf[OneEnum[_, _]]
     def keyw = KW(ns.toString, this.toString)
+//    override def toString = sym.name.toString
     override def toString = sym.name.toString.head.toLower + sym.name.toString.tail
     def kw = KW(ns.toString, this.toString)
     def kwS = s":$ns/$name"

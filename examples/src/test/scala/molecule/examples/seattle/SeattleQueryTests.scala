@@ -421,8 +421,6 @@ class SeattleQueryTests extends SeattleSpec {
 
   "Working with time" >> {
 
-    implicit val conn = loadFromFiles("seattle-schema1a.dtm", "seattle-data0a.dtm", 2)
-
     m(Db.txInstant) -->
       """[:find  ?b
         | :where [?a :db/txInstant ?b]]""".stripMargin
@@ -430,9 +428,6 @@ class SeattleQueryTests extends SeattleSpec {
 
 
   "Manipulating data - insert" >> {
-
-    implicit val conn = loadSeattle(3)
-
 
     /** Insert data into molecule and save ***********************************************/
 
@@ -447,8 +442,6 @@ class SeattleQueryTests extends SeattleSpec {
         .District.name("myDistrict").region("nw")
     ) -->
       //  Some things to notice:
-      //  - We start from the end of the molecule and traverse left. This allow us to create
-      //    the entities that we will subsequently refer to (#db/id[:db.part/user -1000001])
       //  - Enum values are prefixed with their namespace ("nw" becomes ":district.region/nw")
       //  - Multiple values of many-cardinality attributes each get their own statement ("my" + "favorites")
       //
@@ -509,8 +502,6 @@ class SeattleQueryTests extends SeattleSpec {
 
   "Manipulating data - update/retract" >> {
 
-    implicit val conn = loadSeattle(4)
-
     val belltownId: Long = Community.e.name_("belltown").get.head
 
 
@@ -521,8 +512,8 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).name("belltown 2").url("url 2")
     ) -->
       """List(
-        |  List(  :db/add,   17592186045650,   :community/name,   belltown 2  )
-        |  List(  :db/add,   17592186045650,   :community/url ,   url 2       )
+        |  List(  :db/add,   17592186045887,   :community/name,   belltown 2  )
+        |  List(  :db/add,   17592186045887,   :community/url ,   url 2       )
         |)""".stripMargin
 
 
@@ -533,8 +524,8 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).category("news" -> "Cool news")
     ) -->
       """List(
-        |  List(  :db/retract,   17592186045650,   :community/category,   news       )
-        |  List(  :db/add    ,   17592186045650,   :community/category,   Cool news  )
+        |  List(  :db/retract,   17592186045887,   :community/category,   news       )
+        |  List(  :db/add    ,   17592186045887,   :community/category,   Cool news  )
         |)""".stripMargin
 
 
@@ -546,10 +537,10 @@ class SeattleQueryTests extends SeattleSpec {
       )
     ) -->
       """List(
-        |  List(  :db/retract,   17592186045650,   :community/category,   Cool news          )
-        |  List(  :db/add    ,   17592186045650,   :community/category,   Super cool news    )
-        |  List(  :db/retract,   17592186045650,   :community/category,   events             )
-        |  List(  :db/add    ,   17592186045650,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045887,   :community/category,   Cool news          )
+        |  List(  :db/add    ,   17592186045887,   :community/category,   Super cool news    )
+        |  List(  :db/retract,   17592186045887,   :community/category,   events             )
+        |  List(  :db/add    ,   17592186045887,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -558,7 +549,7 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).category.add("extra category")
     ) -->
       """List(
-        |  List(  :db/add,   17592186045650,   :community/category,   extra category  )
+        |  List(  :db/add,   17592186045887,   :community/category,   extra category  )
         |)""".stripMargin
 
 
@@ -567,7 +558,7 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).category.remove("Super cool events")
     ) -->
       """List(
-        |  List(  :db/retract,   17592186045650,   :community/category,   Super cool events  )
+        |  List(  :db/retract,   17592186045887,   :community/category,   Super cool events  )
         |)""".stripMargin
 
 
@@ -579,10 +570,10 @@ class SeattleQueryTests extends SeattleSpec {
       Community(belltownId).name("belltown 3").url().category()
     ) -->
       """List(
-        |  List(  :db/add    ,   17592186045650,   :community/name    ,   belltown 3                      )
-        |  List(  :db/retract,   17592186045650,   :community/url     ,   http://www.belltownpeople.com/  )
-        |  List(  :db/retract,   17592186045650,   :community/category,   news                            )
-        |  List(  :db/retract,   17592186045650,   :community/category,   events                          )
+        |  List(  :db/add    ,   17592186045887,   :community/name    ,   belltown 3                      )
+        |  List(  :db/retract,   17592186045887,   :community/url     ,   http://www.belltownpeople.com/  )
+        |  List(  :db/retract,   17592186045887,   :community/category,   news                            )
+        |  List(  :db/retract,   17592186045887,   :community/category,   events                          )
         |)""".stripMargin
   }
 }

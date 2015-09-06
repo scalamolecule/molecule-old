@@ -12,7 +12,7 @@ object Model2Query {
 
   def apply(model: Model): Query = {
 
-    def resolve(q: Query, e: String, v: String, element: Element) = {
+    def resolve(q: Query, e: String, v: String, element: Element): Query = {
       val (v1, v2, v3) = (v + 1, v + 2, v + 3)
       element match {
 
@@ -252,7 +252,7 @@ object Model2Query {
         case transitive@Transitive(backRef, refAttr, refNs, _, _) => {
           val (backRefE, backRefV) = query.wh.clauses.reverse.collectFirst {
             case DataClause(_, backE, a, Var(backV), _, _) if a.ns == backRef => (backE.v, backV)
-          } getOrElse sys.error(s"[Model2Query:make(Transitive)] Can't find back reference `$backRef` in query so far:\n$query")
+          } getOrElse sys.error(s"[Model2Query:make(Transitive)] Can't find back reference namespace `$backRef` in query so far:\n$query")
           val backRefElement = transitive.copy(prevVar = backRefV)
           (resolve(query, backRefE, w, backRefElement), v, w, backRef, refAttr, refNs)
         }
@@ -260,7 +260,7 @@ object Model2Query {
         case rbe@ReBond(backRef, _, _, _, _) => {
           val backRefE = query.wh.clauses.reverse.collectFirst {
             case DataClause(_, backE, a, Var(backV), _, _) if a.ns == backRef => backE.v
-          } getOrElse sys.error(s"[Model2Query:make(ReBond)] Can't find back reference `$backRef` in query so far:\n$query")
+          } getOrElse sys.error(s"[Model2Query:make(ReBond)] Can't find back reference namespace `$backRef` in query so far:\n$query")
           (query, backRefE, v, backRef, "", "")
         }
 

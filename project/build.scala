@@ -30,6 +30,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     dependencies = Seq(moleculeCore),
     settings = commonSettings ++ Seq(
       definitionDirectories(
+        "coretest/src/main/scala/molecule/part",
         "coretest/src/main/scala/molecule/util"
       ),
       publish :=(),
@@ -46,7 +47,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       definitionDirectories(
         "examples/src/main/scala/molecule/examples/dayOfDatomic",
         "examples/src/main/scala/molecule/examples/seattle",
-        "examples/src/main/scala/molecule/examples/mbrainz"
+        "examples/src/main/scala/molecule/examples/mbrainz",
+        "examples/src/main/scala/molecule/examples/graph"
       ),
       publish :=(),
       publishLocal :=()
@@ -75,6 +77,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.datomic" % "datomic-free" % "0.9.5206",
       "com.chuusai" %% "shapeless" % "2.0.0",
+      "org.scalaz" %% "scalaz-core" % "7.1.3",
+      "net.liftweb" %% "lift-json" % "3.0-M6",
       "org.specs2" %% "specs2" % "2.4.11" % "test"
     ),
     // Remove Java directories

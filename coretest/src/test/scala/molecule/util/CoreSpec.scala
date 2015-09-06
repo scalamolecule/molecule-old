@@ -9,7 +9,7 @@ import molecule.util.schema.CoreTestSchema
 import org.specs2.specification.Scope
 
 class CoreSetup extends Scope with DatomicFacade {
-  implicit val conn = load(CoreTestSchema.tx)
+  implicit val conn = load(CoreTestSchema)
 }
 
 class CoreSpec extends MoleculeSpec with DatomicFacade {

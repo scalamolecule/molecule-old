@@ -13,7 +13,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
-    tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t) }"))
+    tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
 
   def traverse(prev: Tree, element: Element): Seq[Element] =
     if (prev.isAttr || prev.symbol.isMethod) resolve(prev) :+ element else Seq(element)
@@ -50,7 +50,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.v.apply(..$values)"  => traverse(q"$prev", Meta("", "", "v", AttrVar(""), modelValue("apply", null, q"Seq(..$values)")))
     case q"$prev.v_.apply(..$values)" => traverse(q"$prev", Meta("", "", "v", NoValue, modelValue("apply", null, q"Seq(..$values)")))
     case q"$prev.v"                   => traverse(q"$prev", Meta("", "", "v", AttrVar(""), NoValue))
-    case q"$prev.v_"                  => abort( s"""[Dsl2Model:dslStructure] Generic attribute value `v_` can only be used with an applied value i.e. `v_("someValue")`""")
+    case q"$prev.v_"                  => abort( s"""[Dsl2Model:dslStructure] Generic attribute value `v_` can only be used with an applied value i.e. `v_("some value")`""")
 
 
     // Tx ----------------------------------
@@ -85,10 +85,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case r@q"$prev.$backRefAttr" if backRefAttr.toString.head == '_' => traverse(q"$prev", ReBond(firstLow(backRefAttr.toString.tail), ""))
 
-    case r@q"$prev.$refAttr" if r.isRef            => traverse(q"$prev", Bond(r.refThis, r.name, r.refNext))
-    case a@q"$prev.$cur" if a.isEnum               => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
-    case a@q"$prev.$cur" if a.isValueAttr          => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
-    case a@q"$prev.$cur" if a.isRef || a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
+    //    case r@q"$prev.$refAttr" if r.isRef            => traverse(q"$prev", Bond(r.refThis, r.name, r.refNext))
+    //    case a@q"$prev.$cur" if a.isRef || a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
+    case a@q"$prev.$refAttr" if a.isRef     => traverse(q"$prev", Bond(a.refThis, firstLow(refAttr.toString), a.refNext))
+    case a@q"$prev.$refAttr" if a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
+    case a@q"$prev.$cur" if a.isEnum        => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
+    case a@q"$prev.$cur" if a.isValueAttr   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
 
 
     // Nested group ------------------------
@@ -102,14 +104,14 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.$manyRef.apply[..$types]($nested)"                   => traverse(q"$prev", nested1(prev, manyRef, nested))
 
 
-    case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other) }")
+    case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
   }
 
   def walk(prev: Tree, curNs: String, cur: Tree, thisElement: Element) = {
     val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
     val attr = cur.toString()
     x(1, prevElements, curNs, attr)
-    val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) { case (prevElement, (previous, similarAtoms, trans)) =>
+    val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) {case (prevElement, (previous, similarAtoms, trans)) =>
       prevElement match {
         // Find similar Atoms
         //        case b@Bond(ns, refAttr, refNs) if refNs == ns && clean(refAttr) == clean(attr) =>
@@ -177,7 +179,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         val (refAttr, refNs) = refPairsFiltered.head
         Bond(refNext, firstLow(refAttr), firstLow(refNs)) +: nestedElements
       } else
-        abort(s"[Dsl2Model:dslStructure(nested)] `$manyRef` has more than one ref pointing to `$nestedNs`:\n${refPairs.mkString("\n") }")
+        abort(s"[Dsl2Model:dslStructure(nested)] `$manyRef` has more than one ref pointing to `$nestedNs`:\n${refPairs.mkString("\n")}")
     } else {
       nestedElements
     }
@@ -223,7 +225,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   // Values ================================================================================
 
   def modelValue(op: String, attr: Tree, values0: Tree) = {
-    def errValue(v: Any) = abort(s"[Dsl2Model:modelValue] Unexpected resolved model value for `${attr.name }.$op`: $v")
+    def errValue(v: Any) = abort(s"[Dsl2Model:modelValue] Unexpected resolved model value for `${attr.name}.$op`: $v")
     val values = getValues(values0, attr)
     op match {
       case "apply"       => values match {
@@ -248,13 +250,13 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def getAppliedValue(attr: Tree, values0: Tree): Value = getValues(values0, attr) match {
     case resolved: Value => resolved
     case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
-    case other           => abort(s"[Dsl2Model:getAppliedModelValue] Unexpected applied value for `${attr.name }`: $other")
+    case other           => abort(s"[Dsl2Model:getAppliedModelValue] Unexpected applied value for `${attr.name}`: $other")
   }
 
   def getValues(values: Tree, attr: Tree = null): Any = {
     def aggr(fn: String, value: Option[Int] = None) = if (attr.name.last == '_')
       abort(s"[Dsl2Model:getValues] Aggregated values need to be returned. " +
-        s"Please omit underscore from attribute `:${attr.ns }/${attr.name }`")
+        s"Please omit underscore from attribute `:${attr.ns}/${attr.name}`")
     else
       Fn(fn, value)
 
@@ -317,7 +319,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         && value != "?"
         && !value.toString.startsWith("__ident__")
         && !at.enumValues.contains(value.toString)
-      ) abort(s"[Dsl2Model:validateStaticEnums] '$value' is not among available enum values of attribute ${at.kwS }:\n  " +
+      ) abort(s"[Dsl2Model:validateStaticEnums] '$value' is not among available enum values of attribute ${at.kwS}:\n  " +
         at.enumValues.sorted.mkString("\n  "))
       value
     }
@@ -345,7 +347,7 @@ object Dsl2Model {
       c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$rawElements")
 
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
-    val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) { case (element, (es, gs, v)) =>
+    val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) {case (element, (es, gs, v)) =>
       element match {
         case a: Atom if a.name != "attr" && gs.contains(NsValue) && !gs.contains(AttrVar) =>
           c.abort(c.enclosingPosition, s"[Dsl2Model:condensedElements] `ns` needs to have a generic `a` before")

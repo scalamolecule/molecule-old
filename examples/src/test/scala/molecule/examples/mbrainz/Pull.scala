@@ -11,15 +11,17 @@ import scala.language.postfixOps
 import java.util.UUID
 
 /*
-// Start Datomic transactor first:
-// /PATH/TO/datomic/datomic-pro-0.9.5078/bin/transactor /PATH/TO/mbrainz-1968-1973/dev-transactor-template.properties
-// Remember to add -Xmx2g -server to IDE compiler settings ("Additional build process VM options
-// Also, ensure the same java version is used in IDE
+  Start Datomic transactor first (replace first part of path to where you have the datomic download)
+  ~/lib/datomic/datomic-pro-0.9.5206/bin/transactor ~/lib/datomic/datomic-pro-0.9.5206/mbrainz-1968-1973/dev-transactor-template.properties
+  ~/lib/datomic/datomic-pro-0.9.5206/bin/datomic restore-db file:///Users/mg/lib/datomic/datomic-pro-0.9.5206/mbrainz-1968-1973 datomic:dev://localhost:4334/mbrainz-1968-1973
+  Remember to add -Xmx2g -server to IDE compiler settings ("Additional build process VM options)
+  Also, ensure the same java version is used in IDE
 
   See:
   http://blog.datomic.com/2014/10/datomic-pull.html
   http://docs.datomic.com/pull.html#recursive-specifications
 */
+
 class Pull extends MoleculeSpec {
 
   implicit val conn = Peer.connect("datomic:free://localhost:4334/mbrainz-1968-1973")
@@ -489,4 +491,8 @@ class Pull extends MoleculeSpec {
       "Heartbreaker / Bring It On Home",
       "Immigrant Song / Hey Hey What Can I Do")
   }
+
+//  "Recursion" >> {
+//
+//  }
 }

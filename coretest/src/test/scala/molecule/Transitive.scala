@@ -5,7 +5,7 @@ import molecule.util.schema.CoreTestSchema
 
 class Transitive extends CoreSpec {
 
-  implicit val conn = load(CoreTestSchema.tx)
+  implicit val conn = load(CoreTestSchema)
 
 
   val List(r1, r2, r3, r4) = Ref1.int1 insert List(1, 2, 3, 4) eids

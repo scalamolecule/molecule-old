@@ -14,12 +14,14 @@ trait SeattleDefinition {
   }
 
   trait Neighborhood {
-    val name     = oneString.fullTextSearch.uniqueIdentity
+    val name     = oneString
+      //.fullTextSearch.uniqueIdentity
     val district = one[District]
   }
 
   trait District {
-    val name   = oneString.fullTextSearch.uniqueIdentity
+    val name   = oneString
+      //.fullTextSearch.uniqueIdentity
     val region = oneEnum('n, 'ne, 'e, 'se, 's, 'sw, 'w, 'nw)
   }
 }

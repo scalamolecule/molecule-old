@@ -16,7 +16,7 @@
 //    // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
 //
 //    // 1-2. Make db
-//    implicit val conn = load(SocialNewsSchema.tx, "SocialNews")
+//    implicit val conn = load(SocialNewsSchema, "SocialNews")
 //
 //    // Add Stories
 //    val List(s1, s2, s3) = Story.title.url insert List(

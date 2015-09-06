@@ -29,17 +29,17 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
   }
 
   class SeattleSetup extends Scope with DatomicFacade {
-    //    implicit val conn = load(SeattleSchema.tx, "seattle")
-    implicit val conn = load(SeattleSchema.tx)
+    implicit val conn = load(SeattleSchema)
     // Insert data
     //    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData0
     Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
   }
 
   def loadSeattle(version: Int): Connection = {
-    implicit val conn = load(SeattleSchema.tx, "seattle" + version)
+    implicit val conn = load(SeattleSchema, "resources/seattle" + version)
     // Insert data
-    //    Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData0
+//        Community.name.debug
+//        Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData0
     Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region insert seattleData
 
     conn
@@ -219,14 +219,14 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
   )
 
 
-  //  // Extractor
-  //  val dataFromFile = Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region.hl.map { rec =>
-  //    rec.toList.map {
-  //      case set: Set[_] => set.map("\"" + _.toString + "\"")
-  //      case other       => "\"" + other.toString + "\""
-  //    }
-  //  }.map(e => e.mkString("\n(", ", ", ")"))
-  //  println(dataFromFile)
-  //  println()
-  //  println(seattleData.map(_._1).sorted.mkString("\n"))
+//    // Extractor
+//    val dataFromFile = Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region.hl.map { rec =>
+//      rec.toList.map {
+//        case set: Set[_] => set.map("\"" + _.toString + "\"")
+//        case other       => "\"" + other.toString + "\""
+//      }
+//    }.map(e => e.mkString("\n(", ", ", ")"))
+//    println(dataFromFile)
+//    println()
+//    println(seattleData.map(_._1).sorted.mkString("\n"))
 }
