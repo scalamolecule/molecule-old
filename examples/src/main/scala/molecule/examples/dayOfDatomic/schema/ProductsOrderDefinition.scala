@@ -23,6 +23,8 @@ trait ProductsOrderDefinition {
     val description = oneString.indexed
   }
 
+  // Some extra namespaces to explore insertion of multiple levels of nested data
+
   trait Comment {
     val text = oneString
     val descr = oneString

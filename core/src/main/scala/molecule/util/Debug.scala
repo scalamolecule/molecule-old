@@ -42,7 +42,6 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
           case l: jList[_]            => indent + "JavaList(\n" + l.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case l: Map[_, _] if max    => indent + "Map(" + l.mkString(",   ") + ")"
           case l: Map[_, _]           => indent + "Map(\n" + l.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-//          case Group2(bond, nested)   => indent + "Group2(\n" + (bond +: nested).zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case Group(bond, nested)    => indent + "Group(\n" + (bond +: nested).zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case TxModel(nested)        => indent + "TxModel(\n" + nested.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case m: Model               => indent + "Model(\n" + m.elements.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"

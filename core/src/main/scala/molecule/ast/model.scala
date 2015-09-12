@@ -5,11 +5,6 @@ object model {
   case class Model(elements: Seq[Element]) {
     override def toString = {
       val lines = elements.map {
-//        case Group2(bond, nestedElements) =>
-//          s"""|Group2(
-//              |      $bond,
-//              |      List(
-//              |        ${nestedElements.mkString(",\n        ")}))""".stripMargin
         case Group(bond, nestedElements) =>
           s"""|Group(
               |    $bond,
