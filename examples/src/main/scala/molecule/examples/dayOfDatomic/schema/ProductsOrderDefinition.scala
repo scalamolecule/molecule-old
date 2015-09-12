@@ -16,9 +16,20 @@ trait ProductsOrderDefinition {
     val product  = one[Product]
     val price    = oneDouble
     val quantity = oneInt
+    val comments = many[Comment].subComponents
   }
 
   trait Product {
     val description = oneString.indexed
+  }
+
+  trait Comment {
+    val text = oneString
+    val descr = oneString
+    val authors = many[Person].subComponents
+  }
+
+  trait Person {
+    val name = oneString
   }
 }

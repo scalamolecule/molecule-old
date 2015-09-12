@@ -98,10 +98,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
     case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
 
-    case t@q"$prev.$manyRef.*[..$types]($nested)"                       => traverse(q"$prev", nested1(prev, manyRef, nested))
-    case t@q"$prev.$ns.*[..$types]($nested)"                            => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
-    case t@q"$prev.$ns.apply[..$types]($nested)" if !q"$prev.$ns".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
-    case t@q"$prev.$manyRef.apply[..$types]($nested)"                   => traverse(q"$prev", nested1(prev, manyRef, nested))
+    //    case t@q"$prev.$ns.*[..$types]($nested)"                            => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
+    case t@q"$prev.$manyRef.*[..$types]($nested)"                                 => traverse(q"$prev", nested1(prev, manyRef, nested))
+    case t@q"$prev.$manyRef.apply[..$types]($nested)" if !q"$prev.$manyRef".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$manyRef", firstLow(manyRef.toString), nested)))
+    case t@q"$prev.$manyRef.apply[..$types]($nested)"                             => traverse(q"$prev", nested1(prev, manyRef, nested))
 
 
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
@@ -113,12 +113,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     x(1, prevElements, curNs, attr)
     val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) {case (prevElement, (previous, similarAtoms, trans)) =>
       prevElement match {
-        // Find similar Atoms
-        //        case b@Bond(ns, refAttr, refNs) if refNs == ns && clean(refAttr) == clean(attr) =>
-        //        case b@Bond(_, refAttr, refNs)=>
-        //          x(2, prev, b, attr, refAttr, ns, refNs)
-        //          (previous.init, atoms, trans)
-
         case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
           val t = previous.init.reverse.collectFirst {
             // Find first previous Bond (relating to this attribute)
@@ -133,7 +127,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
           }
           x(3, prevElements.last, prevNs, prevAttr)
           (previous.init, similarAtoms :+ prevAtom, Some(t))
-        case _                                                                                                   => (previous.init, similarAtoms, trans)
+        case _                                                                                                   =>
+          (previous.init, similarAtoms, trans)
       }
     }
 
@@ -161,7 +156,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     }
     val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nested)
     val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
-    //      x(20, parentNs, nestedElements, group, refNext, nestedNs, parentNs)
+    //          x(20, parentNs, nestedElems, group, refNext, parentNs)
     group
   }
 
@@ -335,22 +330,22 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 object Dsl2Model {
   def inst(c0: Context) = new {val c: c0.type = c0} with Dsl2Model[c0.type]
   def apply(c: Context)(dsl: c.Expr[NS]): Model = {
-    val rawElements = inst(c).resolve(dsl.tree)
+    val elements0 = inst(c).resolve(dsl.tree)
 
     // Sanity check
-    rawElements.collectFirst {
+    elements0.collectFirst {
       case a: Atom                         => a
       case b: Bond                         => b
       case g: Group                        => g
       case m@Meta(_, "txInstant", _, _, _) => m
     } getOrElse
-      c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$rawElements")
+      c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$elements0")
 
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
-    val condensedElements = rawElements.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) {case (element, (es, gs, v)) =>
+    val elements1 = elements0.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) {case (element, (es, gs, v)) =>
       element match {
         case a: Atom if a.name != "attr" && gs.contains(NsValue) && !gs.contains(AttrVar) =>
-          c.abort(c.enclosingPosition, s"[Dsl2Model:condensedElements] `ns` needs to have a generic `a` before")
+          c.abort(c.enclosingPosition, s"[Dsl2Model:apply] `ns` needs to have a generic `a` before")
 
         case a: Atom if gs.isEmpty       => (a +: es, Nil, NoValue)
         case a: Atom if a.name == "attr" => (a.copy(gs = a.gs ++ gs, value = v) +: es, Nil, NoValue)
@@ -361,9 +356,18 @@ object Dsl2Model {
       }
     }._1
 
-    val model = Model(condensedElements)
+//    def resolveGroups(e: Element, level: Int): Element = e match {
+//      case g: Group if level == 1 => Group(g.ref, g.elements.map(resolveGroups(_, 2)))
+////      case g: Group if level == 2 => Group2(g.ref, g.elements.map(resolveGroups(_, 3)))
+//      case g: Group if level > 2  => c.abort(c.enclosingPosition, "[Dsl2Model:apply] Can't nest more than 2 levels deep.")
+//      case _ => e
+//    }
+//    val elements2 = elements1.map(resolveGroups(_, 1))
+
+    val model = Model(elements1)
     //    inst(c).x(30, condensedElements)
-    //        inst(c).x(30, dsl, rawElements, condensedElements, model)
+//    inst(c).x(30, dsl, elements0, elements1, elements2, model)
+//    inst(c).x(30, dsl, elements0, elements1, model)
     model
   }
 }

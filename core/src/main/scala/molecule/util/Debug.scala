@@ -26,8 +26,8 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
         val indent = if (i == 0) "" else pad1 + i + pad2
         val max = level >= maxLevel
         x match {
-          case Add(e, a, stmts: Seq[_]) => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) +  "List(\n" +
-            stmts.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case Add(e, a, stmts: Seq[_]) => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) + "List(\n" +
+            stmts.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case Add(e, a, v)             => indent + ":db/add" + padS(13, ":db/add") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
           case Retract(e, a, v)         => indent + ":db/retract" + padS(13, ":db/retract") + e + padS(34, e.toString) + a + padS(26, a.toString) + "   " + v
 
@@ -37,14 +37,15 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
           }
 
           case l: List[_] if max      => indent + "List(" + l.mkString(",   ") + ")"
-          case l: List[_]             => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case l: List[_]             => indent + "List(\n" + l.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case l: jList[_] if max     => indent + "JavaList(" + l.mkString(",   ") + ")"
-          case l: jList[_]            => indent + "JavaList(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case l: jList[_]            => indent + "JavaList(\n" + l.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case l: Map[_, _] if max    => indent + "Map(" + l.mkString(",   ") + ")"
-          case l: Map[_, _]           => indent + "Map(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case Group(bond, nested)    => indent + "Group(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case TxModel(nested)        => indent + "TxModel(\n" + nested.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
-          case m: Model               => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case l: Map[_, _]           => indent + "Map(\n" + l.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+//          case Group2(bond, nested)   => indent + "Group2(\n" + (bond +: nested).zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case Group(bond, nested)    => indent + "Group(\n" + (bond +: nested).zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case TxModel(nested)        => indent + "TxModel(\n" + nested.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+          case m: Model               => indent + "Model(\n" + m.elements.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           case m: java.util.Map[_, _] => {
             if (m.size() == 4 && m.keys.map(_.toString).contains(":db-before")) {
               val tx = m.toList
@@ -52,11 +53,11 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
                 traverse(tx(0), level + 1, 1) + "\n" +
                 traverse(tx(1), level + 1, 2) + "\n" +
                 traverse(tx(2), level + 1, 3) + "\n" +
-                traverse(":tempids(\n" + tx(3)._2.asInstanceOf[java.util.Map[_, _]].iterator.zipWithIndex.map { case (y, j) => traverse(y, level + 2, j + 1)}.mkString("\n") + "))", level + 1, 4)
+                traverse(":tempids(\n" + tx(3)._2.asInstanceOf[java.util.Map[_, _]].iterator.zipWithIndex.map {case (y, j) => traverse(y, level + 2, j + 1)}.mkString("\n") + "))", level + 1, 4)
             } else if (max)
               indent + "JavaMap(" + m.iterator.mkString(",   ") + ")"
             else
-              indent + "JavaMap(\n" + m.iterator.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
+              indent + "JavaMap(\n" + m.iterator.zipWithIndex.map {case (y, j) => traverse(y, level + 1, j + 1)}.mkString("\n") + ")"
           }
 
           case (a, b) => {
@@ -86,7 +87,7 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
       }
 
       println(s"## $id: $clazz \n========================================================================\n" +
-        params.toList.zipWithIndex.map { case (e, i) => traverse(e, 0, i + 1)}
+        params.toList.zipWithIndex.map {case (e, i) => traverse(e, 0, i + 1)}
           .mkString("\n------------------------------------------------\n") +
         s"\n========================================================================\n$stackTrace")
     }

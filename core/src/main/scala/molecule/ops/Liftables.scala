@@ -177,9 +177,38 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftReBond     = Liftable[ReBond] { r => q"ReBond(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.distinct}, ${r.prevVar})"}
   implicit val liftTransitive = Liftable[Transitive] { r => q"Transitive(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.depth}, ${r.prevVar})"}
   implicit val liftMeta       = Liftable[Meta] { m => q"Meta(${m.ns}, ${m.attr}, ${m.kind}, ${m.generic}, ${m.value})"}
-  implicit val liftGroup      = Liftable[Group] { g =>
-    val es = g.elements map { case q"$e" => e}
-    q"Group(${g.ref}, Seq(..$es))"
+  //  implicit val liftGroup2     = Liftable[Group2] { g =>
+  //    val es = g.elements map {
+  ////      case a: Atom => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))"
+  //      case a: Atom => q"$a"
+  //      case q"$e" => e
+  //    }
+  //    q"Group2(${g.ref}, Seq(..$es))"
+  //  }
+  implicit val liftGroup      = Liftable[Group] { g0 =>
+    val es0 = g0.elements map {
+      case a: Atom       => q"$a"
+      case b: Bond       => q"$b"
+      case r: ReBond     => q"$r"
+      case r: Transitive => q"$r"
+      case m: Meta       => q"$m"
+      case g1: Group     => {
+        val es1 = g1.elements map {
+          case a: Atom       => q"$a"
+          case b: Bond       => q"$b"
+          case r: ReBond     => q"$r"
+          case r: Transitive => q"$r"
+          case m: Meta       => q"$m"
+//          case g: Group      =>
+        }
+        q"Group(${g1.ref}, Seq(..$es1))"
+      }
+//      q"Group(${g0.ref}, Seq(..$es0))"
+//      case g: Group      => abort(s"[Liftables:liftGroup] Can't lift another group: $g")
+//      case t: TxModel    => q"$t"
+//      case q"$e" => e
+    }
+    q"Group(${g0.ref}, Seq(..$es0))"
   }
   implicit val liftTxModel    = Liftable[TxModel] { g =>
     val es = g.elements map { case q"$e" => e}
@@ -192,6 +221,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
       case b: Bond       => q"$b"
       case r: ReBond     => q"$r"
       case r: Transitive => q"$r"
+//      case g: Group2     => q"$g"
       case g: Group      => q"$g"
       case m: Meta       => q"$m"
       case t: TxModel    => q"$t"
@@ -204,6 +234,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Bond(ns, refAttr, refNs)                            => q"Bond($ns, $refAttr, $refNs)"
     case ReBond(backRef, refAttr, refNs, distinct, prevVar)  => q"ReBond($backRef, $refAttr, $refNs, $distinct, $prevVar)"
     case Transitive(backRef, refAttr, refNs, level, prevVar) => q"Transitive($backRef, $refAttr, $refNs, $level, $prevVar)"
+//    case Group2(ref, elements)                               => q"Group2($ref, $elements)"
     case Group(ref, elements)                                => q"Group($ref, $elements)"
     case Meta(ns, attr, kind, generic, value)                => q"Meta($ns, $attr, $kind, $generic, $value)"
     case TxModel(elements)                                   => q"TxModel($elements)"

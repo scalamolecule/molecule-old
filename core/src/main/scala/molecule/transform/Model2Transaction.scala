@@ -11,24 +11,24 @@ import scala.collection.JavaConversions._
 
 
 case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 33, 33, false, 6)
+  val x = Debug("Model2Transaction", 40, 40, false, 6)
 
-//  println(model)
+  //  println(model)
 
   //  private def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
   private def tempId(attr: String) = {
-//      println(attr)
-//      println(attr.substring(1).split("(?=_)").head)
-//      println("---------")
-      val first = attr.split("_(\\d+|In.*)").head
+    //      println(attr)
+    //      println(attr.substring(1).split("(?=_)").head)
+    //      println("---------")
+    val first = attr.split("_(\\d+|In.*)").head
 
-      attr match {
-        case "tx"                     => Peer.tempid(s":db.part/tx")
-        case s if s.contains('_') => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
-//        case s if s.tail.head.isLower => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
-        case _                        => Peer.tempid(s":db.part/user")
-      }
+    attr match {
+      case "tx"                 => Peer.tempid(s":db.part/tx")
+      case s if s.contains('_') => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
+      //        case s if s.tail.head.isLower => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
+      case _ => Peer.tempid(s":db.part/user")
     }
+  }
 
 
   private def getValues1(db: Database, id: Any, attr: String) = {
@@ -45,8 +45,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('_, Meta(ns, "", "e", _, Eq(Seq(id: Long)))) => (Eid(id), stmts)
       case ('_, Atom(ns, name, _, _, VarValue, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
       case ('_, Atom(ns, name, _, _, value, prefix, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
-      case ('_, Bond(ns, refAttr, refNs))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", s":$refNs"))
-//      case ('_, Bond(ns, refAttr, _))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
+      case ('_, Bond(ns, refAttr, refNs))                => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", s":$refNs"))
+      //      case ('_, Bond(ns, refAttr, _))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
 
       case (e, Group(Bond(ns, refAttr, _), elements)) =>
         val nested = elements.foldLeft('v: Any, Seq[Statement]()) {
@@ -63,8 +63,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('e, Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
       case ('e, Atom(ns, name, _, _, VarValue, _, _))             => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
       case ('e, Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
-//      case ('e, Bond(ns, refAttr, _))                             => ('v, stmts :+ Add('e, s":$ns/$refAttr", 'tempId))
-      case ('e, Bond(ns, refAttr, refNs))                    => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
+      //      case ('e, Bond(ns, refAttr, _))                             => ('v, stmts :+ Add('e, s":$ns/$refAttr", 'tempId))
+      case ('e, Bond(ns, refAttr, refNs)) => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
 
 
       case ('e, TxModel(elements)) => ('e, stmts ++ elements.foldLeft('tx: Any, Seq[Statement]()) {
@@ -125,44 +125,54 @@ case class Model2Transaction(conn: Connection, model: Model) {
     val (dataStmts, txStmts) = splitStmts()
     val dataStmtss: Seq[Seq[Statement]] = dataRows.map {args =>
       x(30, args)
-      dataStmts.foldLeft(0, Seq[Statement]()) {case ((cur, stmts), stmt) =>
-        x(31, s"$cur - $stmt")
+      dataStmts.foldLeft(0, Seq[Statement]()) {case ((cur, stmts), dataStmt) =>
+        x(31, s"$cur - $dataStmt")
         val arg = args.get(cur)
         val next = if ((cur + 1) < args.size) cur + 1 else cur
         if (arg == null) {
-          x(20, s"$cur - $next - $stmt")
+          x(20, s"$cur - $next - $dataStmt")
           (next, stmts)
         } else
-          stmt match {
-//            case Add('tempId, a, 'tempId)                 => x(1, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(a)))
-            case Add('tempId, a, 'arg)                    => x(3, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg))
-            case Add('tempId, a, Values(EnumVal, prefix)) => x(4, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg, prefix))
-            case Add('tempId, a, Values(vs, prefix))      => x(5, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, vs, prefix))
-            case Add('tempId, a, refNs: String)           => x(1, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(refNs)))
-            case Add('arg, a, 'tempId)                    => x(2, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, arg, a, tempId(a)))
-            case Add('e, a, 'arg)                         => x(6, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg))
-//            case Add('e, a, 'tempId)                      => x(7, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
-            case Add('e, a, refNs: String)                      => x(7, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
-            case Add('e, a, Values(EnumVal, prefix))      => x(8, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))           => x(9, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
-            case Add('v, a, 'arg)                         => x(10, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, arg))
-            case Add('v, a, 'tempId)                      => x(11, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, stmts.last.v, a, tempId(a)))
-            case Add('v, a, Values(vs, prefix))           => x(12, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
-            case Add('tx, a, 'arg)                        => x(13, s"$cur - $stmt - $arg"); (next, resolveStmts(stmts, tempId("tx"), a, arg))
-            case Retract(e, a, v)                         => x(14, s"$cur - $stmt - $arg"); (cur, stmts)
-            case Add(e, ref, nestedStmts: Seq[_])         =>
-              val parentId = if (e == 'parentId) tempId(ref) else stmts.last.e // todo: check that 'ref' is always in the right partition...
-            // Loop nested rows of data
-            val nestedInsertStmts: Seq[Statement] = nestedArgss(nestedStmts, arg).flatMap {nestedArgs =>
-                val nestedId = tempId(ref)
-                val nestedStmts1 = nestedArgs.zip(nestedStmts).flatMap {case (nestedArg, Add(_, a, _)) =>
-                  resolveStmts(Seq(), nestedId, a, nestedArg)
+          dataStmt match {
+            case Add('tempId, a, 'arg)                    => x(1, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg))
+            case Add('tempId, a, Values(EnumVal, prefix)) => x(2, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg, prefix))
+            case Add('tempId, a, Values(vs, prefix))      => x(3, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, vs, prefix))
+            case Add('tempId, a, refNs: String)           => x(4, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(refNs)))
+            case Add('arg, a, 'tempId)                    => x(5, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, arg, a, tempId(a)))
+            case Add('e, a, 'arg)                         => x(6, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg))
+            case Add('e, a, refNs: String)                => x(7, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
+            case Add('e, a, Values(EnumVal, prefix))      => x(8, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg, prefix))
+            case Add('e, a, Values(vs, prefix))           => x(9, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
+            case Add('v, a, 'arg)                         => x(10, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, arg))
+            case Add('v, a, 'tempId)                      => x(11, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, stmts.last.v, a, tempId(a)))
+            case Add('v, a, Values(vs, prefix))           => x(12, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
+            case Add('tx, a, 'arg)                        => x(13, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId("tx"), a, arg))
+            case Retract(e, a, v)                         => x(14, s"$cur - $dataStmt - $arg"); (cur, stmts)
+            case Add(e0, ref0, nestedStmts0: Seq[_])      => {
+              x(15, e0, ref0, nestedStmts0, cur, dataStmt, arg)
+              def resolveNested(e: Any, ref: String, nestedStmts: Seq[Any], arg1: Any, lastE: Any): Seq[Statement] = {
+                if (arg1 == Nil) {
+                  Nil
+                } else {
+                  val parentId = if (e == 'parentId) tempId(ref) else lastE // todo: check that 'ref' is always in the right partition...
+                  nestedArgss(nestedStmts, arg1).flatMap {nestedArgs =>
+                    val nestedId = tempId(ref)
+                    val bondStmt = Add(parentId, ref, nestedId)
+                    val nestedStmts1 = nestedArgs.zip(nestedStmts).flatMap {
+                      case (nestedArg, Add(e1, ref1, nestedStmts1: Seq[_])) => resolveNested(nestedId, ref1, nestedStmts1, nestedArg, nestedId)
+                      case (null, _)                                        => Nil
+                      case (nestedArg, Add(_, a, _))                        => resolveStmts(Seq(), nestedId, a, nestedArg)
+                    }
+                    bondStmt +: nestedStmts1
+                  }
                 }
-                val bondStmt = Add(parentId, ref, nestedId)
-                bondStmt +: nestedStmts1
               }
+              val nestedInsertStmts: Seq[Statement] = resolveNested(e0, ref0, nestedStmts0, arg, stmts.last.e)
               (next, stmts ++ nestedInsertStmts)
+            }
             case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
+            //            case Add('tempId, a, 'tempId)                 => x(1, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(a)))
+            //            case Add('e, a, 'tempId)                      => x(7, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
           }
       }._2
     }
@@ -171,7 +181,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (stmts, Add('tx, a, Values(vs, prefix))) => resolveStmts(stmts, txId, a, vs, prefix)
       case (stmts, unexpected)                      => sys.error("[Model2Transaction:insertStmts:txStmts] Unexpected insert statement: " + unexpected)
     })
-    //    x(26, model, stmtsModel, dataStmts, dataStmtss, txStmts, txStmtss, dataRows)
+    x(26, model, stmtsModel, dataStmts, dataStmtss, txStmts, txStmtss, dataRows)
     dataStmtss ++ txStmtss
   }
 
@@ -217,21 +227,22 @@ case class Model2Transaction(conn: Connection, model: Model) {
   }
 
 
-  private def nestedArgss(stmts: Seq[Any], data0: Any): Seq[Seq[Any]] = {
-    val (dataArity, data) = data0 match {
-      case d: Seq[_]  => d.head match {
-        case p: Product => (p.productArity, d)
-        case l: Seq[_]  => (l.size, d)
-        case _          => (1, d)
+  private def nestedArgss(stmts: Seq[Any], arg0: Any): Seq[Seq[Any]] = {
+    val (argArity, arg) = arg0 match {
+      case a: Seq[_]  => a.head match {
+        case p: Product => (p.productArity, a)
+        case l: Seq[_]  => (l.size, a)
+        case null       => sys.error("[Model2Transaction:nestedData] Please use `List()` instead of `List(null)` for missing nested values.")
+        case _          => (1, a)
       }
       case unexpected => sys.error("[Model2Transaction:nestedData] Unexpected data: " + unexpected)
     }
-    assert(dataArity == stmts.size, s"[Model2Transaction:nestedData] Arity of statements and arguments should match. Found: \n" +
+    assert(argArity == stmts.size, s"[Model2Transaction:nestedData] Arity of statements and arguments should match. Found: \n" +
       s"Statements (arity ${stmts.size}): " + stmts.mkString("\n  ", "\n  ", "\n") +
-      s"Argumewnts (arity $dataArity): " + data.mkString("\n  ", "\n  ", "\n"))
+      s"Argumewnts (arity $argArity): " + arg.mkString("\n  ", "\n  ", "\n"))
 
     // Todo: can we convert tuples more elegantly?
-    data map {
+    arg map {
       case t: (_, _)                                                             => Seq(t._1, t._2)
       case t: (_, _, _)                                                          => Seq(t._1, t._2, t._3)
       case t: (_, _, _, _)                                                       => Seq(t._1, t._2, t._3, t._4)
@@ -254,7 +265,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)    => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21)
       case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21, t._22)
       case l: Seq[_]                                                             => l
-      case d                                                                     => Seq(d)
+      case a                                                                     => Seq(a)
     }
   }
 }

@@ -203,14 +203,10 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
     ids.toList
   }
 
+  def eidSet = eids.toSet
   def eid = eids.head
   def db = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
   def t = db.basisT()
   def tx = db.entity(Peer.toTx(t))
   def inst: Date = tx.get(":db/txInstant").asInstanceOf[Date]
 }
-
-
-// From Datomisca...
-
-
