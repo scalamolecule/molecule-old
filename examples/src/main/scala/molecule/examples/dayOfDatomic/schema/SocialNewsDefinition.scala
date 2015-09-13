@@ -5,7 +5,7 @@ import molecule.dsl.schemaDefinition._
 
 
 @InOut(2, 5)
-trait SocialNewsDefinition {
+object SocialNewsDefinition {
 
   trait Story {
     val title = oneString.fullTextSearch.indexed

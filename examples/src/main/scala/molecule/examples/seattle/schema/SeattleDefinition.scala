@@ -2,7 +2,7 @@ package molecule.examples.seattle.schema
 import molecule.dsl.schemaDefinition._
 
 @InOut(3, 8)
-trait SeattleDefinition {
+object SeattleDefinition {
 
   trait Community {
     val name         = oneString.fullTextSearch

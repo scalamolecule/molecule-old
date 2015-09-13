@@ -3,7 +3,7 @@ package molecule.examples.mbrainz.schema
 import molecule.dsl.schemaDefinition._
 
 @InOut(3, 8)
-trait MBrainzDefinition {
+object MBrainzDefinition {
 
   trait AbstractRelease {
     val name         = oneString

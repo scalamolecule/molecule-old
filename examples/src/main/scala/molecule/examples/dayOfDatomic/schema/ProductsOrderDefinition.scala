@@ -5,7 +5,7 @@ import molecule.dsl.schemaDefinition._
 // See: http://blog.datomic.com/2013/06/component-entities.html
 
 @InOut(0, 5)
-trait ProductsOrderDefinition {
+object ProductsOrderDefinition {
 
   trait Order {
     val orderid   = oneInt

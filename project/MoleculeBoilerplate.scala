@@ -2,9 +2,7 @@ import java.io.File
 
 import sbt._
 
-
 // Generate molecule dsl from definition files
-
 
 object MoleculeBoilerplate {
 
@@ -79,12 +77,12 @@ object MoleculeBoilerplate {
 
     // Check domain name
     val domain = raw collect {
-      case r"trait (.*)${name}Definition"      => name
-      case r"trait (.*)${name}Definition \{"   => name
-      case r"trait (.*)${name}Definition \{\}" => name
+      case r"object (.*)${name}Definition"      => name
+      case r"object (.*)${name}Definition \{"   => name
+      case r"object (.*)${name}Definition \{\}" => name
     } match {
-      case Nil                      => sys.error("Couldn't find definition trait <domain>Definition in " + defFile.getName)
-      case l: List[_] if l.size > 1 => sys.error(s"Only one definition trait per definition file allowed. Found ${l.size}:" + l.mkString("\n - ", "Definition\n - ", "Definition"))
+      case Nil                      => sys.error("Couldn't find definition object <domain>Definition in " + defFile.getName)
+      case l: List[_] if l.size > 1 => sys.error(s"Only one definition object per definition file allowed. Found ${l.size}:" + l.mkString("\n - ", "Definition\n - ", "Definition"))
       case domainNameList           => firstLow(domainNameList.head)
     }
 
@@ -132,11 +130,13 @@ object MoleculeBoilerplate {
       case r"oneEnum\((.*)$enums\)"  => Enum(attr, attrClean, "OneEnum", "String", "", enums.replaceAll("'", "").split(",").toList.map(_.trim))
       case r"manyEnum\((.*)$enums\)" => Enum(attr, attrClean, "ManyEnums", "Set[String]", "String", enums.replaceAll("'", "").split(",").toList.map(_.trim))
 
-      case r"one\[([a-z].*)$partref\](.*)$str" => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
-      case r"one\[(.*)$ref\](.*)$str"          => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", ref)
-      case r"many\[(.*)$partref\](.*)$str"     => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
-      case r"many\[([a-z].*)$ref\](.*)$str"    => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ref)
-      case unexpected                          => sys.error(s"Unexpected attribute code in ${defFile.getName}:\n" + unexpected)
+      case r"one\[\w*Definition\.([a-z].*)$partref\](.*)$str"  => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
+      case r"one\[([a-z].*)$partref\](.*)$str"                 => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
+      case r"one\[(.*)$ref\](.*)$str"                          => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", ref)
+      case r"many\[\w*Definition\.([a-z].*)$partref\](.*)$str" => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
+      case r"many\[([a-z].*)$partref\](.*)$str"                => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
+      case r"many\[(.*)$ref\](.*)$str"                         => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ref)
+      case unexpected                                          => sys.error(s"Unexpected attribute code in ${defFile.getName}:\n" + unexpected)
     }
 
     val definition: Definition = raw.foldLeft(Definition("", Seq(), -1, -1, "", "", Seq())) {
@@ -145,7 +145,7 @@ object MoleculeBoilerplate {
         case r"package (.*)$path\.[\w]*"                      => d.copy(pkg = path)
         case "import molecule.dsl.schemaDefinition._"         => d
         case r"@InOut\((\d+)$inS, (\d+)$outS\)"               => d.copy(in = inS.toString.toInt, out = outS.toString.toInt)
-        case r"trait (.*)${dmn}Definition \{"                 => d.copy(domain = dmn)
+        case r"object (.*)${dmn}Definition \{"                => d.copy(domain = dmn)
         case r"object ([a-z]*)$part\s*\{"                     => d.copy(part = part)
         case r"object (\w*)$part\s*\{"                        => sys.error(s"Unexpected partition name '$part' in ${defFile.getName}. Only small letters (a-z) allowed in a partition name.")
         case r"trait ([A-Z]\w*)$ns\s*\{"                      => {
@@ -153,11 +153,10 @@ object MoleculeBoilerplate {
           // prepend partition to its namespaces!
           d.copy(nss = d.nss :+ Namespace(d.part, partns))
         }
-        case r"trait (\w*)$ns\s*\{"                           => sys.error(s"Unexpected namespace name '$ns' in ${defFile.getName}. Namespaces have to start with a capital letter (A-Z).")
+        case r"trait (\w*)$ns\s*\{"                           => sys.error(s"Unexpected namespace name '$ns' in ${defFile.getName}. Namespaces have to start with a capital letter [A-Z].")
         case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$str" => d.addAttr(parseAttr(q1 + a + q2, a, str))
         case "}"                                              => d
-        //        case r"trait (\w*)$ns\s*\{"                           => d.copy(nss = d.nss :+ Namespace(d.part, d.part + ns)) // prepend partition to its namespaces!
-        case unexpected => sys.error(s"Unexpected definition code in ${defFile.getName}:\n" + unexpected)
+        case unexpected                                       => sys.error(s"Unexpected definition code in ${defFile.getName}:\n" + unexpected)
       }
     }
 
@@ -217,7 +216,7 @@ object MoleculeBoilerplate {
       val partition = if (part.isEmpty) ":db.part/user" else s":$part"
       es.map(e =>
         s"""Util.map(":db/id", Peer.tempid("$partition"), ":db/ident", ":${firstLow(ns)}.$a/$e")""").mkString(",\n    ")
-//            s"""Util.map(":db/id", Peer.tempid(":db.part/$part"), ":db/ident", ":${firstLow(ns)}.$a/$e")""").mkString(",\n    ")
+      //            s"""Util.map(":db/id", Peer.tempid(":db.part/$part"), ":db/ident", ":${firstLow(ns)}.$a/$e")""").mkString(",\n    ")
     }
 
     val partitions = {
@@ -226,7 +225,7 @@ object MoleculeBoilerplate {
             |             ":db/id"                , Peer.tempid(":db.part/db"),
             |             ":db.install/_partition", ":db.part/db")""".stripMargin
       }
-      if(ps.nonEmpty) {
+      if (ps.nonEmpty) {
         s"""|
             |  lazy val partitions = Util.list(
             |
@@ -321,11 +320,11 @@ object MoleculeBoilerplate {
         val p2 = padS(maxAttr, attrClean)
         val t1 = s"$attr$p1[$nextNS, $nextIn] with $nextNS"
         val xx = a match {
-//          case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":$ns/$attr" }"""
-//          case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":$ns/$attr" }"""
-                    case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
-                    case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
-          case _ => s"""lazy val $attr  $p1: $t1 = ???"""
+          //          case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":$ns/$attr" }"""
+          //          case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":$ns/$attr" }"""
+          case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
+          case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
+          case _                                     => s"""lazy val $attr  $p1: $t1 = ???"""
         }
         Some((xx, s"lazy val ${attrClean}_ $p2: $attr$p1[$thisNS, $thisIn] with $thisNS = ???"))
     }.unzip

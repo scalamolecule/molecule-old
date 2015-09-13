@@ -3,7 +3,7 @@ package molecule.examples.dayOfDatomic.schema
 import molecule.dsl.schemaDefinition._
 
 @InOut(0, 5)
-trait AggregatesDefinition {
+object AggregatesDefinition {
 
   trait Obj {
     val name       = oneString.indexed.doc("Name of a Solar System object.")

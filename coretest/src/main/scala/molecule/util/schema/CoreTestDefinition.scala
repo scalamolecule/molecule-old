@@ -3,7 +3,7 @@ package molecule.util.schema
 import molecule.dsl.schemaDefinition._
 
 @InOut(3, 22)
-trait CoreTestDefinition {
+object CoreTestDefinition {
 
   trait Ns {
     val str     = oneString.fullTextSearch

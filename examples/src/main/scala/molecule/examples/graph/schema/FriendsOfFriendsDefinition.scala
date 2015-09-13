@@ -4,7 +4,7 @@ import molecule.dsl.schemaDefinition._
 
 
 @InOut(0, 4)
-trait FriendsOfFriendsDefinition {
+object FriendsOfFriendsDefinition {
 
   trait Person {
     val name    = oneString
