@@ -8,7 +8,7 @@ object MoleculeBoilerplate {
 
   // Definition AST .......................................
 
-  case class Definition(pkg: String, imports: Seq[String], in: Int, out: Int, domain: String, part: String, nss: Seq[Namespace]) {
+  case class Definition(pkg: String, imports: Seq[String], in: Int, out: Int, domain: String, curPart: String, nss: Seq[Namespace]) {
     def addAttr(attr: Attr) = {
       val previousNs = nss.init
       val lastNs = nss.last
@@ -104,7 +104,7 @@ object MoleculeBoilerplate {
       if (allIndexed) (options :+ indexed).distinct else options
     }
 
-    def parseAttr(attr: String, attrClean: String, str: String) = str match {
+    def parseAttr(attr: String, attrClean: String, str: String, curPart: String) = str match {
       case r"oneString(.*)$str"  => Val(attr, attrClean, "OneString", "String", "", "string", parseOptions(str))
       case r"oneByte(.*)$str"    => Val(attr, attrClean, "OneByte", "Byte", "", "byte", parseOptions(str))
       case r"oneShort(.*)$str"   => Val(attr, attrClean, "OneShort", "Short", "", "short", parseOptions(str))
@@ -132,10 +132,10 @@ object MoleculeBoilerplate {
 
       case r"one\[\w*Definition\.([a-z].*)$partref\](.*)$str"  => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
       case r"one\[([a-z].*)$partref\](.*)$str"                 => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
-      case r"one\[(.*)$ref\](.*)$str"                          => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", ref)
+      case r"one\[(.*)$ref\](.*)$str"                          => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", curPart + "_" + ref)
       case r"many\[\w*Definition\.([a-z].*)$partref\](.*)$str" => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
       case r"many\[([a-z].*)$partref\](.*)$str"                => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
-      case r"many\[(.*)$ref\](.*)$str"                         => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ref)
+      case r"many\[(.*)$ref\](.*)$str"                         => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", curPart + "_" + ref)
       case unexpected                                          => sys.error(s"Unexpected attribute code in ${defFile.getName}:\n" + unexpected)
     }
 
@@ -146,15 +146,15 @@ object MoleculeBoilerplate {
         case "import molecule.dsl.schemaDefinition._"         => d
         case r"@InOut\((\d+)$inS, (\d+)$outS\)"               => d.copy(in = inS.toString.toInt, out = outS.toString.toInt)
         case r"object (.*)${dmn}Definition \{"                => d.copy(domain = dmn)
-        case r"object ([a-z]*)$part\s*\{"                     => d.copy(part = part)
+        case r"object ([a-z]*)$part\s*\{"                     => d.copy(curPart = part)
         case r"object (\w*)$part\s*\{"                        => sys.error(s"Unexpected partition name '$part' in ${defFile.getName}. Only small letters (a-z) allowed in a partition name.")
         case r"trait ([A-Z]\w*)$ns\s*\{"                      => {
-          val partns = if (d.part.isEmpty) ns else d.part + "_" + ns
-          // prepend partition to its namespaces!
-          d.copy(nss = d.nss :+ Namespace(d.part, partns))
+          val partns = if (d.curPart.isEmpty) ns else d.curPart + "_" + ns
+          // prepend partition to its namespaces
+          d.copy(nss = d.nss :+ Namespace(d.curPart, partns))
         }
         case r"trait (\w*)$ns\s*\{"                           => sys.error(s"Unexpected namespace name '$ns' in ${defFile.getName}. Namespaces have to start with a capital letter [A-Z].")
-        case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$str" => d.addAttr(parseAttr(q1 + a + q2, a, str))
+        case r"val\s*(\`?)$q1(\w*)$a(\`?)$q2\s*\=\s*(.*)$str" => d.addAttr(parseAttr(q1 + a + q2, a, str, d.curPart))
         case "}"                                              => d
         case unexpected                                       => sys.error(s"Unexpected definition code in ${defFile.getName}:\n" + unexpected)
       }
