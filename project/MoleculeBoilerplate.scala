@@ -132,9 +132,11 @@ object MoleculeBoilerplate {
 
       case r"one\[\w*Definition\.([a-z].*)$partref\](.*)$str"  => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
       case r"one\[([a-z].*)$partref\](.*)$str"                 => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
+      case r"one\[(.*)$ref\](.*)$str" if curPart.isEmpty       => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", ref)
       case r"one\[(.*)$ref\](.*)$str"                          => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", curPart + "_" + ref)
       case r"many\[\w*Definition\.([a-z].*)$partref\](.*)$str" => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
       case r"many\[([a-z].*)$partref\](.*)$str"                => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
+      case r"many\[(.*)$ref\](.*)$str" if curPart.isEmpty      => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ref)
       case r"many\[(.*)$ref\](.*)$str"                         => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", curPart + "_" + ref)
       case unexpected                                          => sys.error(s"Unexpected attribute code in ${defFile.getName}:\n" + unexpected)
     }
@@ -320,8 +322,6 @@ object MoleculeBoilerplate {
         val p2 = padS(maxAttr, attrClean)
         val t1 = s"$attr$p1[$nextNS, $nextIn] with $nextNS"
         val xx = a match {
-          //          case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":$ns/$attr" }"""
-          //          case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":$ns/$attr" }"""
           case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
           case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
           case _                                     => s"""lazy val $attr  $p1: $t1 = ???"""
@@ -341,9 +341,10 @@ object MoleculeBoilerplate {
         val p2 = padS("ManyRef".length, clazz2)
         val p3 = padS(maxRefNs.max, refNs)
         val ref = (in, out) match {
-          case (0, 0) => s"${refNs}_0$p3"
-          case (0, o) => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
-          case (i, o) => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
+          case (0, 0)                => s"${refNs}_0$p3"
+          case (0, o) if o == maxOut => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
+          case (0, o)                => s"${refNs}_$o$p3[${OutTypes mkString ", "}] with Nested$o[${refNs}_$o$p3, ${refNs}_${o + 1}$p3, ${OutTypes mkString ", "}]"
+          case (i, o)                => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
         }
         acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
       }

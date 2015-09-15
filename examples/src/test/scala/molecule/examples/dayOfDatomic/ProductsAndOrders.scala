@@ -21,6 +21,7 @@ class ProductsAndOrders extends MoleculeSpec {
     // Insert nested data .................................
 
     // Template for Order with multiple LineItems
+    //    val order0 = m(Order.orderid * LineItem.product.price.quantity)
     val order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
 
     // Make order with two line items and return created entity id
@@ -30,6 +31,7 @@ class ProductsAndOrders extends MoleculeSpec {
     Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId
 
 
+    //    def LineItems  : ManyRef[Order, LineItem] with LineItem_1[A] with Group1[LineItem_1, LineItem_2, A] = ???
     // Touch entity ................................
 
     // Get all attributes/values of this entity. Sub-component values are recursively retrieved
