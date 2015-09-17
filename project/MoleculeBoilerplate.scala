@@ -341,7 +341,7 @@ object MoleculeBoilerplate {
         val p2 = padS("ManyRef".length, clazz2)
         val p3 = padS(maxRefNs.max, refNs)
         val ref = (in, out) match {
-          case (0, 0)                => s"${refNs}_0$p3"
+          case (0, 0)                => s"${refNs}_0$p3 with Nested0[${refNs}_0$p3, ${refNs}_1$p3]"
           case (0, o) if o == maxOut => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
           case (0, o)                => s"${refNs}_$o$p3[${OutTypes mkString ", "}] with Nested$o[${refNs}_$o$p3, ${refNs}_${o + 1}$p3, ${OutTypes mkString ", "}]"
           case (i, o)                => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"

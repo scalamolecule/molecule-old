@@ -11,25 +11,13 @@ import scala.collection.JavaConversions._
 
 
 case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 40, 40, false, 6)
+  val x = Debug("Model2Transaction", 50, 21, false, 6)
 
-  //  println(model)
-
-  //  private def tempId(partition: String = "user") = Peer.tempid(s":db.part/$partition")
-  private def tempId(attr: String) = {
-    //      println(attr)
-    //      println(attr.substring(1).split("(?=_)").head)
-    //      println("---------")
-    val first = attr.split("_(\\d+|In.*)").head
-
-    attr match {
-      case "tx"                 => Peer.tempid(s":db.part/tx")
-      case s if s.contains('_') => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
-      //        case s if s.tail.head.isLower => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
-      case _ => Peer.tempid(s":db.part/user")
-    }
+  private def tempId(attr: String) = attr match {
+    case "tx"                 => Peer.tempid(s":db.part/tx")
+    case s if s.contains('_') => Peer.tempid(s":" + attr.substring(1).split("(?=_)").head) // extract "partition" from ":partition_Namespace/attr"
+    case _                    => Peer.tempid(s":db.part/user")
   }
-
 
   private def getValues1(db: Database, id: Any, attr: String) = {
     val query = s"[:find ?values :in $$ ?id :where [?id $attr ?values]]"
@@ -167,12 +155,11 @@ case class Model2Transaction(conn: Connection, model: Model) {
                   }
                 }
               }
-              val nestedInsertStmts: Seq[Statement] = resolveNested(e0, ref0, nestedStmts0, arg, stmts.last.e)
+              val lastE = if (stmts.isEmpty) e0 else stmts.last.e
+              val nestedInsertStmts: Seq[Statement] = resolveNested(e0, ref0, nestedStmts0, arg, lastE)
               (next, stmts ++ nestedInsertStmts)
             }
             case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
-            //            case Add('tempId, a, 'tempId)                 => x(1, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(a)))
-            //            case Add('e, a, 'tempId)                      => x(7, s"$cur - $stmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
           }
       }._2
     }

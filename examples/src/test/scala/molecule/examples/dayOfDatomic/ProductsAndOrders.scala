@@ -20,22 +20,10 @@ class ProductsAndOrders extends MoleculeSpec {
 
     // Insert nested data .................................
 
-    // Template for Order with multiple LineItems
-    //    val order0 = m(Order.orderid * LineItem.product.price.quantity)
-    val order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
+    // We don't necessarily have to assert a fact of the initial namespace
+    val order0 = Order.LineItems * LineItem.product.price.quantity insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) eid
 
-    // Make order with two line items and return created entity id
-    val orderId = order.insert(23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).eid
-
-    // Find id of order with chocolate
-    Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId
-
-
-    //    def LineItems  : ManyRef[Order, LineItem] with LineItem_1[A] with Group1[LineItem_1, LineItem_2, A] = ???
-    // Touch entity ................................
-
-    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-    orderId.touch === Map(
+    order0.touch === Map(
       ":db/id" -> 17592186045422L,
       ":order/lineItems" -> List(
         Map(
@@ -51,7 +39,29 @@ class ProductsAndOrders extends MoleculeSpec {
           ":lineItem/product" -> Map(
             ":db/id" -> 17592186045419L,
             ":product/description" -> "Expensive Chocolate"),
-          ":lineItem/quantity" -> 1)),
+          ":lineItem/quantity" -> 1)))
+
+    // Template for Order with multiple LineItems
+    val order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
+
+    // Make order with two line items and return created entity id
+    val orderId = order.insert(23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).eid
+
+    // Find id of order with chocolate
+    Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId
+
+
+    //    def LineItems  : ManyRef[Order, LineItem] with LineItem_1[A] with Group1[LineItem_1, LineItem_2, A] = ???
+    // Touch entity ................................
+
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+    orderId.touch === Map(
+      ":db/id" -> 17592186045426L,
+      ":order/lineItems" -> List(
+        Map(":db/id" -> 17592186045428L, ":lineItem/price" -> 38.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":lineItem/quantity" -> 2),
+        Map(":db/id" -> 17592186045427L, ":lineItem/price" -> 48.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":lineItem/quantity" -> 1)),
       ":order/orderid" -> 23)
 
 
@@ -92,18 +102,12 @@ class ProductsAndOrders extends MoleculeSpec {
         Map(":lineItem/comments" -> List(
           Map(":db/id" -> 17592186045427L, ":comment/text" -> "second"),
           Map(":db/id" -> 17592186045429L, ":comment/text" -> "best"),
-          Map(":db/id" -> 17592186045428L, ":comment/text" -> "is")),
-          ":lineItem/price" -> 38.0,
-          ":lineItem/quantity" -> 2,
-          ":lineItem/product" -> Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"),
-          ":db/id" -> 17592186045426L),
+          Map(":db/id" -> 17592186045428L, ":comment/text" -> "is")), ":lineItem/price" -> 38.0, ":lineItem/quantity" -> 2, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045426L),
         Map(":lineItem/comments" -> List(
           Map(":db/id" -> 17592186045425L, ":comment/text" -> "product"),
-          Map(":db/id" -> 17592186045424L, ":comment/text" -> "first")),
-          ":lineItem/price" -> 48.0,
-          ":lineItem/quantity" -> 1,
-          ":lineItem/product" -> Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"),
-          ":db/id" -> 17592186045423L)),
+          Map(":db/id" -> 17592186045424L, ":comment/text" -> "first")), ":lineItem/price" -> 48.0, ":lineItem/quantity" -> 1, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":db/id" -> 17592186045423L)),
       ":order/orderid" -> 23)
   }
 
@@ -135,18 +139,12 @@ class ProductsAndOrders extends MoleculeSpec {
         Map(":lineItem/comments" -> List(
           Map(":db/id" -> 17592186045428L, ":comment/descr" -> "2b", ":comment/text" -> "is"),
           Map(":db/id" -> 17592186045427L, ":comment/descr" -> "2b", ":comment/text" -> "second"),
-          Map(":db/id" -> 17592186045429L, ":comment/descr" -> "2c", ":comment/text" -> "best")),
-          ":lineItem/price" -> 38.0,
-          ":lineItem/quantity" -> 2,
-          ":lineItem/product" ->
-            Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045426L),
+          Map(":db/id" -> 17592186045429L, ":comment/descr" -> "2c", ":comment/text" -> "best")), ":lineItem/price" -> 38.0, ":lineItem/quantity" -> 2, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045426L),
         Map(":lineItem/comments" -> List(
           Map(":db/id" -> 17592186045425L, ":comment/descr" -> "1b", ":comment/text" -> "product"),
-          Map(":db/id" -> 17592186045424L, ":comment/descr" -> "1a", ":comment/text" -> "first")),
-          ":lineItem/price" -> 48.0,
-          ":lineItem/quantity" -> 1,
-          ":lineItem/product" ->
-            Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":db/id" -> 17592186045423L)),
+          Map(":db/id" -> 17592186045424L, ":comment/descr" -> "1a", ":comment/text" -> "first")), ":lineItem/price" -> 48.0, ":lineItem/quantity" -> 1, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":db/id" -> 17592186045423L)),
       ":order/orderid" -> 23)
   }
 
@@ -177,35 +175,19 @@ class ProductsAndOrders extends MoleculeSpec {
       ":order/lineItems" -> List(
         Map(":lineItem/comments" -> List(
           Map(":db/id" -> 17592186045434L, ":comment/authors" -> List(
-            Map(":db/id" -> 17592186045435L, ":person/name" -> "test")),
-            ":comment/descr" -> "2c",
-            ":comment/text" -> "best"),
+            Map(":db/id" -> 17592186045435L, ":person/name" -> "test")), ":comment/descr" -> "2c", ":comment/text" -> "best"),
           Map(":db/id" -> 17592186045429L, ":comment/authors" -> List(
             Map(":db/id" -> 17592186045431L, ":person/name" -> "Stuart Halloway"),
-            Map(":db/id" -> 17592186045430L, ":person/name" -> "Don Juan")),
-            ":comment/descr" -> "2b",
-            ":comment/text" -> "second"),
+            Map(":db/id" -> 17592186045430L, ":person/name" -> "Don Juan")), ":comment/descr" -> "2b", ":comment/text" -> "second"),
           Map(":db/id" -> 17592186045432L, ":comment/authors" -> List(
-            Map(":db/id" -> 17592186045433L, ":person/name" -> "Nick Smith")),
-            ":comment/descr" -> "2b",
-            ":comment/text" -> "is")),
-          ":lineItem/price" -> 38.0,
-          ":lineItem/quantity" -> 2,
-          ":lineItem/product" -> Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"),
-          ":db/id" -> 17592186045428L),
+            Map(":db/id" -> 17592186045433L, ":person/name" -> "Nick Smith")), ":comment/descr" -> "2b", ":comment/text" -> "is")), ":lineItem/price" -> 38.0, ":lineItem/quantity" -> 2, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045428L),
         Map(":lineItem/comments" -> List(
           Map(":db/id" -> 17592186045424L, ":comment/authors" -> List(
-            Map(":db/id" -> 17592186045425L, ":person/name" -> "Marc Grue")),
-            ":comment/descr" -> "1a",
-            ":comment/text" -> "first"),
+            Map(":db/id" -> 17592186045425L, ":person/name" -> "Marc Grue")), ":comment/descr" -> "1a", ":comment/text" -> "first"),
           Map(":db/id" -> 17592186045426L, ":comment/authors" -> List(
-            Map(":db/id" -> 17592186045427L, ":person/name" -> "Marc Grue")),
-            ":comment/descr" -> "1b",
-            ":comment/text" -> "product")),
-          ":lineItem/price" -> 48.0,
-          ":lineItem/quantity" -> 1,
-          ":lineItem/product" -> Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"),
-          ":db/id" -> 17592186045423L)),
+            Map(":db/id" -> 17592186045427L, ":person/name" -> "Marc Grue")), ":comment/descr" -> "1b", ":comment/text" -> "product")), ":lineItem/price" -> 48.0, ":lineItem/quantity" -> 1, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":db/id" -> 17592186045423L)),
       ":order/orderid" -> 23)
   }
 
@@ -235,11 +217,8 @@ class ProductsAndOrders extends MoleculeSpec {
           Map(":db/id" -> 17592186045426L, ":comment/descr" -> "2c", ":comment/text" -> "best"),
           Map(":db/id" -> 17592186045425L, ":comment/descr" -> "2b", ":comment/text" -> "is"),
           Map(":db/id" -> 17592186045423L, ":comment/authors" -> List(
-            Map(":db/id" -> 17592186045424L, ":person/name" -> "Don Juan")), ":comment/descr" -> "2b", ":comment/text" -> "second")),
-          ":lineItem/price" -> 38.0,
-          ":lineItem/quantity" -> 2,
-          ":lineItem/product" -> Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky"),
-          ":db/id" -> 17592186045422L)),
+            Map(":db/id" -> 17592186045424L, ":person/name" -> "Don Juan")), ":comment/descr" -> "2b", ":comment/text" -> "second")), ":lineItem/price" -> 38.0, ":lineItem/quantity" -> 2, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045422L)),
       ":order/orderid" -> 23)
   }
 
@@ -270,11 +249,8 @@ class ProductsAndOrders extends MoleculeSpec {
           Map(":db/id" -> 17592186045425L, ":comment/authors" -> List(
             Map(":db/id" -> 17592186045426L, ":person/name" -> "Marc")), ":comment/descr" -> "foo", ":comment/text" -> "chance"),
           Map(":db/id" -> 17592186045423L, ":comment/authors" -> List(
-            Map(":db/id" -> 17592186045424L, ":person/name" -> "Don Juan")), ":comment/text" -> "second")),
-          ":lineItem/price" -> 38.0,
-          ":lineItem/quantity" -> 2,
-          ":lineItem/product" -> Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky"),
-          ":db/id" -> 17592186045422L)),
+            Map(":db/id" -> 17592186045424L, ":person/name" -> "Don Juan")), ":comment/text" -> "second")), ":lineItem/price" -> 38.0, ":lineItem/quantity" -> 2, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045422L)),
       ":order/orderid" -> 23)
   }
 }
