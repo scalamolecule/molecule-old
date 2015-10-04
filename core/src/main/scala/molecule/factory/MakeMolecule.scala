@@ -9,7 +9,6 @@ import scala.reflect.macros.whitebox.Context
 
 trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
   import c.universe._
-  //  val x = Debug("BuildMolecule", 1, 20, false)
 
   def from0attr(dsl: c.Expr[NS]) = {
     expr(
@@ -18,37 +17,6 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
       new Molecule0(model, query) {
         def debug(implicit conn: Connection): Unit = debugMolecule(conn, model, query)
         def debugE(implicit conn: Connection): Unit = debugMolecule(conn, model, query)
-      }
-    """)
-  }
-
-  def isNested(model: Tree) = {
-    q"""
-      $model.elements.foldLeft((None: Option[Element], false)) {case ((lastElement, result), e) =>
-        (lastElement, e) match {
-          case (Some(b: Bond), g: Group) => (Some(e), true)
-          case _                         => (Some(e), result)
-        }
-      }._2
-     """
-  }
-
-  def from1attr(dsl: c.Expr[NS], A: Type) = {
-    val OutTypes2 = Seq(c.typeOf[Long], A)
-    expr(
-      q"""
-      ..${basics(dsl)}
-      new Molecule1[$A](model, query) {
-        def getE(implicit conn: Connection): Seq[(..$OutTypes2)] = results(conn, modelE, queryE).map(row => (..${castTpl(q"queryE", q"row", OutTypes2)}))
-        def debugE(implicit conn: Connection): Unit              = debugMolecule(conn, modelE, queryE)
-
-        def get(implicit conn: Connection): Seq[$A]         = if (${isNested(q"model")})
-            ${castNestedTpls(q"queryE", q"results(conn, modelE, queryE)", Seq(A))}.asInstanceOf[Seq[$A]]
-          else
-            results(conn, model, query).map(row => ${cast(q"query", q"row", A, 0)}.asInstanceOf[$A])
-
-        def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(conn, model, query).map(row => ${castHListElem(q"query", q"row", A, 0, q"shapeless.HList()")})
-        def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query)
       }
     """)
   }
@@ -64,24 +32,29 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
         def getE(implicit conn: Connection): Seq[(..$OutTypes2)] = ${castTpls(q"queryE", q"results(conn, modelE, queryE)", OutTypes2)}
         def debugE(implicit conn: Connection): Unit              = debugMolecule(conn, modelE, queryE)
 
-        def get(implicit conn: Connection): Seq[(..$OutTypes)] = if (${isNested(q"model")})
+        def get(implicit conn: Connection): Seq[(..$OutTypes)] = {
+          val isNested = model.elements.foldLeft(false) {
+            case (result, Group(Bond("","",""), _)) => false
+            case (result, g: Group)                 => true
+            case (result, _)                        => result
+          }
+          if (isNested)
             ${castNestedTpls(q"queryE", q"results(conn, modelE, queryE)", OutTypes)}.asInstanceOf[Seq[(..$OutTypes)]]
           else
             results(conn, model, query).map(data => (..${castTpl(q"query", q"data", OutTypes)}))
-
+        }
         def hl(implicit conn: Connection) : Seq[$HListType]    = ${castHLists(q"query", q"results(conn, model, query)", OutTypes)}
         def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query)
       }
-    """)
-//        def get(implicit conn: Connection): Seq[(..$OutTypes)] = if (model.elements.collect{ case g: molecule.ast.model.Group => g}.isEmpty)
+    """
+//         println(isNested + " - " + model)
+    )
   }
 }
 
 
 object MakeMolecule {
   def build(c0: Context) = new {val c: c0.type = c0} with MakeMolecule[c0.type]
-
-  // Molecule implementations
 
   def from0attr[Ns0: c.WeakTypeTag, Ns1[_], In1_0[_], In1_1[_, _]]
   (c: Context)(dsl: c.Expr[Out_0[Ns0, Ns1, In1_0, In1_1]])
@@ -93,7 +66,7 @@ object MakeMolecule {
   A: c.WeakTypeTag]
   (c: Context)(dsl: c.Expr[Out_1[Ns1, Ns2, In1_1, In1_2, A]])
   : c.Expr[Molecule1[A]] =
-    build(c).from1attr(dsl, c.weakTypeOf[A])
+    build(c).fromXattrs(dsl, c.weakTypeOf[A])
 
 
   def from2attr[Ns2[_, _], Ns3[_, _, _], In1_2[_, _, _], In1_3[_, _, _, _],

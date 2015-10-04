@@ -138,6 +138,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
   }
 
   def molecule_o(outArity: Int) = outArity match {
+    case 1  => tq"Molecule1"
     case 2  => tq"Molecule2"
     case 3  => tq"Molecule3"
     case 4  => tq"Molecule4"
@@ -160,31 +161,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     case 21 => tq"Molecule21"
     case 22 => tq"Molecule22"
     case o  => abort(s"[TreeOps:molecule_o] Unsupported arity for MoleculeX: $o")
-  }
-
-  def nodeMolecule_o(outArity: Int) = outArity match {
-    case 2  => tq"SubMolecule2"
-    case 3  => tq"SubMolecule3"
-    case 4  => tq"SubMolecule4"
-    case 5  => tq"SubMolecule5"
-    case 6  => tq"SubMolecule6"
-    case 7  => tq"SubMolecule7"
-    case 8  => tq"SubMolecule8"
-    case 9  => tq"SubMolecule9"
-    case 10 => tq"SubMolecule10"
-    case 11 => tq"SubMolecule11"
-    case 12 => tq"SubMolecule12"
-    case 13 => tq"SubMolecule13"
-    case 14 => tq"SubMolecule14"
-    case 15 => tq"SubMolecule15"
-    case 16 => tq"SubMolecule16"
-    case 17 => tq"SubMolecule17"
-    case 18 => tq"SubMolecule18"
-    case 19 => tq"SubMolecule19"
-    case 20 => tq"SubMolecule20"
-    case 21 => tq"SubMolecule21"
-    case 22 => tq"SubMolecule22"
-    case o  => abort(s"[TreeOps:nodeMolecule_o] Unsupported arity for SubMoleculeX: $o")
   }
 
   def namespaceSymbol(tree: Tree) = {

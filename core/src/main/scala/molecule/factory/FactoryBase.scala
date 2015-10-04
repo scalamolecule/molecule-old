@@ -122,22 +122,14 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
     val value: Tree = q"$row.get($i)"
     def tp(t: Type) = s"$i  " + t.toString + (" " * (8 - t.toString.length)) + " "
     tpe match {
-      case t if t <:< typeOf[Set[Int]]       => q"$value.asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t]"
-      case t if t <:< typeOf[Set[Float]]     => q"$value.asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t]"
-      case t if t <:< typeOf[Set[_]]         => q"$value.asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
-      case t if t <:< typeOf[Vector[_]]      => q"$value.asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
-      case t if t <:< typeOf[Stream[_]]      => q"$value.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
-      case t if t <:< typeOf[Int]            => q"if($value.isInstanceOf[jLong]) $value.asInstanceOf[jLong].toInt.asInstanceOf[$t] else $value.asInstanceOf[$t]"
-      case t if t <:< typeOf[Float]          => q"if($value.isInstanceOf[jDouble]) $value.asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[Long]           => q"$value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[Double]         => q"$value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[String]         => q"$value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[Boolean]        => q"$value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[java.util.Date] => q"$value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[java.util.UUID] => q"$value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[java.net.URI]   => q"$value.asInstanceOf[$t]"
-//      case t if t <:< typeOf[Any]            => q"$value.asInstanceOf[$t]"
-      case t                                 =>
+      case t if t <:< typeOf[Set[Int]]   => q"$value.asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t]"
+      case t if t <:< typeOf[Set[Float]] => q"$value.asInstanceOf[clojure.lang.PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t]"
+      case t if t <:< typeOf[Set[_]]     => q"$value.asInstanceOf[clojure.lang.PersistentHashSet].toSet.asInstanceOf[$t]"
+      case t if t <:< typeOf[Vector[_]]  => q"$value.asInstanceOf[clojure.lang.PersistentVector].toVector.asInstanceOf[$t]"
+      case t if t <:< typeOf[Stream[_]]  => q"$value.asInstanceOf[clojure.lang.LazySeq].toStream.asInstanceOf[$t]"
+      case t if t <:< typeOf[Int]        => q"if($value.isInstanceOf[jLong]) $value.asInstanceOf[jLong].toInt.asInstanceOf[$t] else $value.asInstanceOf[$t]"
+      case t if t <:< typeOf[Float]      => q"if($value.isInstanceOf[jDouble]) $value.asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $value.asInstanceOf[$t]"
+      case t                             =>
         q"""
           $query.f.outputs($i) match {
             case AggrExpr("sum",_,_) =>
@@ -157,7 +149,6 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
             case other => $value.asInstanceOf[$t]
           }
        """
-//            case other => sys.error("[FactoryBase:cast] Unexpected type `" + ${tpe.toString} + "` for value: " + $value)
     }
   }
 
@@ -179,10 +170,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         } else if ($tpl.get.isInstanceOf[List[_]]) {
 
           lazy val nestedTpl = ${
-        resolveNested(query, nestedTpes,
-          q"Some($tpl.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-          prevRow, row, rowNo, entityIndex + 1 + i)
-      }.asInstanceOf[(..$nestedTpes)]
+            resolveNested(query, nestedTpes,
+              q"Some($tpl.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+              prevRow, row, rowNo, entityIndex + 1 + i)
+          }.asInstanceOf[(..$nestedTpes)]
 
           val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
 
@@ -194,10 +185,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         } else {
 
           lazy val nestedTpl = ${
-        resolveNested(query, nestedTpes,
-          q"Some($tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-          prevRow, row, rowNo, entityIndex + 1 + i)
-      }.asInstanceOf[(..$nestedTpes)]
+            resolveNested(query, nestedTpes,
+              q"Some($tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+              prevRow, row, rowNo, entityIndex + 1 + i)
+          }.asInstanceOf[(..$nestedTpes)]
 
           val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
 

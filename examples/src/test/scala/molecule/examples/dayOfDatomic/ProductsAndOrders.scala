@@ -280,7 +280,6 @@ class ProductsAndOrders extends MoleculeSpec {
   }
 
 
-
   "Nested Data, 3 levels" >> {
 
     implicit val conn = load(ProductsOrderSchema, "Orders4")
