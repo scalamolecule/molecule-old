@@ -53,36 +53,6 @@ class SeattleTests extends SeattleSpec {
     communityId(":community/emptyOrBogusAttribute") === None
   }
 
-//  "Getting an entity's attribute values 2" >> {
-//
-//    // Using the entity api
-//
-//    // Get a community id
-//    val communityId: Long = Community.e.name_.get.head
-//
-//    // Use the community id to touch all the entity's attribute values
-//    communityId.touch === Map(
-//      ":community/type" -> ":community.type/email_list",
-//      ":community/url" -> "http://groups.yahoo.com/group/15thAve_Community/",
-//      ":community/category" -> List("15th avenue residents"),
-//      ":community/orgtype" -> ":community.orgtype/community",
-//      ":db/id" -> 17592186045439L,
-//      ":community/name" -> "15th Ave Community",
-//      ":community/neighborhood" -> Map(
-//        ":db/id" -> 17592186045440L,
-//        ":neighborhood/district" -> Map(
-//          ":db/id" -> 17592186045441L,
-//          ":district/name" -> "East",
-//          ":district/region" -> ":district.region/e"),
-//        ":neighborhood/name" -> "Capitol Hill"))
-//
-//    // We can also retrive a single (optional) attribute value
-//    communityId(":community/name") === Some("15th Ave Community")
-//    communityId(":community/url") === Some("http://groups.yahoo.com/group/15thAve_Community/")
-//    communityId(":community/category") === Some(Set("15th avenue residents"))
-//    communityId(":community/emptyOrBogusAttribute") === None
-//  }
-
 
   "Querying _for_ attribute values" >> {
 
