@@ -35,8 +35,9 @@ object QueryOps {
       }.distinct
       val moreOutputs = o match {
         case NoVal                         => genericVars
-        case _ if !q.f.outputs.contains(o) => o +: genericVars
-        case _                             => genericVars
+        case _  => o +: genericVars
+//        case _ if !q.f.outputs.contains(o) => o +: genericVars
+//        case _                             => genericVars
       }
       q.copy(f = Find(q.f.outputs ++ moreOutputs))
     }

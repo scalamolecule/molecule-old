@@ -1,4 +1,5 @@
 package molecule.examples.dayOfDatomic
+import datomic.Peer
 import molecule._
 import molecule.examples.dayOfDatomic.dsl.productsOrder._
 import molecule.examples.dayOfDatomic.schema._
@@ -7,7 +8,7 @@ import molecule.util.MoleculeSpec
 class ProductsAndOrders extends MoleculeSpec {
 
 
-  "Nested data, 1 level" >> {
+  "Nested data, 1 level without initial namespace asserts" >> {
 
     // See: http://blog.datomic.com/2013/06/component-entities.html
 
@@ -17,32 +18,47 @@ class ProductsAndOrders extends MoleculeSpec {
     // Insert 2 products
     val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky").eids
 
-
     // Insert nested data .................................
 
     // We don't necessarily have to assert a fact of the initial namespace
-    val order0 = Order.LineItems * LineItem.product.price.quantity insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) eid
+    val order = Order.LineItems * LineItem.product.price.quantity insert List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) eid
 
-    order0.touch === Map(
+    order.touch === Map(
       ":db/id" -> 17592186045422L,
       ":order/lineItems" -> List(
-        Map(
-          ":db/id" -> 17592186045424L,
-          ":lineItem/price" -> 38.0,
-          ":lineItem/product" -> Map(
-            ":db/id" -> 17592186045420L,
-            ":product/description" -> "Cheap Whisky"),
-          ":lineItem/quantity" -> 2),
-        Map(
-          ":db/id" -> 17592186045423L,
-          ":lineItem/price" -> 48.0,
-          ":lineItem/product" -> Map(
-            ":db/id" -> 17592186045419L,
-            ":product/description" -> "Expensive Chocolate"),
-          ":lineItem/quantity" -> 1)))
+        Map(":db/id" -> 17592186045424L, ":lineItem/price" -> 38.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":lineItem/quantity" -> 2),
+        Map(":db/id" -> 17592186045423L, ":lineItem/price" -> 48.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":lineItem/quantity" -> 1)))
+
+    // We can get the created order entity id and its lineItem's data
+    m(Order.e.LineItems * LineItem.product.price.quantity).get === Seq(
+      (17592186045422L, Seq((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)))
+    )
+
+    // Or we can omit the order entity id and get the lineItem data in groups for each Order found (only 1 here)
+    m(Order.LineItems * LineItem.product.price.quantity).get === Seq(
+      Seq((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))
+    )
+
+    // If we query for only 1 attribute we get a list of values instead of tuples of values
+    m(Order.LineItems * LineItem.product).get === Seq(
+      Seq(chocolateId, whiskyId)
+    )
+  }
+
+
+  "Nested Data, 1 level" >> {
+
+    implicit val conn = load(ProductsOrderSchema, "Orders1")
+
+    // Insert 2 products
+    val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky").eids
 
     // Template for Order with multiple LineItems
     val order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
+
+    // Insert nested data .................................
 
     // Make order with two line items and return created entity id
     val orderId = order.insert(23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))).eid
@@ -51,19 +67,22 @@ class ProductsAndOrders extends MoleculeSpec {
     Order.e.LineItems.Product.description_("Expensive Chocolate").get.head === orderId
 
 
-    //    def LineItems  : ManyRef[Order, LineItem] with LineItem_1[A] with Group1[LineItem_1, LineItem_2, A] = ???
     // Touch entity ................................
 
     // Get all attributes/values of this entity. Sub-component values are recursively retrieved
     orderId.touch === Map(
-      ":db/id" -> 17592186045426L,
+      ":db/id" -> 17592186045422L,
       ":order/lineItems" -> List(
-        Map(":db/id" -> 17592186045428L, ":lineItem/price" -> 38.0, ":lineItem/product" ->
+        Map(":db/id" -> 17592186045424L, ":lineItem/price" -> 38.0, ":lineItem/product" ->
           Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":lineItem/quantity" -> 2),
-        Map(":db/id" -> 17592186045427L, ":lineItem/price" -> 48.0, ":lineItem/product" ->
+        Map(":db/id" -> 17592186045423L, ":lineItem/price" -> 48.0, ":lineItem/product" ->
           Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":lineItem/quantity" -> 1)),
       ":order/orderid" -> 23)
 
+    // We can re-use the `order` molecule
+    order.get === List(
+      (23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)))
+    )
 
     // Retract nested data ............................
 
@@ -73,6 +92,97 @@ class ProductsAndOrders extends MoleculeSpec {
     // The products are still there
     Product.e.description_("Expensive Chocolate" or "Cheap Whisky").get === List(chocolateId, whiskyId)
   }
+
+
+  "Nested Data, 1 level, with null value" >> {
+
+    implicit val conn = load(ProductsOrderSchema, "OrdersX")
+
+    // Insert 2 products
+    val List(chocolateId, whiskyId, licoriceId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky", "Licorice").eids
+
+    // Template for Order with multiple LineItems
+    val order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
+
+
+    // Insert .................................
+
+    // Make order with two line items and return created entity id
+    val List(order23, l1, l2, l3, order24, ll1, ll2) = order insert List(
+      (23, List(
+        (chocolateId, 48.00, 1),
+        (whiskyId, 38.00, null.asInstanceOf[Int]),
+        (licoriceId, 77.00, 2))),
+      (24, List(
+        (whiskyId, 38.00, 3),
+        (licoriceId, 77.00, 4)))) eids
+
+
+    // Find id of orders containing various products
+    Order.e.LineItems.Product.description_("Expensive Chocolate").get === List(order23)
+    Order.e.LineItems.Product.description_("Licorice").get === List(order24, order23)
+
+
+    // Touch ................................
+
+    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+    order23.touch === Map(
+      ":db/id" -> 17592186045423L,
+      ":order/lineItems" -> List(
+        Map(":db/id" -> 17592186045426L, ":lineItem/price" -> 77.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045421L, ":product/description" -> "Licorice"), ":lineItem/quantity" -> 2),
+        Map(":db/id" -> 17592186045425L, ":lineItem/price" -> 38.0, ":lineItem/product" ->
+          // Whisky _is_ touched although it has no quantity asserted!
+          Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky")),
+        Map(":db/id" -> 17592186045424L, ":lineItem/price" -> 48.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":lineItem/quantity" -> 1)),
+      ":order/orderid" -> 23)
+
+    order24.touch === Map(
+      ":db/id" -> 17592186045427L,
+      ":order/lineItems" -> List(
+        Map(":db/id" -> 17592186045429L, ":lineItem/price" -> 77.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045421L, ":product/description" -> "Licorice"), ":lineItem/quantity" -> 4),
+        Map(":db/id" -> 17592186045428L, ":lineItem/price" -> 38.0, ":lineItem/product" ->
+          Map(":db/id" -> 17592186045420L, ":product/description" -> "Cheap Whisky"), ":lineItem/quantity" -> 3)),
+      ":order/orderid" -> 24)
+
+
+    // Get ................................
+
+    // Get adjacent facts
+    val adjacent: Seq[(Int, Int, Double, Long, String)] = m(Order.orderid.LineItems.quantity.price.product.Product.description).get.sortBy(_._1)
+    adjacent === List(
+      (23, 2, 77.0, licoriceId, "Licorice"),
+      // whisky for order 23 is _not_ fetched since it has no quantity asserted!
+      (23, 1, 48.0, chocolateId, "Expensive Chocolate"),
+      (24, 3, 38.0, whiskyId, "Cheap Whisky"),
+      (24, 4, 77.0, licoriceId, "Licorice")
+    )
+
+    // Get nested data
+    m(Order.e.orderid.LineItems * LineItem.quantity.price).get === Seq(
+      (17592186045423L, 23, Seq((1, 48.0), (2, 77.0))),
+      (17592186045427L, 24, Seq((3, 38.0), (4, 77.0))))
+
+    m(Order.orderid.LineItems * LineItem.quantity.price).get === Seq(
+      (23, Seq((1, 48.0), (2, 77.0))),
+      (24, Seq((3, 38.0), (4, 77.0))))
+
+    m(Order.orderid.LineItems * LineItem.quantity).get === Seq(
+      (23, Seq(1, 2)),
+      (24, Seq(3, 4)))
+
+
+    // Retract ............................
+
+    // Retract entity - all subcomponents/lineItems are retracted
+    order23.retract
+
+    // The products are still there
+    Product.e.description_("Expensive Chocolate" or "Cheap Whisky").get === List(chocolateId, whiskyId)
+  }
+
 
   "Nested Data, 2 levels" >> {
 
@@ -109,6 +219,14 @@ class ProductsAndOrders extends MoleculeSpec {
           Map(":db/id" -> 17592186045424L, ":comment/text" -> "first")), ":lineItem/price" -> 48.0, ":lineItem/quantity" -> 1, ":lineItem/product" ->
           Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":db/id" -> 17592186045423L)),
       ":order/orderid" -> 23)
+
+
+    m(Order.orderid.LineItems * (LineItem.product.price.quantity.Comments * Comment.text)).get === List(
+      (23, List(
+        (chocolateId, 48.00, 1, List("first", "product")),
+        (whiskyId, 38.00, 2, List("second", "is", "best"))
+      ))
+    )
   }
 
 
@@ -146,7 +264,21 @@ class ProductsAndOrders extends MoleculeSpec {
           Map(":db/id" -> 17592186045424L, ":comment/descr" -> "1a", ":comment/text" -> "first")), ":lineItem/price" -> 48.0, ":lineItem/quantity" -> 1, ":lineItem/product" ->
           Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":db/id" -> 17592186045423L)),
       ":order/orderid" -> 23)
+
+
+    m(Order.orderid.LineItems * (LineItem.quantity.price.Comments * Comment.text.descr)).get === List(
+      (23, List(
+        (1, 48.00, List(
+          ("first", "1a"),
+          ("product", "1b"))),
+        (2, 38.00, List(
+          ("second", "2b"),
+          ("is", "2b"),
+          ("best", "2c")))
+      ))
+    )
   }
+
 
 
   "Nested Data, 3 levels" >> {
@@ -189,6 +321,18 @@ class ProductsAndOrders extends MoleculeSpec {
             Map(":db/id" -> 17592186045427L, ":person/name" -> "Marc Grue")), ":comment/descr" -> "1b", ":comment/text" -> "product")), ":lineItem/price" -> 48.0, ":lineItem/quantity" -> 1, ":lineItem/product" ->
           Map(":db/id" -> 17592186045419L, ":product/description" -> "Expensive Chocolate"), ":db/id" -> 17592186045423L)),
       ":order/orderid" -> 23)
+
+    m(Order.orderid.LineItems * (LineItem.product.price.quantity.Comments * (Comment.text.descr.Authors * Person.name))).get === List(
+      (23, List(
+        (chocolateId, 48.00, 1, List(
+          ("first", "1a", List("Marc Grue")),
+          ("product", "1b", List("Marc Grue")))),
+        (whiskyId, 38.00, 2, List(
+          ("second", "2b", List("Don Juan", "Stuart Halloway")),
+          ("is", "2b", List("Nick Smith")),
+          ("best", "2c", List("test"))))
+      ))
+    )
   }
 
 
@@ -220,6 +364,14 @@ class ProductsAndOrders extends MoleculeSpec {
             Map(":db/id" -> 17592186045424L, ":person/name" -> "Don Juan")), ":comment/descr" -> "2b", ":comment/text" -> "second")), ":lineItem/price" -> 38.0, ":lineItem/quantity" -> 2, ":lineItem/product" ->
           Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045422L)),
       ":order/orderid" -> 23)
+
+    // Comments with no author are not fetched
+    m(Order.orderid.LineItems * (LineItem.product.price.quantity.Comments * (Comment.text.descr.Authors * Person.name))).get === List(
+      (23, List(
+        (whiskyId, 38.00, 2, List(
+          ("second", "2b", List("Don Juan"))))
+      ))
+    )
   }
 
 
@@ -236,7 +388,7 @@ class ProductsAndOrders extends MoleculeSpec {
         (whiskyId, 38.00, 2, List(
           ("second", null, List("Don Juan")),
           ("chance", "foo", List("Marc"))
-          // ("chance", "foo", null) // Would throw runtime error
+          // ("chance", "foo", null) // null value as nested data will throw runtime error
         ))
       ))
     ) eid
@@ -252,5 +404,14 @@ class ProductsAndOrders extends MoleculeSpec {
             Map(":db/id" -> 17592186045424L, ":person/name" -> "Don Juan")), ":comment/text" -> "second")), ":lineItem/price" -> 38.0, ":lineItem/quantity" -> 2, ":lineItem/product" ->
           Map(":db/id" -> 17592186045419L, ":product/description" -> "Cheap Whisky"), ":db/id" -> 17592186045422L)),
       ":order/orderid" -> 23)
+
+    // Comment with no `description` is not fetched
+    m(Order.orderid.LineItems * (LineItem.product.price.quantity.Comments * (Comment.text.descr.Authors * Person.name))).get === List(
+      (23, List(
+        (whiskyId, 38.00, 2, List(
+          ("chance", "foo", List("Marc"))
+        ))
+      ))
+    )
   }
 }

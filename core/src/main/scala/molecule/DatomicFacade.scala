@@ -58,7 +58,6 @@ trait DatomicFacade {
   case class txLong(t: Long) extends TxType
   case class txlObj(tx: java.util.List[Object]) extends TxType
 
-
   sealed trait DbOp
   case class AsOf(tx: TxType) extends DbOp
   case class Since(date: Date) extends DbOp
@@ -66,11 +65,6 @@ trait DatomicFacade {
   case object History extends DbOp
 
   private[molecule] var dbOp: DbOp = null
-
-  def rule(query: Query) = {
-    val p = (expr: QueryExpr) => Query2String(query).p(expr)
-    "[" + (query.i.rules map p mkString " ") + "]"
-  }
 
   def cast(a: Any) = a match {
     case i: Int   => i.toLong.asInstanceOf[Object]
@@ -86,7 +80,8 @@ trait DatomicFacade {
     case other                              => sys.error(s"[DatomicFacade] UNEXPECTED inputs: $other")
   }
 
-  def results(query: Query, conn: Connection): jCollection[jList[AnyRef]] = {
+//  def results(conn: Connection, model: Model, query: Query): jCollection[jList[AnyRef]] = {
+  def results(conn: Connection, model: Model, query: Query): Seq[jList[AnyRef]] = {
     val p = (expr: QueryExpr) => Query2String(query).p(expr)
     val rules = "[" + (query.i.rules map p mkString " ") + "]"
     val db = dbOp match {
@@ -106,7 +101,7 @@ trait DatomicFacade {
     val allInputs = first ++ inputs(query)
 
     try {
-      Peer.q(query.toMap, allInputs: _*)
+      Peer.q(query.toMap, allInputs: _*).toSeq
     } catch {
       case e: Throwable => throw new RuntimeException(
         s"""
@@ -124,17 +119,6 @@ trait DatomicFacade {
          """.stripMargin)
     }
   }
-
-  def getValues1(db: Database, id: Any, attr: String) =
-    Peer.q(s"[:find ?values :in $$ ?id :where [?id :$attr ?values]]", db, id.asInstanceOf[Object]).map(_.get(0))
-  //
-  //  def maybe(db: Database, e: Any, attr: String, ifNot: Any) =
-  //    Peer.q(s"[:find ?v :in $$ ?e ?a :where [?e ?a ?v]]", db, e.asInstanceOf[Object], attr).map(_.get(0)).headOption match {
-  //      case Some(set: Set[_]) =>
-  //    }
-
-
-  def entityIds(query: Query)(implicit conn: Connection) = results(query, conn).toList.map(_.get(0).asInstanceOf[Long])
 
 
   // Manipulation

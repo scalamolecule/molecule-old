@@ -52,7 +52,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case (k: UUID, v: UUID)     => q"(${mkUUID(k)}, ${mkUUID(v)})"
     case (k: URI, v: URI)       => q"(${mkURI(k)}, ${mkURI(v)})"
     case (a, b)                 => abort(s"[Liftables:liftTuple2] Can't lift unexpected Tuple2: ($a, $b)")
-    case other                  => abort(s"[Liftables:liftTuple2] Can't lift unexpected product type: $other")
+//    case (a, b, c)              => abort(s"[Liftables:liftTuple3] Can't lift unexpected Tuple3: ($a, $b, $c)")
+    case other                  => abort(s"[Liftables:Product] Can't lift unexpected product type: $other")
   }
 
 
@@ -156,6 +157,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case OpValue          => q"OpValue"
     case BackValue(value) => q"BackValue($value)"
     case EnumVal          => q"EnumVal"
+    case IndexVal         => q"IndexVal"
     case And(values)      => q"And(Seq(..$values))"
     case Eq(values)       => q"Eq(Seq(..$values))"
     case Neq(values)      => q"Neq(Seq(..$values))"

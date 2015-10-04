@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 6, 32)
+  val x = DebugMacro("Dsl2Model", 27, 32)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -38,7 +38,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // EAV + ns -----------------------------
 
-    case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", NoValue, EntValue))
+//    case q"$prev.e" if q"$prev".isAttr => traverse(q"$prev", Meta(q"$prev".ns, q"$prev".name, "e", NoValue, EntValue))
+    case q"$prev.e"                    => traverse(q"$prev", Meta("", "", "e", NoValue, EntValue))
 
     case q"$prev.a" => traverse(q"$prev", Atom("?", "attr", "a", 1, NoValue))
 
@@ -98,8 +99,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
     case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
 
-    //    case t@q"$prev.$ns.*[..$types]($nested)"                            => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$ns", firstLow(ns.toString), nested)))
-    case t@q"$prev.$manyRef.*[..$types]($nested)"                                 => traverse(q"$prev", nested1(prev, manyRef, nested))
+    case t@q"$prev.e.$manyRef.*[..$types]($nested)"                               => traverse(q"$prev.e", nested1(q"$prev", manyRef, nested))
+    case t@q"$prev.$manyRef.*[..$types]($nested)"                                 => traverse(q"$prev", nested1(q"$prev", manyRef, nested))
     case t@q"$prev.$manyRef.apply[..$types]($nested)" if !q"$prev.$manyRef".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$manyRef", firstLow(manyRef.toString), nested)))
     case t@q"$prev.$manyRef.apply[..$types]($nested)"                             => traverse(q"$prev", nested1(prev, manyRef, nested))
 
@@ -151,8 +152,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val parentNs = prev match {
       case q"$p.apply($value)" if p.isAttr => p.ns
       case q"$p.apply($value)"             => p.name
-      case q"$p" if p.isAttr               => p.ns
-      case q"$p"                           => p.name
+      case p if p.isAttr                   => p.ns
+      case p                               => p.name
     }
     val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nested)
     val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
@@ -356,18 +357,18 @@ object Dsl2Model {
       }
     }._1
 
-//    def resolveGroups(e: Element, level: Int): Element = e match {
-//      case g: Group if level == 1 => Group(g.ref, g.elements.map(resolveGroups(_, 2)))
-////      case g: Group if level == 2 => Group2(g.ref, g.elements.map(resolveGroups(_, 3)))
-//      case g: Group if level > 2  => c.abort(c.enclosingPosition, "[Dsl2Model:apply] Can't nest more than 2 levels deep.")
-//      case _ => e
-//    }
-//    val elements2 = elements1.map(resolveGroups(_, 1))
+    //    def resolveGroups(e: Element, level: Int): Element = e match {
+    //      case g: Group if level == 1 => Group(g.ref, g.elements.map(resolveGroups(_, 2)))
+    ////      case g: Group if level == 2 => Group2(g.ref, g.elements.map(resolveGroups(_, 3)))
+    //      case g: Group if level > 2  => c.abort(c.enclosingPosition, "[Dsl2Model:apply] Can't nest more than 2 levels deep.")
+    //      case _ => e
+    //    }
+    //    val elements2 = elements1.map(resolveGroups(_, 1))
 
     val model = Model(elements1)
     //    inst(c).x(30, condensedElements)
-//    inst(c).x(30, dsl, elements0, elements1, elements2, model)
-//    inst(c).x(30, dsl, elements0, elements1, model)
+    //    inst(c).x(30, dsl, elements0, elements1, elements2, model)
+    //    inst(c).x(30, dsl, elements0, elements1, model)
     model
   }
 }

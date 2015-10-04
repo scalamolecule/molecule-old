@@ -6,7 +6,7 @@ import molecule.ops.QueryOps._
 import molecule.util.Debug
 
 object Model2Query {
-  val x = Debug("Model2Query", 70, 60, false)
+  val x = Debug("Model2Query", 100, 20, false)
   def uri(t: String) = t == "java.net.URI"
   def u(t: String, v: String) = if (t == "java.net.URI") v else ""
 
@@ -225,6 +225,7 @@ object Model2Query {
         case Meta(_, _, "e", _, Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
         case Meta(_, _, "e", _, Fn("count", _))         => q.find("count", Seq(), e, Seq())
         case Meta(_, _, "e", _, Length(Some(Fn(_, _)))) => q.find(e, Seq())
+        case Meta(_, _, _, _, IndexVal)                 => q.find(v, Seq()).func("+", Seq(Var(e)), ScalarBinding(Var(v)))
         case Meta(_, _, _, _, EntValue)                 => q.find(e, Seq())
         case Meta(_, _, _, _, _)                        => q
 
@@ -235,14 +236,16 @@ object Model2Query {
     def make(query: Query, element: Element, e: String, v: String, prevNs: String, prevAttr: String, prevRefNs: String)
     : (Query, String, String, String, String, String) = {
       val w = (v.toCharArray.head + 1).toChar.toString
-      x(7, query, element, e, v, prevNs, prevAttr, prevRefNs)
+      val y = (v.toCharArray.head + 2).toChar.toString
+      x(1, query, element, e, v, prevNs, prevAttr, prevRefNs)
       element match {
-        case Atom(ns, attr, "a", _, _, _, _)                  => (resolve(query, e, v, element), e, w, ns, attr, "")
-        case Atom(ns, attr, "ns", _, _, _, _)                 => (resolve(query, e, v, element), e, w, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _, _) if ns == prevNs    => (resolve(query, e, w, element), e, w, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _, _) if ns == prevAttr  => (resolve(query, v, w, element), v, w, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _, _) if ns == prevRefNs => (resolve(query, v, w, element), v, w, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _, _)                    => (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Atom(ns, attr, "a", _, _, _, _)                          => (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Atom(ns, attr, "ns", _, _, _, _)                         => (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _) if prevRefNs == "IndexVal" => x(9, query, element); (resolve(query, e, w, element), e, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _) if ns == prevNs            => (resolve(query, e, w, element), e, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _) if ns == prevAttr          => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _) if ns == prevRefNs         => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _)                            => (resolve(query, e, v, element), e, v, ns, attr, "")
 
         case Bond(ns, refAttr, refNs) if ns == prevNs    => (resolve(query, e, w, element), e, w, ns, refAttr, refNs)
         case Bond(ns, refAttr, refNs) if ns == prevAttr  => (resolve(query, v, w, element), v, w, ns, refAttr, refNs)
@@ -272,10 +275,18 @@ object Model2Query {
           }
           (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
 
-        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))    => x(2, query, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "" => x(3, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, _)                    => x(4, query, element); (resolve(query, v, w, element), v, w, ns, attr, "")
-        case Meta(ns, attr, _, _, _)                            => x(5, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))            => x(2, query, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, prevRefNs)
+        case Meta(ns, attr, "e", NoValue, IndexVal) if prevRefNs == ""  => x(3, query, element); (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, IndexVal)                     => x(4, query, element); (resolve(query, v, w, element), v, w, ns, attr, "IndexVal")
+        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == ""         => x(5, query, element); (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "IndexVal" => x(6, query, element); (resolve(query, e, y, element), e, y, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _)                            => x(7, query, element); (resolve(query, v, w, element), e, w, ns, attr, "")
+        case Meta(ns, attr, _, _, _)                                    => x(8, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+
+        //        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))    => x(2, query, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
+        //        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "" => x(3, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+        //        case Meta(ns, attr, "e", NoValue, _)                    => x(4, query, element); (resolve(query, v, w, element), v, w, ns, attr, "")
+        //        case Meta(ns, attr, _, _, _)                            => x(5, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
 
         case TxModel(elements) =>
           val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, "tx", w, prevNs, prevAttr, prevRefNs)) {
@@ -288,9 +299,9 @@ object Model2Query {
       }
     }
 
-    // Consider And-semantics (self-joins)
+    // Process And-semantics (self-joins)
     def postProcess(q: Query) = {
-      val andAtoms: Seq[Atom] = model.elements.collect { case a@Atom(_, _, _, _, And(andValues), _, _) => a }
+      val andAtoms: Seq[Atom] = model.elements.collect {case a@Atom(_, _, _, _, And(andValues), _, _) => a}
       if (andAtoms.size > 1) sys.error("[Model2Query:postProcess] For now, only 1 And-expression can be used. Found: " + andAtoms)
       if (andAtoms.size == 1) {
         val clauses = q.wh.clauses
@@ -300,7 +311,7 @@ object Model2Query {
         val unifyAttrs = model.elements.collect {
           case a@Atom(ns1, attr1, _, _, _, _, _) if a != andAtom => (ns1, if (attr1.last == '_') attr1.init else attr1)
         }
-        val selfJoinClauses = andValues.zipWithIndex.tail.flatMap { case (andValue, i) =>
+        val selfJoinClauses = andValues.zipWithIndex.tail.flatMap {case (andValue, i) =>
 
           // Todo: complete matches...
           def vi(v0: Var) = Var(v0.v + "_" + i)
@@ -349,11 +360,11 @@ object Model2Query {
       } else q
     }
 
-    val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) =>
+    val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) {case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) =>
       make(query_, element, e, v, prevNs, prevAttr, prevRefNs)
     }._1
 
-    x(8, query)
+    x(20, query, query.datalog)
 
     postProcess(query)
   }

@@ -219,7 +219,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case a: Seq[_]  => a.head match {
         case p: Product => (p.productArity, a)
         case l: Seq[_]  => (l.size, a)
-        case null       => sys.error("[Model2Transaction:nestedData] Please use `List()` instead of `List(null)` for missing nested values.")
+        case null       => sys.error("[Model2Transaction:nestedData] Please use `List()` instead of `List(null)` for nested null values.")
         case _          => (1, a)
       }
       case unexpected => sys.error("[Model2Transaction:nestedData] Unexpected data: " + unexpected)
