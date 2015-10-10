@@ -47,7 +47,6 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
         def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query)
       }
     """
-//         println(isNested + " - " + model)
     )
   }
 }

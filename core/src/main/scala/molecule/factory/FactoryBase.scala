@@ -167,11 +167,11 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           val nestedTpl = ${resolveNested(query, nestedTpes, q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i)}
           Seq(nestedTpl)
 
-        } else if ($tpl.get.isInstanceOf[List[_]]) {
+        } else if ($tpl.get.isInstanceOf[Seq[_]]) {
 
           lazy val nestedTpl = ${
             resolveNested(query, nestedTpes,
-              q"Some($tpl.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+              q"Some($tpl.get.asInstanceOf[Seq[(..$tpes)]].last.asInstanceOf[(..$nestedTpes)])",
               prevRow, row, rowNo, entityIndex + 1 + i)
           }.asInstanceOf[(..$nestedTpes)]
 
@@ -186,163 +186,165 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
 
           lazy val nestedTpl = ${
             resolveNested(query, nestedTpes,
-              q"Some($tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+              q"Some($tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
               prevRow, row, rowNo, entityIndex + 1 + i)
           }.asInstanceOf[(..$nestedTpes)]
 
           val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
 
           if (newNested1)
-            $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
+            $tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
           else
-            $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
+            $tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
         }
       """
-      //      q"""
-      //println("  E tpl: " + $tpl)
-      //
-      //        val result = if ($tpl == null || $newNested) {
-      //          val nestedTpl = ${resolveNested(query, nestedTpes, q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i)}
-      //println("  E0 nestedTpl: " + nestedTpl)
-      //          Seq(nestedTpl)
-      //
-      //        } else if ($tpl.get.isInstanceOf[List[_]]) {
-      //
-      //          lazy val nestedTpl = ${resolveNested(query, nestedTpes,
-      //            q"Some($tpl.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-      //            prevRow, row, rowNo, entityIndex + 1 + i)}.asInstanceOf[(..$nestedTpes)]
-      //println("  E1 nestedTpl: " + nestedTpl)
-      //
-      //          val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
-      //println("  E1 newNested1: " + newNested1)
-      //
-      //          if (newNested1)
-      //            $tpl.get.asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
-      //          else
-      //            $tpl.get.asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
-      //
-      //
-      //        } else {
-      //
-      //          lazy val nestedTpl = ${resolveNested(query, nestedTpes,
-      //            q"Some($tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-      //            prevRow, row, rowNo, entityIndex + 1 + i)}.asInstanceOf[(..$nestedTpes)]
-      //println("  E2 nestedTpl: " + nestedTpl)
-      //
-      //          val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
-      //println("  E2 newNested1: " + newNested1)
-      //
-      //          if (newNested1)
-      //            $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
-      //          else
-      //            $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
-      //        }
-      //
-      //        println("Result E  " + $entityIndex + "  " + $i + " : " + result)
-      //        result
-      //      """
+//            q"""
+////      println("  E tpl: " + tpl.isInstanceOf[Product])
+//
+//              if ($tpl.isEmpty || $newNested) {
+//                val nestedTpl = ${resolveNested(query, nestedTpes, q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i)}
+//println("  E0 tpl: " + $tpl)
+////      println("  E0 nestedTpl: " + nestedTpl)
+//
+//                Seq(nestedTpl)
+//
+//              } else if ($tpl.get.isInstanceOf[Seq[_]]) {
+//println("  E1 tpl: " + $tpl)
+//
+//                val nestedTpl = ${resolveNested(query, nestedTpes,
+//                  q"Some($tpl.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+//                  prevRow, row, rowNo, entityIndex + 1 + i)}.asInstanceOf[(..$nestedTpes)]
+////      println("  E1 nestedTpl: " + nestedTpl)
+//
+//                val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
+////      println("  E1 newNested1: " + newNested1)
+//
+//                if (newNested1)
+//                  $tpl.get.asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
+//                else
+//                  $tpl.get.asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
+//
+//
+//              } else {
+//println("  E2 tpl: " + $tpl)
+//
+//                val nestedTpl = ${
+//                   resolveNested(query, nestedTpes,
+//                     q"Some($tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+//                     prevRow, row, rowNo, entityIndex + 1 + i)
+//                 }.asInstanceOf[(..$nestedTpes)]
+//
+//                 val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
+//
+//                 if (newNested1)
+//                   $tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
+//                 else
+//                   $tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
+//              }
+//            """
+//      q"null.asInstanceOf[Seq[(..$nestedTpes)]]"
     }
 
     lazy val values = tpes.zipWithIndex.map {
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[(_, _)]] =>
-        val nestedTpes = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _)].typeSymbol).typeArgs
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[(_, _)]] =>
+        val nestedTpes = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head.baseType(weakTypeOf[(_, _)].typeSymbol).typeArgs
         resolve(nestedTpes, i)
 
-      case (nestedTplType, i) if nestedTplType <:< weakTypeOf[Seq[_]] =>
-        val nestedTpe = nestedTplType.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head
+      case (tpe, i) if tpe <:< weakTypeOf[Seq[_]] =>
+        val nestedTpe = tpe.baseType(weakTypeOf[Seq[_]].typeSymbol).typeArgs.head
         q"""
           if ($tpl.isEmpty || $newNested) {
             val nestedTpl = ${resolveNested(query, Seq(nestedTpe), q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i)}
             Seq(nestedTpl)
 
-          } else if ($tpl.get.isInstanceOf[List[_]]) {
+          } else if ($tpl.get.isInstanceOf[Seq[_]]) {
 
             lazy val nestedTpl = ${
-          resolveNested(query, Seq(nestedTpe),
-            q"Some($tpl.get.asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
-            prevRow, row, rowNo, entityIndex + 1 + i)
-        }.asInstanceOf[$nestedTpe]
+              resolveNested(query, Seq(nestedTpe),
+                q"Some($tpl.get.asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
+                prevRow, row, rowNo, entityIndex + 1 + i)
+            }.asInstanceOf[$nestedTpe]
 
             val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
 
@@ -354,64 +356,66 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           } else {
 
             lazy val nestedTpl = ${
-          resolveNested(query, Seq(nestedTpe),
-            q"Some($tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
-            prevRow, row, rowNo, entityIndex + 1 + i)
-        }.asInstanceOf[$nestedTpe]
+              resolveNested(query, Seq(nestedTpe),
+                q"Some($tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
+                prevRow, row, rowNo, entityIndex + 1 + i)
+            }.asInstanceOf[$nestedTpe]
 
             val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
 
             if (newNested1)
-              $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]] :+ nestedTpl
+              $tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[$nestedTpe]] :+ nestedTpl
             else
-              $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]].init :+ nestedTpl
+              $tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[$nestedTpe]].init :+ nestedTpl
+
           }
         """
-      //        q"""
-      //println("  B tpl: " + $tpl)
-      //println("  B nestedTpe: " + ${nestedTpe.toString})
-      //
-      //          val result = if ($tpl.isEmpty || $newNested) {
-      //println("  B0")
-      //            val nestedTpl = ${resolveNested(query, Seq(nestedTpe), q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i)}
-      //println("  B0 nestedTpl: " + nestedTpl)
-      //            Seq(nestedTpl)
-      //
-      //          } else if ($tpl.get.isInstanceOf[List[_]]) {
-      //
-      //            lazy val nestedTpl = ${resolveNested(query, Seq(nestedTpe),
-      //              q"Some($tpl.get.asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
-      //              prevRow, row, rowNo, entityIndex + 1 + i)}.asInstanceOf[$nestedTpe]
-      //println("  B1 nestedTpl: " + nestedTpl)
-      //
-      //            val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
-      //println("  B1 newNested1: " + newNested1)
-      //
-      //            if (newNested1)
-      //              $tpl.get.asInstanceOf[Seq[$nestedTpe]] :+ nestedTpl
-      //            else
-      //              $tpl.get.asInstanceOf[Seq[$nestedTpe]].init :+ nestedTpl
-      //
-      //
-      //          } else {
-      //
-      //            lazy val nestedTpl = ${resolveNested(query, Seq(nestedTpe),
-      //              q"Some($tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
-      //              prevRow, row, rowNo, entityIndex + 1 + i)}.asInstanceOf[$nestedTpe]
-      //println("  B1 nestedTpl: " + nestedTpl)
-      //
-      //            val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
-      //println("  B1 newNested1: " + newNested1)
-      //
-      //            if (newNested1)
-      //              $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]] :+ nestedTpl
-      //            else
-      //              $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]].init :+ nestedTpl
-      //          }
-      //
-      //          println("Result B  " + $entityIndex + "  " + $i + " : " + result)
-      //          result
-      //        """
+//              q"""
+//      println("  B tpl: " + $tpl)
+//
+//                val result = if ($tpl.isEmpty || $newNested) {
+//      println("  B0")
+//                  val nestedTpl = ${resolveNested(query, Seq(nestedTpe), q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i)}
+//      println("  B0 nestedTpl: " + nestedTpl)
+//                  Seq(nestedTpl)
+//
+//                } else if ($tpl.get.isInstanceOf[Seq[_]]) {
+//
+//                  lazy val nestedTpl = ${resolveNested(query, Seq(nestedTpe),
+//                    q"Some($tpl.get.asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
+//                    prevRow, row, rowNo, entityIndex + 1 + i)}.asInstanceOf[$nestedTpe]
+//      println("  B1 nestedTpl: " + nestedTpl)
+//
+//                  val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
+//      println("  B1 newNested1: " + newNested1)
+//
+//                  if (newNested1)
+//                    $tpl.get.asInstanceOf[Seq[$nestedTpe]] :+ nestedTpl
+//                  else
+//                    $tpl.get.asInstanceOf[Seq[$nestedTpe]].init :+ nestedTpl
+//
+//
+//                } else {
+//
+//                  lazy val nestedTpl = ${resolveNested(query, Seq(nestedTpe),
+//                    q"Some($tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
+//                    prevRow, row, rowNo, entityIndex + 1 + i)}.asInstanceOf[$nestedTpe]
+//      println("  B1 nestedTpl: " + nestedTpl)
+//
+//                  val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
+//      println("  B1 newNested1: " + newNested1)
+//
+//                  if (newNested1)
+//                    $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]] :+ nestedTpl
+//                  else
+//                    $tpl.get.productElement($tpl.get.productArity - 1).asInstanceOf[Seq[$nestedTpe]].init :+ nestedTpl
+//                }
+//
+//                println("Result B  " + $entityIndex + "  " + $i + " : " + result)
+//                result
+//              """
+//        q"null.asInstanceOf[Seq[$nestedTpe]]"
+
 
       case (tpe, i) => q"${cast(query, row, tpe, entityIndex + 1 + i)}"
       //        q"""
@@ -485,7 +489,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           val rowCount = sortedRows.length
 
           sortedRows.foldLeft((Seq[(..$tpes)](), None: Option[(..$tpes)], Seq(0L), Seq[Any](0L), 1)) { case ((accTpls, tpl0, prevEntities, prevRow, r), row) =>
-//            println("--- " + r + " ---")
+//println("--- " + r + " ---")
             val entities = entityIndexes.map(i => row(i).asInstanceOf[Long])
 
             val isLastRow = rowCount == r

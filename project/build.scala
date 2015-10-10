@@ -54,6 +54,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       publishLocal :=()
 
 
+
 //    ,mappings in (Compile, packageSrc) ++= {
 //      val allGeneratedFiles = ((sourceManaged in Compile).value ** "*") filter { _.isFile }
 //        println("@@@@@@@@@@ allGeneratedFiles: " + allGeneratedFiles.toString)
@@ -64,8 +65,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "org.scalamolecule",
-    version := "0.3.0",
-    scalaVersion := "2.11.6",
+    version := "0.3.1-SNAPSHOT",
+    scalaVersion := "2.11.7",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
     resolvers ++= Seq(
       "datomic" at "http://files.datomic.com/maven",
@@ -79,7 +80,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.scalaz" %% "scalaz-core" % "7.1.3",
       "net.liftweb" %% "lift-json" % "3.0-M6",
-      "org.specs2" %% "specs2" % "2.4.11" % "test"
+      "org.specs2" %% "specs2" % "2.4.11" //% "test"
     ),
     // Remove Java directories
     unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_)),

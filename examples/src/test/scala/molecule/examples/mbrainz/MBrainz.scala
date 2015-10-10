@@ -11,6 +11,8 @@ import scala.language.postfixOps
 
   cd [datomic-download]
   bin/transactor config/samples/dev-transactor-template.properties
+
+  [first time (replace full path):]
   bin/datomic restore-db file:///Users/mg/lib/datomic/datomic-pro-0.9.5206/mbrainz-1968-1973 datomic:dev://localhost:4334/mbrainz-1968-1973
 
   Remember to add -Xmx2g -server to IDE compiler settings ("Additional build process VM options)

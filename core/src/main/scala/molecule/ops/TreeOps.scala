@@ -197,7 +197,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
       val test = s.head.toLower + s.tail.takeWhile(_ != '_')
 //      s
 //      s.split("_(\\d+|In.*)").head
-      val first = s.split("_(\\d+|In.*)").head
+      val first = s.split("_(\\d+|In_.*)").head
       val result = first.head.toLower + first.tail
 //      x(8, s, test, result)
       result

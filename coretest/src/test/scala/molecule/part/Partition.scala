@@ -1,4 +1,5 @@
-package molecule.part
+package molecule
+package part
 import java.util.UUID._
 
 import datomic.Peer
@@ -31,7 +32,5 @@ class Partition extends MoleculeSpec {
         |  List(  :db/add,   #db/id[:gen -1000002],   :gen_Person/name  ,   Marc                     )
         |  List(  :db/add,   #db/id[:gen -1000002],   :gen_Person/gender,   :gen_Person.gender/male  )
         |)""".stripMargin
-
-    //    ok
   }
 }

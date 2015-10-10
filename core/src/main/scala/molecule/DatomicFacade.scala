@@ -9,14 +9,18 @@ import molecule.ast.query._
 import molecule.ast.transaction.{Statement, _}
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
-import molecule.util.{Helpers, Debug}
+import molecule.util.Debug
 import dsl.Transaction
+import org.specs2.main.ArgProperties
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-import scala.language.{existentials, higherKinds}
+//import scala.language.{existentials, higherKinds}
 
-trait DatomicFacade {
+// ArgProperties for some reason makes FactoryBase happy when creating nested molecules
+// outside the Specs2 framework (in non-test code). Todo: Do without ArgProperties
+
+trait DatomicFacade extends ArgProperties {
   private val x = Debug("DatomicFacade", 1, 99, false, 3)
   type KeepQueryOpsWhenFormatting = KeepQueryOps
 
