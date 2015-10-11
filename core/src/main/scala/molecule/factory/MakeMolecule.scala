@@ -39,7 +39,7 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
             case (result, _)                        => result
           }
           if (isNested)
-            ${castNestedTpls(q"queryE", q"results(conn, modelE, queryE)", OutTypes)}.asInstanceOf[Seq[(..$OutTypes)]]
+            ${castNestedTpls(q"queryE", q"results(conn, modelE, queryE)", OutTypes)}
           else
             results(conn, model, query).map(data => (..${castTpl(q"query", q"data", OutTypes)}))
         }

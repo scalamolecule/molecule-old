@@ -84,8 +84,7 @@ trait DatomicFacade extends ArgProperties {
     case other                              => sys.error(s"[DatomicFacade] UNEXPECTED inputs: $other")
   }
 
-//  def results(conn: Connection, model: Model, query: Query): jCollection[jList[AnyRef]] = {
-  def results(conn: Connection, model: Model, query: Query): Seq[jList[AnyRef]] = {
+  def results(conn: Connection, model: Model, query: Query): List[jList[AnyRef]] = {
     val p = (expr: QueryExpr) => Query2String(query).p(expr)
     val rules = "[" + (query.i.rules map p mkString " ") + "]"
     val db = dbOp match {
@@ -105,7 +104,7 @@ trait DatomicFacade extends ArgProperties {
     val allInputs = first ++ inputs(query)
 
     try {
-      Peer.q(query.toMap, allInputs: _*).toSeq
+      Peer.q(query.toMap, allInputs: _*).toList
     } catch {
       case e: Throwable => throw new RuntimeException(
         s"""
