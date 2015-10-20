@@ -33,6 +33,8 @@ case class Query2String(q: Query) {
     case Val(date: Date)                 => format(date)
     case Val(v: UUID)                    => "#uuid \"" + v + "\""
     case Val(v)                          => "\"" + v + "\""
+    case Pull(e, ns, attr, Some(prefix)) => s"(pull ?$e [{:$ns/$attr [:db/ident]}])"
+    case Pull(e, ns, attr, _)            => s"(pull ?$e [:$ns/$attr])"
     case Dummy                           => "_"
     case NoVal                           => ""
     case DS(name)                        => "$" + name
@@ -53,7 +55,6 @@ case class Query2String(q: Query) {
     case Rule(name, args, clauses)       => s"[($name " + (args map p mkString " ") + ") " + (clauses map p mkString " ") + "]"
     case RuleInvocation(name, args)      => s"($name " + (args map p mkString " ") + ")"
     case unresolvedQuery                 => sys.error(s"\n[Query2String] UNRESOLVED query expression: $unresolvedQuery")
-    //    case KW(ns, attr, _)                 => ":" + ns.head.toLower + ns.tail + "/" + attr
   }
 
   def pp(es: QueryExpr*): String = es.toList.map(p).filter(_.trim.nonEmpty).mkString("[", " ", "]")

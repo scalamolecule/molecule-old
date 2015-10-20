@@ -9,10 +9,10 @@ class Output extends CoreSpec {
 
   class Setup extends CoreSetup {
     // Persons with ages (except Mona)
-    Ns.str.int insert List(
-      ("John", 37),
-      ("Lisa", 28),
-      ("Mona", null.asInstanceOf[Int]))
+    Ns.str.int$ insert List(
+      ("John", Some(37)),
+      ("Lisa", Some(28)),
+      ("Mona", None))
   }
 
 

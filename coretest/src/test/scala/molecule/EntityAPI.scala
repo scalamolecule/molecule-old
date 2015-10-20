@@ -10,39 +10,38 @@ class EntityAPI extends CoreSpec {
 
   class OneSetup extends CoreSetup {
 
-    val List(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11) = Ns
-      .str.int.long.float.double.bool.date.uuid.uri.enum insert List(
-      ("a", 1, long1, float1, double1, bool1, date1, uuid1, uri1, enum1),
-      (null.asInstanceOf[String], 2, long1, float1, double1, bool1, date1, uuid1, uri1, enum1),
-      ("c", null.asInstanceOf[Int], long1, float1, double1, bool1, date1, uuid1, uri1, enum1),
-      ("d", 4, null.asInstanceOf[Long], float1, double1, bool1, date1, uuid1, uri1, enum1),
-      ("e", 5, long1, null.asInstanceOf[Float], double1, bool1, date1, uuid1, uri1, enum1),
-      ("f", 6, long1, float1, null.asInstanceOf[Double], bool1, date1, uuid1, uri1, enum1),
-      ("g", 7, long1, float1, double1, null.asInstanceOf[Boolean], date1, uuid1, uri1, enum1),
-      ("h", 8, long1, float1, double1, bool1, null.asInstanceOf[Date], uuid1, uri1, enum1),
-      ("i", 9, long1, float1, double1, bool1, date1, null.asInstanceOf[UUID], uri1, enum1),
-      ("j", 10, long1, float1, double1, bool1, date1, uuid1, null.asInstanceOf[URI], enum1),
-      ("k", 11, long1, float1, double1, bool1, date1, uuid1, uri1, null.asInstanceOf[String])
+    val List(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11) = m(Ns.ints.str$.int$.long$.float$.double$.bool$.date$.uuid$.uri$.enum$) insert List(
+      (Set(1), Some("a"), Some(1), Some(long1), Some(float1), Some(double1), Some(bool1), Some(date1), Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(2), None, Some(2), Some(long1), Some(float1), Some(double1), Some(bool1), Some(date1), Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(3), Some("c"), None, Some(long1), Some(float1), Some(double1), Some(bool1), Some(date1), Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(4), Some("d"), Some(4), None, Some(float1), Some(double1), Some(bool1), Some(date1), Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(5), Some("e"), Some(5), Some(long1), None, Some(double1), Some(bool1), Some(date1), Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(6), Some("f"), Some(6), Some(long1), Some(float1), None, Some(bool1), Some(date1), Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(7), Some("g"), Some(7), Some(long1), Some(float1), Some(double1), None, Some(date1), Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(8), Some("h"), Some(8), Some(long1), Some(float1), Some(double1), Some(bool1), None, Some(uuid1), Some(uri1), Some(enum1)),
+      (Set(9), Some("i"), Some(9), Some(long1), Some(float1), Some(double1), Some(bool1), Some(date1), None, Some(uri1), Some(enum1)),
+      (Set(10), Some("j"), Some(10), Some(long1), Some(float1), Some(double1), Some(bool1), Some(date1), Some(uuid1), None, Some(enum1)),
+      (Set(11), Some("k"), Some(11), Some(long1), Some(float1), Some(double1), Some(bool1), Some(date1), Some(uuid1), Some(uri1), None)
     ) eids
   }
 
   class ManySetup extends CoreSetup {
 
-    val List(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11) = Ns
-      .int.strs.ints.longs.floats.doubles.bools.dates.uuids.uris.enums insert List(
-      (1, Set("a"), Set(1), Set(long1), Set(float1), Set(double1), Set(bool1), Set(date1), Set(uuid1), Set(uri1), Set(enum1)),
-      (2, null, Set(2), Set(long1), Set(float1), Set(double1), Set(bool1), Set(date1), Set(uuid1), Set(uri1), Set(enum1)),
-      (3, Set("c"), null, Set(long1), Set(float1), Set(double1), Set(bool1), Set(date1), Set(uuid1), Set(uri1), Set(enum1)),
-      (4, Set("d"), Set(4), null, Set(float1), Set(double1), Set(bool1), Set(date1), Set(uuid1), Set(uri1), Set(enum1)),
-      (5, Set("e"), Set(5), Set(long1), null, Set(double1), Set(bool1), Set(date1), Set(uuid1), Set(uri1), Set(enum1)),
-      (6, Set("f"), Set(6), Set(long1), Set(float1), null, Set(bool1), Set(date1), Set(uuid1), Set(uri1), Set(enum1)),
-      (7, Set("g"), Set(7), Set(long1), Set(float1), Set(double1), null, Set(date1), Set(uuid1), Set(uri1), Set(enum1)),
-      (8, Set("h"), Set(8), Set(long1), Set(float1), Set(double1), Set(bool1), null, Set(uuid1), Set(uri1), Set(enum1)),
-      (9, Set("i"), Set(9), Set(long1), Set(float1), Set(double1), Set(bool1), Set(date1), null, Set(uri1), Set(enum1)),
-      (10, Set("j"), Set(10), Set(long1), Set(float1), Set(double1), Set(bool1), Set(date1), Set(uuid1), null, Set(enum1)),
-      (11, Set("k"), Set(11), Set(long1), Set(float1), Set(double1), Set(bool1), Set(date1), Set(uuid1), Set(uri1), null)
+    val List(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11) = m(Ns.int.strs$.ints$.longs$.floats$.doubles$.bools$.dates$.uuids$.uris$.enums$) insert List(
+      (1, Some(Set("a")), Some(Set(1)), Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (2, None, Some(Set(2)), Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (3, Some(Set("c")), None, Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (4, Some(Set("d")), Some(Set(4)), None, Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (5, Some(Set("e")), Some(Set(5)), Some(Set(long1)), None, Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (6, Some(Set("f")), Some(Set(6)), Some(Set(long1)), Some(Set(float1)), None, Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (7, Some(Set("g")), Some(Set(7)), Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), None, Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (8, Some(Set("h")), Some(Set(8)), Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), None, Some(Set(uuid1)), Some(Set(uri1)), Some(Set(enum1))),
+      (9, Some(Set("i")), Some(Set(9)), Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), None, Some(Set(uri1)), Some(Set(enum1))),
+      (10, Some(Set("j")), Some(Set(10)), Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), None, Some(Set(enum1))),
+      (11, Some(Set("k")), Some(Set(11)), Some(Set(long1)), Some(Set(float1)), Some(Set(double1)), Some(Set(bool1)), Some(Set(date1)), Some(Set(uuid1)), Some(Set(uri1)), None)
     ) eids
   }
+
 
   "`getTyped` - Optional typed card one values from entity id" in new OneSetup {
 
@@ -79,11 +78,11 @@ class EntityAPI extends CoreSpec {
 
     // entity 2: no str asserted
     // entity 3: no int asserted
-    Ns.str.<=("d").int.get.sortBy(_._1) === List(
+    Ns.str.<=("d").int.get.sortBy(_._1.head) === List(
       ("a", 1),
       ("d", 4))
 
-    Ns.str.int.<=(4).get.sortBy(_._1) === List(
+    Ns.str.int.<=(4).get.sortBy(_._1.head) === List(
       ("a", 1),
       ("d", 4))
   }
@@ -144,17 +143,17 @@ class EntityAPI extends CoreSpec {
 
     // Get optional values
     Ns.int.<=(4).maybe(str) === List(
-      (2, None),
       (1, Some("a")),
+      (2, None),
       (4, Some("d")))
 
     Ns.int.<=(4).maybe(str, long) === List(
-      (2, None, Some(1L)),
       (1, Some("a"), Some(1L)),
+      (2, None, Some(1L)),
       (4, Some("d"), None))
 
     Ns.int.<=(4).str.maybe(long) === List(
-      (1, "a", Some(1)),
-      (4, "d", None))
+      (4, "d", None),
+      (1, "a", Some(1)))
   }
 }

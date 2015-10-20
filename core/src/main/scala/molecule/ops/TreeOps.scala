@@ -20,8 +20,8 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     lazy val card       = at.card
     lazy val enumPrefix = at.enumPrefix
 
-    def isPartition = tpe <:< typeOf[Partition]
-    def isNS = tpe <:< typeOf[NS]
+    def isFirstNS = tpe <:< typeOf[FirstNS]
+//    def isNS0 = tpe <:< typeOf[NS0[_]]
     def owner = t.symbol.typeSignature.typeParams.head.name.toString
     def alias = t.symbol.typeSignature.typeParams.head.name.toString
 
@@ -48,7 +48,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isManyURI = tpe <:< weakTypeOf[ManyURI[_, _]]
     override def toString = t.tpe.typeSymbol.name.toString
   }
-//  def nsString(ns: String): String = ns.head.toLower + ns.tail
   def nsString(ns: String): String = ns
   def nsString(ns: Tree): String = nsString(ns.symbol.name.toString)
   def nsString(ns: Name): String = nsString(ns.decodedName.toString)
@@ -184,6 +183,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
   class nsp(val sym: Symbol) {
     val x = DebugMacro("ModelOps:nsp", 8)
+
     lazy val nsType = sym match {
       case s: TermSymbol if s.isPublic                => s.typeSignature.typeSymbol.typeSignature
       case s: MethodSymbol
@@ -192,22 +192,19 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
       case unexpected                                 =>
         abortTree(q"$unexpected", s"[TreeOps:nsp] Unexpected namespace symbol")
     }
+
     override def toString = {
       val s = sym.name.toString
       val test = s.head.toLower + s.tail.takeWhile(_ != '_')
-//      s
-//      s.split("_(\\d+|In.*)").head
       val first = s.split("_(\\d+|In_.*)").head
-      val result = first.head.toLower + first.tail
-//      x(8, s, test, result)
-      result
-//      test
+      first.head.toLower + first.tail
     }
+
     def attrs = nsType.members.collect {
       case s: TermSymbol if s.isPublic                                   => new att(s)
       case s: MethodSymbol if s.asMethod.returnType <:< weakTypeOf[Attr] => new att(s)
     }.toList.reverse
-    // todo: remove redundant Ref methods!!
+
     def enums = attrs.filter(_.isEnum).distinct
     def isNamespace = true
   }
@@ -255,17 +252,14 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
       case v: TermSymbol
         if v.isPrivate && v.isLazy && v.typeSignature.typeSymbol.asType.toType =:= typeOf[EnumValue.type]
       => v.name.decodedName.toString.trim
-    }
-      .toList.reverse
+    }.toList.reverse
     def hasEnum(enumCandidate: String) = enumValues.contains(enumCandidate)
     def card = if (isMany || attrType <:< weakTypeOf[ManyEnums[_, _]]) 2 else 1
     def isValue = attrType <:< weakTypeOf[One[_, _, _]] || attrType <:< weakTypeOf[Many[_, _, _, _]] || attrType <:< weakTypeOf[OneEnum[_, _]]
     def keyw = KW(ns.toString, this.toString)
-//    override def toString = sym.name.toString
     override def toString = sym.name.toString.head.toLower + sym.name.toString.tail
     def kw = KW(ns.toString, this.toString)
     def kwS = s":$ns/$name"
-    // todo: if (nestedNS.isDefined) s":$ns.$nestedNS/$name" else s":$ns/$name"
     def enumPrefix = ns.enums.size match {
       case 0 => ""
       case _ => s":$ns." + (if (name.toString.last == '_') name.toString.init else name) + "/"

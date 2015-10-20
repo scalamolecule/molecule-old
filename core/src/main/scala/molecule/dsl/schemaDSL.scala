@@ -9,6 +9,8 @@ object schemaDSL {
 
   trait NS
 
+  trait FirstNS extends NS
+
   // Using dummy type parameter to simplify parsing DSL
   trait NS0[Dummy] extends NS
   trait NS1[A] extends NS
@@ -73,15 +75,14 @@ object schemaDSL {
   trait OneRef[This, Next] extends Ref[This, Next]
   trait ManyRef[This, Next] extends Ref[This, Next]
 
-  import scalaz._
-  trait ManyRefSelf2[A, B]
-  {
-    def tree(levels: Int): Seq[Tree[(A, B)]] = ???
-  }
-
-
-  // todo?
-  trait Partition
+  //  import scalaz._
+  //  trait ManyRefSelf2[A, B]
+  //  {
+  //    def tree(levels: Int): Seq[Tree[(A, B)]] = ???
+  //  }
+  //  trait ManyRefAttrSelf[Ns, In] extends ManyRefAttr[Ns, In] {
+  //    def recurse(levels: Int): Ns with Attr = ???
+  //  }
 
   trait Attr
 
@@ -94,15 +95,9 @@ object schemaDSL {
     def apply(values: Long*)                          : Ns with Attr = ???
     def apply(oneSet: Set[Long], moreSets: Set[Long]*): Ns with Attr = ??? // Todo: not implemented yet
 
-    def add(value: Long)     : Ns with Attr = ???
-    def remove(values: Long*): Ns with Attr = ???
-    // def apply(test: maybe) : Ns with Attr = ???
+    def add(value: Long)                              : Ns with Attr = ???
+    def remove(values: Long*)                         : Ns with Attr = ???
   }
-
-  trait ManyRefAttrSelf[Ns, In] extends ManyRefAttr[Ns, In] {
-    def recurse(levels: Int): Ns with Attr = ???
-  }
-
   trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns with Attr = ???
   }
@@ -112,6 +107,7 @@ object schemaDSL {
     // Keyword for entity api
     val _kw: String = ""
 
+    // Expressions
     def apply(expr1: Exp1[T])       : Ns with Attr = ???
     def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
     def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
@@ -119,30 +115,31 @@ object schemaDSL {
     // Null (datom not asserted)
     def apply(noValue: nil): Ns with Attr = ???
 
+    // Negation
     def not(one: T, more: T*)         : Ns with Attr = ???
     // Todo: remove this when Intellij can infer from the next method alone...
     def != (value: T)         : Ns with Attr = ???
     def != (one: T, more: T*) : Ns with Attr = ???
 
-    // def > (value: T)          : Ns with Compare[Ns, In, T] with Attr = ???
-    def < (value: T)  : Ns with Attr = ???
-    def > (value: T)  : Ns with Attr = ???
+    // Comparison
+    def <  (value: T) : Ns with Attr = ???
+    def >  (value: T) : Ns with Attr = ???
     def <= (value: T) : Ns with Attr = ???
     def >= (value: T) : Ns with Attr = ???
 
     // Input
-    def < (in: ?)   : In with Attr = ???
-    def > (in: ?)   : In with Attr = ???
-    def <= (in: ?)  : In with Attr = ???
-    def >= (in: ?)  : In with Attr = ???
-    def != (in: ?)  : In with Attr = ???
-    def not (in: ?) : In with Attr = ???
-
     def apply(in: ?) : In with Attr = ???
-    // def apply(test: maybe) : Ns with Attr = ???
+    def not  (in: ?) : In with Attr = ???
+    def !=   (in: ?) : In with Attr = ???
+    def <    (in: ?) : In with Attr = ???
+    def >    (in: ?) : In with Attr = ???
+    def <=   (in: ?) : In with Attr = ???
+    def >=   (in: ?) : In with Attr = ???
   }
 
-  // One-cardinality
+
+  // Cardinality one
+
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
     // Empty `apply` is a request to delete values!
     def apply()                 : Ns with Attr = ???
@@ -160,11 +157,11 @@ object schemaDSL {
   trait OneURI    [Ns, In] extends One[Ns, In, URI    ]
   trait OneAny    [Ns, In] extends One[Ns, In, Any    ]
 
-  // Many-cardinality
+
+  // Cardinality many
+
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T, S] {
-    def apply(values: T*) : Ns with Attr = ???
-//    def apply(one: T, more: T*)                    : Ns with Attr = ???
-//    def apply(oneSet: S)                           : Ns with Attr = ???
+    def apply(values: T*)                          : Ns with Attr = ???
     def apply(oneSet: S, moreSets: S*)             : Ns with Attr = ???
 
     def add(value: T)                              : Ns with Attr = ???

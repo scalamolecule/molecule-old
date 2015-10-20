@@ -33,8 +33,8 @@ trait DatomicFacade extends ArgProperties {
       Peer.deleteDatabase(uri)
       Peer.createDatabase(uri)
       val conn = Peer.connect(uri)
-      conn.transact(tx.partitions) //.get()
-      conn.transact(tx.namespaces) //.get()
+      conn.transact(tx.partitions)
+      conn.transact(tx.namespaces)
       conn
     } catch {
       case e: Throwable => sys.error("@@@@@@@@@@ " + e.getCause)
@@ -128,11 +128,8 @@ trait DatomicFacade extends ArgProperties {
 
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
-    //        x(1, model, transformer.stmtsModel, dataRows)
-    //            x(1, transformer.stmtsModel, dataRows)
     val stmtss = transformer.insertStmts(dataRows)
-    //            x(2,  stmtss)
-//            x(2, model, transformer.stmtsModel, dataRows, stmtss)
+    //    x(2, model, transformer.stmtsModel, dataRows, stmtss)
     Tx(conn, transformer, stmtss)
   }
 
@@ -165,10 +162,8 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
     //    case Add(e, a, v: URI)   => Add(e, a, v).toJava
     case other => other.toJava
   }.asJava
-//      x(7, stmtss, flatStmts)
+  //      x(7, stmtss, flatStmts)
 
-  //  val xx = Util.list(Util.list(":db/add", Peer.tempid(":db.part/user"), ":ns/float", 1f.toDouble: java.lang.Double))
-  //  val txResult: jMap[_, _] = conn.transact(xx).get
   val txResult: jMap[_, _] = conn.transact(flatStmts).get
 
   def eids: List[Long] = {
@@ -185,7 +180,6 @@ case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[
     val txTtempIds = txResult.get(Connection.TEMPIDS)
     val dbAfter = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
     val ids = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
-
     //    x(1, transformer.stmtsModel, stmtss, datoms, ids)
     ids.toList
   }

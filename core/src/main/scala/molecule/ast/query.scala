@@ -43,8 +43,9 @@ object query {
 
   case class Var(v: String) extends QueryValue with Output
   case class Val(v: Any) extends QueryValue with Output
-  case object Dummy extends QueryValue
+  case class Pull(e: String, ns: String, attr: String, enumPrefix: Option[String] = None) extends QueryValue with Output
   case object NoVal extends QueryValue with Output
+  case object Dummy extends QueryValue
 
 
   sealed trait DataSource extends QueryTerm

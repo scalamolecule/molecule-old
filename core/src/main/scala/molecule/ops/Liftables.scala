@@ -65,10 +65,11 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   implicit val liftWith   = Liftable[With] { widh => q"With(Seq(..${widh.variables}))"}
 
   implicit val liftQueryValue = Liftable[QueryValue] {
-    case Var(sym) => q"Var($sym)"
-    case Val(v)   => q"Val($v)"
-    case Dummy    => q"Dummy"
-    case NoVal    => q"NoVal"
+    case Var(sym)                      => q"Var($sym)"
+    case Val(v)                        => q"Val($v)"
+    case Pull(e, ns, attr, enumPrefix) => q"Pull($e, $ns, $attr, $enumPrefix)"
+    case Dummy                         => q"Dummy"
+    case NoVal                         => q"NoVal"
   }
 
   implicit val liftDataSource = Liftable[DataSource] {

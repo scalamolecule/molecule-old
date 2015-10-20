@@ -24,6 +24,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
     //    x(25, query, id.asInstanceOf[Object], Peer.q(query, db, id.asInstanceOf[Object]))
     Peer.q(query, db, id.asInstanceOf[Object]).map(_.get(0))
   }
+
   val stmtsModel: Seq[Statement] = {
 
     def resolveElement(eSlot: Any, stmts: Seq[Statement], element: Element): (Any, Seq[Statement]) = (eSlot, element) match {
@@ -46,6 +47,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       // First with id
       case (Eid(id), Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
       case (Eid(id), Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
+      case (Eid(id), Bond(ns, refAttr, refNs))                         => ('v, stmts :+ Add(id, s":$ns/$refAttr", 'tempId))
 
       // Same namespace
       case ('e, Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
@@ -76,9 +78,23 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (e, elem) =>
         //        x(27, model, e, elem)
         //        throw new RuntimeException(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
-        sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
+        sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\nMODEL: $model \nPAIR: ($e, $elem)\nSTMTS: $stmts")
     }
-    model.elements.foldLeft('_: Any, Seq[Statement]()) {
+
+    def replace$(elements: Seq[Element]): Seq[Element] = elements map {
+      case a@Atom(_, attr, _, _, _, Some(enumPrefix), _)
+        if attr.last == '$' && enumPrefix.init.last == '$'    => a.copy(name = attr.init, enumPrefix = Some(enumPrefix.init.init + "/"))
+      case a@Atom(_, attr, _, _, _, _, _) if attr.last == '$' => a.copy(name = attr.init)
+      case b@Bond(_, attr, _) if attr.last == '$'             => b.copy(refAttr = attr.init)
+      case b@ReBond(_, attr, _, _, _) if attr.last == '$'     => b.copy(refAttr = attr.init)
+      case t@Transitive(_, attr, _, _, _) if attr.last == '$' => t.copy(refAttr = attr.init)
+      case Group(ref, es)                                     => Group(ref, replace$(es))
+      case other                                              => other
+    }
+    val model1 = Model(replace$(model.elements))
+    x(50, model, model1)
+
+    model1.elements.foldLeft('_: Any, Seq[Statement]()) {
       case ((eSlot, stmts), element) => resolveElement(eSlot, stmts, element)
     }._2
   }
@@ -109,58 +125,64 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
   def lastE(stmts: Seq[Statement], attr: String) = if (stmts.isEmpty) tempId(attr) else stmts.last.e
 
+  def matchDataStmt(stmts: Seq[Statement], dataStmt: Statement, arg: Any, cur: Int, next: Int) = dataStmt match {
+    case Add('tempId, a, 'arg)                    => x(1, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg))
+    case Add('tempId, a, Values(EnumVal, prefix)) => x(2, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg, prefix))
+    case Add('tempId, a, Values(vs, prefix))      => x(3, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, vs, prefix))
+    case Add('tempId, a, refNs: String)           => x(4, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(refNs)))
+    case Add('arg, a, 'tempId)                    => x(5, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, arg, a, tempId(a)))
+    case Add('e, a, 'arg)                         => x(6, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg))
+    case Add('e, a, refNs: String)                => x(7, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
+    case Add('e, a, Values(EnumVal, prefix))      => x(8, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg, prefix))
+    case Add('e, a, Values(vs, prefix))           => x(9, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
+    case Add('v, a, 'arg)                         => x(10, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, arg))
+    case Add('v, a, 'tempId)                      => x(11, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, stmts.last.v, a, tempId(a)))
+    case Add('v, a, Values(EnumVal, prefix))      => x(12, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, arg, prefix))
+    case Add('v, a, Values(vs, prefix))           => x(12, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
+    case Add('tx, a, 'arg)                        => x(13, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId("tx"), a, arg))
+    case Retract(e, a, v)                         => x(14, s"$cur - $dataStmt - $arg"); (cur, stmts)
+    case Add(e0, ref0, nestedStmts0: Seq[_])      => {
+      x(15, e0, ref0, nestedStmts0, cur, dataStmt, arg)
+      def resolveNested(e: Any, ref: String, nestedStmts: Seq[Any], arg1: Any, lastE: Any): Seq[Statement] = {
+        if (arg1 == Nil) {
+          Nil
+        } else {
+          val parentId = if (e == 'parentId) tempId(ref) else lastE // todo: check that 'ref' is always in the right partition...
+          nestedArgss(nestedStmts, arg1).flatMap { nestedArgs =>
+            val nestedId = tempId(ref)
+            val bondStmt = Add(parentId, ref, nestedId)
+            val nestedStmts1 = nestedArgs.zip(nestedStmts).flatMap {
+              case (null, _)                                              => sys.error("[Model2Transaction:matchDataStmt:resolveNested] null values not allowed. Please use `attr$` for Option[tpe] values.")
+              case (None, _)                                              => Nil
+              case (Some(nestedArg), Add(e1, ref1, nestedStmts1: Seq[_])) => resolveNested(nestedId, ref1, nestedStmts1, nestedArg, nestedId)
+              case (Some(nestedArg), Add(_, a, _))                        => resolveStmts(Seq(), nestedId, a, nestedArg)
+              case (nestedArg, Add(e1, ref1, nestedStmts1: Seq[_]))       => resolveNested(nestedId, ref1, nestedStmts1, nestedArg, nestedId)
+              case (nestedArg, Add(_, a, Values(EnumVal, prefix)))        => resolveStmts(Seq(), nestedId, a, nestedArg, prefix)
+              case (nestedArg, Add(_, a, _))                              => resolveStmts(Seq(), nestedId, a, nestedArg)
+            }
+            bondStmt +: nestedStmts1
+          }
+        }
+      }
+      val lastE = if (stmts.isEmpty) e0 else stmts.last.e
+      val nestedInsertStmts: Seq[Statement] = resolveNested(e0, ref0, nestedStmts0, arg, lastE)
+      (next, stmts ++ nestedInsertStmts)
+    }
+    case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
+  }
+
   def insertStmts(dataRows: Seq[Seq[Any]]): Seq[Seq[Statement]] = {
     val (dataStmts, txStmts) = splitStmts()
-    val dataStmtss: Seq[Seq[Statement]] = dataRows.map {args =>
-      x(30, args)
-      dataStmts.foldLeft(0, Seq[Statement]()) {case ((cur, stmts), dataStmt) =>
-        x(31, s"$cur - $dataStmt")
-        val arg = args.get(cur)
-        val next = if ((cur + 1) < args.size) cur + 1 else cur
-        if (arg == null) {
-          x(20, s"$cur - $next - $dataStmt")
-          (next, stmts)
-        } else
-          dataStmt match {
-            case Add('tempId, a, 'arg)                    => x(1, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg))
-            case Add('tempId, a, Values(EnumVal, prefix)) => x(2, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, arg, prefix))
-            case Add('tempId, a, Values(vs, prefix))      => x(3, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId(a), a, vs, prefix))
-            case Add('tempId, a, refNs: String)           => x(4, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, tempId(a), a, tempId(refNs)))
-            case Add('arg, a, 'tempId)                    => x(5, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, arg, a, tempId(a)))
-            case Add('e, a, 'arg)                         => x(6, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg))
-            case Add('e, a, refNs: String)                => x(7, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
-            case Add('e, a, Values(EnumVal, prefix))      => x(8, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, arg, prefix))
-            case Add('e, a, Values(vs, prefix))           => x(9, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
-            case Add('v, a, 'arg)                         => x(10, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, arg))
-            case Add('v, a, 'tempId)                      => x(11, s"$cur - $dataStmt - $arg"); (cur, resolveStmts(stmts, stmts.last.v, a, tempId(a)))
-            case Add('v, a, Values(vs, prefix))           => x(12, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
-            case Add('tx, a, 'arg)                        => x(13, s"$cur - $dataStmt - $arg"); (next, resolveStmts(stmts, tempId("tx"), a, arg))
-            case Retract(e, a, v)                         => x(14, s"$cur - $dataStmt - $arg"); (cur, stmts)
-            case Add(e0, ref0, nestedStmts0: Seq[_])      => {
-              x(15, e0, ref0, nestedStmts0, cur, dataStmt, arg)
-              def resolveNested(e: Any, ref: String, nestedStmts: Seq[Any], arg1: Any, lastE: Any): Seq[Statement] = {
-                if (arg1 == Nil) {
-                  Nil
-                } else {
-                  val parentId = if (e == 'parentId) tempId(ref) else lastE // todo: check that 'ref' is always in the right partition...
-                  nestedArgss(nestedStmts, arg1).flatMap {nestedArgs =>
-                    val nestedId = tempId(ref)
-                    val bondStmt = Add(parentId, ref, nestedId)
-                    val nestedStmts1 = nestedArgs.zip(nestedStmts).flatMap {
-                      case (nestedArg, Add(e1, ref1, nestedStmts1: Seq[_])) => resolveNested(nestedId, ref1, nestedStmts1, nestedArg, nestedId)
-                      case (null, _)                                        => Nil
-                      case (nestedArg, Add(_, a, _))                        => resolveStmts(Seq(), nestedId, a, nestedArg)
-                    }
-                    bondStmt +: nestedStmts1
-                  }
-                }
-              }
-              val lastE = if (stmts.isEmpty) e0 else stmts.last.e
-              val nestedInsertStmts: Seq[Statement] = resolveNested(e0, ref0, nestedStmts0, arg, lastE)
-              (next, stmts ++ nestedInsertStmts)
-            }
-            case unexpected                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
-          }
+    val dataStmtss: Seq[Seq[Statement]] = dataRows.map { row =>
+      dataStmts.foldLeft(0, Seq[Statement]()) { case ((cur, stmts), dataStmt) =>
+        val arg = row.get(cur)
+        val next = if ((cur + 1) < row.size) cur + 1 else cur
+        arg match {
+          case null       => sys.error("[Model2Transaction:insertStmts] null values not allowed. Please use `attr$` for Option[tpe] values.")
+          case None       => (next, stmts)
+          case Some(arg1) => matchDataStmt(stmts, dataStmt, arg1, cur, next)
+          case _          => matchDataStmt(stmts, dataStmt, arg, cur, next)
+        }
       }._2
     }
     val txId = tempId("tx")
@@ -168,29 +190,32 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (stmts, Add('tx, a, Values(vs, prefix))) => resolveStmts(stmts, txId, a, vs, prefix)
       case (stmts, unexpected)                      => sys.error("[Model2Transaction:insertStmts:txStmts] Unexpected insert statement: " + unexpected)
     })
-    x(26, model, stmtsModel, dataStmts, dataStmtss, txStmts, txStmtss, dataRows)
     dataStmtss ++ txStmtss
   }
 
-  def saveStmts(): Seq[Statement] = stmtsModel.foldLeft(0, Seq[Statement]()) {case ((i, stmts), stmt) =>
-    val j = i + 1
-    stmt match {
-      case Add('tempId, a, Values(vs, prefix)) => (j, resolveStmts(stmts, tempId(a), a, vs, prefix))
-      case Add('e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
-      case Add('e, a, 'tempId)                 => (i, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
-      case Add('e, a, refNs: String)           => (i, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
-      case Add('v, a, Values(vs, prefix))      => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
-      case Retract(e, a, v)                    => (i, stmts)
-      case Add(_, a, 'arg)                     => sys.error(s"[Model2Transaction:saveStmts] Attribute `$a` needs a value applied")
-      case unexpected                          => sys.error("[Model2Transaction:saveStmts] Unexpected save statement: " + unexpected)
-    }
-  }._2
+  def saveStmts(): Seq[Statement] = {
+    //    x(20, stmtsModel)
+    stmtsModel.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
+      val j = i + 1
+      stmt match {
+        case Add('tempId, a, Values(vs, prefix)) => (j, resolveStmts(stmts, tempId(a), a, vs, prefix))
+        case Add('e, a, Values(vs, prefix))      => (j, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
+        case Add('e, a, 'tempId)                 => (i, resolveStmts(stmts, lastE(stmts, a), a, tempId(a)))
+        case Add(id, a, 'tempId)                 => (i, resolveStmts(stmts, id, a, tempId(a)))
+        case Add('e, a, refNs: String)           => (i, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
+        case Add('v, a, Values(vs, prefix))      => (j, resolveStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix))
+        case Retract(e, a, v)                    => (i, stmts)
+        case Add(_, a, 'arg)                     => sys.error(s"[Model2Transaction:saveStmts] Attribute `$a` needs a value applied")
+        case unexpected                          => sys.error("[Model2Transaction:saveStmts] Unexpected save statement: " + unexpected)
+      }
+    }._2
+  }
 
 
   def updateStmts(): Seq[Statement] = {
     val (dataStmts0, txStmts0) = splitStmts()
     x(27, model, stmtsModel)
-    val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) {case ((i, stmts), stmt) =>
+    val dataStmts: Seq[Statement] = dataStmts0.foldLeft(0, Seq[Statement]()) { case ((i, stmts), stmt) =>
       val j = i + 1
       stmt match {
         case Add('e, a, Values(vs, prefix))     => (j, resolveStmts(stmts, lastE(stmts, a), a, vs, prefix))
@@ -217,16 +242,18 @@ case class Model2Transaction(conn: Connection, model: Model) {
   private def nestedArgss(stmts: Seq[Any], arg0: Any): Seq[Seq[Any]] = {
     val (argArity, arg) = arg0 match {
       case a: Seq[_]  => a.head match {
+        case None       => sys.error("[Model2Transaction:nestedData] Please use `List()` instead of `List(None)` for nested null values.")
+        case null       => sys.error("[Model2Transaction:nestedData] Please use `List()` instead of `List(null)` for nested null values.")
         case p: Product => (p.productArity, a)
         case l: Seq[_]  => (l.size, a)
-        case null       => sys.error("[Model2Transaction:nestedData] Please use `List()` instead of `List(null)` for nested null values.")
         case _          => (1, a)
       }
       case unexpected => sys.error("[Model2Transaction:nestedData] Unexpected data: " + unexpected)
     }
     assert(argArity == stmts.size, s"[Model2Transaction:nestedData] Arity of statements and arguments should match. Found: \n" +
       s"Statements (arity ${stmts.size}): " + stmts.mkString("\n  ", "\n  ", "\n") +
-      s"Argumewnts (arity $argArity): " + arg.mkString("\n  ", "\n  ", "\n"))
+      s"Arguments0                  : " + arg0 +
+      s"Arguments  (arity $argArity): " + arg.mkString("\n  ", "\n  ", "\n"))
 
     // Todo: can we convert tuples more elegantly?
     arg map {

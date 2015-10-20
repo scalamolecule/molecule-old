@@ -27,7 +27,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"TermValue.apply($ns)" => resolve(ns)
 
     // Namespace(eid).attr1...
-    case q"$prev.$ns.apply($eid)" if ns.toString.head.isUpper => traverse(q"$prev", Meta(firstLow(ns), "", "e", NoValue, Eq(Seq(extract(eid)))))
+    case q"$prev.$ns.apply($eid)" if q"$prev.$ns".isFirstNS => traverse(q"$prev", Meta(firstLow(ns), "", "e", NoValue, Eq(Seq(extract(eid)))))
 
 
     // Functions ---------------------------
@@ -38,8 +38,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // EAV + ns -----------------------------
 
-//    case q"$prev.e" if q"$prev".isAttr => traverse(q"$prev", Meta(q"$prev".ns, q"$prev".name, "e", NoValue, EntValue))
-    case q"$prev.e"                    => traverse(q"$prev", Meta("", "", "e", NoValue, EntValue))
+    //    case q"$prev.e" if q"$prev".isAttr => traverse(q"$prev", Meta(q"$prev".ns, q"$prev".name, "e", NoValue, EntValue))
+    case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", NoValue, EntValue))
 
     case q"$prev.a" => traverse(q"$prev", Atom("?", "attr", "a", 1, NoValue))
 
@@ -84,17 +84,17 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case t@q"$prev.$cur.$op(..$values)" => walk(q"$prev", q"$prev.$cur".ns, q"$cur", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
-    case r@q"$prev.$backRefAttr" if backRefAttr.toString.head == '_' => traverse(q"$prev", ReBond(firstLow(backRefAttr.toString.tail), ""))
+    case r@q"$prev.$backRefAttr" if backRefAttr.toString.head == '_' =>
+      val backRef = c.typecheck(q"$prev.$backRefAttr").tpe.typeSymbol.toString // "trait partition_Ns_X"
+      traverse(q"$prev", ReBond(firstLow(backRef.substring(6, backRef.length - 2)), "")) // "partition_Ns"
 
-    //    case r@q"$prev.$refAttr" if r.isRef            => traverse(q"$prev", Bond(r.refThis, r.name, r.refNext))
-    //    case a@q"$prev.$cur" if a.isRef || a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
     case a@q"$prev.$refAttr" if a.isRef     => traverse(q"$prev", Bond(a.refThis, firstLow(refAttr.toString), a.refNext))
     case a@q"$prev.$refAttr" if a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
     case a@q"$prev.$cur" if a.isEnum        => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
     case a@q"$prev.$cur" if a.isValueAttr   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
 
 
-    // Nested group ------------------------
+    // Nested ------------------------
 
     case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
     case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
@@ -112,7 +112,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
     val attr = cur.toString()
     x(1, prevElements, curNs, attr)
-    val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) {case (prevElement, (previous, similarAtoms, trans)) =>
+    val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) { case (prevElement, (previous, similarAtoms, trans)) =>
       prevElement match {
         case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
           val t = previous.init.reverse.collectFirst {
@@ -191,17 +191,6 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val value: Value = modelValue(op.toString(), attr, values0)
     val enumPrefix = if (attr.isEnum) Some(attr.at.enumPrefix) else None
     val cur = curTree.toString()
-    // For debugging...
-    //    previous match {
-    //      case prev if cur.head.isUpper          => x(1, prev, cur, curTree, value)
-    //      case prev if cur == "e" && prev.isRef  => x(2, prev, op, cur, curTree, value)
-    //      case prev if cur == "e" && prev.isAttr => x(3, prev, curTree)
-    //      case prev if cur == "e"                => x(4, prev, op, cur, curTree)
-    //      case prev if cur == "a"                => x(5, prev, op, cur, curTree)
-    //      case prev if attr.isAttr               => x(6, prev, curTree, value)
-    //      case prev if prev.isAttr               => x(7, prev, curTree, value)
-    //      case prev                              => x(8, prev, curTree, value)
-    //    }
     previous match {
       case prev if cur.head.isUpper          => Atom(attr.name, cur, cast(attr), attr.card, value, enumPrefix)
       case prev if cur == "e" && prev.isRef  => Meta(prev.name, prev.refNext, "e", NoValue, value)
@@ -335,15 +324,16 @@ object Dsl2Model {
 
     // Sanity check
     elements0.collectFirst {
-      case a: Atom                         => a
-      case b: Bond                         => b
-      case g: Group                        => g
-      case m@Meta(_, "txInstant", _, _, _) => m
+      //      case a: Atom                         => a
+      case a@Atom(_, name, _, _, _, _, _) if name.last != '$' => a
+      case b: Bond                                            => b
+      case g: Group                                           => g
+      case m@Meta(_, "txInstant", _, _, _)                    => m
     } getOrElse
-      c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta attributes. Please add one or more attributes.\n$elements0")
+      c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.\nModel($elements0)")
 
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
-    val elements1 = elements0.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) {case (element, (es, gs, v)) =>
+    val elements1 = elements0.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) { case (element, (es, gs, v)) =>
       element match {
         case a: Atom if a.name != "attr" && gs.contains(NsValue) && !gs.contains(AttrVar) =>
           c.abort(c.enclosingPosition, s"[Dsl2Model:apply] `ns` needs to have a generic `a` before")
@@ -356,14 +346,6 @@ object Dsl2Model {
         case other                       => (other +: es, gs, v)
       }
     }._1
-
-    //    def resolveGroups(e: Element, level: Int): Element = e match {
-    //      case g: Group if level == 1 => Group(g.ref, g.elements.map(resolveGroups(_, 2)))
-    ////      case g: Group if level == 2 => Group2(g.ref, g.elements.map(resolveGroups(_, 3)))
-    //      case g: Group if level > 2  => c.abort(c.enclosingPosition, "[Dsl2Model:apply] Can't nest more than 2 levels deep.")
-    //      case _ => e
-    //    }
-    //    val elements2 = elements1.map(resolveGroups(_, 1))
 
     val model = Model(elements1)
     //    inst(c).x(30, condensedElements)

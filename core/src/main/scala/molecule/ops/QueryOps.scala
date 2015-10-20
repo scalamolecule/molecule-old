@@ -34,13 +34,14 @@ object QueryOps {
         case other          => None
       }.distinct
       val moreOutputs = o match {
-        case NoVal                         => genericVars
-        case _  => o +: genericVars
-//        case _ if !q.f.outputs.contains(o) => o +: genericVars
-//        case _                             => genericVars
+        case NoVal => genericVars
+        case _     => o +: genericVars
       }
       q.copy(f = Find(q.f.outputs ++ moreOutputs))
     }
+
+    def pull(e: String, atom: Atom) = q.copy(f = Find(q.f.outputs :+ Pull(e, atom.ns, atom.name)))
+    def pullEnum(e: String, atom: Atom) = q.copy(f = Find(q.f.outputs :+ Pull(e, atom.ns, atom.name, atom.enumPrefix)))
 
 
     // In ..........................................
@@ -50,9 +51,6 @@ object QueryOps {
 
     def in(v: String, ns: String, attr: String, e: String): Query =
       q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(ns, attr), None, e)))
-
-    //    def placeholder(v: String, a: Atom, enumPrefix: Option[String] = None, e: String = ""): Query =
-    //      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(v, KW(a.ns, a.name), enumPrefix, e)))
 
 
     // With ...........................................
@@ -175,8 +173,8 @@ object QueryOps {
           DataClause(ImplDS, Var("x"), KW("?", "attr"), Var("v2"), Empty),
           Funct("!=", Seq(Var("v1"), Var("v2")), NoBinding)))
         case n => Rule(s"transitive$n", Seq(Var("attr"), Var("v1"), Var("v2")), Seq(
-          RuleInvocation(s"transitive${n - 1 }", Seq(KW("?", "attr"), Var("v1"), Var("x"))),
-          RuleInvocation(s"transitive${n - 1 }", Seq(KW("?", "attr"), Var("x"), Var("v2"))),
+          RuleInvocation(s"transitive${n - 1}", Seq(KW("?", "attr"), Var("v1"), Var("x"))),
+          RuleInvocation(s"transitive${n - 1}", Seq(KW("?", "attr"), Var("x"), Var("v2"))),
           Funct("!=", Seq(Var("v1"), Var("v2")), NoBinding)))
       }
       val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = (q.i.rules ++ newRules).distinct)

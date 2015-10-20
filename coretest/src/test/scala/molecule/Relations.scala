@@ -9,14 +9,13 @@ class Relations extends CoreSpec {
 
 
   class RelSetup extends CoreSetup {
-    Ns.str.Ref1.str1.Ref2.str2 insert List(
-      ("a0", "a1", "a2"),
-      ("b0", "b1", "b2"),
-      ("c0", "c1", "c2"),
+    Ns.str.Ref1.str1$.Ref2.str2$ insert List(
+      ("a0", Some("a1"), Some("a2")),
+      ("b0", Some("b1"), Some("b2")),
+      ("c0", Some("c1"), Some("c2")),
       // null values are simply not asserted (inserted)
-      //      (null, "d1", "d2"),
-      ("e0", null, "e2"),
-      ("f0", "f1", null))
+      ("e0", None, Some("e2")),
+      ("f0", Some("f1"), None))
 
   }
 
@@ -31,9 +30,9 @@ class Relations extends CoreSpec {
     // Get attribute values from 2 namespaces
     // Namespace references like `Ref1` starts with Capital letter
     Ns.str.Ref1.str1.get === List(
+      ("c0", "c1"),
       ("a0", "a1"),
-      ("b0", "b1"),
-      ("c0", "c1"))
+      ("b0", "b1"))
 
     // We can also retrieve the referenced entity id
     // Referenced entity id `ref1` starts with lower case letter
@@ -68,8 +67,44 @@ class Relations extends CoreSpec {
       ("b0", orderLine2),
       ("c0", orderLine3))
   }
-  //
-  //
+
+  "Referenced entity ids" in new CoreSetup {
+    val id     = Ns.str("a").add.eid
+    val refId1 = Ns(id).Refs1.int1(1).add.eid
+    val refId2 = Ref1(refId1).Ref2.int2(2).add.eid
+
+    Ns(id).Refs1.e.Ref2.int2_(2).one === refId1
+  }
+
+
+  "Enum" in new CoreSetup {
+    Ns.str.enum insert List(("a", "enum0"))
+
+    Ns.str.enum.get === List(("a", "enum0"))
+  }
+
+  "Ref enum after ref" in new CoreSetup {
+    Ns.str.Ref1.enum1 insert List(("b", "enum10"))
+    Ns.str.Ref1.enum1.get === List(("b", "enum10"))
+  }
+
+  "Ref enum after attr" in new CoreSetup {
+    Ns.str.Ref1.int1.enum1 insert List(("c", 11, "enum11"))
+    Ns.str.Ref1.int1.enum1.get === List(("c", 11, "enum11"))
+  }
+
+  "Nested enum after ref" in new CoreSetup {
+    m(Ns.str.Refs1 * Ref1.enum1) insert List(("d", List("enum11")))
+    m(Ns.str.Refs1 * Ref1.enum1).get === List(("d", List("enum11")))
+  }
+
+  "Nested enum after attr" in new CoreSetup {
+    m(Ns.str.Refs1 * Ref1.int1.enum1) insert List(("e", List((12, "enum12"))))
+    m(Ns.str.Refs1 * Ref1.int1.enum1).get === List(("e", List((12, "enum12"))))
+  }
+
+
+
   //  "Implicit namespaces" in new RelSetup {
   //
   //

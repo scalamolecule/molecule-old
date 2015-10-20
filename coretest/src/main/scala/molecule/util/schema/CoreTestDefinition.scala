@@ -33,70 +33,23 @@ object CoreTestDefinition {
     val refsSub1 = many[Ref1].subComponents
   }
 
-  trait OneOne {
-    val ref1 = oneString
-  }
-
   trait Ref1 {
-    val str1    = oneString
-    val int1    = oneInt
-    val ref2    = one[Ref2]
-    val refSub2 = one[Ref2].subComponent
-
-    //    val str    = oneString.fullTextSearch
-    //    val int    = oneInt
-    //    val long   = oneLong
-    //    val float  = oneFloat
-    //    val double = oneDouble
-    //    val bool   = oneBoolean
-    //    val date   = oneDate
-    //    val uuid   = oneUUID
-    //    val uri    = oneURI
-    //    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
-    //    val ref2   = one[Ref2]
-
+    val str1     = oneString
+    val int1     = oneInt
+    val enum1    = oneEnum('enum10, 'enum11, 'enum12)
+    val ref2     = one[Ref2]
+    val refSub2  = one[Ref2].subComponent
     val strs1    = manyString
     val ints1    = manyInt
     val refs2    = many[Ref2]
     val refsSub2 = many[Ref2].subComponents
-
-    //    val strs    = manyString.fullTextSearch
-    //    val ints    = manyInt
-    //    val longs   = manyLong
-    //    val floats  = manyFloat
-    //    val doubles = manyDouble
-    //    val bools   = manyBoolean
-    //    val dates   = manyDate
-    //    val uuids   = manyUUID
-    //    val uris    = manyURI
-    //    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
-    //    val refs2   = many[Ref2]
   }
 
   trait Ref2 {
-    val str2 = oneString
-    val int2 = oneInt
-
-    //    val str    = oneString.fullTextSearch
-    //    val int    = oneInt
-    //    val long   = oneLong
-    //    val float  = oneFloat
-    //    val double = oneDouble
-    //    val bool   = oneBoolean
-    //    val date   = oneDate
-    //    val uuid   = oneUUID
-    //    val uri    = oneURI
-    //    val enum   = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
-
+    val str2  = oneString
+    val int2  = oneInt
+    val enum2 = oneEnum('enum20, 'enum21, 'enum22)
     val strs2 = manyString
     val ints2 = manyInt
-    //    val longs   = manyLong
-    //    val floats  = manyFloat
-    //    val doubles = manyDouble
-    //    val bools   = manyBoolean
-    //    val dates   = manyDate
-    //    val uuids   = manyUUID
-    //    val uris    = manyURI
-    //    val enums   = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
   }
 }

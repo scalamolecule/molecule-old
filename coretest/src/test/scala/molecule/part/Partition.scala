@@ -6,15 +6,16 @@ import datomic.Peer
 import molecule.ast.model.{Bond, Eq, Atom, Model}
 import molecule.part.dsl.partitionTest._
 import molecule.part.schema.PartitionTestSchema
-import molecule.util.MoleculeSpec
+import molecule.util.{CoreSpec, CoreSetup, MoleculeSpec}
 import scala.language.reflectiveCalls
 
 class Partition extends MoleculeSpec {
 
+  sequential
+
+  implicit val conn = load(PartitionTestSchema)
+
   "Insert resolves to correct partitions" >> {
-
-    implicit val conn = load(PartitionTestSchema)
-
     testInsertMolecule(
       lit_Book.title("A good book").cat("good").Author.name("Marc").gender("male")
     ) -->
@@ -24,7 +25,7 @@ class Partition extends MoleculeSpec {
         Bond("lit_Book", "author", "gen_Person"),
         Atom("gen_Person", "name", "String", 1, Eq(List("Marc")), None, List()),
         Atom("gen_Person", "gender", "String", 1, Eq(List("male")), Some(":gen_Person.gender/"), List()))) -->
-      //            action          temp id             attribute            value
+      //           action          temp id             attribute            value
       """List(
         |  List(  :db/add,   #db/id[:lit -1000001],   :lit_Book/title   ,   A good book              )
         |  List(  :db/add,   #db/id[:lit -1000001],   :lit_Book/cat     ,   :lit_Book.cat/good       )
@@ -33,4 +34,13 @@ class Partition extends MoleculeSpec {
         |  List(  :db/add,   #db/id[:gen -1000002],   :gen_Person/gender,   :gen_Person.gender/male  )
         |)""".stripMargin
   }
+
+
+  lit_Book.title("A good book").cat("good").Author.name("Marc").gender("male").add.eid
+
+
+  "Back reference" >> {
+    lit_Book.title.Author.name._Book.cat.one === ("A good book", "Marc", "good")
+  }
+
 }

@@ -152,6 +152,8 @@ package object molecule {
   trait ?
   object ? extends ?
 
+
+  // Null marker (for non-asserted facts)
   trait nil
   object nil extends nil
 

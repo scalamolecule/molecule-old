@@ -167,7 +167,7 @@ object MoleculeBoilerplate {
 
   def resolve(definition: Definition) = {
 
-    val newNss1 = definition.nss.foldLeft(definition.nss) {case (nss2, ns) =>
+    val newNss1 = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
       // Gather OneRefs (ManyRefs are treated as nested data structures)
       val refs1 = ns.attrs.collect {
         case ref@Ref(_, refAttr, clazz, _, _, _, refNs) => refNs -> ref
@@ -176,7 +176,7 @@ object MoleculeBoilerplate {
       // Add BackRefs
       nss2.map {
         case ns2 if refs1.nonEmpty && refs1.keys.toList.contains(ns2.ns) =>
-          val attrs2 = refs1.foldLeft(ns2.attrs) {case (attrs, ref) =>
+          val attrs2 = refs1.foldLeft(ns2.attrs) { case (attrs, ref) =>
             val Ref(_, refAttr, clazz, _, tpe, _, _) = ref._2
             val cleanNs = if (ns.ns.contains('_')) ns.ns.split("_").tail.head else ns.ns
             val backRef = BackRef(s"_$cleanNs", ns.ns, "BackRefAttr", "BackRef", tpe, "", "") // todo: check not to backreference same-named namespaces in different partitions
@@ -218,11 +218,10 @@ object MoleculeBoilerplate {
       val partition = if (part.isEmpty) ":db.part/user" else s":$part"
       es.map(e =>
         s"""Util.map(":db/id", Peer.tempid("$partition"), ":db/ident", ":${firstLow(ns)}.$a/$e")""").mkString(",\n    ")
-      //            s"""Util.map(":db/id", Peer.tempid(":db.part/$part"), ":db/ident", ":${firstLow(ns)}.$a/$e")""").mkString(",\n    ")
     }
 
     val partitions = {
-      val ps = d.nss.map(_.part).filter(_.nonEmpty).distinct.map {p =>
+      val ps = d.nss.map(_.part).filter(_.nonEmpty).distinct.map { p =>
         s"""|Util.map(":db/ident"             , ":$p",
             |             ":db/id"                , Peer.tempid(":db.part/db"),
             |             ":db.install/_partition", ":db.part/db")""".stripMargin
@@ -237,10 +236,10 @@ object MoleculeBoilerplate {
       } else "\n  lazy val partitions = Util.list()\n"
     }
 
-    val stmts = d.nss map {ns =>
+    val stmts = d.nss map { ns =>
       val exts = ns.opt.getOrElse("").toString
       val header = "\n    // " + ns.ns + exts + " " + ("-" * (65 - (ns.ns.length + exts.length)))
-      val attrs = ns.attrs.flatMap {a =>
+      val attrs = ns.attrs.flatMap { a =>
         val attr = attrStmts(ns.ns, a)
         a match {
           case e: Enum     => Seq(attr, enums(ns.part, ns.ns, a.attrClean, e.enums))
@@ -273,12 +272,21 @@ object MoleculeBoilerplate {
     val (ns, option, attrs) = (namesp.ns, namesp.opt, namesp.attrs)
     val InTypes = (0 until in) map (n => "I" + (n + 1))
     val OutTypes = (0 until out) map (n => (n + 'A').toChar.toString)
-    val maxAttr = attrs.map(_.attr.length).max
-    val maxTpe = attrs.map(_.tpe.length).max
+    val maxAttr = attrs.map(_.attr).filter(!_.startsWith("_")).map(_.length).max
+    val maxTpe = attrs.filter(!_.attr.startsWith("_")).map(_.tpe.length).max
+    val maxAttr4 = {
+      val lengths = attrs.filter(!_.clazz.contains("Ref")).map(_.attr.length)
+      if (lengths.isEmpty) 0 else lengths.max
+    }
+
+//    if (ns == "music_Instrumentation") {
+//      println(s"------ $ns ------")
+//      println(attrs.filter(!_.clazz.contains("Ref")).mkString("\n"))
+//    }
 
     val (attrVals, attrVals_) = attrs.flatMap {
       case BackRef(_, _, _, _, _, _, _) => None
-      case a                            =>
+      case a                            => {
         val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
         val p3 = padS(maxTpe, tpe)
 
@@ -320,14 +328,45 @@ object MoleculeBoilerplate {
 
         val p1 = padS(maxAttr, attr)
         val p2 = padS(maxAttr, attrClean)
+        val p4 = padS(maxAttr4, attr)
         val t1 = s"$attr$p1[$nextNS, $nextIn] with $nextNS"
-        val xx = a match {
-          case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
-          case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t1 { override val _kw = ":${firstLow(ns)}/$attr" }"""
+        val t2 = s"$attr$p4[$nextNS, $nextIn] with $nextNS"
+        val attrVal = a match {
+          case valueAttr: Val if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t2 { override val _kw = ":${firstLow(ns)}/$attr" }"""
+          case enumAttr: Enum if in == 0 && out == 0 => s"""lazy val $attr  $p1: $t1 = new $t2 { override val _kw = ":${firstLow(ns)}/$attr" }"""
           case _                                     => s"""lazy val $attr  $p1: $t1 = ???"""
         }
-        Some((xx, s"lazy val ${attrClean}_ $p2: $attr$p1[$thisNS, $thisIn] with $thisNS = ???"))
+        val attrVal_ = s"lazy val ${attrClean}_ $p2: $attr$p1[$thisNS, $thisIn] with $thisNS = ???"
+
+        Some((attrVal, attrVal_))
+      }
     }.unzip
+
+    val attrValsOpt = attrs.flatMap {
+      case BackRef(_, _, _, _, _, _, _) => None
+      case a                            => {
+        val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
+        val p1 = padS(maxAttr, attr)
+        val p2 = padS(maxAttr, attrClean)
+        val p3 = padS(maxTpe, tpe)
+        val nextNS = (in, out) match {
+          case (0, 0) => s"${ns}_1[Option[$tpe]$p3]"
+          case (0, o) => s"${ns}_${o + 1}[${(OutTypes :+ s"Option[$tpe]") mkString ", "}$p3]"
+          case (i, o) => s"${ns}_In_${i}_${o + 1}[${(InTypes ++ OutTypes :+ s"Option[$tpe]") mkString ", "}$p3]"
+        }
+        val nextIn = if (maxIn == 0 || in == maxIn) {
+          val n2 = out + in + 2
+          val t2 = (1 to n2).map(i => "_").mkString(",")
+          s"P$n2[$t2]"
+        } else (in, out) match {
+          case (0, 0) => s"${ns}_In_1_1[Option[$tpe]$p3, Option[$tpe]$p3]"
+          case (0, o) => s"${ns}_In_1_${o + 1}[Option[$tpe]$p3, ${(OutTypes :+ s"Option[$tpe]") mkString ", "}$p3]"
+          case (i, 0) => s"${ns}_In_${i + 1}_1[${(InTypes :+ s"Option[$tpe]") mkString ", "}$p3, Option[$tpe]$p3]"
+          case (i, o) => s"${ns}_In_${i + 1}_${o + 1}[${(InTypes :+ s"Option[$tpe]") mkString ", "}$p3, ${(OutTypes :+ s"Option[$tpe]") mkString ", "}$p3]"
+        }
+        Some(s"lazy val $attrClean$$ $p2: $attr$p1[$nextNS, $nextIn] with $nextNS = ???")
+      }
+    }
 
     val (maxClazz2, maxRefNs, maxNs) = attrs.map {
       case Ref(_, _, _, clazz2, _, _, refNs)       => (clazz2.length, refNs.length, 0)
@@ -335,9 +374,10 @@ object MoleculeBoilerplate {
       case other                                   => (0, 0, 0)
     }.unzip3
 
+    val maxAttr0 = attrs.map(_.attr.length).max
     val refCode = attrs.foldLeft(Seq("")) {
       case (acc, Ref(attr, _, _, clazz2, _, _, refNs))      => {
-        val p1 = padS(maxAttr, attr)
+        val p1 = padS(maxAttr0, attr)
         val p2 = padS("ManyRef".length, clazz2)
         val p3 = padS(maxRefNs.max, refNs)
         val ref = (in, out) match {
@@ -346,17 +386,17 @@ object MoleculeBoilerplate {
           case (0, o)                => s"${refNs}_$o$p3[${OutTypes mkString ", "}] with Nested$o[${refNs}_$o$p3, ${refNs}_${o + 1}$p3, ${OutTypes mkString ", "}]"
           case (i, o)                => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        acc :+ s"def ${attr.capitalize} $p1 : $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
+        acc :+ s"def ${attr.capitalize} $p1: $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
       }
       case (acc, BackRef(backAttr, backRef, _, _, _, _, _)) =>
-        val p1 = padS(maxAttr, backAttr)
+        val p1 = padS(maxAttr0, backAttr)
         val p2 = padS(maxClazz2.max, backRef)
         val ref = (in, out) match {
           case (0, 0) => s"${backRef}_0$p2"
           case (0, o) => s"${backRef}_$o$p2[${OutTypes mkString ", "}]"
           case (i, o) => s"${backRef}_In_${i}_$o$p2[${(InTypes ++ OutTypes) mkString ", "}]"
         }
-        acc :+ s"def $backAttr $p1 : $ref = ???"
+        acc :+ s"def $backAttr $p1: $ref = ???"
       case (acc, _)                                         => acc
     }.distinct
 
@@ -369,7 +409,7 @@ object MoleculeBoilerplate {
       case (0, 0) =>
         val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_1_0", s"${ns}_In_1_1")
         s"""trait ${ns}_0 extends $ns with Out_0[${ns}_0, ${ns}_1, $thisIn, $nextIn] {
-            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
+            |  ${(attrVals ++ Seq("") ++ attrValsOpt ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
             |}
          """.stripMargin
 
@@ -386,7 +426,7 @@ object MoleculeBoilerplate {
         val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_1_$o", s"${ns}_In_1_${o + 1}")
         val types = OutTypes mkString ", "
         s"""trait ${ns}_$o[$types] extends $ns with Out_$o[${ns}_$o, ${ns}_${o + 1}, $thisIn, $nextIn, $types] {
-            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
+            |  ${(attrVals ++ Seq("") ++ attrValsOpt ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
             |}
          """.stripMargin
 
@@ -401,7 +441,7 @@ object MoleculeBoilerplate {
            |/********* Input molecules awaiting $i input$s *******************************/
            |
            |trait ${ns}_In_${i}_0[$types] extends $ns with In_${i}_0[${ns}_In_${i}_0, ${ns}_In_${i}_1, $thisIn, $nextIn, $types] {
-           |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
+           |  ${(attrVals ++ Seq("") ++ attrValsOpt ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
            |}
          """.stripMargin
 
@@ -417,7 +457,7 @@ object MoleculeBoilerplate {
       case (i, o) if i == maxIn =>
         val types = (InTypes ++ OutTypes) mkString ", "
         s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, P${out + in + 1}, P${out + in + 2}, $types] {
-            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
+            |  ${(attrVals ++ Seq("") ++ attrValsOpt ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
             |}
          """.stripMargin
 
@@ -426,7 +466,7 @@ object MoleculeBoilerplate {
         val (thisIn, nextIn) = if (i == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_${i + 1}_$o", s"${ns}_In_${i + 1}_${o + 1}")
         val types = (InTypes ++ OutTypes) mkString ", "
         s"""trait ${ns}_In_${i}_$o[$types] extends $ns with In_${i}_$o[${ns}_In_${i}_$o, ${ns}_In_${i}_${o + 1}, $thisIn, $nextIn, $types] {
-            |  ${(attrVals ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
+            |  ${(attrVals ++ Seq("") ++ attrValsOpt ++ Seq("") ++ attrVals_ ++ refCode ++ optional).mkString("\n  ").trim}
             |}
          """.stripMargin
     }
@@ -437,8 +477,8 @@ object MoleculeBoilerplate {
     val outArity = d.out
     val Ns = namespace.ns
     val attrs = namespace.attrs
-    val p1 = (s: String) => padS(attrs.map(_.attr.length).max, s)
-    val p2 = (s: String) => padS(attrs.map(_.clazz.length).max, s)
+    val p1 = (s: String) => padS(attrs.map(_.attr).filter(!_.startsWith("_")).map(_.length).max, s)
+    val p2 = (s: String) => padS(attrs.map(_.clazz).filter(!_.startsWith("Back")).map(_.length).max, s)
 
     val attrClasses = attrs.flatMap {
       case Val(attr, _, clazz, _, _, _, options) =>
@@ -447,8 +487,7 @@ object MoleculeBoilerplate {
 
       case Enum(attr, _, clazz, _, _, enums) =>
         val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
-        Some(
-          s"""class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }""")
+        Some( s"""class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }""")
 
       case Ref(attr, _, clazz, _, _, _, _) =>
         Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]")
@@ -480,7 +519,7 @@ object MoleculeBoilerplate {
         |import molecule.dsl._$extraImports
         |
         |
-        |object $Ns extends ${Ns}_0 {
+        |object $Ns extends ${Ns}_0 with FirstNS {
         |  def apply(e: Long): ${Ns}_0 = ???
         |}
         |
@@ -488,17 +527,17 @@ object MoleculeBoilerplate {
         |  $attrClasses
         |}
         |
-       |$nsTraits""".stripMargin
+        |$nsTraits""".stripMargin
   }
 
   def generate(srcManaged: File, domainDirs: Seq[String], allIndexed: Boolean = true): Seq[File] = {
     // Loop domain directories
-    val files = domainDirs flatMap {domainDir =>
+    val files = domainDirs flatMap { domainDir =>
       val definitionFiles = sbt.IO.listFiles(new File(domainDir) / "schema").filter(f => f.isFile && f.getName.endsWith("Definition.scala"))
       assert(definitionFiles.size > 0, "Found no definition files in path: " + domainDir)
 
       // Loop definition files in each domain directory
-      definitionFiles flatMap {definitionFile =>
+      definitionFiles flatMap { definitionFile =>
         val d0 = parse(definitionFile, allIndexed)
         val d = resolve(d0)
 
@@ -508,7 +547,7 @@ object MoleculeBoilerplate {
         IO.write(schemaFile, schemaBody(d))
 
         // Write namespace files
-        val namespaceFiles = d.nss.map {ns =>
+        val namespaceFiles = d.nss.map { ns =>
           val nsFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((dir, pkg) => dir / pkg) / "dsl" / firstLow(d.domain) / s"${ns.ns}.scala"
           val nsBody = namespaceBody(d, ns)
           IO.write(nsFile, nsBody)

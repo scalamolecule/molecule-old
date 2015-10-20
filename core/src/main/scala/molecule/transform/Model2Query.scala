@@ -6,7 +6,7 @@ import molecule.ops.QueryOps._
 import molecule.util.Debug
 
 object Model2Query {
-  val x = Debug("Model2Query", 100, 20, false)
+  val x = Debug("Model2Query", 20, 9, false)
   def uri(t: String) = t == "java.net.URI"
   def u(t: String, v: String) = if (t == "java.net.URI") v else ""
 
@@ -70,7 +70,7 @@ object Model2Query {
         }
 
 
-        // Enum Atom_ ------------------------------------------------------------
+        // Enum Atom_ (in where clause but not in output) --------------------------------------------
 
         case a0@Atom(_, attr0, _, _, value, Some(prefix), gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
@@ -91,7 +91,7 @@ object Model2Query {
           }
         }
 
-        // Atom_ -----------------------------------------------------------------
+        // Atom_ (in where clause but not in output) --------------------------------------------
 
         case a0@Atom(_, attr0, _, _, value, _, gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
@@ -122,7 +122,45 @@ object Model2Query {
         }
 
 
-        // Enum Atom ------------------------------------------------------------
+        // Enum Atom$ (optional) ------------------------------------------------------------
+
+        case a0@Atom(_, attr0, _, 2, value, Some(prefix), gs) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case EnumVal => q.pullEnum(e, a)
+            case other   => sys.error(s"[Model2Query:resolve[Enum Atom 2 optional]] Unresolved cardinality-many enum Atom:\nAtom   : $a\nElement: $other")
+          }
+        }
+
+        case a0@Atom(_, attr0, _, 1, value, Some(prefix), gs) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case EnumVal => q.pullEnum(e, a)
+            case other   => sys.error(s"[Model2Query:resolve[Enum Atom 1 optional]] Unresolved cardinality-one enum Atom:\nAtom   : $a\nElement: $other")
+          }
+        }
+
+
+        // Atom$ (optional) ------------------------------------------------------------
+
+        case a0@Atom(_, attr0, t, 2, value, _, gs) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case VarValue => q.pull(e, a)
+            case other    => sys.error(s"[Model2Query:resolve[Atom 2 optional]] Unresolved cardinality-many Atom:\nAtom   : $a\nElement: $other")
+          }
+        }
+
+        case a0@Atom(_, attr0, t, 1, value, _, gs) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case VarValue => q.pull(e, a)
+            case other    => sys.error(s"[Model2Query:resolve[Atom 1 optional]] Unresolved cardinality-one Atom:\nAtom   : $a\nElement: $other")
+          }
+        }
+
+
+        // Enum Atom (mandatory) ------------------------------------------------------------
 
         case a@Atom(_, _, _, 2, value, Some(prefix), gs) => value match {
           case Qm                       => q.find(v2, gs).enum(e, a, v, gs).in(v, a, Some(prefix))
@@ -157,7 +195,7 @@ object Model2Query {
         }
 
 
-        // Atom -----------------------------------------------------------------
+        // Atom (mandatory) -----------------------------------------------------------------
 
         case a@Atom(_, _, t, 2, value, _, gs) => value match {
           case Qm                       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).in(v, a)
@@ -241,7 +279,7 @@ object Model2Query {
       element match {
         case Atom(ns, attr, "a", _, _, _, _)                          => (resolve(query, e, v, element), e, w, ns, attr, "")
         case Atom(ns, attr, "ns", _, _, _, _)                         => (resolve(query, e, v, element), e, w, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _, _) if prevRefNs == "IndexVal" => x(9, query, element); (resolve(query, e, w, element), e, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _) if prevRefNs == "IndexVal" => (resolve(query, e, w, element), e, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _) if ns == prevNs            => (resolve(query, e, w, element), e, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _) if ns == prevAttr          => (resolve(query, v, w, element), v, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _) if ns == prevRefNs         => (resolve(query, v, w, element), v, w, ns, attr, "")
@@ -263,7 +301,7 @@ object Model2Query {
         case rbe@ReBond(backRef, _, _, _, _) => {
           val backRefE = query.wh.clauses.reverse.collectFirst {
             case DataClause(_, backE, a, Var(backV), _, _) if a.ns == backRef => backE.v
-          } getOrElse sys.error(s"[Model2Query:make(ReBond)] Can't find back reference namespace `$backRef` in query so far:\n$query")
+          } getOrElse sys.error(s"[Model2Query:make(ReBond)] Can't find back reference namespace `$backRef` in query so far:\n$query\n$rbe")
           (query, backRefE, v, backRef, "", "")
         }
 
@@ -275,13 +313,15 @@ object Model2Query {
           }
           (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
 
-        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))            => x(2, query, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, prevRefNs)
-        case Meta(ns, attr, "e", NoValue, IndexVal) if prevRefNs == ""  => x(3, query, element); (resolve(query, e, v, element), e, w, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, IndexVal)                     => x(4, query, element); (resolve(query, v, w, element), v, w, ns, attr, "IndexVal")
-        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == ""         => x(5, query, element); (resolve(query, e, v, element), e, w, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "IndexVal" => x(6, query, element); (resolve(query, e, y, element), e, y, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, _)                            => x(7, query, element); (resolve(query, v, w, element), e, w, ns, attr, "")
-        case Meta(ns, attr, _, _, _)                                    => x(8, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))            => x(2, query, element, prevRefNs, e, v, w, y); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, prevRefNs)
+        case Meta(ns, attr, "e", NoValue, IndexVal) if prevRefNs == ""  => x(3, query, element, prevRefNs, e, v, w, y); (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, IndexVal)                     => x(4, query, element, prevRefNs, e, v, w, y); (resolve(query, v, w, element), v, w, ns, attr, "IndexVal")
+        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == ""         => x(5, query, element, prevRefNs, e, v, w, y); (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "IndexVal" => x(6, query, element, prevRefNs, e, v, w, y); (resolve(query, e, y, element), e, y, ns, attr, "")
+
+        case Meta(ns, attr, "e", NoValue, EntValue)                     => x(7, query, element, prevRefNs, e, v, w, y); (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _)                            => x(8, query, element, prevRefNs, e, v, w, y); (resolve(query, v, w, element), e, w, ns, attr, "")
+        case Meta(ns, attr, _, _, _)                                    => x(9, query, element, prevRefNs, e, v, w, y); (resolve(query, e, v, element), e, v, ns, attr, "")
 
         //        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))    => x(2, query, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
         //        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "" => x(3, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
@@ -301,7 +341,7 @@ object Model2Query {
 
     // Process And-semantics (self-joins)
     def postProcess(q: Query) = {
-      val andAtoms: Seq[Atom] = model.elements.collect {case a@Atom(_, _, _, _, And(andValues), _, _) => a}
+      val andAtoms: Seq[Atom] = model.elements.collect { case a@Atom(_, _, _, _, And(andValues), _, _) => a }
       if (andAtoms.size > 1) sys.error("[Model2Query:postProcess] For now, only 1 And-expression can be used. Found: " + andAtoms)
       if (andAtoms.size == 1) {
         val clauses = q.wh.clauses
@@ -311,7 +351,7 @@ object Model2Query {
         val unifyAttrs = model.elements.collect {
           case a@Atom(ns1, attr1, _, _, _, _, _) if a != andAtom => (ns1, if (attr1.last == '_') attr1.init else attr1)
         }
-        val selfJoinClauses = andValues.zipWithIndex.tail.flatMap {case (andValue, i) =>
+        val selfJoinClauses = andValues.zipWithIndex.tail.flatMap { case (andValue, i) =>
 
           // Todo: complete matches...
           def vi(v0: Var) = Var(v0.v + "_" + i)
@@ -360,7 +400,7 @@ object Model2Query {
       } else q
     }
 
-    val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) {case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) =>
+    val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) { case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) =>
       make(query_, element, e, v, prevNs, prevAttr, prevRefNs)
     }._1
 
