@@ -3,10 +3,9 @@ package molecule
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
 
-
 class OptionalValues extends CoreSpec {
 
-  "Correct types returned (card-one)" >> {
+  "Correct card-one types returned" >> {
 
     "String (no assertion)" in new CoreSetup {
       Ns.int.str.insert(1, "a")
@@ -91,7 +90,7 @@ class OptionalValues extends CoreSpec {
   }
 
 
-  "Correct types returned (card-many)" >> {
+  "Correct card-many types returned" >> {
 
     "String (no assertion)" in new CoreSetup {
       Ns.int.strs.insert(1, Set("a", "b"))
@@ -177,166 +176,282 @@ class OptionalValues extends CoreSpec {
   }
 
 
+  "Multiple optional attributes" >> {
 
-  "Various" >> {
+    "One namespace" in new CoreSetup {
+      Ns.str.int$.long$ insert List(
+        ("a", Some(1), Some(10L)),
+        ("b", None, Some(20L)),
+        ("c", Some(3), None),
+        ("d", None, None))
 
-    "Only optional attributes not allowed" in new CoreSetup {
-      expectCompileError(
-        """
-              m(Ns.str$)
-        """,
-        """
-          |[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.
-          |Model(List(Atom(ns,str$,String,1,VarValue,None,List())))
-        """)
+      Ns.str.int$.long$.get === List(
+        ("a", Some(1), Some(10L)),
+        ("b", None, Some(20L)),
+        ("c", Some(3), None),
+        ("d", None, None))
 
-      expectCompileError(
-        """
-              m(Ns.str$.int$)
-        """,
-        """
-          |[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.
-          |Model(List(Atom(ns,str$,String,1,VarValue,None,List()), Atom(ns,int$,Long,1,VarValue,None,List())))
-        """)
-
-      ok
+      // We don't have to retrieve the attribute values in the same order as inserted
+      Ns.int$.str.long$.get === List(
+        (None, "d", None),
+        (Some(3), "c", None),
+        (None, "b", Some(20L)),
+        (Some(1), "a", Some(10L)))
     }
-
-    "First attr can be optional" in new CoreSetup {
-      Ns.str$.int insert List((Some("a"), 1), (None, 2))
-      Ns.str$.int.get === List((Some("a"), 1), (None, 2))
-    }
-
-    "Ref attribute can be optional (1)" in new CoreSetup {
-      Ns.str.Ref1.int1$ insert List(("a", Some(1)), ("b", None))
-
-      // No ref from entity with "b"
-      Ns.str.Ref1.int1$.get === List(("a", Some(1)))
-    }
-
-    "Ref attribute can be optional (2)" in new CoreSetup {
-      Ns.str.Ref1.str1.int1$ insert List(("a", "a1", Some(1)), ("b", "b1", None))
-
-      // Now there's a ref from entity with "b" to entity with "b1"
-      Ns.str.Ref1.str1.int1$.get === List(("a", "a1", Some(1)), ("b", "b1", None))
-    }
-
-    "Nested attribute can be optional (1)" in new CoreSetup {
-      // Throws runtime exception
-      // m(Ns.str.Refs1 * Ref1.int1$) insert List(("a", List(Some(1))), ("b", List(None)))
-
-      // Add None values as empty list
-      m(Ns.str.Refs1 * Ref1.int1$) insert List(("a", List(Some(1))), ("b", List()))
-
-      // No ref from entity with "b"
-      m(Ns.str.Refs1 * Ref1.int1$).get === List(("a", List(Some(1))))
-    }
-
-    "Nested attribute can be optional (2)" in new CoreSetup {
-      m(Ns.str.Refs1 * Ref1.str1.int1$) insert List(
-        ("a", List(("a1", Some(1)))),
-        ("b", List(("b1", None)))
-      )
-
-      // Now there's a ref from entity with "b" to entity with "b1"
-      m(Ns.str.Refs1 * Ref1.str1.int1$).get === List(
-        ("a", List(("a1", Some(1)))),
-        ("b", List(("b1", None)))
-      )
-    }
-
   }
 
 
-  // Todo:
-  // "component"
-  // "multiple optionals"
+  "Ref optionals" >> {
+
+    "Ref attribute can be optional (1)" in new CoreSetup {
+      Ns.str.Ref1.str1.int1$ insert List(
+        ("a", "a1", Some(11)),
+        ("b", "b1", None))
+
+      // Now there's a ref from entity with "b" to entity with "b1"
+      Ns.str.Ref1.str1.int1$.get === List(
+        ("a", "a1", Some(11)),
+        ("b", "b1", None))
+    }
+
+    "Ref attribute can be optional (2)" in new CoreSetup {
+
+      Ns.str.Ref1.str1$.int1 insert List(
+        ("a", None, 11),
+        ("b", Some("b1"), 21))
+
+      Ns.str.Ref1.str1$.int1.get === List(
+        ("a", None, 11),
+        ("b", Some("b1"), 21))
+      ok
+    }
+
+    "Nested attribute can be optional" in new CoreSetup {
+      m(Ns.str.Refs1 * Ref1.str1.int1$) insert List(
+        ("a", List(("a1", Some(11)))),
+        ("b", List(("b1", None))))
+
+      // Now there's a ref from entity with "b" to entity with "b1"
+      m(Ns.str.Refs1 * Ref1.str1.int1$).get === List(
+        ("a", List(("a1", Some(11)))),
+        ("b", List(("b1", None))))
+    }
+
+    "Ref enum" in new CoreSetup {
+      Ns.str.Ref1.str1.enum1$ insert List(
+        ("a", "a1", Some("enum10")),
+        ("b", "b1", None))
+
+      Ns.str.Ref1.str1.enum1$.get === List(
+        ("a", "a1", Some("enum10")),
+        ("b", "b1", None))
+    }
+
+    "Nested enum" in new CoreSetup {
+      m(Ns.str.Refs1 * Ref1.str1.int1$.enum1$) insert List(
+        ("a", List(("a1", Some(11), None))),
+        ("b", List(("b1", None, Some("enum12")))))
+
+      m(Ns.str.Refs1 * Ref1.str1.int1$.enum1$).get === List(
+        ("a", List(("a1", Some(11), None))),
+        ("b", List(("b1", None, Some("enum12")))))
+    }
+  }
 
 
+  "Ref optionals, 2 levels" >> {
 
-  //    "String (no assertion)" in new CoreSetup {
-  //
-  //      Ns.str.int$.long$ insert List(
-  //        ("a", Some(1), Some(10L)),
-  //        ("b", None, Some(20L)),
-  //        ("c", Some(3), None)
-  //      )
-  //
-  ///*
-  //Query(
-  //  Find(List(
-  //    Var(b),
-  //    Pull(a,ns,int,None),
-  //    Pull(a,ns,long,None))),
-  //  Where(List(
-  //    DataClause(ImplDS,Var(a),KW(ns,str,),Var(b),Empty,NoBinding))))
-  //
-  ////        [:find  ?b (pull ?a [:ns/int]) (pull ?a [:ns/long])
-  ////         :where [?a :ns/str ?b]]
-  //
-  //
-  //*/
-  //      Ns.str.int$.long$.debug
-  //
-  //      datomic.Peer.q(
-  //        """
-  //          |[:find  ?b (pull ?a [:ns/int :ns/long])
-  //          | :where [?a :ns/str ?b]]
-  //        """.stripMargin, conn.db) === 9
-  //
-  //
-  //
-  //
-  //      // Todo: non-adjacent optionals shouldn't compile
-  ////      Ns.str.int$.bool.long$.debug
-  //
-  //
-  ////      Ns.str.int$.long$.get === List(
-  ////        ("a", Some(1), Some(10L)),
-  ////        ("b", None, Some(20L)),
-  ////        ("c", Some(3), None)
-  ////      )
-  //
-  ////      Ns.str.int$.Ref1.str1.int1$ insert List(
-  ////        ("a", None, "a1", Some(10)),
-  ////        ("b", Some(2), "b1", None)
-  ////      )
-  ////      Ns.str.int$.Ref1.int1$.debug
-  ////      Ns.str.int$.Ref1.int1$.str1.debug
-  ////      Ns.str.int$.Ref1.str1.int1$.debug
-  ////      Ns.str.Ref1.int1$.debug
-  //////      Ns.str.Ref1.int1$.get === List(
-  //////      Ns.str.Ref1.int1_(nil).get === List(
-  ////      Ns.str.get === List(
-  ////        ("a", Some(1)),
-  ////        ("b", None)
-  ////      )
-  //
-  //
-  //
-  //
-  ////      datomic.Peer.q(
-  ////        """
-  ////          |[:find  ?b (pull ?a [:ns/int :ns/long])
-  ////          | :where [?a :ns/str ?b]]
-  ////        """.stripMargin, conn.db) === 9
-  //
-  ////      Ns.str.int_.apply(nil)._query.datalog === 7
-  ////      Ns.str.int_.apply(nil).get === 7
-  //
-  ////      Ns.str.int.>(1)._query.datalog === 7
-  //    }
+    "Adjacent" in new CoreSetup {
 
-  // "Non-adjacent optionals in same namespace not allowed (shouldn't compile)"
-  /*
+      Ns.str.Ref1.str1$.int1.Ref2.str2.int2$ insert List(
+        ("a", None, 11, "a2", Some(12)),
+        ("b", Some("b1"), 21, "b2", None))
 
-[:find  ?b ?c
- :where [?a :ns/str ?b]
-        [?a :ns/int ?c]
-        [(.compareTo ^Long ?c 1) ?c2]
-        [(> ?c2 0)]]
+      Ns.str.Ref1.str1$.int1.Ref2.str2.int2$.get === List(
+        ("b", Some("b1"), 21, "b2", None),
+        ("a", None, 11, "a2", Some(12)))
+    }
 
-        [:find  ?b (pull ?a [:ns/int]) (pull ?a [:ns/long])
-         :where [?a :ns/str ?b]]
-  */
+    "Nested" in new CoreSetup {
+      m(Ns.str.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)) insert List(
+        ("a", List(
+          (None, 11, List(
+            ("a2", Some(12)))))),
+        ("b", List(
+          (Some("b1"), 21, List(
+            ("b2", None))))))
+
+      m(Ns.str.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)).get === List(
+        ("a", List(
+          (None, 11, List(
+            ("a2", Some(12)))))),
+        ("b", List(
+          (Some("b1"), 21, List(
+            ("b2", None))))))
+    }
+  }
+
+
+  "Molecule has to end with attribute" >> {
+
+    "Ending with ref" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.Ref1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str.Ref1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str_.Ref1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+      ok
+    }
+
+    "Ending with refs" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.Refs1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str.Refs1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str_.Refs1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+      ok
+    }
+  }
+
+
+  "Missing mandatory attributes" >> {
+
+    "No attributes at all" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns)",
+        """
+          |[Dsl2Model:dslStructure] Unexpected DSL structure: molecule.util.dsl.coreTest.Ns
+          |Select(Select(Select(Select(Ident(molecule), molecule.util), molecule.util.dsl), molecule.util.dsl.coreTest), molecule.util.dsl.coreTest.Ns)
+        """)
+    }
+
+    "Only un-fetched attributes" in new CoreSetup {
+
+      // Un-fetched mandatory attributes only don't make it for querable molecules
+      expectCompileError(
+        "m(Ns.str_).get",
+        "value get is not a member of molecule.api.Molecule0")
+
+      expectCompileError(
+        "m(Ns.str_.Ref1.int1_).get",
+        "value get is not a member of molecule.api.Molecule0")
+      ok
+    }
+
+    "No mandatory attributes before ref" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.Ref1.int1)",
+        "[Dsl2Model:apply (2)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.Refs1.int1)",
+        "[Dsl2Model:apply (2)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.str.Ref1.Ref2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+      expectCompileError(
+        "m(Ns.str_.Ref1.Ref2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.str.Refs1.Ref2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+      expectCompileError(
+        "m(Ns.str_.Refs1.Ref2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.str.Refs1.Refs2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+      expectCompileError(
+        "m(Ns.str_.Refs1.Refs2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.str.Refs1 * Ref1.Ref2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+      expectCompileError(
+        "m(Ns.str_.Refs1 * Ref1.Ref2.int2)",
+        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+      ok
+    }
+
+    "No mandatory attributes before nested" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.Refs1 * Ref1.int1)",
+        "[Dsl2Model:apply (3)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.str.Refs1 * (Ref1.Refs2 * Ref2.int2))",
+        "[Dsl2Model:apply (3)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+      ok
+    }
+
+    "No mandatory attributes after nested" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.str.Refs1 * Ref1.int1$)",
+        "[Dsl2Model:apply (4)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.str.Refs1 * (Ref1.int1.Refs2 * Ref2.int2$))",
+        "[Dsl2Model:apply (4)] Namespace `Ref2` has no mandatory attributes. Please add at least one.")
+      ok
+    }
+
+    "No mandatory attributes for a namespace" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.str$)",
+        "[Dsl2Model:apply (5)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.int.Ref1.str1$)",
+        "[Dsl2Model:apply (5)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+
+      expectCompileError(
+        "m(Ns.int.Refs1.str1$)",
+        "[Dsl2Model:apply (5)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
+      ok
+    }
+  }
+
+
+  "Mixing optional and non-fetching attributes" >> {
+
+    "Ok in query" in new CoreSetup {
+
+      Ns.str.int$ insert List(
+        ("a", Some(1)),
+        ("b", None))
+
+      m(Ns.str_.int$).get === List(
+        Some(1),
+        None)
+    }
+
+    "RuntimeException when inserting" in new CoreSetup {
+
+      (m(Ns.str_.int$).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+        "[Molecule:modelCheck] Underscore-suffixed attributes like `str_` not allowed in insert molecules."
+    }
+  }
 }

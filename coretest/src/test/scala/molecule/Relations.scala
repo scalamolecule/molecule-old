@@ -7,19 +7,6 @@ import scala.collection.generic.SeqFactory
 
 class Relations extends CoreSpec {
 
-
-  class RelSetup extends CoreSetup {
-    Ns.str.Ref1.str1$.Ref2.str2$ insert List(
-      ("a0", Some("a1"), Some("a2")),
-      ("b0", Some("b1"), Some("b2")),
-      ("c0", Some("c1"), Some("c2")),
-      // null values are simply not asserted (inserted)
-      ("e0", None, Some("e2")),
-      ("f0", Some("f1"), None))
-
-  }
-
-
   "One-to-One" in new CoreSetup {
 
     val List(id1, ref1, id2, ref2, id3, ref3) = Ns.str.Ref1.str1 insert List(
@@ -102,27 +89,4 @@ class Relations extends CoreSpec {
     m(Ns.str.Refs1 * Ref1.int1.enum1) insert List(("e", List((12, "enum12"))))
     m(Ns.str.Refs1 * Ref1.int1.enum1).get === List(("e", List((12, "enum12"))))
   }
-
-
-
-  //  "Implicit namespaces" in new RelSetup {
-  //
-  //
-  //    // Get attribute values from all 3 namespaces
-  //    Ns.str.Ref1.str.Ref2.str.get === List(
-  //      ("b0", "b1", "b2"),
-  //      ("c0", "c1", "c2"),
-  //      ("a0", "a1", "a2")
-  //    )
-  //    Ns.str.Ref1.Ref2.str.get === List(
-  //      ("a0", "a2"),
-  //      ("b0", "b2"),
-  //      ("c0", "c2"))
-  //
-  //    Ns.Ref1.str.Ref2.str.get === List(
-  //      ("b0", "b1", "b2"),
-  //      ("c0", "c1", "c2"),
-  //      ("a0", "a1", "a2"))
-  //  }
-
 }

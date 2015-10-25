@@ -40,8 +40,13 @@ object QueryOps {
       q.copy(f = Find(q.f.outputs ++ moreOutputs))
     }
 
-    def pull(e: String, atom: Atom) = q.copy(f = Find(q.f.outputs :+ Pull(e, atom.ns, atom.name)))
-    def pullEnum(e: String, atom: Atom) = q.copy(f = Find(q.f.outputs :+ Pull(e, atom.ns, atom.name, atom.enumPrefix)))
+    def pull(e: String, atom: Atom) =
+      q.copy(f = Find(q.f.outputs :+ Pull(e + "_" + atom.name, atom.ns, atom.name)))
+        .func("molecule.Functions/bind", Seq(Var(e)), ScalarBinding(Var(e + "_" + atom.name)))
+
+    def pullEnum(e: String, atom: Atom) =
+      q.copy(f = Find(q.f.outputs :+ Pull(e + "_" + atom.name, atom.ns, atom.name, atom.enumPrefix)))
+        .func("molecule.Functions/bind", Seq(Var(e)), ScalarBinding(Var(e + "_" + atom.name)))
 
 
     // In ..........................................

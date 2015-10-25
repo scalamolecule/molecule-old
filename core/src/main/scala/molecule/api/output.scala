@@ -33,6 +33,15 @@ trait Molecule extends DatomicFacade {
 
   def debug(implicit conn: Connection): Unit
   def debugE(implicit conn: Connection): Unit
+
+  protected trait modelCheck {
+    def recurse(elements: Seq[Element]): Seq[Element] = elements flatMap {
+      case a: Atom if a.name.last == '_' => throw new RuntimeException(s"[Molecule:modelCheck] Underscore-suffixed attributes like `${a.name}` not allowed in insert molecules.")
+      case Group(ref, es)                => recurse(es)
+      case e: Element                    => Seq(e)
+    }
+    recurse(_model.elements)
+  }
 }
 
 abstract class Molecule0(val _model: Model, val _query: Query) extends Molecule
@@ -45,7 +54,7 @@ abstract class Molecule1[A](val _model: Model, val _query: Query) extends Molecu
   def some       (implicit conn: Connection): Option[A] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, ax: A*)                (implicit conn: Connection): Tx = insert(conn, _model, (a +: ax.toList).map(Seq(_)))
     def apply(data: Seq[A], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(Seq(_)))
     def apply(data: A :: HNil)             (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -88,7 +97,7 @@ abstract class Molecule2[A, B](val _model: Model, val _query: Query) extends Mol
   def some       (implicit conn: Connection): Option[(A, B)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B)                       (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b)))
     def apply(data: Seq[(A, B)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2)))
     def apply(data: A :: B :: HNil)             (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -130,7 +139,7 @@ abstract class Molecule3[A, B, C](val _model: Model, val _query: Query) extends 
   def some       (implicit conn: Connection): Option[(A, B, C)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C)                    (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c)))
     def apply(data: Seq[(A, B, C)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3)))
     def apply(data: A :: B :: C :: HNil)           (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -171,7 +180,7 @@ abstract class Molecule4[A, B, C, D](val _model: Model, val _query: Query) exten
   def some       (implicit conn: Connection): Option[(A, B, C, D)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D)                 (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d)))
     def apply(data: Seq[(A, B, C, D)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4)))
     def apply(data: A :: B :: C :: D :: HNil)         (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -211,7 +220,7 @@ abstract class Molecule5[A, B, C, D, E](val _model: Model, val _query: Query) ex
   def some       (implicit conn: Connection): Option[(A, B, C, D, E)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E)              (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e)))
     def apply(data: Seq[(A, B, C, D, E)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
     def apply(data: A :: B :: C :: D :: E :: HNil)       (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -250,7 +259,7 @@ abstract class Molecule6[A, B, C, D, E, F](val _model: Model, val _query: Query)
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F)           (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f)))
     def apply(data: Seq[(A, B, C, D, E, F)], hack: Int = 42)(implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
     def apply(data: A :: B :: C :: D :: E :: F :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -288,7 +297,7 @@ abstract class Molecule7[A, B, C, D, E, F, G](val _model: Model, val _query: Que
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)          (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g)))
     def apply(data: Seq[(A, B, C, D, E, F, G)], hack: Int = 42)  (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -325,7 +334,7 @@ abstract class Molecule8[A, B, C, D, E, F, G, H](val _model: Model, val _query: 
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)         (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H)], hack: Int = 42)    (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -361,7 +370,7 @@ abstract class Molecule9[A, B, C, D, E, F, G, H, I](val _model: Model, val _quer
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)        (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I)], hack: Int = 42)      (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -396,7 +405,7 @@ abstract class Molecule10[A, B, C, D, E, F, G, H, I, J](val _model: Model, val _
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)       (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J)], hack: Int = 42)        (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -430,7 +439,7 @@ abstract class Molecule11[A, B, C, D, E, F, G, H, I, J, K](val _model: Model, va
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)      (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K)], hack: Int = 42)          (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -463,7 +472,7 @@ abstract class Molecule12[A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model,
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L)], hack: Int = 42)            (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -495,7 +504,7 @@ abstract class Molecule13[A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Mod
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)    (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M)], hack: Int = 42)              (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -526,7 +535,7 @@ abstract class Molecule14[A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: 
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)   (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)], hack: Int = 42)                (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -556,7 +565,7 @@ abstract class Molecule15[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _mode
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)  (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)], hack: Int = 42)                  (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -585,7 +594,7 @@ abstract class Molecule16[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _m
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P) (implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)], hack: Int = 42)                    (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -613,7 +622,7 @@ abstract class Molecule17[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)], hack: Int = 42)                      (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: HNil)     (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -640,7 +649,7 @@ abstract class Molecule18[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)], hack: Int = 42)                         (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: HNil)      (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -666,7 +675,7 @@ abstract class Molecule19[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)], hack: Int = 42)                            (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: HNil)       (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -691,7 +700,7 @@ abstract class Molecule20[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil]
   def hl(n: Int)(implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)], hack: Int = 42)                               (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: HNil)        (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -715,7 +724,7 @@ abstract class Molecule21[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)], hack: Int = 42)                                  (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: HNil)         (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))
@@ -737,7 +746,7 @@ abstract class Molecule22[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, 
   def some       (implicit conn: Connection): Option[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)] = get(conn).headOption
   def hl         (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil]
   def hl(n: Int) (implicit conn: Connection): Seq[A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil] = hl.take(n)
-  object insert {
+  object insert extends modelCheck {
     def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Connection): Tx = insert(conn, _model, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
     def apply(data: Seq[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)], hack: Int = 42)                                     (implicit conn: Connection): Tx = insert(conn, _model, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
     def apply(data: A :: B :: C :: D :: E :: F :: G :: H :: I :: J :: K :: L :: M :: N :: O :: P :: Q :: R :: S :: T :: U :: V :: HNil)          (implicit conn: Connection): Tx = insert(conn, _model, Seq(data.toList))

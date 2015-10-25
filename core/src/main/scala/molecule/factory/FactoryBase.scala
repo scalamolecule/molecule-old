@@ -1,14 +1,15 @@
 package molecule.factory
+import java.net.URI
+import java.util.{Date, UUID}
+
 import molecule.ast.model._
 import molecule.dsl.schemaDSL._
 import molecule.ops.TreeOps
 import molecule.transform._
+
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
-import java.net.URI
-import java.util.{Date, UUID}
-import clojure.lang.Keyword
 
 trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
@@ -163,10 +164,19 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
             Some($value.asInstanceOf[jMap[String, String]].toMap.values.head)
           }
         """
-      case t if t <:< typeOf[Option[Set[Double]]] => q"""if ($value == null) None else Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[Double]])"""
-      case t if t <:< typeOf[Option[Set[Date]]]   => q"""if ($value == null) None else Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[Date]])"""
-      case t if t <:< typeOf[Option[Set[UUID]]]   => q"""if ($value == null) None else Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[UUID]])"""
-      case t if t <:< typeOf[Option[Set[URI]]]    => q"""if ($value == null) None else Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[URI]])"""
+      case t if t <:< typeOf[Option[Set[Double]]] =>
+        q"""if ($value == null) None else
+              Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[Double]])"""
+      case t if t <:< typeOf[Option[Set[Date]]]   =>
+        q"""if ($value == null) None else
+              Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[Date]])"""
+      case t if t <:< typeOf[Option[Set[UUID]]]   =>
+        q"""if ($value == null) None else
+              Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[UUID]])"""
+      case t if t <:< typeOf[Option[Set[URI]]]    =>
+        q"""
+           if ($value == null) None else
+           Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[URI]])"""
       case t if t <:< typeOf[Option[Set[Int]]]    =>
         q"""
           if ($value == null) None else {

@@ -19,7 +19,7 @@ class TypeInference extends CoreSpec {
     typed[UUID](Ns.uuid.get.head)
     typed[URI](Ns.uri.get.head)
     typed[String](Ns.enum.get.head)
-    typed[String](Ns.Ref1.str1.get.head)
+    typed[Long](Ns.ref1.get.head)
 
     // Arity 2
     typed[(String, Int)](Ns.str.int.get.head)
@@ -129,7 +129,7 @@ class TypeInference extends CoreSpec {
     typed[Set[UUID]](Ns.uuids.get.head)
     typed[Set[URI]](Ns.uris.get.head)
     typed[Set[String]](Ns.enums.get.head)
-    typed[String](Ns.Refs1.str1.get.head)
+    typed[Set[Long]](Ns.refs1.get.head)
 
     // Arity 2
     typed[(Set[String], Set[Int])](Ns.strs.ints.get.head)

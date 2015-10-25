@@ -1,16 +1,16 @@
 package molecule
 import java.util.UUID._
-import java.util.{Collection => jCollection, Date, List => jList, Map => jMap, UUID}
+import java.util.{Collection => jCollection, Date, List => jList, Map => jMap}
 
 import datomic._
 import datomic.db.Db
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ast.transaction.{Statement, _}
+import molecule.dsl.Transaction
 import molecule.ops.QueryOps._
 import molecule.transform.{Model2Transaction, Query2String}
 import molecule.util.Debug
-import dsl.Transaction
 import org.specs2.main.ArgProperties
 
 import scala.collection.JavaConversions._
@@ -19,6 +19,8 @@ import scala.collection.JavaConverters._
 
 // ArgProperties for some reason makes FactoryBase happy when creating nested molecules
 // outside the Specs2 framework (in non-test code). Todo: Do without ArgProperties
+
+
 
 trait DatomicFacade extends ArgProperties {
   private val x = Debug("DatomicFacade", 1, 99, false, 3)
@@ -33,6 +35,17 @@ trait DatomicFacade extends ArgProperties {
       Peer.deleteDatabase(uri)
       Peer.createDatabase(uri)
       val conn = Peer.connect(uri)
+
+      val bindFunctionMap = Util.map(
+        "lang", "java",
+        "params", Util.list("var"),
+        "code", "return var"
+      )
+      val bindfunction = Peer.function(bindFunctionMap)
+      val bindEntity = Util.map(
+        "db/id", Peer.tempid(":db.part/user")
+      )
+
       conn.transact(tx.partitions)
       conn.transact(tx.namespaces)
       conn
@@ -129,7 +142,9 @@ trait DatomicFacade extends ArgProperties {
   protected[molecule] def insert(conn: Connection, model: Model, dataRows: Seq[Seq[Any]] = Seq()): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmtss = transformer.insertStmts(dataRows)
-    //    x(2, model, transformer.stmtsModel, dataRows, stmtss)
+//        x(2, model, transformer.stmtsModel, dataRows, stmtss)
+//        x(2, model, transformer.stmtsModel, stmtss)
+//        x(2, transformer.stmtsModel, stmtss)
     Tx(conn, transformer, stmtss)
   }
 

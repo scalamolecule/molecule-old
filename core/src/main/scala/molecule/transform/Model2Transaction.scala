@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 
 
 case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 50, 21, false, 6)
+  val x = Debug("Model2Transaction", 23, 22, false, 6)
 
   private def tempId(attr: String) = attr match {
     case "tx"                 => Peer.tempid(s":db.part/tx")
@@ -28,14 +28,11 @@ case class Model2Transaction(conn: Connection, model: Model) {
   val stmtsModel: Seq[Statement] = {
 
     def resolveElement(eSlot: Any, stmts: Seq[Statement], element: Element): (Any, Seq[Statement]) = (eSlot, element) match {
-      // First
-      //      case ('_, Meta(ns, "", "e", EntValue, _))          => ('arg, stmts)
       case ('_, Meta(ns, "", "e", _, EntValue))          => ('arg, stmts)
       case ('_, Meta(ns, "", "e", _, Eq(Seq(id: Long)))) => (Eid(id), stmts)
       case ('_, Atom(ns, name, _, _, VarValue, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
       case ('_, Atom(ns, name, _, _, value, prefix, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
       case ('_, Bond(ns, refAttr, refNs))                => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", s":$refNs"))
-      //      case ('_, Bond(ns, refAttr, _))                    => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", 'tempId))
 
       case (e, Group(Bond(ns, refAttr, _), elements)) =>
         val nested = elements.foldLeft('v: Any, Seq[Statement]()) {
@@ -53,11 +50,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('e, Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
       case ('e, Atom(ns, name, _, _, VarValue, _, _))             => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
       case ('e, Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
-      //      case ('e, Bond(ns, refAttr, _))                             => ('v, stmts :+ Add('e, s":$ns/$refAttr", 'tempId))
-      case ('e, Bond(ns, refAttr, refNs)) => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
-
-
-      case ('e, TxModel(elements)) => ('e, stmts ++ elements.foldLeft('tx: Any, Seq[Statement]()) {
+      case ('e, Bond(ns, refAttr, refNs))                         => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
+      case ('e, TxModel(elements))                                => ('e, stmts ++ elements.foldLeft('tx: Any, Seq[Statement]()) {
         case ((eSlot1, stmts1), element1) => resolveElement(eSlot1, stmts1, element1)
       }._2)
 
@@ -65,8 +59,6 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case ('tx, Atom(ns, name, _, _, VarValue, _, _))                       => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
       case ('tx, Atom(ns, name, _, _, value, prefix, _)) if name.last == '_' => ('tx, stmts :+ Add('tx, s":$ns/${name.init}", Values(value, prefix)))
       case ('tx, Atom(ns, name, _, _, value, prefix, _))                     => ('tx, stmts :+ Add('tx, s":$ns/$name", Values(value, prefix)))
-      //      case ('tx, a@Atom(ns, name, _, _, _, _, _))                     =>
-      //        sys.error(s"[Model2Transaction:stmtsModel] Please use underscore suffix for tx attribute (`$name` -> `${name}_`}) in:\n$a")
 
       // Next namespace
       case ('v, Atom(ns, name, _, _, VarValue, _, _))   => ('e, stmts :+ Add('v, s":$ns/$name", 'arg))
@@ -75,10 +67,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
 
       case ('arg, Bond(ns, refAttr, _)) => ('v, stmts :+ Add('arg, s":$ns/$refAttr", 'tempId))
 
-      case (e, elem) =>
-        //        x(27, model, e, elem)
-        //        throw new RuntimeException(s"[Model2Transaction:stmtsModel] Unexpected transformation:\n$model \n($e, $elem)")
-        sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\nMODEL: $model \nPAIR: ($e, $elem)\nSTMTS: $stmts")
+      case (e, elem) => sys.error(s"[Model2Transaction:stmtsModel] Unexpected transformation:\nMODEL: $model \nPAIR: ($e, $elem)\nSTMTS: $stmts")
     }
 
     def replace$(elements: Seq[Element]): Seq[Element] = elements map {
@@ -155,6 +144,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
               case (null, _)                                              => sys.error("[Model2Transaction:matchDataStmt:resolveNested] null values not allowed. Please use `attr$` for Option[tpe] values.")
               case (None, _)                                              => Nil
               case (Some(nestedArg), Add(e1, ref1, nestedStmts1: Seq[_])) => resolveNested(nestedId, ref1, nestedStmts1, nestedArg, nestedId)
+              case (Some(nestedArg), Add(_, a, Values(EnumVal, prefix)))  => resolveStmts(Seq(), nestedId, a, nestedArg, prefix)
               case (Some(nestedArg), Add(_, a, _))                        => resolveStmts(Seq(), nestedId, a, nestedArg)
               case (nestedArg, Add(e1, ref1, nestedStmts1: Seq[_]))       => resolveNested(nestedId, ref1, nestedStmts1, nestedArg, nestedId)
               case (nestedArg, Add(_, a, Values(EnumVal, prefix)))        => resolveStmts(Seq(), nestedId, a, nestedArg, prefix)
@@ -177,11 +167,16 @@ case class Model2Transaction(conn: Connection, model: Model) {
       dataStmts.foldLeft(0, Seq[Statement]()) { case ((cur, stmts), dataStmt) =>
         val arg = row.get(cur)
         val next = if ((cur + 1) < row.size) cur + 1 else cur
-        arg match {
-          case null       => sys.error("[Model2Transaction:insertStmts] null values not allowed. Please use `attr$` for Option[tpe] values.")
-          case None       => (next, stmts)
-          case Some(arg1) => matchDataStmt(stmts, dataStmt, arg1, cur, next)
-          case _          => matchDataStmt(stmts, dataStmt, arg, cur, next)
+        x(16, arg, dataStmt, stmts)
+        (arg, dataStmt) match {
+          case (null, _)                                                                    => sys.error("[Model2Transaction:insertStmts] null values not allowed. Please use `attr$` for Option[tpe] values.")
+          case (None, Add('e, a, refNs: String))                                            => (cur, resolveStmts(stmts, lastE(stmts, a), a, tempId(refNs)))
+          case (None, _)                                                                    => (next, stmts)
+          case (Some(arg1), _)                                                              => matchDataStmt(stmts, dataStmt, arg1, cur, next)
+          case (_, Add('e, a, 'arg)) if stmts.last.v.toString.startsWith("#db/id[:db.part") => (next, resolveStmts(stmts, stmts.last.v, a, arg))
+          case (_, _)                                                                       => matchDataStmt(stmts, dataStmt, arg, cur, next)
+          //          case (_, Add('e, a, Values(EnumVal, prefix))) if stmts.last.v.toString.startsWith("#db/id[:db.part") => (next, resolveStmts(stmts, stmts.last.v, a, arg, prefix))
+          //          case (_, Add('e, a, Values(vs, prefix))) if stmts.last.v.toString.startsWith("#db/id[:db.part")      => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
         }
       }._2
     }
@@ -190,7 +185,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case (stmts, Add('tx, a, Values(vs, prefix))) => resolveStmts(stmts, txId, a, vs, prefix)
       case (stmts, unexpected)                      => sys.error("[Model2Transaction:insertStmts:txStmts] Unexpected insert statement: " + unexpected)
     })
-    dataStmtss ++ txStmtss
+    dataStmtss ++ (if (txStmtss.head.isEmpty) Nil else txStmtss)
   }
 
   def saveStmts(): Seq[Statement] = {
