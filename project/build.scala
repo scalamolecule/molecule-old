@@ -65,7 +65,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "org.scalamolecule",
-    version := "0.4.0",
+    version := "0.4.1",
     scalaVersion := "2.11.7",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
     resolvers ++= Seq(
@@ -76,7 +76,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     ),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.datomic" % "datomic-free" % "0.9.5206",
+      "com.datomic" % "datomic-free" % "0.9.5327",
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.scalaz" %% "scalaz-core" % "7.1.3",
       "net.liftweb" %% "lift-json" % "3.0-M6",

@@ -331,27 +331,14 @@ object Dsl2Model {
       case _       => "ok"
     }
 
-    // Avoid orphan reference entities
-    // A molecule can only build on with a ref if it has already at least one mandatory attribute
-    def abortNs(i: Int, ns: String) = c.abort(c.enclosingPosition,
-      s"[Dsl2Model:apply ($i)] Namespace `$ns` has no mandatory attributes. Please add at least one.")
-    //      s"[Dsl2Model:apply ($i)] Namespace `$ns` has no mandatory attributes. Please add at least one.\n${Model(elements0).toString}")
-    def recurse(elements: Seq[Element]): (Seq[Element], String) = elements.foldLeft((Seq[Element](), "")) { case ((attrs, ns0), e) =>
-      e match {
-        case b: Bond                       => if (attrs.isEmpty) abortNs(2, b.ns.capitalize) else (Seq[Element](), b.refNs.capitalize)
-        case Group(ref, es)                => if (attrs.isEmpty) abortNs(3, ref.ns.capitalize)
-        else {
-          val (nested, ns) = recurse(es)
-          if (nested.isEmpty) abortNs(4, ns) else (nested, ns)
-        }
-        case m@Meta(_, _, "e", NoValue, _) => (attrs :+ m, m.ns.capitalize)
-        case a: Atom if a.name.last != '$' => (attrs :+ a, a.ns.capitalize)
-        case a: Atom                       => (attrs, a.ns.capitalize)
-        case _                             => (attrs, ns0)
-      }
-    }
-    val (elements, ns) = recurse(elements0)
-    if (elements.isEmpty) abortNs(5, ns)
+    // Molecule should at least have one mandatory attribute
+    elements0.collectFirst {
+      case a@Atom(_, name, _, _, _, _, _) if name.last != '$' => a
+      case b: Bond                                            => b
+      case g: Group                                           => g
+      case m@Meta(_, "txInstant", _, _, _)                    => m
+    } getOrElse
+      c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
 
 
     // Resolve generic elements ............................................................

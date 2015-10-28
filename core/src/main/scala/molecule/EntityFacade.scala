@@ -22,12 +22,12 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
   def touch: Map[String, Any] = toMap
 
   // Format touch output for tests...
-  def touch2: Map[_, _] = toMap.map(p => s"""\n"${p._1 }"""" -> formatEntity(p._2)).toMap
+  def touch2: Map[_, _] = toMap.map(p => s"""\n"${p._1}"""" -> formatEntity(p._2)).toMap
   def formatEntity(value: Any): Any = value match {
     case s: String               => s""""$s""""
-    case l: Long                 => if (l > Int.MaxValue) s"${l }L" else l // presuming we used Int... - todo: how to get Int from touch?
+    case l: Long                 => if (l > Int.MaxValue) s"${l}L" else l // presuming we used Int... - todo: how to get Int from touch?
     case l: Seq[_]               => l map formatEntity
-    case m: Map[_, _]            => "\n" + m.map(p => s""""${p._1 }"""" -> formatEntity(p._2))
+    case m: Map[_, _]            => "\n" + m.map(p => s""""${p._1}"""" -> formatEntity(p._2))
     case (s: String, value: Any) => s""""$s"""" -> formatEntity(value)
     case other                   => other
   }
@@ -40,29 +40,21 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
     builder += ":db/id" -> entity.get(":db/id")
     while (iter.hasNext) {
       val key = iter.next()
-      builder += (key -> toScala(entity.get(key)))
+      val scalaValue = toScala(entity.get(key))
+      val sortedValue = scalaValue match {
+        case l: Seq[_] => l.head match {
+          case m1: Map[_, _] if m1.containsKey(":db/id") =>
+            val indexedRefMaps: Seq[(Long, Map[String, Any])] = l.map {
+              case m2: Map[_, _] => m2.get(":db/id").asInstanceOf[Long] -> m2.asInstanceOf[Map[String, Any]]
+            }
+            indexedRefMaps.sortBy(_._1).map(_._2)
+          case _                                         => l
+        }
+        case other     => other
+      }
+      builder += (key -> sortedValue)
     }
-    builder.result().toMap
-//      .toList.map {
-//      case (s: String, refs: List[_]) =>
-////        refs.head match {
-//////        case ref1: Map[_, _] => ref1.head match {
-//////          case (attr: String, id: Long) => {
-//////            // Presuming we now have a map of referenced entities we can sort the referenced maps by ref ids
-//////            val indexedRefMaps: List[(Long, Map[String, Any])] = refs.map {
-//////              case ref2: Map[_, _] => ref2.head match {
-//////                case (attr: String, id: Long) => {
-//////                  id -> ref2.asInstanceOf[Map[String, Any]]
-//////                }
-//////              }
-//////            }
-//////            s -> indexedRefMaps.sortBy(_._1).map(_._2)
-//////          }
-//////        }
-////        case other           => s -> refs
-////      }
-//      case other                      => other
-//    }.toMap
+    builder.result()
   }
 
   // Entity api from ValueAttribute (typed) .................................................................

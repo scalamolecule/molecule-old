@@ -35,17 +35,6 @@ trait DatomicFacade extends ArgProperties {
       Peer.deleteDatabase(uri)
       Peer.createDatabase(uri)
       val conn = Peer.connect(uri)
-
-      val bindFunctionMap = Util.map(
-        "lang", "java",
-        "params", Util.list("var"),
-        "code", "return var"
-      )
-      val bindfunction = Peer.function(bindFunctionMap)
-      val bindEntity = Util.map(
-        "db/id", Peer.tempid(":db.part/user")
-      )
-
       conn.transact(tx.partitions)
       conn.transact(tx.namespaces)
       conn

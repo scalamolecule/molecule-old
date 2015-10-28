@@ -536,10 +536,11 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         } else {
           val flatModel = {
             def recurse(element: Element): Seq[Element] = element match {
-              case g: Group => g.elements flatMap recurse
-              case a: Atom  => Seq(a)
-              case m: Meta  => Seq(m)
-              case other => Seq()
+              case g: Group                                            => g.elements flatMap recurse
+              case a@Atom(_, attr, _, _, _, _, _) if attr.last == '_'  => Seq()
+              case a: Atom                                             => Seq(a)
+              case m: Meta                                             => Seq(m)
+              case other                                               => Seq()
             }
             val elements = modelE.elements flatMap recurse
             if (elements.size != queryE.f.outputs.size)

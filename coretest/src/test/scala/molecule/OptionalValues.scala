@@ -215,7 +215,6 @@ class OptionalValues extends CoreSpec {
     }
 
     "Ref attribute can be optional (2)" in new CoreSetup {
-
       Ns.str.Ref1.str1$.int1 insert List(
         ("a", None, 11),
         ("b", Some("b1"), 21))
@@ -262,7 +261,6 @@ class OptionalValues extends CoreSpec {
   "Ref optionals, 2 levels" >> {
 
     "Adjacent" in new CoreSetup {
-
       Ns.str.Ref1.str1$.int1.Ref2.str2.int2$ insert List(
         ("a", None, 11, "a2", Some(12)),
         ("b", Some("b1"), 21, "b2", None))
@@ -292,153 +290,9 @@ class OptionalValues extends CoreSpec {
   }
 
 
-  "Molecule has to end with attribute" >> {
-
-    "Ending with ref" in new CoreSetup {
-
-      expectCompileError(
-        "m(Ns.Ref1)",
-        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
-
-      expectCompileError(
-        "m(Ns.str.Ref1)",
-        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
-
-      expectCompileError(
-        "m(Ns.str_.Ref1)",
-        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
-      ok
-    }
-
-    "Ending with refs" in new CoreSetup {
-
-      expectCompileError(
-        "m(Ns.Refs1)",
-        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
-
-      expectCompileError(
-        "m(Ns.str.Refs1)",
-        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
-
-      expectCompileError(
-        "m(Ns.str_.Refs1)",
-        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
-      ok
-    }
-  }
-
-
-  "Missing mandatory attributes" >> {
-
-    "No attributes at all" in new CoreSetup {
-
-      expectCompileError(
-        "m(Ns)",
-        """
-          |[Dsl2Model:dslStructure] Unexpected DSL structure: molecule.util.dsl.coreTest.Ns
-          |Select(Select(Select(Select(Ident(molecule), molecule.util), molecule.util.dsl), molecule.util.dsl.coreTest), molecule.util.dsl.coreTest.Ns)
-        """)
-    }
-
-    "Only un-fetched attributes" in new CoreSetup {
-
-      // Un-fetched mandatory attributes only don't make it for querable molecules
-      expectCompileError(
-        "m(Ns.str_).get",
-        "value get is not a member of molecule.api.Molecule0")
-
-      expectCompileError(
-        "m(Ns.str_.Ref1.int1_).get",
-        "value get is not a member of molecule.api.Molecule0")
-      ok
-    }
-
-    "No mandatory attributes before ref" in new CoreSetup {
-
-      expectCompileError(
-        "m(Ns.Ref1.int1)",
-        "[Dsl2Model:apply (2)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.Refs1.int1)",
-        "[Dsl2Model:apply (2)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.str.Ref1.Ref2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-      expectCompileError(
-        "m(Ns.str_.Ref1.Ref2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.str.Refs1.Ref2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-      expectCompileError(
-        "m(Ns.str_.Refs1.Ref2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.str.Refs1.Refs2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-      expectCompileError(
-        "m(Ns.str_.Refs1.Refs2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.str.Refs1 * Ref1.Ref2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-      expectCompileError(
-        "m(Ns.str_.Refs1 * Ref1.Ref2.int2)",
-        "[Dsl2Model:apply (2)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-      ok
-    }
-
-    "No mandatory attributes before nested" in new CoreSetup {
-
-      expectCompileError(
-        "m(Ns.Refs1 * Ref1.int1)",
-        "[Dsl2Model:apply (3)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.str.Refs1 * (Ref1.Refs2 * Ref2.int2))",
-        "[Dsl2Model:apply (3)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-      ok
-    }
-
-    "No mandatory attributes after nested" in new CoreSetup {
-
-      expectCompileError(
-        "m(Ns.str.Refs1 * Ref1.int1$)",
-        "[Dsl2Model:apply (4)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.str.Refs1 * (Ref1.int1.Refs2 * Ref2.int2$))",
-        "[Dsl2Model:apply (4)] Namespace `Ref2` has no mandatory attributes. Please add at least one.")
-      ok
-    }
-
-    "No mandatory attributes for a namespace" in new CoreSetup {
-
-      expectCompileError(
-        "m(Ns.str$)",
-        "[Dsl2Model:apply (5)] Namespace `Ns` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.int.Ref1.str1$)",
-        "[Dsl2Model:apply (5)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-
-      expectCompileError(
-        "m(Ns.int.Refs1.str1$)",
-        "[Dsl2Model:apply (5)] Namespace `Ref1` has no mandatory attributes. Please add at least one.")
-      ok
-    }
-  }
-
-
   "Mixing optional and non-fetching attributes" >> {
 
     "Ok in query" in new CoreSetup {
-
       Ns.str.int$ insert List(
         ("a", Some(1)),
         ("b", None))
@@ -449,9 +303,8 @@ class OptionalValues extends CoreSpec {
     }
 
     "RuntimeException when inserting" in new CoreSetup {
-
       (m(Ns.str_.int$).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
-        "[Molecule:modelCheck] Underscore-suffixed attributes like `str_` not allowed in insert molecules."
+        "[output.Molecule:modelCheck] Underscore-suffixed attributes like `str_` not allowed in insert molecules."
     }
   }
 }

@@ -1,8 +1,7 @@
 package molecule
+import molecule._
 import molecule.util.dsl.coreTest._
-import molecule.util.{CoreSetup, CoreSpec}
-
-import scala.collection.generic.SeqFactory
+import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
 
 
 class Relations extends CoreSpec {
@@ -55,6 +54,7 @@ class Relations extends CoreSpec {
       ("c0", orderLine3))
   }
 
+
   "Referenced entity ids" in new CoreSetup {
     val id     = Ns.str("a").add.eid
     val refId1 = Ns(id).Refs1.int1(1).add.eid
@@ -88,5 +88,186 @@ class Relations extends CoreSpec {
   "Nested enum after attr" in new CoreSetup {
     m(Ns.str.Refs1 * Ref1.int1.enum1) insert List(("e", List((12, "enum12"))))
     m(Ns.str.Refs1 * Ref1.int1.enum1).get === List(("e", List((12, "enum12"))))
+  }
+
+
+  "BackRef" in new CoreSetup {
+    Ns.str.Ref1.str1._Ns.Refs1.int1 insert List(
+      ("a", "a1", 1),
+      ("b", "b1", 2))
+
+    Ns.str.Ref1.str1._Ns.Refs1.int1.get === List(
+      ("a", "a1", 1),
+      ("b", "b1", 2))
+
+    Ns.str.Refs1.int1._Ns.Ref1.str1.get === List(
+      ("a", 1, "a1"),
+      ("b", 2, "b1"))
+  }
+
+
+  "No attributes at all" in new CoreSetup {
+    expectCompileError(
+      "m(Ns)",
+      """
+        |[Dsl2Model:dslStructure] Unexpected DSL structure: molecule.util.dsl.coreTest.Ns
+        |Select(Select(Select(Select(Ident(molecule), molecule.util), molecule.util.dsl), molecule.util.dsl.coreTest), molecule.util.dsl.coreTest.Ns)
+      """)
+  }
+
+  "No optional values" in new CoreSetup {
+    expectCompileError(
+      "m(Ns.str$)",
+      "[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+
+    expectCompileError(
+      "m(Ns.str$.int$)",
+      "[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+  }
+
+
+  "Only un-fetched attributes" in new CoreSetup {
+
+    // Un-fetched mandatory attributes only don't make it for querable molecules
+    expectCompileError(
+      "m(Ns.str_).get",
+      "value get is not a member of molecule.api.Molecule0")
+
+    expectCompileError(
+      "m(Ns.str_.Ref1.int1_).get",
+      "value get is not a member of molecule.api.Molecule0")
+    ok
+  }
+
+
+  "Ns without attribute" in new CoreSetup {
+    Ns.str.Ref1.int1 insert List(
+      ("a", 1),
+      ("b", 2))
+
+    Ref1.int1.get === List(1, 2)
+
+    // Adding unnecessary Ns gives same result
+    Ns.Ref1.int1.get === List(1, 2)
+
+    // We don't want a Ns entity with no asserted attributes but with a reference to Ref1 (an orphan)
+    (m(Ns.Ref1.int1).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+      "[output.Molecule:modelCheck (2)] Namespace `Ns` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+
+  "Adjacent ref without attribute" in new CoreSetup {
+    Ns.str.Ref1.int1.Ref2.int2 insert List(
+      ("a", 11, 12),
+      ("b", 21, 22))
+
+    // We can jump from namespace to namespace in queries
+    Ns.str.Ref1.Ref2.int2.get === List(
+      ("b", 22),
+      ("a", 12))
+
+    // But in insert molecules we don't want to create referenced orphan entities
+    (m(Ns.str.Ref1.Ref2.int2).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+      "[output.Molecule:modelCheck (2)] Namespace `Ref1` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+
+  "Nested ref without attribute" in new CoreSetup {
+    m(Ns.str.Refs1 * Ref1.int1.Ref2.int2) insert List(
+      ("a", List((11, 12))),
+      ("b", List((21, 22))))
+
+
+    m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2).get === List(
+      ("a", List(12)),
+      ("b", List(22)))
+
+    // We can omit non-fetching attribute between Ref1 and Ref2
+    m(Ns.str.Refs1 * Ref1.Ref2.int2).get === List(
+      ("a", List(12)),
+      ("b", List(22)))
+
+    // But in insert molecules we don't want to create referenced orphan entities
+    (m(Ns.str.Refs1 * Ref1.Ref2.int2).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+      "[output.Molecule:modelCheck (2)] Namespace `Ref1` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+
+  "No mandatory attributes after card-one ref" in new CoreSetup {
+    m(Ns.str.Ref1.int1) insert List(
+      ("a", 1),
+      ("b", 2))
+
+    m(Ns.str.Ref1.int1$).get === List(
+      ("a", Some(1)),
+      ("b", Some(2)))
+
+    // But in insert molecules we don't want to create referenced orphan entities
+    (m(Ns.str.Ref1.int1$).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+      "[output.Molecule:modelCheck (4)] Namespace `Ref1` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+  "No mandatory attributes after card-many ref" in new CoreSetup {
+    m(Ns.str.Refs1.int1) insert List(
+      ("a", 1),
+      ("b", 2))
+
+    m(Ns.str.Refs1.int1$).get === List(
+      ("a", Some(1)),
+      ("b", Some(2)))
+
+    // But in insert molecules we don't want to create referenced orphan entities
+    (m(Ns.str.Refs1.int1$).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+      "[output.Molecule:modelCheck (4)] Namespace `Ref1` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+  "No mandatory attributes after nested" in new CoreSetup {
+    m(Ns.str.Refs1 * Ref1.int1) insert List(
+      ("a", List(11)),
+      ("b", List(21)))
+
+    m(Ns.str.Refs1 * Ref1.int1$).get === List(
+      ("a", List(Some(11))),
+      ("b", List(Some(21))))
+
+    // But in insert molecules we don't want to create referenced orphan entities
+    (m(Ns.str.Refs1 * Ref1.int1$).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+      "[output.Molecule:modelCheck (3)] Namespace `Ref1` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+
+  "Molecule has to end with attribute" >> {
+
+    "Ending with ref" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.Ref1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str.Ref1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str_.Ref1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+      ok
+    }
+
+    "Ending with refs" in new CoreSetup {
+
+      expectCompileError(
+        "m(Ns.Refs1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str.Refs1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+
+      expectCompileError(
+        "m(Ns.str_.Refs1)",
+        "[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+      ok
+    }
   }
 }

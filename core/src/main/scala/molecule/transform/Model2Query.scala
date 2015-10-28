@@ -263,7 +263,7 @@ object Model2Query {
         case Meta(_, _, "e", _, Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
         case Meta(_, _, "e", _, Fn("count", _))         => q.find("count", Seq(), e, Seq())
         case Meta(_, _, "e", _, Length(Some(Fn(_, _)))) => q.find(e, Seq())
-        case Meta(_, _, _, _, IndexVal)                 => q.find(v, Seq()).func("+", Seq(Var(e)), ScalarBinding(Var(v)))
+        case Meta(_, _, _, _, IndexVal)                 => q.find(v, Seq()).func("molecule.Functions/bind", Seq(Var(e)), ScalarBinding(Var(v)))
         case Meta(_, _, _, _, EntValue)                 => q.find(e, Seq())
         case Meta(_, _, _, _, _)                        => q
 
@@ -313,20 +313,15 @@ object Model2Query {
           }
           (q2, e2, (v2.toCharArray.head + 1).toChar.toString, ns2, attr2, refNs2)
 
-        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))            => x(2, query, element, prevRefNs, e, v, w, y); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, prevRefNs)
-        case Meta(ns, attr, "e", NoValue, IndexVal) if prevRefNs == ""  => x(3, query, element, prevRefNs, e, v, w, y); (resolve(query, e, v, element), e, w, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, IndexVal)                     => x(4, query, element, prevRefNs, e, v, w, y); (resolve(query, v, w, element), v, w, ns, attr, "IndexVal")
-        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == ""         => x(5, query, element, prevRefNs, e, v, w, y); (resolve(query, e, v, element), e, w, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "IndexVal" => x(6, query, element, prevRefNs, e, v, w, y); (resolve(query, e, y, element), e, y, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))            => (resolve(query, id.toString, v, element), id.toString, v, ns, attr, prevRefNs)
+        case Meta(ns, attr, "e", NoValue, IndexVal) if prevRefNs == ""  => (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, IndexVal)                     => (resolve(query, v, w, element), v, y, ns, attr, "IndexVal")
+        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == ""         => (resolve(query, e, v, element), e, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "IndexVal" => (resolve(query, e, y, element), e, y, ns, attr, "")
 
-        case Meta(ns, attr, "e", NoValue, EntValue)                     => x(7, query, element, prevRefNs, e, v, w, y); (resolve(query, v, w, element), v, w, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, _)                            => x(8, query, element, prevRefNs, e, v, w, y); (resolve(query, v, w, element), e, w, ns, attr, "")
-        case Meta(ns, attr, _, _, _)                                    => x(9, query, element, prevRefNs, e, v, w, y); (resolve(query, e, v, element), e, v, ns, attr, "")
-
-        //        case Meta(ns, attr, "e", NoValue, Eq(Seq(id: Long)))    => x(2, query, element); (resolve(query, id.toString, v, element), id.toString, v, ns, attr, "")
-        //        case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "" => x(3, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
-        //        case Meta(ns, attr, "e", NoValue, _)                    => x(4, query, element); (resolve(query, v, w, element), v, w, ns, attr, "")
-        //        case Meta(ns, attr, _, _, _)                            => x(5, query, element); (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, EntValue)                     => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _)                            => (resolve(query, v, w, element), e, w, ns, attr, "")
+        case Meta(ns, attr, _, _, _)                                    => (resolve(query, e, v, element), e, v, ns, attr, "")
 
         case TxModel(elements) =>
           val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, "tx", w, prevNs, prevAttr, prevRefNs)) {

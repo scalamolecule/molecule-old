@@ -61,7 +61,7 @@ class QueryTour extends MoleculeSpec {
     // 8. A Schema Query
 
     // Attributes of all entities having comments
-    Parent.a.Comment.get.sorted === List(
+    Parent.a.comment_.get.sorted === List(
       ":comment/author",
       ":comment/text",
       ":parent/comment",
@@ -70,14 +70,14 @@ class QueryTour extends MoleculeSpec {
     )
 
     // Attributes of stories having comments
-    Parent(Story.a.title_).Comment.get.sorted === List(
+    Parent(Story.a.title_).comment_.get.sorted === List(
       ":parent/comment",
       ":story/title",
       ":story/url"
     )
 
     // Attributes of comments having a sub-comment
-    Parent(Comment.a.text_).Comment.get.sorted === List(
+    Parent(Comment.a.text_).comment_.get.sorted === List(
       ":comment/author",
       ":comment/text",
       ":parent/comment"

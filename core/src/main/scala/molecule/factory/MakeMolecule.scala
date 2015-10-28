@@ -38,6 +38,12 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
             case (result, g: Group)                 => true
             case (result, _)                        => result
           }
+//          println(modelE)
+//          println("-------------")
+//          println(queryE)
+//          println("-------------")
+//          println(queryE.datalog)
+
           if (isNested)
             ${castNestedTpls(q"queryE", q"results(conn, modelE, queryE)", OutTypes)}
           else

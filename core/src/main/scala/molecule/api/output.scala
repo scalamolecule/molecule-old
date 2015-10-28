@@ -35,12 +35,35 @@ trait Molecule extends DatomicFacade {
   def debugE(implicit conn: Connection): Unit
 
   protected trait modelCheck {
-    def recurse(elements: Seq[Element]): Seq[Element] = elements flatMap {
-      case a: Atom if a.name.last == '_' => throw new RuntimeException(s"[Molecule:modelCheck] Underscore-suffixed attributes like `${a.name}` not allowed in insert molecules.")
-      case Group(ref, es)                => recurse(es)
+    def recurse1(elements: Seq[Element]): Seq[Element] = elements flatMap {
+      case a: Atom if a.name.last == '_' => throw new RuntimeException(
+        s"[output.Molecule:modelCheck] Underscore-suffixed attributes like `${a.name}` not allowed in insert molecules.")
+      case Group(ref, es)                => recurse1(es)
       case e: Element                    => Seq(e)
     }
-    recurse(_model.elements)
+    recurse1(_model.elements)
+
+    // Avoid orphan reference entities when inserting data
+    // A insert molecule can only build on with a ref if it has already at least one mandatory attribute
+    def abortNs(i: Int, ns: String) = throw new RuntimeException(
+      s"[output.Molecule:modelCheck ($i)] Namespace `$ns` in insert molecule has no mandatory attributes. Please add at least one.")
+    def getNs(ns: String) = if (ns.contains("_")) ns else ns.capitalize
+    def recurse2(elements: Seq[Element]): (Seq[Element], String) = elements.foldLeft((Seq[Element](), "")) { case ((attrs, ns0), e) =>
+      e match {
+        case a: Atom if a.name.last != '$'   => (attrs :+ a, getNs(a.ns))
+        case a: Atom                         => (attrs, getNs(a.ns))
+        case b: Bond                         => if (attrs.isEmpty) abortNs(2, getNs(b.ns)) else (Seq[Element](), getNs(b.ns))
+        case r@ReBond(ns1, _, _, _, _)       => (attrs :+ r, getNs(ns1))
+        case Group(ref, es)                  => {
+          val (nested, ns1) = recurse2(es)
+          if (nested.isEmpty) abortNs(3, ns1) else (nested, ns1)
+        }
+        case m@Meta(ns1, _, "e", NoValue, _) => (attrs :+ m, getNs(ns1))
+        case _                               => (attrs, ns0)
+      }
+    }
+    val (elements, ns) = recurse2(_model.elements)
+    if (elements.isEmpty) abortNs(4, ns)
   }
 }
 
