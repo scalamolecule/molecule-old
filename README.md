@@ -87,7 +87,7 @@ allows you to
 
 Molecule 0.4.1 for Scala 2.11.7 is available at
 [Sonatype](https://oss.sonatype.org/content/repositories/releases/org/scalamolecule/molecule_2.11/)
- so that you can add a dependency in your sbt file to `"org.scalamolecule" %% "molecule" % "0.4.0"`.
+ so that you can add a dependency in your sbt file to `"org.scalamolecule" %% "molecule" % "0.4.1"`.
 
 Since Molecule generates boilerplate code from your definitions it also needs to have the `DslBoilerplate.scala` file 
 in your project folder. Please have a look at how the sbt build file
