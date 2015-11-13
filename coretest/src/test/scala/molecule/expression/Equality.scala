@@ -6,7 +6,7 @@ import datomic.Peer
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 
-class Equality1Value extends Expressions {
+class Equality extends Base {
 
   "Card one" in new OneSetup {
 

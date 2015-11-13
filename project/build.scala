@@ -53,8 +53,6 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
       publish :=(),
       publishLocal :=()
 
-
-
 //    ,mappings in (Compile, packageSrc) ++= {
 //      val allGeneratedFiles = ((sourceManaged in Compile).value ** "*") filter { _.isFile }
 //        println("@@@@@@@@@@ allGeneratedFiles: " + allGeneratedFiles.toString)
@@ -65,7 +63,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "org.scalamolecule",
-    version := "0.4.1",
+    version := "0.4.2",
     scalaVersion := "2.11.7",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
     resolvers ++= Seq(

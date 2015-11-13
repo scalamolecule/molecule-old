@@ -6,7 +6,7 @@ import datomic.Peer
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 
-class Comparison extends Expressions {
+class Comparison extends Base {
 
   "Card one" in new OneSetup {
 

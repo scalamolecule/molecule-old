@@ -431,10 +431,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           } else if ($tpl.get.isInstanceOf[Seq[_]]) {
 
             lazy val nestedTpl = ${
-          resolveNested(query, Seq(nestedTpe),
-            q"Some($tpl.get.asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
-            prevRow, row, rowNo, entityIndex + 1 + i)
-        }.asInstanceOf[$nestedTpe]
+              resolveNested(query, Seq(nestedTpe),
+                q"Some($tpl.get.asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
+                prevRow, row, rowNo, entityIndex + 1 + i)
+            }.asInstanceOf[$nestedTpe]
 
             val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
 
@@ -446,10 +446,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           } else {
 
             lazy val nestedTpl = ${
-          resolveNested(query, Seq(nestedTpe),
-            q"Some($tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
-            prevRow, row, rowNo, entityIndex + 1 + i)
-        }.asInstanceOf[$nestedTpe]
+              resolveNested(query, Seq(nestedTpe),
+                q"Some($tpl.get.asInstanceOf[(..$tpes)].productElement($tpl.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[$nestedTpe]].last.asInstanceOf[$nestedTpe])",
+                prevRow, row, rowNo, entityIndex + 1 + i)
+            }.asInstanceOf[$nestedTpe]
 
             val newNested1 = $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
 

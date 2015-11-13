@@ -6,7 +6,7 @@ import datomic.Peer
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 
-class Negation extends Expressions {
+class Negation extends Base {
 
   "Include entities with non-asserted datoms (null values)" in new OneSetup {
     Ns.str.int.long$ insert List(
@@ -126,7 +126,7 @@ class Negation extends Expressions {
     // will just return the coalesced set minus the excluded value
     Ns.strs.not("b").get === List(Set("d", "a", "c"))
 
-    // We could group by another attribute ut that still leave us with filtered sets
+    // We could group by another attribute but that still leave us with filtered sets
     //      Ns.str.strs.not("a").debug
     Ns.str.strs.not("a").get === List(("str1", Set("b")), ("str2", Set("b", "c")), ("str3", Set("d", "b")))
     Ns.str.strs.not("b").get === List(("str1", Set("a")), ("str2", Set("c")), ("str3", Set("d")))

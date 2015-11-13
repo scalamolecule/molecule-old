@@ -29,7 +29,7 @@ class MBrainz extends MoleculeSpec {
   implicit val conn = Peer.connect("datomic:free://localhost:4334/mbrainz-1968-1973")
 
 
-  "Queries" >> {
+  "Data" >> {
 
     // What are the titles of all the tracks John Lennon played on?
     Track.name.Artists.name_("John Lennon").get(3) === List("Baby's Heartbeat", "John & Yoko", "Nutopian International Anthem")
@@ -59,6 +59,9 @@ class MBrainz extends MoleculeSpec {
       (1972, "Always on My Mind / That Ain't Right", "Always on My Mind", "Brenda Lee"),
       (1970, "Check Out Your Mind!", "You'll Always Be Mine", "The Impressions"),
       (1968, "Signed, Sealed and Delivered", "I Want to Be With You Always", "Lefty Frizzell"))
+  }
+
+  "Collaboration" >> {
 
     // Who collaborated with one of the Beatles?
     // Repeated attributes are translated to transitive lookups
@@ -83,8 +86,9 @@ class MBrainz extends MoleculeSpec {
 
     // George Harrison's collaborators collaborators (includes George...)
     collaborators(collabs1).get === List("George Harrison", "Ali Akbar Khan")
+  }
 
-
+  "2-step querying" >> {
     // Which artists have songs that might be covers of The Who (or vice versa)?
 
     // 2-step querying:

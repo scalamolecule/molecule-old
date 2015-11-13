@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 27, 32)
+  val x = DebugMacro("Dsl2Model", 6, 5)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -85,8 +85,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.$cur.$op(..$values)" => walk(q"$prev", q"$prev.$cur".ns, q"$cur", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
     case r@q"$prev.$backRefAttr" if backRefAttr.toString.head == '_' =>
-      val backRef = c.typecheck(q"$prev.$backRefAttr").tpe.typeSymbol.toString // "trait partition_Ns_X"
-      traverse(q"$prev", ReBond(firstLow(backRef.substring(6, backRef.length - 2)), "")) // "partition_Ns"
+      val backRef = c.typecheck(q"$prev.$backRefAttr").tpe.typeSymbol.name.toString // "partition_Ns_<arity>"
+      traverse(q"$prev", ReBond(firstLow(backRef.replaceFirst("_[0-9]+$", "")), "")) // "partition_Ns"
 
     case a@q"$prev.$refAttr" if a.isRef     => traverse(q"$prev", Bond(a.refThis, firstLow(refAttr.toString), a.refNext))
     case a@q"$prev.$refAttr" if a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
@@ -104,45 +104,50 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case t@q"$prev.$manyRef.apply[..$types]($nested)" if !q"$prev.$manyRef".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$manyRef", firstLow(manyRef.toString), nested)))
     case t@q"$prev.$manyRef.apply[..$types]($nested)"                             => traverse(q"$prev", nested1(prev, manyRef, nested))
 
-
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
   }
 
   def walk(prev: Tree, curNs: String, cur: Tree, thisElement: Element) = {
     val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
     val attr = cur.toString()
-    x(1, prevElements, curNs, attr)
-    val (_, similarAtoms, transitive) = prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) { case (prevElement, (previous, similarAtoms, trans)) =>
-      prevElement match {
-        case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
-          val t = previous.init.reverse.collectFirst {
-            // Find first previous Bond (relating to this attribute)
-            case prevBond@Bond(ns2, refAttr, refNs) =>
-              x(2, prevAtom, prevBond, ns2, refAttr, refNs)
-
-              Transitive(ns2, refAttr, refNs, 0)
-          } getOrElse {
-            //            abort("[Dsl2Model:walk] ")
-            //            x(6, curNs, cur)
-            Transitive(prevNs, prevAttr, prevNs, 0)
+    x(1, prevElements, curNs, attr, thisElement)
+    if (prevElements.isEmpty) {
+      traverse(q"$prev", thisElement)
+    } else {
+      prevElements.last match {
+        case Atom(prevNs0, prevAttr0, _, _, _, _, _) if prevNs0 == curNs && clean(prevAttr0) == clean(attr) =>
+          val (_, similarAtoms, transitive) = {
+            prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) {
+              case (prevElement, (previous, similarAtoms1, trans)) =>
+                x(6, previous, prevElement)
+                prevElement match {
+                  case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
+                    val t = previous.init.reverse.collectFirst {
+                      // Find first previous Bond (relating to this attribute)
+                      case prevBond@Bond(ns2, refAttr, refNs) =>
+                        x(2, prevAtom, prevBond, ns2, refAttr, refNs)
+                        Transitive(ns2, refAttr, refNs, 0)
+                    } getOrElse {
+                      x(3, curNs, cur)
+                      Transitive(prevNs, prevAttr, prevNs, 0)
+                    }
+                    x(4, prevElements.last, prevNs, prevAttr)
+                    (previous.init, similarAtoms1 :+ prevAtom, Some(t))
+                  case _                                                                                                   =>
+                    (previous.init, similarAtoms1, trans)
+                }
+            }
           }
-          x(3, prevElements.last, prevNs, prevAttr)
-          (previous.init, similarAtoms :+ prevAtom, Some(t))
-        case _                                                                                                   =>
-          (previous.init, similarAtoms, trans)
+          similarAtoms.size match {
+            case 1 => prevElements :+ transitive.get.copy(depth = 1) :+ thisElement
+            case 2 => prevElements :+ transitive.get.copy(depth = 2) :+ thisElement
+            case 3 => prevElements :+ transitive.get.copy(depth = 3) :+ thisElement
+            case n => abort(s"[Dsl2Model:walk] Unsupported transitive arity: $n")
+          }
+
+        case _ => traverse(q"$prev", thisElement)
       }
     }
-
-    if (transitive.isDefined) {
-      x(4, similarAtoms, transitive)
-      similarAtoms.size match {
-        case 1 => prevElements :+ transitive.get.copy(depth = 1) :+ thisElement
-        case 2 => prevElements :+ transitive.get.copy(depth = 2) :+ thisElement
-        case 3 => prevElements :+ transitive.get.copy(depth = 3) :+ thisElement
-        case n => abort(s"[Dsl2Model:walk] Unsupported transitive arity: $n")
-      }
-    } else
-      traverse(q"$prev", thisElement)
   }
 
   def clean(a: String) = if (a.last == '_') firstLow(a.init) else firstLow(a)
@@ -150,14 +155,16 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def nested1(prev: Tree, manyRef: TermName, nested: Tree) = {
     val refNext = q"$prev.$manyRef".refNext
     val parentNs = prev match {
-      case q"$p.apply($value)" if p.isAttr => p.ns
-      case q"$p.apply($value)"             => p.name
-      case p if p.isAttr                   => p.ns
-      case p                               => p.name
+      case q"$p.apply($value)" if p.isAttr         => p.ns
+      case q"$p.apply($value)"                     => p.name
+      case p if p.symbol.name.toString.head == '_' => firstLow(prev.tpe.typeSymbol.name.toString.replaceFirst("_[0-9]+$", ""))
+      case p if p.isAttr                           => p.ns
+      case p if p.isRef                            => p.refNext
+      case p                                       => p.name
     }
     val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nested)
     val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
-    //          x(20, parentNs, nestedElems, group, refNext, parentNs)
+    //    x(28, prev, parentNs, nestedElems, group, refNext)
     group
   }
 
@@ -360,6 +367,7 @@ object Dsl2Model {
 
     val model = Model(elements1)
     //    inst(c).x(30, dsl, elements0, elements1, model)
+    //    inst(c).x(30, model)
     model
   }
 }

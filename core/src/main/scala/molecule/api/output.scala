@@ -35,6 +35,9 @@ trait Molecule extends DatomicFacade {
   def debugE(implicit conn: Connection): Unit
 
   protected trait modelCheck {
+
+    // No <attr>_
+
     def recurse1(elements: Seq[Element]): Seq[Element] = elements flatMap {
       case a: Atom if a.name.last == '_' => throw new RuntimeException(
         s"[output.Molecule:modelCheck] Underscore-suffixed attributes like `${a.name}` not allowed in insert molecules.")
@@ -43,27 +46,41 @@ trait Molecule extends DatomicFacade {
     }
     recurse1(_model.elements)
 
-    // Avoid orphan reference entities when inserting data
+    // No orphan reference entities
     // A insert molecule can only build on with a ref if it has already at least one mandatory attribute
+
     def abortNs(i: Int, ns: String) = throw new RuntimeException(
       s"[output.Molecule:modelCheck ($i)] Namespace `$ns` in insert molecule has no mandatory attributes. Please add at least one.")
+
     def getNs(ns: String) = if (ns.contains("_")) ns else ns.capitalize
-    def recurse2(elements: Seq[Element]): (Seq[Element], String) = elements.foldLeft((Seq[Element](), "")) { case ((attrs, ns0), e) =>
+
+    def recurse2(elements: Seq[Element]): (Element, Seq[Element], String) = elements.foldLeft((null:Element, Seq[Element](), "")) {
+      case ((prevElem, attrs, ns0), e) =>
       e match {
-        case a: Atom if a.name.last != '$'   => (attrs :+ a, getNs(a.ns))
-        case a: Atom                         => (attrs, getNs(a.ns))
-        case b: Bond                         => if (attrs.isEmpty) abortNs(2, getNs(b.ns)) else (Seq[Element](), getNs(b.ns))
-        case r@ReBond(ns1, _, _, _, _)       => (attrs :+ r, getNs(ns1))
-        case Group(ref, es)                  => {
-          val (nested, ns1) = recurse2(es)
-          if (nested.isEmpty) abortNs(3, ns1) else (nested, ns1)
+        case a: Atom if a.name.last != '$'                   => (a, attrs :+ a, getNs(a.ns))
+        case a: Atom                                         => (a, attrs, getNs(a.ns))
+        case b: Bond if attrs.isEmpty                        => abortNs(2, getNs(b.ns))
+        case b: Bond                                         => (b, Nil, getNs(b.ns))
+        case r@ReBond(ns1, _, _, _, _)                       => (r, attrs :+ r, getNs(ns1))
+        case g@Group(ref, es) if prevElem.isInstanceOf[Bond] => abortNs(5, prevElem.asInstanceOf[Bond].refAttr.capitalize)
+        case g@Group(ref, es)                                => {
+//          x(1, e, attrs, prevElem, ref, es)
+          val (_, nested, ns1) = recurse2(es)
+          if (nested.isEmpty) abortNs(3, ns1) else (g, nested, ns1)
         }
-        case m@Meta(ns1, _, "e", NoValue, _) => (attrs :+ m, getNs(ns1))
-        case _                               => (attrs, ns0)
+        case m@Meta(ns1, _, "e", NoValue, _)                 => (m, attrs :+ m, getNs(ns1))
+        case _                                               => (e, attrs, ns0)
       }
     }
-    val (elements, ns) = recurse2(_model.elements)
-    if (elements.isEmpty) abortNs(4, ns)
+    val (_, elements, ns) = recurse2(_model.elements)
+    if (elements.isEmpty)
+      abortNs(4, ns)
+
+    // No transitive attributes
+    _model.elements map {
+      case t: Transitive => throw new RuntimeException(s"[output.Molecule:modelCheck (6)] Can't insert transitive attribute values (repeated attributes).")
+      case ok            => ok
+    }
   }
 }
 

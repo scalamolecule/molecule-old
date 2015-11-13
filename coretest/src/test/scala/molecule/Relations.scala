@@ -1,5 +1,6 @@
 package molecule
 import molecule._
+import molecule.part.dsl.partitionTest.{gen_Profession, lit_Book}
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
 
@@ -198,6 +199,7 @@ class Relations extends CoreSpec {
       ("a", 1),
       ("b", 2))
 
+    // Ok to ask for an optional referenced value
     m(Ns.str.Ref1.int1$).get === List(
       ("a", Some(1)),
       ("b", Some(2)))
@@ -233,6 +235,73 @@ class Relations extends CoreSpec {
     // But in insert molecules we don't want to create referenced orphan entities
     (m(Ns.str.Refs1 * Ref1.int1$).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
       "[output.Molecule:modelCheck (3)] Namespace `Ref1` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+
+  "Nested 2 levels deep" >> {
+
+    "Optional attribute" in new CoreSetup {
+      // Todo
+      //      m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2) insert List(("a", None, List(2)))
+      //      m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2).get === List(("a", None, List(2)))
+      //      m(Ns.str.Refs1.Refs2 * Ref2.int2).get === List(("a", List(2)))
+      ok
+    }
+
+    "One - one" in new CoreSetup {
+      m(Ns.str.Ref1.int1.Refs2 * Ref2.int2) insert List(("a", 1, List(2)))
+      m(Ns.str.Ref1.int1.Refs2 * Ref2.int2).get === List(("a", 1, List(2)))
+      m(Ns.str.Ref1.Refs2 * Ref2.int2).get === List(("a", List(2)))
+    }
+
+    "One - one - many" in new CoreSetup {
+      m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2) insert List(("a", 1, List(Set(2))))
+      m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2).get === List(("a", 1, List(Set(2))))
+      m(Ns.str.Ref1.Refs2 * Ref2.ints2).get === List(("a", List(Set(2))))
+    }
+
+    "Many - one" in new CoreSetup {
+      m(Ns.str.Refs1.int1.Refs2 * Ref2.int2) insert List(("a", 1, List(2)))
+      m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).get === List(("a", 1, List(2)))
+      m(Ns.str.Refs1.Refs2 * Ref2.int2).get === List(("a", List(2)))
+    }
+
+    "Missing many attribute" in new CoreSetup {
+      (m(Ns.str.Refs1.Refs2 * Ref2.int2).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+        "[output.Molecule:modelCheck (5)] Namespace `Refs1` in insert molecule has no mandatory attributes. Please add at least one."
+    }
+  }
+
+
+  "Back ref" >> {
+
+    "Adjacent" in new CoreSetup {
+      m(Ns.str.Ref1.str1._Ns.Refs1.str1) insert List(("book", "John", "Marc"))
+
+      m(Ns.str.Ref1.str1._Ns.Refs1.str1).get === List(("book", "John", "Marc"))
+      m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).get === List(("book", "John", List("Marc")))
+    }
+
+    "Nested" in new CoreSetup {
+      m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1) insert List(("book", "John", List("Marc")))
+
+      m(Ns.str.Ref1.str1._Ns.Refs1.str1).get === List(("book", "John", "Marc"))
+      m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).get === List(("book", "John", List("Marc")))
+    }
+
+    "Nested + adjacent" in new CoreSetup {
+      m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2) insert List(("book", "John", List(("Marc", "Musician"))))
+
+      m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).get === List(("book", "John", "Marc", "Musician"))
+      m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2).get === List(("book", "John", List(("Marc", "Musician"))))
+    }
+
+    "Nested + nested" in new CoreSetup {
+      m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)) insert List(("book", "John", List(("Marc", List("Musician")))))
+
+      m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).get === List(("book", "John", "Marc", "Musician"))
+      m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)).get === List(("book", "John", List(("Marc", List("Musician")))))
+    }
   }
 
 

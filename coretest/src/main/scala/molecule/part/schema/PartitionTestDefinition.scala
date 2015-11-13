@@ -5,9 +5,14 @@ import molecule.dsl.schemaDefinition._
 object PartitionTestDefinition {
 
   object gen {
+    trait Profession {
+      val name = oneString
+    }
+
     trait Person {
       val name   = oneString
       val gender = oneEnum('male, 'female)
+      val professions = many[Profession]
     }
   }
 
@@ -19,6 +24,7 @@ object PartitionTestDefinition {
       // (in case we would have needed an attribute named `gen` for instance)
       val editor = one[PartitionTestDefinition.gen.Person]
       val cat    = oneEnum('good, 'bad)
+      val reviewers = many[gen.Person]
     }
   }
 }

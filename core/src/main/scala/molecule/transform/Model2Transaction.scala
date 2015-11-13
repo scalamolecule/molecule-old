@@ -12,7 +12,7 @@ import scala.collection.JavaConversions._
 
 
 case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 25, 24, false, 6)
+  val x = Debug("Model2Transaction", 45, 45, false, 6)
 
   private def tempId(attr: String) = attr match {
     case "tx"                 => Peer.tempid(s":db.part/tx")
@@ -115,8 +115,23 @@ case class Model2Transaction(conn: Connection, model: Model) {
     (dataStmts0.flatten, txStmts0.flatten)
   }
 
-  def lastE(stmts: Seq[Statement], attr: String, nestedE: Any = 0) = if (nestedE != 0) nestedE else if (stmts.isEmpty) tempId(attr) else stmts.last.e
-  def lastV(stmts: Seq[Statement], attr: String, nestedE: Any = 0) = if (nestedE != 0) nestedE else if (stmts.isEmpty) tempId(attr) else stmts.last.v
+  def lastE(stmts: Seq[Statement], attr: String, nestedE: Any = 0) = {
+    if (nestedE != 0)
+      nestedE
+    else if (stmts.isEmpty)
+      tempId(attr)
+    else
+      stmts.last.e
+  }
+
+  def lastV(stmts: Seq[Statement], attr: String, nestedE: Any = 0) = {
+    if (nestedE != 0)
+      nestedE
+    else if (stmts.isEmpty)
+      tempId(attr)
+    else
+      stmts.last.v
+  }
 
   def matchDataStmt(stmts: Seq[Statement], dataStmt: Statement, arg: Any, cur: Int, next: Int, nestedE: Any = 0) = dataStmt match {
     // Keep current cursor (add no new data in this iteration)
@@ -140,7 +155,15 @@ case class Model2Transaction(conn: Connection, model: Model) {
     case Add('tx, a, 'arg)                                                        => (next, valueStmts(stmts, tempId("tx"), a, arg))
     case Add(e0, ref0, nestedStmts0: Seq[_]) if arg == Nil                        => (next, stmts)
     case Add(e, ref, nestedStmts: Seq[_])                                         => {
-      val parentE = if (e == 'parentId) tempId(ref) else if (stmts.isEmpty) e else stmts.last.e // todo: check that 'ref' is always in the right partition...
+      val parentE = if (e == 'parentId)
+        tempId(ref)
+      else if (stmts.isEmpty)
+        e
+      else
+        stmts.reverse.collectFirst {
+          // Find entity value of Add statement with matching namespace
+          case Add(e1, a, _) if a.replaceFirst("/.*", "") == ref.replaceFirst("/.*", "") => e1
+        }.getOrElse(sys.error("[Model2Transaction:matchDataStmt] Couldn't find previous statement with matching namespace."))
       val nestedRows = untupleNestedArgss(nestedStmts, arg)
       val nestedInsertStmts = nestedRows.flatMap { nestedRow =>
         val nestedE = tempId(ref)
@@ -151,7 +174,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
       }
       (next, stmts ++ nestedInsertStmts)
     }
-    case unexpected                                                               => sys.error("[Model2Transaction:insertStmts:dataStmts] Unexpected insert statement: " + unexpected)
+
+    case unexpected => sys.error("[Model2Transaction:matchDataStmt] Unexpected insert statement: " + unexpected)
   }
 
   def resolveStmts(genericStmts: Seq[Statement], row: Seq[Any], nestedE0: Any = 0): Seq[Statement] = {
@@ -165,7 +189,8 @@ case class Model2Transaction(conn: Connection, model: Model) {
         case _                     => (stmts0, nestedE0)
       }
       (arg, dataStmt) match {
-        case (null, _)                                                                     => sys.error("[Model2Transaction:insertStmts] null values not allowed. Please use `attr$` for Option[tpe] values.")
+        case (null, _)                                                                     => sys.error(
+          "[Model2Transaction:insertStmts] null values not allowed. Please use `attr$` for Option[tpe] values.")
         case (_, br@Add('ns, ns, ""))                                                      => {
           val backRef = stmts.reverse.collectFirst {
             case Add(e, a, v) if a.startsWith(ns) && e.isInstanceOf[db.DbId] => e
@@ -176,19 +201,19 @@ case class Model2Transaction(conn: Connection, model: Model) {
         case (None, _)                                                                     => (next, stmts)
         case (Some(arg1), _)                                                               => matchDataStmt(stmts, dataStmt, arg1, cur, next, nestedE)
         case (_, Add('e, a, 'arg)) if stmts.nonEmpty && stmts.last.v.isInstanceOf[db.DbId] => (next, valueStmts(stmts, stmts.last.v, a, arg))
-        case (_, _)                                                                        => matchDataStmt(stmts, dataStmt, arg, cur, next, nestedE)
+        case (_, _)                                                                        =>
+          //          x(25, arg, dataStmt)
+          matchDataStmt(stmts, dataStmt, arg, cur, next, nestedE)
         //          case (_, Add('e, a, Values(EnumVal, prefix))) if stmts.last.v.toString.startsWith("#db/id[:db.part") => (next, resolveStmts(stmts, stmts.last.v, a, arg, prefix))
         //          case (_, Add('e, a, Values(vs, prefix))) if stmts.last.v.toString.startsWith("#db/id[:db.part")      => (next, resolveStmts(stmts, stmts.last.v, a, vs, prefix))
       }
+
     }._2
   }
 
   def insertStmts(dataRows: Seq[Seq[Any]]): Seq[Seq[Statement]] = {
     val (dataStmts, txStmts) = splitStmts()
-    val dataStmtss: Seq[Seq[Statement]] = dataRows.map {
-      row =>
-        resolveStmts(dataStmts, row)
-    }
+    val dataStmtss: Seq[Seq[Statement]] = dataRows.map(resolveStmts(dataStmts, _))
     val txId = tempId("tx")
     val txStmtss: Seq[Seq[Statement]] = Seq(txStmts.foldLeft(Seq[Statement]()) {
       case (stmts, Add('tx, a, Values(vs, prefix))) => valueStmts(stmts, txId, a, vs, prefix)

@@ -85,7 +85,7 @@ case class Debug(clazz: String, threshold: Int, max: Int = 9999, showStackTrace:
         }
       }
 
-      println(s"## $id: $clazz \n========================================================================\n" +
+      println(s"## $id ##: $clazz \n========================================================================\n" +
         params.toList.zipWithIndex.map {case (e, i) => traverse(e, 0, i + 1)}
           .mkString("\n------------------------------------------------\n") +
         s"\n========================================================================\n$stackTrace")

@@ -57,6 +57,7 @@ trait DatomicFacade extends ArgProperties {
     }
   }
 
+
   // Query ==================================================================
 
   sealed trait TxType
@@ -72,7 +73,7 @@ trait DatomicFacade extends ArgProperties {
 
   private[molecule] var dbOp: DbOp = null
 
-  def cast(a: Any) = a match {
+  private def cast(a: Any) = a match {
     case i: Int   => i.toLong.asInstanceOf[Object]
     case f: Float => f.toDouble.asInstanceOf[Object]
     case other    => other.asInstanceOf[Object]

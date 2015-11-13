@@ -6,7 +6,7 @@ import datomic.Peer
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 
-class Expressions extends CoreSpec {
+class Base extends CoreSpec {
 
   class OneSetup extends CoreSetup {
     Ns.str insert List("", " ", ",", ".", "?", "A", "B", "a", "b")
