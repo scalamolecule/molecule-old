@@ -307,4 +307,53 @@ class OptionalValues extends CoreSpec {
         "[output.Molecule:modelCheck] Underscore-suffixed attributes like `str_` not allowed in insert molecules."
     }
   }
+
+  "No attributes at all" in new CoreSetup {
+    expectCompileError(
+      "m(Ns)",
+      """
+        |[Dsl2Model:dslStructure] Unexpected DSL structure: molecule.util.dsl.coreTest.Ns
+        |Select(Select(Select(Select(Ident(molecule), molecule.util), molecule.util.dsl), molecule.util.dsl.coreTest), molecule.util.dsl.coreTest.Ns)
+      """)
+  }
+
+  "Ns without attribute" in new CoreSetup {
+    Ns.str.Ref1.int1 insert List(
+      ("a", 1),
+      ("b", 2))
+
+    Ref1.int1.get === List(1, 2)
+
+    // Adding unnecessary Ns gives same result
+    Ns.Ref1.int1.get === List(1, 2)
+
+    // We don't want a Ns entity with no asserted attributes but with a reference to Ref1 (an orphan)
+    (m(Ns.Ref1.int1).insert must throwA[RuntimeException]).message === "Got the exception java.lang.RuntimeException: " +
+      "[output.Molecule:modelCheck (2)] Namespace `Ns` in insert molecule has no mandatory attributes. Please add at least one."
+  }
+
+  "No optional values" in new CoreSetup {
+    expectCompileError(
+      "m(Ns.str$)",
+      "[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+
+    expectCompileError(
+      "m(Ns.str$.int$)",
+      "[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+  }
+
+
+  "Only un-fetched attributes" in new CoreSetup {
+
+    // Un-fetched mandatory attributes only don't make it for querable molecules
+    expectCompileError(
+      "m(Ns.str_).get",
+      "value get is not a member of molecule.api.Molecule0")
+
+    expectCompileError(
+      "m(Ns.str_.Ref1.int1_).get",
+      "value get is not a member of molecule.api.Molecule0")
+    ok
+  }
+
 }
