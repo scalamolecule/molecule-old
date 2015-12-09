@@ -150,6 +150,29 @@ object QueryOps {
     def fulltext(e: String, a: Atom, v: String, qv: QueryValue): Query =
       q.func("fulltext", Seq(DS(), KW(a.ns, a.name), qv), RelationBinding(Seq(Var(e), Var(v))))
 
+    def mappings(e: String, a: Atom, args0: Seq[(String, Any)]): Query = {
+      val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
+      val mapped = args0.foldLeft(Map.empty[String, Seq[Any]]) { case (map, (key, value)) =>
+        if (map.keys.toSeq.contains(key))
+          map + (key -> (map(key) :+ value))
+        else
+          map + (key -> Seq(value))
+      }
+      val newRules = mapped.foldLeft(q.i.rules) { case (rules, (key, values)) =>
+        val dataClauses = Seq(
+          Funct(".startsWith ^String", Seq(Var(e), Val(key)), NoBinding),
+          Funct(".split ^String", Seq(Var(e), Val("@"), Val(2)), ScalarBinding(Var(e + 1))),
+          Funct("second", Seq(Var(e + 1)), ScalarBinding(Var(e + 2))),
+          Funct(".matches ^String", Seq(Var(e + 2), Val(".*(" + values.mkString("|") + ").*")), NoBinding)
+        )
+        val rule = Rule(ruleName, Seq(Var(e)), dataClauses)
+        rules :+ rule
+      }
+      val newIn = q.i.copy(ds = (q.i.ds :+ DS).distinct, rules = newRules)
+      val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
+      q.copy(i = newIn, wh = newWhere)
+    }
+
     def orRules(e: String, a: Atom, args: Seq[Any], gs: Seq[Generic] = Seq(), v: String = ""): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
       val newRules = args.foldLeft(q.i.rules) { case (rules, arg) =>
@@ -157,12 +180,14 @@ object QueryOps {
           case s: String => s.replaceAll("\"", "\\\\\"")
           case other     => other
         }
-        val dataClauses = if (v.nonEmpty)
-          Seq(
-            Funct( s"""ground (java.net.URI. "$arg1")""", Nil, ScalarBinding(Var(v))),
+        val dataClauses = if (a.card == 3)
+          Seq(Funct(".startsWith ^String", Seq(Var(e), Val(arg1)), NoBinding))
+        else if (v.nonEmpty) {
+          Seq(Funct( s"""ground (java.net.URI. "$arg1")""", Nil, ScalarBinding(Var(v))),
             DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty))
-        else
+        } else
           Seq(DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg1), Empty))
+
         val rule = Rule(ruleName, Seq(Var(e)), dataClauses)
         rules :+ rule
       }

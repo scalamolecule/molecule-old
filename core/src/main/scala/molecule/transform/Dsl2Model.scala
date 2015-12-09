@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 6, 5)
+  val x = DebugMacro("Dsl2Model", 30,30)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -91,6 +91,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case a@q"$prev.$refAttr" if a.isRef     => traverse(q"$prev", Bond(a.refThis, firstLow(refAttr.toString), a.refNext))
     case a@q"$prev.$refAttr" if a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
     case a@q"$prev.$cur" if a.isEnum        => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
+    case a@q"$prev.$cur" if a.isMapAttr     => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), 3, VarValue))
     case a@q"$prev.$cur" if a.isValueAttr   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
 
 
@@ -110,7 +111,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def walk(prev: Tree, curNs: String, cur: Tree, thisElement: Element) = {
     val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
     val attr = cur.toString()
-    x(1, prevElements, curNs, attr, thisElement)
+    //    x(1, prevElements, curNs, attr, thisElement)
     if (prevElements.isEmpty) {
       traverse(q"$prev", thisElement)
     } else {
@@ -119,7 +120,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
           val (_, similarAtoms, transitive) = {
             prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) {
               case (prevElement, (previous, similarAtoms1, trans)) =>
-                x(6, previous, prevElement)
+                //                x(6, previous, prevElement)
                 prevElement match {
                   case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
                     val t = previous.init.reverse.collectFirst {
@@ -207,6 +208,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case prev if cur == "a_"               => Atom("?", "attr_", "a", 1, value)
       case prev if cur == "ns"               => Atom("ns", "?", "ns", 1, value)
       case prev if cur == "ns_"              => Atom("ns_", "?", "ns", 1, value)
+      case prev if attr.isMapAttr            => Atom(attr.ns, attr.name, cast(attr), 3, value, Some("mapping"))
       case prev if attr.isAttr               => Atom(attr.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
       case prev if prev.isAttr               => Atom(prev.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
       case prev                              => Atom(attr.name, cur, "Int", attr.card, value, enumPrefix)
@@ -233,7 +235,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case "$less$eq"    => values match {case qm: Qm.type => Le(Qm); case vs: Seq[_] => Le(vs.head)}
       case "$greater$eq" => values match {case qm: Qm.type => Ge(Qm); case vs: Seq[_] => Ge(vs.head)}
       case "contains"    => values match {case qm: Qm.type => Fulltext(Seq(Qm)); case vs: Seq[_] => Fulltext(vs)}
-      case "add"         => values match {case vs: Seq[_] => Eq(vs)}
+      case "add"         => values match {case vs: Seq[_] => Eq(vs); case mapped: Value => mapped}
       case "remove"      => values match {case vs: Seq[_] => Remove(vs)}
       case unexpected    => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
     }
@@ -274,13 +276,20 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
       case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
       case q"Seq(..$vs)"                                           => vs match {
-        case get if get.nonEmpty && get.head.tpe <:< weakTypeOf[(_, _)] =>
-          val oldNew: Map[Any, Any] = get.map {
+        case pairs if pairs.nonEmpty && pairs.head.tpe <:< weakTypeOf[(_, _)] =>
+          val keyValues = pairs.map {
             case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
-          }.toMap
-          Replace(oldNew)
-        case other if attr == null                                      => vs.flatMap(v => resolveValues(v))
-        case other                                                      => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+          }
+          x(6, keyValues)
+          if (attr.isMapAttr) {
+            val keys = keyValues.map(_._1).distinct
+            if(keys.contains("_") && keys.size > 1)
+              abort(s"[Dsl2Model:getValues] Searching for all keys with `_` can't be combined with other key-values.")
+            Mapping(keyValues.map(kv => (kv._1.asInstanceOf[String], kv._2)))
+          } else
+            Replace(keyValues.toMap)
+        case other if attr == null                                            => vs.flatMap(v => resolveValues(v))
+        case other                                                            => vs.flatMap(v => resolveValues(v, att(q"$attr")))
       }
       case other if attr == null                                   => resolveValues(other)
       //      case other if attr.isOneURI || attr.isManyURI                => Fn("URI", resolveValues(other))
@@ -366,8 +375,8 @@ object Dsl2Model {
     }._1
 
     val model = Model(elements1)
-    //    inst(c).x(30, dsl, elements0, elements1, model)
-    //    inst(c).x(30, model)
+//        inst(c).x(30, dsl, elements0, elements1, model)
+//        inst(c).x(30, model)
     model
   }
 }

@@ -180,7 +180,7 @@ class Logic extends Base {
     val strSet = Set(a, c)
     Ns.strs(strSet).get === List(Set("a", "b", "c"))
 
-    // We can even supply multiple comma-separated Sets of search values
+    // We can even apply multiple comma-separated Sets of search values
     Ns.strs.apply(Set(a, c), Set(d)).get === List(Set("d", "a", "b", "c"))
 
 

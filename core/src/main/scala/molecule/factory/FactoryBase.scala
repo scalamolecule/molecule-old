@@ -37,11 +37,15 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //            x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-    //        x(1, dsl.tree, model)
+    //            x(1, dsl.tree, model)
 
-    def keyValues(idents: Seq[Any]) = idents.flatMap {
-      case ident: String if ident.startsWith("__ident__") => Some(ident -> q"${TermName(ident.substring(9))}")
-      case _                                              => None
+    def keyValues(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {
+      case (key: String, value: String)
+        if key.startsWith("__ident__") && value.startsWith("__ident__")  => Seq(key -> q"${TermName(key.substring(9))}", value -> q"${TermName(value.substring(9))}")
+      case (key: String, value: Any) if key.startsWith("__ident__")      => Seq(key -> q"${TermName(key.substring(9))}")
+      case (key: String, value: String) if value.startsWith("__ident__") => Seq(value -> q"${TermName(value.substring(9))}")
+      case ident: String if ident.startsWith("__ident__")                => Seq(ident -> q"${TermName(ident.substring(9))}")
+      case _                                                             => Nil
     }
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
@@ -53,13 +57,16 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         case atom@Atom(_, _, _, _, Le(ident), _, _)      => keyValues(Seq(ident))
         case atom@Atom(_, _, _, _, Ge(ident), _, _)      => keyValues(Seq(ident))
         case atom@Atom(_, _, _, _, Remove(idents), _, _) => keyValues(idents)
+        case atom@Atom(_, _, _, _, Mapping(pairs), _, _) => keyValues(pairs)
         case meta@Meta(_, _, _, _, Eq(idents))           => keyValues(idents)
         case Group(_, nestedElements)                    => mapIdentifiers(nestedElements, identifiers0)
         case TxModel(txElements)                         => mapIdentifiers(txElements, identifiers0)
       }).flatten
       (identifiers0 ++ newIdentifiers).distinct
     }
+
     val identMap = mapIdentifiers(model.elements).toMap
+    //    x(2, identMap)
 
     q"""
       import molecule._
@@ -78,22 +85,27 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       import clojure.lang.{PersistentHashSet, PersistentVector, LazySeq, Keyword}
 
       def getValues(idents: Seq[Any]) = idents.map {
-        case ident: String if ident.startsWith("__ident__") => $identMap.get(ident).get
-        case other                                          => other
+        case (key: String, value: String)
+          if key.startsWith("__ident__") && value.startsWith("__ident__")   => ($identMap.get(key).get, $identMap.get(value).get)
+        case (key: String, value: Any)     if key.startsWith("__ident__")   => ($identMap.get(key).get, value)
+        case (key: String, value: String)  if value.startsWith("__ident__") => (key, $identMap.get(value).get)
+        case ident: String                 if ident.startsWith("__ident__") => $identMap.get(ident).get
+        case other                                                          => other
       }
 
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
-        case atom@Atom(_, _, _, _, Eq(idents), _, _)         => atom.copy(value = Eq(getValues(idents)))
-        case atom@Atom(_, _, _, _, Neq(idents), _, _)        => atom.copy(value = Neq(getValues(idents)))
-        case atom@Atom(_, _, _, _, Lt(ident), _, _)          => atom.copy(value = Lt(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Gt(ident), _, _)          => atom.copy(value = Gt(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Le(ident), _, _)          => atom.copy(value = Le(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Ge(ident), _, _)          => atom.copy(value = Ge(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Remove(Seq(ident)), _, _) => atom.copy(value = Remove(getValues(Seq(ident))))
-        case meta@Meta(_, _, _, _, Eq(Seq(ident)))           => meta.copy(value = Eq(getValues(Seq(ident))))
-        case Group(ns, nestedElements)                       => Group(ns, resolveIdentifiers(nestedElements))
-        case TxModel(txElements)                             => TxModel(resolveIdentifiers(txElements))
-        case other                                           => other
+        case atom@Atom(_, _, _, _, Eq(idents), _, _)     => atom.copy(value = Eq(getValues(idents)))
+        case atom@Atom(_, _, _, _, Neq(idents), _, _)    => atom.copy(value = Neq(getValues(idents)))
+        case atom@Atom(_, _, _, _, Lt(ident), _, _)      => atom.copy(value = Lt(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Gt(ident), _, _)      => atom.copy(value = Gt(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Le(ident), _, _)      => atom.copy(value = Le(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Ge(ident), _, _)      => atom.copy(value = Ge(getValues(Seq(ident)).head))
+        case atom@Atom(_, _, _, _, Remove(idents), _, _) => atom.copy(value = Remove(getValues(idents)))
+        case atom@Atom(_, _, _, _, Mapping(pairs), _, _) => atom.copy(value = Mapping(getValues(pairs).asInstanceOf[Seq[(String, Any)]]))
+        case meta@Meta(_, _, _, _, Eq(idents))           => meta.copy(value = Eq(getValues(idents)))
+        case Group(ns, nestedElements)                   => Group(ns, resolveIdentifiers(nestedElements))
+        case TxModel(txElements)                         => TxModel(resolveIdentifiers(txElements))
+        case other                                       => other
       }
 
       val model: Model = Model(resolveIdentifiers($model.elements))
@@ -126,6 +138,8 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
   def cast(query: Tree, row: Tree, tpe: Type, i: Int): Tree = {
     val value: Tree = q"$row.get($i)"
     tpe match {
+      case t if t <:< typeOf[Map[String, String]] => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1)}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, Int]]    => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1).toInt}.toMap.asInstanceOf[$t]"""
       case t if t <:< typeOf[Set[Int]]            => q"$value.asInstanceOf[PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t]"
       case t if t <:< typeOf[Set[Float]]          => q"$value.asInstanceOf[PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t]"
       case t if t <:< typeOf[Set[_]]              => q"$value.asInstanceOf[PersistentHashSet].toSet.asInstanceOf[$t]"
@@ -258,9 +272,11 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           Seq(nestedTpl)
 
         } else if ($tpl0.get.isInstanceOf[Seq[_]]) {
-          val nestedTpl = ${resolveNested(query, nestedTpes,
-            q"Some($tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-            prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)}.asInstanceOf[(..$nestedTpes)]
+          val nestedTpl = ${
+        resolveNested(query, nestedTpes,
+          q"Some($tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+          prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)
+      }.asInstanceOf[(..$nestedTpes)]
 
           if ($prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] || $depth == $maxDepth)
             $tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
@@ -269,10 +285,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
 
         } else {
           val nestedTpl = ${
-            resolveNested(query, nestedTpes,
-              q"Some($tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-              prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)
-          }.asInstanceOf[(..$nestedTpes)]
+        resolveNested(query, nestedTpes,
+          q"Some($tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+          prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)
+      }.asInstanceOf[(..$nestedTpes)]
 
           if ($prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] || $depth == $maxDepth)
             $tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
@@ -280,64 +296,64 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
             $tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
         }
       """
-//            q"""
-////      println("  E tpl: " + tpl.isInstanceOf[Product])
-////println(tab + " depth       : " + depth)
-//val tab = "  " * $depth
-//val prevId = if($prevRow.head == 0L) 0L else $prevRow.apply($entityIndex).asInstanceOf[Long]
-//println(tab + " nested      : " + $newNested + "   " + prevId + "  " + $row.apply($entityIndex).asInstanceOf[Long])
-//
-//              if ($tpl0.isEmpty || $newNested) {
-//println(tab + " 0 tpl0      : " + $tpl0)
-//                val nestedTpl = ${resolveNested(query, nestedTpes, q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)}
-//println(tab + " 0 nestedTpl : " + nestedTpl)
-//
-//                Seq(nestedTpl)
-//
-//              } else if ($tpl0.get.isInstanceOf[Seq[_]]) {
-//println(tab + " 1 tpl0      : " + $tpl0)
-//                val nestedTpl = ${resolveNested(query, nestedTpes,
-//                  q"Some($tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-//                  prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)}.asInstanceOf[(..$nestedTpes)]
-//
-//                val newNested = $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
-//                val newNestedx = true
-//
-//println(tab + " 1 nestedTpl : " + nestedTpl)
-//println(tab + " 1 newNested : " + newNested + "  " + $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] + " " + $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long])
-//
-//               val nestedAcc = if (newNested)
-//                  $tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
-//                else
-//                  $tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
-//
-//println(tab + " 1 nestedAcc : " + nestedAcc)
-//                nestedAcc
-//
-//              } else {
-//println(tab + " 2 tpl0      : " + $tpl0)
-//
-//                val nestedTpl = ${
-//                   resolveNested(query, nestedTpes,
-//                     q"Some($tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
-//                     prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)
-//                 }.asInstanceOf[(..$nestedTpes)]
-//
-//                 val newNested = $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] || $depth == $maxDepth
-//                 val newNestedx = true
-//
-//println(tab + " 2 nestedTpl : " + nestedTpl)
-//println(tab + " 2 newNested : " + newNested + "   " + $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] + "  " + $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] + "    " + $depth + "  " + $maxDepth)
-//
-//                 val nestedAcc = if (newNested)
-//                   $tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
-//                 else
-//                   $tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
-//
-//println(tab + " 2 nestedAcc : " + nestedAcc)
-//                nestedAcc
-//              }
-//            """
+      //            q"""
+      ////      println("  E tpl: " + tpl.isInstanceOf[Product])
+      ////println(tab + " depth       : " + depth)
+      //val tab = "  " * $depth
+      //val prevId = if($prevRow.head == 0L) 0L else $prevRow.apply($entityIndex).asInstanceOf[Long]
+      //println(tab + " nested      : " + $newNested + "   " + prevId + "  " + $row.apply($entityIndex).asInstanceOf[Long])
+      //
+      //              if ($tpl0.isEmpty || $newNested) {
+      //println(tab + " 0 tpl0      : " + $tpl0)
+      //                val nestedTpl = ${resolveNested(query, nestedTpes, q"None: Option[(..$tpes)]", prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)}
+      //println(tab + " 0 nestedTpl : " + nestedTpl)
+      //
+      //                Seq(nestedTpl)
+      //
+      //              } else if ($tpl0.get.isInstanceOf[Seq[_]]) {
+      //println(tab + " 1 tpl0      : " + $tpl0)
+      //                val nestedTpl = ${resolveNested(query, nestedTpes,
+      //                  q"Some($tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+      //                  prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)}.asInstanceOf[(..$nestedTpes)]
+      //
+      //                val newNested = $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long]
+      //                val newNestedx = true
+      //
+      //println(tab + " 1 nestedTpl : " + nestedTpl)
+      //println(tab + " 1 newNested : " + newNested + "  " + $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] + " " + $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long])
+      //
+      //               val nestedAcc = if (newNested)
+      //                  $tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
+      //                else
+      //                  $tpl0.get.asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
+      //
+      //println(tab + " 1 nestedAcc : " + nestedAcc)
+      //                nestedAcc
+      //
+      //              } else {
+      //println(tab + " 2 tpl0      : " + $tpl0)
+      //
+      //                val nestedTpl = ${
+      //                   resolveNested(query, nestedTpes,
+      //                     q"Some($tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].last.asInstanceOf[(..$nestedTpes)])",
+      //                     prevRow, row, rowNo, entityIndex + 1 + i, depth + 1, maxDepth)
+      //                 }.asInstanceOf[(..$nestedTpes)]
+      //
+      //                 val newNested = $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] != $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] || $depth == $maxDepth
+      //                 val newNestedx = true
+      //
+      //println(tab + " 2 nestedTpl : " + nestedTpl)
+      //println(tab + " 2 newNested : " + newNested + "   " + $prevRow.apply(${entityIndex + 1 + i}).asInstanceOf[Long] + "  " + $row.apply(${entityIndex + 1 + i}).asInstanceOf[Long] + "    " + $depth + "  " + $maxDepth)
+      //
+      //                 val nestedAcc = if (newNested)
+      //                   $tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]] :+ nestedTpl
+      //                 else
+      //                   $tpl0.get.asInstanceOf[(..$tpes)].productElement($tpl0.get.asInstanceOf[(..$tpes)].productArity - 1).asInstanceOf[Seq[(..$nestedTpes)]].init :+ nestedTpl
+      //
+      //println(tab + " 2 nestedAcc : " + nestedAcc)
+      //                nestedAcc
+      //              }
+      //            """
       //      q"null.asInstanceOf[Seq[(..$nestedTpes)]]"
     }
 
@@ -546,5 +562,5 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
     case ((tpe, i), hl) => castHListElem(query, data, tpe, i, hl)
   }
 
-  def castHLists(query: Tree, data: Tree, ts: Seq[Type]) = q"$data.map(d => ${ castHList(query, q"d", ts)})"
+  def castHLists(query: Tree, data: Tree, ts: Seq[Type]) = q"$data.map(d => ${castHList(query, q"d", ts)})"
 }

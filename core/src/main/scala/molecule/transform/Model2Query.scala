@@ -18,8 +18,8 @@ object Model2Query {
 
         // Manipulate ------------------------------------------------------------
 
-        case Atom(_, _, _, _, Replace(_), _, _) => q
-        case Atom(_, _, _, _, Remove(_), _, _)  => q
+        //        case Atom(_, _, _, _, Replace(_), _, _) => q
+        case Atom(_, _, _, _, Remove(_), _, _) => q
 
 
         // Schema ------------------------------------------------------------
@@ -160,6 +160,48 @@ object Model2Query {
         }
 
 
+        // Map Atom (mandatory) -----------------------------------------------------------------
+
+        case a@Atom(_, _, t, 3, value, _, gs) => value match {
+          //          case Qm                       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).in(v, a)
+          //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
+          //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
+          //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
+          //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
+          //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
+          //          case Fulltext(Seq(Qm))        => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Var(v1)).in(v1, a)
+          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
+          //          case Eq(arg :: Nil)           => q.find("distinct", Seq(), v, gs).where(e, a, Val(arg), gs).where(e, a, v, Seq())
+          //          case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
+          //          case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
+          //          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
+          //          case Fulltext(arg :: Nil)     => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(arg))
+          case VarValue       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
+          case Eq(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
+          case Eq(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
+          case Mapping(pairs) => {
+            if (pairs.head._1 == "_") {
+              q.find("distinct", Seq(), v, gs)
+                .where(e, a, v, gs)
+                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+                .func(".matches ^String", Seq(Var(v2), Val(".*(" + pairs.map(_._2).mkString("|") + ").*")))
+            } else if (pairs.map(_._1).distinct.size == 1) {
+              val (key: String, value1) = pairs.head
+              val values = if (pairs.size == 1) value1 else "(" + pairs.map(_._2).mkString("|") + ")"
+              q.find("distinct", Seq(), v, gs)
+                .where(e, a, v, gs)
+                .func(".startsWith ^String", Seq(Var(v), Val(key)))
+                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+                .func(".matches ^String", Seq(Var(v2), Val(".*" + values + ".*")))
+            } else
+              q.find("distinct", Seq(), v, gs).where(e, a, v, gs).mappings(v, a, pairs)
+          }
+          case other          => sys.error(s"[Model2Query:resolve[Atom 3]] Unresolved mapped Atom:\nAtom   : $a\nElement: $other")
+        }
+
+
         // Enum Atom (mandatory) ------------------------------------------------------------
 
         case a@Atom(_, _, _, 2, value, Some(prefix), gs) => value match {
@@ -211,6 +253,7 @@ object Model2Query {
           case Eq(args)                 => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, args, Nil, u(t, v))
           case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
           case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
+          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
           case Fulltext(arg :: Nil)     => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(arg))
           case other                    => sys.error(s"[Model2Query:resolve[Atom 2]] Unresolved cardinality-many Atom:\nAtom   : $a\nElement: $other")
         }
@@ -249,7 +292,7 @@ object Model2Query {
         }
 
 
-        // Graph -----------------------------------------------------------------
+        // Bond -----------------------------------------------------------------
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
@@ -319,9 +362,9 @@ object Model2Query {
         case Meta(ns, attr, "e", NoValue, _) if prevRefNs == ""         => (resolve(query, e, v, element), e, w, ns, attr, "")
         case Meta(ns, attr, "e", NoValue, _) if prevRefNs == "IndexVal" => (resolve(query, e, y, element), e, y, ns, attr, "")
 
-        case Meta(ns, attr, "e", NoValue, EntValue)                     => (resolve(query, v, w, element), v, w, ns, attr, "")
-        case Meta(ns, attr, "e", NoValue, _)                            => (resolve(query, v, w, element), e, w, ns, attr, "")
-        case Meta(ns, attr, _, _, _)                                    => (resolve(query, e, v, element), e, v, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, EntValue) => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Meta(ns, attr, "e", NoValue, _)        => (resolve(query, v, w, element), e, w, ns, attr, "")
+        case Meta(ns, attr, _, _, _)                => (resolve(query, e, v, element), e, v, ns, attr, "")
 
         case TxModel(elements) =>
           val (q2, e2, v2, ns2, attr2, refNs2) = elements.foldLeft((query, "tx", w, prevNs, prevAttr, prevRefNs)) {

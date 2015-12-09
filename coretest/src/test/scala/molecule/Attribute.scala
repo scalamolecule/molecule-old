@@ -144,7 +144,7 @@ class Attribute extends CoreSpec {
       str1, int1, long1, float1, double1, bool1, date1, uuid1, uri1, enum1)
 
     // Get single molecule as tuple of values
-    Ns.str.int.long.float.double.bool.date.uuid.uri.enum.one === (
+    Ns.str.int.long.float.double.bool.date.uuid.uri.enum.one ===(
       str1, int1, long1, float1, double1, bool1, date1, uuid1, uri1, enum1)
   }
 
@@ -155,7 +155,7 @@ class Attribute extends CoreSpec {
       strs1, ints1, longs1, floats1, doubles1, dates1, uuids1, uris1, enums1)
 
     // Get single molecule as tuple of Sets of values
-    Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums.one === (
+    Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums.one ===(
       strs1, ints1, longs1, floats1, doubles1, dates1, uuids1, uris1, enums1)
   }
 

@@ -39,6 +39,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isManyRefAttr = tpe <:< weakTypeOf[ManyRefAttr[_, _]]
 
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _, _]]
+    def isMapAttr = tpe <:< weakTypeOf[Mapped[_, _, _, _]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
     def isMany = tpe <:< weakTypeOf[Many[_, _, _, _]]
     def isEnum = tpe <:< weakTypeOf[Enum]

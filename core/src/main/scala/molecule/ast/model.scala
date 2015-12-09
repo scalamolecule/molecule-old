@@ -76,6 +76,7 @@ object model {
 
   // Action
   case class Replace(oldNew: Map[Any, Any]) extends Value
+  case class Mapping(pairs: Seq[(String, Any)]) extends Value
   case class Remove(value: Seq[Any]) extends Value
 
 

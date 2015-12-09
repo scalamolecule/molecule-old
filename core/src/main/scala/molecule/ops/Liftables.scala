@@ -2,9 +2,11 @@ package molecule
 package ops
 import java.net.URI
 import java.util.{Date, UUID}
+
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.util.MacroHelpers
+
 import scala.reflect.macros.whitebox.Context
 
 trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
@@ -19,7 +21,6 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   def mkURI(uri: URI) = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
   implicit val liftAny = Liftable[Any] {
-    case Literal(Constant(s: String))  => q"$s"
     case Literal(Constant(s: String))  => q"$s"
     case Literal(Constant(i: Int))     => q"$i"
     case Literal(Constant(l: Long))    => q"$l"
@@ -43,6 +44,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftTuple2 = Liftable[Product] {
+//    case (k: String, v: Long) => q"($k, $v)"
     case (k: String, v: String) => q"($k, $v)"
     case (k: Int, v: Int)       => q"($k, $v)"
     case (k: Long, v: Long)     => q"($k, $v)"
@@ -52,17 +54,17 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case (k: UUID, v: UUID)     => q"(${mkUUID(k)}, ${mkUUID(v)})"
     case (k: URI, v: URI)       => q"(${mkURI(k)}, ${mkURI(v)})"
     case (a, b)                 => abort(s"[Liftables:liftTuple2] Can't lift unexpected Tuple2: ($a, $b)")
-//    case (a, b, c)              => abort(s"[Liftables:liftTuple3] Can't lift unexpected Tuple3: ($a, $b, $c)")
-    case other                  => abort(s"[Liftables:Product] Can't lift unexpected product type: $other")
+    //    case (a, b, c)              => abort(s"[Liftables:liftTuple3] Can't lift unexpected Tuple3: ($a, $b, $c)")
+    case other => abort(s"[Liftables:Product] Can't lift unexpected product type: $other")
   }
 
 
   // Liftables for Query --------------------------------------------------------------
 
-  implicit val liftVar    = Liftable[Var] { v => q"Var(${v.v})"}
-  implicit val liftVal    = Liftable[Val] { value => q"Val(${value.v})"}
-  implicit val liftAttrKW = Liftable[KW] { kw => q"KW(${kw.ns}, ${kw.attr}, ${kw.refNs})"}
-  implicit val liftWith   = Liftable[With] { widh => q"With(Seq(..${widh.variables}))"}
+  implicit val liftVar    = Liftable[Var] { v => q"Var(${v.v})" }
+  implicit val liftVal    = Liftable[Val] { value => q"Val(${value.v})" }
+  implicit val liftAttrKW = Liftable[KW] { kw => q"KW(${kw.ns}, ${kw.attr}, ${kw.refNs})" }
+  implicit val liftWith   = Liftable[With] { widh => q"With(Seq(..${widh.variables}))" }
 
   implicit val liftQueryValue = Liftable[QueryValue] {
     case Var(sym)                      => q"Var($sym)"
@@ -94,7 +96,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case AggrExpr(fn, args, v) => q"AggrExpr($fn, Seq(..$args), $v)"
     case Var(sym)              => q"Var($sym)"
   }
-  implicit val liftFind   = Liftable[Find] { find => q"Find(Seq(..${find.outputs}))"}
+  implicit val liftFind   = Liftable[Find] { find => q"Find(Seq(..${find.outputs}))" }
 
   implicit val liftBinding = Liftable[Binding] {
     case NoBinding               => q"NoBinding"
@@ -126,8 +128,8 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     q"Rule(${rd.name}, Seq(..${rd.args}), Seq(..${rd.clauses}))"
   }
 
-  implicit val liftIn    = Liftable[In] { in => q"In(Seq(..${in.inputs}), Seq(..${in.rules}), Seq(..${in.ds}))"}
-  implicit val liftWhere = Liftable[Where] { where => q"Where(Seq(..${where.clauses}))"}
+  implicit val liftIn    = Liftable[In] { in => q"In(Seq(..${in.inputs}), Seq(..${in.rules}), Seq(..${in.ds}))" }
+  implicit val liftWhere = Liftable[Where] { where => q"Where(Seq(..${where.clauses}))" }
   implicit val liftQuery = Liftable[Query] { q =>
     q"import molecule.ast.query._; Query(${q.f}, ${q.wi}, ${q.i}, ${q.wh})"
   }
@@ -145,7 +147,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case NoValue         => q"NoValue"
   }
 
-  implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.value})"}
+  implicit val liftFn    = Liftable[Fn] { fn => q"Fn(${fn.name}, ${fn.value})" }
   implicit val liftValue = Liftable[Value] {
     case EntValue         => q"EntValue"
     case VarValue         => q"VarValue"
@@ -172,14 +174,15 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Distinct         => q"Distinct"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
     case Replace(values)  => q"Replace($values)"
+    case Mapping(pairs)   => q"Mapping(Seq(..$pairs))"
     case Remove(values)   => q"Remove(Seq(..$values))"
   }
 
-  implicit val liftAtom       = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))"}
-  implicit val liftBond       = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})"}
-  implicit val liftReBond     = Liftable[ReBond] { r => q"ReBond(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.distinct}, ${r.prevVar})"}
-  implicit val liftTransitive = Liftable[Transitive] { r => q"Transitive(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.depth}, ${r.prevVar})"}
-  implicit val liftMeta       = Liftable[Meta] { m => q"Meta(${m.ns}, ${m.attr}, ${m.kind}, ${m.generic}, ${m.value})"}
+  implicit val liftAtom       = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))" }
+  implicit val liftBond       = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})" }
+  implicit val liftReBond     = Liftable[ReBond] { r => q"ReBond(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.distinct}, ${r.prevVar})" }
+  implicit val liftTransitive = Liftable[Transitive] { r => q"Transitive(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.depth}, ${r.prevVar})" }
+  implicit val liftMeta       = Liftable[Meta] { m => q"Meta(${m.ns}, ${m.attr}, ${m.kind}, ${m.generic}, ${m.value})" }
   implicit val liftGroup      = Liftable[Group] { g0 =>
     val es0 = g0.elements map {
       case a: Atom       => q"$a"
@@ -201,7 +204,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     q"Group(${g0.ref}, Seq(..$es0))"
   }
   implicit val liftTxModel    = Liftable[TxModel] { g =>
-    val es = g.elements map { case q"$e" => e}
+    val es = g.elements map { case q"$e" => e }
     q"TxModel(Seq(..$es))"
   }
 
@@ -229,5 +232,5 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case EmptyElement                                        => q"EmptyElement"
   }
 
-  implicit val liftModel = Liftable[Model] { model => q"Model(Seq(..${model.elements}))"}
+  implicit val liftModel = Liftable[Model] { model => q"Model(Seq(..${model.elements}))" }
 }

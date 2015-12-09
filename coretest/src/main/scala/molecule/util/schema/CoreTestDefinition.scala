@@ -31,6 +31,8 @@ object CoreTestDefinition {
     val enums    = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
     val refs1    = many[Ref1]
     val refsSub1 = many[Ref1].subComponents
+
+    val strMap   = mapString
   }
 
   trait Ref1 {

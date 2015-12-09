@@ -12,7 +12,7 @@ import scala.collection.JavaConversions._
 
 
 case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 45, 45, false, 6)
+  val x = Debug("Model2Transaction", 25, 25, false, 6)
 
   private def tempId(attr: String) = attr match {
     case "tx"                 => Peer.tempid(s":db.part/tx")
@@ -20,7 +20,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
     case _                    => Peer.tempid(s":db.part/user")
   }
 
-  private def getValues1(db: Database, id: Any, attr: String) = {
+  private def attrValues(db: Database, id: Any, attr: String) = {
     val query = s"[:find ?values :in $$ ?id :where [?id $attr ?values]]"
     //    x(25, query, id.asInstanceOf[Object], Peer.q(query, db, id.asInstanceOf[Object]))
     Peer.q(query, db, id.asInstanceOf[Object]).map(_.get(0))
@@ -91,20 +91,48 @@ case class Model2Transaction(conn: Connection, model: Model) {
     }._2
   }
 
-  private def valueStmts(stmts: Seq[Statement], e: Any, a: String, value: Any, prefix: Option[String] = None): Seq[Statement] = {
-    def p(value: Any) = if (prefix.isDefined) prefix.get + value else value
-    stmts ++ (value match {
+  def pairStr(e: Any, a: String, key: String) = {
+    val query = s"[:find ?v :in $$ ?e ?a ?key :where [?e ?a ?v][(.startsWith ^String ?v ?key)]]"
+    Peer.q(query, conn.db, e.asInstanceOf[Object], a.asInstanceOf[Object], key.asInstanceOf[Object]).map(_.get(0))
+  }
+
+  private def valueStmts(stmts: Seq[Statement], e: Any, a: String, arg: Any, prefix: Option[String] = None): Seq[Statement] = {
+    def p(arg: Any) = if (prefix.isDefined) prefix.get + arg else arg
+    val newStmts = if (prefix.contains("mapping")) arg match {
+      case Mapping(pairs)    => pairs.flatMap {
+        case (key, value) => {
+          val existing = pairStr(e, a, key)
+          existing.size match {
+            case 0 => Seq(Add(e, a, key + "@" + value))
+            case 1 => Seq(Retract(e, a, existing.head), Add(e, a, key + "@" + value))
+            case _ => sys.error("[Model2Transaction:valueStmts] Unexpected number of mapped values with the same key:\n" + existing.mkString("\n"))
+          }
+        }
+      }
+      case Remove(Seq())        => attrValues(conn.db, e, a).toSeq.map(v => Retract(e, a, p(v)))
+      case Remove(removeValues) => removeValues.flatMap { case key: String =>
+        val existing = pairStr(e, a, key)
+        existing.size match {
+          case 0 => None
+          case 1 => Some(Retract(e, a, existing.head))
+          case _ => sys.error("[Model2Transaction:valueStmts] Unexpected number of mapped values with the same key:\n" + existing.mkString("\n"))
+        }
+      }
+    } else arg match {
       case Replace(oldNew)      => oldNew.toSeq.flatMap {
         case (oldValue, newValue) => Seq(Retract(e, a, p(oldValue)), Add(e, a, p(newValue)))
       }
-      case Remove(Seq())        => getValues1(conn.db, e, a).toSeq.map(v => Retract(e, a, p(v)))
+      case Remove(Seq())        => attrValues(conn.db, e, a).toSeq.map(v => Retract(e, a, p(v)))
       case Remove(removeValues) => removeValues.map(v => Retract(e, a, p(v)))
       case Eq(vs)               => vs.map(v => Add(e, a, p(v)))
       case vs: Set[_]           => vs.map(v => Add(e, a, p(v)))
+      case m: Map[_, _]         => m map { case (k, v) => Add(e, a, k + "@" + v) }
       case v :: Nil             => Seq(Add(e, a, p(v)))
       case vs: List[_]          => vs.map(v => Add(e, a, p(v)))
       case v                    => Seq(Add(e, a, p(v)))
-    })
+    }
+
+    stmts ++ newStmts
   }
 
   def splitStmts(): (Seq[Statement], Seq[Statement]) = {

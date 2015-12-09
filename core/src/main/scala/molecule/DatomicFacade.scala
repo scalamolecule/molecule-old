@@ -149,6 +149,7 @@ trait DatomicFacade extends ArgProperties {
     val transformer = Model2Transaction(conn, model)
     val stmts = transformer.updateStmts()
     //        x(3, model, transformer.stmtsModel, stmts)
+//            x(3, transformer.stmtsModel, stmts)
     Tx(conn, transformer, Seq(stmts))
   }
 }

@@ -147,6 +147,26 @@ class Relations extends CoreSpec {
       "[output.Molecule:modelCheck (4)] Namespace `Ref1` in insert molecule has no mandatory attributes. Please add at least one."
   }
 
+  "Aggregates one" in new CoreSetup {
+    m(Ns.str.ref1) insert List(
+      ("a", 1L),
+      ("b", 2L))
+
+    m(Ns.str.ref1(count)).get === List(
+      ("a", 1),
+      ("b", 1))
+  }
+
+  "Aggregates many" in new CoreSetup {
+    m(Ns.str.refs1) insert List(
+      ("a", Set(1L)),
+      ("b", Set(2L, 3L)))
+
+    m(Ns.str.refs1(count)).get === List(
+      ("a", 1),
+      ("b", 2))
+  }
+
 
   "Molecule has to end with attribute" >> {
 

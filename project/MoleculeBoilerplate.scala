@@ -127,6 +127,8 @@ object MoleculeBoilerplate {
       case r"manyUUID(.*)$str"    => Val(attr, attrClean, "ManyUUID", "Set[java.util.UUID]", "java.util.UUID", "uuid", parseOptions(str))
       case r"manyURI(.*)$str"     => Val(attr, attrClean, "ManyURI", "Set[java.net.URI]", "java.net.URI", "uri", parseOptions(str))
 
+      case r"mapString(.*)$str" => Val(attr, attrClean, "ManyString", "Map[String, String]", "String", "string", parseOptions(str))
+
       case r"oneEnum\((.*)$enums\)"  => Enum(attr, attrClean, "OneEnum", "String", "", enums.replaceAll("'", "").split(",").toList.map(_.trim))
       case r"manyEnum\((.*)$enums\)" => Enum(attr, attrClean, "ManyEnums", "Set[String]", "String", enums.replaceAll("'", "").split(",").toList.map(_.trim))
 
@@ -138,7 +140,8 @@ object MoleculeBoilerplate {
       case r"many\[([a-z].*)$partref\](.*)$str"                => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
       case r"many\[(.*)$ref\](.*)$str" if curPart.isEmpty      => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ref)
       case r"many\[(.*)$ref\](.*)$str"                         => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", curPart + "_" + ref)
-      case unexpected                                          => sys.error(s"Unexpected attribute code in ${defFile.getName}:\n" + unexpected)
+
+      case unexpected => sys.error(s"Unexpected attribute code in ${defFile.getName}:\n" + unexpected)
     }
 
     val definition: Definition = raw.foldLeft(Definition("", Seq(), -1, -1, "", "", Seq())) {
@@ -278,11 +281,6 @@ object MoleculeBoilerplate {
       val lengths = attrs.filter(!_.clazz.contains("Ref")).map(_.attr.length)
       if (lengths.isEmpty) 0 else lengths.max
     }
-
-//    if (ns == "music_Instrumentation") {
-//      println(s"------ $ns ------")
-//      println(attrs.filter(!_.clazz.contains("Ref")).mkString("\n"))
-//    }
 
     val (attrVals, attrVals_) = attrs.flatMap {
       case BackRef(_, _, _, _, _, _, _) => None
@@ -481,6 +479,10 @@ object MoleculeBoilerplate {
     val p2 = (s: String) => padS(attrs.map(_.clazz).filter(!_.startsWith("Back")).map(_.length).max, s)
 
     val attrClasses = attrs.flatMap {
+      case Val(attr, _, clazz, tpe, baseTpe, _, options) if tpe.take(3) == "Map" =>
+        val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
+        Some(s"class $attr${p1(attr)}[Ns, In] extends Map$baseTpe${p2("Map"+baseTpe)}[Ns, In]$extensions")
+
       case Val(attr, _, clazz, _, _, _, options) =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
         Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions")
@@ -540,7 +542,6 @@ object MoleculeBoilerplate {
       definitionFiles flatMap { definitionFile =>
         val d0 = parse(definitionFile, allIndexed)
         val d = resolve(d0)
-
 
         // Write schema file
         val schemaFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((dir, pkg) => dir / pkg) / "schema" / s"${d.domain}Schema.scala"

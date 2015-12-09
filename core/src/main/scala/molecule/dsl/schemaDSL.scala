@@ -162,11 +162,11 @@ object schemaDSL {
 
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T, S] {
     def apply(values: T*)                          : Ns with Attr = ???
-    def apply(oneSet: S, moreSets: S*)             : Ns with Attr = ???
-
+//    def apply(set: S)                              : Ns with Attr = ???
+    def apply(set: S, moreSets: S*)             : Ns with Attr = ???
+    def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
     def add(value: T)                              : Ns with Attr = ???
     def remove(values: T*)                         : Ns with Attr = ???
-    def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
   }
   trait ManyString [Ns, In] extends Many[Ns, In, Set[String] , String ]
   trait ManyInt    [Ns, In] extends Many[Ns, In, Set[Int]    , Int    ]
@@ -177,6 +177,18 @@ object schemaDSL {
   trait ManyDate   [Ns, In] extends Many[Ns, In, Set[Date]   , Date   ]
   trait ManyUUID   [Ns, In] extends Many[Ns, In, Set[UUID]   , UUID   ]
   trait ManyURI    [Ns, In] extends Many[Ns, In, Set[URI]    , URI    ]
+
+
+  trait Mapped[Ns, In, M, T] extends ValueAttr[Ns, In, T, M] {
+    def apply(values: T*)                          : Ns with Attr = ???
+//    def apply(oneSet: M, moreSets: M*)             : Ns with Attr = ???
+
+    def add(pair: (T, T), morePairs: (T, T)*) : Ns with Attr = ???
+    def remove(key: String, moreKeys: String*)    : Ns with Attr = ???
+    def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
+  }
+  trait MapString [Ns, In] extends Mapped[Ns, In, Map[String, String] , String]
+  trait MapInt    [Ns, In] extends Mapped[Ns, In, Map[String, Int   ] , Int   ]
 
   // Enums
   trait Enum

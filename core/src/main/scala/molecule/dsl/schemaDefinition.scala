@@ -28,6 +28,10 @@ object schemaDefinition {
   trait manyString extends scalarAttr[manyString] {
     val fullTextSearch: manyString = ???
   }
+  object mapString extends mapString
+  trait mapString extends scalarAttr[mapString] {
+    val fullTextSearch: mapString = ???
+  }
 
   // Todo: Specialized attributes with constraints
   object oneEmail extends oneEmail
