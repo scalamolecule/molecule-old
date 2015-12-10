@@ -18,23 +18,7 @@ trait InputMolecule {
     traverse(or)
   }
 
-  def varsAndPrefixes = {
-//    println(_model)
-//    println(_query)
-    _query.i.inputs.collect {
-      case Placeholder(v, kw, enumPrefix, _) => (Var(v), enumPrefix.getOrElse(""))
-    }
-  }
-
-  def getValues(prefix: String, rawValues: Seq[Any]) = if (prefix != "") {
-    rawValues.flatMap {
-      case many: Set[_] => many.toList.map(setValue => prefix + setValue.toString).toSeq
-      case one          => Seq(prefix + one.toString)
-    }
-  } else {
-    rawValues.flatMap {
-      case many: Set[_] => many.toSeq
-      case one          => Seq(one)
-    }
+  def varsAndPrefixes = _query.i.inputs.collect {
+    case Placeholder(v, kw, enumPrefix, _) => (Var(v), enumPrefix.getOrElse(""))
   }
 }

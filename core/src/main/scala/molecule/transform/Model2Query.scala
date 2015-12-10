@@ -163,7 +163,6 @@ object Model2Query {
         // Map Atom (mandatory) -----------------------------------------------------------------
 
         case a@Atom(_, _, t, 3, value, _, gs) => value match {
-          //          case Qm                       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).in(v, a)
           //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
           //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
           //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
@@ -176,6 +175,14 @@ object Model2Query {
           //          case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
           //          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
           //          case Fulltext(arg :: Nil)     => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(arg))
+          case Qm             => q
+            .find("distinct", Seq(), v, gs)
+            .where(e, a, v, gs)
+            .in(v + "Key", a).in(v + "Value", a)
+            .func(".startsWith ^String", Seq(Var(v), Var(v + "Key")))
+            .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+            .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+            .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
           case VarValue       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
           case Eq(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
           case Eq(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)

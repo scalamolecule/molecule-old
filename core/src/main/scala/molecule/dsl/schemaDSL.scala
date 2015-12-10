@@ -163,7 +163,7 @@ object schemaDSL {
   trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T, S] {
     def apply(values: T*)                          : Ns with Attr = ???
 //    def apply(set: S)                              : Ns with Attr = ???
-    def apply(set: S, moreSets: S*)             : Ns with Attr = ???
+    def apply(set: S, moreSets: S*)                : Ns with Attr = ???
     def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
     def add(value: T)                              : Ns with Attr = ???
     def remove(values: T*)                         : Ns with Attr = ???
@@ -183,8 +183,8 @@ object schemaDSL {
     def apply(values: T*)                          : Ns with Attr = ???
 //    def apply(oneSet: M, moreSets: M*)             : Ns with Attr = ???
 
-    def add(pair: (T, T), morePairs: (T, T)*) : Ns with Attr = ???
-    def remove(key: String, moreKeys: String*)    : Ns with Attr = ???
+    def add(pair: (T, T), morePairs: (T, T)*)      : Ns with Attr = ???
+    def remove(key: String, moreKeys: String*)     : Ns with Attr = ???
     def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
   }
   trait MapString [Ns, In] extends Mapped[Ns, In, Map[String, String] , String]

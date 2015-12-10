@@ -25,8 +25,8 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
         def apply(args: $InputTypes)(implicit conn: Connection): Molecule0 = {
           val query1 = bindValues1(args)
           new Molecule0(model, query1) {
-            def debug(implicit conn: Connection): Unit = debugMolecule(conn, model, query1, inputValues1(args))
-            def debugE(implicit conn: Connection): Unit = debugMolecule(conn, model, query1, inputValues1(args))
+            def debug(implicit conn: Connection): Unit = debugMolecule(conn, model, query1)
+            def debugE(implicit conn: Connection): Unit = debugMolecule(conn, model, query1)
           }
         }
       }
@@ -53,7 +53,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[$A]         = results(conn, model, query2).toList.map(row => ${cast(q"query", q"row", A, 0)}.asInstanceOf[$A])
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(conn, model, query2).toList.map(row => ${castHListElem(q"query", q"row", A, 0, q"shapeless.HList()")})
-            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query2, Seq(..$inTerms))
+            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query2)
           }
         }
       """
@@ -70,7 +70,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[$A]         = results(conn, model, query1).toList.map(row => ${cast(q"query", q"row", A, 0)}.asInstanceOf[$A])
             def hl(implicit conn: Connection) : Seq[$A :: HNil] = results(conn, model, query1).toList.map(row => ${castHListElem(q"query", q"row", A, 0, q"shapeless.HList()")})
-            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query1, inputValues1(args))
+            def debug(implicit conn: Connection): Unit          = debugMolecule(conn, model, query1)
           }
         }
         $bindValues2
@@ -100,8 +100,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(conn, model, query2).toList.map(row => (..${castTpl(q"query", q"row", OutTypes)}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(conn, model, query2).toList.map(row => ${castHList(q"query", q"row", OutTypes)})
-            //def debug(implicit conn: Connection): Unit           = debugMolecule(conn, model, query2, inputValues2(..inTerms))
-            def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query2, Seq(..$inTerms))
+            def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query2)
           }
         }
       """
@@ -119,7 +118,7 @@ trait MakeInputMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
             def get(implicit conn: Connection): Seq[(..$OutTypes)] = results(conn, model, query1).toList.map(row => (..${castTpl(q"query", q"row", OutTypes)}))
             def hl(implicit conn: Connection): Seq[$HListType]     = results(conn, model, query1).toList.map(row => ${castHList(q"query", q"row", OutTypes)})
-            def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query1, inputValues1(args))
+            def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query1)
           }
         }
         $bindValues2

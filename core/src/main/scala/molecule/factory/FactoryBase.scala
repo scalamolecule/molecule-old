@@ -114,12 +114,13 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       lazy val modelE = Model(resolveIdentifiers($modelE.elements))
       lazy val queryE = Model2Query(modelE)
 
-      def debugMolecule(conn: Connection, m: Model, q: Query, args: Seq[Any] = Seq()): Unit = {
+      def debugMolecule(conn: Connection, m: Model, q: Query): Unit = {
         val rows = try {
           results(conn, m, q).take(500)
         } catch {
           case e: Throwable => sys.error(e.toString)
         }
+        val ins = inputs(q)
         sys.error(
           "\n--------------------------------------------------------------------------\n" +
           ${show(dsl.tree)} + "\n\n" +
@@ -127,7 +128,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           q + "\n\n" +
           q.datalog + "\n\n" +
           "RULES: " + (if (q.i.rules.isEmpty) "none\n\n" else q.i.rules.map(Query2String(q).p(_)).mkString("[\n ", "\n ", "\n]\n\n")) +
-          "INPUTS: " + (if (args.isEmpty) "none\n\n" else args.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n", "\n", "\n\n")) +
+          "INPUTS: " + (if (ins.isEmpty) "none\n\n" else ins.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n", "\n", "\n\n")) +
           "OUTPUTS:\n" + rows.toList.zipWithIndex.map(r => (r._2 + 1) + "  " + r._1).mkString("\n") + "\n(showing up to 500 rows...)" +
           "\n--------------------------------------------------------------------------\n"
         )

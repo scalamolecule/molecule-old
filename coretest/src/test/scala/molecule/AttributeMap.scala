@@ -184,6 +184,79 @@ class AttributeMap extends CoreSpec {
       Map("en" -> "Hello", "fr" -> "Bonjour", "da" -> "Hej")
     )
   }
+
+
+  "Input" in new CoreSetup {
+
+    Ns.int.strMap insert List(
+      (1, Map("en" -> "Hi there")),
+      (2, Map("fr" -> "Bonjour", "en" -> "Oh, Hi")),
+      (3, Map("en" -> "Hello")),
+      (4, Map("da" -> "Hej"))
+    )
+    // One key, one value
+    m(Ns.int.strMap(?))(Map("en" -> "Hi")).get === List(
+      (1, Map("en" -> "Hi there")),
+      (2, Map("en" -> "Oh, Hi"))
+    )
+
+
+    // One key, multiple values (using OR regex)
+    m(Ns.int.strMap(?))(Map("en" -> "Hi|He")).get === List(
+      (1, Map("en" -> "Hi there")),
+      (2, Map("en" -> "Oh, Hi")),
+      (3, Map("en" -> "Hello"))
+    )
+
+    // Multiple keys
+    m(Ns.int.strMap(?))(Map("en" -> "Hi", "fr" -> "Bon")).get === List(
+      (1, Map("en" -> "Hi there")),
+      (2, Map("fr" -> "Bonjour", "en" -> "Oh, Hi"))
+    )
+
+    // Multiple keys with multiple values for some keys (using OR regex)
+    m(Ns.int.strMap(?))(Map("en" -> "Hi|He", "fr" -> "Bon")).get === List(
+      (1, Map("en" -> "Hi there")),
+      (2, Map("fr" -> "Bonjour", "en" -> "Oh, Hi")),
+      (3, Map("en" -> "Hello"))
+    )
+
+    // All keys
+    m(Ns.int.strMap(?))(Map("_" -> "He")).get === List(
+      (3, Map("en" -> "Hello")),
+      (4, Map("da" -> "Hej"))
+    )
+
+    // All keys with multiple values (using OR regex)
+    m(Ns.int.strMap(?))(Map("_" -> "He|Bon")).get === List(
+      (2, Map("fr" -> "Bonjour")),
+      (3, Map("en" -> "Hello")),
+      (4, Map("da" -> "Hej"))
+    )
+
+    // Results are coalesced to one Map when no other attributes are present in the molecule
+    m(Ns.strMap(?))(Map("_" -> "He|Bon")).get === List(
+      Map("en" -> "Hello", "fr" -> "Bonjour", "da" -> "Hej")
+    )
+  }
 }
 
 
+//    datomic.Peer.q(
+//      """
+//        |[:find  ?b (distinct ?c)
+//        | :in    $ [[ ?cKey ?cValue ]]
+//        | :where [?a :ns/int ?b]
+//        |        [?a :ns/strMap ?c]
+//        |        [(.startsWith ^String ?c ?cKey)]
+//        |        [(.split ^String ?c "@" 2) ?c1]
+//        |        [(second ?c1) ?c2]
+//        |        [(.matches ^String ?c2 ?cValue)]]
+//      """.stripMargin, conn.db, datomic.Util.list(
+//        datomic.Util.list("en", ".*Hi.*"),
+//        datomic.Util.list("en", ".*He.*")
+//      )) === List(
+//      (1, Map("en" -> "Hi there")),
+//      (2, Map("en" -> "Oh, Hi")),
+//      (3, Map("en" -> "Hello"))
+//    )
