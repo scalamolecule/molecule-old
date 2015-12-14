@@ -1,16 +1,11 @@
 package molecule.transform
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone, UUID}
+import molecule.util.Helpers
 
 import molecule.ast.query._
 
-case class Query2String(q: Query) {
-
-  def format(date: Date) = {
-    val f = new SimpleDateFormat("'#inst \"'yyyy-MM-dd'T'HH:mm:ss.SSSXXX'\"'")
-    f.setTimeZone(TimeZone.getTimeZone("UTC"))
-    f.format(date)
-  }
+case class Query2String(q: Query) extends Helpers {
 
   def p(expr: QueryExpr): String = expr match {
     case Query(find, widh, in, where)    => pp(find, widh, in, where)

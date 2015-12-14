@@ -1,6 +1,6 @@
 package molecule
 import java.util.UUID._
-import java.util.{Collection => jCollection, Date, List => jList, Map => jMap}
+import java.util.{Date, List => jList, Map => jMap}
 
 import datomic._
 import datomic.db.Db
@@ -15,7 +15,6 @@ import org.specs2.main.ArgProperties
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-//import scala.language.{existentials, higherKinds}
 
 // ArgProperties for some reason makes FactoryBase happy when creating nested molecules
 // outside the Specs2 framework (in non-test code). Todo: Do without ArgProperties

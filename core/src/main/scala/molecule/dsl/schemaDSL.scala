@@ -137,7 +137,6 @@ object schemaDSL {
     def >=   (in: ?) : In with Attr = ???
   }
 
-
   // Cardinality one
 
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
@@ -178,33 +177,52 @@ object schemaDSL {
   trait ManyUUID   [Ns, In] extends Many[Ns, In, Set[UUID]   , UUID   ]
   trait ManyURI    [Ns, In] extends Many[Ns, In, Set[URI]    , URI    ]
 
-
-  trait Mapped[Ns, In, M, T] extends ValueAttr[Ns, In, T, M] {
-    def apply(values: T*)                          : Ns with Attr = ???
-//    def apply(oneSet: M, moreSets: M*)             : Ns with Attr = ???
-
-    def add(pair: (T, T), morePairs: (T, T)*)      : Ns with Attr = ???
-    def remove(key: String, moreKeys: String*)     : Ns with Attr = ???
-    def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
+  trait MapAttr[Ns, In] extends ValueAttr[Ns, In, String, Map[String, String]]  {
+    def apply(values: String*)                                         : Ns with Attr = ???
+    def add(pair: (String, String), morePairs: (String, String)*)      : Ns with Attr = ???
+    def remove(key: String, moreKeys: String*)                         : Ns with Attr = ???
+    def apply(oldNew: (String, String), oldNewMore: (String, String)*) : Ns with Attr = ???
   }
-  trait MapString [Ns, In] extends Mapped[Ns, In, Map[String, String] , String]
-  trait MapInt    [Ns, In] extends Mapped[Ns, In, Map[String, Int   ] , Int   ]
 
   // Enums
+  object EnumValue
   trait Enum
   trait OneEnum  [Ns, In] extends One [Ns, In, String]              with Enum
   trait ManyEnums[Ns, In] extends Many[Ns, In, Set[String], String] with Enum
-  object EnumValue
 
-  // Attribute options
-  case class Doc(msg: String)
-  trait UniqueValue
-  trait UniqueIdentity
-  trait Indexed
-  trait FulltextSearch[Ns, In] {
-    def contains(that: String): Ns with Attr = ???
-    def contains(in: ?) : In with Attr = ???
-  }
-  trait IsComponent
-  trait NoHistory
+
+  // Optionals
+
+  trait OneRefAttr$  extends Attr
+  trait ManyRefAttr$ extends Attr
+
+  trait MapAttr$[T] extends Attr
+
+  trait ValueAttr$[T] extends Attr
+
+  trait OneValueAttr$[T]  extends ValueAttr$[T]
+  trait OneString$  extends OneValueAttr$[String ]
+  trait OneInt$     extends OneValueAttr$[Int    ]
+  trait OneLong$    extends OneValueAttr$[Long   ]
+  trait OneFloat$   extends OneValueAttr$[Float  ]
+  trait OneDouble$  extends OneValueAttr$[Double ]
+  trait OneBoolean$ extends OneValueAttr$[Boolean]
+  trait OneDate$    extends OneValueAttr$[Date   ]
+  trait OneUUID$    extends OneValueAttr$[UUID   ]
+  trait OneURI$     extends OneValueAttr$[URI    ]
+
+  trait ManyValueAttr$[T] extends ValueAttr$[T]
+  trait ManyString$  extends ManyValueAttr$[Set[String ]]
+  trait ManyInt$     extends ManyValueAttr$[Set[Int    ]]
+  trait ManyLong$    extends ManyValueAttr$[Set[Long   ]]
+  trait ManyFloat$   extends ManyValueAttr$[Set[Float  ]]
+  trait ManyDouble$  extends ManyValueAttr$[Set[Double ]]
+  trait ManyBoolean$ extends ManyValueAttr$[Set[Boolean]]
+  trait ManyDate$    extends ManyValueAttr$[Set[Date   ]]
+  trait ManyUUID$    extends ManyValueAttr$[Set[UUID   ]]
+  trait ManyURI$     extends ManyValueAttr$[Set[URI    ]]
+
+  trait Enum$
+  trait OneEnum$   extends Enum$
+  trait ManyEnums$ extends Enum$
 }

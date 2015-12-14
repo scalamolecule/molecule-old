@@ -1,18 +1,18 @@
 package molecule.transform
-import java.util.{List => jList}
+import java.util.{Date, List => jList}
 
 //import datomic.{Connection, Database, Peer}
 import datomic._
 //import molecule.DatomicFacade
 import molecule.ast.model._
 import molecule.ast.transaction._
-import molecule.util.Debug
+import molecule.util.{Debug, Helpers}
 
 import scala.collection.JavaConversions._
 
 
-case class Model2Transaction(conn: Connection, model: Model) {
-  val x = Debug("Model2Transaction", 25, 25, false, 6)
+case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
+  val x = Debug("Model2Transaction", 52, 51, false, 6)
 
   private def tempId(attr: String) = attr match {
     case "tx"                 => Peer.tempid(s":db.part/tx")
@@ -57,9 +57,9 @@ case class Model2Transaction(conn: Connection, model: Model) {
       }._2)
 
       // Continue with only transaction Atoms...
-      case ('tx, Atom(ns, name, _, _, VarValue, _, _))                       => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
-      case ('tx, Atom(ns, name, _, _, value, prefix, _)) if name.last == '_' => ('tx, stmts :+ Add('tx, s":$ns/${name.init}", Values(value, prefix)))
-      case ('tx, Atom(ns, name, _, _, value, prefix, _))                     => ('tx, stmts :+ Add('tx, s":$ns/$name", Values(value, prefix)))
+      case ('tx, Atom(ns, name, _, _, VarValue, _, _))                                           => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
+      case ('tx, Atom(ns, name, _, _, value, prefix, _)) if name.last == '_' || name.last == '$' => ('tx, stmts :+ Add('tx, s":$ns/${name.init}", Values(value, prefix)))
+      case ('tx, Atom(ns, name, _, _, value, prefix, _))                                         => ('tx, stmts :+ Add('tx, s":$ns/$name", Values(value, prefix)))
 
       // Next namespace
       case ('v, Atom(ns, name, _, _, VarValue, _, _))   => ('e, stmts :+ Add('v, s":$ns/$name", 'arg))
@@ -84,8 +84,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case other                                              => other
     }
     val model1 = Model(replace$(model.elements))
-    x(50, model, model1)
-
+//    x(50, model, model1)
     model1.elements.foldLeft('_: Any, Seq[Statement]()) {
       case ((eSlot, stmts), element) => resolveElement(eSlot, stmts, element)
     }._2
@@ -99,7 +98,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
   private def valueStmts(stmts: Seq[Statement], e: Any, a: String, arg: Any, prefix: Option[String] = None): Seq[Statement] = {
     def p(arg: Any) = if (prefix.isDefined) prefix.get + arg else arg
     val newStmts = if (prefix.contains("mapping")) arg match {
-      case Mapping(pairs)    => pairs.flatMap {
+      case Mapping(pairs)       => pairs.flatMap {
         case (key, value) => {
           val existing = pairStr(e, a, key)
           existing.size match {
@@ -126,7 +125,10 @@ case class Model2Transaction(conn: Connection, model: Model) {
       case Remove(removeValues) => removeValues.map(v => Retract(e, a, p(v)))
       case Eq(vs)               => vs.map(v => Add(e, a, p(v)))
       case vs: Set[_]           => vs.map(v => Add(e, a, p(v)))
-      case m: Map[_, _]         => m map { case (k, v) => Add(e, a, k + "@" + v) }
+      case m: Map[_, _]         => m map {
+        case (k, d: Date) => Add(e, a, k + "@" + format2(d)) // Need uniform Date format
+        case (k, v)       => Add(e, a, k + "@" + v)
+      }
       case v :: Nil             => Seq(Add(e, a, p(v)))
       case vs: List[_]          => vs.map(v => Add(e, a, p(v)))
       case v                    => Seq(Add(e, a, p(v)))
@@ -183,6 +185,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
     case Add('tx, a, 'arg)                                                        => (next, valueStmts(stmts, tempId("tx"), a, arg))
     case Add(e0, ref0, nestedStmts0: Seq[_]) if arg == Nil                        => (next, stmts)
     case Add(e, ref, nestedStmts: Seq[_])                                         => {
+//      x(51, e, ref, nestedStmts, stmts)
       val parentE = if (e == 'parentId)
         tempId(ref)
       else if (stmts.isEmpty)
@@ -191,7 +194,7 @@ case class Model2Transaction(conn: Connection, model: Model) {
         stmts.reverse.collectFirst {
           // Find entity value of Add statement with matching namespace
           case Add(e1, a, _) if a.replaceFirst("/.*", "") == ref.replaceFirst("/.*", "") => e1
-        }.getOrElse(sys.error("[Model2Transaction:matchDataStmt] Couldn't find previous statement with matching namespace."))
+        }.getOrElse(sys.error("[Model2Transaction:matchDataStmt] Couldn't find previous statement with matching namespace. e: " + e + "  -- ref: " + ref.replaceFirst("/.*", "")))
       val nestedRows = untupleNestedArgss(nestedStmts, arg)
       val nestedInsertStmts = nestedRows.flatMap { nestedRow =>
         val nestedE = tempId(ref)

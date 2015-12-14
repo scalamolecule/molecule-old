@@ -22,6 +22,7 @@ trait InputMolecule_1[I1] extends InputMolecule {
       in1.flatMap {
         case map: Map[_, _] => map.toList.map { case (k, v) => Seq(k, ".*(" + v + ").*") }
         case set: Set[_]    => Seq(set.toSeq)
+//        case one            => Seq(Seq(one))
         case one            => Seq(Seq(one))
       }
     //    x(1, vars, values)
@@ -36,7 +37,7 @@ trait InputMolecule_1[I1] extends InputMolecule {
     else if (vars.size > 1)
       _query.copy(i = In(Seq(InVar(RelationBinding(vars), values)), _query.i.rules, _query.i.ds))
     else if (values.size > 1)
-      _query.copy(i = In(Seq(InVar(CollectionBinding(vars.head), values)), _query.i.rules, _query.i.ds))
+      _query.copy(i = In(Seq(InVar(CollectionBinding(vars.head), Seq(values.flatten))), _query.i.rules, _query.i.ds))
     else
       _query.copy(i = In(Seq(InVar(ScalarBinding(vars.head), values)), _query.i.rules, _query.i.ds))
   }

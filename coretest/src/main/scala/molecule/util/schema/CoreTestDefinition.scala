@@ -32,7 +32,15 @@ object CoreTestDefinition {
     val refs1    = many[Ref1]
     val refsSub1 = many[Ref1].subComponents
 
-    val strMap   = mapString
+    val strMap    = mapString
+    val intMap    = mapInt
+    val longMap   = mapLong
+    val floatMap  = mapFloat
+    val doubleMap = mapDouble
+    val boolMap   = mapBoolean
+    val dateMap   = mapDate
+    val uuidMap   = mapUUID
+    val uriMap    = mapURI
   }
 
   trait Ref1 {

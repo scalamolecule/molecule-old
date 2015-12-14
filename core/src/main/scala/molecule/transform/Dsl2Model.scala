@@ -9,14 +9,16 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 30,30)
+  val x = DebugMacro("Dsl2Model", 29, 28)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
 
-  def traverse(prev: Tree, element: Element): Seq[Element] =
+  def traverse(prev: Tree, element: Element): Seq[Element] = {
+//    x(1, prev, element)
     if (prev.isAttr || prev.symbol.isMethod) resolve(prev) :+ element else Seq(element)
+  }
 
   def kw(kwTree: Tree): (String, String) = (kwTree.toString(): String) match {
     case r""""\:(\w*)$ns0/(\w*)$attr0"""" => (ns0, attr0)
@@ -38,9 +40,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // EAV + ns -----------------------------
 
-    //    case q"$prev.e" if q"$prev".isAttr => traverse(q"$prev", Meta(q"$prev".ns, q"$prev".name, "e", NoValue, EntValue))
     case q"$prev.e" => traverse(q"$prev", Meta("", "", "e", NoValue, EntValue))
-
     case q"$prev.a" => traverse(q"$prev", Atom("?", "attr", "a", 1, NoValue))
 
     case q"$prev.ns.apply(..$values)"  => traverse(q"$prev", Atom("ns", "?", "ns", 1, modelValue("apply", null, q"Seq(..$values)")))
@@ -78,6 +78,13 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case q"$prev.op"        => traverse(q"$prev", Meta("db", "op", "tx", OpValue, NoValue))
 
 
+    // Optional ----------------------
+
+    case a@q"$prev.$cur" if a.isEnum$      => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
+    case a@q"$prev.$cur" if a.isMapAttr$   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), 3, VarValue, Some("mapping")))
+    case a@q"$prev.$cur" if a.isValueAttr$ => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
+
+
     // Generic -----------------------------
 
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
@@ -91,7 +98,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case a@q"$prev.$refAttr" if a.isRef     => traverse(q"$prev", Bond(a.refThis, firstLow(refAttr.toString), a.refNext))
     case a@q"$prev.$refAttr" if a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
     case a@q"$prev.$cur" if a.isEnum        => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
-    case a@q"$prev.$cur" if a.isMapAttr     => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), 3, VarValue))
+    case a@q"$prev.$cur" if a.isMapAttr     => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), 3, VarValue, Some("mapping")))
     case a@q"$prev.$cur" if a.isValueAttr   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
 
 
@@ -111,7 +118,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def walk(prev: Tree, curNs: String, cur: Tree, thisElement: Element) = {
     val prevElements = if (q"$prev".isAttr || q"$prev".symbol.isMethod) resolve(prev) else Seq[Element]()
     val attr = cur.toString()
-    //    x(1, prevElements, curNs, attr, thisElement)
+    x(2, prevElements, curNs, attr, thisElement)
     if (prevElements.isEmpty) {
       traverse(q"$prev", thisElement)
     } else {
@@ -126,13 +133,13 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
                     val t = previous.init.reverse.collectFirst {
                       // Find first previous Bond (relating to this attribute)
                       case prevBond@Bond(ns2, refAttr, refNs) =>
-                        x(2, prevAtom, prevBond, ns2, refAttr, refNs)
+                        //                        x(2, prevAtom, prevBond, ns2, refAttr, refNs)
                         Transitive(ns2, refAttr, refNs, 0)
                     } getOrElse {
-                      x(3, curNs, cur)
+                      //                      x(3, curNs, cur)
                       Transitive(prevNs, prevAttr, prevNs, 0)
                     }
-                    x(4, prevElements.last, prevNs, prevAttr)
+                    //                    x(4, prevElements.last, prevNs, prevAttr)
                     (previous.init, similarAtoms1 :+ prevAtom, Some(t))
                   case _                                                                                                   =>
                     (previous.init, similarAtoms1, trans)
@@ -165,7 +172,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     }
     val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nested)
     val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
-    //    x(28, prev, parentNs, nestedElems, group, refNext)
+//    x(28, prev, parentNs, nestedElems, group, refNext)
     group
   }
 
@@ -280,10 +287,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
           val keyValues = pairs.map {
             case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
           }
-          x(6, keyValues)
+          //          x(6, keyValues)
           if (attr.isMapAttr) {
             val keys = keyValues.map(_._1).distinct
-            if(keys.contains("_") && keys.size > 1)
+            if (keys.contains("_") && keys.size > 1)
               abort(s"[Dsl2Model:getValues] Searching for all keys with `_` can't be combined with other key-values.")
             Mapping(keyValues.map(kv => (kv._1.asInstanceOf[String], kv._2)))
           } else
@@ -375,8 +382,9 @@ object Dsl2Model {
     }._1
 
     val model = Model(elements1)
-//        inst(c).x(30, dsl, elements0, elements1, model)
-//        inst(c).x(30, model)
+    //        inst(c).x(30, dsl, elements0, elements1, model)
+    //        inst(c).x(30, model)
+
     model
   }
 }

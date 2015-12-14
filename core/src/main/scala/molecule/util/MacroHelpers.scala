@@ -67,7 +67,7 @@ trait MacroHelpers[Ctx <: Context] {
           }
         }
 
-        c.warning(c.enclosingPosition, s"## $id ##: $clazz \n" +
+        c.warning(c.enclosingPosition, s"## $id ## $clazz \n" +
           //        println(s"##$id: $clazz \n" +
           params.toList.zipWithIndex.map {case (e, i) => traverse(e, 0, i + 1)}
             .mkString("\n------------------------------------------------\n") +

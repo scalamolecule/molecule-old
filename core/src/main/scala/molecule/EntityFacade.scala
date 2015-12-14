@@ -86,8 +86,8 @@ case class EntityFacade(entity: datomic.Entity, conn: Connection, id: Object) {
       case shouldWeEverGetHere_?                   => Some(toScala(shouldWeEverGetHere_?).asInstanceOf[A])
     }
 
-    // How to treat mapped attributes?
-    case mapped: Mapped[_, _, _, _]   => entity.get(attr._kw) match {
+    // How to treat map attributes?
+    case mapped: MapAttr[_, _] => entity.get(attr._kw) match {
       case null                                    => None
       case results: clojure.lang.PersistentHashSet => results.head match {
         case ent: datomic.Entity => Some(results.toList.map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]).sorted.asInstanceOf[A])

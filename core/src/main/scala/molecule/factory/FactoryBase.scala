@@ -82,6 +82,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       import java.lang.{Long => jLong, Double => jDouble}
       import java.util.{Date, UUID, Map => jMap}
       import java.net.URI
+      import java.text.SimpleDateFormat
       import clojure.lang.{PersistentHashSet, PersistentVector, LazySeq, Keyword}
 
       def getValues(idents: Seq[Any]) = idents.map {
@@ -114,6 +115,8 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       lazy val modelE = Model(resolveIdentifiers($modelE.elements))
       lazy val queryE = Model2Query(modelE)
 
+      def date(s: String) = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(s)
+
       def debugMolecule(conn: Connection, m: Model, q: Query): Unit = {
         val rows = try {
           results(conn, m, q).take(500)
@@ -139,23 +142,37 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
   def cast(query: Tree, row: Tree, tpe: Type, i: Int): Tree = {
     val value: Tree = q"$row.get($i)"
     tpe match {
-      case t if t <:< typeOf[Map[String, String]] => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1)}.toMap.asInstanceOf[$t]"""
-      case t if t <:< typeOf[Map[String, Int]]    => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1).toInt}.toMap.asInstanceOf[$t]"""
-      case t if t <:< typeOf[Set[Int]]            => q"$value.asInstanceOf[PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t]"
-      case t if t <:< typeOf[Set[Float]]          => q"$value.asInstanceOf[PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t]"
-      case t if t <:< typeOf[Set[_]]              => q"$value.asInstanceOf[PersistentHashSet].toSet.asInstanceOf[$t]"
-      case t if t <:< typeOf[Vector[_]]           => q"$value.asInstanceOf[PersistentVector].toVector.asInstanceOf[$t]"
-      case t if t <:< typeOf[Stream[_]]           => q"$value.asInstanceOf[LazySeq].toStream.asInstanceOf[$t]"
-      case t if t <:< typeOf[Int]                 => q"if($value.isInstanceOf[jLong]) $value.asInstanceOf[jLong].toInt.asInstanceOf[$t] else $value.asInstanceOf[$t]"
-      case t if t <:< typeOf[Float]               => q"if($value.isInstanceOf[jDouble]) $value.asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $value.asInstanceOf[$t]"
-      case t if t <:< typeOf[Option[Int]]         => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Int]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Float]]       => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Float]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Double]]      => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Double]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Boolean]]     => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Boolean]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Date]]        => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Date]].toMap.values.head)"
-      case t if t <:< typeOf[Option[UUID]]        => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, UUID]].toMap.values.head)"
-      case t if t <:< typeOf[Option[URI]]         => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, URI]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Long]]        =>
+      case t if t <:< typeOf[Option[Map[String, String]]]  =>
+        q"""
+          if($value == null)
+            None
+          else
+            Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1)}.toMap).asInstanceOf[$t]
+        """
+      case t if t <:< typeOf[Map[String, String]]  => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1)}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, Int]]     => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1).toInt}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, Long]]    => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1).toLong}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, Float]]   => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1).toFloat}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, Double]]  => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1).toDouble}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, Boolean]] => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> p(1).toBoolean}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, Date]]    => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> date(p(1))}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, UUID]]    => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> UUID.fromString(p(1))}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Map[String, URI]]     => q"""$value.asInstanceOf[PersistentHashSet].toSeq.map{case s:String => val p = s.split("@", 2); p(0) -> new URI(p(1))}.toMap.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Set[Int]]             => q"$value.asInstanceOf[PersistentHashSet].toSeq.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[$t]"
+      case t if t <:< typeOf[Set[Float]]           => q"$value.asInstanceOf[PersistentHashSet].toSeq.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[$t]"
+      case t if t <:< typeOf[Set[_]]               => q"$value.asInstanceOf[PersistentHashSet].toSet.asInstanceOf[$t]"
+      case t if t <:< typeOf[Vector[_]]            => q"$value.asInstanceOf[PersistentVector].toVector.asInstanceOf[$t]"
+      case t if t <:< typeOf[Stream[_]]            => q"$value.asInstanceOf[LazySeq].toStream.asInstanceOf[$t]"
+      case t if t <:< typeOf[Int]                  => q"if($value.isInstanceOf[jLong]) $value.asInstanceOf[jLong].toInt.asInstanceOf[$t] else $value.asInstanceOf[$t]"
+      case t if t <:< typeOf[Float]                => q"if($value.isInstanceOf[jDouble]) $value.asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $value.asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[Int]]          => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Int]].toMap.values.head)"
+      case t if t <:< typeOf[Option[Float]]        => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Float]].toMap.values.head)"
+      case t if t <:< typeOf[Option[Double]]       => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Double]].toMap.values.head)"
+      case t if t <:< typeOf[Option[Boolean]]      => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Boolean]].toMap.values.head)"
+      case t if t <:< typeOf[Option[Date]]         => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Date]].toMap.values.head)"
+      case t if t <:< typeOf[Option[UUID]]         => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, UUID]].toMap.values.head)"
+      case t if t <:< typeOf[Option[URI]]          => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, URI]].toMap.values.head)"
+      case t if t <:< typeOf[Option[Long]]         =>
         q"""
           if($value == null) {
             None
@@ -167,7 +184,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
             Some($value.asInstanceOf[jMap[String, Long]].toMap.values.head)
           }
         """
-      case t if t <:< typeOf[Option[String]]      =>
+      case t if t <:< typeOf[Option[String]]       =>
         q"""
           if($value == null) {
             None
@@ -179,34 +196,34 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
             Some($value.asInstanceOf[jMap[String, String]].toMap.values.head)
           }
         """
-      case t if t <:< typeOf[Option[Set[Double]]] =>
+      case t if t <:< typeOf[Option[Set[Double]]]  =>
         q"""if ($value == null) None else
               Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[Double]])"""
-      case t if t <:< typeOf[Option[Set[Date]]]   =>
+      case t if t <:< typeOf[Option[Set[Date]]]    =>
         q"""if ($value == null) None else
               Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[Date]])"""
-      case t if t <:< typeOf[Option[Set[UUID]]]   =>
+      case t if t <:< typeOf[Option[Set[UUID]]]    =>
         q"""if ($value == null) None else
               Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[UUID]])"""
-      case t if t <:< typeOf[Option[Set[URI]]]    =>
+      case t if t <:< typeOf[Option[Set[URI]]]     =>
         q"""
            if ($value == null) None else
            Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[URI]])"""
-      case t if t <:< typeOf[Option[Set[Int]]]    =>
+      case t if t <:< typeOf[Option[Set[Int]]]     =>
         q"""
           if ($value == null) None else {
             val values = $value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSeq
             Some(values.map(_.asInstanceOf[jLong].toInt).toSet.asInstanceOf[Set[Int]])
           }
         """
-      case t if t <:< typeOf[Option[Set[Float]]]  =>
+      case t if t <:< typeOf[Option[Set[Float]]]   =>
         q"""
           if ($value == null) None else {
             val values = $value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSeq
             Some(values.map(_.asInstanceOf[jDouble].toFloat).toSet.asInstanceOf[Set[Float]])
           }
         """
-      case t if t <:< typeOf[Option[Set[Long]]]   =>
+      case t if t <:< typeOf[Option[Set[Long]]]    =>
         q"""
           if ($value == null) {
             None
@@ -219,7 +236,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
             Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[Long]])
           }
         """
-      case t if t <:< typeOf[Option[Set[String]]] =>
+      case t if t <:< typeOf[Option[Set[String]]]  =>
         q"""
           if($value == null) {
             None
@@ -232,7 +249,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
             Some($value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[PersistentVector].toSet.asInstanceOf[Set[String]])
           }
         """
-      case t                                      =>
+      case t                                       =>
         q"""
           $query.f.outputs($i) match {
             case AggrExpr("sum",_,_) =>

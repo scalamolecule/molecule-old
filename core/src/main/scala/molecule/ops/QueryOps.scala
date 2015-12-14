@@ -40,6 +40,9 @@ object QueryOps {
       q.copy(f = Find(q.f.outputs ++ moreOutputs))
     }
 
+
+    // Pull ..........................................
+
     def pull(e: String, atom: Atom) =
       q.copy(f = Find(q.f.outputs :+ Pull(e + "_" + atom.name, atom.ns, atom.name)))
         .func("molecule.Functions/bind", Seq(Var(e)), ScalarBinding(Var(e + "_" + atom.name)))
@@ -172,6 +175,7 @@ object QueryOps {
       val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
       q.copy(i = newIn, wh = newWhere)
     }
+
 
     def orRules(e: String, a: Atom, args: Seq[Any], gs: Seq[Generic] = Seq(), v: String = ""): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)

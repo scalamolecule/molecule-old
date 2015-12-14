@@ -72,7 +72,6 @@ object model {
 
   case object Qm extends Value
   case object Distinct extends Value
-  //  case object Maybe extends Value
 
   // Action
   case class Replace(oldNew: Map[Any, Any]) extends Value

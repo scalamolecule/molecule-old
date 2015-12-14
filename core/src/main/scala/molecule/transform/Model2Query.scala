@@ -16,13 +16,118 @@ object Model2Query {
       val (v1, v2, v3) = (v + 1, v + 2, v + 3)
       element match {
 
-        // Manipulate ------------------------------------------------------------
+        // Manipulation (not relevant to queries) ----------------------------
 
-        //        case Atom(_, _, _, _, Replace(_), _, _) => q
-        case Atom(_, _, _, _, Remove(_), _, _) => q
+        case Atom(_, _, _, card, Replace(_), _, _) => q
+        case Atom(_, _, _, card, Remove(_), _, _)  => q
 
 
-        // Schema ------------------------------------------------------------
+        // Mapped many attributes ===============================================================
+
+        // Map Atom (tacet)
+
+        case a0@Atom(_, attr0, t, 3, value, _, gs) if attr0.last == '_' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
+            //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
+            //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
+            //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
+            //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
+            //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
+            //          case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
+            //          case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
+            //          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
+            case Qm             => q
+              .where(e, a, v, gs)
+              .in(v + "Key", a).in(v + "Value", a)
+              .func(".startsWith ^String", Seq(Var(v), Var(v + "Key")))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+              .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+              .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
+            case VarValue       => q.where(e, a, v, gs)
+            case Eq(arg :: Nil) => q.where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
+            case Eq(args)       => q.where(e, a, v, gs).orRules(v, a, args)
+            case Mapping(pairs) => {
+              if (pairs.head._1 == "_") {
+                q.where(e, a, v, gs)
+                  .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+                  .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+                  .func(".matches ^String", Seq(Var(v2), Val(".*(" + pairs.map(_._2).mkString("|") + ").*")))
+              } else if (pairs.map(_._1).distinct.size == 1) {
+                val (key: String, value1) = pairs.head
+                val values = if (pairs.size == 1) value1 else "(" + pairs.map(_._2).mkString("|") + ")"
+                q.where(e, a, v, gs)
+                  .func(".startsWith ^String", Seq(Var(v), Val(key)))
+                  .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+                  .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+                  .func(".matches ^String", Seq(Var(v2), Val(".*" + values + ".*")))
+              } else {
+                q.where(e, a, v, gs).mappings(v, a, pairs)
+              }
+            }
+            case other          => sys.error(s"[Model2Query:resolve[Map Atom]] Unresolved tacet mapped Atom_:\nAtom_   : $a\nElement: $other")
+          }
+        }
+
+        // Map Atom$ (optional)
+
+        case a0@Atom(_, attr0, t, 3, value, _, gs) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case VarValue => q.pull(e, a)
+            case other    => sys.error("[Model2Query:resolve[Map Atom]] Unresolved optional mapped Atom$:\nAtom$   : " + s"$a\nElement: $other")
+          }
+        }
+
+        // Map Atom (mandatory)
+
+        case a@Atom(_, _, t, 3, value, _, gs) => value match {
+          //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
+          //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
+          //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
+          //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
+          //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
+          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
+          //          case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
+          //          case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
+          //          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
+          case Qm             => q
+            .find("distinct", Seq(), v, gs)
+            .where(e, a, v, gs)
+            .in(v + "Key", a).in(v + "Value", a)
+            .func(".startsWith ^String", Seq(Var(v), Var(v + "Key")))
+            .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+            .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+            .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
+          case VarValue       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
+          case Eq(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
+          case Eq(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
+          case Mapping(pairs) => {
+            if (pairs.head._1 == "_") {
+              q.find("distinct", Seq(), v, gs)
+                .where(e, a, v, gs)
+                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+                .func(".matches ^String", Seq(Var(v2), Val(".*(" + pairs.map(_._2).mkString("|") + ").*")))
+            } else if (pairs.map(_._1).distinct.size == 1) {
+              val (key: String, value1) = pairs.head
+              val values = if (pairs.size == 1) value1 else "(" + pairs.map(_._2).mkString("|") + ")"
+              q.find("distinct", Seq(), v, gs)
+                .where(e, a, v, gs)
+                .func(".startsWith ^String", Seq(Var(v), Val(key)))
+                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+                .func(".matches ^String", Seq(Var(v2), Val(".*" + values + ".*")))
+            } else {
+              q.find("distinct", Seq(), v, gs).where(e, a, v, gs).mappings(v, a, pairs)
+            }
+          }
+          case other          => sys.error(s"[Model2Query:resolve[Map Atom]] Unresolved mapped Atom:\nAtom   : $a\nElement: $other")
+        }
+
+
+        // Schema =================================================================================
 
         case Atom("?", "attr_", _, _, value, _, gs) => value match {
           case Distinct                  => q.attr(e, Var(v), v1, v2, gs)
@@ -70,7 +175,9 @@ object Model2Query {
         }
 
 
-        // Enum Atom_ (in where clause but not in output) --------------------------------------------
+        // Enum ===================================================================================
+
+        // Enum Atom_ (tacet) - in where clause but not in output
 
         case a0@Atom(_, attr0, _, _, value, Some(prefix), gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
@@ -86,12 +193,66 @@ object Model2Query {
             case Eq(arg :: Nil)            => q.where(e, a, Val(prefix + arg), gs)
             case Neq(args)                 => q.enum(e, a, v, gs).compareTo("!=", a, v2, args map Val)
             case Fn("not", _)              => q.not(e, a, v, gs)
-            case other                     =>
-              sys.error(s"[Model2Query:resolve[Atom_]] Unresolved enum Atom_:\nAtom_  : $a\nElement: $other")
+            case other                     => sys.error(s"[Model2Query:resolve[Enum Atom]] Unresolved tacet enum Atom_:\nAtom_  : $a\nElement: $other")
           }
         }
 
-        // Atom_ (in where clause but not in output) --------------------------------------------
+        // Enum Atom$ (optional)
+
+        case a0@Atom(_, attr0, _, 2, value, Some(prefix), gs) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case EnumVal => q.pullEnum(e, a)
+            case other   => sys.error("[Model2Query:resolve[Enum Atom]] Unresolved optional cardinality-many enum Atom$:\nAtom$   : " + s"$a\nElement: $other")
+          }
+        }
+
+        case a0@Atom(_, attr0, _, 1, value, Some(prefix), gs) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case EnumVal => q.pullEnum(e, a)
+            case other   => sys.error("[Model2Query:resolve[Enum Atom]] Unresolved optional cardinality-one enum Atom$:\nAtom$   : " + s"$a\nElement: $other")
+          }
+        }
+
+        // Enum Atom (mandatory)
+
+        case a@Atom(_, _, _, 2, value, Some(prefix), gs) => value match {
+          case Qm                       => q.find(v2, gs).enum(e, a, v, gs).in(v, a, Some(prefix))
+          case Neq(Seq(Qm))             => q.find(v2, gs).enum(e, a, v, gs).compareTo("!=", a, v2, Var(v3), 1).in(v3, a)
+          case Lt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<", a, v2, Var(v3), 1).in(v3, a)
+          case Gt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">", a, v2, Var(v3), 1).in(v3, a)
+          case Le(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<=", a, v2, Var(v3), 1).in(v3, a)
+          case Ge(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">=", a, v2, Var(v3), 1).in(v3, a)
+          case EnumVal                  => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs)
+          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs).orRules(e, a, set.toSeq.map(prefix + _), gs)
+          case Eq(args)                 => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs).orRules(e, a, args.map(prefix + _), gs)
+          case other                    => sys.error(s"[Model2Query:resolve[Enum Atom]] Unresolved cardinality-many enum Atom:\nAtom   : $a\nElement: $other")
+        }
+
+        case a@Atom(_, _, _, 1, value, Some(prefix), gs) => value match {
+          case Qm                       => q.find(v2, gs).enum(e, a, v, gs).in(v, a, Some(prefix))
+          case Lt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<", a, v2, Var(v3), 1).in(v3, a)
+          case Gt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">", a, v2, Var(v3), 1).in(v3, a)
+          case Le(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<=", a, v2, Var(v3), 1).in(v3, a)
+          case Ge(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">=", a, v2, Var(v3), 1).in(v3, a)
+          case Neq(Seq(Qm))             => q.find(v2, gs).enum(e, a, v, gs).compareTo("!=", a, v2, Var(v3), 1).in(v3, a)
+          case EnumVal                  => q.find(v2, gs).enum(e, a, v, gs)
+          case Eq((seq: Seq[_]) :: Nil) => q.find(v2, gs).enum(e, a, v, gs).orRules(e, a, seq.map(prefix + _), gs)
+          case Eq(arg :: Nil)           => q.find(v2, gs).enum(e, a, v, gs).where(e, a, Val(prefix + arg), gs)
+          case Eq(args)                 => q.find(v2, gs).enum(e, a, v, gs).orRules(e, a, args.map(prefix + _), gs)
+          case Neq(args)                => q.find(v2, gs).enum(e, a, v, gs).compareTo("!=", a, v2, args map Val)
+          case Lt(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo("<", a, v2, Val(arg), 1)
+          case Gt(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo(">", a, v2, Val(arg), 1)
+          case Le(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo("<=", a, v2, Val(arg), 1)
+          case Ge(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo(">=", a, v2, Val(arg), 1)
+          case other                    => sys.error(s"[Model2Query:resolve[Enum Atom]] Unresolved cardinality-one enum Atom:\nAtom   : $a\nElement: $other")
+        }
+
+
+        // Atom ===================================================================================
+
+        // Atom_ (tacet)
 
         case a0@Atom(_, attr0, _, _, value, _, gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
@@ -117,37 +278,17 @@ object Model2Query {
             case Fulltext(qv :: Nil)      => q.fulltext(e, a, v, Val(qv))
             case Fulltext(qvs)            => q.orRules(v1, a, qvs, gs).fulltext(e, a, v, Var(v1))
             case other                    =>
-              sys.error(s"[Model2Query:resolve[Atom_]] Unresolved Atom_:\nAtom_  : $a\nElement: $other")
+              sys.error(s"[Model2Query:resolve[Atom]] Unresolved tacet Atom_:\nAtom_  : $a\nElement: $other")
           }
         }
 
-
-        // Enum Atom$ (optional) ------------------------------------------------------------
-
-        case a0@Atom(_, attr0, _, 2, value, Some(prefix), gs) if attr0.last == '$' => {
-          val a = a0.copy(name = attr0.init)
-          value match {
-            case EnumVal => q.pullEnum(e, a)
-            case other   => sys.error(s"[Model2Query:resolve[Enum Atom 2 optional]] Unresolved cardinality-many enum Atom:\nAtom   : $a\nElement: $other")
-          }
-        }
-
-        case a0@Atom(_, attr0, _, 1, value, Some(prefix), gs) if attr0.last == '$' => {
-          val a = a0.copy(name = attr0.init)
-          value match {
-            case EnumVal => q.pullEnum(e, a)
-            case other   => sys.error(s"[Model2Query:resolve[Enum Atom 1 optional]] Unresolved cardinality-one enum Atom:\nAtom   : $a\nElement: $other")
-          }
-        }
-
-
-        // Atom$ (optional) ------------------------------------------------------------
+        // Atom$ (optional)
 
         case a0@Atom(_, attr0, t, 2, value, _, gs) if attr0.last == '$' => {
           val a = a0.copy(name = attr0.init)
           value match {
             case VarValue => q.pull(e, a)
-            case other    => sys.error(s"[Model2Query:resolve[Atom 2 optional]] Unresolved cardinality-many Atom:\nAtom   : $a\nElement: $other")
+            case other    => sys.error("[Model2Query:resolve[Atom]] Unresolved optional cardinality-many Atom$:\nAtom$   : " + s"$a\nElement: $other")
           }
         }
 
@@ -155,96 +296,11 @@ object Model2Query {
           val a = a0.copy(name = attr0.init)
           value match {
             case VarValue => q.pull(e, a)
-            case other    => sys.error(s"[Model2Query:resolve[Atom 1 optional]] Unresolved cardinality-one Atom:\nAtom   : $a\nElement: $other")
+            case other    => sys.error("[Model2Query:resolve[Atom]] Unresolved optional cardinality-one Atom$:\nAtom$   : " + s"$a\nElement: $other")
           }
         }
 
-
-        // Map Atom (mandatory) -----------------------------------------------------------------
-
-        case a@Atom(_, _, t, 3, value, _, gs) => value match {
-          //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
-          //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
-          //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
-          //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
-          //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
-          //          case Fulltext(Seq(Qm))        => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Var(v1)).in(v1, a)
-          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
-          //          case Eq(arg :: Nil)           => q.find("distinct", Seq(), v, gs).where(e, a, Val(arg), gs).where(e, a, v, Seq())
-          //          case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
-          //          case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
-          //          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
-          //          case Fulltext(arg :: Nil)     => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(arg))
-          case Qm             => q
-            .find("distinct", Seq(), v, gs)
-            .where(e, a, v, gs)
-            .in(v + "Key", a).in(v + "Value", a)
-            .func(".startsWith ^String", Seq(Var(v), Var(v + "Key")))
-            .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
-            .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-            .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
-          case VarValue       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
-          case Eq(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
-          case Eq(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
-          case Mapping(pairs) => {
-            if (pairs.head._1 == "_") {
-              q.find("distinct", Seq(), v, gs)
-                .where(e, a, v, gs)
-                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
-                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-                .func(".matches ^String", Seq(Var(v2), Val(".*(" + pairs.map(_._2).mkString("|") + ").*")))
-            } else if (pairs.map(_._1).distinct.size == 1) {
-              val (key: String, value1) = pairs.head
-              val values = if (pairs.size == 1) value1 else "(" + pairs.map(_._2).mkString("|") + ")"
-              q.find("distinct", Seq(), v, gs)
-                .where(e, a, v, gs)
-                .func(".startsWith ^String", Seq(Var(v), Val(key)))
-                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
-                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-                .func(".matches ^String", Seq(Var(v2), Val(".*" + values + ".*")))
-            } else
-              q.find("distinct", Seq(), v, gs).where(e, a, v, gs).mappings(v, a, pairs)
-          }
-          case other          => sys.error(s"[Model2Query:resolve[Atom 3]] Unresolved mapped Atom:\nAtom   : $a\nElement: $other")
-        }
-
-
-        // Enum Atom (mandatory) ------------------------------------------------------------
-
-        case a@Atom(_, _, _, 2, value, Some(prefix), gs) => value match {
-          case Qm                       => q.find(v2, gs).enum(e, a, v, gs).in(v, a, Some(prefix))
-          case Neq(Seq(Qm))             => q.find(v2, gs).enum(e, a, v, gs).compareTo("!=", a, v2, Var(v3), 1).in(v3, a)
-          case Lt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<", a, v2, Var(v3), 1).in(v3, a)
-          case Gt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">", a, v2, Var(v3), 1).in(v3, a)
-          case Le(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<=", a, v2, Var(v3), 1).in(v3, a)
-          case Ge(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">=", a, v2, Var(v3), 1).in(v3, a)
-          case EnumVal                  => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs)
-          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs).orRules(e, a, set.toSeq.map(prefix + _), gs)
-          case Eq(args)                 => q.find("distinct", Seq(), v2, gs).enum(e, a, v, gs).orRules(e, a, args.map(prefix + _), gs)
-          case other                    => sys.error(s"[Model2Query:resolve[Enum Atom 2]] Unresolved cardinality-many enum Atom:\nAtom   : $a\nElement: $other")
-        }
-
-        case a@Atom(_, _, _, 1, value, Some(prefix), gs) => value match {
-          case Qm                       => q.find(v2, gs).enum(e, a, v, gs).in(v, a, Some(prefix))
-          case Lt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<", a, v2, Var(v3), 1).in(v3, a)
-          case Gt(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">", a, v2, Var(v3), 1).in(v3, a)
-          case Le(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo("<=", a, v2, Var(v3), 1).in(v3, a)
-          case Ge(Qm)                   => q.find(v2, gs).enum(e, a, v, gs).compareTo(">=", a, v2, Var(v3), 1).in(v3, a)
-          case Neq(Seq(Qm))             => q.find(v2, gs).enum(e, a, v, gs).compareTo("!=", a, v2, Var(v3), 1).in(v3, a)
-          case EnumVal                  => q.find(v2, gs).enum(e, a, v, gs)
-          case Eq((seq: Seq[_]) :: Nil) => q.find(v2, gs).enum(e, a, v, gs).orRules(e, a, seq.map(prefix + _), gs)
-          case Eq(arg :: Nil)           => q.find(v2, gs).enum(e, a, v, gs).where(e, a, Val(prefix + arg), gs)
-          case Eq(args)                 => q.find(v2, gs).enum(e, a, v, gs).orRules(e, a, args.map(prefix + _), gs)
-          case Neq(args)                => q.find(v2, gs).enum(e, a, v, gs).compareTo("!=", a, v2, args map Val)
-          case Lt(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo("<", a, v2, Val(arg), 1)
-          case Gt(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo(">", a, v2, Val(arg), 1)
-          case Le(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo("<=", a, v2, Val(arg), 1)
-          case Ge(arg)                  => q.find(v2, gs).enum(e, a, v, gs).compareTo(">=", a, v2, Val(arg), 1)
-          case other                    => sys.error(s"[Model2Query:resolve[Enum Atom 1]] Unresolved cardinality-one enum Atom:\nAtom   : $a\nElement: $other")
-        }
-
-
-        // Atom (mandatory) -----------------------------------------------------------------
+        // Atom (mandatory)
 
         case a@Atom(_, _, t, 2, value, _, gs) => value match {
           case Qm                       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).in(v, a)
@@ -262,7 +318,7 @@ object Model2Query {
           case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
           case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
           case Fulltext(arg :: Nil)     => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(arg))
-          case other                    => sys.error(s"[Model2Query:resolve[Atom 2]] Unresolved cardinality-many Atom:\nAtom   : $a\nElement: $other")
+          case other                    => sys.error(s"[Model2Query:resolve[Atom]] Unresolved cardinality-many Atom:\nAtom   : $a\nElement: $other")
         }
 
         case a@Atom(_, _, t, 1, value, _, gs) => value match {
@@ -295,11 +351,11 @@ object Model2Query {
           case Length(Some(Fn(fn, Some(i)))) => q.find(v2, gs).where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2)
           case Length(Some(Fn(fn, _)))       => q.find(fn, Seq(), v2, gs).where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2)
           case Length(_)                     => q.find(v2, gs).where(e, a, v, gs).cast(v, v1).func("count", Var(v1), v2)
-          case other                         => sys.error(s"[Model2Query:resolve[Atom 1]] Unresolved cardinality-one Atom:\nAtom   : $a\nElement: $other")
+          case other                         => sys.error(s"[Model2Query:resolve[Atom]] Unresolved cardinality-one Atom:\nAtom   : $a\nElement: $other")
         }
 
 
-        // Bond -----------------------------------------------------------------
+        // Bond ===================================================================================
 
         case Bond(ns, refAttr, refNs) => q.ref(e, ns, refAttr, v, refNs)
 
@@ -308,7 +364,7 @@ object Model2Query {
         case ReBond(backRef, refAttr, refNs, _, _) => q.ref(e, backRef, refAttr, v, refNs)
 
 
-        // Meta -----------------------------------------------------------------
+        // Meta ===================================================================================
 
         case Meta(_, _, "e", _, Fn("count", Some(i)))   => q.find("count", Seq(i), e, Seq())
         case Meta(_, _, "e", _, Fn("count", _))         => q.find("count", Seq(), e, Seq())
