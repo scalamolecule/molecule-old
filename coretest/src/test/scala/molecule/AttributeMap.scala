@@ -75,9 +75,7 @@ class AttributeMap extends CoreSpec {
     )
 
     // Key
-//    Ns.int.apply(1).debug
-//    Ns.int.strMap.apply("en").debug
-    Ns.int.strMap.apply("en").get === List(
+    Ns.int.strMap("en").get === List(
       (1, Map("en" -> "Hi there")),
       (2, Map("en" -> "Hi")),
       (3, Map("en" -> "Hello"))

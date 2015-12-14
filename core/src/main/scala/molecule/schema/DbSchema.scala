@@ -14,7 +14,7 @@ object Db extends Db_0 {
 }
 
 trait Db {
-  class valueType[Ns, In] extends OneString[Ns, In] with Indexed
+  class valueType[Ns, In] extends OneString[Ns, In]
 }
 
 trait Db_0 extends Db with Out_0[Db_0, Db_1, Db_In_1_0, Db_In_1_1] {
