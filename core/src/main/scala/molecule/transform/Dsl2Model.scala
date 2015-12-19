@@ -16,7 +16,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     tree, (t: Tree) => abort(s"[Dsl2Model:resolve] Unexpected tree: $t\nRAW: ${showRaw(t)}"))
 
   def traverse(prev: Tree, element: Element): Seq[Element] = {
-//    x(1, prev, element)
+    //    x(1, prev, element)
     if (prev.isAttr || prev.symbol.isMethod) resolve(prev) :+ element else Seq(element)
   }
 
@@ -80,9 +80,10 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // Optional ----------------------
 
-    case a@q"$prev.$cur" if a.isEnum$      => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
-    case a@q"$prev.$cur" if a.isMapAttr$   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), 3, VarValue, Some("mapping")))
-    case a@q"$prev.$cur" if a.isValueAttr$ => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
+    case a@q"$prev.$refAttr" if a.isRefAttr$ => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
+    case a@q"$prev.$cur" if a.isEnum$        => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
+    case a@q"$prev.$cur" if a.isMapAttr$     => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), 3, VarValue, Some("mapping")))
+    case a@q"$prev.$cur" if a.isValueAttr$   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
 
 
     // Generic -----------------------------
@@ -172,7 +173,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     }
     val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nested)
     val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
-//    x(28, prev, parentNs, nestedElems, group, refNext)
+    //    x(28, prev, parentNs, nestedElems, group, refNext)
     group
   }
 

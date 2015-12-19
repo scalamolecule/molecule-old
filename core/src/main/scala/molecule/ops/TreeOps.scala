@@ -33,6 +33,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     def isAttr = tpe <:< typeOf[Attr]
 
+    def isRefAttr$ = tpe <:< weakTypeOf[RefAttr$]
     def isRefAttr = tpe <:< weakTypeOf[RefAttr[_, _]]
     def isOneRefAttr = tpe <:< weakTypeOf[OneRefAttr[_, _]]
     def isManyRefAttr = tpe <:< weakTypeOf[ManyRefAttr[_, _]]

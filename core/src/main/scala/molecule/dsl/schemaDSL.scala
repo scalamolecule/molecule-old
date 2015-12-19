@@ -193,8 +193,9 @@ object schemaDSL {
 
   // Optionals
 
-  trait OneRefAttr$  extends Attr
-  trait ManyRefAttr$ extends Attr
+  trait RefAttr$ extends Attr
+  trait OneRefAttr$  extends RefAttr$
+  trait ManyRefAttr$ extends RefAttr$
 
   trait MapAttr$[T] extends Attr
 

@@ -25,11 +25,12 @@ object MoleculeBoilerplate {
     val attrClean: String
     val clazz    : String
     val tpe      : String
+    val options  : Seq[Optional]
   }
   case class Val(attr: String, attrClean: String, clazz: String, tpe: String, baseTpe: String, datomicTpe: String, options: Seq[Optional] = Seq()) extends Attr
-  case class Enum(attr: String, attrClean: String, clazz: String, tpe: String, baseTpe: String, enums: Seq[String]) extends Attr
-  case class Ref(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, refNs: String) extends Attr
-  case class BackRef(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, backRef: String) extends Attr
+  case class Enum(attr: String, attrClean: String, clazz: String, tpe: String, baseTpe: String, enums: Seq[String], options: Seq[Optional] = Seq()) extends Attr
+  case class Ref(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, refNs: String, options: Seq[Optional] = Seq()) extends Attr
+  case class BackRef(attr: String, attrClean: String, clazz: String, clazz2: String, tpe: String, baseTpe: String, backRef: String, options: Seq[Optional] = Seq()) extends Attr
 
   case class Optional(datomicKeyValue: String, clazz: String)
 
@@ -137,17 +138,17 @@ object MoleculeBoilerplate {
       case r"mapUUID(.*)$str"    => Val(attr, attrClean, "ManyString", "Map[String, java.util.UUID]", "java.util.UUID", "string", parseOptions(str))
       case r"mapURI(.*)$str"     => Val(attr, attrClean, "ManyString", "Map[String, java.net.URI]", "java.net.URI", "string", parseOptions(str))
 
-      case r"oneEnum\((.*)$enums\)"  => Enum(attr, attrClean, "OneEnum", "String", "", enums.replaceAll("'", "").split(",").toList.map(_.trim))
-      case r"manyEnum\((.*)$enums\)" => Enum(attr, attrClean, "ManyEnums", "Set[String]", "String", enums.replaceAll("'", "").split(",").toList.map(_.trim))
+      case r"oneEnum\((.*?)$enums\)(.*)$str"  => Enum(attr, attrClean, "OneEnum", "String", "", enums.replaceAll("'", "").split(",").toList.map(_.trim), parseOptions(str))
+      case r"manyEnum\((.*?)$enums\)(.*)$str" => Enum(attr, attrClean, "ManyEnums", "Set[String]", "String", enums.replaceAll("'", "").split(",").toList.map(_.trim), parseOptions(str))
 
-      case r"one\[\w*Definition\.([a-z].*)$partref\](.*)$str"  => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
-      case r"one\[([a-z].*)$partref\](.*)$str"                 => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"))
-      case r"one\[(.*)$ref\](.*)$str" if curPart.isEmpty       => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", ref)
-      case r"one\[(.*)$ref\](.*)$str"                          => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", curPart + "_" + ref)
-      case r"many\[\w*Definition\.([a-z].*)$partref\](.*)$str" => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
-      case r"many\[([a-z].*)$partref\](.*)$str"                => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"))
-      case r"many\[(.*)$ref\](.*)$str" if curPart.isEmpty      => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ref)
-      case r"many\[(.*)$ref\](.*)$str"                         => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", curPart + "_" + ref)
+      case r"one\[\w*Definition\.([a-z].*)$partref\](.*)$str"  => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"), parseOptions(str))
+      case r"one\[([a-z].*)$partref\](.*)$str"                 => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", partref.replace(".", "_"), parseOptions(str))
+      case r"one\[(.*)$ref\](.*)$str" if curPart.isEmpty       => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", ref, parseOptions(str))
+      case r"one\[(.*)$ref\](.*)$str"                          => Ref(attr, attrClean, "OneRefAttr", "OneRef", "Long", "", curPart + "_" + ref, parseOptions(str))
+      case r"many\[\w*Definition\.([a-z].*)$partref\](.*)$str" => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"), parseOptions(str))
+      case r"many\[([a-z].*)$partref\](.*)$str"                => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", partref.replace(".", "_"), parseOptions(str))
+      case r"many\[(.*)$ref\](.*)$str" if curPart.isEmpty      => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", ref, parseOptions(str))
+      case r"many\[(.*)$ref\](.*)$str"                         => Ref(attr, attrClean, "ManyRefAttr", "ManyRef", "Set[Long]", "Long", curPart + "_" + ref, parseOptions(str))
 
       case unexpected => sys.error(s"Unexpected attribute code in ${defFile.getName}:\n" + unexpected)
     }
@@ -181,14 +182,14 @@ object MoleculeBoilerplate {
     val newNss1 = definition.nss.foldLeft(definition.nss) { case (nss2, ns) =>
       // Gather OneRefs (ManyRefs are treated as nested data structures)
       val refs1 = ns.attrs.collect {
-        case ref@Ref(_, refAttr, clazz, _, _, _, refNs) => refNs -> ref
+        case ref@Ref(_, refAttr, clazz, _, _, _, refNs, _) => refNs -> ref
       }.toMap
 
       // Add BackRefs
       nss2.map {
         case ns2 if refs1.nonEmpty && refs1.keys.toList.contains(ns2.ns) =>
           val attrs2 = refs1.foldLeft(ns2.attrs) { case (attrs, ref) =>
-            val Ref(_, refAttr, clazz, _, tpe, _, _) = ref._2
+            val Ref(_, refAttr, clazz, _, tpe, _, _, _) = ref._2
             val cleanNs = if (ns.ns.contains('_')) ns.ns.split("_").tail.head else ns.ns
             val backRef = BackRef(s"_$cleanNs", ns.ns, "BackRefAttr", "BackRef", tpe, "", "") // todo: check not to backreference same-named namespaces in different partitions
             //            val backRef = BackRef(s"_${ns.ns}", ns.ns, "BackRefAttr", "BackRef", tpe, "", "")
@@ -214,8 +215,8 @@ object MoleculeBoilerplate {
       val stmts = a match {
         case Val(_, _, clazz, _, _, t, options) if clazz.take(3) == "One" => Seq(tpe(t), card("one")) ++ options.map(_.datomicKeyValue)
         case Val(_, _, _, _, _, t, options)                               => Seq(tpe(t), card("many")) ++ options.map(_.datomicKeyValue)
-        case a: Attr if a.clazz.take(3) == "One"                          => Seq(tpe("ref"), card("one"))
-        case a: Attr                                                      => Seq(tpe("ref"), card("many"))
+        case a: Attr if a.clazz.take(3) == "One"                          => Seq(tpe("ref"), card("one")) ++ a.options.map(_.datomicKeyValue)
+        case a: Attr                                                      => Seq(tpe("ref"), card("many")) ++ a.options.map(_.datomicKeyValue)
         case unexpected                                                   => sys.error(s"Unexpected attribute statement:\n" + unexpected)
       }
       val all = (ident +: stmts) ++ Seq(
@@ -291,7 +292,7 @@ object MoleculeBoilerplate {
     }
 
     val (attrVals, attrVals_) = attrs.flatMap {
-      case BackRef(_, _, _, _, _, _, _) => None
+      case BackRef(_, _, _, _, _, _, _, _) => None
       case a                            => {
         val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
         val p3 = padS(maxTpe, tpe)
@@ -349,7 +350,7 @@ object MoleculeBoilerplate {
     }.unzip
 
     val attrValsOpt = attrs.flatMap {
-      case BackRef(_, _, _, _, _, _, _) => None
+      case BackRef(_, _, _, _, _, _, _, _) => None
       case a                            => {
         val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
         val p1 = padS(maxAttr, attr)
@@ -375,14 +376,14 @@ object MoleculeBoilerplate {
     }
 
     val (maxClazz2, maxRefNs, maxNs) = attrs.map {
-      case Ref(_, _, _, clazz2, _, _, refNs)       => (clazz2.length, refNs.length, 0)
-      case BackRef(_, clazz2, _, _, _, _, backRef) => (clazz2.length, backRef.length, ns.length)
+      case Ref(_, _, _, clazz2, _, _, refNs, _)       => (clazz2.length, refNs.length, 0)
+      case BackRef(_, clazz2, _, _, _, _, backRef, _) => (clazz2.length, backRef.length, ns.length)
       case other                                   => (0, 0, 0)
     }.unzip3
 
     val maxAttr0 = attrs.map(_.attr.length).max
     val refCode = attrs.foldLeft(Seq("")) {
-      case (acc, Ref(attr, _, _, clazz2, _, _, refNs))      => {
+      case (acc, Ref(attr, _, _, clazz2, _, _, refNs, _))      => {
         val p1 = padS(maxAttr0, attr)
         val p2 = padS("ManyRef".length, clazz2)
         val p3 = padS(maxRefNs.max, refNs)
@@ -394,7 +395,7 @@ object MoleculeBoilerplate {
         }
         acc :+ s"def ${attr.capitalize} $p1: $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
       }
-      case (acc, BackRef(backAttr, backRef, _, _, _, _, _)) =>
+      case (acc, BackRef(backAttr, backRef, _, _, _, _, _, _)) =>
         val p1 = padS(maxAttr0, backAttr)
         val p2 = padS(maxClazz2.max, backRef)
         val ref = (in, out) match {
@@ -491,12 +492,12 @@ object MoleculeBoilerplate {
         Some(s"class $attr${p1(attr)}[Ns, In] extends MapAttr${p2("MapAttr")}[Ns, In]")
       case Val(attr, _, clazz, _, _, _, _) =>
         Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]")
-      case Enum(attr, _, clazz, _, _, enums) =>
-        val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
+      case Enum(attr, _, clazz, _, _, enums, _) =>
+        val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue"
         Some( s"""class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In] { $enumValues }""")
-      case Ref(attr, _, clazz, _, _, _, _) =>
+      case Ref(attr, _, clazz, _, _, _, _, _) =>
         Some(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]")
-      case BackRef(backAttr, _, clazz, _, _, _, _) => None
+      case BackRef(backAttr, _, clazz, _, _, _, _, _) => None
     }.mkString("\n  ").trim
 
     val attrClassesOpt = attrs.flatMap {
@@ -504,12 +505,12 @@ object MoleculeBoilerplate {
         Some(s"class $attrClean$$${p1(attrClean)} extends MapAttr$$${p2("MapAttr$")} [$tpe]")
       case Val(attr, attrClean, clazz, _, _, _, _) =>
         Some(s"class $attrClean$$${p1(attrClean)} extends $clazz$$${p2(clazz)}")
-      case Enum(attr, attrClean, clazz, _, _, enums) =>
-        val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue "
+      case Enum(attr, attrClean, clazz, _, _, enums, _) =>
+        val enumValues = s"private lazy val ${enums.mkString(", ")} = EnumValue"
         Some( s"""class $attrClean$$${p1(attrClean)} extends $clazz$$${p2(clazz)} { $enumValues }""")
-      case Ref(attr, attrClean, clazz, _, _, _, _) =>
+      case Ref(attr, attrClean, clazz, _, _, _, _, _) =>
         Some(s"class $attrClean$$${p1(attrClean)} extends $clazz$$${p2(clazz)}")
-      case BackRef(backAttr, _, clazz, _, _, _, _) => None
+      case BackRef(backAttr, _, clazz, _, _, _, _, _) => None
     }.mkString("\n  ").trim
 
     val nsArities = d.nss.map(ns => ns.ns -> ns.attrs.size).toMap
