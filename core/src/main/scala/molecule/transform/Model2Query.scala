@@ -443,7 +443,9 @@ object Model2Query {
     // Process And-semantics (self-joins)
     def postProcess(q: Query) = {
       val andAtoms: Seq[Atom] = model.elements.collect { case a@Atom(_, _, _, _, And(andValues), _, _) => a }
-      if (andAtoms.size > 1) sys.error("[Model2Query:postProcess] For now, only 1 And-expression can be used. Found: " + andAtoms)
+      if (andAtoms.size > 1)
+        sys.error("[Model2Query:postProcess] For now, only 1 And-expression can be used. Found: " + andAtoms)
+
       if (andAtoms.size == 1) {
         val clauses = q.wh.clauses
         val andAtom = andAtoms.head
@@ -475,7 +477,7 @@ object Model2Query {
           }
           def clause(cl: Clause) = cl match {
             case dc: DataClause => dataCls(dc)
-            case other          => resolve(other)
+            case other          => resolve(other).get
           }
           def dataCls(dc: DataClause) = dc match {
             case DataClause(ds, e, a@KW(ns2, attr2, _), v, tx, op) if (ns, attr) ==(ns2, attr2) =>
@@ -490,12 +492,13 @@ object Model2Query {
               // Add i to variables
               DataClause(ds, vi(e), a, queryValue(v), queryTerm(tx), queryTerm(op))
           }
-          def resolve(expr: QueryExpr): Clause = expr match {
-            case dc@DataClause(ds, e, a, v, tx, op) => dataCls(dc)
-            case RuleInvocation(name, args)         => RuleInvocation(name, args map queryTerm)
-            case Funct(name, ins, outs)             => Funct(name, ins map queryTerm, binding(outs))
+          def resolve(expr: QueryExpr): Option[Clause] = expr match {
+            case dc@DataClause(ds, e, a, v, tx, op)                    => Some(dataCls(dc))
+            case RuleInvocation(name, args)                            => Some(RuleInvocation(name, args map queryTerm))
+            case Funct(".startsWith ^String", List(v, key), NoBinding) => None // No need to unify key
+            case Funct(name, ins, outs)                                => Some(Funct(name, ins map queryTerm, binding(outs)))
           }
-          clauses map resolve
+          clauses flatMap resolve
         }
         q.copy(wh = Where(q.wh.clauses ++ selfJoinClauses))
       } else q

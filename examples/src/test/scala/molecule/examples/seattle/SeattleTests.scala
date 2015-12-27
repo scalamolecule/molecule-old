@@ -9,6 +9,7 @@ import molecule.schema._
 import shapeless._
 
 import scala.language.reflectiveCalls
+import scala.language.postfixOps
 
 
 class SeattleTests extends SeattleSpec {

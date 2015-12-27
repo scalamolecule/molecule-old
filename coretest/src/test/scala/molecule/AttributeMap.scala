@@ -94,6 +94,12 @@ class AttributeMap extends CoreSpec {
       Map("en" -> "Hi"),
       Map("en" -> "Hello")
     )
+    // Or return only the values
+    Ns.e.strMap("en").get.map(_._2("en")) === List(
+      "Hi there",
+      "Hi",
+      "Hello"
+    )
 
     // Keys
     Ns.int.strMap("en", "fr").get === List(
@@ -181,6 +187,22 @@ class AttributeMap extends CoreSpec {
 
     // Int values of entities with an english or french value
     Ns.int.strMap_("fr", "da").get === List(2, 4)
+  }
+
+
+  "Key with AND expression of ref attribute" in new CoreSetup {
+
+    m(Ns.strMap.Refs1 * Ref1.int1) insert List(
+      (Map("en" -> "Hi there"), List(1, 2)),
+      (Map("fr" -> "Bonjour", "en" -> "Oh, Hi"), List(1, 2)),
+      (Map("en" -> "Hello"), List(2, 3)),
+      (Map("da" -> "Hej"), List(3, 4))
+    )
+
+    Ns.e.strMap("en").Refs1.int1_(1 and 2).get.map(_._2("en")) === List(
+      "Hi there",
+      "Oh, Hi"
+    )
   }
 
 
