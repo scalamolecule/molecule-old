@@ -81,6 +81,20 @@ class AttributeMap extends CoreSpec {
       (3, Map("en" -> "Hello"))
     )
 
+    // OBS: Since a map is returned, only one `en` key is possible and therefore also only one value.
+    // The key-value pairs are coalesced to one (random) key-value and therefore not suitable like this:
+    Ns.strMap("en").get === List(
+      Map("en" -> "Hi")
+    )
+    // Instead, add another attribute, for instance the neutral and always present entity id `e`
+    // and filter on the results afterwards.
+    // Note that if another attribute is picked, only present values are returned.
+    Ns.e.strMap("en").get.map(_._2) === List(
+      Map("en" -> "Hi there"),
+      Map("en" -> "Hi"),
+      Map("en" -> "Hello")
+    )
+
     // Keys
     Ns.int.strMap("en", "fr").get === List(
       (1, Map("en" -> "Hi there")),
