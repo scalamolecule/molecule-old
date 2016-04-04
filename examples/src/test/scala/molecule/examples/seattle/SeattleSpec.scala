@@ -7,6 +7,8 @@ import molecule.examples.seattle.schema.SeattleSchema
 import molecule.util.MoleculeSpec
 import org.specs2.specification.Scope
 
+//import org.specs2.control.NoLanguageFeatures
+
 
 trait SeattleSpec extends MoleculeSpec with DatomicFacade {
 
@@ -28,6 +30,7 @@ trait SeattleSpec extends MoleculeSpec with DatomicFacade {
     conn
   }
 
+//  class SeattleSetup extends Scope with NoLanguageFeatures with DatomicFacade {
   class SeattleSetup extends Scope with DatomicFacade {
     implicit val conn = load(SeattleSchema)
     // Insert data

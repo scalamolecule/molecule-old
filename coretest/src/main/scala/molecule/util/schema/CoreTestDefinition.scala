@@ -16,6 +16,7 @@ object CoreTestDefinition {
     val uuid    = oneUUID
     val uri     = oneURI
     val enum    = oneEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
+    val parent  = one[Ns]
     val ref1    = one[Ref1]
     val refSub1 = one[Ref1].subComponent
 
@@ -29,6 +30,7 @@ object CoreTestDefinition {
     val uuids    = manyUUID
     val uris     = manyURI
     val enums    = manyEnum('enum0, 'enum1, 'enum2, 'enum3, 'enum4, 'enum5, 'enum6, 'enum7, 'enum8, 'enum9)
+    val parents  = many[Ns]
     val refs1    = many[Ref1]
     val refsSub1 = many[Ref1].subComponents
 

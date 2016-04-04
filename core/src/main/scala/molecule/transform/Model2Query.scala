@@ -386,9 +386,9 @@ object Model2Query {
         case Atom(ns, attr, "a", _, _, _, _)                          => (resolve(query, e, v, element), e, w, ns, attr, "")
         case Atom(ns, attr, "ns", _, _, _, _)                         => (resolve(query, e, v, element), e, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _) if prevRefNs == "IndexVal" => (resolve(query, e, w, element), e, w, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _, _) if ns == prevNs            => (resolve(query, e, w, element), e, w, ns, attr, "")
-        case Atom(ns, attr, _, _, _, _, _) if ns == prevAttr          => (resolve(query, v, w, element), v, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _) if ns == prevRefNs         => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _) if ns == prevAttr          => (resolve(query, v, w, element), v, w, ns, attr, "")
+        case Atom(ns, attr, _, _, _, _, _) if ns == prevNs            => (resolve(query, e, w, element), e, w, ns, attr, "")
         case Atom(ns, attr, _, _, _, _, _)                            => (resolve(query, e, v, element), e, v, ns, attr, "")
 
         case Bond(ns, refAttr, refNs) if ns == prevNs    => (resolve(query, e, w, element), e, w, ns, refAttr, refNs)

@@ -8,6 +8,8 @@ import molecule.ast.transaction._
 import molecule.transform.{Model2Transaction, Query2String}
 import org.specs2.mutable._
 
+import scala.language.postfixOps
+
 
 trait MoleculeSpec extends Specification with DatomicFacade {
 

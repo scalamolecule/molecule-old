@@ -226,4 +226,16 @@ object schemaDSL {
   trait Enum$
   trait OneEnum$   extends Enum$
   trait ManyEnums$ extends Enum$
+
+  // Attribute options
+  case class Doc(msg: String)
+  trait UniqueValue
+  trait UniqueIdentity
+  trait Indexed
+  trait FulltextSearch[Ns, In] {
+    def contains(that: String): Ns with Attr = ???
+    def contains(in: ?) : In with Attr = ???
+  }
+  trait IsComponent
+  trait NoHistory
 }

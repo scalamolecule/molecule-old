@@ -167,6 +167,14 @@ class Relations extends CoreSpec {
       ("b", 2))
   }
 
+  "Self-refs" in new CoreSetup {
+    m(Ns.str.Parent.str) insert List(("child", "parent"))
+    m(Ns.str.Parent.str).get === List(("child", "parent"))
+
+    m(Ns.str.Parents * Ns.str) insert List(("child", List("parent1", "parent2")))
+    m(Ns.str.Parents * Ns.str).get === List(("child", List("parent1", "parent2")))
+    m(Ns.str.Parents.str).get === List(("child", "parent1"), ("child", "parent2"))
+  }
 
   "Molecule has to end with attribute" >> {
 

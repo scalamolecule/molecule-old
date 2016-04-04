@@ -134,14 +134,14 @@ trait DatomicFacade extends ArgProperties {
 //        x(2, model, transformer.stmtsModel, dataRows, stmtss)
 //        x(2, model, transformer.stmtsModel, stmtss)
 //        x(2, transformer.stmtsModel, stmtss)
-    Tx(conn, transformer, stmtss)
+    Tx(conn, stmtss)
   }
 
   protected[molecule] def save(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmts = transformer.saveStmts()
     //        x(2, model, transformer.stmtsModel, stmts)
-    Tx(conn, transformer, Seq(stmts))
+    Tx(conn, Seq(stmts))
   }
 
   protected[molecule] def update(conn: Connection, model: Model): Tx = {
@@ -149,14 +149,14 @@ trait DatomicFacade extends ArgProperties {
     val stmts = transformer.updateStmts()
     //        x(3, model, transformer.stmtsModel, stmts)
 //            x(3, transformer.stmtsModel, stmts)
-    Tx(conn, transformer, Seq(stmts))
+    Tx(conn, Seq(stmts))
   }
 }
 
 object DatomicFacade extends DatomicFacade
 
 
-case class Tx(conn: Connection, transformer: Model2Transaction, stmtss: Seq[Seq[Statement]]) {
+case class Tx(conn: Connection, stmtss: Seq[Seq[Statement]]) {
   private val x = Debug("Tx", 1, 99, false, 3)
 
   val flatStmts = stmtss.flatten.map {

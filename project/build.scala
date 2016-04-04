@@ -60,10 +60,14 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
 //    }
     )
   )
+//  Error:scalac: ambiguous implicit values:
+//   both value postfixOps in object language of type => languageFeature.postfixOps
+//   and value postfixOpsAreAllowed in trait LanguageFeatures of type => languageFeature.postfixOps
+//   match expected type scala.languageFeature.postfixOps
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "org.scalamolecule",
-    version := "0.5.1-SNAPSHOT",
+    version := "0.5.1",
     scalaVersion := "2.11.7",
     scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
     resolvers ++= Seq(
@@ -74,7 +78,7 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     ),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.datomic" % "datomic-free" % "0.9.5327",
+      "com.datomic" % "datomic-free" % "0.9.5350",
       "com.chuusai" %% "shapeless" % "2.0.0",
       "org.scalaz" %% "scalaz-core" % "7.1.3",
       "net.liftweb" %% "lift-json" % "3.0-M6",

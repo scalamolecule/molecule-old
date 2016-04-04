@@ -207,7 +207,7 @@ package object molecule {
 
 
   // Todo - should we have this one somewhere else?
-  // Runtime organizing of optional values
+  // Runtime organizing of mapped values
   implicit class MapAttr2MapOps[T](mapAttr: Option[Map[String, T]]) {
 
     def at(key: String): Option[T] = mapAttr.flatMap(_.get(key))
