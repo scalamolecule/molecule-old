@@ -30,6 +30,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
     def isRef = tpe <:< weakTypeOf[Ref[_, _]]
     def isOneRef = tpe <:< weakTypeOf[OneRef[_, _]]
     def isManyRef = tpe <:< weakTypeOf[ManyRef[_, _]]
+    def refCard = if(tpe <:< weakTypeOf[ManyRef[_, _]]) 2 else 1
 
     def isAttr = tpe <:< typeOf[Attr]
 
@@ -40,7 +41,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _, _]]
     def isValueAttr$ = tpe <:< weakTypeOf[ValueAttr$[_]]
-    def isMapAttr = tpe <:< weakTypeOf[MapAttr[_, _]]
+    def isMapAttr = tpe <:< weakTypeOf[MapAttr[_, _, _, _]]
     def isMapAttr$ = tpe <:< weakTypeOf[MapAttr$[_]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
     def isMany = tpe <:< weakTypeOf[Many[_, _, _, _]]

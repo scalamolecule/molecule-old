@@ -12,7 +12,7 @@ class Input extends CoreSpec {
 
   // Input-molecules have the benefit that you can assign them to a variable
   // and then re-use them with various input values. This also allows Datomic
-  // to cache and optimize the query and thereby increase runtime performance.
+  // to cache and optimize the query and thereby improve runtime performance.
 
 
   "Introduction" in new CoreSetup {
@@ -486,7 +486,7 @@ class Input extends CoreSpec {
   }
 
   "2 input parameters" >> {
-    // todo
+    // todo: also AND semantics of supplying tuples of values
     ok
   }
 

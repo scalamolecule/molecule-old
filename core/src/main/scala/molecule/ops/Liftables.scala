@@ -179,9 +179,10 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
   }
 
   implicit val liftAtom       = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))" }
-  implicit val liftBond       = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs})" }
+  implicit val liftBond       = Liftable[Bond] { b => q"Bond(${b.ns}, ${b.refAttr}, ${b.refNs}, ${b.card})" }
   implicit val liftReBond     = Liftable[ReBond] { r => q"ReBond(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.distinct}, ${r.prevVar})" }
   implicit val liftTransitive = Liftable[Transitive] { r => q"Transitive(${r.backRef}, ${r.refAttr}, ${r.refNs}, ${r.depth}, ${r.prevVar})" }
+//  implicit val liftSelf       = Liftable[Self] { r => q"Self" }
   implicit val liftMeta       = Liftable[Meta] { m => q"Meta(${m.ns}, ${m.attr}, ${m.kind}, ${m.generic}, ${m.value})" }
   implicit val liftGroup      = Liftable[Group] { g0 =>
     val es0 = g0.elements map {
@@ -189,6 +190,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
       case b: Bond       => q"$b"
       case r: ReBond     => q"$r"
       case r: Transitive => q"$r"
+      case Self          => q"Self"
       case m: Meta       => q"$m"
       case g1: Group     => {
         val es1 = g1.elements map {
@@ -196,6 +198,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
           case b: Bond       => q"$b"
           case r: ReBond     => q"$r"
           case r: Transitive => q"$r"
+          case Self          => q"Self"
           case m: Meta       => q"$m"
         }
         q"Group(${g1.ref}, Seq(..$es1))"
@@ -214,6 +217,7 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
       case b: Bond       => q"$b"
       case r: ReBond     => q"$r"
       case r: Transitive => q"$r"
+      case Self          => q"Self"
       case g: Group      => q"$g"
       case m: Meta       => q"$m"
       case t: TxModel    => q"$t"
@@ -223,9 +227,10 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
 
   implicit val liftElement = Liftable[Element] {
     case Atom(ns, name, tpeS, card, value, enumPrefix, tx)   => q"Atom($ns, $name, $tpeS, $card, $value, $enumPrefix, Seq(..$tx))"
-    case Bond(ns, refAttr, refNs)                            => q"Bond($ns, $refAttr, $refNs)"
+    case Bond(ns, refAttr, refNs, card)                      => q"Bond($ns, $refAttr, $refNs, $card)"
     case ReBond(backRef, refAttr, refNs, distinct, prevVar)  => q"ReBond($backRef, $refAttr, $refNs, $distinct, $prevVar)"
     case Transitive(backRef, refAttr, refNs, level, prevVar) => q"Transitive($backRef, $refAttr, $refNs, $level, $prevVar)"
+    case Self                                                => q"Self"
     case Group(ref, elements)                                => q"Group($ref, $elements)"
     case Meta(ns, attr, kind, generic, value)                => q"Meta($ns, $attr, $kind, $generic, $value)"
     case TxModel(elements)                                   => q"TxModel($elements)"

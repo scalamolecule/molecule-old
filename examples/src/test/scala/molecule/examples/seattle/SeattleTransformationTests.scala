@@ -145,8 +145,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.Neighborhood.District.region_("ne")) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Bond("community", "neighborhood", "neighborhood"),
-        Bond("neighborhood", "district", "district"),
+        Bond("community", "neighborhood", "neighborhood", 1),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "region_", "String", 1, Eq(List("ne")), Some(":district.region/")))
       ) -->
       Query(
@@ -169,8 +169,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.Neighborhood.District.region) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Bond("community", "neighborhood", "neighborhood"),
-        Bond("neighborhood", "district", "district"),
+        Bond("community", "neighborhood", "neighborhood", 1),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "region", "String", 1, EnumVal, Some(":district.region/")))
       ) -->
       Query(
@@ -799,8 +799,8 @@ class SeattleTransformationTests extends SeattleSpec {
     m(Community.name.Neighborhood.District.region("ne" or "sw")) -->
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
-        Bond("community", "neighborhood", "neighborhood"),
-        Bond("neighborhood", "district", "district"),
+        Bond("community", "neighborhood", "neighborhood", 1),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "region", "String", 1, Eq(List("ne", "sw")), Some(":district.region/")))
       ) -->
       Query(
@@ -844,8 +844,8 @@ class SeattleTransformationTests extends SeattleSpec {
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
         Atom("community", "type_", "String", 1, Eq(List("twitter", "facebook_page")), Some(":community.type/")),
-        Bond("community", "neighborhood", "neighborhood"),
-        Bond("neighborhood", "district", "district"),
+        Bond("community", "neighborhood", "neighborhood", 1),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "region_", "String", 1, Eq(List("sw", "s", "se")), Some(":district.region/")))
       ) -->
       Query(
@@ -893,8 +893,8 @@ class SeattleTransformationTests extends SeattleSpec {
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
         Atom("community", "type_", "String", 1, Qm, Some(":community.type/")),
-        Bond("community", "neighborhood", "neighborhood"),
-        Bond("neighborhood", "district", "district"),
+        Bond("community", "neighborhood", "neighborhood", 1),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "region_", "String", 1, Qm, Some(":district.region/")))
       ) -->
       Query(
@@ -927,8 +927,8 @@ class SeattleTransformationTests extends SeattleSpec {
       Model(List(
         Atom("community", "name", "String", 1, VarValue, None),
         Atom("community", "type_", "String", 1, Qm, Some(":community.type/")),
-        Bond("community", "neighborhood", "neighborhood"),
-        Bond("neighborhood", "district", "district"),
+        Bond("community", "neighborhood", "neighborhood", 1),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "region_", "String", 1, Qm, Some(":district.region/")))
       ) -->
       Query(
@@ -1016,9 +1016,9 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "type", "String", 1, Eq(List("twitter")), Some(":community.type/")),
         Atom("community", "orgtype", "String", 1, Eq(List("personal")), Some(":community.orgtype/")),
         Atom("community", "category", "String", 2, Eq(List("my", "favorites")), None),
-        Bond("community", "neighborhood", "neighborhood"),
+        Bond("community", "neighborhood", "neighborhood", 1),
         Atom("neighborhood", "name", "String", 1, Eq(List("myNeighborhood")), None, List()),
-        Bond("neighborhood", "district", "district"),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "name", "String", 1, Eq(List("myDistrict")), None),
         Atom("district", "region", "String", 1, Eq(List("nw")), Some(":district.region/")))
       ) -->
@@ -1051,9 +1051,9 @@ class SeattleTransformationTests extends SeattleSpec {
         Atom("community", "type", "String", 1, EnumVal, Some(":community.type/")),
         Atom("community", "orgtype", "String", 1, EnumVal, Some(":community.orgtype/")),
         Atom("community", "category", "String", 2, VarValue, None),
-        Bond("community", "neighborhood", "neighborhood"),
+        Bond("community", "neighborhood", "neighborhood", 1),
         Atom("neighborhood", "name", "String", 1, VarValue, None),
-        Bond("neighborhood", "district", "district"),
+        Bond("neighborhood", "district", "district", 1),
         Atom("district", "name", "String", 1, VarValue, None),
         Atom("district", "region", "String", 1, EnumVal, Some(":district.region/")))
       ) -->

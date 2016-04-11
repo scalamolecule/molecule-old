@@ -1,8 +1,5 @@
 package molecule
-import java.util.Date
-import java.util.UUID._
-import java.net.URI
-import datomic.Peer
+package expression
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
 
@@ -26,7 +23,6 @@ class Base extends CoreSpec {
     val (a, b, c, d) = ("a", "b", "c", "d")
 
     // We pair cardinality many attribute values with card-one's too to be able to group by cardinality one values
-    //    Ns.str.strs.debug
     Ns.str.strs insert List(
       ("str1", Set("a", "b")),
       ("str2", Set("b", "c")),
@@ -75,4 +71,38 @@ class Base extends CoreSpec {
       ("enum3", Set("enum2", "enum4")))
   }
 
+  class OneRefSetup extends CoreSetup {
+
+    m(Ns.str.Ref1.int1) insert List(
+      ("en", 1),
+      ("fr", 2)
+    )
+  }
+
+  class ManyRefSetup extends CoreSetup {
+
+    m(Ns.str.Refs1 * Ref1.int1) insert List(
+      ("en", List(1, 2)),
+      ("fr", List(1, 2)),
+      ("da", List(3, 4))
+    )
+  }
+//
+//  class OneRefSetup extends CoreSetup {
+//
+//    m(Ns.strMap.Ref1.int1) insert List(
+//      (Map("en" -> "Hi there"), 1),
+//      (Map("fr" -> "Bonjour", "en" -> "Oh, Hi"), 1)
+//    )
+//  }
+//
+//  class ManyRefSetup extends CoreSetup {
+//
+//    m(Ns.strMap.Refs1 * Ref1.int1) insert List(
+//      (Map("en" -> "Hi there"), List(1, 2)),
+//      (Map("fr" -> "Bonjour", "en" -> "Oh, Hi"), List(1, 2)),
+//      (Map("en" -> "Hello"), List(2, 3)),
+//      (Map("da" -> "Hej"), List(3, 4))
+//    )
+//  }
 }

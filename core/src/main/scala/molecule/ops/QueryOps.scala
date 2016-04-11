@@ -95,6 +95,17 @@ object QueryOps {
     def where(e: String, a: Atom, qv: Val, gs: Seq[Generic]): Query =
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(a.ns, a.name), qv, Empty)))
 
+    def whereAnd[T](e: String, a: Atom, v: String, gs: Seq[Generic], args: Seq[T]): Query = {
+      val valueClauses = args.map(arg => DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg), Empty))
+      val outputClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty)
+      q.copy(wh = Where(q.wh.clauses ++ valueClauses :+ outputClause))
+    }
+
+    def whereAndMap[T](e: String, a: Atom, v: String, gs: Seq[Generic], args: Seq[T]): Query = {
+      val valueClauses = args.map(arg => DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg), Empty))
+      val outputClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty)
+      q.copy(wh = Where(q.wh.clauses ++ valueClauses :+ outputClause))
+    }
 
     // Null ..........................................
 

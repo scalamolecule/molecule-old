@@ -70,6 +70,7 @@ object schemaDSL {
   type P26[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, Z, AA] = Nothing
   type P27[A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, X, Y, Z, AA, AB] = Nothing
 
+  trait SelfJoin
 
   trait Ref[This, Next]
   trait OneRef[This, Next] extends Ref[This, Next]
@@ -107,25 +108,11 @@ object schemaDSL {
     // Keyword for entity api
     val _kw: String = ""
 
-    // Expressions
-    def apply(expr1: Exp1[T])       : Ns with Attr = ???
-    def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
-    def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
-
     // Null (datom not asserted)
     def apply(noValue: nil): Ns with Attr = ???
 
-    // Negation
-    def not(one: T, more: T*)         : Ns with Attr = ???
-    // Todo: remove this when Intellij can infer from the next method alone...
-    def != (value: T)         : Ns with Attr = ???
-    def != (one: T, more: T*) : Ns with Attr = ???
-
-    // Comparison
-    def <  (value: T) : Ns with Attr = ???
-    def >  (value: T) : Ns with Attr = ???
-    def <= (value: T) : Ns with Attr = ???
-    def >= (value: T) : Ns with Attr = ???
+    // Unifying marker for attributes to be unified in self-joins
+    def apply(unifyThis: unify): Ns with Attr = ???
 
     // Input
     def apply(in: ?) : In with Attr = ???
@@ -137,9 +124,31 @@ object schemaDSL {
     def >=   (in: ?) : In with Attr = ???
   }
 
+  // Separating out all methods involving type T to allow
+  // MapAttr to have its own String-only implementations
+  trait ValueAttr0[Ns, In, T, U] extends ValueAttr[Ns, In, T, U] {
+
+    // Expressions
+    def apply(expr1: Exp1[T])       : Ns with Attr = ???
+    def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
+    def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
+
+    // Negation
+    def not(one: T, more: T*)         : Ns with Attr = ???
+    // Todo: remove this when Intellij can infer from the next method alone...
+//    def != (value: T)         : Ns with Attr = ???
+    def != (one: T, more: T*) : Ns with Attr = ???
+
+    // Comparison
+    def <  (value: T) : Ns with Attr = ???
+    def >  (value: T) : Ns with Attr = ???
+    def <= (value: T) : Ns with Attr = ???
+    def >= (value: T) : Ns with Attr = ???
+  }
+
   // Cardinality one
 
-  trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
+  trait One[Ns, In, T] extends ValueAttr0[Ns, In, T, T] {
     // Empty `apply` is a request to delete values!
     def apply()                 : Ns with Attr = ???
     def apply(one: T, more: T*) : Ns with Attr = ???
@@ -159,7 +168,7 @@ object schemaDSL {
 
   // Cardinality many
 
-  trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T, S] {
+  trait Many[Ns, In, S, T] extends ValueAttr0[Ns, In, T, S] {
     def apply(values: T*)                          : Ns with Attr = ???
 //    def apply(set: S)                              : Ns with Attr = ???
     def apply(set: S, moreSets: S*)                : Ns with Attr = ???
@@ -167,22 +176,61 @@ object schemaDSL {
     def add(value: T)                              : Ns with Attr = ???
     def remove(values: T*)                         : Ns with Attr = ???
   }
-  trait ManyString [Ns, In] extends Many[Ns, In, Set[String] , String ]
-  trait ManyInt    [Ns, In] extends Many[Ns, In, Set[Int]    , Int    ]
-  trait ManyLong   [Ns, In] extends Many[Ns, In, Set[Long]   , Long   ]
-  trait ManyFloat  [Ns, In] extends Many[Ns, In, Set[Float]  , Float  ]
-  trait ManyDouble [Ns, In] extends Many[Ns, In, Set[Double] , Double ]
+  trait ManyString [Ns, In] extends Many[Ns, In, Set[String ], String ]
+  trait ManyInt    [Ns, In] extends Many[Ns, In, Set[Int    ], Int    ]
+  trait ManyLong   [Ns, In] extends Many[Ns, In, Set[Long   ], Long   ]
+  trait ManyFloat  [Ns, In] extends Many[Ns, In, Set[Float  ], Float  ]
+  trait ManyDouble [Ns, In] extends Many[Ns, In, Set[Double ], Double ]
   trait ManyBoolean[Ns, In] extends Many[Ns, In, Set[Boolean], Boolean]
-  trait ManyDate   [Ns, In] extends Many[Ns, In, Set[Date]   , Date   ]
-  trait ManyUUID   [Ns, In] extends Many[Ns, In, Set[UUID]   , UUID   ]
-  trait ManyURI    [Ns, In] extends Many[Ns, In, Set[URI]    , URI    ]
+  trait ManyDate   [Ns, In] extends Many[Ns, In, Set[Date   ], Date   ]
+  trait ManyUUID   [Ns, In] extends Many[Ns, In, Set[UUID   ], UUID   ]
+  trait ManyURI    [Ns, In] extends Many[Ns, In, Set[URI    ], URI    ]
 
-  trait MapAttr[Ns, In] extends ValueAttr[Ns, In, String, Map[String, String]]  {
-    def apply(values: String*)                                         : Ns with Attr = ???
-    def add(pair: (String, String), morePairs: (String, String)*)      : Ns with Attr = ???
-    def remove(key: String, moreKeys: String*)                         : Ns with Attr = ???
-    def apply(oldNew: (String, String), oldNewMore: (String, String)*) : Ns with Attr = ???
+
+  // Map
+
+  // We bypass ValueAttr0 in order to have String-based expressions only
+  trait MapAttr[Ns, In, M, T] extends ValueAttr[Ns, In, T, M]  {
+    def apply(values: String*)                               : Ns with Attr = ???
+    def add(pair: (String, T), morePairs: (String, T)*)      : Ns with Attr = ???
+    def remove(key: String, moreKeys: String*)               : Ns with Attr = ???
+    def apply(oldNew: (String, T), oldNewMore: (String, T)*) : Ns with Attr = ???
+
+
+    def k(value: T, more: T*): Ns with Attr = ???
+
+    // Expressions (only for keys of type String)
+    def apply(expr1: Exp1[String])                 : Ns with Attr = ???
+
+    def apply(expr2: Exp2[String, String])         : Ns with Attr = ???
+    def apply(expr3: Exp3[String, String, String]) : Ns with Attr = ???
+
+    def apply(expr2: And2[(String, T), (String, T)])              : Ns with Attr = ???
+    def apply(expr2: And3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
+
+    // Negation
+    def not(one: String, more: String*)         : Ns with Attr = ???
+    // Todo: remove this when Intellij can infer from the next method alone...
+    def != (value: String)         : Ns with Attr = ???
+    def != (one: String, more: String*) : Ns with Attr = ???
+
+    // Comparison
+    def <  (value: String) : Ns with Attr = ???
+    def >  (value: String) : Ns with Attr = ???
+    def <= (value: String) : Ns with Attr = ???
+    def >= (value: String) : Ns with Attr = ???
+
   }
+  trait MapString [Ns, In] extends MapAttr[Ns, In, Map[String, String ], String ]
+  trait MapInt    [Ns, In] extends MapAttr[Ns, In, Map[String, Int    ], Int    ]
+  trait MapLong   [Ns, In] extends MapAttr[Ns, In, Map[String, Long   ], Long   ]
+  trait MapFloat  [Ns, In] extends MapAttr[Ns, In, Map[String, Float  ], Float  ]
+  trait MapDouble [Ns, In] extends MapAttr[Ns, In, Map[String, Double ], Double ]
+  trait MapBoolean[Ns, In] extends MapAttr[Ns, In, Map[String, Boolean], Boolean]
+  trait MapDate   [Ns, In] extends MapAttr[Ns, In, Map[String, Date   ], Date   ]
+  trait MapUUID   [Ns, In] extends MapAttr[Ns, In, Map[String, UUID   ], UUID   ]
+  trait MapURI    [Ns, In] extends MapAttr[Ns, In, Map[String, URI    ], URI    ]
+
 
   // Enums
   object EnumValue
@@ -196,8 +244,6 @@ object schemaDSL {
   trait RefAttr$ extends Attr
   trait OneRefAttr$  extends RefAttr$
   trait ManyRefAttr$ extends RefAttr$
-
-  trait MapAttr$[T] extends Attr
 
   trait ValueAttr$[T] extends Attr
 
@@ -222,6 +268,17 @@ object schemaDSL {
   trait ManyDate$    extends ManyValueAttr$[Set[Date   ]]
   trait ManyUUID$    extends ManyValueAttr$[Set[UUID   ]]
   trait ManyURI$     extends ManyValueAttr$[Set[URI    ]]
+
+  trait MapAttr$[T] extends Attr
+  trait MapString$  extends MapAttr$[Map[String, String        ]]
+  trait MapInt$     extends MapAttr$[Map[String, Int           ]]
+  trait MapLong$    extends MapAttr$[Map[String, Long          ]]
+  trait MapFloat$   extends MapAttr$[Map[String, Float         ]]
+  trait MapDouble$  extends MapAttr$[Map[String, Double        ]]
+  trait MapBoolean$ extends MapAttr$[Map[String, Boolean       ]]
+  trait MapDate$    extends MapAttr$[Map[String, java.util.Date]]
+  trait MapUUID$    extends MapAttr$[Map[String, java.util.UUID]]
+  trait MapURI$     extends MapAttr$[Map[String, java.net.URI  ]]
 
   trait Enum$
   trait OneEnum$   extends Enum$

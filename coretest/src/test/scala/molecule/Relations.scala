@@ -4,7 +4,6 @@ import molecule.part.dsl.partitionTest.{gen_Profession, lit_Book}
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
 
-
 class Relations extends CoreSpec {
 
   "One-to-One" in new CoreSetup {
@@ -168,6 +167,7 @@ class Relations extends CoreSpec {
   }
 
   "Self-refs" in new CoreSetup {
+    // OBS: not considered "Self-joins" in this context
     m(Ns.str.Parent.str) insert List(("child", "parent"))
     m(Ns.str.Parent.str).get === List(("child", "parent"))
 

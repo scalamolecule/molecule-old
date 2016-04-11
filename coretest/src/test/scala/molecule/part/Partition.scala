@@ -26,7 +26,7 @@ class Partition extends MoleculeSpec {
       Model(List(
         Atom("lit_Book", "title", "String", 1, Eq(List("A good book")), None, List()),
         Atom("lit_Book", "cat", "String", 1, Eq(List("good")), Some(":lit_Book.cat/"), List()),
-        Bond("lit_Book", "author", "gen_Person"),
+        Bond("lit_Book", "author", "gen_Person", 1),
         Atom("gen_Person", "name", "String", 1, Eq(List("Marc")), None, List()),
         Atom("gen_Person", "gender", "String", 1, Eq(List("male")), Some(":gen_Person.gender/"), List()))) -->
       //           action          temp id             attribute            value

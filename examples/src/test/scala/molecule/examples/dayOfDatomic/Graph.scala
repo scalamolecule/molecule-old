@@ -166,5 +166,59 @@ class Graph extends Specification with DatomicFacade {
     RETURN group.name, count(role)
     ORDER BY group.name ASC
     */
+
+
+    //    User.name_("User1" and "User2")
+    //      .RoleInGroup.Group.name
+    //      ._RoleInGroup.Roles.name(count).debug
+    /*
+    * Model(List(
+      Atom(user,name_,String,1,And(List(User1, User2)),None,List()),
+      Bond(user,roleInGroup,roleInGroup,2),
+      Bond(roleInGroup,group,group,1),
+      Atom(group,name,String,1,VarValue,None,List()),
+      ReBond(roleInGroup,,,false,),
+      Bond(roleInGroup,roles,role,2),
+      Atom(role,name,String,1,Fn(count,None),None,List())))
+
+    Query(
+      Find(List(
+        Var(e),
+        AggrExpr(count,List(),Var(g)))),
+      Where(List(
+        DataClause(ImplDS,Var(a),KW(user,name,),Val(User1),Empty,NoBinding),
+        DataClause(ImplDS,Var(a),KW(user,roleInGroup,roleInGroup),Var(c),Empty,NoBinding),
+        DataClause(ImplDS,Var(c),KW(roleInGroup,group,group),Var(d),Empty,NoBinding),
+        DataClause(ImplDS,Var(d),KW(group,name,),Var(e),Empty,NoBinding),
+        DataClause(ImplDS,Var(c),KW(roleInGroup,roles,role),Var(f),Empty,NoBinding),
+        DataClause(ImplDS,Var(f),KW(role,name,),Var(g),Empty,NoBinding),
+        DataClause(ImplDS,Var(a_1),KW(user,name,),Val(User2),Empty,NoBinding),
+        DataClause(ImplDS,Var(a_1),KW(user,roleInGroup,roleInGroup),Var(c_1),Empty,NoBinding),
+        DataClause(ImplDS,Var(c_1),KW(roleInGroup,group,group),Var(d_1),Empty,NoBinding),
+        DataClause(ImplDS,Var(d_1),KW(group,name,),Var(e),Empty,NoBinding),
+        DataClause(ImplDS,Var(c_1),KW(roleInGroup,roles,role),Var(f_1),Empty,NoBinding),
+        DataClause(ImplDS,Var(f_1),KW(role,name,),Var(g),Empty,NoBinding))))
+
+    [:find  ?e (count ?g)
+     :where [?a :user/name "User1"]
+            [?a :user/roleInGroup ?c]
+            [?c :roleInGroup/group ?d]
+            [?d :group/name ?e]
+            [?c :roleInGroup/roles ?f]
+            [?f :role/name ?g]
+            [?a_1 :user/name "User2"]
+            [?a_1 :user/roleInGroup ?c_1]
+            [?c_1 :roleInGroup/group ?d_1]
+            [?d_1 :group/name ?e]
+            [?c_1 :roleInGroup/roles ?f_1]
+            [?f_1 :role/name ?g]]
+
+    RULES: none
+
+    INPUTS: none
+
+    OUTPUTS:
+    1  ["Group1" 1]
+    2  ["Group2" 1]*/
   }
 }

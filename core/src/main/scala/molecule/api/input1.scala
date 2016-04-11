@@ -8,38 +8,42 @@ import molecule.ast.query._
 // 1 input X outputs
 
 trait InputMolecule_1[I1] extends InputMolecule {
-  val x = molecule.util.Debug("InputMolecule_1", 1)
 
   def bindValues1(in1: Seq[I1]) = {
-    val (vars, prefixes) = varsAndPrefixes.unzip
+    val (inVars, prefixes) = varsAndPrefixes.unzip
     val prefix = prefixes.head
     val values = if (prefix != "")
       in1.flatMap {
-        case set: Set[_] => Seq(set.toList.map(setValue => prefix + setValue.toString).toSeq)
+        case set: Set[_] => Seq(set.toSeq.map(setValue => prefix + setValue.toString))
         case one         => Seq(Seq(prefix + one.toString))
       }
     else
       in1.flatMap {
-        case map: Map[_, _] => map.toList.map { case (k, v) => Seq(k, ".*(" + v + ").*") }
+        case map: Map[_, _] => map.toSeq.map { case (k, v) => Seq(k, ".*(" + v + ").*") }
         case set: Set[_]    => Seq(set.toSeq)
-//        case one            => Seq(Seq(one))
         case one            => Seq(Seq(one))
       }
-    //    x(1, vars, values)
-    if (vars.size > 1 && values.head.head == "_")
-      _query.copy(
-        // Don't search for key
-        i = In(Seq(InVar(ScalarBinding(vars(1)), List(List(values.head(1))))), _query.i.rules, _query.i.ds),
-        wh = Where(_query.wh.clauses.filter {
-          case Funct(".startsWith ^String", _, _) => false
-          case _                                  => true
-        }))
-    else if (vars.size > 1)
-      _query.copy(i = In(Seq(InVar(RelationBinding(vars), values)), _query.i.rules, _query.i.ds))
+
+    val keys = values.map(_.head).distinct
+    if (inVars.size > 1 && keys.contains("_")) {
+      if (keys.size > 1) {
+        val otherKeys = keys.filterNot(_ == "_")
+        throw new RuntimeException("[InputMolecule_1:bindValues1] Searching for all keys (with `_`) can't be combined with other key(s): " + otherKeys.mkString(", "))
+      }
+      val searchValues = in1.flatMap { case map: Map[_, _] => map.values }
+      val regEx = ".*(" + searchValues.mkString("|") + ").*"
+      val newIn = In(Seq(InVar(ScalarBinding(inVars(1)), List(List(regEx)))), _query.i.rules, _query.i.ds)
+      val newClauses = _query.wh.clauses.filter {
+        case Funct(".startsWith ^String", _, _) => false
+        case _                                  => true
+      }
+      _query.copy(i = newIn, wh = Where(newClauses))
+    } else if (inVars.size > 1)
+      _query.copy(i = In(Seq(InVar(RelationBinding(inVars), values)), _query.i.rules, _query.i.ds))
     else if (values.size > 1)
-      _query.copy(i = In(Seq(InVar(CollectionBinding(vars.head), Seq(values.flatten))), _query.i.rules, _query.i.ds))
+      _query.copy(i = In(Seq(InVar(CollectionBinding(inVars.head), Seq(values.flatten))), _query.i.rules, _query.i.ds))
     else
-      _query.copy(i = In(Seq(InVar(ScalarBinding(vars.head), values)), _query.i.rules, _query.i.ds))
+      _query.copy(i = In(Seq(InVar(ScalarBinding(inVars.head), values)), _query.i.rules, _query.i.ds))
   }
 }
 

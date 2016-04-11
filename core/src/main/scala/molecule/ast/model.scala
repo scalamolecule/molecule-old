@@ -25,10 +25,11 @@ object model {
   trait Element
 
   case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None, gs: Seq[Generic] = Seq()) extends Element
-  case class Bond(ns: String, refAttr: String, refNs: String = "") extends Element
+  case class Bond(ns: String, refAttr: String, refNs: String = "", card: Int) extends Element
   case class ReBond(backRef: String, refAttr: String, refNs: String = "", distinct: Boolean = false, prevVar: String = "") extends Element
   case class Transitive(backRef: String, refAttr: String, refNs: String, depth: Int = 1, prevVar: String = "") extends Element
   case class Group(ref: Bond, elements: Seq[Element]) extends Element
+  case object Self extends Element
 
   case class Meta(ns: String, attr: String, kind: String, generic: Generic, value: Value) extends Element
   case class TxModel(elements: Seq[Element]) extends Element
@@ -90,6 +91,7 @@ object model {
   case class Or[T1](e1: Exp1[T1], e2: Exp1[T1]) extends Exp1[T1]
 
   trait Exp2[T1, T2] extends Expression
+
   case class And2[T1, T2](e1: Exp1[T1], e2: Exp1[T2]) extends Exp2[T1, T2] {
     def and[T3](e3: Exp1[T3]) = And3(e1, e2, e3)
     def or(that: And2[T1, T2]) = Or2(this, that)
@@ -100,16 +102,17 @@ object model {
 
   trait Exp3[T1, T2, T3] extends Expression
   case class And3[T1, T2, T3](e1: Exp1[T1], e2: Exp1[T2], e3: Exp1[T3]) extends Exp3[T1, T2, T3]
+  case class Or3 [T1, T2, T3](e1: Exp1[T1], e2: Exp1[T2], e3: Exp1[T3]) extends Exp3[T1, T2, T3]
 
 
   // Convenience methods .........................
 
   def curNs(e: Element) = e match {
-    case Atom(ns, _, _, _, _, _, _) => ns
-    case Bond(ns, _, _)             => ns
-    case Group(Bond(ns, _, _), _)   => ns
-    case Meta(ns, _, _, _, _)       => ns
-    case unexpected                 => sys.error("[model:curNs] Unexpected element: " + unexpected)
+    case Atom(ns, _, _, _, _, _, _)  => ns
+    case Bond(ns, _, _, _)           => ns
+    case Group(Bond(ns, _, _, _), _) => ns
+    case Meta(ns, _, _, _, _)        => ns
+    case unexpected                  => sys.error("[model:curNs] Unexpected element: " + unexpected)
   }
 }
 

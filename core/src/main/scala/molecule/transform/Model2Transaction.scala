@@ -33,9 +33,9 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
       case ('_, Meta(ns, "", "e", _, Eq(Seq(id: Long)))) => (Eid(id), stmts)
       case ('_, Atom(ns, name, _, _, VarValue, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
       case ('_, Atom(ns, name, _, _, value, prefix, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
-      case ('_, Bond(ns, refAttr, refNs))                => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", s":$refNs"))
+      case ('_, Bond(ns, refAttr, refNs, _))             => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", s":$refNs"))
 
-      case (e, Group(Bond(ns, refAttr, _), elements)) =>
+      case (e, Group(Bond(ns, refAttr, _, _), elements)) =>
         val nested = elements.foldLeft('v: Any, Seq[Statement]()) {
           case ((eSlot1, stmts1), element1) => resolveElement(eSlot1, stmts1, element1)
         }._2
@@ -45,13 +45,13 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
       // First with id
       case (Eid(id), Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
       case (Eid(id), Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
-      case (Eid(id), Bond(ns, refAttr, refNs))                         => ('v, stmts :+ Add(id, s":$ns/$refAttr", 'tempId))
+      case (Eid(id), Bond(ns, refAttr, refNs, _))                      => ('v, stmts :+ Add(id, s":$ns/$refAttr", 'tempId))
 
       // Same namespace
       case ('e, Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
       case ('e, Atom(ns, name, _, _, VarValue, _, _))             => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
       case ('e, Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
-      case ('e, Bond(ns, refAttr, refNs))                         => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
+      case ('e, Bond(ns, refAttr, refNs, _))                      => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
       case ('e, TxModel(elements))                                => ('e, stmts ++ elements.foldLeft('tx: Any, Seq[Statement]()) {
         case ((eSlot1, stmts1), element1) => resolveElement(eSlot1, stmts1, element1)
       }._2)
@@ -64,9 +64,9 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
       // Next namespace
       case ('v, Atom(ns, name, _, _, VarValue, _, _))   => ('e, stmts :+ Add('v, s":$ns/$name", 'arg))
       case ('v, Atom(ns, name, _, _, value, prefix, _)) => ('e, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
-      case ('v, Bond(ns, refAttr, _))                   => ('v, stmts :+ Add('v, s":$ns/$refAttr", 'tempId))
+      case ('v, Bond(ns, refAttr, _, _))                => ('v, stmts :+ Add('v, s":$ns/$refAttr", 'tempId))
 
-      case ('arg, Bond(ns, refAttr, _)) => ('v, stmts :+ Add('arg, s":$ns/$refAttr", 'tempId))
+      case ('arg, Bond(ns, refAttr, _, _)) => ('v, stmts :+ Add('arg, s":$ns/$refAttr", 'tempId))
 
       // BackRef
       case (_, ReBond(ns, _, _, _, _)) => ('e, stmts :+ Add('ns, s":$ns", ""))
@@ -78,13 +78,13 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
       case a@Atom(_, attr, _, _, _, Some(enumPrefix), _)
         if attr.last == '$' && enumPrefix.init.last == '$'    => a.copy(name = attr.init, enumPrefix = Some(enumPrefix.init.init + "/"))
       case a@Atom(_, attr, _, _, _, _, _) if attr.last == '$' => a.copy(name = attr.init)
-      case b@Bond(_, attr, _) if attr.last == '$'             => b.copy(refAttr = attr.init)
+      case b@Bond(_, attr, _, _) if attr.last == '$'          => b.copy(refAttr = attr.init)
       case t@Transitive(_, attr, _, _, _) if attr.last == '$' => t.copy(refAttr = attr.init)
       case Group(ref, es)                                     => Group(ref, replace$(es))
       case other                                              => other
     }
     val model1 = Model(replace$(model.elements))
-//    x(50, model, model1)
+    //    x(50, model, model1)
     model1.elements.foldLeft('_: Any, Seq[Statement]()) {
       case ((eSlot, stmts), element) => resolveElement(eSlot, stmts, element)
     }._2
@@ -185,7 +185,7 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
     case Add('tx, a, 'arg)                                                        => (next, valueStmts(stmts, tempId("tx"), a, arg))
     case Add(e0, ref0, nestedStmts0: Seq[_]) if arg == Nil                        => (next, stmts)
     case Add(e, ref, nestedStmts: Seq[_])                                         => {
-//      x(51, e, ref, nestedStmts, stmts)
+      //      x(51, e, ref, nestedStmts, stmts)
       val parentE = if (e == 'parentId)
         tempId(ref)
       else if (stmts.isEmpty)

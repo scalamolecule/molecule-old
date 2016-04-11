@@ -142,6 +142,9 @@ package object molecule {
   implicit def uuidSet2Model   (set: Set[UUID]   ): TermValue[Set[UUID]]    = TermValue(set)
   implicit def uriSet2Model    (set: Set[URI]    ): TermValue[Set[URI]]     = TermValue(set)
 
+//  implicit def strPair2Model    (pair: (String, String)): TermValue[(String, String)]  = TermValue(pair)
+//  implicit def intPair2Model    (pair: (String, Int   )): TermValue[(String, Int)]     = TermValue(pair)
+
   implicit def tuple2Model[A, B](tpl: (A, B)): TermValue[(A, B)] = TermValue(tpl)
 
   // Entity api
@@ -156,6 +159,10 @@ package object molecule {
   // Null marker (for non-asserted facts)
   trait nil
   object nil extends nil
+
+  // Unifying marker for attributes to be unified in self-joind
+  trait unify
+  object unify extends unify
 
 
   // Aggregates ==========================================================
@@ -223,7 +230,7 @@ package object molecule {
       }
     }
 
-    def find(needle1: T, needleN: T*): Map[String, T] = {
+    def values(needle1: T, needleN: T*): Map[String, T] = {
       val needles = needle1 +: needleN
       mapAttr match {
         case None    => Map[String, T]()
@@ -243,7 +250,7 @@ package object molecule {
       }
     }
 
-    def find(keyNeedles: (String, T)*): Map[String, T] = {
+    def keyValue(keyNeedles: (String, T)*): Map[String, T] = {
       val subpatterns = keyNeedles.map { case (k, v) => s"$k.*$v.*" }.mkString("|")
       val pattern = s"(?i)($subpatterns)".r.pattern
       mapAttr match {
@@ -255,7 +262,7 @@ package object molecule {
       }
     }
 
-    def find(keyNeedle1: (String, Seq[T]), keyNeedleN: (String, Seq[T])*): Map[String, T] = {
+    def keyValues(keyNeedle1: (String, Seq[T]), keyNeedleN: (String, Seq[T])*): Map[String, T] = {
       val keyNeedles = keyNeedle1 +: keyNeedleN
       val subpatterns = keyNeedles.map { case (k, vs) => s"$k.*(${vs.mkString("|")}).*" }.mkString("|")
       val pattern = s"(?i)($subpatterns)".r.pattern

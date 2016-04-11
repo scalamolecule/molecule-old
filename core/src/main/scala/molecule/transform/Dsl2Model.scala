@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 29, 28)
+  val x = DebugMacro("Dsl2Model", 36, 28)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -86,7 +86,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     case a@q"$prev.$cur" if a.isValueAttr$   => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), a.card, VarValue))
 
 
-    // Generic -----------------------------
+    // Self join -----------------------------
+    case q"$prev.Self" => traverse(q"$prev", Self)
+
+
+    // Attributes -----------------------------
 
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
 
@@ -96,7 +100,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val backRef = c.typecheck(q"$prev.$backRefAttr").tpe.typeSymbol.name.toString // "partition_Ns_<arity>"
       traverse(q"$prev", ReBond(firstLow(backRef.replaceFirst("_[0-9]+$", "")), "")) // "partition_Ns"
 
-    case a@q"$prev.$refAttr" if a.isRef     => traverse(q"$prev", Bond(a.refThis, firstLow(refAttr.toString), a.refNext))
+    case a@q"$prev.$refAttr" if a.isRef     => traverse(q"$prev", Bond(a.refThis, firstLow(refAttr.toString), a.refNext, a.refCard))
     case a@q"$prev.$refAttr" if a.isRefAttr => traverse(q"$prev", Atom(a.ns, a.name, "Long", a.card, VarValue))
     case a@q"$prev.$cur" if a.isEnum        => traverse(q"$prev", Atom(a.ns, a.name, cast(a), a.card, EnumVal, Some(a.enumPrefix)))
     case a@q"$prev.$cur" if a.isMapAttr     => walk(q"$prev", a.ns, q"$cur", Atom(a.ns, a.name, cast(a), 3, VarValue, Some("mapping")))
@@ -105,12 +109,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     // Nested ------------------------
 
-    case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", ""), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
-    case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", ""), resolve(nested)))
+    case t@q"$prev.e.apply[..$types]($nested)" if !q"$prev".isRef  => Seq(Group(Bond("", "", "", 2), Meta("", "", "e", NoValue, EntValue) +: resolve(nested)))
+    case t@q"$prev.e_.apply[..$types]($nested)" if !q"$prev".isRef => Seq(Group(Bond("", "", "", 2), resolve(nested)))
 
     case t@q"$prev.e.$manyRef.*[..$types]($nested)"                               => traverse(q"$prev.e", nested1(q"$prev", manyRef, nested))
     case t@q"$prev.$manyRef.*[..$types]($nested)"                                 => traverse(q"$prev", nested1(q"$prev", manyRef, nested))
-    case t@q"$prev.$manyRef.apply[..$types]($nested)" if !q"$prev.$manyRef".isRef => Seq(Group(Bond("", "", ""), nestedElements(q"$prev.$manyRef", firstLow(manyRef.toString), nested)))
+    case t@q"$prev.$manyRef.apply[..$types]($nested)" if !q"$prev.$manyRef".isRef => Seq(Group(Bond("", "", "", 2), nestedElements(q"$prev.$manyRef", firstLow(manyRef.toString), nested)))
     case t@q"$prev.$manyRef.apply[..$types]($nested)"                             => traverse(q"$prev", nested1(prev, manyRef, nested))
 
     case other => abort(s"[Dsl2Model:dslStructure] Unexpected DSL structure: $other\n${showRaw(other)}")
@@ -133,7 +137,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
                   case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
                     val t = previous.init.reverse.collectFirst {
                       // Find first previous Bond (relating to this attribute)
-                      case prevBond@Bond(ns2, refAttr, refNs) =>
+                      case prevBond@Bond(ns2, refAttr, refNs, _) =>
                         //                        x(2, prevAtom, prevBond, ns2, refAttr, refNs)
                         Transitive(ns2, refAttr, refNs, 0)
                     } getOrElse {
@@ -172,7 +176,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case p                                       => p.name
     }
     val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nested)
-    val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext), nestedElems)
+    val group = Group(Bond(parentNs.toString, firstLow(manyRef), refNext, 2), nestedElems)
     //    x(28, prev, parentNs, nestedElems, group, refNext)
     group
   }
@@ -189,7 +193,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         nestedElements
       } else if (refPairsFiltered.size == 1) {
         val (refAttr, refNs) = refPairsFiltered.head
-        Bond(refNext, firstLow(refAttr), firstLow(refNs)) +: nestedElements
+        Bond(refNext, firstLow(refAttr), firstLow(refNs), 2) +: nestedElements
       } else
         abort(s"[Dsl2Model:dslStructure(nested)] `$manyRef` has more than one ref pointing to `$nestedNs`:\n${refPairs.mkString("\n")}")
     } else {
@@ -263,36 +267,40 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       Fn(fn, value)
 
     values match {
-      case q"Seq($pkg.?)"                                              => Qm
-      case q"Seq($pkg.distinct)"                                       => Distinct
-      case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"        => aggr("max", Some(i))
-      case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"        => aggr("min", Some(i))
-      case q"Seq($pkg.rand.apply(${Literal(Constant(i: Int))}))"       => aggr("rand", Some(i))
-      case q"Seq($pkg.sample.apply(${Literal(Constant(i: Int))}))"     => aggr("sample", Some(i))
-      case q"Seq($pkg.max)"                                            => aggr("max")
-      case q"Seq($pkg.min)"                                            => aggr("min")
-      case q"Seq($pkg.rand)"                                           => aggr("rand")
-      case q"Seq($pkg.count)"                                          => aggr("count")
-      case q"Seq($pkg.countDistinct)"                                  => aggr("count-distinct")
-      case q"Seq($pkg.sum)"                                            => aggr("sum")
-      case q"Seq($pkg.avg)"                                            => aggr("avg")
-      case q"Seq($pkg.median)"                                         => aggr("median")
-      case q"Seq($pkg.variance)"                                       => aggr("variance")
-      case q"Seq($pkg.stddev)"                                         => aggr("stddev")
-      case q"Seq($pkg.nil)" if attr.name.last == '_'                   => Fn("not")
-      case q"Seq($pkg.nil)"                                            => abort(s"[Dsl2Model:getValues] Please add underscore to attribute: `${attr.name}_(nil)`")
-      case q"Seq($a.and[$t]($b).and[$u]($c))" if attr.name.last == '_' => And(resolveValues(q"Seq($a, $b, $c)"))
-      case q"Seq($a.and[$t]($b))" if attr.name.last == '_'             => And(resolveValues(q"Seq($a, $b)"))
-      case q"Seq($a.and[$t]($b).and[$u]($c))"                          => abort(s"[Dsl2Model:getValues] Can't retrieve multiple values from AND expression. Please add underscore to attribute: `${attr.name}_([AND-expression])`")
-      case q"Seq($a.and[$t]($b))"                                      => abort(s"[Dsl2Model:getValues] Can't retrieve multiple values from AND expression. Please add underscore to attribute: `${attr.name}_([AND-expression])`")
-      case q"Seq(..$vs)"                                               => vs match {
+      case q"Seq($pkg.?)"                                          => Qm
+      case q"Seq($pkg.nil)" if attr.name.last == '_'               => Fn("not")
+      case q"Seq($pkg.nil)"                                        => abort(s"[Dsl2Model:getValues] Please add underscore to attribute: `${attr.name}_(nil)`")
+      case q"Seq($pkg.unify)"                                      => Fn("unify")
+      case q"Seq($pkg.distinct)"                                   => Distinct
+      case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"    => aggr("max", Some(i))
+      case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"    => aggr("min", Some(i))
+      case q"Seq($pkg.rand.apply(${Literal(Constant(i: Int))}))"   => aggr("rand", Some(i))
+      case q"Seq($pkg.sample.apply(${Literal(Constant(i: Int))}))" => aggr("sample", Some(i))
+      case q"Seq($pkg.max)"                                        => aggr("max")
+      case q"Seq($pkg.min)"                                        => aggr("min")
+      case q"Seq($pkg.rand)"                                       => aggr("rand")
+      case q"Seq($pkg.count)"                                      => aggr("count")
+      case q"Seq($pkg.countDistinct)"                              => aggr("count-distinct")
+      case q"Seq($pkg.sum)"                                        => aggr("sum")
+      case q"Seq($pkg.avg)"                                        => aggr("avg")
+      case q"Seq($pkg.median)"                                     => aggr("median")
+      case q"Seq($pkg.variance)"                                   => aggr("variance")
+      case q"Seq($pkg.stddev)"                                     => aggr("stddev")
+      case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
+      case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
+      //      case q"Seq($a.and[$t]($b).and[$u]($c))" if attr.name.last == '_' => And(resolveValues(q"Seq($a, $b, $c)"))
+      //      case q"Seq($a.and[$t]($b))" if attr.name.last == '_'             => And(resolveValues(q"Seq($a, $b)"))
+      //      case q"Seq($a.and[$t]($b).and[$u]($c))"                          => abort(s"[Dsl2Model:getValues] Can't retrieve multiple values from AND expression. Please add underscore to attribute: `${attr.name}_([AND-expression])`")
+      //      case q"Seq($a.and[$t]($b))"                                      => abort(s"[Dsl2Model:getValues] Can't retrieve multiple values from AND expression. Please add underscore to attribute: `${attr.name}_([AND-expression])`")
+      case q"Seq(..$vs)"         => vs match {
         case pairs if pairs.nonEmpty && pairs.head.tpe <:< weakTypeOf[(_, _)] =>
           val keyValues = pairs.map {
             case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
           }
-          //          x(6, keyValues)
+                    x(6, keyValues)
           if (attr.isMapAttr) {
             val keys = keyValues.map(_._1).distinct
+            x(7, keys)
             if (keys.contains("_") && keys.size > 1)
               abort(s"[Dsl2Model:getValues] Searching for all keys with `_` can't be combined with other key-values.")
             Mapping(keyValues.map(kv => (kv._1.asInstanceOf[String], kv._2)))
@@ -301,7 +309,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         case other if attr == null                                            => vs.flatMap(v => resolveValues(v))
         case other                                                            => vs.flatMap(v => resolveValues(v, att(q"$attr")))
       }
-      case other if attr == null                                       => resolveValues(other)
+      case other if attr == null => resolveValues(other)
       //      case other if attr.isOneURI || attr.isManyURI                => Fn("URI", resolveValues(other))
       case other => resolveValues(other, att(q"$attr"))
     }
@@ -348,12 +356,13 @@ object Dsl2Model {
   def apply(c: Context)(dsl: c.Expr[NS]): Model = {
     val elements0 = inst(c).resolve(dsl.tree)
 
+    def abort(msg: String) = c.abort(c.enclosingPosition, msg)
+
     // Sanity checks .......................................................................
 
     // Avoid ending with a ref
     elements0.last match {
-      case b: Bond => c.abort(c.enclosingPosition,
-        s"[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
+      case b: Bond => abort(s"[Dsl2Model:apply (1)] Molecule not allowed to end with a reference. Please add a one or more attribute to the reference.")
       case _       => "ok"
     }
 
@@ -364,7 +373,17 @@ object Dsl2Model {
       case g: Group                                           => g
       case m@Meta(_, "txInstant", _, _, _)                    => m
     } getOrElse
-      c.abort(c.enclosingPosition, s"[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+      abort(s"[Dsl2Model:apply (2)] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+
+    // Only tacet attributes allowed to have AND semantics for self-joins
+    def checkAndSemantics(elements: Seq[Element]): Seq[String] = elements flatMap {
+      case a@Atom(_, name, _, 1, And(_), _, _) if name.last != '_' =>
+        abort("[Dsl2Model:apply (3)] Card-one attributes cannot return multiple values and thus not have AND semantics.\n" +
+          "Please make the attribute tacet by appending an underscore.")
+      case Group(bond, elements2)                                  => checkAndSemantics(elements2)
+      case _                                                       => Seq("ok")
+    }
+    checkAndSemantics(elements0)
 
 
     // Resolve generic elements ............................................................
@@ -372,15 +391,13 @@ object Dsl2Model {
     // Transfer generic values from Meta elements to Atoms and skip Meta elements
     val elements1 = elements0.foldRight(Seq[Element](), Seq[Generic](), NoValue: Value) { case (element, (es, gs, v)) =>
       element match {
-        case a: Atom if a.name != "attr" && gs.contains(NsValue) && !gs.contains(AttrVar) =>
-          c.abort(c.enclosingPosition, s"[Dsl2Model:apply (6)] `ns` needs to have a generic `a` before")
-
-        case a: Atom if gs.isEmpty       => (a +: es, Nil, NoValue)
-        case a: Atom if a.name == "attr" => (a.copy(gs = a.gs ++ gs, value = v) +: es, Nil, NoValue)
-        case a: Atom                     => (a.copy(gs = a.gs ++ gs) +: es, Nil, NoValue)
-        case m@Meta(_, _, "e", g, v1)    => (m +: es, g +: gs, v1)
-        case Meta(_, _, _, g, v1)        => (es, g +: gs, v1)
-        case other                       => (other +: es, gs, v)
+        case a: Atom if a.name != "attr" && gs.contains(NsValue) && !gs.contains(AttrVar) => abort(s"[Dsl2Model:apply (6)] `ns` needs to have a generic `a` before")
+        case a: Atom if gs.isEmpty                                                        => (a +: es, Nil, NoValue)
+        case a: Atom if a.name == "attr"                                                  => (a.copy(gs = a.gs ++ gs, value = v) +: es, Nil, NoValue)
+        case a: Atom                                                                      => (a.copy(gs = a.gs ++ gs) +: es, Nil, NoValue)
+        case m@Meta(_, _, "e", g, v1)                                                     => (m +: es, g +: gs, v1)
+        case Meta(_, _, _, g, v1)                                                         => (es, g +: gs, v1)
+        case other                                                                        => (other +: es, gs, v)
       }
     }._1
 
