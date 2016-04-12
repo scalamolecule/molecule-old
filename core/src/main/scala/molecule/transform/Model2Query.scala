@@ -3,9 +3,9 @@ package transform
 import molecule.ast.model._
 import molecule.ast.query._
 import molecule.ops.QueryOps._
-import molecule.util.Debug
+import molecule.util.{Debug, Helpers}
 
-object Model2Query {
+object Model2Query extends Helpers {
   val x = Debug("Model2Query", 20, 9, false)
   def uri(t: String) = t == "java.net.URI"
   def u(t: String, v: String) = if (t == "java.net.URI") v else ""
@@ -77,25 +77,31 @@ object Model2Query {
         case a0@Atom(_, attr0, t, 3, value, _, gs) if attr0.last == '_' => {
           val a = a0.copy(name = attr0.init)
           value match {
-            //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
-            //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
-            //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
-            //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
-            //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
-            //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
-            //          case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
-            //          case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
-            //          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
-            case Qm             => q
+            case Qm => q
               .where(e, a, v, gs)
               .in(v + "Key", a).in(v + "Value", a)
               .func(".startsWith ^String", Seq(Var(v), Var(v + "Key")))
               .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
               .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
               .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
+            //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
+            //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
+            //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
+            //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
+            //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
+
             case VarValue       => q.where(e, a, v, gs)
-            case Eq(arg :: Nil) => q.where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
+            case Eq(arg :: Nil) => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@" + f(arg))))
             case Eq(args)       => q.where(e, a, v, gs).orRules(v, a, args)
+            case Neq(args)      => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(?!(" + args.map(f).mkString("|") + ")$).*")))
+            case Lt(arg)        => q.mapCompareTo("<", e, a, v, arg)
+            case Gt(arg)        => q.mapCompareTo(">", e, a, v, arg)
+            case Le(arg)        => q.mapCompareTo("<=", e, a, v, arg)
+            case Ge(arg)        => q.mapCompareTo(">=", e, a, v, arg)
+
+            //          case Eq((set: Set[_]) :: Nil) => q.where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
+            //          case Fn(fn, _)                => q.where(e, a, v, gs)
+
             case Mapping(pairs) => {
               if (pairs.head._1 == "_") {
                 q.where(e, a, v, gs)
@@ -131,15 +137,6 @@ object Model2Query {
         // Map Atom (mandatory)
 
         case a@Atom(_, _, t, 3, value, _, gs) => value match {
-          //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
-          //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
-          //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
-          //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
-          //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
-          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
-          //          case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
-          //          case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
-          //          case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
           case Qm => q
             .find("distinct", Seq(), v, gs)
             .where(e, a, v, gs)
@@ -148,12 +145,33 @@ object Model2Query {
             .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
             .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
             .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
+          //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
+          //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
+          //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
+          //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
+          //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
+          //          case Fulltext(Seq(Qm))        => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Var(v1)).in(v1, a)1
 
-          case VarValue       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
-          case Eq(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
-          case Eq(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
+          case VarValue             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
+          case Fulltext(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@.*" + f(arg) + ".*")))
+          case Fulltext(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@.*(" + args.map(f).mkString("|") + ").*")))
+          case Eq(arg :: Nil)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@" + f(arg))))
+          case Eq(args)             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
+          case Neq(args)            => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(?!(" + args.map(f).mkString("|") + ")$).*")))
+          case Lt(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo("<", e, a, v, arg)
+          case Gt(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo(">", e, a, v, arg)
+          case Le(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo("<=", e, a, v, arg)
+          case Ge(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo(">=", e, a, v, arg)
+          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
+          //          case Fn("sum", _)                  => q.find("sum", Seq(), v, gs).where(e, a, v, gs).widh(e)
+          //          case Fn("avg", _)                  => q.find("avg", Seq(), v, gs).where(e, a, v, gs).widh(e)
+          //          case Fn(fn, Some(i))               => q.find(fn, Seq(i), v, gs).where(e, a, v, gs)
+          //          case Fn(fn, _)                     => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
 
-          case And(args)      => q
+          //          case Eq(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
+          //          case Eq(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
+
+          case And(args) => q
             .find("distinct", Seq(), v, gs)
             .whereAnd(e, a, v, args)
 
@@ -326,6 +344,9 @@ object Model2Query {
           case Eq(args)                 => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, args, Nil, u(t, v))
           case Neq(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
           case Gt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))
+          case Lt(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Val(arg))
+          case Ge(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Val(arg))
+          case Le(arg)                  => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Val(arg))
           case And(args)                => q.find("distinct", Seq(), v, gs).whereAnd(e, a, v, args)
           case Fn(fn, _)                => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
           case Fulltext(arg :: Nil)     => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Val(arg))
@@ -333,23 +354,21 @@ object Model2Query {
         }
 
         case a@Atom(_, _, t, 1, value, _, gs) => value match {
-          case Qm                       => q.find(v, gs).where(e, a, v, gs).in(v, a)
-          case Neq(Seq(Qm))             => q.find(v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
-          case Lt(Qm)                   => q.find(v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
-          case Gt(Qm)                   => q.find(v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
-          case Le(Qm)                   => q.find(v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
-          case Ge(Qm)                   => q.find(v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
-          case Fulltext(Seq(Qm))        => q.find(v, gs).fulltext(e, a, v, Var(v1)).in(v1, a)
-          case EntValue                 => q.find(e, gs)
-          case VarValue                 => q.find(v, gs).where(e, a, v, gs)
-          case NoValue                  => q.find(NoVal, gs).where(e, a, v, gs)
-          case BackValue(backNs)        => q.find(e, gs).where(v, a.ns, a.name, Var(e), backNs, gs)
-          case Eq((seq: Seq[_]) :: Nil) => q.find(v, gs).where(e, a, v, gs).orRules(e, a, seq, gs, u(t, v))
-          case Eq(arg :: Nil) if uri(t) => q.find(v, gs).func( s"""ground (java.net.URI. "$arg")""", Empty, v).where(e, a, v, Seq())
-          case Eq(arg :: Nil)           => q.find(v, gs).where(e, a, Val(arg), gs).where(e, a, v, Seq())
-          case Eq(args)                 => q.find(v, gs).where(e, a, v, gs).orRules(e, a, args, gs, u(t, v))
-          //          case And(args)                => q.find(v, gs).where(e, a, Val(args.head), gs).where(e, a, v, gs)
-          //          case And(args)                     => q.find(v, gs).whereAnd(e, a, v, gs, args)
+          case Qm                            => q.find(v, gs).where(e, a, v, gs).in(v, a)
+          case Neq(Seq(Qm))                  => q.find(v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
+          case Lt(Qm)                        => q.find(v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
+          case Gt(Qm)                        => q.find(v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
+          case Le(Qm)                        => q.find(v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
+          case Ge(Qm)                        => q.find(v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
+          case Fulltext(Seq(Qm))             => q.find(v, gs).fulltext(e, a, v, Var(v1)).in(v1, a)
+          case EntValue                      => q.find(e, gs)
+          case VarValue                      => q.find(v, gs).where(e, a, v, gs)
+          case NoValue                       => q.find(NoVal, gs).where(e, a, v, gs)
+          case BackValue(backNs)             => q.find(e, gs).where(v, a.ns, a.name, Var(e), backNs, gs)
+          case Eq((seq: Seq[_]) :: Nil)      => q.find(v, gs).where(e, a, v, gs).orRules(e, a, seq, gs, u(t, v))
+          case Eq(arg :: Nil) if uri(t)      => q.find(v, gs).func( s"""ground (java.net.URI. "$arg")""", Empty, v).where(e, a, v, Seq())
+          case Eq(arg :: Nil)                => q.find(v, gs).where(e, a, Val(arg), gs).where(e, a, v, Seq())
+          case Eq(args)                      => q.find(v, gs).where(e, a, v, gs).orRules(e, a, args, gs, u(t, v))
           case Neq(args)                     => q.find(v, gs).where(e, a, v, gs).compareTo("!=", a, v, args map Val)
           case Lt(arg)                       => q.find(v, gs).where(e, a, v, gs).compareTo("<", a, v, Val(arg))
           case Gt(arg)                       => q.find(v, gs).where(e, a, v, gs).compareTo(">", a, v, Val(arg))

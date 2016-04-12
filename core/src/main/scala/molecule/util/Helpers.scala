@@ -1,7 +1,7 @@
 package molecule.util
 import java.text.SimpleDateFormat
 import java.time.{LocalDate, ZoneId}
-import java.util.{TimeZone, Date}
+import java.util.{Date, TimeZone}
 
 trait Helpers {
 
@@ -25,5 +25,10 @@ trait Helpers {
     val f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     f.setTimeZone(TimeZone.getTimeZone("UTC"))
     f.format(date)
+  }
+
+  def f(a: Any) = a match {
+    case date: Date => format2(date)
+    case other      => other
   }
 }

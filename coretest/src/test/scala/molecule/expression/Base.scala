@@ -26,7 +26,7 @@ class Base extends CoreSpec {
     Ns.str.strs insert List(
       ("str1", Set("a", "b")),
       ("str2", Set("b", "c")),
-      ("str3", Set("b", "d")))
+      ("str3", Set("ba", "d")))
 
     Ns.int.ints insert List(
       (1, Set(1, 2)),
@@ -41,12 +41,12 @@ class Base extends CoreSpec {
     Ns.float.floats insert List(
       (1.0f, Set(1.0f, 2.0f)),
       (2.0f, Set(2.0f, 3.0f)),
-      (3.0f, Set(2.0f, 4.0f)))
+      (3.0f, Set(2.5f, 4.0f)))
 
     Ns.double.doubles insert List(
       (1.0, Set(1.0, 2.0)),
       (2.0, Set(2.0, 3.0)),
-      (3.0, Set(2.0, 4.0)))
+      (3.0, Set(2.5, 4.0)))
 
     // Set of boolean values not relevant
 

@@ -1,8 +1,12 @@
 package molecule.ops
+import java.net.URI
+import java.util.{Date, UUID}
+
 import molecule.ast.model._
 import molecule.ast.query._
+import molecule.util.Helpers
 
-object QueryOps {
+object QueryOps extends Helpers {
   type KeepQueryOps = Int
 
   implicit class QueryOps(q: Query) {
@@ -189,16 +193,37 @@ object QueryOps {
       q.copy(i = newIn, wh = newWhere)
     }
 
+    def mapCompareTo(op: String, e: String, a: Atom, v: String, arg: Any, gs: Seq[Generic] = Seq()) = {
+      val q1 = q
+        .where(e, a, v, gs)
+        .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 1)))
+        .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
+      arg match {
+        case _: String  => q1.compareTo(op, a, v + 2, Val(arg), 1)
+        case _: UUID    => q1.compareTo(op, a, v + 2, Val(arg), 1)
+        case _: URI     => q1.compareTo(op, a, v + 2, Val(arg), 1)
+        case _: Boolean => q1.compareTo(op, a, v + 2, Val(arg), 1)
+        case _: Date    => q1
+          .func(".compareTo ^String", Seq(Var(v + 2), Val(f(arg))), ScalarBinding(Var(v + 3)))
+          .func(op, Seq(Var(v + 3), Val(0)))
+        case number     => q1
+          .func("read-string", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
+          .func(op, Seq(Var(v + 3), Val(number)))
+      }
+    }
+
 
     def orRules(e: String, a: Atom, args: Seq[Any], gs: Seq[Generic] = Seq(), v: String = ""): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
       val newRules = args.foldLeft(q.i.rules) { case (rules, arg) =>
         val arg1 = arg match {
+          case d: Date   => format2(d)
           case s: String => s.replaceAll("\"", "\\\\\"")
           case other     => other
         }
         val dataClauses = if (a.card == 3)
-          Seq(Funct(".startsWith ^String", Seq(Var(e), Val(arg1)), NoBinding))
+        //          Seq(Funct(".startsWith ^String", Seq(Var(e), Val(arg1)), NoBinding))
+          Seq(Funct(".matches ^String", Seq(Var(e), Val(".+@" + arg1)), NoBinding))
         else if (v.nonEmpty) {
           Seq(Funct( s"""ground (java.net.URI. "$arg1")""", Nil, ScalarBinding(Var(v))),
             DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty))

@@ -36,51 +36,51 @@ class Base extends CoreSpec {
       (5, Map[String, Int]())
     )
     Ns.int.longMap insert List(
-      (1, Map("en" -> 10L)),
-      (2, Map("fr" -> 20L, "en" -> 10L)),
-      (3, Map("en" -> 30L)),
+      (1, Map("en" -> 10L, "da" -> 30L)),
+      (2, Map("en" -> 10L, "da" -> 10L, "fr" -> 20L, "it" -> 30L)),
+      (3, Map("en" -> 30L, "da" -> 30L)),
       (4, Map("da" -> 30L)),
       (5, Map[String, Long]())
     )
     Ns.int.floatMap insert List(
-      (1, Map("en" -> 10f)),
-      (2, Map("fr" -> 20f, "en" -> 10f)),
-      (3, Map("en" -> 30f)),
+      (1, Map("en" -> 10f, "da" -> 30f)),
+      (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f, "it" -> 30f)),
+      (3, Map("en" -> 30f, "da" -> 30f)),
       (4, Map("da" -> 30f)),
       (5, Map[String, Float]())
     )
     Ns.int.doubleMap insert List(
-      (1, Map("en" -> 10.0)),
-      (2, Map("fr" -> 20.0, "en" -> 10.0)),
-      (3, Map("en" -> 30.0)),
+      (1, Map("en" -> 10.0, "da" -> 30.0)),
+      (2, Map("en" -> 10.0, "da" -> 10.0, "fr" -> 20.0, "it" -> 30.0)),
+      (3, Map("en" -> 30.0, "da" -> 30.0)),
       (4, Map("da" -> 30.0)),
       (5, Map[String, Double]())
     )
     Ns.int.boolMap insert List(
-      (1, Map("en" -> true)),
-      (2, Map("fr" -> false, "en" -> true)),
+      (1, Map("en" -> true, "da" -> false)),
+      (2, Map("en" -> true, "da" -> true, "fr" -> false, "it" -> false)),
       (3, Map("en" -> false)),
-      (4, Map("da" -> true)),
+      (4, Map("da" -> false)),
       (5, Map[String, Boolean]())
     )
     Ns.int.dateMap insert List(
-      (1, Map("en" -> date1)),
-      (2, Map("fr" -> date2, "en" -> date1)),
-      (3, Map("en" -> date3)),
+      (1, Map("en" -> date1, "da" -> date3)),
+      (2, Map("en" -> date1, "da" -> date1, "fr" -> date2, "it" -> date3)),
+      (3, Map("en" -> date3, "da" -> date3)),
       (4, Map("da" -> date3)),
       (5, Map[String, Date]())
     )
     Ns.int.uuidMap insert List(
-      (1, Map("en" -> uuid1)),
-      (2, Map("fr" -> uuid2, "en" -> uuid1)),
-      (3, Map("en" -> uuid3)),
+      (1, Map("en" -> uuid1, "da" -> uuid3)),
+      (2, Map("en" -> uuid1, "da" -> uuid1, "fr" -> uuid2, "it" -> uuid3)),
+      (3, Map("en" -> uuid3, "da" -> uuid3)),
       (4, Map("da" -> uuid3)),
       (5, Map[String, UUID]())
     )
     Ns.int.uriMap insert List(
-      (1, Map("en" -> uri1)),
-      (2, Map("fr" -> uri2, "en" -> uri1)),
-      (3, Map("en" -> uri3)),
+      (1, Map("en" -> uri1, "da" -> uri3)),
+      (2, Map("en" -> uri1, "da" -> uri1, "fr" -> uri2, "it" -> uri3)),
+      (3, Map("en" -> uri3, "da" -> uri3)),
       (4, Map("da" -> uri3)),
       (5, Map[String, URI]())
     )

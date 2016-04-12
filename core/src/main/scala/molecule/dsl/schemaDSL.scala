@@ -117,7 +117,7 @@ object schemaDSL {
     // Negation
     def not(one: T, more: T*)         : Ns with Attr = ???
     // Todo: remove this when Intellij can infer from the next method alone...
-//    def != (value: T)         : Ns with Attr = ???
+    def != (value: T)         : Ns with Attr = ???
     def != (one: T, more: T*) : Ns with Attr = ???
 
     // Comparison
@@ -221,12 +221,15 @@ object schemaDSL {
 
     def k(value: String, more: String*)        : Values with Ns with Attr = ???
     def k(values: Seq[String])                 : Values with Ns with Attr = ???
+
+
     def k(expr1: Exp1[String])                 : Values with Ns with Attr = ???
     def k(expr2: Exp2[String, String])         : Values with Ns with Attr = ???
     def k(expr3: Exp3[String, String, String]) : Values with Ns with Attr = ???
 
     // Values
     def apply(value: T, more: T*)                         : Ns with Attr = ???
+    def apply(set: Set[T], moreSets: Set[T]*)             : Ns with Attr = ???
     def apply(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
     def apply(pairs: Seq[(String, T)])                    : Ns with Attr = ???
 
@@ -235,14 +238,19 @@ object schemaDSL {
     def apply(expr2: Exp2[(String, T), (String, T)])              : Ns with Attr = ???
     def apply(expr3: Exp3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
 
+    // Todo? Can we allow OR semantics for values too at the same time as for key/value pairs?
+    //    def apply(expr1: Exp1[T])       : Ns with Attr = ???
+    //    def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
+    //    def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
+
     // Key/values
     def apply(and2: And2[(String, T), (String, T)])              : Ns with Attr = ???
     def apply(and3: And3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
   }
 
   trait MapString [Ns, In] extends MapAttr[Ns, In, Map[String, String ], String ] {
-    def contains(that: String): Ns with Attr = ???
-    def contains(in: ?)       : In with Attr = ???
+    def contains(s: String, more: String*): Ns with Attr = ???
+    def contains(in: ?)                   : In with Attr = ???
   }
   trait MapInt    [Ns, In] extends MapAttr[Ns, In, Map[String, Int    ], Int    ]
   trait MapLong   [Ns, In] extends MapAttr[Ns, In, Map[String, Long   ], Long   ]
@@ -315,8 +323,8 @@ object schemaDSL {
   trait UniqueIdentity
   trait Indexed
   trait FulltextSearch[Ns, In] {
-    def contains(that: String): Ns with Attr = ???
-    def contains(in: ?)       : In with Attr = ???
+    def contains(s: String, more: String*): Ns with Attr = ???
+    def contains(in: ?)                   : In with Attr = ???
   }
   trait IsComponent
   trait NoHistory
