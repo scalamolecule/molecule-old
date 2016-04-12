@@ -114,6 +114,18 @@ object schemaDSL {
     // Unifying marker for attributes to be unified in self-joins
     def apply(unifyThis: unify): Ns with Attr = ???
 
+    // Negation
+    def not(one: T, more: T*)         : Ns with Attr = ???
+    // Todo: remove this when Intellij can infer from the next method alone...
+//    def != (value: T)         : Ns with Attr = ???
+    def != (one: T, more: T*) : Ns with Attr = ???
+
+    // Comparison
+    def <  (value: T) : Ns with Attr = ???
+    def >  (value: T) : Ns with Attr = ???
+    def <= (value: T) : Ns with Attr = ???
+    def >= (value: T) : Ns with Attr = ???
+
     // Input
     def apply(in: ?) : In with Attr = ???
     def not  (in: ?) : In with Attr = ???
@@ -127,26 +139,12 @@ object schemaDSL {
   // Separating out all methods involving type T to allow
   // MapAttr to have its own String-only implementations
   trait ValueAttr0[Ns, In, T, U] extends ValueAttr[Ns, In, T, U] {
-
-    // Expressions
     def apply(expr1: Exp1[T])       : Ns with Attr = ???
     def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
     def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
-
-    // Negation
-    def not(one: T, more: T*)         : Ns with Attr = ???
-    // Todo: remove this when Intellij can infer from the next method alone...
-//    def != (value: T)         : Ns with Attr = ???
-    def != (one: T, more: T*) : Ns with Attr = ???
-
-    // Comparison
-    def <  (value: T) : Ns with Attr = ???
-    def >  (value: T) : Ns with Attr = ???
-    def <= (value: T) : Ns with Attr = ???
-    def >= (value: T) : Ns with Attr = ???
   }
 
-  // Cardinality one
+  // Cardinality one attributes
 
   trait One[Ns, In, T] extends ValueAttr0[Ns, In, T, T] {
     // Empty `apply` is a request to delete values!
@@ -166,11 +164,10 @@ object schemaDSL {
   trait OneAny    [Ns, In] extends One[Ns, In, Any    ]
 
 
-  // Cardinality many
+  // Cardinality many attributes
 
   trait Many[Ns, In, S, T] extends ValueAttr0[Ns, In, T, S] {
     def apply(values: T*)                          : Ns with Attr = ???
-//    def apply(set: S)                              : Ns with Attr = ???
     def apply(set: S, moreSets: S*)                : Ns with Attr = ???
     def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
     def add(value: T)                              : Ns with Attr = ???
@@ -187,41 +184,66 @@ object schemaDSL {
   trait ManyURI    [Ns, In] extends Many[Ns, In, Set[URI    ], URI    ]
 
 
-  // Map
+  // Map attributes
 
   // We bypass ValueAttr0 in order to have String-based expressions only
   trait MapAttr[Ns, In, M, T] extends ValueAttr[Ns, In, T, M]  {
-    def apply(values: String*)                               : Ns with Attr = ???
-    def add(pair: (String, T), morePairs: (String, T)*)      : Ns with Attr = ???
-    def remove(key: String, moreKeys: String*)               : Ns with Attr = ???
-    def apply(oldNew: (String, T), oldNewMore: (String, T)*) : Ns with Attr = ???
 
+    // Manipulation
 
-    def k(value: T, more: T*): Ns with Attr = ???
+    // Empty `apply` is a request to delete all key/values!
+    def apply()                                         : Ns with Attr = ???
+    def add(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
+    def remove(key: String, moreKeys: String*)          : Ns with Attr = ???
+
+    // Subsequent methods for applying values to keyed atributes
+    trait Values {
+      def apply(value: T, more: T*): Ns with Attr = ???
+
+      def apply(expr1: Exp1[T])       : Ns with Attr = ???
+      def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
+      def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
+
+      // Negation
+      def not(one: T, more: T*)         : Ns with Attr = ???
+      def != (one: T, more: T*) : Ns with Attr = ???
+
+      // Comparison
+      def <  (value: T) : Ns with Attr = ???
+      def >  (value: T) : Ns with Attr = ???
+      def <= (value: T) : Ns with Attr = ???
+      def >= (value: T) : Ns with Attr = ???
+
+      // Todo: How can we make those available to String type only?
+      def contains(that: T): Ns with Attr = ???
+      def contains(in: ?)  : In with Attr = ???
+    }
+
+    def k(value: String, more: String*)        : Values with Ns with Attr = ???
+    def k(values: Seq[String])                 : Values with Ns with Attr = ???
+    def k(expr1: Exp1[String])                 : Values with Ns with Attr = ???
+    def k(expr2: Exp2[String, String])         : Values with Ns with Attr = ???
+    def k(expr3: Exp3[String, String, String]) : Values with Ns with Attr = ???
+
+    // Values
+    def apply(value: T, more: T*)                         : Ns with Attr = ???
+    def apply(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
+    def apply(pairs: Seq[(String, T)])                    : Ns with Attr = ???
 
     // Expressions (only for keys of type String)
-    def apply(expr1: Exp1[String])                 : Ns with Attr = ???
+    def apply(expr1: Exp1[(String, T)])                           : Ns with Attr = ???
+    def apply(expr2: Exp2[(String, T), (String, T)])              : Ns with Attr = ???
+    def apply(expr3: Exp3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
 
-    def apply(expr2: Exp2[String, String])         : Ns with Attr = ???
-    def apply(expr3: Exp3[String, String, String]) : Ns with Attr = ???
-
-    def apply(expr2: And2[(String, T), (String, T)])              : Ns with Attr = ???
-    def apply(expr2: And3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
-
-    // Negation
-    def not(one: String, more: String*)         : Ns with Attr = ???
-    // Todo: remove this when Intellij can infer from the next method alone...
-    def != (value: String)         : Ns with Attr = ???
-    def != (one: String, more: String*) : Ns with Attr = ???
-
-    // Comparison
-    def <  (value: String) : Ns with Attr = ???
-    def >  (value: String) : Ns with Attr = ???
-    def <= (value: String) : Ns with Attr = ???
-    def >= (value: String) : Ns with Attr = ???
-
+    // Key/values
+    def apply(and2: And2[(String, T), (String, T)])              : Ns with Attr = ???
+    def apply(and3: And3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
   }
-  trait MapString [Ns, In] extends MapAttr[Ns, In, Map[String, String ], String ]
+
+  trait MapString [Ns, In] extends MapAttr[Ns, In, Map[String, String ], String ] {
+    def contains(that: String): Ns with Attr = ???
+    def contains(in: ?)       : In with Attr = ???
+  }
   trait MapInt    [Ns, In] extends MapAttr[Ns, In, Map[String, Int    ], Int    ]
   trait MapLong   [Ns, In] extends MapAttr[Ns, In, Map[String, Long   ], Long   ]
   trait MapFloat  [Ns, In] extends MapAttr[Ns, In, Map[String, Float  ], Float  ]
@@ -233,6 +255,7 @@ object schemaDSL {
 
 
   // Enums
+
   object EnumValue
   trait Enum
   trait OneEnum  [Ns, In] extends One [Ns, In, String]              with Enum
@@ -284,14 +307,16 @@ object schemaDSL {
   trait OneEnum$   extends Enum$
   trait ManyEnums$ extends Enum$
 
+
   // Attribute options
+
   case class Doc(msg: String)
   trait UniqueValue
   trait UniqueIdentity
   trait Indexed
   trait FulltextSearch[Ns, In] {
     def contains(that: String): Ns with Attr = ???
-    def contains(in: ?) : In with Attr = ???
+    def contains(in: ?)       : In with Attr = ???
   }
   trait IsComponent
   trait NoHistory

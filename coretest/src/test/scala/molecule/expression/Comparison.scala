@@ -202,7 +202,8 @@ class Comparison extends Base {
 
     // Often we probably instead want to _group by another attribute_ and
     // then compare each set of cardinality-many values:
-    Ns.str.strs.get.filter(_._2.forall(_ > "a")) === List(("str2", Set("b", "c")), ("str3", Set("d", "b")))
-    // etc...
+    Ns.str.strs.get.filter(_._2.forall(_ > "a")) === List(
+      ("str2", Set("b", "c")),
+      ("str3", Set("d", "b")))
   }
 }

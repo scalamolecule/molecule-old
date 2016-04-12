@@ -37,7 +37,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //            x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-    //            x(1, dsl.tree, model)
+//                x(1, dsl.tree, model)
 
     def keyValues(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {
       case (key: String, value: String)
@@ -52,6 +52,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       val newIdentifiers = (elements collect {
         case atom@Atom(_, _, _, _, Eq(idents), _, _)     => keyValues(idents)
         case atom@Atom(_, _, _, _, Neq(idents), _, _)    => keyValues(idents)
+        case atom@Atom(_, _, _, _, And(idents), _, _)    => keyValues(idents)
         case atom@Atom(_, _, _, _, Lt(ident), _, _)      => keyValues(Seq(ident))
         case atom@Atom(_, _, _, _, Gt(ident), _, _)      => keyValues(Seq(ident))
         case atom@Atom(_, _, _, _, Le(ident), _, _)      => keyValues(Seq(ident))
@@ -66,7 +67,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
     }
 
     val identMap = mapIdentifiers(model.elements).toMap
-    //    x(2, identMap)
+//        x(2, identMap)
 
     q"""
       import molecule._
@@ -95,8 +96,15 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       }
 
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
+        case atom@Atom(_, _, _, 2, Eq(idents), _, _)     =>
+          val flatValues = getValues(idents).flatMap {
+            case set: Set[_] => set.toList
+            case other       => Seq(other)
+          }
+          atom.copy(value = Eq(flatValues))
         case atom@Atom(_, _, _, _, Eq(idents), _, _)     => atom.copy(value = Eq(getValues(idents)))
         case atom@Atom(_, _, _, _, Neq(idents), _, _)    => atom.copy(value = Neq(getValues(idents)))
+        case atom@Atom(_, _, _, _, And(idents), _, _)    => atom.copy(value = And(getValues(idents)))
         case atom@Atom(_, _, _, _, Lt(ident), _, _)      => atom.copy(value = Lt(getValues(Seq(ident)).head))
         case atom@Atom(_, _, _, _, Gt(ident), _, _)      => atom.copy(value = Gt(getValues(Seq(ident)).head))
         case atom@Atom(_, _, _, _, Le(ident), _, _)      => atom.copy(value = Le(getValues(Seq(ident)).head))

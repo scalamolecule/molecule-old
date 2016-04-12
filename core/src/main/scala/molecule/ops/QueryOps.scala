@@ -95,17 +95,19 @@ object QueryOps {
     def where(e: String, a: Atom, qv: Val, gs: Seq[Generic]): Query =
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(a.ns, a.name), qv, Empty)))
 
-    def whereAnd[T](e: String, a: Atom, v: String, gs: Seq[Generic], args: Seq[T]): Query = {
-      val valueClauses = args.map(arg => DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg), Empty))
-      val outputClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty)
-      q.copy(wh = Where(q.wh.clauses ++ valueClauses :+ outputClause))
+    //    def whereAnd[T](e: String, a: Atom, v: String, gs: Seq[Generic], args: Seq[T]): Query = {
+    //      val valueClauses = args.map(arg => DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg), Empty))
+    //      val outputClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty)
+    //      q.copy(wh = Where(q.wh.clauses ++ valueClauses :+ outputClause))
+    //    }
+
+    def whereAnd[T](e: String, a: Atom, v: String, args: Seq[T]): Query =
+      args.foldLeft(q) { case (q1, arg) => q1.where(e, a, Val(arg), Nil) }.where(e, a, v, Nil)
+
+    def whereAndEnum[T](e: String, a: Atom, v: String, prefix: String, args: Seq[T]): Query = {
+      args.foldLeft(q) { case (q1, arg) => q1.where(e, a, Val(prefix + arg), Nil) }.enum(e, a, v, Nil)
     }
 
-    def whereAndMap[T](e: String, a: Atom, v: String, gs: Seq[Generic], args: Seq[T]): Query = {
-      val valueClauses = args.map(arg => DataClause(ImplDS, Var(e), KW(a.ns, a.name), Val(arg), Empty))
-      val outputClause = DataClause(ImplDS, Var(e), KW(a.ns, a.name), Var(v), Empty)
-      q.copy(wh = Where(q.wh.clauses ++ valueClauses :+ outputClause))
-    }
 
     // Null ..........................................
 

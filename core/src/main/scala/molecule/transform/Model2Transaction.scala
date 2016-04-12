@@ -90,6 +90,7 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
     }._2
   }
 
+  // Lookup if key is already populated
   def pairStr(e: Any, a: String, key: String) = {
     val query = s"[:find ?v :in $$ ?e ?a ?key :where [?e ?a ?v][(.startsWith ^String ?v ?key)]]"
     Peer.q(query, conn.db, e.asInstanceOf[Object], a.asInstanceOf[Object], key.asInstanceOf[Object]).map(_.get(0))

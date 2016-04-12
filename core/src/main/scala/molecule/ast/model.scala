@@ -104,7 +104,6 @@ object model {
   case class And3[T1, T2, T3](e1: Exp1[T1], e2: Exp1[T2], e3: Exp1[T3]) extends Exp3[T1, T2, T3]
   case class Or3 [T1, T2, T3](e1: Exp1[T1], e2: Exp1[T2], e3: Exp1[T3]) extends Exp3[T1, T2, T3]
 
-
   // Convenience methods .........................
 
   def curNs(e: Element) = e match {

@@ -267,37 +267,35 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       Fn(fn, value)
 
     values match {
-      case q"Seq($pkg.?)"                                          => Qm
-      case q"Seq($pkg.nil)" if attr.name.last == '_'               => Fn("not")
-      case q"Seq($pkg.nil)"                                        => abort(s"[Dsl2Model:getValues] Please add underscore to attribute: `${attr.name}_(nil)`")
-      case q"Seq($pkg.unify)"                                      => Fn("unify")
-      case q"Seq($pkg.distinct)"                                   => Distinct
-      case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"    => aggr("max", Some(i))
-      case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"    => aggr("min", Some(i))
-      case q"Seq($pkg.rand.apply(${Literal(Constant(i: Int))}))"   => aggr("rand", Some(i))
-      case q"Seq($pkg.sample.apply(${Literal(Constant(i: Int))}))" => aggr("sample", Some(i))
-      case q"Seq($pkg.max)"                                        => aggr("max")
-      case q"Seq($pkg.min)"                                        => aggr("min")
-      case q"Seq($pkg.rand)"                                       => aggr("rand")
-      case q"Seq($pkg.count)"                                      => aggr("count")
-      case q"Seq($pkg.countDistinct)"                              => aggr("count-distinct")
-      case q"Seq($pkg.sum)"                                        => aggr("sum")
-      case q"Seq($pkg.avg)"                                        => aggr("avg")
-      case q"Seq($pkg.median)"                                     => aggr("median")
-      case q"Seq($pkg.variance)"                                   => aggr("variance")
-      case q"Seq($pkg.stddev)"                                     => aggr("stddev")
-      case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
-      case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
-      //      case q"Seq($a.and[$t]($b).and[$u]($c))" if attr.name.last == '_' => And(resolveValues(q"Seq($a, $b, $c)"))
-      //      case q"Seq($a.and[$t]($b))" if attr.name.last == '_'             => And(resolveValues(q"Seq($a, $b)"))
-      //      case q"Seq($a.and[$t]($b).and[$u]($c))"                          => abort(s"[Dsl2Model:getValues] Can't retrieve multiple values from AND expression. Please add underscore to attribute: `${attr.name}_([AND-expression])`")
-      //      case q"Seq($a.and[$t]($b))"                                      => abort(s"[Dsl2Model:getValues] Can't retrieve multiple values from AND expression. Please add underscore to attribute: `${attr.name}_([AND-expression])`")
-      case q"Seq(..$vs)"         => vs match {
+      case q"Seq($pkg.?)"                                             => Qm
+      case q"Seq($pkg.nil)" if attr.name.last == '_'                  => Fn("not")
+      case q"Seq($pkg.nil)"                                           => abort(s"[Dsl2Model:getValues] Please add underscore to attribute: `${attr.name}_(nil)`")
+      case q"Seq($pkg.unify)"                                         => Fn("unify")
+      case q"Seq($pkg.distinct)"                                      => Distinct
+      case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"       => aggr("max", Some(i))
+      case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"       => aggr("min", Some(i))
+      case q"Seq($pkg.rand.apply(${Literal(Constant(i: Int))}))"      => aggr("rand", Some(i))
+      case q"Seq($pkg.sample.apply(${Literal(Constant(i: Int))}))"    => aggr("sample", Some(i))
+      case q"Seq($pkg.max)"                                           => aggr("max")
+      case q"Seq($pkg.min)"                                           => aggr("min")
+      case q"Seq($pkg.rand)"                                          => aggr("rand")
+      case q"Seq($pkg.count)"                                         => aggr("count")
+      case q"Seq($pkg.countDistinct)"                                 => aggr("count-distinct")
+      case q"Seq($pkg.sum)"                                           => aggr("sum")
+      case q"Seq($pkg.avg)"                                           => aggr("avg")
+      case q"Seq($pkg.median)"                                        => aggr("median")
+      case q"Seq($pkg.variance)"                                      => aggr("variance")
+      case q"Seq($pkg.stddev)"                                        => aggr("stddev")
+      case q"Seq($a.and[$t]($b).and[$u]($c).and[$v]($d).and[$w]($e))" => And(resolveValues(q"Seq($a, $b, $c, $d, $e)"))
+      case q"Seq($a.and[$t]($b).and[$u]($c).and[$v]($d))"             => And(resolveValues(q"Seq($a, $b, $c, $d)"))
+      case q"Seq($a.and[$t]($b).and[$u]($c))"                         => And(resolveValues(q"Seq($a, $b, $c)"))
+      case q"Seq($a.and[$t]($b))"                                     => And(resolveValues(q"Seq($a, $b)"))
+      case q"Seq(..$vs)"                                              => vs match {
         case pairs if pairs.nonEmpty && pairs.head.tpe <:< weakTypeOf[(_, _)] =>
           val keyValues = pairs.map {
             case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
           }
-                    x(6, keyValues)
+          x(6, keyValues)
           if (attr.isMapAttr) {
             val keys = keyValues.map(_._1).distinct
             x(7, keys)
@@ -309,7 +307,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
         case other if attr == null                                            => vs.flatMap(v => resolveValues(v))
         case other                                                            => vs.flatMap(v => resolveValues(v, att(q"$attr")))
       }
-      case other if attr == null => resolveValues(other)
+      case other if attr == null                                      => resolveValues(other)
       //      case other if attr.isOneURI || attr.isManyURI                => Fn("URI", resolveValues(other))
       case other => resolveValues(other, att(q"$attr"))
     }
