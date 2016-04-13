@@ -88,6 +88,7 @@ object model {
   }
   case class TermValue[T1](v: T1) extends Exp1[T1]
   case class Not[T1](e: Exp1[T1]) extends Exp1[T1]
+
   case class Or[T1](e1: Exp1[T1], e2: Exp1[T1]) extends Exp1[T1]
 
   trait Exp2[T1, T2] extends Expression

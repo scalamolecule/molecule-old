@@ -134,11 +134,7 @@ object schemaDSL {
     def >    (in: ?) : In with Attr = ???
     def <=   (in: ?) : In with Attr = ???
     def >=   (in: ?) : In with Attr = ???
-  }
 
-  // Separating out all methods involving type T to allow
-  // MapAttr to have its own String-only implementations
-  trait ValueAttr0[Ns, In, T, U] extends ValueAttr[Ns, In, T, U] {
     def apply(expr1: Exp1[T])       : Ns with Attr = ???
     def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
     def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
@@ -146,7 +142,7 @@ object schemaDSL {
 
   // Cardinality one attributes
 
-  trait One[Ns, In, T] extends ValueAttr0[Ns, In, T, T] {
+  trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
     // Empty `apply` is a request to delete values!
     def apply()                 : Ns with Attr = ???
     def apply(one: T, more: T*) : Ns with Attr = ???
@@ -166,7 +162,7 @@ object schemaDSL {
 
   // Cardinality many attributes
 
-  trait Many[Ns, In, S, T] extends ValueAttr0[Ns, In, T, S] {
+  trait Many[Ns, In, S, T] extends ValueAttr[Ns, In, T, S] {
     def apply(values: T*)                          : Ns with Attr = ???
     def apply(set: S, moreSets: S*)                : Ns with Attr = ???
     def apply(oldNew: (T, T), oldNewMore: (T, T)*) : Ns with Attr = ???
@@ -186,17 +182,28 @@ object schemaDSL {
 
   // Map attributes
 
-  // We bypass ValueAttr0 in order to have String-based expressions only
   trait MapAttr[Ns, In, M, T] extends ValueAttr[Ns, In, T, M]  {
 
     // Manipulation
-
     // Empty `apply` is a request to delete all key/values!
     def apply()                                         : Ns with Attr = ???
     def add(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
     def remove(key: String, moreKeys: String*)          : Ns with Attr = ???
 
-    // Subsequent methods for applying values to keyed atributes
+    // Values
+    def apply(value: T, more: T*)                         : Ns with Attr = ???
+    def apply(set: Set[T], moreSets: Set[T]*)             : Ns with Attr = ???
+    def apply(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
+    def apply(pairs: Seq[(String, T)])                    : Ns with Attr = ???
+
+    // Keys
+    def k(value: String, more: String*)        : Values with Ns with Attr = ???
+    def k(values: Seq[String])                 : Values with Ns with Attr = ???
+    def k(expr1: Exp1[String])                 : Values with Ns with Attr = ???
+    def k(expr2: Exp2[String, String])         : Values with Ns with Attr = ???
+    def k(expr3: Exp3[String, String, String]) : Values with Ns with Attr = ???
+
+    // Keyed attribute value methods
     trait Values {
       def apply(value: T, more: T*): Ns with Attr = ???
 
@@ -218,34 +225,6 @@ object schemaDSL {
       def contains(that: T): Ns with Attr = ???
       def contains(in: ?)  : In with Attr = ???
     }
-
-    def k(value: String, more: String*)        : Values with Ns with Attr = ???
-    def k(values: Seq[String])                 : Values with Ns with Attr = ???
-
-
-    def k(expr1: Exp1[String])                 : Values with Ns with Attr = ???
-    def k(expr2: Exp2[String, String])         : Values with Ns with Attr = ???
-    def k(expr3: Exp3[String, String, String]) : Values with Ns with Attr = ???
-
-    // Values
-    def apply(value: T, more: T*)                         : Ns with Attr = ???
-    def apply(set: Set[T], moreSets: Set[T]*)             : Ns with Attr = ???
-    def apply(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
-    def apply(pairs: Seq[(String, T)])                    : Ns with Attr = ???
-
-    // Expressions (only for keys of type String)
-    def apply(expr1: Exp1[(String, T)])                           : Ns with Attr = ???
-    def apply(expr2: Exp2[(String, T), (String, T)])              : Ns with Attr = ???
-    def apply(expr3: Exp3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
-
-    // Todo? Can we allow OR semantics for values too at the same time as for key/value pairs?
-    //    def apply(expr1: Exp1[T])       : Ns with Attr = ???
-    //    def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
-    //    def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
-
-    // Key/values
-    def apply(and2: And2[(String, T), (String, T)])              : Ns with Attr = ???
-    def apply(and3: And3[(String, T), (String, T), (String, T)]) : Ns with Attr = ???
   }
 
   trait MapString [Ns, In] extends MapAttr[Ns, In, Map[String, String ], String ] {

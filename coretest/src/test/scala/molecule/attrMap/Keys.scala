@@ -1,11 +1,11 @@
-//package molecule
-//package attrMap
-//import datomic.Peer
-//import molecule.util.dsl.coreTest._
-//
-//class Keys extends Base {
-//
-//
+package molecule
+package attrMap
+import datomic.Peer
+import molecule.util.dsl.coreTest._
+
+class Keys extends Base {
+
+
 //  "One key" in new Setup {
 //
 //    Ns.int.strMap.k("en").get === List(
@@ -53,8 +53,8 @@
 //      30
 //    )
 //  }
-//
-//
+
+
 //  "Multiple keys (OR semantics)" in new Setup {
 //
 //
@@ -177,4 +177,4 @@
 //      (3, Map("en" -> 30, "da" -> 30))
 //    )
 //  }
-//}
+}

@@ -248,20 +248,12 @@
 //
 //    // OR semantics
 //
-//    Ns.int.strMap("en" -> "Hi there" or "da" -> "Hej").get === List(
-//      (1, Map("en" -> "Hi there")),
-//      (4, Map("da" -> "Hej"))
-//    )
-//    // Comma-separated pairs have OR-semantics
+//    // Comma-separated pairs have OR-semantics (can't use 'or'-notation for pairs)
 //    Ns.int.strMap("en" -> "Hi there", "da" -> "Hej").get === List(
 //      (1, Map("en" -> "Hi there")),
 //      (4, Map("da" -> "Hej"))
 //    )
 //
-//    Ns.int.intMap("en" -> 10 or "fr" -> 20).get === List(
-//      (1, Map("en" -> 10)),
-//      (2, Map("fr" -> 20, "en" -> 10))
-//    )
 //    Ns.int.intMap("en" -> 10, "fr" -> 20).get === List(
 //      (1, Map("en" -> 10)),
 //      (2, Map("fr" -> 20, "en" -> 10))

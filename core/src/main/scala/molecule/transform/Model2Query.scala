@@ -91,6 +91,7 @@ object Model2Query extends Helpers {
             //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
 
             case VarValue       => q.where(e, a, v, gs)
+            case And(args)      => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + args.head + ")$")))
             case Eq(arg :: Nil) => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@" + f(arg))))
             case Eq(args)       => q.where(e, a, v, gs).orRules(v, a, args)
             case Neq(args)      => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(?!(" + args.map(f).mkString("|") + ")$).*")))
@@ -155,14 +156,23 @@ object Model2Query extends Helpers {
           case VarValue             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
           case Fulltext(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@.*" + f(arg) + ".*")))
           case Fulltext(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@.*(" + args.map(f).mkString("|") + ").*")))
-          case Eq(arg :: Nil)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@" + f(arg))))
-          case Eq(args)             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
-          case Neq(args)            => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(?!(" + args.map(f).mkString("|") + ")$).*")))
-          case Lt(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo("<", e, a, v, arg)
-          case Gt(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo(">", e, a, v, arg)
-          case Le(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo("<=", e, a, v, arg)
-          case Ge(arg)              => q.find("distinct", Seq(), v, gs).mapCompareTo(">=", e, a, v, arg)
-          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
+          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + set.toSeq.map(f).mkString("|") + ")$")))
+          //          case Eq(arg :: Nil)           => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@" + f(arg))))
+          //          case Eq(args)                 => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + args.map(f).mkString("|") + ")$")))
+          case Eq(args) => {
+            val args1 = args flatMap {
+              case set: Set[_] => set.toSeq
+              case other       => Seq(other)
+            }
+            q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + args1.map(f).mkString("|") + ")$")))
+          }
+
+          //          case Eq(args)                 => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
+          case Neq(args) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(?!(" + args.map(f).mkString("|") + ")$).*")))
+          case Lt(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo("<", e, a, v, arg)
+          case Gt(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo(">", e, a, v, arg)
+          case Le(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo("<=", e, a, v, arg)
+          case Ge(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo(">=", e, a, v, arg)
           //          case Fn("sum", _)                  => q.find("sum", Seq(), v, gs).where(e, a, v, gs).widh(e)
           //          case Fn("avg", _)                  => q.find("avg", Seq(), v, gs).where(e, a, v, gs).widh(e)
           //          case Fn(fn, Some(i))               => q.find(fn, Seq(i), v, gs).where(e, a, v, gs)
@@ -515,12 +525,9 @@ object Model2Query extends Helpers {
         case Group(_, elements2)                      => getAndAtoms(elements2)
         case _                                        => Nil
       }
-      //      val andAtoms: Seq[Atom] = getAndAtoms(model.elements)
 
       val andAtoms: Seq[Atom] = model.elements.collect {
-        //        case a@Atom(_, attr0, _, 1, And(andValues), _, _) if attr0.last == '_' => a
-        case a@Atom(_, attr0, _, 1, And(andValues), _, _) => a
-        //              case Group(b@Bond(ns, refAttr, refNs, _), elements) =>
+        case a@Atom(_, attr0, _, card, And(_), _, _) if card == 1 || card == 3 => a
       }
 
       if (andAtoms.size > 1)
@@ -529,11 +536,13 @@ object Model2Query extends Helpers {
       if (andAtoms.size == 1) {
         val clauses = q.wh.clauses
         val andAtom = andAtoms.head
-        val Atom(ns, attr0, _, _, And(andValues), _, _) = andAtom
+        val Atom(ns, attr0, _, card, And(andValues), _, _) = andAtom
         val attr = if (attr0.last == '_') attr0.init else attr0
         val unifyAttrs = model.elements.collect {
           case a@Atom(ns1, attr1, _, _, _, _, _) if a != andAtom => (ns1, if (attr1.last == '_') attr1.init else attr1)
         }
+
+        // The first arg is already modelled in the query
         val selfJoinClauses = andValues.zipWithIndex.tail.flatMap { case (andValue, i) =>
 
           // Todo: complete matches...
@@ -543,7 +552,7 @@ object Model2Query extends Helpers {
             case _      => qv
           }
           def queryTerm(qt: QueryTerm): QueryTerm = qt match {
-            case Rule(name, args, cls) => Rule(name, args map queryValue, cls map clause)
+            case Rule(name, args, cls) => Rule(name, args map queryValue, cls flatMap clause)
             case InVar(b, argss)       => InVar(binding(b), argss)
             case qv: QueryValue        => queryValue(qv)
             case other                 => qt
@@ -555,33 +564,38 @@ object Model2Query extends Helpers {
             case RelationBinding(vs)  => RelationBinding(vs map vi)
             case _                    => b
           }
-          def clause(cl: Clause) = cl match {
-            case dc: DataClause => dataCls(dc)
-            case other          => resolve(other).get
+          def clause(cl: Clause): Seq[Clause] = cl match {
+            case dc: DataClause => dataClauses(dc)
+            case other          => makeSelfJoinClauses(other)
           }
-          def dataCls(dc: DataClause) = dc match {
-            case DataClause(ds, e, a@KW(ns2, attr2, _), v, tx, op) if (ns, attr) ==(ns2, attr2) =>
+          def dataClauses(dc: DataClause): Seq[Clause] = dc match {
+            case DataClause(ds, e, a@KW(ns2, attr2, _), Var(v), tx, op) if (ns, attr) ==(ns2, attr2) && card == 3 =>
               // Add next And-value
-              val dc = DataClause(ds, vi(e), a, Val(andValue), queryTerm(tx), queryTerm(op))
-              dc
+              Seq(
+                DataClause(ds, vi(e), a, Var(v + "_" + i), queryTerm(tx), queryTerm(op)),
+                Funct(".matches ^String", List(Var(v + "_" + i), Val(".+@(" + andValue + ")$")), NoBinding)
+              )
+
+            case DataClause(ds, e, a@KW(ns2, attr2, _), _, tx, op) if (ns, attr) ==(ns2, attr2) =>
+              // Add next And-value
+              Seq(DataClause(ds, vi(e), a, Val(andValue), queryTerm(tx), queryTerm(op)))
 
             case DataClause(ds, e, a@KW(ns2, attr2, _), v, tx, op) if unifyAttrs.contains((ns2, attr2)) =>
               // Keep value-position value to unify
-              val dc = DataClause(ds, vi(e), a, v, queryTerm(tx), queryTerm(op))
-              dc
+              Seq(DataClause(ds, vi(e), a, v, queryTerm(tx), queryTerm(op)))
 
             case DataClause(ds, e, a, v, tx, op) =>
               // Add i to variables
-              val dc = DataClause(ds, vi(e), a, queryValue(v), queryTerm(tx), queryTerm(op))
-              dc
+              Seq(DataClause(ds, vi(e), a, queryValue(v), queryTerm(tx), queryTerm(op)))
           }
-          def resolve(expr: QueryExpr): Option[Clause] = expr match {
-            case dc@DataClause(ds, e, a, v, tx, op)                    => Some(dataCls(dc))
-            case RuleInvocation(name, args)                            => Some(RuleInvocation(name, args map queryTerm))
-            case Funct(".startsWith ^String", List(v, key), NoBinding) => None // No need to unify key
-            case Funct(name, ins, outs)                                => Some(Funct(name, ins map queryTerm, binding(outs)))
+          def makeSelfJoinClauses(expr: QueryExpr): Seq[Clause] = expr match {
+            case dc@DataClause(ds, e, a, v, tx, op)                    => dataClauses(dc)
+            case RuleInvocation(name, args)                            => Seq(RuleInvocation(name, args map queryTerm))
+            case Funct(".startsWith ^String", List(v, key), NoBinding) => Nil
+            case Funct(".matches ^String", List(v, key), NoBinding)    => Nil
+            case Funct(name, ins, outs)                                => Seq(Funct(name, ins map queryTerm, binding(outs)))
           }
-          clauses flatMap resolve
+          clauses flatMap makeSelfJoinClauses
         }
         q.copy(wh = Where(q.wh.clauses ++ selfJoinClauses))
       } else q

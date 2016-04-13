@@ -24,7 +24,7 @@ class Base extends CoreSpec {
     Ns.int.strMap insert List(
       (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
       (2, Map("en" -> "Oh, Hi", "da" -> "Hilser", "fr" -> "Bonjour", "it" -> "Bon giorno")),
-      (3, Map("en" -> "Hello", "da" -> "Hejhej")),
+      (3, Map("en" -> "Hello", "da" -> "Hej")),
       (4, Map("da" -> "Hej")),
       (5, Map[String, String]())
     )
@@ -59,7 +59,7 @@ class Base extends CoreSpec {
     Ns.int.boolMap insert List(
       (1, Map("en" -> true, "da" -> false)),
       (2, Map("en" -> true, "da" -> true, "fr" -> false, "it" -> false)),
-      (3, Map("en" -> false)),
+      (3, Map("en" -> false, "en" -> false)),
       (4, Map("da" -> false)),
       (5, Map[String, Boolean]())
     )

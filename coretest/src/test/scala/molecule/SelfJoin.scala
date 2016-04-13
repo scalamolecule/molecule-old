@@ -1,7 +1,8 @@
 package molecule
-import datomic.Peer
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
+//import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
+//import datomic.Peer
 
 class SelfJoin extends CoreSpec {
 
@@ -30,7 +31,7 @@ class SelfJoin extends CoreSpec {
     // where one is 23 years old and the other 25 years old and then see
     // which of those pairs have a shared preferred beverage. We say that
     // we "unify" by the beverage attribute value (Refs1.str1) - the values
-    // what the two entities have in common.
+    // that the two entities have in common.
 
     // What beverages do 23- AND 25-year-olds like in common?
     // (unifying on Refs1.str1)
@@ -106,23 +107,132 @@ class SelfJoin extends CoreSpec {
     // since a card-one attribute naturally can't have multiple values.
     expectCompileError(
       """Ns.str("str1" and "str2").get""",
-      "[Dsl2Model:apply (3)] Card-one attributes cannot return multiple values and thus not have AND semantics")
+      "[Dsl2Model:apply (3)] Card-one attribute `str` cannot return multiple values.\n"
+        + "A tacet attribute can though have AND expressions to make a self-join.\n"
+        + "If you want this, please make the attribute tacet by appending an underscore: `str_`")
   }
 
 
-  "Selective unifying" in new Setup {
+  "AND self-joins including attribute maps" in new CoreSetup {
 
-    // We could have written the first example above with a more verbose
-    // but more flexible notation, giving the same result:
+    // age - name(in various languages) - beverage - rating
+    m(Ns.int.strMap.Refs1 * Ref1.str1.int1) insert List(
+      (23, Map("en" -> "Joe", "da" -> "Jonas"), List(("Coffee", 3), ("Cola", 2), ("Pepsi", 3))),
+      (25, Map("en" -> "Ben", "es" -> "Benito"), List(("Coffee", 2), ("Tea", 3))),
+      (23, Map("en" -> "Liz", "da" -> "Lis"), List(("Coffee", 1), ("Tea", 3), ("Pepsi", 1))))
+
+
+    // What beverages do 23- AND 25-year-olds like in common?
+    // (unifying on Refs1.str1)
+    Ns.int_(23 and 25).Refs1.str1.get === List("Coffee", "Tea")
+
+    // Does 23- and 25-years-old have some common beverage ratings?
+    // (unifying on Refs1.int1)
+    Ns.int_(23 and 25).Refs1.int1.get === List(2, 3)
+
+    // Any 23- and 25-year-olds with the same name? (no)
+    // (unifying on Ns.strMap)
+    Ns.int_(23 and 25).strMap.get === List()
+
+
+    // Which beverages do Joe AND Liz both like?
+    // (unifying on Refs1.str1)
+    // Given the names are saved in an attribute map we can retrieve
+    // all combinations of names in different languages.
+    // Note that this `and` notation is to only create a self-join
+    // - not to retrieve multiple values from one strMap!
+    Ns.strMap_("Joe" and "Liz").Refs1.str1.get === List("Pepsi", "Coffee")
+    Ns.strMap_("Joe" and "Lis").Refs1.str1.get === List("Pepsi", "Coffee")
+    Ns.strMap_("Jonas" and "Liz").Refs1.str1.get === List("Pepsi", "Coffee")
+    Ns.strMap_("Jonas" and "Lis").Refs1.str1.get === List("Pepsi", "Coffee")
+
+    // Do Joe AND Liz have some common ratings?
+    // (unifying on Refs1.int1)
+    Ns.strMap_("Joe" and "Liz").Refs1.int1.get === List(3)
+    Ns.strMap_("Joe" and "Lis").Refs1.int1.get === List(3)
+    Ns.strMap_("Jonas" and "Liz").Refs1.int1.get === List(3)
+    Ns.strMap_("Jonas" and "Lis").Refs1.int1.get === List(3)
+
+    // Do Joe AND Liz have a shared age?
+    // (unifying on Ns.int)
+    Ns.strMap_("Joe" and "Liz").int.get === List(23)
+    Ns.strMap_("Joe" and "Lis").int.get === List(23)
+    Ns.strMap_("Jonas" and "Liz").int.get === List(23)
+    Ns.strMap_("Jonas" and "Lis").int.get === List(23)
+
+
+    // Who likes both Coffee AND Tea?
+    // (unifying on Ns.strMap)
+    Ns.strMap.Refs1.str1_("Coffee" and "Tea").get === List(
+      Map(
+        "en" -> "Liz",
+        "da" -> "Lis",
+        "es" -> "Benito"
+      )
+    )
+    // Since the merged Map of results contains multiple pairs
+    // with the same key, the pairs coalesce to a smaller set:
+    Map(
+      "en" -> "Ben", // Same key - this one went
+      "en" -> "Liz", // Same key
+      "da" -> "Lis",
+      "es" -> "Benito"
+    )
+    // Instead we could unify also by the entity id and then filter it out
+    // to get a more useful result:
+    Ns.e.strMap.Refs1.str1_("Coffee" and "Tea").get.map(_._2) === List(
+      Map("en" -> "Ben", "es" -> "Benito"),
+      Map("en" -> "Liz", "da" -> "Lis")
+    )
+
+    // What ages have those who like both Coffe and Tea?
+    // (unifying on Ns.int)
+    Ns.int.Refs1.str1_("Coffee" and "Tea").get === List(23, 25)
+
+    // What shared ratings do Coffee and Tea have?
+    // (unifying on Ref1.int1)
+    Ref1.str1_("Coffee" and "Tea").int1.get === List(3)
+
+
+    // Who rated both 2 AND 3?
+    // (unifying on Ns.strMap)
+    // Using entity id againg to get uncoalesced strMap values
+    Ns.e.strMap.Refs1.int1_(2 and 3).get.map(_._2) === List(
+      Map("en" -> "Joe", "da" -> "Jonas"),
+      Map("en" -> "Ben", "es" -> "Benito")
+    )
+
+    // What ages have those who rated both 2 AND 3?
+    // (unifying on Ns.int)
+    Ns.int.Refs1.int1_(2 and 3).get === List(23, 25)
+
+    // Which beverages are rated 2 AND 3?
+    // (unifying on Refs1.str1)
+    Ref1.int1_(2 and 3).str1.get === List("Coffee")
+  }
+
+
+  "Advanced self-joins - selective unifying" in new Setup {
+
+    // All the examples above use the AND notation to construct
+    // simple self-joins. Any of them could be re-written to use
+    // a more powerful and precise Self-notation:
+
+    Ns.int_(23 and 25).Refs1.str1.get === List("Coffee", "Tea")
+    // ..can be re-written to:
     Ns.int_(23).Refs1.str1._Ns.Self
       .int_(25).Refs1.str1_(unify).get === List("Coffee", "Tea")
 
-    // After asking for the beverage value (Refs1.str1) of the first entity
-    // we "go back" to the initial namespace (Ns) and then say that we want
-    // to make a self-join (with Self) to start defining the other entity.
-    // When we define the beverage value for the second entity we tell molecule
-    // to "unify" that value with the equivavelent beverage value of the
-    // first entity.
+    // Let's walk through that one...
+
+    // First we ask for a tacet age of 23 being asserted with one person (entity).
+    // After asking for the beverage value (Refs1.str1) of the first person we
+    // "go back" with `_Ns` to the initial namespace `Ns` and then say that we
+    // want to make a self-join with `Self` to start defining another person/entity.
+    // We want the other person to be 25 years old.
+    // When we define the beverage value for the other person we tell molecule
+    // to "unify" that value with the equivalent beverage value of the
+    // first person.
 
     // This second notation gives us freedom to fetch more values that
     // shouldn't be unified. Say for instance that we want to know the names
@@ -134,6 +244,7 @@ class SelfJoin extends CoreSpec {
       ("Liz", "Coffee", "Ben"),
       ("Liz", "Tea", "Ben")
     )
+    // Now, name (`str`) is not being unified between the two entities.
 
     // Let's add the ratings too
     Ns.int_(23).str.Refs1.int1.str1._Ns.Self
@@ -162,10 +273,6 @@ class SelfJoin extends CoreSpec {
       ("Liz", "Coffee", 1, "Ben", 2),
       ("Liz", "Tea", 3, "Ben", 3)
     )
-  }
-
-
-  "With constraints" in new Setup {
 
     // Only higher rated beverages
     Ns.int_(23).str.Refs1.int1.>(1).str1._Ns.Self
@@ -180,22 +287,34 @@ class SelfJoin extends CoreSpec {
       ("Liz", 3, "Tea", "Ben", 3)
     )
 
-    // Common beverage of
-    // 23-year-olds with weak preference and
-    // 24-year-olds with good preference
+    // Common beverage of 23-year-old with weak preference and
+    // 25-year-old with good preference
     Ns.int_(23).str.Refs1.int1(1).str1._Ns.Self
       .int_(25).str.Refs1.int1(2).str1_(unify).get.sorted === List(
       ("Liz", 1, "Coffee", "Ben", 2)
     )
-  }
-
-
-  "Constraints on the unifying attribute" in new Setup {
 
     // Any 23- and 25-year-olds wanting to drink tea together?
     Ns.int_(23).str.Refs1.str1_("Tea")._Ns.Self
-      .int_(25).str.Refs1.str1_(unify).get === List(
-      ("Liz", "Ben")
+      .int_(25).str.Refs1.str1_("Tea").get === List(("Liz", "Ben"))
+
+    // Any 23-year old Tea drinker and a 25-year-old Coffee drinker?
+    Ns.int_(23).str.Refs1.str1_("Tea")._Ns.Self
+      .int_(25).str.Refs1.str1_("Coffee").get === List(("Liz", "Ben"))
+
+    // Any pair of young persons drinking respectively Tea and Coffee?
+    Ns.int_.<(24).str.Refs1.str1_("Tea")._Ns.Self
+      .int_.<(24).str.Refs1.str1_("Coffee").get === List(
+      ("Liz", "Joe"),
+      ("Liz", "Liz")
+    )
+    // Since Liz is under 24 and drinks both Tea and Coffee she
+    // shows up as two persons (one drinking Tea, the other Coffee).
+    // We can filter the result to only get different persons:
+    Ns.e.int_.<(24).str.Refs1.str1_("Tea")._Ns.Self
+      .e.int_.<(24).str.Refs1.str1_("Coffee").get
+      .filter(r => r._1 != r._3).map(r => (r._2, r._4)) === List(
+      ("Liz", "Joe")
     )
   }
 
@@ -207,141 +326,4 @@ class SelfJoin extends CoreSpec {
       .str_("Ben").Refs1.str1_(unify)._Ns.Self
       .str_("Liz").Refs1.str1_(unify).get === List("Coffee")
   }
-
-
-  "Self-joins with attribute maps" in new CoreSetup {
-
-    m(Ns.strMap.Refs1 * Ref1.int1) insert List(
-      (Map("en" -> "Hi there"), List(1, 2)),
-      (Map("fr" -> "Bonjour", "en" -> "Oh, Hi"), List(1, 2)),
-      (Map("en" -> "Hello"), List(2, 3)),
-      (Map("da" -> "Hej"), List(3, 4))
-    )
-
-//    Ns.strMap.apply("en" and "fr").Refs1.str1.debug
-//    Ns.strMap.apply("en" -> "hej").Refs1.str1.debug
-//    Ns.strMap.apply("en" -> "hej" and "fr" -> "Joe").Refs1.str1.debug
-//    Ns.strMap.apply(("en" -> "hej") and ("fr" -> "Joe")).Refs1.str1.debug
-
-
-    Ns.e.strMap("en").Refs1.int1_(1 and 2).get.map(_._2("en")) === List(
-      "Hi there",
-      "Oh, Hi"
-    )
-    //    Ns.e.strMap("en").Refs1.int1(1).debug
-    //    Ns.e.strMap("en").Ref1.int1_(1 and 2).debug
-
-    //    Ns.e.strMap("en").Refs1.int1_(1 and 2).debug
-        /*
-        * Model(List(
-          Meta(,,e,NoValue,EntValue),
-          Atom(ns,strMap,String,3,Eq(List(en)),Some(mapping),List()),
-          Bond(ns,refs1,ref1),
-          Atom(ref1,int1_,Long,1,And(List(1, 2)),None,List())))
-
-        Query(
-          Find(List(
-            Var(a),
-            AggrExpr(distinct,List(),Var(c)))),
-          Where(List(
-            DataClause(ImplDS,Var(a),KW(ns,strMap,),Var(c),Empty,NoBinding),
-            Funct(.startsWith ^String,List(Var(c), Val(en)),NoBinding),
-            DataClause(ImplDS,Var(a),KW(ns,refs1,ref1),Var(d),Empty,NoBinding),
-            DataClause(ImplDS,Var(d),KW(ref1,int1,),Val(1),Empty,NoBinding),
-            DataClause(ImplDS,Var(a_1),KW(ns,strMap,),Var(c),Empty,NoBinding),
-            DataClause(ImplDS,Var(a_1),KW(ns,refs1,ref1),Var(d_1),Empty,NoBinding),
-            DataClause(ImplDS,Var(d_1),KW(ref1,int1,),Val(2),Empty,NoBinding))))
-
-        [:find  ?a (distinct ?c)
-         :where [?a :ns/strMap ?c]
-                [(.startsWith ^String ?c "en")]
-                [?a :ns/refs1 ?d]
-                [?d :ref1/int1 1]
-                [?a_1 :ns/strMap ?c]
-                [?a_1 :ns/refs1 ?d_1]
-                [?d_1 :ref1/int1 2]]
-
-        RULES: none
-
-        INPUTS: none
-
-        OUTPUTS:
-        1  [17592186045445 #{"en@Hi there"}]
-        2  [17592186045448 #{"en@Oh, Hi"}]*/
-
-
-        Peer.q(
-          """
-            |[:find  ?a (distinct ?c)
-            |     :where [?a :ns/strMap ?c]
-            |            [(.startsWith ^String ?c "en")]
-            |            [?a :ns/refs1 ?d]
-            |            [?d :ref1/int1 1]
-            |            [?d :ref1/int1 ?e]
-            |            [?a_1 :ns/strMap ?c]
-            |            [?a_1 :ns/refs1 ?d_1]
-            |            [?d_1 :ref1/int1 2]
-            |            ]
-          """.stripMargin, conn.db) === 7
-
-    //    Ns.e.strMap("en").Refs1.int1(1 and 2).debug
-        Ns.e.strMap("en").Refs1.int1(1).debug
-        /*
-        * Model(List(
-          Meta(,,e,NoValue,EntValue),
-          Atom(ns,strMap,String,3,Eq(List(en)),Some(mapping),List()),
-          Bond(ns,refs1,ref1),
-          Atom(ref1,int1,Long,1,Eq(List(1)),None,List())))
-
-        Query(
-          Find(List(
-            Var(a),
-            AggrExpr(distinct,List(),Var(c)),
-            Var(e))),
-          Where(List(
-            DataClause(ImplDS,Var(a),KW(ns,strMap,),Var(c),Empty,NoBinding),
-            Funct(.startsWith ^String,List(Var(c), Val(en)),NoBinding),
-            DataClause(ImplDS,Var(a),KW(ns,refs1,ref1),Var(d),Empty,NoBinding),
-            DataClause(ImplDS,Var(d),KW(ref1,int1,),Val(1),Empty,NoBinding),
-            DataClause(ImplDS,Var(d),KW(ref1,int1,),Var(e),Empty,NoBinding))))
-
-        [:find  ?a (distinct ?c) ?e
-         :where [?a :ns/strMap ?c]
-                [(.startsWith ^String ?c "en")]
-                [?a :ns/refs1 ?d]
-                [?d :ref1/int1 1]
-                [?d :ref1/int1 ?e]]*/
-
-
-        Peer.q(
-          """
-            |[:find  ?a (distinct ?c) ?e
-            | :where [?a :ns/strMap ?c]
-            |        [(.startsWith ^String ?c "en")]
-            |        [?a :ns/refs1 ?d]
-            |        [?d :ref1/int1 1]
-            |        [?d :ref1/int1 ?e]]
-          """.stripMargin, conn.db) === 7
-
-//    m(Ns.strMap.Ref1.int1) insert List(
-//      (Map("en" -> "Hi there"), 1),
-//      (Map("fr" -> "Bonjour", "en" -> "Oh, Hi"), 1)
-//    )
-
-    ok
-  }
 }
-
-//Peer.q(
-//  """
-//    |[:find  ?d ?x ?y
-//    | :where [?a :ns/int 23]
-//    |        [?a :ns/str ?x]
-//    |        [?a :ns/refs1 ?c]
-//    |        [?c :ref1/str1 ?d]
-//    |        [?a_1 :ns/int 25]
-//    |        [?a_1 :ns/str ?y]
-//    |        [?a_1 :ns/refs1 ?c_1]
-//    |        [?c_1 :ref1/str1 ?d]
-//    |        ]
-//  """.stripMargin, conn.db) === 7
