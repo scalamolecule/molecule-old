@@ -191,25 +191,21 @@ object schemaDSL {
     def remove(key: String, moreKeys: String*)          : Ns with Attr = ???
 
     // Values
-    def apply(value: T, more: T*)                         : Ns with Attr = ???
-    def apply(set: Set[T], moreSets: Set[T]*)             : Ns with Attr = ???
-    def apply(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
-    def apply(pairs: Seq[(String, T)])                    : Ns with Attr = ???
+    def apply(value: T, more: T*)                        : Ns with Attr = ???
+    def apply(set: Set[T], moreSets: Set[T]*)            : Ns with Attr = ???
+    def apply(pair: (String, T), morePairs: (String, T)*): Ns with Attr = ???
+    def apply(pairs: Seq[(String, T)])                   : Ns with Attr = ???
+    def apply(pairs: Or[(String, T)])                    : Ns with Attr = ???
 
     // Keys
     def k(value: String, more: String*)        : Values with Ns with Attr = ???
     def k(values: Seq[String])                 : Values with Ns with Attr = ???
-    def k(expr1: Exp1[String])                 : Values with Ns with Attr = ???
-    def k(expr2: Exp2[String, String])         : Values with Ns with Attr = ???
-    def k(expr3: Exp3[String, String, String]) : Values with Ns with Attr = ???
+    def k(or: Or[String])                      : Values with Ns with Attr = ???
 
     // Keyed attribute value methods
     trait Values {
       def apply(value: T, more: T*): Ns with Attr = ???
-
-      def apply(expr1: Exp1[T])       : Ns with Attr = ???
-      def apply(expr2: Exp2[T, T])    : Ns with Attr = ???
-      def apply(expr3: Exp3[T, T, T]) : Ns with Attr = ???
+      def apply(or: Or[T]): Values with Ns with Attr = ???
 
       // Negation
       def not(one: T, more: T*)         : Ns with Attr = ???

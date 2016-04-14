@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 36, 28)
+  val x = DebugMacro("Dsl2Model", 4, 12)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -231,15 +231,20 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   // Values ================================================================================
 
   def modelValue(op: String, attr: Tree, values0: Tree) = {
-    def errValue(v: Any) = abort(s"[Dsl2Model:modelValue] Unexpected resolved model value for `${attr.name}.$op`: $v")
+    def errValue(i: Int, v: Any) = abort(s"[Dsl2Model:modelValue $i] Unexpected resolved model value for `${attr.name}.$op`: $v")
     val values = getValues(values0, attr)
+    //    x(9, values)
     op match {
       case "apply"       => values match {
         case resolved: Value => resolved
         case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
-        case other           => errValue(other)
+        case other           => errValue(1, other)
       }
-      case "count"       => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(other)}
+      case "k"           => values match {
+        case vs: Seq[_] => Keys(vs.map(_.asInstanceOf[String]))
+        case other      => errValue(2, other)
+      }
+      case "count"       => values match {case Fn("avg", i) => Length(Some(Fn("avg", i))); case other => errValue(3, other)}
       case "not"         => values match {case qm: Qm.type => Neq(Seq(Qm)); case vs: Seq[_] => Neq(vs)}
       case "$bang$eq"    => values match {case qm: Qm.type => Neq(Seq(Qm)); case vs: Seq[_] => Neq(vs)}
       case "$less"       => values match {case qm: Qm.type => Lt(Qm); case vs: Seq[_] => Lt(vs.head)}
@@ -249,14 +254,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case "contains"    => values match {case qm: Qm.type => Fulltext(Seq(Qm)); case vs: Seq[_] => Fulltext(vs)}
       case "add"         => values match {case vs: Seq[_] => Eq(vs); case mapped: Value => mapped}
       case "remove"      => values match {case vs: Seq[_] => Remove(vs)}
-      case unexpected    => abort(s"[Dsl2Model:atomOp] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
+      case unexpected    => abort(s"[Dsl2Model:modelValue] Unknown operator '$unexpected'\nattr: $attr \nvalue: $values0")
     }
-  }
-
-  def getAppliedValue(attr: Tree, values0: Tree): Value = getValues(values0, attr) match {
-    case resolved: Value => resolved
-    case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
-    case other           => abort(s"[Dsl2Model:getAppliedModelValue] Unexpected applied value for `${attr.name}`: $other")
   }
 
   def getValues(values: Tree, attr: Tree = null): Any = {
@@ -288,27 +287,31 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case q"Seq($pkg.stddev)"                                     => aggr("stddev")
       case q"Seq($a.and[$t]($b).and[$u]($c))"                      => And(resolveValues(q"Seq($a, $b, $c)"))
       case q"Seq($a.and[$t]($b))"                                  => And(resolveValues(q"Seq($a, $b)"))
-      case q"Seq(..$vs)"                                           => vs match {
-        case pairs if pairs.nonEmpty && pairs.head.tpe <:< weakTypeOf[(_, _)] =>
-          val keyValues = pairs.map {
-            case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
-          }
-          x(6, keyValues)
-          if (attr.isMapAttr) {
-            val keys = keyValues.map(_._1).distinct
-            x(7, keys)
-            if (keys.contains("_") && keys.size > 1)
-              abort(s"[Dsl2Model:getValues] Searching for all keys with `_` can't be combined with other key-values.")
-            Mapping(keyValues.map(kv => (kv._1.asInstanceOf[String], kv._2)))
-          } else
-            Replace(keyValues.toMap)
-        case other if attr == null                                            => vs.flatMap(v => resolveValues(v))
-        case other                                                            => vs.flatMap(v => resolveValues(v, att(q"$attr")))
+      case q"Seq(..$vs)"
+        if vs.size == 1 && vs.head.tpe <:< weakTypeOf[Seq[(_, _)]] => vs.head match {
+        case Apply(_, pairs) => mapPairs(pairs, attr)
+        case ident           => mapPairs(Seq(ident), attr)
       }
+      case q"Seq(..$vs)"
+        if vs.nonEmpty && vs.head.tpe <:< weakTypeOf[(_, _)]       => mapPairs(vs, attr)
+      case q"Seq(..$vs)" if attr == null                           => vs.flatMap(v => resolveValues(v))
+      case q"Seq(..$vs)"                                           => vs.flatMap(v => resolveValues(v, att(q"$attr")))
       case other if attr == null                                   => resolveValues(other)
+      case other                                                   => resolveValues(other, att(q"$attr"))
       //      case other if attr.isOneURI || attr.isManyURI                => Fn("URI", resolveValues(other))
-      case other => resolveValues(other, att(q"$attr"))
     }
+  }
+
+  def mapPairs(vs: Seq[Tree], attr: Tree = null) = {
+    val keyValues = vs.map {
+      case q"scala.this.Predef.ArrowAssoc[$t1]($k).->[$t2]($v)" => (extract(k), extract(v))
+      case q"scala.Tuple2.apply[$t1, $t2]($k, $v)"              => (extract(k), extract(v))
+      case ident                                                => (extract(ident), "__pair__")
+    }
+    if (attr.isMapAttr)
+      Mapping(keyValues.map(kv => (kv._1.asInstanceOf[String], kv._2)))
+    else
+      Replace(keyValues.toMap)
   }
 
   def extract(t: Tree) = {

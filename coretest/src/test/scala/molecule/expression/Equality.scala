@@ -88,12 +88,12 @@ class Equality extends Base {
     Ns.strs("a").get === List(Set("b", "a"))
 
     // "b" is in all 3 entities, so all values are coalesced to one set
-    Ns.strs("b").get === List(Set("d", "a", "b", "c"))
+    Ns.strs("b").get === List(Set("a", "b", "c"))
     Ns.strs("c").get === List(Set("c", "b"))
-    Ns.strs("d").get === List(Set("d", "b"))
+    Ns.strs("d").get === List(Set("d", "ba"))
 
     // Using value assigned to variable
-    Ns.strs(d).get === List(Set("d", "b"))
+    Ns.strs(d).get === List(Set("d", "ba"))
 
 
     Ns.ints(1).get === List(Set(1, 2))
@@ -103,25 +103,25 @@ class Equality extends Base {
     Ns.ints(int1).get === List(Set(1, 2))
 
 
-    Ns.longs(1).get === List(Set(1, 2))
-    Ns.longs(2).get === List(Set(1, 4, 3, 2))
-    Ns.longs(3).get === List(Set(3, 2))
-    Ns.longs(4).get === List(Set(4, 2))
-    Ns.longs(long1).get === List(Set(1, 2))
+    Ns.longs(1).get === List(Set(1L, 2L))
+    Ns.longs(2).get === List(Set(1L, 4L, 3L, 2L))
+    Ns.longs(3).get === List(Set(3L, 2L))
+    Ns.longs(4).get === List(Set(4L, 2L))
+    Ns.longs(long1).get === List(Set(1L, 2L))
 
 
-    Ns.floats(1).get === List(Set(1, 2))
-    Ns.floats(2).get === List(Set(1, 4, 3, 2))
-    Ns.floats(3).get === List(Set(3, 2))
-    Ns.floats(4).get === List(Set(4, 2))
-    Ns.floats(float1).get === List(Set(1, 2))
+    Ns.floats(1).get === List(Set(1.0f, 2.0f))
+    Ns.floats(2).get === List(Set(2.0f, 1.0f, 3.0f))
+    Ns.floats(3).get === List(Set(3.0f, 2.0f))
+    Ns.floats(4).get === List(Set(4.0f, 2.5f))
+    Ns.floats(float1).get === List(Set(1.0f, 2.0f))
 
 
-    Ns.doubles(1).get === List(Set(1, 2))
-    Ns.doubles(2).get === List(Set(1, 4, 3, 2))
-    Ns.doubles(3).get === List(Set(3, 2))
-    Ns.doubles(4).get === List(Set(4, 2))
-    Ns.doubles(double1).get === List(Set(1, 2))
+    Ns.doubles(1).get === List(Set(1.0, 2.0))
+    Ns.doubles(2).get === List(Set(2.0, 1.0, 3.0))
+    Ns.doubles(3).get === List(Set(3.0, 2.0))
+    Ns.doubles(4).get === List(Set(4.0, 2.5))
+    Ns.doubles(double1).get === List(Set(1.0, 2.0))
 
 
     // Cardinality-many attribute for boolean values not implemented (doesn't make sense)
@@ -156,10 +156,10 @@ class Equality extends Base {
 
     // Card-many values can group by card-one attributes
     Ns.str.strs("a").get === List(("str1", Set("a", "b")))
-    Ns.str.strs("b").get === List(("str1", Set("a", "b")), ("str2", Set("b", "c")), ("str3", Set("d", "b")))
+    Ns.str.strs("b").get === List(("str1", Set("a", "b")), ("str2", Set("b", "c")))
     Ns.str.strs("c").get === List(("str2", Set("b", "c")))
-    Ns.str.strs("d").get === List(("str3", Set("d", "b")))
-    Ns.str.strs(d).get === List(("str3", Set("d", "b")))
+    Ns.str.strs("d").get === List(("str3", Set("d", "ba")))
+    Ns.str.strs(d).get === List(("str3", Set("d", "ba")))
 
 
     Ns.int.ints(1).get === List((1, Set(1, 2)))
@@ -177,16 +177,16 @@ class Equality extends Base {
 
 
     Ns.float.floats(1.0f).get === List((1.0f, Set(1.0f, 2.0f)))
-    Ns.float.floats(2.0f).get === List((1.0f, Set(1.0f, 2.0f)), (2.0f, Set(3.0f, 2.0f)), (3.0f, Set(4.0f, 2.0f)))
+    Ns.float.floats(2.0f).get === List((1.0f, Set(1.0f, 2.0f)), (2.0f, Set(3.0f, 2.0f)))
     Ns.float.floats(3.0f).get === List((2.0f, Set(3.0f, 2.0f)))
-    Ns.float.floats(4.0f).get === List((3.0f, Set(4.0f, 2.0f)))
+    Ns.float.floats(4.0f).get === List((3.0f, Set(4.0f, 2.5f)))
     Ns.float.floats(float3).get === List((2.0f, Set(3.0f, 2.0f)))
 
 
     Ns.double.doubles(1.0).get === List((1.0, Set(1.0, 2.0)))
-    Ns.double.doubles(2.0).get === List((1.0, Set(1.0, 2.0)), (2.0, Set(3.0, 2.0)), (3.0, Set(4.0, 2.0)))
+    Ns.double.doubles(2.0).get === List((1.0, Set(1.0, 2.0)), (2.0, Set(3.0, 2.0)))
     Ns.double.doubles(3.0).get === List((2.0, Set(3.0, 2.0)))
-    Ns.double.doubles(4.0).get === List((3.0, Set(4.0, 2.0)))
+    Ns.double.doubles(4.0).get === List((3.0, Set(4.0, 2.5)))
     Ns.double.doubles(double3).get === List((2.0, Set(3.0, 2.0)))
 
 
@@ -220,7 +220,7 @@ class Equality extends Base {
     // We could also match the card-one value to get the corresponding card-many set of values
     Ns.str("str1").strs.get === List(("str1", Set("a", "b")))
     Ns.str("str2").strs.get === List(("str2", Set("b", "c")))
-    Ns.str("str3").strs.get === List(("str3", Set("b", "d")))
+    Ns.str("str3").strs.get === List(("str3", Set("ba", "d")))
     // etc...
   }
 }

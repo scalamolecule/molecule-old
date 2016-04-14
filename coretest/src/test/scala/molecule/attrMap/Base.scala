@@ -1,15 +1,17 @@
 package molecule
 package attrMap
+import java.net.URI
+import java.util.{Date, UUID}
+
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
-import java.util.{Date, UUID}
-import java.net.URI
 
 class Base extends CoreSpec {
 
   class Setup extends CoreSetup {
 
     val en    = "en"
+    val da    = "da"
     val fr    = "fr"
     val it    = "it"
     val Hi    = "Hi"

@@ -161,9 +161,9 @@ class Logic extends Base {
     Ns.strs("a" or "c").get === List(Set("a", "b", "c"))
 
     // 2. Comma-separated values
-    Ns.strs("a", "b").get === List(Set("d", "a", "b", "c"))
+    Ns.strs("a", "b").get === List(Set("a", "b", "c"))
     Ns.strs("a", "c").get === List(Set("a", "b", "c"))
-    Ns.strs("a", "d").get === List(Set("a", "b", "d"))
+    Ns.strs("a", "d").get === List(Set("d", "a", "ba", "b"))
 
     // 3. Set of values (note that this differs from card-one attributes that use Seq/List)
     Ns.strs(Set("a", "c")).get === List(Set("a", "b", "c"))
@@ -171,7 +171,7 @@ class Logic extends Base {
     // Unifying results by another attribute prevents the card-many attribute values to coalesce
     Ns.str.strs("c" or "d").get === List(
       ("str2", Set("b", "c")),
-      ("str3", Set("b", "d"))
+      ("str3", Set("d", "ba"))
     )
 
     // Using variables
@@ -182,10 +182,10 @@ class Logic extends Base {
     Ns.strs(strSet).get === List(Set("a", "b", "c"))
 
     // We can even apply multiple comma-separated Sets of search values
-    Ns.strs(Set(a, c), Set(d)).get === List(Set("d", "a", "b", "c"))
+    Ns.strs(Set(a, c), Set(d)).get === List(Set("ba", "a", "b", "c", "d"))
 
     // (variables with variables are resolved too)
-    Ns.strs.apply(strSet, Set(d)).get === List(Set("d", "a", "b", "c"))
+    Ns.strs.apply(strSet, Set(d)).get === List(Set("ba", "a", "b", "c", "d"))
 
 
     Ns.ints(1 or 3).get === List(Set(1, 2, 3))
@@ -216,9 +216,9 @@ class Logic extends Base {
 
     Ns.floats(1.0f or 3.0f).get === List(Set(1.0f, 2.0f, 3.0f))
     Ns.floats(Set(1.0f, 3.0f)).get === List(Set(1.0f, 2.0f, 3.0f))
-    Ns.floats(1.0f, 2.0f).get === List(Set(1.0f, 4.0f, 3.0f, 2.0f))
+    Ns.floats(1.0f, 2.0f).get === List(Set(2.0f, 1.0f, 3.0f))
     Ns.floats(1.0f, 3.0f).get === List(Set(1.0f, 2.0f, 3.0f))
-    Ns.floats(1.0f, 4.0f).get === List(Set(1.0f, 2.0f, 4.0f))
+    Ns.floats(1.0f, 4.0f).get === List(Set(2.0f, 4.0f, 1.0f, 2.5f))
 
     Ns.floats(float1 or float3).get === List(Set(1.0f, 2.0f, 3.0f))
     Ns.floats(Set(float1, float3)).get === List(Set(1.0f, 2.0f, 3.0f))
@@ -229,9 +229,9 @@ class Logic extends Base {
 
     Ns.doubles(1.0 or 3.0).get === List(Set(1.0, 2.0, 3.0))
     Ns.doubles(Set(1.0, 3.0)).get === List(Set(1.0, 2.0, 3.0))
-    Ns.doubles(1.0, 2.0).get === List(Set(1.0, 4.0, 3.0, 2.0))
+    Ns.doubles(1.0, 2.0).get === List(Set(2.0, 1.0, 3.0))
     Ns.doubles(1.0, 3.0).get === List(Set(1.0, 2.0, 3.0))
-    Ns.doubles(1.0, 4.0).get === List(Set(1.0, 2.0, 4.0))
+    Ns.doubles(1.0, 4.0).get === List(Set(2.0, 4.0, 1.0, 2.5))
 
     Ns.doubles(double1 or double3).get === List(Set(1.0, 2.0, 3.0))
     Ns.doubles(Set(double1, double3)).get === List(Set(1.0, 2.0, 3.0))

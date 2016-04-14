@@ -83,45 +83,28 @@ object Model2Query extends Helpers {
               .func(".startsWith ^String", Seq(Var(v), Var(v + "Key")))
               .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
               .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-              .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
+              .matches(v2, v + "Value")
             //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
             //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
             //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
             //          case Le(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<=", a, v, Var(v1)).in(v1, a)
             //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
 
-            case VarValue       => q.where(e, a, v, gs)
-            case And(args)      => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + args.head + ")$")))
-            case Eq(arg :: Nil) => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@" + f(arg))))
-            case Eq(args)       => q.where(e, a, v, gs).orRules(v, a, args)
-            case Neq(args)      => q.where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(?!(" + args.map(f).mkString("|") + ")$).*")))
-            case Lt(arg)        => q.mapCompareTo("<", e, a, v, arg)
-            case Gt(arg)        => q.mapCompareTo(">", e, a, v, arg)
-            case Le(arg)        => q.mapCompareTo("<=", e, a, v, arg)
-            case Ge(arg)        => q.mapCompareTo(">=", e, a, v, arg)
-
+            case VarValue                      => q.where(e, a, v, gs)
+            case And(args)                     => q.where(e, a, v, gs).matches(v, ".+@(" + args.head + ")$")
+            case Eq(arg :: Nil)                => q.where(e, a, v, gs).matches(v, ".+@(" + f(arg) + ")")
+            case Eq(args)                      => q.where(e, a, v, gs).orRules(v, a, args)
+            case Neq(args)                     => q.where(e, a, v, gs).matches(v, ".+@(?!(" + args.map(f).mkString("|") + ")$).*")
+            case Lt(arg)                       => q.mapCompareTo("<", e, a, v, arg)
+            case Gt(arg)                       => q.mapCompareTo(">", e, a, v, arg)
+            case Le(arg)                       => q.mapCompareTo("<=", e, a, v, arg)
+            case Ge(arg)                       => q.mapCompareTo(">=", e, a, v, arg)
+            case Mapping((key, value1) :: Nil) => q.where(e, a, v, gs).matches(v, "^(" + key + ")@(" + value1 + ")$")
+            case Mapping(pairs)                => q.where(e, a, v, gs).mappings(v, a, pairs)
             //          case Eq((set: Set[_]) :: Nil) => q.where(e, a, v, gs).orRules(e, a, set.toSeq, gs, u(t, v))
             //          case Fn(fn, _)                => q.where(e, a, v, gs)
 
-            case Mapping(pairs) => {
-              if (pairs.head._1 == "_") {
-                q.where(e, a, v, gs)
-                  .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
-                  .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-                  .func(".matches ^String", Seq(Var(v2), Val(".*(" + pairs.map(_._2).mkString("|") + ").*")))
-              } else if (pairs.map(_._1).distinct.size == 1) {
-                val (key: String, value1) = pairs.head
-                val values = if (pairs.size == 1) value1 else pairs.map(_._2).mkString("|")
-                q.where(e, a, v, gs)
-                  .func(".startsWith ^String", Seq(Var(v), Val(key)))
-                  .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
-                  .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-                  .func(".matches ^String", Seq(Var(v2), Val(".*(" + values + ").*")))
-              } else {
-                q.where(e, a, v, gs).mappings(v, a, pairs)
-              }
-            }
-            case other          => sys.error(s"[Model2Query:resolve[Map Atom]] Unresolved tacet mapped Atom_:\nAtom_   : $a\nElement: $other")
+            case other => sys.error(s"[Model2Query:resolve[Map Atom]] Unresolved tacet mapped Atom_:\nAtom_   : $a\nElement: $other")
           }
         }
 
@@ -145,7 +128,7 @@ object Model2Query extends Helpers {
             .func(".startsWith ^String", Seq(Var(v), Var(v + "Key")))
             .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
             .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-            .func(".matches ^String", Seq(Var(v2), Var(v + "Value")))
+            .matches(v2, v + "Value")
           //          case Neq(Seq(Qm))             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("!=", a, v, Var(v1)).in(v1, a)
           //          case Lt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo("<", a, v, Var(v1)).in(v1, a)
           //          case Gt(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">", a, v, Var(v1)).in(v1, a)
@@ -153,58 +136,27 @@ object Model2Query extends Helpers {
           //          case Ge(Qm)                   => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).compareTo(">=", a, v, Var(v1)).in(v1, a)
           //          case Fulltext(Seq(Qm))        => q.find("distinct", Seq(), v, gs).fulltext(e, a, v, Var(v1)).in(v1, a)1
 
-          case VarValue             => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
-          case Fulltext(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@.*" + f(arg) + ".*")))
-          case Fulltext(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@.*(" + args.map(f).mkString("|") + ").*")))
-          //          case Eq((set: Set[_]) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + set.toSeq.map(f).mkString("|") + ")$")))
-          //          case Eq(arg :: Nil)           => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@" + f(arg))))
-          //          case Eq(args)                 => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + args.map(f).mkString("|") + ")$")))
-          case Eq(args) => {
-            val args1 = args flatMap {
-              case set: Set[_] => set.toSeq
-              case other       => Seq(other)
-            }
-            q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(" + args1.map(f).mkString("|") + ")$")))
-          }
-
-          //          case Eq(args)                 => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
-          case Neq(args) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".matches ^String", Seq(Var(v), Val(".+@(?!(" + args.map(f).mkString("|") + ")$).*")))
-          case Lt(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo("<", e, a, v, arg)
-          case Gt(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo(">", e, a, v, arg)
-          case Le(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo("<=", e, a, v, arg)
-          case Ge(arg)   => q.find("distinct", Seq(), v, gs).mapCompareTo(">=", e, a, v, arg)
+          case VarValue                      => q.find("distinct", Seq(), v, gs).where(e, a, v, gs)
+          case Fulltext(arg :: Nil)          => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, ".+@.*" + f(arg) + ".*")
+          case Fulltext(args)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, ".+@.*(" + args.map(f).mkString("|") + ").*")
+          case Eq((set: Set[_]) :: Nil)      => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, ".+@(" + set.toSeq.map(f).mkString("|") + ")$")
+          case Eq(arg :: Nil)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, ".+@(" + f(arg) + ")")
+          case Eq(args)                      => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, ".+@(" + args.map(f).mkString("|") + ")$")
+          case Neq(args)                     => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, ".+@(?!(" + args.map(f).mkString("|") + ")$).*")
+          case Lt(arg)                       => q.find("distinct", Seq(), v, gs).mapCompareTo("<", e, a, v, arg)
+          case Gt(arg)                       => q.find("distinct", Seq(), v, gs).mapCompareTo(">", e, a, v, arg)
+          case Le(arg)                       => q.find("distinct", Seq(), v, gs).mapCompareTo("<=", e, a, v, arg)
+          case Ge(arg)                       => q.find("distinct", Seq(), v, gs).mapCompareTo(">=", e, a, v, arg)
+          case And(args)                     => q.find("distinct", Seq(), v, gs).whereAnd(e, a, v, args)
+          case Keys(arg :: Nil)              => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg + "@")), NoBinding)
+          case Keys(args)                    => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, "^(" + args.mkString("|") + ")@.*")
+          case Mapping((key, value1) :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).matches(v, "^(" + key + ")@(" + value1 + ")$")
+          case Mapping(pairs)                => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).mappings(v, a, pairs)
           //          case Fn("sum", _)                  => q.find("sum", Seq(), v, gs).where(e, a, v, gs).widh(e)
           //          case Fn("avg", _)                  => q.find("avg", Seq(), v, gs).where(e, a, v, gs).widh(e)
           //          case Fn(fn, Some(i))               => q.find(fn, Seq(i), v, gs).where(e, a, v, gs)
           //          case Fn(fn, _)                     => q.find(fn, Seq(), v, gs).where(e, a, v, gs)
 
-          //          case Eq(arg :: Nil) => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).func(".startsWith ^String", Seq(Var(v), Val(arg)), NoBinding)
-          //          case Eq(args)       => q.find("distinct", Seq(), v, gs).where(e, a, v, gs).orRules(v, a, args)
-
-          case And(args) => q
-            .find("distinct", Seq(), v, gs)
-            .whereAnd(e, a, v, args)
-
-          case Mapping(pairs) => {
-            if (pairs.head._1 == "_") {
-              q.find("distinct", Seq(), v, gs)
-                .where(e, a, v, gs)
-                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
-                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-                .func(".matches ^String", Seq(Var(v2), Val(".*(" + pairs.map(_._2).mkString("|") + ").*")))
-            } else if (pairs.map(_._1).distinct.size == 1) {
-              val (key: String, value1) = pairs.head
-              val values = if (pairs.size == 1) value1 else pairs.map(_._2).mkString("|")
-              q.find("distinct", Seq(), v, gs)
-                .where(e, a, v, gs)
-                .func(".startsWith ^String", Seq(Var(v), Val(key)))
-                .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
-                .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
-                .func(".matches ^String", Seq(Var(v2), Val(".*(" + values + ").*")))
-            } else {
-              q.find("distinct", Seq(), v, gs).where(e, a, v, gs).mappings(v, a, pairs)
-            }
-          }
 
           case other => sys.error(s"[Model2Query:resolve[Map Atom]] Unresolved mapped Atom:\nAtom   : $a\nElement: $other")
         }

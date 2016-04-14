@@ -172,19 +172,8 @@ object QueryOps extends Helpers {
 
     def mappings(e: String, a: Atom, args0: Seq[(String, Any)]): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
-      val mapped = args0.foldLeft(Map.empty[String, Seq[Any]]) { case (map, (key, value)) =>
-        if (map.keys.toSeq.contains(key))
-          map + (key -> (map(key) :+ value))
-        else
-          map + (key -> Seq(value))
-      }
-      val newRules = mapped.foldLeft(q.i.rules) { case (rules, (key, values)) =>
-        val dataClauses = Seq(
-          Funct(".startsWith ^String", Seq(Var(e), Val(key)), NoBinding),
-          Funct(".split ^String", Seq(Var(e), Val("@"), Val(2)), ScalarBinding(Var(e + 1))),
-          Funct("second", Seq(Var(e + 1)), ScalarBinding(Var(e + 2))),
-          Funct(".matches ^String", Seq(Var(e + 2), Val(".*(" + values.mkString("|") + ").*")), NoBinding)
-        )
+      val newRules = args0.foldLeft(q.i.rules) { case (rules, (key, value)) =>
+        val dataClauses = Seq(Funct(".matches ^String", Seq(Var(e), Val("^(" + key + ")@(" + value + ")$")), NoBinding))
         val rule = Rule(ruleName, Seq(Var(e)), dataClauses)
         rules :+ rule
       }
@@ -192,6 +181,8 @@ object QueryOps extends Helpers {
       val newWhere = Where(q.wh.clauses :+ RuleInvocation(ruleName, Seq(Var(e))))
       q.copy(i = newIn, wh = newWhere)
     }
+    def matches(v: String, regEx: String) =
+      q.func(".matches ^String", Seq(Var(v), Val(regEx)))
 
     def mapCompareTo(op: String, e: String, a: Atom, v: String, arg: Any, gs: Seq[Generic] = Seq()) = {
       val q1 = q
@@ -217,7 +208,7 @@ object QueryOps extends Helpers {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
       val newRules = args.foldLeft(q.i.rules) { case (rules, arg) =>
         val arg1 = arg match {
-          case d: Date   => format2(d)
+//          case d: Date   => format2(d)
           case s: String => s.replaceAll("\"", "\\\\\"")
           case other     => other
         }

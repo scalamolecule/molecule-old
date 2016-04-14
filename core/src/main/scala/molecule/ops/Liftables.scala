@@ -174,8 +174,9 @@ trait Liftables[Ctx <: Context] extends MacroHelpers[Ctx] {
     case Distinct         => q"Distinct"
     case Fulltext(search) => q"Fulltext(Seq(..$search))"
     case Replace(values)  => q"Replace($values)"
-    case Mapping(pairs)   => q"Mapping(Seq(..$pairs))"
     case Remove(values)   => q"Remove(Seq(..$values))"
+    case Mapping(pairs)   => q"Mapping(Seq(..$pairs))"
+    case Keys(ks)         => q"Keys(Seq(..$ks))"
   }
 
   implicit val liftAtom       = Liftable[Atom] { a => q"Atom(${a.ns}, ${a.name}, ${a.tpeS}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gs}))" }

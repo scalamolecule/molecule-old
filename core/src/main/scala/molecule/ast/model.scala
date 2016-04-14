@@ -75,9 +75,13 @@ object model {
   case object Distinct extends Value
 
   // Action
-  case class Replace(oldNew: Map[Any, Any]) extends Value
-  case class Mapping(pairs: Seq[(String, Any)]) extends Value
   case class Remove(value: Seq[Any]) extends Value
+  case class Replace(oldNew: Map[Any, Any]) extends Value
+
+  // Attribute Maps
+  case class Mapping(pairs: Seq[(String, Any)]) extends Value
+//  case class KeyValues(ks: Seq[String], vs: Seq[Any]) extends Value
+  case class Keys(ks: Seq[String]) extends Value
 
 
   trait Expression

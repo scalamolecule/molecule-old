@@ -1,6 +1,5 @@
 package molecule.factory
 import java.net.URI
-import java.text.SimpleDateFormat
 import java.util.{Date, UUID}
 
 import molecule.ast.model._
@@ -38,15 +37,14 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       case _                     => "other..."
     }
     //            x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
-//                x(1, dsl.tree, model)
+    //                x(1, dsl.tree, model)
 
     def keyValues(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {
-      case (key: String, value: String)
-        if key.startsWith("__ident__") && value.startsWith("__ident__")  => Seq(key -> q"${TermName(key.substring(9))}", value -> q"${TermName(value.substring(9))}")
-      case (key: String, value: Any) if key.startsWith("__ident__")      => Seq(key -> q"${TermName(key.substring(9))}")
-      case (key: String, value: String) if value.startsWith("__ident__") => Seq(value -> q"${TermName(value.substring(9))}")
-      case ident: String if ident.startsWith("__ident__")                => Seq(ident -> q"${TermName(ident.substring(9))}")
-      case _                                                             => Nil
+      case (key: String, value: String) if key.startsWith("__ident__") && value.startsWith("__ident__") => Seq(key -> q"${TermName(key.substring(9))}", value -> q"${TermName(value.substring(9))}")
+      case (key: String, value: Any) if key.startsWith("__ident__")                                     => Seq(key -> q"${TermName(key.substring(9))}")
+      case (key: String, value: String) if value.startsWith("__ident__")                                => Seq(value -> q"${TermName(value.substring(9))}")
+      case ident: String if ident.startsWith("__ident__")                                               => Seq(ident -> q"${TermName(ident.substring(9))}")
+      case _                                                                                            => Nil
     }
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
@@ -60,6 +58,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         case atom@Atom(_, _, _, _, Ge(ident), _, _)      => keyValues(Seq(ident))
         case atom@Atom(_, _, _, _, Remove(idents), _, _) => keyValues(idents)
         case atom@Atom(_, _, _, _, Mapping(pairs), _, _) => keyValues(pairs)
+        case atom@Atom(_, _, _, _, Keys(idents), _, _)   => keyValues(idents)
         case meta@Meta(_, _, _, _, Eq(idents))           => keyValues(idents)
         case Group(_, nestedElements)                    => mapIdentifiers(nestedElements, identifiers0)
         case TxModel(txElements)                         => mapIdentifiers(txElements, identifiers0)
@@ -68,7 +67,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
     }
 
     val identMap = mapIdentifiers(model.elements).toMap
-//        x(2, identMap)
+    //        x(2, identMap)
 
     q"""
       import molecule._
@@ -88,12 +87,12 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       import clojure.lang.{PersistentHashSet, PersistentVector, LazySeq, Keyword}
 
       def getValues(idents: Seq[Any]) = idents.map {
-        case (key: String, value: String)
-          if key.startsWith("__ident__") && value.startsWith("__ident__")   => ($identMap.get(key).get, $identMap.get(value).get)
-        case (key: String, value: Any)     if key.startsWith("__ident__")   => ($identMap.get(key).get, value)
-        case (key: String, value: String)  if value.startsWith("__ident__") => (key, $identMap.get(value).get)
-        case ident: String                 if ident.startsWith("__ident__") => $identMap.get(ident).get
-        case other                                                          => other
+        case (key: String, value: String) if key.startsWith("__ident__") && value.startsWith("__ident__") => ($identMap.get(key).get, $identMap.get(value).get)
+        case (key: String, "__pair__")    if key.startsWith("__ident__")                                  => $identMap.get(key).get
+        case (key: String, value: Any)    if key.startsWith("__ident__")                                  => ($identMap.get(key).get, value)
+        case (key: String, value: String) if value.startsWith("__ident__")                                => (key, $identMap.get(value).get)
+        case ident: String                if ident.startsWith("__ident__")                                => $identMap.get(ident).get
+        case other                                                                                        => other
       }
 
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
@@ -111,7 +110,24 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         case atom@Atom(_, _, _, _, Le(ident), _, _)      => atom.copy(value = Le(getValues(Seq(ident)).head))
         case atom@Atom(_, _, _, _, Ge(ident), _, _)      => atom.copy(value = Ge(getValues(Seq(ident)).head))
         case atom@Atom(_, _, _, _, Remove(idents), _, _) => atom.copy(value = Remove(getValues(idents)))
-        case atom@Atom(_, _, _, _, Mapping(pairs), _, _) => atom.copy(value = Mapping(getValues(pairs).asInstanceOf[Seq[(String, Any)]]))
+        case atom@Atom(_, _, _, _, Mapping(idents), _, _) =>
+          val flattened = getValues(idents) match {
+            case seq: Seq[_] => seq flatMap {
+              case seq2: Seq[_] => seq2
+              case other        => Seq(other)
+            }
+            case other       => sys.error("Variable `idents` resolved to an unexpected value: " + other.toString)
+          }
+          atom.copy(value = Mapping(flattened.asInstanceOf[Seq[(String, Any)]]))
+        case atom@Atom(_, _, _, _, Keys(idents), _, _)   =>
+          val flattened = getValues(idents) match {
+            case seq: Seq[_] => seq flatMap {
+              case seq2: Seq[_] => seq2
+              case other        => Seq(other)
+            }
+            case other       => sys.error("Variable `idents` resolved to an unexpected value: " + other.toString)
+          }
+          atom.copy(value = Keys(flattened.asInstanceOf[Seq[String]]))
         case meta@Meta(_, _, _, _, Eq(idents))           => meta.copy(value = Eq(getValues(idents)))
         case Group(ns, nestedElements)                   => Group(ns, resolveIdentifiers(nestedElements))
         case TxModel(txElements)                         => TxModel(resolveIdentifiers(txElements))

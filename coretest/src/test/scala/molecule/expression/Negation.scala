@@ -54,7 +54,7 @@ class Negation extends Base {
     Ns.str.not(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
     Ns.str.!=(str1).get.sorted === List("", " ", ",", ".", "?", "A", "B", "b")
 
-    // Negate multiple values ("NOR"-logic: not 'a AND not 'b AND ...)
+    // Negate multiple values ("NOR"-logic: not 'a NOR 'b NOR 'c...)
     Ns.str.not("", " ").get.sorted === List(",", ".", "?", "A", "B", "a", "b")
     Ns.str.not("", " ", ",", ".", "?").get.sorted === List("A", "B", "a", "b")
     Ns.str.not("", " ", ",", ".", "?", "A", "B").get.sorted === List("a", "b")
@@ -108,7 +108,7 @@ class Negation extends Base {
     Ns.uuid.not(uuid0, uuid1).get.sortBy(_.toString) === List(uuid2)
     Ns.uuid.not(uuid0, uuid1, uuid2).get.sortBy(_.toString) === List()
 
-    // todo when we get a string representation #uri
+    // todo: when Datomic gets a string representation #uri
     //    val uri = new URI("other")
     //    Ns.uri.not(uri).get.sortBy(_.toString) === List(uri0, uri1, uri2)
     //    Ns.uri.not(uri1).get.sortBy(_.toString) === List(uri0, uri2)
@@ -125,20 +125,18 @@ class Negation extends Base {
 
     // Negation of a cardinality-many attribute value is rather useless since it
     // will just return the coalesced set minus the excluded value
-    Ns.strs.not("b").get === List(Set("d", "a", "c"))
+    Ns.strs.not("b").get === List(Set("d", "a", "ba", "c"))
 
     // We could group by another attribute but that still leave us with filtered sets
-    //      Ns.str.strs.not("a").debug
-    Ns.str.strs.not("a").get === List(("str1", Set("b")), ("str2", Set("b", "c")), ("str3", Set("d", "b")))
-    Ns.str.strs.not("b").get === List(("str1", Set("a")), ("str2", Set("c")), ("str3", Set("d")))
-    Ns.str.strs.not("c").get === List(("str1", Set("a", "b")), ("str2", Set("b")), ("str3", Set("d", "b")))
-    Ns.str.strs.not("d").get === List(("str1", Set("a", "b")), ("str2", Set("b", "c")), ("str3", Set("b")))
+    Ns.str.strs.not("a").get === List(("str1", Set("b")), ("str2", Set("b", "c")), ("str3", Set("d", "ba")))
+    Ns.str.strs.not("b").get === List(("str1", Set("a")), ("str2", Set("c")), ("str3", Set("d", "ba")))
+    Ns.str.strs.not("c").get === List(("str1", Set("a", "b")), ("str2", Set("b")), ("str3", Set("d", "ba")))
+    Ns.str.strs.not("d").get === List(("str1", Set("a", "b")), ("str2", Set("b", "c")), ("str3", Set("ba")))
 
     // What we probably want to do is to filter out full sets having the negation value:
-    Ns.str.strs.get.filter(!_._2.contains("a")) === List(("str2", Set("b", "c")), ("str3", Set("d", "b")))
-    Ns.str.strs.get.filter(!_._2.contains("b")) === List()
-    Ns.str.strs.get.filter(!_._2.contains("c")) === List(("str1", Set("a", "b")), ("str3", Set("d", "b")))
-    Ns.str.strs.get.filter(!_._2.contains("d")) === List(("str1", Set("a", "b")), ("str2", Set("b", "c")))
-    // etc...
+    Ns.str.strs.get.filterNot(_._2.contains("a")) === List(("str2", Set("b", "c")), ("str3", Set("d", "ba")))
+    Ns.str.strs.get.filterNot(_._2.contains("b")) === List(("str3", Set("d", "ba")))
+    Ns.str.strs.get.filterNot(_._2.contains("c")) === List(("str1", Set("a", "b")), ("str3", Set("d", "ba")))
+    Ns.str.strs.get.filterNot(_._2.contains("d")) === List(("str1", Set("a", "b")), ("str2", Set("b", "c")))
   }
 }
