@@ -16,6 +16,10 @@ class Values extends Base {
       (3, Map("en" -> "Hello", "da" -> "Hej")),
       (4, Map("da" -> "Hej"))
     )
+
+    // Tacet attribute map
+    Ns.int.strMap_.get === List(1, 2, 3, 4)
+
     Ns.int.intMap.get === List(
       (1, Map("en" -> 10, "da" -> 30)),
       (2, Map("en" -> 10, "da" -> 10, "fr" -> 20, "it" -> 30)),
@@ -75,52 +79,73 @@ class Values extends Base {
     Ns.int.strMap("Hello").get === List(
       (3, Map("en" -> "Hello"))
     )
+    // Tacet value in attribute map
+    Ns.int.strMap_("Hello").get === List(3)
+
     // Note that text searches for attribute maps are case-sensitive
     Ns.int.strMap("hello").get === List()
+
 
     Ns.int.intMap(10).get === List(
       (1, Map("en" -> 10)),
       (2, Map("en" -> 10, "da" -> 10))
     )
+    Ns.int.intMap_(10).get === List(1, 2)
+
     Ns.int.longMap(10L).get === List(
       (1, Map("en" -> 10L)),
       (2, Map("en" -> 10L, "da" -> 10L))
     )
+    Ns.int.longMap_(10L).get === List(1, 2)
+
     Ns.int.floatMap(10f).get === List(
       (1, Map("en" -> 10f)),
       (2, Map("en" -> 10f, "da" -> 10f))
     )
+    Ns.int.floatMap_(10f).get === List(1, 2)
+
     Ns.int.doubleMap(10.0).get === List(
       (1, Map("en" -> 10.0)),
       (2, Map("en" -> 10.0, "da" -> 10.0))
     )
+    Ns.int.doubleMap_(10.0).get === List(1, 2)
+
     Ns.int.boolMap(true).get === List(
       (1, Map("en" -> true)),
       (2, Map("en" -> true, "da" -> true))
     )
+    Ns.int.boolMap_(true).get === List(1, 2)
+
     Ns.int.dateMap(date1).get === List(
       (1, Map("en" -> date1)),
       (2, Map("en" -> date1, "da" -> date1))
     )
+    Ns.int.dateMap_(date1).get === List(1, 2)
+
     Ns.int.uuidMap(uuid1).get === List(
       (1, Map("en" -> uuid1)),
       (2, Map("en" -> uuid1, "da" -> uuid1))
     )
+    Ns.int.uuidMap_(uuid1).get === List(1, 2)
+
     Ns.int.uriMap(uri1).get === List(
       (1, Map("en" -> uri1)),
       (2, Map("en" -> uri1, "da" -> uri1))
     )
+    Ns.int.uriMap_(uri1).get === List(1, 2)
   }
 
 
   "Regex/partial search" in new Setup {
 
     // We can search text strings with regular expressions
+    // Note that searches are case-sensitive ("there" not included)
     Ns.int.strMap(".*He.*").get === List(
       (1, Map("da" -> "Hejsa")),
       (3, Map("en" -> "Hello", "da" -> "Hej")),
       (4, Map("da" -> "Hej"))
     )
+    Ns.int.strMap_(".*He.*").get === List(1, 3, 4)
 
     // The above search is identical to using contains
     Ns.int.strMap.contains("He").get === List(
@@ -128,14 +153,7 @@ class Values extends Base {
       (3, Map("en" -> "Hello", "da" -> "Hej")),
       (4, Map("da" -> "Hej"))
     )
-
-    // Note that text searches for attribute maps are case-sensitive
-    Ns.int.strMap(".*he.*").get === List(
-      (1, Map("en" -> "Hi there"))
-    )
-    Ns.int.strMap.contains("he").get === List(
-      (1, Map("en" -> "Hi there"))
-    )
+    Ns.int.strMap_.contains("He").get === List(1, 3, 4)
 
     // Multiple needles
     Ns.int.strMap.contains("He", "jour").get === List(
@@ -144,6 +162,9 @@ class Values extends Base {
       (3, Map("en" -> "Hello", "da" -> "Hej")),
       (4, Map("da" -> "Hej"))
     )
+    Ns.int.strMap_.contains("He", "jour").get === List(1, 2, 3, 4)
+    // When used with normal attributes, `contains` only looks up
+    // full words in freetext searches!
   }
 
 
@@ -158,6 +179,7 @@ class Values extends Base {
     Ns.int(2).strMap.!=("Bonjour", "Bon giorno").get === List(
       (2, Map("en" -> "Oh, Hi", "da" -> "Hilser"))
     )
+    Ns.int(2).strMap_.!=("Bonjour", "Bon giorno").get === List(2)
 
 
     // Int
@@ -260,41 +282,40 @@ class Values extends Base {
 
     // String
 
-    // Values after 'H'
-
-    // When comparing strings, note that two or more
-    // letter starting with 'H' is 'greater than H'
+    // Values lexically after 'Hej'
     // (See java.util.String.compareTo)
-    Ns.int.strMap.>("H").get === List(
+    Ns.int.strMap.>("Hej").get === List(
       (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
       (2, Map("en" -> "Oh, Hi", "da" -> "Hilser")),
-      (3, Map("en" -> "Hello", "da" -> "Hej")),
-      (4, Map("da" -> "Hej"))
-    )
-    // Thus this turns out to be the same as (except for the text string "H")
-    Ns.int.strMap.>=("H").get === List(
-      (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
-      (2, Map("en" -> "Oh, Hi", "da" -> "Hilser")),
-      (3, Map("en" -> "Hello", "da" -> "Hej")),
-      (4, Map("da" -> "Hej"))
+      (3, Map("en" -> "Hello"))
     )
 
-    // Values after 'H', again
-    // If what we are after is values starting with
-    // 'I' or higher, we could say '>= I'
-    Ns.int.strMap.>=("I").get === List(
-      (2, Map("en" -> "Oh, Hi"))
-    )
     // Note that String comparisons are case-sensitive!
     // (lower-case letters come after upper-case letters)
-    Ns.int.strMap.>=("i").get === List()
+    Ns.int.strMap.>("hej").get === List()
 
-    // Values before or starting with 'H' (that is, _only_ 'H'!)
-    Ns.int.strMap.<=("H").get === List(
+    // Values lexically equal to or after 'Hej'
+    Ns.int.strMap.>=("Hej").get === List(
+      (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
+      (2, Map("en" -> "Oh, Hi", "da" -> "Hilser")),
+      (3, Map("en" -> "Hello", "da" -> "Hej")),
+      (4, Map("da" -> "Hej"))
+    )
+
+    // Values lexically equal to or before 'Hej'
+    Ns.int.strMap.<=("Hej").get === List(
+      (2, Map("fr" -> "Bonjour", "it" -> "Bon giorno")),
+        (3, Map("da" -> "Hej")),
+        (4, Map("da" -> "Hej"))
+    )
+
+    // Values lexically before 'Hej'
+    Ns.int.strMap.<("Hej").get === List(
       (2, Map("fr" -> "Bonjour", "it" -> "Bon giorno"))
     )
-    // Again, if what we intended wass to find all values
-    // starting with 'H' or before, we should instead say
+
+    // To find values starting with 'H' or before
+    // we need to "go below the next character":
     Ns.int.strMap.<("I").get === List(
       (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
       (2, Map("da" -> "Hilser", "fr" -> "Bonjour", "it" -> "Bon giorno")),
@@ -307,14 +328,10 @@ class Values extends Base {
       (2, Map("fr" -> "Bonjour", "it" -> "Bon giorno"))
     )
 
-    // Entities with str values beginning from 'H'
-    Ns.int.strMap_.>=("H").get.sorted === List(1, 2, 3, 4)
-
-    // Entities with str values beginning from 'I'
-    Ns.int.strMap_.>=("I").get.sorted === List(2)
-
-    // Entities with str values beginning before 'H'
-    Ns.int.strMap_.<("H").get.sorted === List(2)
+    Ns.int.strMap_.>("Hej").get.sorted === List(1, 2, 3)
+    Ns.int.strMap_.>=("Hej").get.sorted === List(1, 2, 3, 4)
+    Ns.int.strMap_.<=("Hej").get.sorted === List(2, 3, 4)
+    Ns.int.strMap_.<("Hej").get.sorted === List(2)
 
 
     // Int
@@ -469,6 +486,7 @@ class Values extends Base {
       (3, Map("en" -> date3, "da" -> date3)),
       (4, Map("da" -> date3))
     )
+
     Ns.int.dateMap.>=(date2).get === List(
       (1, Map("da" -> date3)),
       (2, Map("fr" -> date2, "it" -> date3)),
@@ -494,7 +512,7 @@ class Values extends Base {
   }
 
 
-  "OR semantics" in new Setup {
+  "Multiple values (OR semantics)" in new Setup {
 
     // String
 
@@ -527,6 +545,11 @@ class Values extends Base {
       (4, Map("da" -> "Hej"))
     )
 
+    Ns.int.strMap_("Hello", "Hej").get === List(3, 4)
+    Ns.int.strMap_(Set("Hello", "Hej")).get === List(3, 4)
+    Ns.int.strMap_(set).get === List(3, 4)
+    Ns.int.strMap_("Hello|Hej").get === List(3, 4)
+
 
     // Int
 
@@ -549,6 +572,11 @@ class Values extends Base {
       (2, Map("en" -> 10, "da" -> 10, "fr" -> 20))
     )
 
+    Ns.int.intMap_(10, 20).get === List(1, 2)
+    Ns.int.intMap_(Set(10, 20)).get === List(1, 2)
+    Ns.int.intMap_(Set(10), Set(20)).get === List(1, 2)
+    Ns.int.intMap_(intSet).get === List(1, 2)
+
 
     // Long
 
@@ -560,6 +588,9 @@ class Values extends Base {
       (1, Map("en" -> 10L)),
       (2, Map("en" -> 10L, "da" -> 10L, "fr" -> 20L))
     )
+
+    Ns.int.longMap_(10L, 20L).get === List(1, 2)
+    Ns.int.longMap_(Set(10L, 20L)).get === List(1, 2)
 
 
     // Float
@@ -573,6 +604,9 @@ class Values extends Base {
       (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f))
     )
 
+    Ns.int.floatMap_(10f, 20f).get === List(1, 2)
+    Ns.int.floatMap_(Set(10f, 20f)).get === List(1, 2)
+
 
     // Double
 
@@ -584,6 +618,9 @@ class Values extends Base {
       (1, Map("en" -> 10.0)),
       (2, Map("en" -> 10.0, "da" -> 10.0, "fr" -> 20.0))
     )
+
+    Ns.int.doubleMap_(10.0, 20.0).get === List(1, 2)
+    Ns.int.doubleMap_(Set(10.0, 20.0)).get === List(1, 2)
 
 
     // Date
@@ -597,6 +634,9 @@ class Values extends Base {
       (2, Map("en" -> date1, "da" -> date1, "fr" -> date2))
     )
 
+    Ns.int.dateMap_(date1, date2).get === List(1, 2)
+    Ns.int.dateMap_(Set(date1, date2)).get === List(1, 2)
+
 
     // UUID
 
@@ -609,6 +649,9 @@ class Values extends Base {
       (2, Map("en" -> uuid1, "da" -> uuid1, "fr" -> uuid2))
     )
 
+    Ns.int.uuidMap_(uuid1, uuid2).get === List(1, 2)
+    Ns.int.uuidMap_(Set(uuid1, uuid2)).get === List(1, 2)
+
 
     // URI
 
@@ -620,6 +663,9 @@ class Values extends Base {
       (1, Map("en" -> uri1)),
       (2, Map("en" -> uri1, "da" -> uri1, "fr" -> uri2))
     )
+
+    Ns.int.uriMap_(uri1, uri2).get === List(1, 2)
+    Ns.int.uriMap_(Set(uri1, uri2)).get === List(1, 2)
 
     // Searching for multiple Boolean values doesn't make sense...
   }

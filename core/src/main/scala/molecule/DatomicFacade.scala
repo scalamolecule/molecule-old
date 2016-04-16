@@ -196,3 +196,34 @@ case class Tx(conn: Connection, stmtss: Seq[Seq[Statement]]) {
   def tx = db.entity(Peer.toTx(t))
   def inst: Date = tx.get(":db/txInstant").asInstanceOf[Date]
 }
+
+//import scala.language.existentials
+//  private def cast(a: Any) = a match {
+//    case i: Int   => i.toLong.asInstanceOf[Object]
+//    case f: Float => f.toDouble.asInstanceOf[Object]
+//    case other    => other.asInstanceOf[Object]
+//  }
+//  val argssRaw     = Seq(Seq("(.*)", "(?i)(H)"))
+//  val argssJava = Seq(datomic.Util.list(argssRaw.map(args => datomic.Util.list(args map cast: _*)).asJava: _*))
+//  val argss1    = conn.db +: argssJava
+//
+//  datomic.Peer.q(
+//    """
+//      |[:find  ?b (distinct ?c)
+//      | :where [?a :ns/int ?b]
+//      |        [(fulltext $ :ns/strMap "da@Hej") [[ ?a ?c ]]]]
+//    """.stripMargin, conn.db) === 987
+//
+//  datomic.Peer.q(
+//    """
+//      |[:find  ?b (distinct ?c)
+//      | :in    $ [[ ?cKey ?cValue ]]
+//      | :where [?a :ns/int ?b]
+//      |        [?a :ns/strMap ?c]
+//      |        [(str "(?i)(" ?cKey ")@.*") ?c1]
+//      |        [(.matches ^String ?c ?c1)]
+//      |        [(.split ^String ?c "@" 2) ?c2]
+//      |        [(second ?c2) ?c3]
+//      |        [(.compareTo ^String ?c3 ?cValue) ?c3_1]
+//      |        [(> ?c3_1 0)]]
+//    """.stripMargin, argss1: _*) === 77

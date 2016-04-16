@@ -219,7 +219,7 @@ package object molecule {
 
     def at(key: String): Option[T] = mapAttr.flatMap(_.get(key))
 
-    def keys(key1: String, keyN: String*): Map[String, T] = {
+    def mapAt(key1: String, keyN: String*): Map[String, T] = {
       val keys = key1 +: keyN
       mapAttr match {
         case None    => Map[String, T]()

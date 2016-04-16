@@ -26,7 +26,9 @@ class Base extends CoreSpec {
     Ns.str.strs insert List(
       ("str1", Set("a", "b")),
       ("str2", Set("b", "c")),
-      ("str3", Set("ba", "d")))
+      ("str3", Set("ba", "d")),
+      ("str4", Set[String]())
+    )
 
     Ns.int.ints insert List(
       (1, Set(1, 2)),

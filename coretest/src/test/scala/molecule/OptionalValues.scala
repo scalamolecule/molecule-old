@@ -308,6 +308,7 @@ class OptionalValues extends CoreSpec {
     }
   }
 
+
   "No attributes at all" in new CoreSetup {
     expectCompileError(
       "m(Ns)",
@@ -316,6 +317,7 @@ class OptionalValues extends CoreSpec {
         |Select(Select(Select(Select(Ident(molecule), molecule.util), molecule.util.dsl), molecule.util.dsl.coreTest), molecule.util.dsl.coreTest.Ns)
       """)
   }
+
 
   "Ns without attribute" in new CoreSetup {
     Ns.str.Ref1.int1 insert List(
@@ -332,14 +334,15 @@ class OptionalValues extends CoreSpec {
       "[output.Molecule:modelCheck (2)] Namespace `Ns` in insert molecule has no mandatory attributes. Please add at least one."
   }
 
+
   "No optional values" in new CoreSetup {
     expectCompileError(
       "m(Ns.str$)",
-      "[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+      "[Dsl2Model:apply (2)] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
 
     expectCompileError(
       "m(Ns.str$.int$)",
-      "[Dsl2Model:apply] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
+      "[Dsl2Model:apply (2)] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
   }
 
 
@@ -353,7 +356,5 @@ class OptionalValues extends CoreSpec {
     expectCompileError(
       "m(Ns.str_.Ref1.int1_).get",
       "value get is not a member of molecule.api.Molecule0")
-    ok
   }
-
 }

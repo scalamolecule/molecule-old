@@ -31,8 +31,8 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
     def resolveElement(eSlot: Any, stmts: Seq[Statement], element: Element): (Any, Seq[Statement]) = (eSlot, element) match {
       case ('_, Meta(ns, "", "e", _, EntValue))          => ('arg, stmts)
       case ('_, Meta(ns, "", "e", _, Eq(Seq(id: Long)))) => (Eid(id), stmts)
-      case ('_, Atom(ns, name, _, _, VarValue, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
-      case ('_, Atom(ns, name, _, _, value, prefix, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
+      case ('_, Atom(ns, name, _, _, VarValue, _, _, _))    => ('e, stmts :+ Add('tempId, s":$ns/$name", 'arg))
+      case ('_, Atom(ns, name, _, _, value, prefix, _, _))  => ('e, stmts :+ Add('tempId, s":$ns/$name", Values(value, prefix)))
       case ('_, Bond(ns, refAttr, refNs, _))             => ('v, stmts :+ Add('tempId, s":$ns/$refAttr", s":$refNs"))
 
       case (e, Group(Bond(ns, refAttr, _, _), elements)) =>
@@ -43,27 +43,27 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
         ('e, stmts :+ Add(parentId, s":$ns/$refAttr", nested))
 
       // First with id
-      case (Eid(id), Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
-      case (Eid(id), Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
+      case (Eid(id), Atom(ns, name, _, _, value@Remove(_), prefix, _, _)) => ('e, stmts :+ Retract(id, s":$ns/$name", Values(value, prefix)))
+      case (Eid(id), Atom(ns, name, _, _, value, prefix, _, _))           => ('e, stmts :+ Add(id, s":$ns/$name", Values(value, prefix)))
       case (Eid(id), Bond(ns, refAttr, refNs, _))                      => ('v, stmts :+ Add(id, s":$ns/$refAttr", 'tempId))
 
       // Same namespace
-      case ('e, Atom(ns, name, _, _, value@Remove(_), prefix, _)) => ('e, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
-      case ('e, Atom(ns, name, _, _, VarValue, _, _))             => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
-      case ('e, Atom(ns, name, _, _, value, prefix, _))           => ('e, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
+      case ('e, Atom(ns, name, _, _, value@Remove(_), prefix, _, _)) => ('e, stmts :+ Retract('e, s":$ns/$name", Values(value, prefix)))
+      case ('e, Atom(ns, name, _, _, VarValue, _, _, _))             => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
+      case ('e, Atom(ns, name, _, _, value, prefix, _, _))           => ('e, stmts :+ Add('e, s":$ns/$name", Values(value, prefix)))
       case ('e, Bond(ns, refAttr, refNs, _))                      => ('v, stmts :+ Add('e, s":$ns/$refAttr", s":$refNs"))
       case ('e, TxModel(elements))                                => ('e, stmts ++ elements.foldLeft('tx: Any, Seq[Statement]()) {
         case ((eSlot1, stmts1), element1) => resolveElement(eSlot1, stmts1, element1)
       }._2)
 
       // Continue with only transaction Atoms...
-      case ('tx, Atom(ns, name, _, _, VarValue, _, _))                                           => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
-      case ('tx, Atom(ns, name, _, _, value, prefix, _)) if name.last == '_' || name.last == '$' => ('tx, stmts :+ Add('tx, s":$ns/${name.init}", Values(value, prefix)))
-      case ('tx, Atom(ns, name, _, _, value, prefix, _))                                         => ('tx, stmts :+ Add('tx, s":$ns/$name", Values(value, prefix)))
+      case ('tx, Atom(ns, name, _, _, VarValue, _, _, _))                                           => ('e, stmts :+ Add('e, s":$ns/$name", 'arg))
+      case ('tx, Atom(ns, name, _, _, value, prefix, _, _)) if name.last == '_' || name.last == '$' => ('tx, stmts :+ Add('tx, s":$ns/${name.init}", Values(value, prefix)))
+      case ('tx, Atom(ns, name, _, _, value, prefix, _, _))                                         => ('tx, stmts :+ Add('tx, s":$ns/$name", Values(value, prefix)))
 
       // Next namespace
-      case ('v, Atom(ns, name, _, _, VarValue, _, _))   => ('e, stmts :+ Add('v, s":$ns/$name", 'arg))
-      case ('v, Atom(ns, name, _, _, value, prefix, _)) => ('e, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
+      case ('v, Atom(ns, name, _, _, VarValue, _, _, _))   => ('e, stmts :+ Add('v, s":$ns/$name", 'arg))
+      case ('v, Atom(ns, name, _, _, value, prefix, _, _)) => ('e, stmts :+ Add('v, s":$ns/$name", Values(value, prefix)))
       case ('v, Bond(ns, refAttr, _, _))                => ('v, stmts :+ Add('v, s":$ns/$refAttr", 'tempId))
 
       case ('arg, Bond(ns, refAttr, _, _)) => ('v, stmts :+ Add('arg, s":$ns/$refAttr", 'tempId))
@@ -75,9 +75,9 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
     }
 
     def replace$(elements: Seq[Element]): Seq[Element] = elements map {
-      case a@Atom(_, attr, _, _, _, Some(enumPrefix), _)
+      case a@Atom(_, attr, _, _, _, Some(enumPrefix), _, _)
         if attr.last == '$' && enumPrefix.init.last == '$'    => a.copy(name = attr.init, enumPrefix = Some(enumPrefix.init.init + "/"))
-      case a@Atom(_, attr, _, _, _, _, _) if attr.last == '$' => a.copy(name = attr.init)
+      case a@Atom(_, attr, _, _, _, _, _, _) if attr.last == '$' => a.copy(name = attr.init)
       case b@Bond(_, attr, _, _) if attr.last == '$'          => b.copy(refAttr = attr.init)
       case t@Transitive(_, attr, _, _, _) if attr.last == '$' => t.copy(refAttr = attr.init)
       case Group(ref, es)                                     => Group(ref, replace$(es))

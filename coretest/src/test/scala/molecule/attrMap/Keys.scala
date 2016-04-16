@@ -12,12 +12,14 @@ class Keys extends Base {
       (2, Map("en" -> "Oh, Hi")),
       (3, Map("en" -> "Hello"))
     )
+    Ns.int.strMap_.k("en").get === List(1, 2, 3)
 
     Ns.int.intMap.k("en").get === List(
       (1, Map("en" -> 10)),
       (2, Map("en" -> 10)),
       (3, Map("en" -> 30))
     )
+    Ns.int.intMap_.k("en").get === List(1, 2, 3)
 
     // OBS: Since a map attribute returns a map, we have to beware that
     // key/value pairs are coalesced if there are no other attributes and
@@ -46,6 +48,7 @@ class Keys extends Base {
       "Oh, Hi",
       "Hello"
     )
+
     Ns.e.intMap.k("en").get.map(_._2("en")) === List(
       10,
       10,
@@ -56,50 +59,68 @@ class Keys extends Base {
 
   "Multiple keys (OR semantics)" in new Setup {
 
-    // OR semantics with comma-separated keys
-    Ns.int.strMap.k("en", "fr").get === List(
-      (1, Map("en" -> "Hi there")),
-      (2, Map("fr" -> "Bonjour", "en" -> "Oh, Hi")),
-      (3, Map("en" -> "Hello"))
-    )
-    Ns.int.strMap.k("en", "fr").get === List(
-      (1, Map("en" -> "Hi there")),
-      (2, Map("fr" -> "Bonjour", "en" -> "Oh, Hi")),
-      (3, Map("en" -> "Hello"))
-    )
-    Ns.int.intMap.k("en", "fr").get === List(
-      (1, Map("en" -> 10)),
-      (2, Map("fr" -> 20, "en" -> 10)),
-      (3, Map("en" -> 30))
-    )
-
-    val en_fr = List(
-      (1, Map("en" -> 10)),
-      (2, Map("fr" -> 20, "en" -> 10)),
-      (3, Map("en" -> 30))
-    )
-    Ns.int.intMap.k(Seq("en", "fr")).get === en_fr
-
     // Variables
-    val keys  = Seq("en", "fr")
-    val keys2 = Seq(en, fr)
-    Ns.int.intMap.k(Seq(en, fr)).get === en_fr
-    Ns.int.intMap.k(keys).get === en_fr
-    Ns.int.intMap.k(keys2).get === en_fr
+    val seq1 = Seq("en", "fr")
+    val seq2 = Seq(en, fr)
 
-
-    // OR semantics with `or`-separated keys
-
-    Ns.int.strMap.k("en" or "fr").get === List(
+    val en_fr_str = List(
       (1, Map("en" -> "Hi there")),
       (2, Map("fr" -> "Bonjour", "en" -> "Oh, Hi")),
       (3, Map("en" -> "Hello"))
     )
-    Ns.int.intMap.k("en" or "fr").get === List(
+    Ns.int.strMap.k("en" or "fr").get === en_fr_str
+    Ns.int.strMap.k("en", "fr").get === en_fr_str
+    Ns.int.strMap.k(Seq("en", "fr")).get === en_fr_str
+    Ns.int.strMap.k(Seq(en, fr)).get === en_fr_str
+    Ns.int.strMap.k(seq1).get === en_fr_str
+    Ns.int.strMap.k(seq2).get === en_fr_str
+
+    Ns.int.strMap_.k("en" or "fr").get === List(1,2,3)
+    Ns.int.strMap_.k("en", "fr").get === List(1,2,3)
+    Ns.int.strMap_.k(Seq("en", "fr")).get === List(1, 2, 3)
+    Ns.int.strMap_.k(Seq(en, fr)).get === List(1, 2, 3)
+    Ns.int.strMap_.k(seq1).get === List(1, 2, 3)
+    Ns.int.strMap_.k(seq2).get === List(1, 2, 3)
+
+
+    val en_fr_int = List(
       (1, Map("en" -> 10)),
       (2, Map("fr" -> 20, "en" -> 10)),
       (3, Map("en" -> 30))
     )
+    Ns.int.intMap.k("en" or "fr").get === en_fr_int
+    Ns.int.intMap.k("en", "fr").get === en_fr_int
+    Ns.int.intMap.k(Seq("en", "fr")).get === en_fr_int
+    Ns.int.intMap.k(Seq(en, fr)).get === en_fr_int
+    Ns.int.intMap.k(seq1).get === en_fr_int
+    Ns.int.intMap.k(seq2).get === en_fr_int
+
+    Ns.int.intMap_.k("en" or "fr").get === List(1,2,3)
+    Ns.int.intMap_.k("en", "fr").get === List(1,2,3)
+    Ns.int.intMap_.k(Seq("en", "fr")).get === List(1, 2, 3)
+    Ns.int.intMap_.k(Seq(en, fr)).get === List(1, 2, 3)
+    Ns.int.intMap_.k(seq1).get === List(1, 2, 3)
+    Ns.int.intMap_.k(seq2).get === List(1, 2, 3)
+
+
+    val en_fr_date = List(
+      (1, Map("en" -> date1)),
+      (2, Map("fr" -> date2, "en" -> date1)),
+      (3, Map("en" -> date3))
+    )
+    Ns.int.dateMap.k("en" or "fr").get === en_fr_date
+    Ns.int.dateMap.k("en", "fr").get === en_fr_date
+    Ns.int.dateMap.k(Seq("en", "fr")).get === en_fr_date
+    Ns.int.dateMap.k(Seq(en, fr)).get === en_fr_date
+    Ns.int.dateMap.k(seq1).get === en_fr_date
+    Ns.int.dateMap.k(seq2).get === en_fr_date
+
+    Ns.int.dateMap_.k("en" or "fr").get === List(1,2,3)
+    Ns.int.dateMap_.k("en", "fr").get === List(1,2,3)
+    Ns.int.dateMap_.k(Seq("en", "fr")).get === List(1, 2, 3)
+    Ns.int.dateMap_.k(Seq(en, fr)).get === List(1, 2, 3)
+    Ns.int.dateMap_.k(seq1).get === List(1, 2, 3)
+    Ns.int.dateMap_.k(seq2).get === List(1, 2, 3)
   }
 
   // AND semantics aren't relevant for attribute maps since we should

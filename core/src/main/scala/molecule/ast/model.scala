@@ -24,7 +24,16 @@ object model {
 
   trait Element
 
-  case class Atom(ns: String, name: String, tpeS: String, card: Int, value: Value, enumPrefix: Option[String] = None, gs: Seq[Generic] = Seq()) extends Element
+  case class Atom(
+    ns: String,
+    name: String,
+    tpeS: String,
+    card: Int,
+    value: Value,
+    enumPrefix: Option[String] = None,
+    gs: Seq[Generic] = Nil,
+    keys: Seq[String]= Nil
+  ) extends Element
   case class Bond(ns: String, refAttr: String, refNs: String = "", card: Int) extends Element
   case class ReBond(backRef: String, refAttr: String, refNs: String = "", distinct: Boolean = false, prevVar: String = "") extends Element
   case class Transitive(backRef: String, refAttr: String, refNs: String, depth: Int = 1, prevVar: String = "") extends Element
@@ -75,12 +84,11 @@ object model {
   case object Distinct extends Value
 
   // Action
-  case class Remove(value: Seq[Any]) extends Value
+  case class Remove(values: Seq[Any]) extends Value
   case class Replace(oldNew: Map[Any, Any]) extends Value
 
   // Attribute Maps
   case class Mapping(pairs: Seq[(String, Any)]) extends Value
-//  case class KeyValues(ks: Seq[String], vs: Seq[Any]) extends Value
   case class Keys(ks: Seq[String]) extends Value
 
 
@@ -112,7 +120,7 @@ object model {
   // Convenience methods .........................
 
   def curNs(e: Element) = e match {
-    case Atom(ns, _, _, _, _, _, _)  => ns
+    case Atom(ns, _, _, _, _, _, _,_)  => ns
     case Bond(ns, _, _, _)           => ns
     case Group(Bond(ns, _, _, _), _) => ns
     case Meta(ns, _, _, _, _)        => ns

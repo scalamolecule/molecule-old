@@ -19,26 +19,12 @@ trait InputMolecule_1[I1] extends InputMolecule {
       }
     else
       in1.flatMap {
-        case map: Map[_, _] => map.toSeq.map { case (k, v) => Seq(k, ".*(" + v + ").*") }
+        case map: Map[_, _] => map.toSeq.map { case (k, v) => Seq(k, v) }
         case set: Set[_]    => Seq(set.toSeq)
         case one            => Seq(Seq(one))
       }
 
-    val keys = values.map(_.head).distinct
-    if (inVars.size > 1 && keys.contains("_")) {
-      if (keys.size > 1) {
-        val otherKeys = keys.filterNot(_ == "_")
-        throw new RuntimeException("[InputMolecule_1:bindValues1] Searching for all keys (with `_`) can't be combined with other key(s): " + otherKeys.mkString(", "))
-      }
-      val searchValues = in1.flatMap { case map: Map[_, _] => map.values }
-      val regEx = ".*(" + searchValues.mkString("|") + ").*"
-      val newIn = In(Seq(InVar(ScalarBinding(inVars(1)), List(List(regEx)))), _query.i.rules, _query.i.ds)
-      val newClauses = _query.wh.clauses.filter {
-        case Funct(".startsWith ^String", _, _) => false
-        case _                                  => true
-      }
-      _query.copy(i = newIn, wh = Where(newClauses))
-    } else if (inVars.size > 1)
+    if (inVars.size > 1)
       _query.copy(i = In(Seq(InVar(RelationBinding(inVars), values)), _query.i.rules, _query.i.ds))
     else if (values.size > 1)
       _query.copy(i = In(Seq(InVar(CollectionBinding(inVars.head), Seq(values.flatten))), _query.i.rules, _query.i.ds))

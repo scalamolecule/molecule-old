@@ -94,6 +94,14 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
 
+      // Attribute map using k/apply
+    case t@q"$prev.$cur.k(..$keys).$op(..$values)" =>
+      val keyList = getValues(q"$keys").asInstanceOf[Seq[String]]
+      val element = resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)") match {
+        case a: Atom => a.copy(keys = keyList)
+      }
+      walk(q"$prev", q"$prev.$cur".ns, q"$cur", element)
+
     case t@q"$prev.$cur.$op(..$values)" => walk(q"$prev", q"$prev.$cur".ns, q"$cur", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
 
     case r@q"$prev.$backRefAttr" if backRefAttr.toString.head == '_' =>
@@ -128,13 +136,13 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       traverse(q"$prev", thisElement)
     } else {
       prevElements.last match {
-        case Atom(prevNs0, prevAttr0, _, _, _, _, _) if prevNs0 == curNs && clean(prevAttr0) == clean(attr) =>
+        case Atom(prevNs0, prevAttr0, _, _, _, _, _, _) if prevNs0 == curNs && clean(prevAttr0) == clean(attr) =>
           val (_, similarAtoms, transitive) = {
             prevElements.foldRight(prevElements, Seq[Atom](), None: Option[Transitive]) {
               case (prevElement, (previous, similarAtoms1, trans)) =>
                 //                x(6, previous, prevElement)
                 prevElement match {
-                  case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
+                  case prevAtom@Atom(prevNs, prevAttr, _, _, _, _, _, _) if prevNs == curNs && clean(prevAttr) == clean(attr) =>
                     val t = previous.init.reverse.collectFirst {
                       // Find first previous Bond (relating to this attribute)
                       case prevBond@Bond(ns2, refAttr, refNs, _) =>
@@ -367,7 +375,7 @@ object Dsl2Model {
 
     // Molecule should at least have one mandatory attribute
     elements0.collectFirst {
-      case a@Atom(_, name, _, _, _, _, _) if name.last != '$' => a
+      case a@Atom(_, name, _, _, _, _, _, _) if name.last != '$' => a
       case b: Bond                                            => b
       case g: Group                                           => g
       case m@Meta(_, "txInstant", _, _, _)                    => m
@@ -376,11 +384,11 @@ object Dsl2Model {
 
     // Only tacet attributes allowed to have AND semantics for self-joins
     def checkAndSemantics(elements: Seq[Element]): Unit = elements foreach {
-      case a@Atom(_, name, _, 1, And(_), _, _) if name.last != '_' =>
+      case a@Atom(_, name, _, 1, And(_), _, _, _) if name.last != '_' =>
         abort(s"[Dsl2Model:apply (3)] Card-one attribute `$name` cannot return multiple values.\n" +
           "A tacet attribute can though have AND expressions to make a self-join.\n" +
           s"If you want this, please make the attribute tacet by appending an underscore: `${name}_`")
-      case a@Atom(_, name, _, 3, And(_), _, _) if name.last != '_' =>
+      case a@Atom(_, name, _, 3, And(_), _, _, _) if name.last != '_' =>
         abort(s"[Dsl2Model:apply (4)] Map attribute `$name` is to be considered a card-one container for keyed variations of one value and " +
           """can semantically therefore not return "multiple values".""" +
           "\nA tacet map attribute can though have AND expressions to make a self-join.\n" +

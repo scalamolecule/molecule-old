@@ -39,7 +39,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
     //            x(1, dsl.tree, showRaw(dsl.tree), model, checkCorrectModel)
     //                x(1, dsl.tree, model)
 
-    def keyValues(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {
+    def mapIdents(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {
       case (key: String, value: String) if key.startsWith("__ident__") && value.startsWith("__ident__") => Seq(key -> q"${TermName(key.substring(9))}", value -> q"${TermName(value.substring(9))}")
       case (key: String, value: Any) if key.startsWith("__ident__")                                     => Seq(key -> q"${TermName(key.substring(9))}")
       case (key: String, value: String) if value.startsWith("__ident__")                                => Seq(value -> q"${TermName(value.substring(9))}")
@@ -49,25 +49,33 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
 
     def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Seq()): Seq[(String, Tree)] = {
       val newIdentifiers = (elements collect {
-        case atom@Atom(_, _, _, _, Eq(idents), _, _)     => keyValues(idents)
-        case atom@Atom(_, _, _, _, Neq(idents), _, _)    => keyValues(idents)
-        case atom@Atom(_, _, _, _, And(idents), _, _)    => keyValues(idents)
-        case atom@Atom(_, _, _, _, Lt(ident), _, _)      => keyValues(Seq(ident))
-        case atom@Atom(_, _, _, _, Gt(ident), _, _)      => keyValues(Seq(ident))
-        case atom@Atom(_, _, _, _, Le(ident), _, _)      => keyValues(Seq(ident))
-        case atom@Atom(_, _, _, _, Ge(ident), _, _)      => keyValues(Seq(ident))
-        case atom@Atom(_, _, _, _, Remove(idents), _, _) => keyValues(idents)
-        case atom@Atom(_, _, _, _, Mapping(pairs), _, _) => keyValues(pairs)
-        case atom@Atom(_, _, _, _, Keys(idents), _, _)   => keyValues(idents)
-        case meta@Meta(_, _, _, _, Eq(idents))           => keyValues(idents)
-        case Group(_, nestedElements)                    => mapIdentifiers(nestedElements, identifiers0)
-        case TxModel(txElements)                         => mapIdentifiers(txElements, identifiers0)
+        case atom@Atom(_, _, _, _, Eq(idents), _, _, keyIdents)     => mapIdents(idents ++ keyIdents)
+        case atom@Atom(_, _, _, _, Neq(idents), _, _, keyIdents)    => mapIdents(idents ++ keyIdents)
+        case atom@Atom(_, _, _, _, And(idents), _, _, keyIdents)    => mapIdents(idents ++ keyIdents)
+        case atom@Atom(_, _, _, _, Lt(ident), _, _, keyIdents)      => mapIdents(ident +: keyIdents)
+        case atom@Atom(_, _, _, _, Gt(ident), _, _, keyIdents)      => mapIdents(ident +: keyIdents)
+        case atom@Atom(_, _, _, _, Le(ident), _, _, keyIdents)      => mapIdents(ident +: keyIdents)
+        case atom@Atom(_, _, _, _, Ge(ident), _, _, keyIdents)      => mapIdents(ident +: keyIdents)
+        case atom@Atom(_, _, _, _, Remove(idents), _, _, keyIdents) => mapIdents(idents ++ keyIdents)
+        case atom@Atom(_, _, _, _, Mapping(pairs), _, _, keyIdents) => mapIdents(pairs ++ keyIdents)
+        case atom@Atom(_, _, _, _, Keys(idents), _, _, keyIdents)   => mapIdents(idents ++ keyIdents)
+        case meta@Meta(_, _, _, _, Eq(idents))                      => mapIdents(idents)
+        case Group(_, nestedElements)                               => mapIdentifiers(nestedElements, identifiers0)
+        case TxModel(txElements)                                    => mapIdentifiers(txElements, identifiers0)
       }).flatten
       (identifiers0 ++ newIdentifiers).distinct
     }
 
     val identMap = mapIdentifiers(model.elements).toMap
     //        x(2, identMap)
+
+//    def getValues(idents: Seq[Any]) = idents.map {
+//      case value => value
+//    }
+//    def getKeys(keyIdents: Seq[String]) = getValues(keyIdents).flatMap {
+//      case seq2: Seq[_] => seq2
+//      case other        => Seq(other)
+//    }.asInstanceOf[Seq[String]]
 
     q"""
       import molecule._
@@ -86,52 +94,43 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       import java.text.SimpleDateFormat
       import clojure.lang.{PersistentHashSet, PersistentVector, LazySeq, Keyword}
 
-      def getValues(idents: Seq[Any]) = idents.map {
-        case (key: String, value: String) if key.startsWith("__ident__") && value.startsWith("__ident__") => ($identMap.get(key).get, $identMap.get(value).get)
-        case (key: String, "__pair__")    if key.startsWith("__ident__")                                  => $identMap.get(key).get
-        case (key: String, value: Any)    if key.startsWith("__ident__")                                  => ($identMap.get(key).get, value)
-        case (key: String, value: String) if value.startsWith("__ident__")                                => (key, $identMap.get(value).get)
-        case ident: String                if ident.startsWith("__ident__")                                => $identMap.get(ident).get
-        case other                                                                                        => other
+      def flatSeq(a: Any) = a match {
+        case seq: Seq[_] => seq
+        case set: Set[_] => set.toSeq
+        case value       => Seq(value)
       }
 
+      def getValues(idents: Seq[Any]) = idents.flatMap {
+        case (key: String, value: String) if key.startsWith("__ident__") && value.startsWith("__ident__") => Seq(($identMap.get(key).get, $identMap.get(value).get))
+        case (key: String, "__pair__")    if key.startsWith("__ident__")                                  => flatSeq($identMap.get(key).get)
+        case (key: String, value: Any)    if key.startsWith("__ident__")                                  => Seq(($identMap.get(key).get, value))
+        case (key: String, value: String) if value.startsWith("__ident__")                                => Seq((key, $identMap.get(value).get))
+        case ident: String                if ident.startsWith("__ident__")                                => flatSeq($identMap.get(ident).get)
+        case seq: Seq[_]                                                                                  => seq
+        case value                                                                                        => Seq(value)
+      }
+
+      def getKeys(keyIdents: Seq[String]) = getValues(keyIdents).flatMap {
+        case keys: Seq[_] => keys
+        case key          => Seq(key)
+      }.asInstanceOf[Seq[String]]
+
       def resolveIdentifiers(elements: Seq[Element]): Seq[Element] = elements map {
-        case atom@Atom(_, _, _, 2, Eq(idents), _, _)     =>
-          val flatValues = getValues(idents).flatMap {
-            case set: Set[_] => set.toList
-            case other       => Seq(other)
-          }
-          atom.copy(value = Eq(flatValues))
-        case atom@Atom(_, _, _, _, Eq(idents), _, _)     => atom.copy(value = Eq(getValues(idents)))
-        case atom@Atom(_, _, _, _, Neq(idents), _, _)    => atom.copy(value = Neq(getValues(idents)))
-        case atom@Atom(_, _, _, _, And(idents), _, _)    => atom.copy(value = And(getValues(idents)))
-        case atom@Atom(_, _, _, _, Lt(ident), _, _)      => atom.copy(value = Lt(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Gt(ident), _, _)      => atom.copy(value = Gt(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Le(ident), _, _)      => atom.copy(value = Le(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Ge(ident), _, _)      => atom.copy(value = Ge(getValues(Seq(ident)).head))
-        case atom@Atom(_, _, _, _, Remove(idents), _, _) => atom.copy(value = Remove(getValues(idents)))
-        case atom@Atom(_, _, _, _, Mapping(idents), _, _) =>
-          val flattened = getValues(idents) match {
-            case seq: Seq[_] => seq flatMap {
-              case seq2: Seq[_] => seq2
-              case other        => Seq(other)
-            }
-            case other       => sys.error("Variable `idents` resolved to an unexpected value: " + other.toString)
-          }
-          atom.copy(value = Mapping(flattened.asInstanceOf[Seq[(String, Any)]]))
-        case atom@Atom(_, _, _, _, Keys(idents), _, _)   =>
-          val flattened = getValues(idents) match {
-            case seq: Seq[_] => seq flatMap {
-              case seq2: Seq[_] => seq2
-              case other        => Seq(other)
-            }
-            case other       => sys.error("Variable `idents` resolved to an unexpected value: " + other.toString)
-          }
-          atom.copy(value = Keys(flattened.asInstanceOf[Seq[String]]))
-        case meta@Meta(_, _, _, _, Eq(idents))           => meta.copy(value = Eq(getValues(idents)))
-        case Group(ns, nestedElements)                   => Group(ns, resolveIdentifiers(nestedElements))
-        case TxModel(txElements)                         => TxModel(resolveIdentifiers(txElements))
-        case other                                       => other
+        case atom@Atom(_, _, _, 2, Eq(idents), _, _, keyIdents)      => atom.copy(value = Eq(getValues(idents)))
+        case atom@Atom(_, _, _, _, Eq(idents), _, _, keyIdents)      => atom.copy(value = Eq(getValues(idents)), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, Neq(idents), _, _, keyIdents)     => atom.copy(value = Neq(getValues(idents)), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, And(idents), _, _, keyIdents)     => atom.copy(value = And(getValues(idents)), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, Lt(ident), _, _, keyIdents)       => atom.copy(value = Lt(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, Gt(ident), _, _, keyIdents)       => atom.copy(value = Gt(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, Le(ident), _, _, keyIdents)       => atom.copy(value = Le(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, Ge(ident), _, _, keyIdents)       => atom.copy(value = Ge(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, Remove(idents), _, _, _)          => atom.copy(value = Remove(getValues(idents)))
+        case atom@Atom(_, _, _, _, Mapping(idents), _, _, keyIdents) => atom.copy(value = Mapping(getValues(idents).asInstanceOf[Seq[(String, Any)]]), keys = getKeys(keyIdents))
+        case atom@Atom(_, _, _, _, Keys(idents), _, _, _)            => atom.copy(value = Keys(getValues(idents).asInstanceOf[Seq[String]]))
+        case meta@Meta(_, _, _, _, Eq(idents))                       => meta.copy(value = Eq(getValues(idents)))
+        case Group(ns, nestedElements)                               => Group(ns, resolveIdentifiers(nestedElements))
+        case TxModel(txElements)                                     => TxModel(resolveIdentifiers(txElements))
+        case other                                                   => other
       }
 
       val model: Model = Model(resolveIdentifiers($model.elements))
@@ -582,7 +581,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           val flatModel = {
             def recurse(element: Element): Seq[Element] = element match {
               case g: Group                                            => g.elements flatMap recurse
-              case a@Atom(_, attr, _, _, _, _, _) if attr.last == '_'  => Seq()
+              case a@Atom(_, attr, _, _, _, _, _, _) if attr.last == '_'  => Seq()
               case a: Atom                                             => Seq(a)
               case m: Meta                                             => Seq(m)
               case other                                               => Seq()

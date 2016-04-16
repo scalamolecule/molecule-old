@@ -21,6 +21,10 @@ class FulltextSearch extends Base {
     Ns.str.contains("jumps").get === List("The quick fox jumps")
     Ns.str.contains("jump").get === List()
 
+    // Searches are case-insensitive
+    Ns.str.contains("Jumps").get === List("The quick fox jumps")
+    Ns.str.contains("JuMpS").get === List("The quick fox jumps")
+
     // Empty spaces ignored
     Ns.str.contains("slow ").get === List("Ten slow monkeys")
     Ns.str.contains(" slow").get === List("Ten slow monkeys")

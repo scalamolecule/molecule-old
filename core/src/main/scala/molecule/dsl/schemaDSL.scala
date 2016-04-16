@@ -205,7 +205,8 @@ object schemaDSL {
     // Keyed attribute value methods
     trait Values {
       def apply(value: T, more: T*): Ns with Attr = ???
-      def apply(or: Or[T]): Values with Ns with Attr = ???
+      def apply(values: Seq[T])    : Ns with Attr = ???
+      def apply(or: Or[T])         : Ns with Attr = ???
 
       // Negation
       def not(one: T, more: T*)         : Ns with Attr = ???
