@@ -113,6 +113,8 @@ trait DatomicFacade extends ArgProperties {
            |#############################################################################
            |$e
            |
+           |$model
+           |
            |$query
            |
            |${query.datalog}
@@ -147,7 +149,7 @@ trait DatomicFacade extends ArgProperties {
   protected[molecule] def update(conn: Connection, model: Model): Tx = {
     val transformer = Model2Transaction(conn, model)
     val stmts = transformer.updateStmts()
-    //        x(3, model, transformer.stmtsModel, stmts)
+//            x(3, model, transformer.stmtsModel, stmts)
 //            x(3, transformer.stmtsModel, stmts)
     Tx(conn, Seq(stmts))
   }
@@ -184,16 +186,16 @@ case class Tx(conn: Connection, stmtss: Seq[Seq[Statement]]) {
 
     val txTtempIds = txResult.get(Connection.TEMPIDS)
     val dbAfter = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
-    val ids = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
+    val ids: Seq[Long] = tempIds.map(tempId => datomic.Peer.resolveTempid(dbAfter, txTtempIds, tempId).asInstanceOf[Long]).distinct
     //    x(1, transformer.stmtsModel, stmtss, datoms, ids)
     ids.toList
   }
 
-  def eidSet = eids.toSet
-  def eid = eids.head
-  def db = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
-  def t = db.basisT()
-  def tx = db.entity(Peer.toTx(t))
+  def eidSet: Set[Long] = eids.toSet
+  def eid: Long = eids.head
+  def db: Db = txResult.get(Connection.DB_AFTER).asInstanceOf[Db]
+  def t: Long = db.basisT()
+  def tx: datomic.Entity = db.entity(Peer.toTx(t))
   def inst: Date = tx.get(":db/txInstant").asInstanceOf[Date]
 }
 

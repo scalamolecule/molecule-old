@@ -209,6 +209,10 @@ class KeysValues extends Base {
       (2, Map("en" -> "Oh, Hi"))
     )
 
+    Ns.int.strMap_.k("en").<("Hi").get === List(3)
+    Ns.int.strMap_.k("en").>("Hi").get === List(1,2)
+
+
     // Multiple keys
 
     Ns.int.strMap.k("en" or "da").<("Hi").get === List(
@@ -222,8 +226,6 @@ class KeysValues extends Base {
       (2, Map("en" -> "Oh, Hi", "da" -> "Hilser"))
     )
 
-    Ns.int.strMap_.k("en").<("Hi").get === List(3)
-    Ns.int.strMap_.k("en").>("Hi").get === List(1,2)
     Ns.int.strMap_.k("en" or "da").<("Hi").get === List(1,3,4)
     Ns.int.strMap_.k("en" or "da").>("Hi").get === List(1,2)
 

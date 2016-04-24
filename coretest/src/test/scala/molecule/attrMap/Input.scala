@@ -7,10 +7,6 @@ class Input extends Base {
 
   "Equality" in new Setup {
 
-    // Attribute maps are a little more inflexible in input molecules
-    // compared to normal attributes in that we can only apply Map values.
-    // But in most case we get around that...
-
     // Input molecule waiting for a key/value pair
     val inputMolecule = m(Ns.int.strMap(?))
 
@@ -36,15 +32,15 @@ class Input extends Base {
 
   "Regex/partial search" in new Setup {
 
-    // Attribute maps in normal attributes allow us to search for a value only:
+    // Attribute maps allow us to search for a value needle without the key:
     Ns.int.strMap(".*He.*").get === List(
       (1, Map("da" -> "Hejsa")),
       (3, Map("en" -> "Hello", "da" -> "Hej")),
       (4, Map("da" -> "Hej"))
     )
 
-    // Attribute maps in input molecules though require Maps only. So, to
-    // search for a regex value we could make the key part accepting anything:
+    // Attribute maps in input molecules though require Maps as needles.
+    // So, to search for a regex value we could make the key part accepting anything:
     m(Ns.int.strMap(?))(Map(".*" -> ".*He.*")).get === List(
       (1, Map("da" -> "Hejsa")),
       (3, Map("en" -> "Hello", "da" -> "Hej")),

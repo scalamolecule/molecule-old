@@ -69,14 +69,6 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
     val identMap = mapIdentifiers(model.elements).toMap
     //        x(2, identMap)
 
-//    def getValues(idents: Seq[Any]) = idents.map {
-//      case value => value
-//    }
-//    def getKeys(keyIdents: Seq[String]) = getValues(keyIdents).flatMap {
-//      case seq2: Seq[_] => seq2
-//      case other        => Seq(other)
-//    }.asInstanceOf[Seq[String]]
-
     q"""
       import molecule._
       import molecule.api._
@@ -94,7 +86,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       import java.text.SimpleDateFormat
       import clojure.lang.{PersistentHashSet, PersistentVector, LazySeq, Keyword}
 
-      def flatSeq(a: Any) = a match {
+      def flatSeq(a: Any): Seq[Any] = a match {
         case seq: Seq[_] => seq
         case set: Set[_] => set.toSeq
         case value       => Seq(value)
@@ -110,7 +102,7 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         case value                                                                                        => Seq(value)
       }
 
-      def getKeys(keyIdents: Seq[String]) = getValues(keyIdents).flatMap {
+      def getKeys(keyIdents: Seq[String]): Seq[String] = getValues(keyIdents).flatMap {
         case keys: Seq[_] => keys
         case key          => Seq(key)
       }.asInstanceOf[Seq[String]]
@@ -136,10 +128,10 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       val model: Model = Model(resolveIdentifiers($model.elements))
       val query: Query = Model2Query(model)
 
-      lazy val modelE = Model(resolveIdentifiers($modelE.elements))
-      lazy val queryE = Model2Query(modelE)
+      lazy val modelE: Model = Model(resolveIdentifiers($modelE.elements))
+      lazy val queryE: Query = Model2Query(modelE)
 
-      def date(s: String) = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(s)
+      def date(s: String): Date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(s)
 
       def debugMolecule(conn: Connection, m: Model, q: Query): Unit = {
         val rows = try {
@@ -247,8 +239,30 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       case t if t <:< typeOf[Set[_]]                 => q"$value.asInstanceOf[PersistentHashSet].toSet.asInstanceOf[$t]"
       case t if t <:< typeOf[Vector[_]]              => q"$value.asInstanceOf[PersistentVector].toVector.asInstanceOf[$t]"
       case t if t <:< typeOf[Stream[_]]              => q"$value.asInstanceOf[LazySeq].toStream.asInstanceOf[$t]"
-      case t if t <:< typeOf[Int]                    => q"if($value.isInstanceOf[jLong]) $value.asInstanceOf[jLong].toInt.asInstanceOf[$t] else $value.asInstanceOf[$t]"
-      case t if t <:< typeOf[Float]                  => q"if($value.isInstanceOf[jDouble]) $value.asInstanceOf[jDouble].toFloat.asInstanceOf[$t] else $value.asInstanceOf[$t]"
+      case t if t <:< typeOf[Int]                    =>
+        q"""
+          if($value.isInstanceOf[jLong])
+            $value.asInstanceOf[jLong].toInt.asInstanceOf[$t]
+          else if($value.isInstanceOf[String])
+            $value.asInstanceOf[String].toInt.asInstanceOf[$t]
+          else
+            $value.asInstanceOf[$t]
+        """
+      case t if t <:< typeOf[Float]                  =>
+        q"""
+          if($value.isInstanceOf[jDouble])
+            $value.asInstanceOf[jDouble].toFloat.asInstanceOf[$t]
+          else if($value.isInstanceOf[String])
+            $value.asInstanceOf[String].toFloat.asInstanceOf[$t]
+          else
+            $value.asInstanceOf[$t]
+        """
+      case t if t <:< typeOf[Long]                   => q"""if($value.isInstanceOf[String]) $value.asInstanceOf[String].toLong.asInstanceOf[$t] else $value.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Double]                 => q"""if($value.isInstanceOf[String]) $value.asInstanceOf[String].toDouble.asInstanceOf[$t] else $value.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Boolean]                => q"""if($value.isInstanceOf[String]) $value.asInstanceOf[String].toBoolean.asInstanceOf[$t] else $value.asInstanceOf[$t]"""
+      case t if t <:< typeOf[Date]                   => q"""if($value.isInstanceOf[String]) date($value.asInstanceOf[String]).asInstanceOf[$t] else $value.asInstanceOf[$t]"""
+      case t if t <:< typeOf[UUID]                   => q"""if($value.isInstanceOf[String]) UUID.fromString($value.asInstanceOf[String]).asInstanceOf[$t] else $value.asInstanceOf[$t]"""
+      case t if t <:< typeOf[URI]                    => q"""if($value.isInstanceOf[String]) new URI($value.asInstanceOf[String]).asInstanceOf[$t] else $value.asInstanceOf[$t]"""
       case t if t <:< typeOf[Option[Int]]            => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Int]].toMap.values.head)"
       case t if t <:< typeOf[Option[Float]]          => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Float]].toMap.values.head)"
       case t if t <:< typeOf[Option[Double]]         => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Double]].toMap.values.head)"

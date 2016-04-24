@@ -33,7 +33,7 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
         def debugE(implicit conn: Connection): Unit              = debugMolecule(conn, modelE, queryE)
 
         def get(implicit conn: Connection): Seq[(..$OutTypes)] = {
-          val isNested = model.elements.foldLeft(false) {
+          val isNested: Boolean = model.elements.foldLeft(false) {
             case (result, Group(Bond("","","", 2), _)) => false
             case (result, g: Group)                    => true
             case (result, _)                           => result

@@ -145,7 +145,7 @@ object schemaDSL {
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
     // Empty `apply` is a request to delete values!
     def apply()                 : Ns with Attr = ???
-    def apply(one: T, more: T*) : Ns with Attr = ???
+    def  apply(one: T, more: T*) : Ns with Attr = ???
     def apply(values: Seq[T])   : Ns with Attr = ???
   }
   trait OneString [Ns, In] extends One[Ns, In, String ]
@@ -182,6 +182,8 @@ object schemaDSL {
 
   // Map attributes
 
+  trait MapAttrK
+
   trait MapAttr[Ns, In, M, T] extends ValueAttr[Ns, In, T, M]  {
 
     // Manipulation
@@ -198,9 +200,10 @@ object schemaDSL {
     def apply(pairs: Or[(String, T)])                    : Ns with Attr = ???
 
     // Keys
-    def k(value: String, more: String*)        : Values with Ns with Attr = ???
-    def k(values: Seq[String])                 : Values with Ns with Attr = ???
-    def k(or: Or[String])                      : Values with Ns with Attr = ???
+    def k(value: String)                : Values with Ns with Attr = ???
+    def k(value: String, more: String*) : Values with Ns with Attr = ???
+    def k(values: Seq[String])          : Values with Ns with Attr = ???
+    def k(or: Or[String])               : Values with Ns with Attr = ???
 
     // Keyed attribute value methods
     trait Values {
@@ -224,10 +227,50 @@ object schemaDSL {
     }
   }
 
-  trait MapString [Ns, In] extends MapAttr[Ns, In, Map[String, String ], String ] {
-    def contains(s: String, more: String*): Ns with Attr = ???
-    def contains(in: ?)                   : In with Attr = ???
+  trait MapAttr2[Ns, In, Ns1, In1, M, T] extends ValueAttr[Ns, In, T, M]  {
+
+    // Manipulation
+    // Empty `apply` is a request to delete all key/values!
+    def apply()                                         : Ns with Attr = ???
+    def add(pair: (String, T), morePairs: (String, T)*) : Ns with Attr = ???
+    def remove(key: String, moreKeys: String*)          : Ns with Attr = ???
+
+    // Values
+    def apply(value: T, more: T*)                        : Ns with Attr = ???
+    def apply(set: Set[T], moreSets: Set[T]*)            : Ns with Attr = ???
+    def apply(pair: (String, T), morePairs: (String, T)*): Ns with Attr = ???
+    def apply(pairs: Seq[(String, T)])                   : Ns with Attr = ???
+    def apply(pairs: Or[(String, T)])                    : Ns with Attr = ???
+
+    // Keys
+    def k(value: String)                : Values with Ns with Attr = ???
+    def k(value: String, more: String*) : Values with Ns with Attr = ???
+    def k(values: Seq[String])          : Values with Ns with Attr = ???
+    def k(or: Or[String])               : Values with Ns with Attr = ???
+
+    // Keyed attribute value methods
+    trait Values {
+      def apply(value: T, more: T*): Ns with Attr = ???
+      def apply(values: Seq[T])    : Ns with Attr = ???
+      def apply(or: Or[T])         : Ns with Attr = ???
+
+      // Negation
+      def not(one: T, more: T*)         : Ns with Attr = ???
+      def != (one: T, more: T*) : Ns with Attr = ???
+
+      // Comparison
+      def <  (value: T) : Ns with Attr = ???
+      def >  (value: T) : Ns with Attr = ???
+      def <= (value: T) : Ns with Attr = ???
+      def >= (value: T) : Ns with Attr = ???
+
+      // Todo: How can we make those available to String type only?
+      def contains(that: T): Ns with Attr = ???
+      def contains(in: ?)  : In with Attr = ???
+    }
   }
+
+  trait MapString [Ns, In] extends MapAttr[Ns, In, Map[String, String ], String ]
   trait MapInt    [Ns, In] extends MapAttr[Ns, In, Map[String, Int    ], Int    ]
   trait MapLong   [Ns, In] extends MapAttr[Ns, In, Map[String, Long   ], Long   ]
   trait MapFloat  [Ns, In] extends MapAttr[Ns, In, Map[String, Float  ], Float  ]

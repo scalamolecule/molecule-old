@@ -1,4 +1,5 @@
-package molecule.ops
+package molecule
+package ops
 import java.net.URI
 import java.util.{Date, UUID}
 
@@ -52,7 +53,7 @@ object QueryOps extends Helpers {
 
     def pull(e: String, atom: Atom) =
       q.copy(f = Find(q.f.outputs :+ Pull(e + "_" + atom.name, atom.ns, atom.name)))
-        .func("molecule.Functions/bind", Seq(Var(e)), ScalarBinding(Var(e + "_" + atom.name)))
+        .func("molecule.Functions/bind ^String", Seq(Var(e)), ScalarBinding(Var(e + "_" + atom.name)))
 
     def pullEnum(e: String, atom: Atom) =
       q.copy(f = Find(q.f.outputs :+ Pull(e + "_" + atom.name, atom.ns, atom.name, atom.enumPrefix)))
@@ -196,11 +197,6 @@ object QueryOps extends Helpers {
           q.where(e, a, v, gs)
             .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 1)))
             .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
-        case key :: Nil =>
-          q.where(e, a, v, gs)
-            .func(".startsWith ^String", Seq(Var(v), Val(key + "@")), NoBinding)
-            .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 1)))
-            .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
         case keys_      =>
           q.where(e, a, v, gs)
             .func(".matches ^String", Seq(Var(v), Val("(" + keys_.mkString("|") + ")" + "@.*")))
@@ -246,8 +242,34 @@ object QueryOps extends Helpers {
       }
     }
 
+    def mapInCompareToK(op: String, e: String, a: Atom, v: String, key: String, gs: Seq[Generic] = Seq()) = {
+      val q1 = q
+        // match key(s) (could be regex)
+        .func(".matches ^String", Seq(Var(v), Val(s"($key)@.*")))
+        // extract value
+        .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 1)))
+        .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
+      a.tpeS match {
+        case "String"         => q1.compareTo(op, a, v + 2, Var(v + "Value"), 1)
+        case "UUID"           => q1.compareTo(op, a, v + 2, Var(v + "Value"), 1)
+        case "URI"            => q1.compareTo(op, a, v + 2, Var(v + "Value"), 1)
+        case "Boolean"        => q1.compareTo(op, a, v + 2, Var(v + "Value"), 1)
+        case "java.util.Date" => q1
+          .func("java.text.SimpleDateFormat.", Seq(Val("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")), ScalarBinding(Var(v + 3)))
+          .func(".format ^java.text.SimpleDateFormat", Seq(Var(v + 3), Var(v + "Value")), ScalarBinding(Var(v + 4)))
+          .func(".compareTo ^String", Seq(Var(v + 2), Var(v + 4)), ScalarBinding(Var(v + 5)))
+          .func(op, Seq(Var(v + 5), Val(0)))
+        case number           => q1
+          .func("read-string", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
+          .func(op, Seq(Var(v + 3), Var(v + "Value")))
+      }
+    }
+
     def mapIn(e: String, a: Atom, v: String, gs: Seq[Generic]): Query =
       q.in(v + "Key", a).in(v + "Value", a).where(e, a, v, gs)
+
+    def mapIn2(e: String, a: Atom, v: String, gs: Seq[Generic]): Query =
+      q.in(v + "Value", a).where(e, a, v, gs)
 
     def matchRegEx(v: String, regex: Seq[QueryTerm]) =
       q.func("str", regex, ScalarBinding(Var(v + 1))).matches(v, Var(v + 1))

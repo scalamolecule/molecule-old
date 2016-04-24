@@ -70,6 +70,150 @@ object Model2Query extends Helpers {
         }
 
 
+        // Keyed mapped attributes ===============================================================
+
+        // Keyed map Atom$ (optional)
+
+        case a0@Atom(_, attr0, t, 4, value, _, gs, _) if attr0.last == '$' => {
+          val a = a0.copy(name = attr0.slice(0, attr0.length - 2))
+          value match {
+            case VarValue => q.pull(e, a)
+            case other    => sys.error("[Model2Query:resolve[Map Atom]] Unresolved optional mapped Atom$:\nAtom$   : " + s"$a\nElement: $other")
+          }
+        }
+
+        // Keyed map Atom_ (tacet)
+
+        case a0@Atom(_, attr0, t, 4, value, _, gs, key :: Nil) if attr0.last == '_' => {
+          val a = a0.copy(name = attr0.slice(0, attr0.length - 2))
+          value match {
+            case Qm                => q
+              .in(v + "Value", a)
+              .where(e, a, v, gs)
+              .func("str", Seq(Val(s"($key)@("), Var(v + "Value"), Val(")")), ScalarBinding(Var(v1)))
+              .func(".matches ^String", Seq(Var(v), Var(v1)))
+
+            case Fulltext(Seq(Qm)) => q
+              .in(v + "Value", a)
+              .where(e, a, v, gs)
+              .func("str", Seq(Val(s"($key)@("), Var(v + "Value"), Val(")")), ScalarBinding(Var(v1)))
+              .func(".matches ^String", Seq(Var(v), Var(v1)))
+
+            case Neq(Seq(Qm))      => q
+              .in(v + "Value", a)
+              .where(e, a, v, gs)
+              .func("str", Seq(Val(s"(?!($key)@("), Var(v + "Value"), Val(")$).*")), ScalarBinding(Var(v1)))
+              .func(".matches ^String", Seq(Var(v), Var(v1)))
+
+            case Gt(Qm) => q.mapIn2(e, a, v, gs).mapInCompareToK(">", e, a, v, key, gs)
+            case Ge(Qm) => q.mapIn2(e, a, v, gs).mapInCompareToK(">=", e, a, v, key, gs)
+            case Lt(Qm) => q.mapIn2(e, a, v, gs).mapInCompareToK("<", e, a, v, key, gs)
+            case Le(Qm) => q.mapIn2(e, a, v, gs).mapInCompareToK("<=", e, a, v, key, gs)
+
+            case Gt(arg) => q.mapCompareTo(">", e, a, v, Seq(key), arg, gs)
+            case Ge(arg) => q.mapCompareTo(">=", e, a, v, Seq(key), arg, gs)
+            case Lt(arg) => q.mapCompareTo("<", e, a, v, Seq(key), arg, gs)
+            case Le(arg) => q.mapCompareTo("<=", e, a, v, Seq(key), arg, gs)
+
+            case VarValue => q
+              .where(e, a, v, gs)
+              .func(".startsWith ^String", Seq(Var(v), Val(key + "@")), NoBinding)
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+              .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+
+            case Fulltext(args) => q
+              .where(e, a, v, gs)
+              .func(".matches ^String", Seq(Var(v), Val("(" + key + ")@.*(" + args.map(f).mkString("|") + ").*$")))
+
+            case Eq(arg :: Nil) => q
+              .where(e, a, v, gs)
+              .func(".matches ^String", Seq(Var(v), Val(s"($key)@" + f(arg))))
+
+            case Eq(args) => q
+              .where(e, a, v, gs)
+              .func(".matches ^String", Seq(Var(v), Val("(" + key + ")@(" + args.map(f).mkString("|") + ")$")))
+
+            case other => sys.error(s"[Model2Query:resolve[Map Atom]] Unresolved tacet mapped Atom_:\nAtom_   : $a\nElement: $other")
+          }
+        }
+
+        // Keyed map Atom (mandatory)
+
+        case a0@Atom(_, attr0, t, 4, value, _, gs, key :: Nil) => {
+          val a = a0.copy(name = attr0.init)
+          value match {
+            case Qm                => q
+              .find(v3, gs)
+              .in(v + "Value", a)
+              .where(e, a, v, gs)
+              .func("str", Seq(Val(s"($key)@("), Var(v + "Value"), Val(")")), ScalarBinding(Var(v1)))
+              .func(".matches ^String", Seq(Var(v), Var(v1)))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 2)))
+              .func("second", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
+
+            case Fulltext(Seq(Qm)) => q
+              .find(v3, gs)
+              .in(v + "Value", a)
+              .where(e, a, v, gs)
+              .func("str", Seq(Val(s"($key)@("), Var(v + "Value"), Val(")")), ScalarBinding(Var(v1)))
+              .func(".matches ^String", Seq(Var(v), Var(v1)))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 2)))
+              .func("second", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
+
+            case Neq(Seq(Qm))      => q
+              .find(v3, gs)
+              .in(v + "Value", a)
+              .where(e, a, v, gs)
+              .func("str", Seq(Val(s"(?!($key)@("), Var(v + "Value"), Val(")$).*")), ScalarBinding(Var(v1)))
+              .func(".matches ^String", Seq(Var(v), Var(v1)))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 2)))
+              .func("second", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
+
+            case Gt(Qm) => q.find(v2, gs).mapIn2(e, a, v, gs).mapInCompareToK(">", e, a, v, key, gs)
+            case Ge(Qm) => q.find(v2, gs).mapIn2(e, a, v, gs).mapInCompareToK(">=", e, a, v, key, gs)
+            case Lt(Qm) => q.find(v2, gs).mapIn2(e, a, v, gs).mapInCompareToK("<", e, a, v, key, gs)
+            case Le(Qm) => q.find(v2, gs).mapIn2(e, a, v, gs).mapInCompareToK("<=", e, a, v, key, gs)
+
+            case Gt(arg) => q.find(v2, gs).mapCompareTo(">", e, a, v, Seq(key), arg, gs)
+            case Ge(arg) => q.find(v2, gs).mapCompareTo(">=", e, a, v, Seq(key), arg, gs)
+            case Lt(arg) => q.find(v2, gs).mapCompareTo("<", e, a, v, Seq(key), arg, gs)
+            case Le(arg) => q.find(v2, gs).mapCompareTo("<=", e, a, v, Seq(key), arg, gs)
+
+            case VarValue => q
+              .find(v2, gs)
+              .where(e, a, v, gs)
+              .func(".matches ^String", Seq(Var(v), Val(s"($key)@.*")))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v1)))
+              .func("second", Seq(Var(v1)), ScalarBinding(Var(v2)))
+
+            case Fulltext(args) => q
+              .find(v2, gs)
+              .where(e, a, v, gs)
+              .func(".matches ^String", Seq(Var(v), Val("(" + key + ")@.*(" + args.map(f).mkString("|") + ").*$")))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 1)))
+              .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
+
+            case Eq(arg :: Nil) => q
+              .find(v2, gs)
+              .where(e, a, v, gs)
+              .func(".matches ^String", Seq(Var(v), Val(s"($key)@" + f(arg))))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 1)))
+              .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
+
+            case Eq(args) => q
+              .find(v2, gs)
+              .where(e, a, v, gs)
+              .func(".matches ^String", Seq(Var(v), Val("(" + key + ")@(" + args.map(f).mkString("|") + ")$")))
+              .func(".split ^String", Seq(Var(v), Val("@"), Val(2)), ScalarBinding(Var(v + 1)))
+              .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
+
+            case Neq(args)                     => q.find(v, gs).where(e, a, v, gs).matches(v, Seq(key), "(?!(" + args.map(f).mkString("|") + ")$).*")
+
+            case other                         => sys.error(s"[Model2Query:resolve[Map Atom]] Unresolved mapped Atom:\nAtom   : $a\nElement: $other")
+          }
+        }
+
+
         // Mapped attributes ===============================================================
 
         // Map Atom$ (optional)

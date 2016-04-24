@@ -41,6 +41,7 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     def isValueAttr = tpe <:< weakTypeOf[ValueAttr[_, _, _, _]]
     def isValueAttr$ = tpe <:< weakTypeOf[ValueAttr$[_]]
+    def isMapAttrK = tpe <:< typeOf[MapAttrK]
     def isMapAttr = tpe <:< weakTypeOf[MapAttr[_, _, _, _]]
     def isMapAttr$ = tpe <:< weakTypeOf[MapAttr$[_]]
     def isOne = tpe <:< weakTypeOf[One[_, _, _]]
@@ -200,7 +201,6 @@ trait TreeOps[Ctx <: Context] extends Liftables[Ctx] {
 
     override def toString = {
       val s = sym.name.toString
-      val test = s.head.toLower + s.tail.takeWhile(_ != '_')
       val first = s.split("_(\\d+|In_.*)").head
       first.head.toLower + first.tail
     }

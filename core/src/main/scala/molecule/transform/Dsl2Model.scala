@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 4, 12)
+  val x = DebugMacro("Dsl2Model", 75, 78)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -94,15 +94,40 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
 
     case q"$prev.$ref.apply(..$values)" if q"$prev.$ref".isRef => abort(s"[Dsl2Model:dslStructure] Can't apply value to a reference (`$ref`)")
 
-      // Attribute map using k/apply
+    // Attribute map using k/apply
     case t@q"$prev.$cur.k(..$keys).$op(..$values)" =>
       val keyList = getValues(q"$keys").asInstanceOf[Seq[String]]
       val element = resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)") match {
         case a: Atom => a.copy(keys = keyList)
       }
+//      x(75, element)
       walk(q"$prev", q"$prev.$cur".ns, q"$cur", element)
 
-    case t@q"$prev.$cur.$op(..$values)" => walk(q"$prev", q"$prev.$cur".ns, q"$cur", resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)"))
+    // Keyed attribute map operation
+    case t@q"$prev.$cur.apply($key).$op(..$values)" if q"$prev.$cur.apply($key)".isMapAttrK =>
+      val funcLitTpe = c.typecheck(q"$prev.$cur").tpe
+      val attrTpe = funcLitTpe.typeArgs(1)
+      val ns = new nsp(attrTpe.typeSymbol.owner).toString
+      val tpe = funcLitTpe.typeArgs.last.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last.toString
+      val value: Value = modelValue(op.toString(), t, q"Seq(..$values)")
+      val element = Atom(ns, cur.toString, cast(tpe.toString), 4, value, Some("mappedKey"), Nil, Seq(extract(q"$key").toString))
+      //      x(76, element)
+      walk(q"$prev", q"$prev.$cur".ns, q"$cur", element)
+
+    // Keyed attribute map
+    case t@q"$prev.$cur.apply($key)" if t.isMapAttrK =>
+      val funcLitTpe = c.typecheck(q"$prev.$cur").tpe
+      val attrTpe = funcLitTpe.typeArgs(1)
+      val ns = new nsp(attrTpe.typeSymbol.owner).toString
+      val tpe = funcLitTpe.typeArgs.last.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last.toString
+      val element = Atom(ns, cur.toString, cast(tpe.toString), 4, VarValue, Some("mappedKey"), Nil, Seq(extract(q"$key").toString))
+      //      x(77, element)
+      walk(q"$prev", q"$prev.$cur".ns, q"$cur", element)
+
+    case t@q"$prev.$cur.$op(..$values)" =>
+      val element = resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)")
+      //      x(78, element)
+      walk(q"$prev", q"$prev.$cur".ns, q"$cur", element)
 
     case r@q"$prev.$backRefAttr" if backRefAttr.toString.head == '_' =>
       val backRef = c.typecheck(q"$prev.$backRefAttr").tpe.typeSymbol.name.toString // "partition_Ns_<arity>"
@@ -154,7 +179,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
                     }
                     //                    x(4, prevElements.last, prevNs, prevAttr)
                     (previous.init, similarAtoms1 :+ prevAtom, Some(t))
-                  case _                                                                                                   =>
+                  case _                                                                                                      =>
                     (previous.init, similarAtoms1, trans)
                 }
             }
@@ -209,11 +234,12 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     }
   }
 
-  def cast(atom: Tree) = atom.tpeS match {
+  def cast(tpe: String): String = tpe match {
     case "Int"   => "Long"
     case "Float" => "Double"
     case other   => other
   }
+  def cast(atom: Tree): String = cast(atom.tpeS)
 
   def resolveOp(previous: Tree, curTree: Tree, attr: Tree, op: Tree, values0: Tree): Element = {
     val value: Value = modelValue(op.toString(), attr, values0)
@@ -228,10 +254,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case prev if cur == "a_"               => Atom("?", "attr_", "a", 1, value)
       case prev if cur == "ns"               => Atom("ns", "?", "ns", 1, value)
       case prev if cur == "ns_"              => Atom("ns_", "?", "ns", 1, value)
-      case prev if attr.isMapAttr            => Atom(attr.ns, attr.name, cast(attr), 3, value, Some("mapping"))
-      case prev if attr.isAttr               => Atom(attr.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
-      case prev if prev.isAttr               => Atom(prev.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
-      case prev                              => Atom(attr.name, cur, "Int", attr.card, value, enumPrefix)
+      //      case prev if attr.isMapAttrK           => Atom(attr.ns, attr.name, cast(attr), 4, value, Some("mapKey"), keys = Seq("xxx"))
+      case prev if attr.isMapAttr => Atom(attr.ns, attr.name, cast(attr), 3, value, Some("mapping"))
+      case prev if attr.isAttr    => Atom(attr.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
+      case prev if prev.isAttr    => Atom(prev.ns, attr.name, cast(attr), attr.card, value, enumPrefix)
+      case prev                   => Atom(attr.name, cur, "Int", attr.card, value, enumPrefix)
     }
   }
 
@@ -243,6 +270,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
     val values = getValues(values0, attr)
     //    x(9, values)
     op match {
+      case "applyKey"    => NoValue
       case "apply"       => values match {
         case resolved: Value => resolved
         case vs: Seq[_]      => if (vs.isEmpty) Remove(Seq()) else Eq(vs)
@@ -376,9 +404,9 @@ object Dsl2Model {
     // Molecule should at least have one mandatory attribute
     elements0.collectFirst {
       case a@Atom(_, name, _, _, _, _, _, _) if name.last != '$' => a
-      case b: Bond                                            => b
-      case g: Group                                           => g
-      case m@Meta(_, "txInstant", _, _, _)                    => m
+      case b: Bond                                               => b
+      case g: Group                                              => g
+      case m@Meta(_, "txInstant", _, _, _)                       => m
     } getOrElse
       abort(s"[Dsl2Model:apply (2)] Molecule is empty or has only meta/optional attributes. Please add one or more attributes.")
 
@@ -393,8 +421,8 @@ object Dsl2Model {
           """can semantically therefore not return "multiple values".""" +
           "\nA tacet map attribute can though have AND expressions to make a self-join.\n" +
           s"If you want this, please make the map attribute tacet by appending an underscore: `${name}_`")
-      case Group(bond, elements2)                                  => checkAndSemantics(elements2)
-      case _                                                       => "ok"
+      case Group(bond, elements2)                                     => checkAndSemantics(elements2)
+      case _                                                          => "ok"
     }
     checkAndSemantics(elements0)
 

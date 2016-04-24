@@ -34,7 +34,7 @@ object CoreTestDefinition {
     val refs1    = many[Ref1]
     val refsSub1 = many[Ref1].subComponents
 
-    val strMap    = mapString
+    val strMap    = mapString.fullTextSearch
     val intMap    = mapInt
     val longMap   = mapLong
     val floatMap  = mapFloat
