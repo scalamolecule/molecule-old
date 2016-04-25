@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 75, 78)
+  val x = DebugMacro("Dsl2Model", 70, 74)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -100,7 +100,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val element = resolveOp(q"$prev", q"$cur", q"$prev.$cur", q"$op", q"Seq(..$values)") match {
         case a: Atom => a.copy(keys = keyList)
       }
-//      x(75, element)
+      //      x(75, element)
       walk(q"$prev", q"$prev.$cur".ns, q"$cur", element)
 
     // Keyed attribute map operation
@@ -201,6 +201,7 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   def nested1(prev: Tree, manyRef: TermName, nested: Tree) = {
     val refNext = q"$prev.$manyRef".refNext
     val parentNs = prev match {
+      case k@q"$p.apply($value)" if k.isMapAttrK   => new nsp(c.typecheck(k).tpe.typeSymbol.owner)
       case q"$p.apply($value)" if p.isAttr         => p.ns
       case q"$p.apply($value)"                     => p.name
       case p if p.symbol.name.toString.head == '_' => firstLow(prev.tpe.typeSymbol.name.toString.replaceFirst("_[0-9]+$", ""))

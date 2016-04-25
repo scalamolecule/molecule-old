@@ -23,6 +23,7 @@ class Keyed extends Base {
     Ns.uriMapK("fr").get === List(uri2)
   }
 
+
   "Single value" in new Setup {
 
     // Whereas attribute maps return Maps
@@ -93,7 +94,6 @@ class Keyed extends Base {
     Ns.int.strMapK("en")(".*He.*").get === List((3, "Hello"))
     Ns.int.strMapK_("en")(".*He.*").get === List(3)
   }
-
 
 
   "Multiple keys" in new Setup {

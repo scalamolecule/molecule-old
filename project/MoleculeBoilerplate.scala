@@ -317,13 +317,13 @@ object MoleculeBoilerplate {
     }
     val maxAttr5 = attrs.map {
       case Val(_, attr, _, _, "K", _, _) => s"String => " + attr
-      case other   => other.attr
+      case other                         => other.attr
     }.filter(!_.startsWith("_")).map(_.length).max
 
     val maxAttr6 = {
       val lengths = attrs.filter(!_.clazz.contains("Ref")).map {
         case Val(_, attr, _, _, "K", _, _) => s"(key: String) => " + attr
-        case other   => other.attr
+        case other                         => other.attr
       }.map(_.length)
       if (lengths.isEmpty) 0 else lengths.max
     }
@@ -383,7 +383,7 @@ object MoleculeBoilerplate {
         val attrVal = a match {
           case valueAttr: Val if a.baseTpe == "K" && in == 0 && out == 0 => s"""lazy val $attr  $p1: String => $attr$p7$t = (key: String) => new $attr$p8$t { override val _kw = ":${firstLow(ns)}/$attr" }"""
           case enumAttr: Enum if a.baseTpe == "K" && in == 0 && out == 0 => s"""lazy val $attr  $p1: String => $attr$p7$t = (key: String) => new $attr$p8$t { override val _kw = ":${firstLow(ns)}/$attr" }"""
-          case _  if a.baseTpe == "K"                                    => s"""lazy val $attr  $p1: String => $attr$p7$t = ???"""
+          case _ if a.baseTpe == "K"                                     => s"""lazy val $attr  $p1: String => $attr$p7$t = ???"""
           case valueAttr: Val if in == 0 && out == 0                     => s"""lazy val $attr  $p1: $attr$p5$t = new $attr$p6$t { override val _kw = ":${firstLow(ns)}/$attr" }"""
           case enumAttr: Enum if in == 0 && out == 0                     => s"""lazy val $attr  $p1: $attr$p5$t = new $attr$p6$t { override val _kw = ":${firstLow(ns)}/$attr" }"""
           case _                                                         => s"""lazy val $attr  $p1: $attr$p5$t = ???"""
@@ -438,19 +438,20 @@ object MoleculeBoilerplate {
 
     val maxAttr0 = attrs.map(_.attr.length).max
     val refCode = attrs.foldLeft(Seq("")) {
-      case (acc, Ref(attr, _, _, clazz2, _, _, refNs, _))      => {
+      case (acc, Ref(attr, _, _, clazz2, _, baseType, refNs, _)) => {
         val p1 = padS(maxAttr0, attr)
         val p2 = padS("ManyRef".length, clazz2)
         val p3 = padS(maxRefNs.max, refNs)
         val ref = (in, out) match {
-          case (0, 0)                => s"${refNs}_0$p3 with Nested0[${refNs}_0$p3, ${refNs}_1$p3]"
-          case (0, o) if o == maxOut => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
-          case (0, o)                => s"${refNs}_$o$p3[${OutTypes mkString ", "}] with Nested$o[${refNs}_$o$p3, ${refNs}_${o + 1}$p3, ${OutTypes mkString ", "}]"
-          case (i, o)                => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
+          case (0, 0) if baseType.isEmpty                => s"${refNs}_0$p3"
+          case (0, 0)                                    => s"${refNs}_0$p3 with Nested0[${refNs}_0$p3, ${refNs}_1$p3]"
+          case (0, o) if o == maxOut || baseType.isEmpty => s"${refNs}_$o$p3[${OutTypes mkString ", "}]"
+          case (0, o)                                    => s"${refNs}_$o$p3[${OutTypes mkString ", "}] with Nested$o[${refNs}_$o$p3, ${refNs}_${o + 1}$p3, ${OutTypes mkString ", "}]"
+          case (i, o)                                    => s"${refNs}_In_${i}_$o$p3[${(InTypes ++ OutTypes) mkString ", "}]"
         }
         acc :+ s"def ${attr.capitalize} $p1: $clazz2$p2[$ns, $refNs$p3] with $ref = ???"
       }
-      case (acc, BackRef(backAttr, backRef, _, _, _, _, _, _)) =>
+      case (acc, BackRef(backAttr, backRef, _, _, _, _, _, _))   =>
         val p1 = padS(maxAttr0, backAttr)
         val p2 = padS(maxClazz2.max, backRef)
         val ref = (in, out) match {
@@ -459,7 +460,7 @@ object MoleculeBoilerplate {
           case (i, o) => s"${backRef}_In_${i}_$o$p2[${(InTypes ++ OutTypes) mkString ", "}]"
         }
         acc :+ s"def $backAttr $p1: $ref = ???"
-      case (acc, _)                                            => acc
+      case (acc, _)                                              => acc
     }.distinct
 
     (in, out) match {

@@ -53,7 +53,7 @@ object QueryOps extends Helpers {
 
     def pull(e: String, atom: Atom) =
       q.copy(f = Find(q.f.outputs :+ Pull(e + "_" + atom.name, atom.ns, atom.name)))
-        .func("molecule.Functions/bind ^String", Seq(Var(e)), ScalarBinding(Var(e + "_" + atom.name)))
+        .func("molecule.Functions/bind", Seq(Var(e)), ScalarBinding(Var(e + "_" + atom.name)))
 
     def pullEnum(e: String, atom: Atom) =
       q.copy(f = Find(q.f.outputs :+ Pull(e + "_" + atom.name, atom.ns, atom.name, atom.enumPrefix)))
