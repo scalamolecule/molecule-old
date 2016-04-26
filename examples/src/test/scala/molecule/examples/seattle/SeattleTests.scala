@@ -1,12 +1,10 @@
 package molecule
 package examples.seattle
 import java.io.FileReader
-
 import datomic._
 import molecule._
 import molecule.examples.seattle.dsl.seattle._
 import molecule.schema._
-import shapeless._
 
 import scala.language.reflectiveCalls
 
@@ -70,12 +68,6 @@ class SeattleTests extends SeattleSpec {
       ("Broadview Community Council", "http://groups.google.com/group/broadview-community-council"),
       ("KOMO Communities - Wallingford", "http://wallingford.komonews.com"),
       ("Aurora Seattle", "http://www.auroraseattle.com/"))
-
-    // Output as HLists
-    Community.name.url.hl(3) === List(
-      "Broadview Community Council" :: "http://groups.google.com/group/broadview-community-council" :: HNil,
-      "KOMO Communities - Wallingford" :: "http://wallingford.komonews.com" :: HNil,
-      "Aurora Seattle" :: "http://www.auroraseattle.com/" :: HNil)
   }
 
 
@@ -416,22 +408,15 @@ class SeattleTests extends SeattleSpec {
     insertCommunity("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s").eids === List(
       17592186045894L, 17592186045895L, 17592186045896L)
 
-    // Insert data as HList
-    insertCommunity("CCC" :: "url C" :: "twitter" :: "personal" :: Set("some", "cat C") :: "neighborhood C" :: "district C" :: "ne" :: HNil).eids === List(
-      17592186045898L, 17592186045899L, 17592186045900L)
-
 
     // Add multiple molecules..........................
 
     // Data as list of tuples
-    Community.name.url.insert(Seq(("Com A", "A.com"), ("Com B", "B.com"))).eids === Seq(17592186045902L, 17592186045903L)
-
-    // Data as list of HLists
-    Community.name.url.insert(Seq("Com C" :: "C.com" :: HNil, "Com D" :: "D.com" :: HNil)).eids === Seq(17592186045905L, 17592186045906L)
+    Community.name.url.insert(Seq(("Com A", "A.com"), ("Com B", "B.com"))).eids === Seq(17592186045898L, 17592186045899L)
 
     // Confirm that new entities have been inserted
-    Community.name.contains("Com").get.sorted === List("Com A", "Com B", "Com C", "Com D")
-    Community.e.name_.get.size === 157
+    Community.name.contains("Com").get.sorted === List("Com A", "Com B")
+    Community.e.name_.get.size === 154
 
 
     // Add multiple sets of entities with multiple facts across multiple namespaces in one go (!):
@@ -446,20 +431,20 @@ class SeattleTests extends SeattleSpec {
     // (This is how we have entered the data of the Seattle sample application - see SeattleSpec that this test class extends)
 
     // Categories before insert (one Set with distinct values)
-    Community.category.get.head.size === 88
+    Community.category.get.head.size === 87
 
     // Re-use insert molecule to insert 3 new communities with 3 new neighborhoods and references to 3 existing Districts
     insertCommunity(newCommunitiesData).eids === List(
-      17592186045908L, 17592186045909L, 17592186045910L,
-      17592186045911L, 17592186045912L, 17592186045913L,
-      17592186045914L, 17592186045915L, 17592186045916L)
+      17592186045901L, 17592186045902L, 17592186045903L,
+      17592186045904L, 17592186045905L, 17592186045906L,
+      17592186045907L, 17592186045908L, 17592186045909L)
 
     // Data has been added
     Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.get === newCommunitiesData
-    Community.e.name_.get.size === 160
+    Community.e.name_.get.size === 157
 
     // 4 new categories added (these are facts, not entities)
-    Community.category.get.head.size === 92
+    Community.category.get.head.size === 91
   }
 
 
@@ -505,19 +490,18 @@ class SeattleTests extends SeattleSpec {
     // Mixing updates and deletes..........................
 
     // Values before
-    Community.name("belltown 2").`type`.url.category.hl === List(
-      "belltown 2" :: "blog" :: "url 2" :: Set("Super cool news", "extra category") :: HNil)
+    Community.name("belltown 2").`type`.url.category.get === List(
+      ("belltown 2", "blog", "url 2", Set("Super cool news", "extra category"))
+    )
 
     // Applying nothing (empty parenthesises) finds and retract all values of an attribute
     Community(belltown).name("belltown 3").url().category().update
 
     // Belltown has no longer a url or any categories
-    Community.name("belltown 3").`type`.url.category.hl === List()
-    //    Community.name_("belltown 3").name.`type`.url.category.hl === List()
+    Community.name("belltown 3").`type`.url.category.get === List()
 
     // ..but we still have a belltown with a name and type
-    Community.name("belltown 3").`type`.hl === List("belltown 3" :: "blog" :: HNil)
-    //    Community.name_("belltown 3").name.`type`.hl === List("belltown 3" :: "blog" :: HNil)
+    Community.name("belltown 3").`type`.get === List(("belltown 3", "blog"))
 
 
     // Retract entities ...................................

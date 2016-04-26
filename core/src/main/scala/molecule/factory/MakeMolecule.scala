@@ -23,7 +23,6 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
 
   def fromXattrs(dsl: c.Expr[NS], OutTypes: Type*) = {
     val MoleculeTpe = molecule_o(OutTypes.size)
-    val HListType = OutTypes.foldRight(tq"HNil": Tree)((t, tpe) => tq"::[$t, $tpe]")
     val OutTypes2 = if (OutTypes.size == 22) OutTypes else c.typeOf[Long] +: OutTypes
     expr(
       q"""
@@ -49,7 +48,6 @@ trait MakeMolecule[Ctx <: Context] extends FactoryBase[Ctx] {
           else
             results(conn, model, query).map(data => (..${castTpl(q"query", q"data", OutTypes)}))
         }
-        def hl(implicit conn: Connection) : Seq[$HListType]    = ${castHLists(q"query", q"results(conn, model, query)", OutTypes)}
         def debug(implicit conn: Connection): Unit             = debugMolecule(conn, model, query)
       }
     """

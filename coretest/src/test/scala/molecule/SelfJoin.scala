@@ -1,8 +1,6 @@
 package molecule
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
-//import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
-//import datomic.Peer
 
 class SelfJoin extends CoreSpec {
 
@@ -17,7 +15,7 @@ class SelfJoin extends CoreSpec {
   }
 
 
-  "All attributes unifying (AND notation)" in new Setup {
+  "AND, unify attributes" in new Setup {
 
     // Normally we ask for values accross attributes like
     // attr1 AND attr2 AND etc as in
@@ -113,7 +111,7 @@ class SelfJoin extends CoreSpec {
   }
 
 
-  "AND self-joins including attribute maps" in new CoreSetup {
+  "AND, unify attribute maps" in new CoreSetup {
 
     // age - name(in various languages) - beverage - rating
     m(Ns.int.strMap.Refs1 * Ref1.str1.int1) insert List(
@@ -212,7 +210,25 @@ class SelfJoin extends CoreSpec {
   }
 
 
-  "Advanced self-joins - selective unifying" in new Setup {
+  "AND, unify keyed attribute maps" in new CoreSetup {
+
+    // age - name(in various languages) - beverage - rating
+    m(Ns.int.strMap.Refs1 * Ref1.str1.int1) insert List(
+      (23, Map("en" -> "Joe", "da" -> "Jonas"), List(("Coffee", 3), ("Cola", 2), ("Pepsi", 3))),
+      (25, Map("en" -> "Ben", "es" -> "Benito"), List(("Coffee", 2), ("Tea", 3))),
+      (23, Map("en" -> "Liz", "da" -> "Lis"), List(("Coffee", 1), ("Tea", 3), ("Pepsi", 1))))
+
+    // Who likes both Coffee AND Tea?
+    // Unifying on Ns.strMapK("en")
+    Ns.strMapK("en").Refs1.str1_("Coffee" and "Tea").get === List("Ben", "Liz")
+
+    // Who rated both 2 AND 3?
+    // Unifying on Ns.strMapK("en")
+    Ns.strMapK("en").Refs1.int1_(2 and 3).get === List("Ben", "Joe")
+  }
+
+
+  "Explicit self-join" in new Setup {
 
     // All the examples above use the AND notation to construct
     // simple self-joins. Any of them could be re-written to use
@@ -319,7 +335,7 @@ class SelfJoin extends CoreSpec {
   }
 
 
-  "Multiple self-joins" in new Setup {
+  "Multiple explicit self-joins" in new Setup {
 
     // Beverages liked by all 3 different people
     Ns.str_("Joe").Refs1.str1._Ns.Self

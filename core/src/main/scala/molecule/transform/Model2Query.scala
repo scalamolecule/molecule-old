@@ -672,6 +672,7 @@ object Model2Query extends Helpers {
             case RuleInvocation(name, args)                            => Seq(RuleInvocation(name, args map queryTerm))
             case Funct(".startsWith ^String", List(v, key), NoBinding) => Nil
             case Funct(".matches ^String", List(v, key), NoBinding)    => Nil
+            case Funct("second", ins, outSame)                         => Seq(Funct("second", ins map queryTerm, outSame))
             case Funct(name, ins, outs)                                => Seq(Funct(name, ins map queryTerm, binding(outs)))
           }
           clauses flatMap makeSelfJoinClauses

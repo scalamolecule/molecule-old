@@ -2,7 +2,6 @@ package molecule
 
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec}
-import shapeless._
 
 class Attribute extends CoreSpec {
 
@@ -48,10 +47,6 @@ class Attribute extends CoreSpec {
     Ns.uuid.one === uuid1
     Ns.uri.one === uri1
     Ns.enum.one === enum1
-
-    // Get list of values as single element HList
-    Ns.str.hl === List(str1 :: HNil)
-    Ns.str.hl(1) === List(str1 :: HNil)
   }
 
   "Single cardinality-2 attribute - one entity" in new CoreSetup {

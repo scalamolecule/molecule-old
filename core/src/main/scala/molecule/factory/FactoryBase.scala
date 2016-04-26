@@ -79,7 +79,6 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
       import scala.collection.JavaConversions._
       import scala.collection.JavaConverters._
       import datomic.Connection
-      import shapeless._
       import java.lang.{Long => jLong, Double => jDouble}
       import java.util.{Date, UUID, Map => jMap}
       import java.net.URI
@@ -672,13 +671,4 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
         }
       """
   }
-
-  // Todo: implement nestedTuples with HLists
-  def castHListElem(query: Tree, data: Tree, tpe: Type, i: Int, hl: Tree) = q"$hl.::(${cast(query, data, tpe, i)})"
-
-  def castHList(query: Tree, data: Tree, tpes: Seq[Type]) = tpes.zipWithIndex.foldRight(q"shapeless.HList()": Tree) {
-    case ((tpe, i), hl) => castHListElem(query, data, tpe, i, hl)
-  }
-
-  def castHLists(query: Tree, data: Tree, ts: Seq[Type]) = q"$data.map(d => ${castHList(query, q"d", ts)})"
 }
