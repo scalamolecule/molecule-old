@@ -5,7 +5,7 @@ import java.util.UUID._
 import java.net.URI
 import datomic.Peer
 import molecule.util.dsl.coreTest._
-import molecule.util.{CoreSetup, CoreSpec}
+import molecule.util.expectCompileError
 
 class Negation extends Base {
 
@@ -21,6 +21,18 @@ class Negation extends Base {
 
     // Entities where long is not asserted (is null)
     Ns.str.int_.long_(nil).get === List("baz")
+
+    // Entities with no ref1
+    Ns.str.int_.ref1_(nil).get === List("bar", "foo", "baz")
+
+    // Makes no sense to return null, so only tacet attributes are allowed
+    expectCompileError(
+      "m(Ns.str.int_.long(nil))",
+      "[Dsl2Model:getValues] Please add underscore to attribute: `long_(nil)`")
+
+    expectCompileError(
+      "m(Ns.str.int_.ref1(nil))",
+      "[Dsl2Model:getValues] Please add underscore to attribute: `ref1_(nil)`")
   }
 
 

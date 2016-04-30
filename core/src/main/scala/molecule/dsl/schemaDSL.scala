@@ -87,11 +87,16 @@ object schemaDSL {
 
   trait Attr
 
-  trait RefAttr[Ns, T] extends Attr
+
+  trait RefAttr[Ns, T] extends Attr {
+    // Null reference (ref datom not asserted)
+    def apply(noValue: nil): Ns with Attr = ???
+  }
 
   trait OneRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns with Attr = ???
   }
+
   trait ManyRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(values: Long*)                          : Ns with Attr = ???
     def apply(oneSet: Set[Long], moreSets: Set[Long]*): Ns with Attr = ??? // Todo: not implemented yet
@@ -99,9 +104,11 @@ object schemaDSL {
     def add(value: Long)                              : Ns with Attr = ???
     def remove(values: Long*)                         : Ns with Attr = ???
   }
+
   trait BackRefAttr[Ns, In] extends RefAttr[Ns,  Long] {
     def apply(value: Long): Ns with Attr = ???
   }
+
 
   sealed trait ValueAttr[Ns, In, T, U] extends Attr {
 
@@ -145,7 +152,7 @@ object schemaDSL {
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
     // Empty `apply` is a request to delete values!
     def apply()                 : Ns with Attr = ???
-    def  apply(one: T, more: T*) : Ns with Attr = ???
+    def apply(one: T, more: T*) : Ns with Attr = ???
     def apply(values: Seq[T])   : Ns with Attr = ???
   }
   trait OneString [Ns, In] extends One[Ns, In, String ]
