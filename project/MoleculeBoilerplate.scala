@@ -404,8 +404,6 @@ object MoleculeBoilerplate {
       case a                               => {
         val (attr, attrClean, tpe) = (a.attr, a.attrClean, a.tpe)
         val p2 = padS(maxAttr, attrClean)
-        val p5 = padS(maxAttr5, attrClean)
-        val p7 = padS(maxAttr5, "String => " + attr)
         val p3 = padS(maxTpe, tpe)
         val nextNS = (in, out) match {
           case (0, 0) => s"${ns}_1[Option[$tpe]$p3]"
@@ -424,8 +422,8 @@ object MoleculeBoilerplate {
         }
 
         a match {
-          case valueAttr: Val if a.baseTpe == "K" => Some(s"lazy val $attrClean$$ $p2: String => $attrClean$$$p7[$nextNS, $nextIn] with $nextNS = ???")
-          case _                                  => Some(s"lazy val $attrClean$$ $p2: $attrClean$$$p5[$nextNS, $nextIn] with $nextNS = ???")
+          case valueAttr: Val if a.baseTpe == "K" => None
+          case _                                  => Some(s"lazy val $attrClean$$ $p2: $attrClean$$$p2[$nextNS, $nextIn] with $nextNS = ???")
         }
       }
     }
@@ -552,15 +550,12 @@ object MoleculeBoilerplate {
     val attrClasses = attrs.flatMap {
       case Val(attr, _, clazz, tpe, baseTpe, datomicTpe, options) if tpe.take(3) == "Map" =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
-        Seq(
-          s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions"
-        )
-      case Val(attr, _, clazz, tpe, baseTpe, datomicTpe, options) if baseTpe == "K"       =>
+        Seq(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions")
+
+      case Val(attr, _, clazz, tpe, baseTpe, datomicTpe, options) if baseTpe == "K" =>
         val options2 = options :+ Optional("", "MapAttrK")
         val extensions = " with " + options2.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
-        Seq(
-          s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions"
-        )
+        Seq(s"class $attr${p1(attr)}[Ns, In] extends $clazz${p2(clazz)}[Ns, In]$extensions")
 
       case Val(attr, _, clazz, _, _, _, options) =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
@@ -579,11 +574,6 @@ object MoleculeBoilerplate {
     val attrClassesOpt = attrs.flatMap {
       case Val(attr, attrClean, clazz, tpe, baseTpe, _, options) if tpe.take(3) == "Map" =>
         val extensions = if (options.isEmpty) "" else " with " + options.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
-        Seq(s"class $attrClean$$${p1(attrClean)}[Ns, In] extends $clazz$$${p2(clazz)}$extensions")
-
-      case Val(attr, attrClean, clazz, tpe, baseTpe, _, options) if baseTpe == "K" =>
-        val options2 = options :+ Optional("", "MapAttrK")
-        val extensions = " with " + options2.filter(_.clazz.nonEmpty).map(_.clazz).mkString(" with ")
         Seq(s"class $attrClean$$${p1(attrClean)}[Ns, In] extends $clazz$$${p2(clazz)}$extensions")
 
       case Val(attr, attrClean, clazz, _, _, _, options) =>

@@ -9,7 +9,7 @@ import scala.reflect.macros.whitebox.Context
 
 trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
   import c.universe._
-  val x = DebugMacro("Dsl2Model", 70, 74)
+  val x = DebugMacro("Dsl2Model", 70, 77)
   //  val x = Debug("Dsl2Model", 30, 32, true)
 
   def resolve(tree: Tree): Seq[Element] = dslStructure.applyOrElse(
@@ -108,7 +108,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val funcLitTpe = c.typecheck(q"$prev.$cur").tpe
       val attrTpe = funcLitTpe.typeArgs(1)
       val ns = new nsp(attrTpe.typeSymbol.owner).toString
-      val tpe = funcLitTpe.typeArgs.last.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last.toString
+      val tpe0 = funcLitTpe.typeArgs.last
+      val tpe = tpe0 match {
+        case t1 if t1 <:< weakTypeOf[One[_, _, _]]     => tpe0.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last
+        case t1 if t1 <:< weakTypeOf[OneValueAttr$[_]] => tpe0.baseType(weakTypeOf[OneValueAttr$[_]].typeSymbol).typeArgs.head
+      }
       val value: Value = modelValue(op.toString(), t, q"Seq(..$values)")
       val element = Atom(ns, cur.toString, cast(tpe.toString), 4, value, Some("mappedKey"), Nil, Seq(extract(q"$key").toString))
       //      x(76, element)
@@ -119,7 +123,11 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       val funcLitTpe = c.typecheck(q"$prev.$cur").tpe
       val attrTpe = funcLitTpe.typeArgs(1)
       val ns = new nsp(attrTpe.typeSymbol.owner).toString
-      val tpe = funcLitTpe.typeArgs.last.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last.toString
+      val tpe0 = funcLitTpe.typeArgs.last
+      val tpe = tpe0 match {
+        case t1 if t1 <:< weakTypeOf[One[_, _, _]]     => tpe0.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last
+        case t1 if t1 <:< weakTypeOf[OneValueAttr$[_]] => tpe0.baseType(weakTypeOf[OneValueAttr$[_]].typeSymbol).typeArgs.head
+      }
       val element = Atom(ns, cur.toString, cast(tpe.toString), 4, VarValue, Some("mappedKey"), Nil, Seq(extract(q"$key").toString))
       //      x(77, element)
       walk(q"$prev", q"$prev.$cur".ns, q"$cur", element)
@@ -306,7 +314,8 @@ trait Dsl2Model[Ctx <: Context] extends TreeOps[Ctx] {
       case q"Seq($pkg.?)"                                          => Qm
       case q"Seq($pkg.nil)" if attr.name.last == '_'               => Fn("not")
       case q"Seq($pkg.nil)"                                        => abort(s"[Dsl2Model:getValues] Please add underscore to attribute: `${attr.name}_(nil)`")
-      case q"Seq($pkg.unify)"                                      => Fn("unify")
+      case q"Seq($pkg.unify)" if attr.name.last == '_'             => Fn("unify")
+      case q"Seq($pkg.unify)"                                      => abort(s"[Dsl2Model:getValues] Can only unify on tacet attributes. Please add underscore to attribute: `${attr.name}_(unify)`")
       case q"Seq($pkg.distinct)"                                   => Distinct
       case q"Seq($pkg.max.apply(${Literal(Constant(i: Int))}))"    => aggr("max", Some(i))
       case q"Seq($pkg.min.apply(${Literal(Constant(i: Int))}))"    => aggr("min", Some(i))

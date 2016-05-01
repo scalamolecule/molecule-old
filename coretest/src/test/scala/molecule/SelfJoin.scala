@@ -332,6 +332,12 @@ class SelfJoin extends CoreSpec {
       .filter(r => r._1 != r._3).map(r => (r._2, r._4)) === List(
       ("Liz", "Joe")
     )
+
+    // Unifying attributes should be tacet
+    // Grab the value from the first attribute that it unifies with (if needed)
+    expectCompileError(
+      "m(Ns.int_(23).Refs1.str1._Ns.Self.int_(25).Refs1.str1(unify))",
+      "[Dsl2Model:getValues] Can only unify on tacet attributes. Please add underscore to attribute: `str1_(unify)`")
   }
 
 

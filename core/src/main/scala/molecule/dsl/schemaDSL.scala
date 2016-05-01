@@ -91,6 +91,9 @@ object schemaDSL {
   trait RefAttr[Ns, T] extends Attr {
     // Null reference (ref datom not asserted)
     def apply(noValue: nil): Ns with Attr = ???
+
+    // Unifying marker for attributes to be unified in self-joins
+    def apply(unifyThis: unify): Ns with Attr = ???
   }
 
   trait OneRefAttr[Ns, In] extends RefAttr[Ns,  Long] {

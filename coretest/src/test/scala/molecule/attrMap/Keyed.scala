@@ -32,8 +32,6 @@ class Keyed extends Base {
 
     // ..the special "K"-appended (for Keyed) attribute returns the value only:
     Ns.int.strMapK("en")("Hi there").get === List((1, "Hi there"))
-
-    Ns.strMapK("en")
   }
 
 
