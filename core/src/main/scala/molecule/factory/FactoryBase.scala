@@ -256,29 +256,29 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           else
             $value.asInstanceOf[$t]
         """
-      case t if t <:< typeOf[Long]                   => q"""if($value.isInstanceOf[String]) $value.asInstanceOf[String].toLong.asInstanceOf[$t] else $value.asInstanceOf[$t]"""
-      case t if t <:< typeOf[Double]                 => q"""if($value.isInstanceOf[String]) $value.asInstanceOf[String].toDouble.asInstanceOf[$t] else $value.asInstanceOf[$t]"""
-      case t if t <:< typeOf[Boolean]                => q"""if($value.isInstanceOf[String]) $value.asInstanceOf[String].toBoolean.asInstanceOf[$t] else $value.asInstanceOf[$t]"""
-      case t if t <:< typeOf[Date]                   => q"""if($value.isInstanceOf[String]) date($value.asInstanceOf[String]).asInstanceOf[$t] else $value.asInstanceOf[$t]"""
-      case t if t <:< typeOf[UUID]                   => q"""if($value.isInstanceOf[String]) UUID.fromString($value.asInstanceOf[String]).asInstanceOf[$t] else $value.asInstanceOf[$t]"""
-      case t if t <:< typeOf[URI]                    => q"""if($value.isInstanceOf[String]) new URI($value.asInstanceOf[String]).asInstanceOf[$t] else $value.asInstanceOf[$t]"""
-      case t if t <:< typeOf[Option[Int]]            => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Int]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Float]]          => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Float]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Double]]         => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Double]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Boolean]]        => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Boolean]].toMap.values.head)"
-      case t if t <:< typeOf[Option[Date]]           => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, Date]].toMap.values.head)"
-      case t if t <:< typeOf[Option[UUID]]           => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, UUID]].toMap.values.head)"
-      case t if t <:< typeOf[Option[URI]]            => q"if($value == null) None else Some($value.asInstanceOf[jMap[String, URI]].toMap.values.head)"
+      case t if t <:< typeOf[Long]                   => q"(if($value.isInstanceOf[String]) $value.asInstanceOf[String].toLong else $value).asInstanceOf[$t]"
+      case t if t <:< typeOf[Double]                 => q"(if($value.isInstanceOf[String]) $value.asInstanceOf[String].toDouble else $value).asInstanceOf[$t]"
+      case t if t <:< typeOf[Boolean]                => q"(if($value.isInstanceOf[String]) $value.asInstanceOf[String].toBoolean else $value).asInstanceOf[$t]"
+      case t if t <:< typeOf[Date]                   => q"(if($value.isInstanceOf[String]) date($value.asInstanceOf[String]) else $value).asInstanceOf[$t]"
+      case t if t <:< typeOf[UUID]                   => q"(if($value.isInstanceOf[String]) UUID.fromString($value.asInstanceOf[String]) else $value).asInstanceOf[$t]"
+      case t if t <:< typeOf[URI]                    => q"(if($value.isInstanceOf[String]) new URI($value.asInstanceOf[String]) else $value).asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[Int]]            => q"(if($value == null) None else Some($value.asInstanceOf[jMap[String, jLong]].toMap.values.head.toInt)).asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[Float]]          => q"(if($value == null) None else Some($value.asInstanceOf[jMap[String, jDouble]].toMap.values.head.toFloat)).asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[Double]]         => q"(if($value == null) None else Some($value.asInstanceOf[jMap[String, jDouble]].toMap.values.head.toDouble)).asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[Boolean]]        => q"(if($value == null) None else Some($value.asInstanceOf[jMap[String, Boolean]].toMap.values.head)).asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[Date]]           => q"(if($value == null) None else Some($value.asInstanceOf[jMap[String, Date]].toMap.values.head)).asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[UUID]]           => q"(if($value == null) None else Some($value.asInstanceOf[jMap[String, UUID]].toMap.values.head)).asInstanceOf[$t]"
+      case t if t <:< typeOf[Option[URI]]            => q"(if($value == null) None else Some($value.asInstanceOf[jMap[String, URI]].toMap.values.head)).asInstanceOf[$t]"
       case t if t <:< typeOf[Option[Long]]           =>
         q"""
           if($value == null) {
             None
           } else if ($value.toString.contains("{:db/id")) {
             // {:ns/ref1 {:db/id 3}}
-            Some($value.toString.substring($value.toString.lastIndexOf(" ")+1).init.init.toLong)
+            Some($value.toString.substring($value.toString.lastIndexOf(" ")+1).init.init.toLong).asInstanceOf[$t]
             // Or this?: Some(value.asInstanceOf[jMap[String, PersistentVector]].toMap.values.head.asInstanceOf[jMap[String, Long]].toMap.values.head)
           } else {
-            Some($value.asInstanceOf[jMap[String, Long]].toMap.values.head)
+            Some($value.asInstanceOf[jMap[String, jLong]].toMap.values.head.toLong).asInstanceOf[$t]
           }
         """
       case t if t <:< typeOf[Option[String]]         =>
@@ -288,9 +288,9 @@ trait FactoryBase[Ctx <: Context] extends TreeOps[Ctx] {
           } else if ($value.toString.contains(":db/ident")) {
             // {:ns/enum {:db/ident :ns.enum/enum1}}
             val value = $value.toString
-            Some(value.substring(value.lastIndexOf("/")+1).init.init)
+            Some(value.substring(value.lastIndexOf("/")+1).init.init).asInstanceOf[$t]
           } else {
-            Some($value.asInstanceOf[jMap[String, String]].toMap.values.head)
+            Some($value.asInstanceOf[jMap[String, String]].toMap.values.head).asInstanceOf[$t]
           }
         """
       case t if t <:< typeOf[Option[Set[Double]]]    =>
