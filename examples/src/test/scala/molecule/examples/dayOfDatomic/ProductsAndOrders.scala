@@ -275,7 +275,7 @@ class ProductsAndOrders extends MoleculeSpec {
     val List(chocolateId, whiskyId) = Product.description.insert("Expensive Chocolate", "Cheap Whisky").eids
 
     // Insert nested data
-    val orderId = Order.orderid.LineItems * (LineItem.product.price.quantity.Comments * Comment.text) insert List(
+    val eid = Order.orderid.LineItems * (LineItem.product.price.quantity.Comments * Comment.text) insert List(
       (23, List(
         (chocolateId, 48.00, 1, List("first", "product")),
         (whiskyId, 38.00, 2, List("second", "is", "best"))
@@ -283,13 +283,13 @@ class ProductsAndOrders extends MoleculeSpec {
     ) eid
 
     // Order lines with correct products added
-    Order(23).LineItems.product.get === List(chocolateId, whiskyId)
+    Order(eid).LineItems.product.get === List(chocolateId, whiskyId)
 
     // Order line comments are correct
     LineItem.product_(chocolateId).Comments.text.get === List("first", "product")
 
     // 2 levels of nested data entered
-    orderId.touch === Map(
+    eid.touch === Map(
       ":db/id" -> 17592186045422L,
       ":order/lineItems" -> List(
         Map(":lineItem/comments" -> List(
