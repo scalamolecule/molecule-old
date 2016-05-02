@@ -95,6 +95,15 @@ class Optional extends Base {
       (5, None)
     )
 
+    // Or we can use implicit functions for convenience
+    Ns.int.intMap$.get.map { case (i, s) => (i, s.atOrElse("en", -7)) } === List(
+      (1, 10),
+      (2, 10),
+      (3, 30),
+      (4, -7),
+      (5, -7)
+    )
+
     // Get filtered map with certain keys
     Ns.int.intMap$.get.map { case (i, s) => (i, s.mapAt("fr", "da")) } === List(
       (1, Map()),
