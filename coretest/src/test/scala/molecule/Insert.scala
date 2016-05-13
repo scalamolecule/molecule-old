@@ -651,4 +651,22 @@ class Insert extends CoreSpec {
       )
     }
   }
+
+  "Additional inserts/upserts" in new CoreSetup {
+
+    // If we need to insert more than 22 facts for a single namespace
+    // we can start asserting those 22 facts, then use the returned eid
+    // to continue (here shown with only 1 fact):
+
+    // Insert maximum of 22 facts
+    val eid = Ns.str.insert("a").eid
+
+    // Use entity id to continue adding more values
+    Ns.e.int.insert(eid, 42)
+
+    // Only a single entity has been created
+    Ns.e.str.int.get === List(
+      (eid, "a", 42)
+    )
+  }
 }
