@@ -496,7 +496,6 @@ object MoleculeBoilerplate {
         val (thisIn, nextIn) = if (maxIn == 0 || in == maxIn) ("P" + (out + in + 1), "P" + (out + in + 2)) else (s"${ns}_In_${i + 1}_0", s"${ns}_In_${i + 1}_1")
         val types = InTypes mkString ", "
         s"""
-           |
            |/********* Input molecules awaiting $i input$s *******************************/
            |
            |trait ${ns}_In_${i}_0[$types] extends $ns with In_${i}_0[${ns}_In_${i}_0, ${ns}_In_${i}_1, $thisIn, $nextIn, $types] {
@@ -533,7 +532,7 @@ object MoleculeBoilerplate {
     }
   }
 
-  def namespaceBody(d: Definition, namespace: Namespace) = {
+  def namespaceBodies(d: Definition, namespace: Namespace): (String, Seq[(Int, String)]) = {
     val inArity = d.in
     val outArity = d.out
     val Ns = namespace.ns
@@ -592,38 +591,57 @@ object MoleculeBoilerplate {
 
     val nsArities = d.nss.map(ns => ns.ns -> ns.attrs.size).toMap
 
-    val nsTraits = (for {
-      in <- 0 to inArity
-      out <- 0 to outArity
-    } yield nsTrait(namespace, in, out, inArity, outArity, nsArities)).mkString("\n")
-
     val extraImports0 = attrs.collect {
       case Val(_, _, _, tpe, _, _, _) if tpe.take(4) == "java" => tpe
     }.distinct
     val extraImports = if (extraImports0.isEmpty) "" else extraImports0.mkString(s"\nimport ", "\nimport ", "")
 
-    s"""/*
-        |* AUTO-GENERATED CODE - DON'T CHANGE!
-        |*
-        |* Manual changes to this file will likely break molecules!
-        |* Instead, change the molecule definition file(s) and recompile your project with `sbt compile`.
-        |*/
-        |package ${d.pkg}.dsl.${firstLow(d.domain)}
-        |import molecule.dsl.schemaDSL._
-        |import molecule.dsl._$extraImports
-        |
-        |
-        |object $Ns extends ${Ns}_0 with FirstNS {
-        |  def apply(e: Long): ${Ns}_0 = ???
-        |}
-        |
-        |trait $Ns {
-        |  $attrClasses
-        |
-        |  $attrClassesOpt
-        |}
-        |
-        |$nsTraits""".stripMargin
+    val nsTraitsOut = (0 to outArity).map(nsTrait(namespace, 0, _, inArity, outArity, nsArities)).mkString("\n")
+    val outFile: String =
+      s"""/*
+          |* AUTO-GENERATED CODE - DON'T CHANGE!
+          |*
+          |* Manual changes to this file will likely break molecules!
+          |* Instead, change the molecule definition file(s) and recompile your project with `sbt compile`.
+          |*/
+          |package ${d.pkg}.dsl.${firstLow(d.domain)}
+          |import molecule.dsl.schemaDSL._
+          |import molecule.dsl._$extraImports
+          |
+          |
+          |object $Ns extends ${Ns}_0 with FirstNS {
+          |  def apply(e: Long): ${Ns}_0 = ???
+          |}
+          |
+          |trait $Ns {
+          |  $attrClasses
+          |
+          |  $attrClassesOpt
+          |}
+          |
+          |$nsTraitsOut""".stripMargin
+
+    val nsTraitsIn: Seq[(Int, String)] = if(inArity == 0) Nil else (1 to inArity).map(in =>
+      (in, (0 to outArity).map(nsTrait(namespace, in, _, inArity, outArity, nsArities)).mkString("\n"))
+    )
+    val inFiles: Seq[(Int, String)] = nsTraitsIn.map { case (in, inTraits) =>
+      val inFile: String =
+        s"""/*
+            |* AUTO-GENERATED CODE - DON'T CHANGE!
+            |*
+            |* Manual changes to this file will likely break molecules!
+            |* Instead, change the molecule definition file(s) and recompile your project with `sbt compile`.
+            |*/
+            |package ${d.pkg}.dsl.${firstLow(d.domain)}
+            |import molecule.dsl.schemaDSL._
+            |import molecule.dsl._$extraImports
+            |
+            |$inTraits""".stripMargin
+
+      (in, inFile)
+    }
+
+    (outFile, inFiles)
   }
 
   def generate(srcManaged: File, domainDirs: Seq[String], allIndexed: Boolean = true): Seq[File] = {
@@ -642,11 +660,17 @@ object MoleculeBoilerplate {
         IO.write(schemaFile, schemaBody(d))
 
         // Write namespace files
-        val namespaceFiles = d.nss.map { ns =>
-          val nsFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((dir, pkg) => dir / pkg) / "dsl" / firstLow(d.domain) / s"${ns.ns}.scala"
-          val nsBody = namespaceBody(d, ns)
-          IO.write(nsFile, nsBody)
-          nsFile
+        val namespaceFiles = d.nss.flatMap { ns =>
+          val (outBody, inBodies) = namespaceBodies(d, ns)
+          val outFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((dir, pkg) => dir / pkg) / "dsl" / firstLow(d.domain) / s"${ns.ns}.scala"
+          IO.write(outFile, outBody)
+
+          val inFiles = inBodies.map { case (i, inBody) =>
+            val inFile: File = d.pkg.split('.').toList.foldLeft(srcManaged)((dir, pkg) => dir / pkg) / "dsl" / firstLow(d.domain) / s"${ns.ns}_in$i.scala"
+            IO.write(inFile, inBody)
+            inFile
+          }
+          outFile +: inFiles
         }
 
         schemaFile +: namespaceFiles
