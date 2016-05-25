@@ -18,8 +18,8 @@ Visit [ScalaMolecule.org](http://ScalaMolecule.org) to learn more or visit the [
 ### Read more
 
 - [Introduction](http://scalamolecule.org/home/introduction) to Datomic/Molecule
-- [Setup Database](http://scalamolecule.org/manual/database-setup): initiate a Datomic database and create a database schema with Molecule
-- [Populate Database](http://scalamolecule.org/manual/populate-database): populate a Datomic database with Molecule
+- [Setup Database](http://scalamolecule.org/manual/setup): initiate a Datomic database and create a database schema with Molecule
+- [Populate Database](http://scalamolecule.org/manual/insert): populate a Datomic database with Molecule
 - [Molecule Seattle tutorial](http://scalamolecule.org/tutorials/seattle) examples of using Molecule (based on the 
 [Datomic Seattle tutorial](http://docs.datomic.com/tutorial.html))
 
