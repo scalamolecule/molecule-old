@@ -124,10 +124,10 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 [issues]: https://github.com/scalamolecule/molecule/issues
 [moleculesbt]: https://github.com/scalamolecule/molecule/blob/master/project/build.scala
 
-[setup]: http://scalamolecule.org/manual/database-setup
+[setup]: http://scalamolecule.org/manual/setup
 [schema]: http://scalamolecule.org/manual/schema-definition
 [deffile]: http://scalamolecule.org/molecule/blob/master/examples/src/main/scala/molecule/examples/seattle/schema/SeattleDefinition.scala
-[populate]: http://scalamolecule.org/manual/populate-database
+[populate]: http://scalamolecule.org/manual/insert
 [tutorial]: http://scalamolecule.org/tutorials/seattle
 [tutorialcode]: http://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleTests.scala
 [tutorialqueries]: http://scalamolecule.org/molecule/blob/master/examples/src/test/scala/molecule/examples/seattle/SeattleQueryTests.scala
