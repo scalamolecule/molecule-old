@@ -125,7 +125,7 @@ Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki
 [moleculesbt]: https://github.com/scalamolecule/molecule/blob/master/project/build.scala
 
 [setup]: http://scalamolecule.org/manual/setup
-[schema]: http://scalamolecule.org/manual/schema-definition
+[schema]: http://scalamolecule.org/manual/schema
 [deffile]: http://scalamolecule.org/molecule/blob/master/examples/src/main/scala/molecule/examples/seattle/schema/SeattleDefinition.scala
 [populate]: http://scalamolecule.org/manual/insert
 [tutorial]: http://scalamolecule.org/tutorials/seattle
