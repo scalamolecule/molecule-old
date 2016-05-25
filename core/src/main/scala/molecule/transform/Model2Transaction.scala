@@ -154,6 +154,8 @@ case class Model2Transaction(conn: Connection, model: Model) extends Helpers {
       nestedE
     else if (stmts.isEmpty)
       tempId(attr)
+    else if (stmts.last.e == -1)
+      stmts.last.v
     else
       stmts.last.e
   }

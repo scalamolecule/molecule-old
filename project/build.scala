@@ -74,11 +74,8 @@ object MoleculeBuild extends Build with Boilerplate with Publishing {
     ),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.datomic" % "datomic-free" % "0.9.5350",
-//      "com.chuusai" %% "shapeless" % "2.0.0",
-//      "org.scalaz" %% "scalaz-core" % "7.1.3",
-//      "net.liftweb" %% "lift-json" % "3.0-M6",
-      "org.specs2" %% "specs2" % "2.4.11" //% "test"
+      "com.datomic" % "datomic-pro" % "0.9.5359",
+      "org.specs2" %% "specs2" % "2.4.11"
     ),
     // Remove Java directories
     unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_)),

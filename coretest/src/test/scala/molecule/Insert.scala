@@ -668,5 +668,13 @@ class Insert extends CoreSpec {
     Ns.e.str.int.get === List(
       (eid, "a", 42)
     )
+
+    // Optional attribute after `e` works too
+    Ns.e.long$.bool.insert(eid, None, true)
+
+    // Only a single entity has been created
+    Ns.e.str.int.long$.bool.get === List(
+      (eid, "a", 42, None, true)
+    )
   }
 }
