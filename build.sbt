@@ -2,14 +2,15 @@
 
 lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
   organization := "org.scalamolecule",
-  version := "0.6.2",
+  version := "0.6.2-SNAPSHOT",
   scalaVersion := "2.11.8",
   scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
   resolvers ++= Seq(
     "datomic" at "http://files.datomic.com/maven",
     "clojars" at "http://clojars.org/repo",
     Resolver.sonatypeRepo("releases"),
-    Resolver.sonatypeRepo("snapshots")
+    Resolver.sonatypeRepo("snapshots"),
+    "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases"
   ),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVersion.value,
@@ -51,11 +52,11 @@ lazy val moleculeExamples = project.in(file("examples"))
 
   // Add schema definition directories
   .settings(Seq(definitionDirectories(
-  "examples/src/main/scala/molecule/examples/dayOfDatomic",
-  "examples/src/main/scala/molecule/examples/seattle",
-  "examples/src/main/scala/molecule/examples/mbrainz",
-  "examples/src/main/scala/molecule/examples/graph"
-)))
+    "examples/src/main/scala/molecule/examples/dayOfDatomic",
+    "examples/src/main/scala/molecule/examples/seattle",
+    "examples/src/main/scala/molecule/examples/mbrainz",
+    "examples/src/main/scala/molecule/examples/graph"
+  )))
 
 
 def definitionDirectories(domainDirs: String*) = sourceGenerators in Compile += Def.task[Seq[File]] {

@@ -88,7 +88,7 @@ class Keyed extends Base {
   "Regular expressions" in new Setup {
 
     // String attribute maps allow us to use regexes
-    // Note that searches are case-insensitive ("Hi there" not matched)
+    // Note that searches are case-sensitive ("Hi there" not matched)
     Ns.int.strMapK("en")(".*He.*").get === List((3, "Hello"))
     Ns.int.strMapK_("en")(".*He.*").get === List(3)
   }
