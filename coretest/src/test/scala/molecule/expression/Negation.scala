@@ -76,34 +76,60 @@ class Negation extends Base {
     Ns.int.not(7).get.sorted === List(-2, -1, 0, 1, 2)
     Ns.int.not(1).get.sorted === List(-2, -1, 0, 2)
     Ns.int.not(-1, 0, 1).get.sorted === List(-2, 2)
+    Ns.int.not(Seq(-1, 0, 1)).get.sorted === List(-2, 2)
     Ns.int.not(int1).get.sorted === List(-2, -1, 0, 2)
     Ns.int.not(int1, int2).get.sorted === List(-2, -1, 0)
+    Ns.int.not(Seq(int1, int2)).get.sorted === List(-2, -1, 0)
+    val ints = Seq(int1, int2)
+    Ns.int.not(ints).get.sorted === List(-2, -1, 0)
+
+    // Same as
+    Ns.int.!=(7).get.sorted === List(-2, -1, 0, 1, 2)
+    Ns.int.!=(1).get.sorted === List(-2, -1, 0, 2)
+    Ns.int.!=(-1, 0, 1).get.sorted === List(-2, 2)
+    Ns.int.!=(Seq(-1, 0, 1)).get.sorted === List(-2, 2)
+    Ns.int.!=(int1).get.sorted === List(-2, -1, 0, 2)
+    Ns.int.!=(int1, int2).get.sorted === List(-2, -1, 0)
+    Ns.int.!=(Seq(int1, int2)).get.sorted === List(-2, -1, 0)
+    Ns.int.!=(ints).get.sorted === List(-2, -1, 0)
 
 
-    Ns.long.not(7).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.long.not(1).get.sorted === List(-2, -1, 0, 2)
-    Ns.long.not(-1, 0, 1).get.sorted === List(-2, 2)
-    Ns.long.not(long1).get.sorted === List(-2, -1, 0, 2)
-    Ns.long.not(long1, long1).get.sorted === List(-2, -1, 0, 2)
+    Ns.long.not(7L).get.sorted === List(-2L, -1L, 0L, 1L, 2L)
+    Ns.long.not(1L).get.sorted === List(-2L, -1L, 0L, 2L)
+    Ns.long.not(-1L, 0L, 1L).get.sorted === List(-2L, 2L)
+    Ns.long.not(Seq(-1L, 0L, 1L)).get.sorted === List(-2L, 2L)
+    Ns.long.not(long1).get.sorted === List(-2L, -1L, 0L, 2L)
+    Ns.long.not(long1, long1).get.sorted === List(-2L, -1L, 0L, 2L)
+    Ns.long.not(Seq(long1, long2)).get.sorted === List(-2L, -1L, 0L)
+    val longs = Seq(long1, long2)
+    Ns.long.not(longs).get.sorted === List(-2L, -1L, 0L)
 
 
-    Ns.float.not(7).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.float.not(1).get.sorted === List(-2, -1, 0, 2)
-    Ns.float.not(-1, 0, 1).get.sorted === List(-2, 2)
-    Ns.float.not(float1).get.sorted === List(-2, -1, 0, 2)
-    Ns.float.not(float1, float1).get.sorted === List(-2, -1, 0, 2)
-    Ns.float.not(float1, float2).get.sorted === List(-2, -1, 0)
+    Ns.float.not(7f).get.sorted === List(-2f, -1f, 0f, 1f, 2f)
+    Ns.float.not(1f).get.sorted === List(-2f, -1f, 0f, 2f)
+    Ns.float.not(-1f, 0f, 1f).get.sorted === List(-2f, 2f)
+    Ns.float.not(Seq(-1f, 0f, 1f)).get.sorted === List(-2f, 2f)
+    Ns.float.not(float1).get.sorted === List(-2f, -1f, 0f, 2f)
+    Ns.float.not(float1, float2).get.sorted === List(-2f, -1f, 0f)
+    Ns.float.not(Seq(float1, float2)).get.sorted === List(-2f, -1f, 0f)
+    val floats = Seq(float1, float2)
+    Ns.float.not(floats).get.sorted === List(-2f, -1f, 0f)
 
 
-    Ns.double.not(7).get.sorted === List(-2, -1, 0, 1, 2)
-    Ns.double.not(1).get.sorted === List(-2, -1, 0, 2)
-    Ns.double.not(-1, 0, 1).get.sorted === List(-2, 2)
-    Ns.double.not(double1).get.sorted === List(-2, -1, 0, 2)
-    Ns.double.not(double1, double2).get.sorted === List(-2, -1, 0)
+    Ns.double.not(7.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0, 2.0)
+    Ns.double.not(1.0).get.sorted === List(-2.0, -1.0, 0.0, 2.0)
+    Ns.double.not(-1.0, 0.0, 1.0).get.sorted === List(-2.0, 2.0)
+    Ns.double.not(Seq(-1.0, 0.0, 1.0)).get.sorted === List(-2.0, 2.0)
+    Ns.double.not(double1).get.sorted === List(-2.0, -1.0, 0.0, 2.0)
+    Ns.double.not(double1, double2).get.sorted === List(-2.0, -1.0, 0.0)
+    Ns.double.not(Seq(double1, double2)).get.sorted === List(-2.0, -1.0, 0.0)
+    val doubles = Seq(double1, double2)
+    Ns.double.not(doubles).get.sorted === List(-2.0, -1.0, 0.0)
 
 
     Ns.bool.not(true).get === List(false)
     Ns.bool.not(false).get === List(true)
+    // Multiple boolean values not so useful...
     Ns.bool.not(false, true).get === List()
 
 
@@ -111,14 +137,18 @@ class Negation extends Base {
     Ns.date.not(now).get.sorted === List(date0, date1, date2)
     Ns.date.not(date0).get.sorted === List(date1, date2)
     Ns.date.not(date0, date1).get.sorted === List(date2)
-    Ns.date.not(date0, date1, date2).get.sorted === List()
+    Ns.date.not(Seq(date0, date1)).get.sorted === List(date2)
+    val dates = Seq(date0, date1)
+    Ns.date.not(dates).get.sorted === List(date2)
 
 
     val uuid3 = randomUUID()
     Ns.uuid.not(uuid3).get.sortBy(_.toString) === List(uuid0, uuid1, uuid2)
     Ns.uuid.not(uuid0).get.sortBy(_.toString) === List(uuid1, uuid2)
     Ns.uuid.not(uuid0, uuid1).get.sortBy(_.toString) === List(uuid2)
-    Ns.uuid.not(uuid0, uuid1, uuid2).get.sortBy(_.toString) === List()
+    Ns.uuid.not(Seq(uuid0, uuid1)).get.sortBy(_.toString) === List(uuid2)
+    val uuids = Seq(uuid0, uuid1)
+    Ns.uuid.not(uuids).get.sortBy(_.toString) === List(uuid2)
 
     // todo: when Datomic gets a string representation #uri
     //    val uri = new URI("other")
@@ -127,9 +157,12 @@ class Negation extends Base {
 
     Ns.enum.not("enum0").get.sorted === List(enum1, enum2)
     Ns.enum.not("enum0", "enum1").get.sorted === List(enum2)
-    Ns.enum.not("enum0", "enum1", "enum2").get.sorted === List()
+    Ns.enum.not(Seq("enum0", "enum1")).get.sorted === List(enum2)
     Ns.enum.not(enum0).get.sorted === List(enum1, enum2)
     Ns.enum.not(enum0, enum1).get.sorted === List(enum2)
+    Ns.enum.not(Seq(enum0, enum1)).get.sorted === List(enum2)
+    val enums = Seq(enum0, enum1)
+    Ns.enum.not(enums).get.sorted === List(enum2)
   }
 
 

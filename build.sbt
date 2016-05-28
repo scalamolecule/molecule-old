@@ -2,7 +2,7 @@
 
 lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
   organization := "org.scalamolecule",
-  version := "0.6.2-SNAPSHOT",
+  version := "0.6.2",
   scalaVersion := "2.11.8",
   scalacOptions := Seq("-feature", "-language:implicitConversions", "-Yrangepos"),
   resolvers ++= Seq(

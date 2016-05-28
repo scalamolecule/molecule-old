@@ -125,10 +125,13 @@ object schemaDSL {
     def apply(unifyThis: unify): Ns with Attr = ???
 
     // Negation
-    def not(one: T, more: T*)         : Ns with Attr = ???
-    // Todo: remove this when Intellij can infer from the next method alone...
-    def != (value: T)         : Ns with Attr = ???
+    def not(one: T, more: T*) : Ns with Attr = ???
+    def not(many: Seq[T])     : Ns with Attr = ???
+    // Same as
     def != (one: T, more: T*) : Ns with Attr = ???
+    // Todo: remove this method when Intellij can infer from the above method alone...
+    def != (one: T)           : Ns with Attr = ???
+    def != (many: Seq[T])     : Ns with Attr = ???
 
     // Comparison
     def <  (value: T) : Ns with Attr = ???
@@ -153,10 +156,10 @@ object schemaDSL {
   // Cardinality one attributes
 
   trait One[Ns, In, T] extends ValueAttr[Ns, In, T, T] {
-    // Empty `apply` is a request to delete values!
+    // Empty `apply` is a request in insert molecules to delete values!
     def apply()                 : Ns with Attr = ???
     def apply(one: T, more: T*) : Ns with Attr = ???
-    def apply(values: Seq[T])   : Ns with Attr = ???
+    def apply(many: Seq[T])   : Ns with Attr = ???
   }
   trait OneString [Ns, In] extends One[Ns, In, String ]
   trait OneInt    [Ns, In] extends One[Ns, In, Int    ]
