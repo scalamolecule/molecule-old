@@ -1,4 +1,4 @@
-package molecule.part.schema
+package molecule.partition.schema
 import molecule.dsl.schemaDefinition._
 
 @InOut(0, 4)
@@ -22,7 +22,7 @@ object PartitionTestDefinition {
       val author = one[gen.Person]
       // To avoid attr/partition name clashes we can prepend the definition object name
       // (in case we would have needed an attribute named `gen` for instance)
-      val editor = one[PartitionTestDefinition.gen.Person]
+      val editor = one[gen.Person]
       val cat    = oneEnum('good, 'bad)
       val reviewers = many[gen.Person]
     }

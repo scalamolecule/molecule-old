@@ -1,5 +1,5 @@
 package molecule
-package basics
+package attr
 
 import java.net.URI
 import java.util.{Date, UUID}

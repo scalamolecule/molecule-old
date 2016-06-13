@@ -1,5 +1,5 @@
 package molecule
-package basics
+package attr
 
 import molecule.util.dsl.coreTest._
 import molecule.util.{CoreSetup, CoreSpec, expectCompileError}
