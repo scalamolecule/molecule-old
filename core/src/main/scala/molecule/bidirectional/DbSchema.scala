@@ -1,4 +1,4 @@
-package molecule.schema
+package molecule.bidirectional
 /*
  * AUTO-GENERATED CODE - DON'T CHANGE!
  *
