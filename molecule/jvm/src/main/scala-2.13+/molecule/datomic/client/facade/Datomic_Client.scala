@@ -2,7 +2,6 @@ package molecule.datomic.client.facade
 
 import java.util.{List => jList, Map => jMap}
 import java.util
-import clojure.lang.Keyword
 import datomic.Peer
 import datomic.Util.read
 import datomicClient.ClojureBridge

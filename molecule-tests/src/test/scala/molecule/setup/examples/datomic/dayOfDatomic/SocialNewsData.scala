@@ -1,4 +1,4 @@
-package molecule.tests.examples.datomic.dayOfDatomic
+package molecule.setup.examples.datomic.dayOfDatomic
 
 import molecule.datomic.api.out3._
 import molecule.datomic.base.facade.Conn

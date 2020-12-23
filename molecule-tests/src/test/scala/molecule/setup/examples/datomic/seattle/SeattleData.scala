@@ -1,4 +1,4 @@
-package molecule.tests.examples.datomic.seattle
+package molecule.setup.examples.datomic.seattle
 
 import molecule.datomic.api.out8._
 import molecule.datomic.base.facade.Conn

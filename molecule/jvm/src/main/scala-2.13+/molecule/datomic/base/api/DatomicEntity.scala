@@ -1,17 +1,14 @@
-package molecule.core.api
+package molecule.datomic.base.api
 
 import java.net.URI
 import java.util.{Date, UUID}
 import clojure.lang.{Keyword, PersistentArrayMap}
-import molecule.core.api.exception.EntityException
 import molecule.core.ast.MoleculeBase
 import molecule.core.ast.model.{Model, TxMetaData}
 import molecule.core.ast.transactionModel.RetractEntity
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.Model2Transaction
 import molecule.core.util.{Debug, Quoted}
-import molecule.core.util.fns.date2str
-import molecule.datomic.base.api.EntityOps
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
@@ -147,7 +144,7 @@ abstract class DatomicEntity(conn: Conn, eid: Any) extends Quoted {
 
   /** Retract single entity using entity id.
     * <br><br>
-    * Given the implicit conversion of Long's in [[EntityOps]] to an [[molecule.core.api.DatomicEntity Entity]] we can
+    * Given the implicit conversion of Long's in [[EntityOps]] to an [[DatomicEntity Entity]] we can
     * can call `retract` on an entity id directly:
     * {{{
     *   // Get entity id of Ben
@@ -170,7 +167,7 @@ abstract class DatomicEntity(conn: Conn, eid: Any) extends Quoted {
 
   /** Asynchronously retract single entity using entity id.
     * <br><br>
-    * Given the implicit conversion of Long's in [[EntityOps]] to an [[molecule.core.api.DatomicEntity Entity]] we can
+    * Given the implicit conversion of Long's in [[EntityOps]] to an [[DatomicEntity Entity]] we can
     * can call `retractAsync` on an entity id directly:
     * {{{
     *   // Get entity id of Ben
@@ -248,13 +245,13 @@ abstract class DatomicEntity(conn: Conn, eid: Any) extends Quoted {
     *
     * @group tx
     * @param metaMolecule Transaction meta data molecule
-    * @return [[molecule.core.api.DatomicEntity.RetractMolecule RetractMolecule]] - a simple wrapper for adding retraction tx meta data
+    * @return [[RetractMolecule RetractMolecule]] - a simple wrapper for adding retraction tx meta data
     */
   def Tx(txMeta: MoleculeBase): RetractMolecule = RetractMolecule(txMeta)
 
   /** Wrapper to add retract methods on entity with transaction meta data.
     * <br><br>
-    * [[molecule.core.api.DatomicEntity.RetractMolecule RetractMolecule]] is created from calling `Tx`:
+    * [[RetractMolecule RetractMolecule]] is created from calling `Tx`:
     * {{{
     *   val benId = Person.name("Ben").Tx(MyMetaData.action("add member")).save.eid
     *

@@ -17,7 +17,7 @@ import molecule.core.util.{BridgeDatomicFuture, Helpers, QueryOpsClojure}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
 import scala.concurrent.{blocking, ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
 /** Factory methods to create facade to Datomic Connection. */
@@ -390,25 +390,25 @@ class Conn_Peer(val peerConn: datomic.Connection)
     def datom2row(tOpt: Option[Long]): Datom => jList[AnyRef] = attrs.length match {
       case 1 =>
         val x1 = datomElement(tOpt, attrs.head)
-        (d: Datom) => list(x1(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) => list(x1(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
       case 2 =>
         val x1 = datomElement(tOpt, attrs.head)
         val x2 = datomElement(tOpt, attrs(1))
-        (d: Datom) => list(x1(d), x2(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) => list(x1(d).asInstanceOf[Object], x2(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
       case 3 =>
         val x1 = datomElement(tOpt, attrs.head)
         val x2 = datomElement(tOpt, attrs(1))
         val x3 = datomElement(tOpt, attrs(2))
-        (d: Datom) => list(x1(d), x2(d), x3(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) => list(x1(d).asInstanceOf[Object], x2(d).asInstanceOf[Object], x3(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
       case 4 =>
         val x1 = datomElement(tOpt, attrs.head)
         val x2 = datomElement(tOpt, attrs(1))
         val x3 = datomElement(tOpt, attrs(2))
         val x4 = datomElement(tOpt, attrs(3))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) => list(x1(d).asInstanceOf[Object], x2(d).asInstanceOf[Object], x3(d).asInstanceOf[Object], x4(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
       case 5 =>
         val x1 = datomElement(tOpt, attrs.head)
@@ -416,7 +416,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
         val x3 = datomElement(tOpt, attrs(2))
         val x4 = datomElement(tOpt, attrs(3))
         val x5 = datomElement(tOpt, attrs(4))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d), x5(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) => list(x1(d).asInstanceOf[Object], x2(d).asInstanceOf[Object], x3(d).asInstanceOf[Object], x4(d).asInstanceOf[Object], x5(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
       case 6 =>
         val x1 = datomElement(tOpt, attrs.head)
@@ -425,7 +425,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
         val x4 = datomElement(tOpt, attrs(3))
         val x5 = datomElement(tOpt, attrs(4))
         val x6 = datomElement(tOpt, attrs(5))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d), x5(d), x6(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) => list(x1(d).asInstanceOf[Object], x2(d).asInstanceOf[Object], x3(d).asInstanceOf[Object], x4(d).asInstanceOf[Object], x5(d).asInstanceOf[Object], x6(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
       case 7 =>
         val x1 = datomElement(tOpt, attrs.head)
@@ -435,7 +435,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
         val x5 = datomElement(tOpt, attrs(4))
         val x6 = datomElement(tOpt, attrs(5))
         val x7 = datomElement(tOpt, attrs(6))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d), x5(d), x6(d), x7(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) => list(x1(d).asInstanceOf[Object], x2(d).asInstanceOf[Object], x3(d).asInstanceOf[Object], x4(d).asInstanceOf[Object], x5(d).asInstanceOf[Object], x6(d).asInstanceOf[Object], x7(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
       case n => throw new MoleculeException("Unexpected datom2row count: " + n)
     }

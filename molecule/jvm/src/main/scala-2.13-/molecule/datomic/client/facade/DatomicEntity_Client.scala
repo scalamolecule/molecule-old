@@ -9,7 +9,7 @@ import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
 import molecule.core.util.RegexMatching
 import molecule.datomic.base.api.DatomicEntity
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.language.existentials
 
 case class DatomicEntity_Client(

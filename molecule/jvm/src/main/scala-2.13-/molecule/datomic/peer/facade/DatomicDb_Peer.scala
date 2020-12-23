@@ -25,7 +25,8 @@ case class DatomicDb_Peer(peerDb: Database) extends DatomicDb {
     peerDb.pull(pattern, eid)
 
   def datoms(index: Any, objects: Any*): lang.Iterable[PeerDatom] = {
-    peerDb.datoms(index, objects: _*)
+    val objects1 = objects.toSeq.asInstanceOf[Seq[Object]]
+    peerDb.datoms(index, objects1: _*)
   }
 
   def indexRange(

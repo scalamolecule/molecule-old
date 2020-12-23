@@ -8,7 +8,7 @@ import datomicScala.client.api.{Datom => ClientDatom}
 import datomicScala.client.api.sync.Db
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade.{Conn, DatomicDb}
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 case class DatomicDb_Client(clientDb: Db) extends DatomicDb {
 

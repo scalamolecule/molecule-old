@@ -1,4 +1,4 @@
-package molecule.setup
+package molecule.setup.core
 
 import java.net.URI
 import java.util.{Date, UUID}

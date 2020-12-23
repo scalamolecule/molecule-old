@@ -9,7 +9,7 @@ import molecule.datomic.client.facade.{Conn_Client, Datomic_Client}
 import scala.collection.mutable
 
 
-object TestPeerServer {
+object CleanPeerServer {
 
   def getCleanPeerServerConn(
     client: Client,
