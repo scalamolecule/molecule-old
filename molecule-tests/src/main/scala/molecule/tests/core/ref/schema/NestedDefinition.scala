@@ -1,4 +1,4 @@
-package molecule.tests.core.nested.schema
+package molecule.tests.core.ref.schema
 
 import molecule.core.schema.definition._
 

@@ -6,7 +6,7 @@ import molecule.core.ast.transactionModel._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
 
-private[molecule] case class Debug(
+private[molecule] case class Inspect(
   clazz: String,
   threshold: Int,
   max: Int = 9999,

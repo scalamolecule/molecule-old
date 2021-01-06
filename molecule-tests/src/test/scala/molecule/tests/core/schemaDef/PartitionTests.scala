@@ -7,7 +7,7 @@ import molecule.TestSpec
 import scala.language.reflectiveCalls
 
 
-class Partition extends TestSpec {
+class PartitionTests extends TestSpec {
 
   "Insert resolves to correct partitions" in new PartitionSetup {
     testInsertMolecule(

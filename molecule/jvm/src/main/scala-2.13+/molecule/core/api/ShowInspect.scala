@@ -10,21 +10,23 @@ import molecule.core.exceptions.{MoleculeException, QueryException}
 import molecule.core.ops.QueryOps._
 import molecule.core.ops.VerifyModel
 import molecule.core.transform._
-import molecule.core.util.Debug
+import molecule.core.util.Inspect
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
+import scala.util.control.Breaks.break
 
-/** Debug methods
+
+/** Inspect methods
   *
-  * Call a debug method on a molecule to see the internal transformations and
+  * Call a inspect method on a molecule to see the internal transformations and
   * produced transaction statements or sample data.
   * */
-trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
+trait ShowInspect[Tpl] { self: Molecule[Tpl] =>
 
 
-  /** Debug call to `get` on a molecule (without affecting the db).
+  /** Inspect call to `get` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -34,10 +36,10 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * 2. Data returned from get query (max 500 rows).
     * OBS: printing raw Date's (Clojure Instant) will miss the time-zone
     *
-    * @group debugGet
+    * @group inspectGet
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGet(implicit conn: Conn): Unit = {
+  def inspectGet(implicit conn: Conn): Unit = {
 
     def generic(): Unit = {
       val rows = conn._index(_model)
@@ -236,7 +238,7 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     }
 
     def data(): Unit = {
-      // Also do Model2Query transformation at runtime to be able to debug it.
+      // Also do Model2Query transformation at runtime to be able to inspect it.
       // Note though that input variables are only bound in the macro at compile
       // time and are therefore not present in this runtime process.
       Model2Query(_model)
@@ -275,7 +277,7 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
   }
 
 
-  /** Debug call to `getAsOf(t)` on a molecule (without affecting the db).
+  /** Inspect call to `getAsOf(t)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -284,14 +286,14 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 2. Data returned from get query (max 500 rows).
     *
-    * @group debugGet
+    * @group inspectGet
     * @param t
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetAsOf(t: Long)(implicit conn: Conn): Unit = debugGet(conn.usingTempDb(AsOf(TxLong(t))))
+  def inspectGetAsOf(t: Long)(implicit conn: Conn): Unit = inspectGet(conn.usingTempDb(AsOf(TxLong(t))))
 
 
-  /** Debug call to `getAsOf(tx)` on a molecule (without affecting the db).
+  /** Inspect call to `getAsOf(tx)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -300,14 +302,14 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 2. Data returned from get query (max 500 rows).
     *
-    * @group debugGet
+    * @group inspectGet
     * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetAsOf(tx: TxReport)(implicit conn: Conn): Unit = debugGet(conn.usingTempDb(AsOf(TxLong(tx.t))))
+  def inspectGetAsOf(tx: TxReport)(implicit conn: Conn): Unit = inspectGet(conn.usingTempDb(AsOf(TxLong(tx.t))))
 
 
-  /** Debug call to `getAsOf(date)` on a molecule (without affecting the db).
+  /** Inspect call to `getAsOf(date)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -316,14 +318,14 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 2. Data returned from get query (max 500 rows).
     *
-    * @group debugGet
+    * @group inspectGet
     * @param date
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scsope
     */
-  def debugGetAsOf(date: Date)(implicit conn: Conn): Unit = debugGet(conn.usingTempDb(AsOf(TxDate(date))))
+  def inspectGetAsOf(date: Date)(implicit conn: Conn): Unit = inspectGet(conn.usingTempDb(AsOf(TxDate(date))))
 
 
-  /** Debug call to `getSince(t)` on a molecule (without affecting the db).
+  /** Inspect call to `getSince(t)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -332,14 +334,14 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 2. Data returned from get query (max 500 rows).
     *
-    * @group debugGet
+    * @group inspectGet
     * @param t
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetSince(t: Long)(implicit conn: Conn): Unit = debugGet(conn.usingTempDb(Since(TxLong(t))))
+  def inspectGetSince(t: Long)(implicit conn: Conn): Unit = inspectGet(conn.usingTempDb(Since(TxLong(t))))
 
 
-  /** Debug call to `getSince(tx)` on a molecule (without affecting the db).
+  /** Inspect call to `getSince(tx)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -348,14 +350,14 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 2. Data returned from get query (max 500 rows).
     *
-    * @group debugGet
+    * @group inspectGet
     * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetSince(tx: TxReport)(implicit conn: Conn): Unit = debugGet(conn.usingTempDb(Since(TxLong(tx.t))))
+  def inspectGetSince(tx: TxReport)(implicit conn: Conn): Unit = inspectGet(conn.usingTempDb(Since(TxLong(tx.t))))
 
 
-  /** Debug call to `getSince(date)` on a molecule (without affecting the db).
+  /** Inspect call to `getSince(date)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -364,14 +366,14 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 2. Data returned from get query (max 500 rows).
     *
-    * @group debugGet
+    * @group inspectGet
     * @param date
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetSince(date: Date)(implicit conn: Conn): Unit = debugGet(conn.usingTempDb(Since(TxDate(date))))
+  def inspectGetSince(date: Date)(implicit conn: Conn): Unit = inspectGet(conn.usingTempDb(Since(TxDate(date))))
 
 
-  /** Debug call to `getWith(txMolecules)` on a molecule (without affecting the db).
+  /** Inspect call to `getWith(txMolecules)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -382,19 +384,19 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 3. Transactions of applied transaction molecules.
     *
-    * @group debugGet
+    * @group inspectGet
     * @param txMolecules Transaction statements from applied Molecules with test data
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Unit = {
-    debugGet(conn.usingTempDb(With(seqAsJavaListConverter(txMolecules.flatten.flatten.map(_.toJava)).asJava)))
+  def inspectGetWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Unit = {
+    inspectGet(conn.usingTempDb(With(txMolecules.flatten.flatten.map(_.toJava).asJava)))
     txMolecules.zipWithIndex foreach { case (stmts, i) =>
-      Debug(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
+      Inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
     }
   }
 
 
-  /** Debug call to `getWith(txData)` on a molecule (without affecting the db).
+  /** Inspect call to `getWith(txData)` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -405,18 +407,18 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 3. Transactions of applied transaction data.
     *
-    * @group debugGet
+    * @group inspectGet
     * @param txData Raw transaction data as java.util.List[Object]
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetWith(txData: jList[jList[_]])(implicit conn: Conn): Unit = {
-    debugGet(conn.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]])))
+  def inspectGetWith(txData: jList[jList[_]])(implicit conn: Conn): Unit = {
+    inspectGet(conn.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]])))
     println("Transaction data:\n========================================================================")
     txData.toArray foreach println
   }
 
 
-  /** Debug call to `getHistory` on a molecule (without affecting the db).
+  /** Inspect call to `getHistory` on a molecule (without affecting the db).
     * <br><br>
     * Prints the following to output:
     * <br><br>
@@ -425,23 +427,23 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     * <br><br>
     * 2. Data returned from get query (max 500 rows).
     *
-    * @group debugGet
+    * @group inspectGet
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def debugGetHistory(implicit conn: Conn): Unit = debugGet(conn.usingTempDb(History))
+  def inspectGetHistory(implicit conn: Conn): Unit = inspectGet(conn.usingTempDb(History))
 
 
-  /** Debug call to `save` on a molecule (without affecting the db).
+  /** Inspect call to `save` on a molecule (without affecting the db).
     * <br><br>
     * Prints internal molecule transformation representations to output:
     * <br><br>
     * Model --> Generic statements --> Datomic statements
     *
-    * @group debugOp
+    * @group inspectOp
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Unit
     */
-  def debugSave(implicit conn: Conn): Unit = {
+  def inspectSave(implicit conn: Conn): Unit = {
     VerifyModel(_model, "save")
     val transformer = Model2Transaction(conn, _model)
     val stmts       = try {
@@ -449,14 +451,14 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     } catch {
       case e: Throwable =>
         println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        Debug("output.Molecule.debugSave", 1)(1, _model, transformer.stmtsModel)
+        Inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.stmtsModel)
         throw e
     }
-    Debug("output.Molecule.debugSave", 1)(1, _model, transformer.stmtsModel, stmts)
+    Inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.stmtsModel, stmts)
   }
 
 
-  protected def _debugInsert(conn: Conn, dataRows: Iterable[Seq[Any]]): Unit = {
+  protected def _inspectInsert(conn: Conn, dataRows: Iterable[Seq[Any]]): Unit = {
     val transformer = Model2Transaction(conn, _model)
     val data        = untupled(dataRows)
     val stmtss      = try {
@@ -464,24 +466,24 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     } catch {
       case e: Throwable =>
         println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        Debug("output.Molecule._debugInsert", 1)(1, _model, transformer.stmtsModel, dataRows, data)
+        Inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.stmtsModel, dataRows, data)
         throw e
     }
-    Debug("output.Molecule._debugInsert", 1)(1, _model, transformer.stmtsModel, dataRows, data, stmtss)
+    Inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.stmtsModel, dataRows, data, stmtss)
   }
 
 
-  /** Debug call to `update` on a molecule (without affecting the db).
+  /** Inspect call to `update` on a molecule (without affecting the db).
     * <br><br>
     * Prints internal molecule transformation representations to output:
     * <br><br>
     * Model --> Generic statements --> Datomic statements
     *
-    * @group debugOp
+    * @group inspectOp
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  def debugUpdate(implicit conn: Conn): Unit = {
+  def inspectUpdate(implicit conn: Conn): Unit = {
     VerifyModel(_model, "update")
     val transformer = Model2Transaction(conn, _model)
     val stmts       = try {
@@ -489,9 +491,9 @@ trait ShowDebug[Tpl] { self: Molecule[Tpl] =>
     } catch {
       case e: Throwable =>
         println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        Debug("output.Molecule.debugUpdate", 1)(1, _model, transformer.stmtsModel)
+        Inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.stmtsModel)
         throw e
     }
-    Debug("output.Molecule.debugUpdate", 1)(1, _model, transformer.stmtsModel, stmts)
+    Inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.stmtsModel, stmts)
   }
 }
