@@ -1,4 +1,4 @@
-package molecule.datomic.ast
+package molecule.datomic.base.ast
 import java.util.{Date, List => jList}
 
 private[molecule] object tempDb {

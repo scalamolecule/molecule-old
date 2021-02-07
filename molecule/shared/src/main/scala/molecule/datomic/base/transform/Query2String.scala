@@ -1,9 +1,9 @@
-package molecule.datomic.transform
+package molecule.datomic.base.transform
 
 import java.util.{Date, UUID}
-import molecule.datomic.ast.query._
+import molecule.datomic.base.ast.query._
 import molecule.core.exceptions.MoleculeException
-import molecule.datomic.transform.exception.Query2StringException
+import molecule.datomic.base.transform.exception.Query2StringException
 import molecule.core.util.Helpers
 import scala.language.implicitConversions
 

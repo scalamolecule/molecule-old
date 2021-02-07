@@ -1,9 +1,9 @@
-package molecule.datomic.ast
+package molecule.datomic.base.ast
 import molecule.core.ast.elements
-import molecule.datomic.transform.Query2String
+import molecule.datomic.base.transform.Query2String
 import molecule.core.util.Helpers
 
-/** AST for molecule [[molecule.datomic.ast.query.Query Query]] representation.
+/** AST for molecule [[molecule.datomic.base.ast.query.Query Query]] representation.
   * <br><br>
   * Molecule transforms custom boilerplate DSL constructs to Datomic queries in 3 steps:
   * <br><br>

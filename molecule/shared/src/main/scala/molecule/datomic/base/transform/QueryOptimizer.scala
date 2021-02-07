@@ -1,6 +1,6 @@
-package molecule.datomic.transform
+package molecule.datomic.base.transform
 
-import molecule.datomic.ast.query.{Clause, _}
+import molecule.datomic.base.ast.query.{Clause, _}
 import scala.collection.mutable.ListBuffer
 
 object QueryOptimizer {

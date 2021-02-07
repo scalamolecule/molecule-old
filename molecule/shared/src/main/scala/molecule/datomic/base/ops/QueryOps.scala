@@ -1,11 +1,11 @@
-package molecule.datomic.ops
+package molecule.datomic.base.ops
 
 import java.net.URI
 import java.util.{Date, UUID}
 import molecule.core.ast.elements._
-import molecule.datomic.ast.query.{Funct, _}
+import molecule.datomic.base.ast.query.{Funct, _}
 import molecule.core.util.{Helpers, JavaUtil}
-import molecule.datomic.ops.exception.QueryOpsException
+import molecule.datomic.base.ops.exception.QueryOpsException
 
 
 /** Query operations */

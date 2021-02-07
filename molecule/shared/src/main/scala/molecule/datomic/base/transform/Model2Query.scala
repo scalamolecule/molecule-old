@@ -1,9 +1,9 @@
-package molecule.datomic.transform
+package molecule.datomic.base.transform
 
 import molecule.core.ast.elements._
-import molecule.datomic.ast.query._
-import molecule.datomic.ops.QueryOps._
-import molecule.datomic.transform.exception.Model2QueryException
+import molecule.datomic.base.ast.query._
+import molecule.datomic.base.ops.QueryOps._
+import molecule.datomic.base.transform.exception.Model2QueryException
 import molecule.core.util.Helpers
 
 

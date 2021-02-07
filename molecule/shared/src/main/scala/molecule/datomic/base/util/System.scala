@@ -1,4 +1,4 @@
-package molecule.datomic.util
+package molecule.datomic.base.util
 
 sealed trait System
 

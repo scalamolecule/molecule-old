@@ -1,4 +1,4 @@
-package molecule.datomic.transform.exception
+package molecule.datomic.base.transform.exception
 
 import molecule.core.exceptions.MoleculeException
 
