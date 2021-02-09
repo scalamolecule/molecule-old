@@ -1,13 +1,12 @@
-package molecule
+package molecule.setup
 
 import _root_.datomic.Peer
 import molecule.core.data.SchemaTransaction
 import molecule.core.util.testing.MoleculeTestHelper
 import molecule.datomic.base.facade.Conn
+import molecule.datomic.base.util.{System, SystemDevLocal, SystemPeer, SystemPeerServer}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
-import molecule.datomic.base.util.{System, SystemDevLocal, SystemPeer, SystemPeerServer}
-import molecule.setup.{CleanPeerServer, SpecHelpers}
 import molecule.setup.core.CoreData
 import molecule.setup.examples.datomic.dayOfDatomic.SocialNewsData
 import molecule.setup.examples.datomic.seattle.SeattleData
