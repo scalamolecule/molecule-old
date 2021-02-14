@@ -1,11 +1,11 @@
-package molecule.tests.core.input1
+package molecule.tests.core.input1.expression
 
 import java.net.URI
-import molecule.datomic.base.ast.query._
 import molecule.core.exceptions.MoleculeException
-import molecule.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.in1_out2._
+import molecule.datomic.base.ast.query._
 import molecule.setup.TestSpec
+import molecule.tests.core.base.dsl.CoreTest._
 
 
 class Input1URI extends TestSpec {
