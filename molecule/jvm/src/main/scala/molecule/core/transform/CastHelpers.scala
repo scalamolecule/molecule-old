@@ -2,7 +2,7 @@ package molecule.core.transform
 
 import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
-import java.util.{Date, UUID, List => jList, Map => jMap}
+import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
 import clojure.lang.{Keyword, PersistentHashSet, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 
@@ -53,7 +53,8 @@ trait CastHelpers[Obj, Tpl] extends CastHelpersAggr {
   // Many ===========================================================================================
 
   protected def castManyInt(row: jList[_], i: Int): Set[Int] = {
-    val it  = row.get(i).asInstanceOf[PersistentHashSet].iterator
+//    val it  = row.get(i).asInstanceOf[PersistentHashSet].iterator
+    val it  = row.get(i).asInstanceOf[jSet[_]].iterator
     var set = Set.empty[Int]
     while (it.hasNext)
       set += it.next.asInstanceOf[jLong].toInt

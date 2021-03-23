@@ -121,6 +121,9 @@ object model {
       * Attempts to insert a duplicate value for a different entity id will fail.
       * */
     lazy val uniqueValue: Self = ???
+
+    lazy val mandatory: Self = ???
+
   }
 
 
@@ -159,6 +162,10 @@ object model {
       * Generate eventually consistent fulltext search index for this attribute.
       */
     lazy val fulltext: oneString = ???
+
+    //    lazy val email: oneString = ???
+    //    def validate(lambda: String => Boolean): oneString = ???
+
   }
   object oneString extends oneString
 
@@ -197,9 +204,13 @@ object model {
   private[molecule] trait oneEmail extends oneString
 
   private[molecule] trait number[Self, T] extends optionBuilder[Self] {
-    // Todo: schema level constraints?
-    def min(n: T): Self = ???
-    def max(n: T): Self = ???
+    //    def min(n: T): Self = ???
+    //    def max(n: T): Self = ???
+    //    lazy val pos: Self = ???
+    //    lazy val pos0: Self = ???
+    //    lazy val neg: Self = ???
+    //    lazy val neg0: Self = ???
+    //    def validate(lambda: T => Boolean): Self = ???
   }
 
 

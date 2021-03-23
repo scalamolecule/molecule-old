@@ -34,15 +34,20 @@ To have molecule jars generated, add `-Dmolecule=true`
 
 2.12 & 2.13:
 > sbt +publishLocal -Dfree=true
-
-or
- 
+> // or
 > sbt +publishSigned -Dfree=true
 
+This might be too heavy for the compiler. In that case split up the process:
 
-// 2.13 only
-> sbt publishLocal
+> sbt ++2.12.13 clean compile -Dfree=true
+> sbt ++2.12.13 doc
+> sbt ++2.12.13 publishSigned -Dfree=true
+> 
+> // publish 2.12 at maven central, then do 2.13:
+> 
+> sbt clean compile -Dfree=true
+> sbt doc
+> sbt publishSigned -Dfree=true
+> // publish 2.13 at maven central
 
-// 2.12 only
-> sbt ++2.12.13 publishSigned
 

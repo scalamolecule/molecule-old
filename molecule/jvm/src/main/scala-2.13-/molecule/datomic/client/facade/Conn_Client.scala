@@ -1,5 +1,6 @@
 package molecule.datomic.client.facade
 
+import java.io.{Reader, StringReader}
 import java.util
 import java.util.{Date, stream, Collection => jCollection, List => jList}
 import datomic.Peer
@@ -177,11 +178,6 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transact(scalaStmts: Seq[Seq[Statement]]): TxReport = {
-    transact(toJava(scalaStmts), scalaStmts)
-  }
-
-
   def transact(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil): TxReport = {
     if (_adhocDb.isDefined) {
       // In-memory "transaction"
@@ -210,11 +206,21 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
     }
   }
 
+  def transact(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]]): TxReport =
+    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
 
-  def transactAsync(scalaStmts: Seq[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport] = {
-    transactAsync(toJava(scalaStmts), scalaStmts)
-  }
+  def transact(edn: String, scalaStmts: Seq[Seq[Statement]]): TxReport =
+    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  def transact(stmtsReader: Reader): TxReport =
+    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
+
+  def transact(edn: String): TxReport =
+    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+
+  def transact(scalaStmts: Seq[Seq[Statement]]): TxReport =
+    transact(toJava(scalaStmts), scalaStmts)
+
 
   def transactAsync(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil)
                    (implicit ec: ExecutionContext): Future[TxReport] = {
@@ -240,6 +246,26 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
       Future(TxReport_Client(clientConn.transact(javaStmts)))
     }
   }
+
+  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]])
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  def transactAsync(edn: String, scalaStmts: Seq[Seq[Statement]])
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  def transactAsync(stmtsReader: Reader)
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
+
+  def transactAsync(edn: String)
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+
+  def transactAsync(scalaStmts: Seq[Seq[Statement]])
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(toJava(scalaStmts), scalaStmts)
 
 
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any]): jCollection[jList[AnyRef]] = {

@@ -9,28 +9,41 @@
 package molecule.core.util.testing.TxCount.schema
 
 import molecule.core.data.SchemaTransaction
-import datomic.Util._
-import datomic.Peer._
 
 object TxCountSchema extends SchemaTransaction {
 
-  lazy val partitions = list()
+  lazy val datomicPeer = Seq(
+    """
+     [
+       ;; TxCount -------------------------------------------
+
+       {:db/ident         :TxCount/db
+        :db/valueType     :db.type/string
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "Database name"
+        :db/index         true}
+
+       {:db/ident         :TxCount/basisT
+        :db/valueType     :db.type/long
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "Datomic basis T"
+        :db/index         true}
+     ]""")
 
 
-  lazy val namespaces = list(
+  lazy val datomicClient = Seq(
+    """
+     [
+       ;; TxCount -------------------------------------------
 
-    // TxCount ----------------------------------------------------------
+       {:db/ident         :TxCount/db
+        :db/valueType     :db.type/string
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "Database name"}
 
-    map(read(":db/ident")             , read(":TxCount/db"),
-        read(":db/valueType")         , read(":db.type/string"),
-        read(":db/cardinality")       , read(":db.cardinality/one"),
-        read(":db/doc")               , "Database name",
-        read(":db/index")             , true.asInstanceOf[Object]),
-
-    map(read(":db/ident")             , read(":TxCount/basisT"),
-        read(":db/valueType")         , read(":db.type/long"),
-        read(":db/cardinality")       , read(":db.cardinality/one"),
-        read(":db/doc")               , "Datomic basis T",
-        read(":db/index")             , true.asInstanceOf[Object])
-  )
+       {:db/ident         :TxCount/basisT
+        :db/valueType     :db.type/long
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "Datomic basis T"}
+     ]""")
 }

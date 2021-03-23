@@ -74,9 +74,7 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     deleteDatabase(dbName)
     createDatabase(dbName)
     val conn = connect(dbName)
-    if (schema.partitions.size() > 0)
-      conn.transact(allowedClientDefinitions(schema.partitions))
-    conn.transact(allowedClientDefinitions(schema.namespaces))
+    schema.datomicClient.foreach(edn => conn.transact(edn))
     conn
   } catch {
     case e: Throwable => throw new DatomicFacadeException(e.getMessage)

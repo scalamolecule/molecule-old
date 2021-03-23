@@ -167,7 +167,8 @@ class TestSpec extends Specification with MoleculeTestHelper with CoreData {
       // Add uppercase-namespaced attribute names so that we can access the externally
       // transacted lowercase names with uppercase names of the molecule code.
       println("Converting nss from lower to upper..")
-      conn.transact(MBrainzSchemaLowerToUpper.namespaces)
+//      conn.transact(MBrainzSchemaLowerToUpper.namespaces)
+//      conn.transact(MBrainzSchemaLowerToUpper.edn)
     }
   }
 }

@@ -2,12 +2,10 @@ package molecule.datomic.base.facade
 
 import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Peer
-import molecule.core.ast.elements
 import molecule.core.ast.elements.Model
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb.TempDb
-import molecule.datomic.base.ast.transactionModel
 import molecule.datomic.base.ast.transactionModel.Statement
 import scala.concurrent.{ExecutionContext, Future}
 

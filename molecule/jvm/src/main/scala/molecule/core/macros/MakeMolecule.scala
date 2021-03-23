@@ -122,11 +122,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     z(3
       , model0
-      //      , typess
-      //      , castss
-      , obj
       , objCode(obj)._1
-      //      , objCode(obj, isNested = true)._1
       , t
     )
     t

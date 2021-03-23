@@ -1,13 +1,26 @@
 package molecule.core.data
 
 
-/** Schema transaction interface for auto-generated schema transaction data.
+/** Generated schema transaction data interface
   * */
 trait SchemaTransaction {
 
-  /** Auto-generated partition transaction data. */
-  val partitions: java.util.List[_]
+  /** Auto-generated edn data to transact Datomic Peer schema.
+    *
+    * One edn text string defines namespaces/attributes, two define partitions
+    * and namespaces/attributes.
+    * */
+  val datomicPeer: Seq[String]
 
-  /** Auto-generated namespace and attribute transaction data. */
-  val namespaces: java.util.List[_]
+
+  /** Auto-generated edn data to transact Datomic Client schema.
+    *
+    * The `datomicClient` schema is a reduced Peer schema where attributes of
+    * type `bytes` are filtered out since this is not an available attribute type
+    * for Client. Likewise, index and fulltext options are also filtered out.
+    *
+    * One edn text string defines namespaces/attributes, two define partitions
+    * and namespaces/attributes.
+    * */
+  val datomicClient: Seq[String]
 }

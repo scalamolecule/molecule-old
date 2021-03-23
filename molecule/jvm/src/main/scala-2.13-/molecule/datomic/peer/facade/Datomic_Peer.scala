@@ -72,9 +72,7 @@ trait Datomic_Peer {
       deleteDatabase(id, protocol)
       createDatabase(id, protocol)
       val conn = connect(id, protocol)
-      if (schema.partitions.size() > 0)
-        conn.transact(schema.partitions)
-      conn.transact(schema.namespaces)
+      schema.datomicPeer.foreach(edn => conn.transact(edn))
       conn
     } catch {
       case e: Throwable => throw new DatomicFacadeException(e.toString)
@@ -129,9 +127,7 @@ trait Datomic_Peer {
     protocol: String = "mem"
   ): Conn_Peer = try {
     val conn = connect(dbIdentifier, protocol)
-    if (schema.partitions.size() > 0)
-      conn.transact(schema.partitions)
-    conn.transact(schema.namespaces)
+    schema.datomicPeer.foreach(edn => conn.transact(edn))
     conn
   } catch {
     case e: Throwable => throw new DatomicFacadeException(e.toString)

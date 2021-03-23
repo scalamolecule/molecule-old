@@ -1,7 +1,5 @@
 package molecule.core.macros
 
-import molecule.core.ast.elements.{Composite, Element, Nested, TxMetaData}
-import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
 private[molecule] trait Cast extends CastAggr {

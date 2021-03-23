@@ -85,6 +85,21 @@ class AdHocTest extends Specification {
     implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
 
 
+    val x =
+      """
+        |[
+        | {:db/ident          :Person/name
+        |  :db/valueType      :db.type/string
+        |  :db/cardinality    :db.cardinality/one
+        |  :db/index          true}
+        | {:db/ident          :Person/age
+        |  :db/valueType      :db.type/long
+        |  :db/cardinality    :db.cardinality/one
+        |  :db/index          true}
+        |]""".stripMargin
+
+    Ns.int(0).save
+
     ok
   }
 

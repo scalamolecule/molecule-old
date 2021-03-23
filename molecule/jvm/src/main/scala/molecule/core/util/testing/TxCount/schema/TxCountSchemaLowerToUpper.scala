@@ -8,15 +8,13 @@
 */
 package molecule.core.util.testing.TxCount.schema
 
-import datomic.Util._
-
 object TxCountSchemaLowerToUpper {
 
-  lazy val namespaces = list(
+  lazy val edn =
+    """
+      ;; TxCount -------------------------------------------
 
-    // TxCount ----------------------------------------------------------
-
-    map(read(":db/id"), read(":txCount/db")    , read(":db/ident"), read(":TxCount/db")),
-    map(read(":db/id"), read(":txCount/basisT"), read(":db/ident"), read(":TxCount/basisT"))
-  )
+      { :db/id :txCount/db       :db/ident :TxCount/db     }
+      { :db/id :txCount/basisT   :db/ident :TxCount/basisT }
+    """
 }

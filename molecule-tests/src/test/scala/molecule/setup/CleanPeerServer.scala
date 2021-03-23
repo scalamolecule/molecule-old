@@ -38,11 +38,16 @@ object CleanPeerServer {
 
     if (log.isEmpty) {
       println("Installing Peer Server schema...")
-      if (schema.partitions.size() > 0)
-        dataConn.transact(peerServer.allowedClientDefinitions(schema.partitions))
-      dataConn.transact(peerServer.allowedClientDefinitions(schema.namespaces))
+//      if (schema.partitions.size() > 0)
+//        dataConn.transact(peerServer.allowedClientDefinitions(schema.partitions))
+//      dataConn.transact(peerServer.allowedClientDefinitions(schema.namespaces))
+
+      schema.datomicClient.foreach(edn => dataConn.transact(edn))
+
       basisT = dataConn.db.t + 1
-      txCountConn.transact(peerServer.allowedClientDefinitions(TxCountSchema.namespaces))
+//      txCountConn.transact(peerServer.allowedClientDefinitions(TxCountSchema.namespaces))
+      TxCountSchema.datomicClient.foreach(edn => txCountConn.transact(edn))
+
       TxCount.db(dbIdentifier).basisT(basisT).save(txCountConn)
 
     } else {

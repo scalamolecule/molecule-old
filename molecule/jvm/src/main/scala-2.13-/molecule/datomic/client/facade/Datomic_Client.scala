@@ -46,22 +46,5 @@ abstract class Datomic_Client(val client: Client, val clientAsync: AsyncClient)
     }
     nss2
   }
-
-  /** Transact schema from auto-generated schema transaction data.
-   *
-   * @group database
-   * @param schema sbt-plugin auto-generated Transaction file path.to.schema.YourDomainSchema
-   * @param dbName Database name
-   * @return [[Conn_Client]]
-   */
-  def transactSchema(schema: SchemaTransaction, dbName: String): Conn_Client = try {
-    val conn = connect(dbName)
-    if (schema.partitions.size() > 0)
-      conn.transact(allowedClientDefinitions(schema.partitions))
-    conn.transact(allowedClientDefinitions(schema.namespaces))
-    conn
-  } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
-  }
 }
 
