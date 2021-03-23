@@ -21,6 +21,8 @@ trait Helpers extends DateHandling {
     case _   => attr
   }
 
+  def getKwName(kw: String) = kw.substring(kw.indexOf('/') + 1)
+
   // Uniform Date formatting to allow text comparisons
   final protected def f(a: Any) = a match {
     case date: Date => date2str(date).replace("+", "\\\\+")
@@ -28,6 +30,7 @@ trait Helpers extends DateHandling {
   }
 
   def escStr(s: String) = s.replace("""\""", """\\""").replace(""""""", """\"""")
+
   def unescStr(s: String) = s.replace("""\"""", """"""").replace("""\\""", """\""")
 
   protected def cast(value: Any): String = value match {
@@ -90,6 +93,7 @@ trait Helpers extends DateHandling {
 
   private var time0 = System.currentTimeMillis()
   private val times = collection.mutable.Map.empty[Int, Long]
+
   protected final def time(n: Int, prev: Int = 0) = {
     if (n < 1 || prev < 0)
       throw new IllegalArgumentException(s"Identifiers have to be positive numbers")

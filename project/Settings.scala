@@ -40,6 +40,12 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     }
   )
 
+  val shared: Seq[Def.Setting[_]] = Seq(
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+    )
+  )
+
   val js: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %%% "scala-java-time" % "2.0.0"
@@ -49,7 +55,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val jvm: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+        //        "org.scala-lang" % "scala-reflect" % scalaVersion.value,
         "org.specs2" %% "specs2-core" % "4.10.6",
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0"
       )

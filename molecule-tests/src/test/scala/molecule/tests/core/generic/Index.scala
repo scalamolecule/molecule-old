@@ -96,10 +96,16 @@ class Index extends TestSpec {
 
     system match {
       case SystemPeer =>
-        EAVT.a.get.size === 709
-        AEVT.a.get.size === 709
-        VAET.a.get.size === 349
-        AVET.a.get.size === 220
+        EAVT.a.get.size === 666
+        AEVT.a.get.size === 666
+        VAET.a.get.size === 323
+        AVET.a.get.size === 205
+
+      //      case SystemPeer =>
+      //        EAVT.a.get.size === 709
+      //        AEVT.a.get.size === 709
+      //        VAET.a.get.size === 349
+      //        AVET.a.get.size === 220
 
       case SystemDevLocal =>
         EAVT.a.get.size === 569

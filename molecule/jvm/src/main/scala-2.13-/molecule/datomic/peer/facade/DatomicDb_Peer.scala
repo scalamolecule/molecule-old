@@ -3,8 +3,6 @@ package molecule.datomic.peer.facade
 import java.{lang, util}
 import java.util.Date
 import datomic.{Database, Peer, Util, Datom => PeerDatom}
-import molecule.datomic.base.api.DatomicEntity
-import molecule.datomic.base.facade.{Conn, DatomicDb}
 
 /** Datomic Db facade for peer api.
  *

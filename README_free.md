@@ -53,7 +53,7 @@ Now you can run molecule tests or projects against Datomic free.
 ## Test
 Test in IDE or with sbt:
 ```
-sbt
+sbt -Dfree=true
 
 // Single test (2.13)
 sbt:molecule> testOnly molecule.tests.core.ref.TwoStepQueries

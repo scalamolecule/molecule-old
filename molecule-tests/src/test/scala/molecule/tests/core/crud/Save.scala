@@ -3,8 +3,8 @@ package molecule.tests.core.crud
 import datomicClient.ClojureBridge
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out9._
-import molecule.datomic.base.facade.TxReport
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.base.facade.TxReport
 import molecule.datomic.base.util.SystemPeer
 import molecule.setup.TestSpec
 import scala.concurrent.ExecutionContext.Implicits.global

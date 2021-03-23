@@ -6,8 +6,6 @@ import datomic.db.DbId
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Db, TxReport => clientTxReport}
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.TxReport
-import molecule.datomic.base.facade.exception.DatomicFacadeException
 import molecule.datomic.base.util.Inspect
 import scala.collection.JavaConverters._
 

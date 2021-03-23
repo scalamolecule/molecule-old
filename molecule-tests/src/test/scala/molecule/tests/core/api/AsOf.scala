@@ -3,8 +3,8 @@ package molecule.tests.core.api
 import java.util.Date
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out1._
-import molecule.datomic.base.facade.TxReport
 import molecule.core.util.JavaUtil
+import molecule.datomic.base.facade.TxReport
 import molecule.setup.TestSpec
 
 

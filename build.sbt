@@ -3,7 +3,9 @@ import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 lazy val molecule = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
-  .settings(Settings.base ++
+  .settings(
+    Settings.base ++
+    Settings.shared ++
     Publish.withoutDocs // save time without doc creation for publishLocal
     //      Publish.withDocs // make docs for publishSigned
   )
@@ -17,7 +19,8 @@ lazy val jvm = molecule.jvm
 lazy val tests = project.in(file("molecule-tests"))
   .enablePlugins(BuildInfoPlugin, MoleculePlugin)
   .dependsOn(jvm)
-  .settings(Settings.base ++
+  .settings(
+    Settings.base ++
     Settings.jvm ++
     Settings.moleculeTests ++
     Settings.tests ++

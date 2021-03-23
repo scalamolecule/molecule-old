@@ -1,5 +1,6 @@
 package molecule.tests.core.transaction
 
+import datomic.Peer
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.in3_out10._
 import molecule.core.ops.exception.VerifyModelException
@@ -325,7 +326,7 @@ class TxMetaData extends TestSpec {
     val tx2 = retract(Seq(e1, e2), Ns.str("b")).tx
 
     if (system == SystemPeerServer) {
-      val (t1, t2) = (conn.getT(tx1), conn.getT(tx2))
+      val (t1, t2) = (Peer.toT(tx1), Peer.toT(tx2))
 
       // History with transaction data
       Ns.int.tx.t.op.Tx(Ns.str).getHistory

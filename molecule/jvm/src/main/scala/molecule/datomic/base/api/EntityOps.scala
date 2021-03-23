@@ -5,7 +5,7 @@ import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.Model2Transaction
+import molecule.datomic.base.transform.Model2DatomicStmts
 import molecule.datomic.base.util.Inspect
 import molecule.datomic.client.facade.{Conn_Client, DatomicEntity_Client}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicEntity_Peer}
@@ -70,13 +70,13 @@ trait EntityOps {
     } else if (txMetaDataMolecules.size == 1) {
       val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
       VerifyModel(txMetaDataModel, "save")
-      Model2Transaction(conn, txMetaDataModel).saveStmts()
+      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
     } else {
       val txMetaDataModel = Model(
         txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
       )
       VerifyModel(txMetaDataModel, "save")
-      Model2Transaction(conn, txMetaDataModel).saveStmts()
+      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
     }
 
     val stmtss = Seq(retractStmts ++ txMetaDataStmts)
@@ -113,13 +113,13 @@ trait EntityOps {
     } else if (txMetaDataMolecules.size == 1) {
       val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
       VerifyModel(txMetaDataModel, "save")
-      Model2Transaction(conn, txMetaDataModel).saveStmts()
+      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
     } else {
       val txMetaDataModel = Model(
         txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
       )
       VerifyModel(txMetaDataModel, "save")
-      Model2Transaction(conn, txMetaDataModel).saveStmts()
+      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
     }
 
     val stmtss = Seq(retractStmts ++ txMetaDataStmts)
@@ -177,7 +177,7 @@ trait EntityOps {
       txMetaDataModel
     }
 
-    val transformer = Model2Transaction(conn, txMetaDataModel)
+    val transformer = Model2DatomicStmts(conn, txMetaDataModel)
 
     val stmts = try {
       Seq(retractStmts ++ transformer.saveStmts())

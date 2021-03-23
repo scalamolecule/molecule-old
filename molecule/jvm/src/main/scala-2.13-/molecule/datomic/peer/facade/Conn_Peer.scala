@@ -9,13 +9,13 @@ import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.util.{BridgeDatomicFuture, Helpers, QueryOpsClojure}
-import molecule.datomic.base.api.DatomicEntity
+import molecule.core.transform.Model2Statements
+import molecule.core.util.{Helpers, QueryOpsClojure}
 import molecule.datomic.base.ast.query.{Query, QueryExpr}
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Datomic, DatomicDb, TxReport}
-import molecule.datomic.base.transform.{Query2String, QueryOptimizer}
+import molecule.datomic.base.transform.{Model2DatomicStmts, Query2String, QueryOptimizer}
+import molecule.datomic.base.util.Inspect
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.util.control.NonFatal
@@ -23,6 +23,7 @@ import scala.util.control.NonFatal
 /** Factory methods to create facade to Datomic Connection. */
 object Conn_Peer {
   def apply(uri: String): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri))
+
   def apply(datomicConn: datomic.Connection): Conn_Peer = new Conn_Peer(datomicConn)
 
   // Constructor for transaction functions where db is supplied inside transaction by transactor
@@ -35,7 +36,7 @@ object Conn_Peer {
 /** Facade to Datomic connection for peer api.
   * */
 class Conn_Peer(val peerConn: datomic.Connection)
-  extends Conn_Datomic with Helpers with BridgeDatomicFuture {
+  extends Conn_Datomic with Helpers {
 
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over test db)
@@ -497,6 +498,20 @@ class Conn_Peer(val peerConn: datomic.Connection)
   }
 
   def sync: ListenableFuture[Database] = peerConn.sync()
+
   def sync(t: Long): ListenableFuture[Database] = peerConn.sync(t)
+
   def syncIndex(t: Long): ListenableFuture[Database] = peerConn.syncIndex(t)
+
+  def model2stmts(model: Model): Model2Statements = Model2DatomicStmts(this, model)
+
+  def inspect(
+    clazz: String,
+    threshold: Int,
+    max: Int = 9999,
+    showStackTrace: Boolean = false,
+    maxLevel: Int = 99,
+    showBi: Boolean = false
+  )(id: Int, params: Any*): Unit =
+    Inspect(clazz, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }

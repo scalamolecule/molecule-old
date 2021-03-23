@@ -12,13 +12,15 @@ import datomicScala.client.api.sync.{Client, Db, Datomic => clientDatomic}
 import datomicScala.client.api.{Datom, sync}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.util.{BridgeDatomicFuture, Helpers, QueryOpsClojure}
+import molecule.core.transform.Model2Statements
+import molecule.core.util.{Helpers, QueryOpsClojure}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.{Query, QueryExpr}
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic, DatomicDb, TxReport}
-import molecule.datomic.base.transform.{Query2String, QueryOptimizer}
+import molecule.datomic.base.transform.{Model2DatomicStmts, Query2String, QueryOptimizer}
+import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
@@ -27,7 +29,7 @@ import scala.util.control.NonFatal
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
  * */
 case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
-  extends Conn_Datomic with Helpers with BridgeDatomicFuture {
+  extends Conn_Datomic with Helpers {
 
   val clientConn: sync.Connection = client.connect(dbName)
 
@@ -551,4 +553,16 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
     }
     jColl
   }
+
+  def model2stmts(model: Model): Model2Statements = Model2DatomicStmts(this, model)
+
+  def inspect(
+    clazz: String,
+    threshold: Int,
+    max: Int = 9999,
+    showStackTrace: Boolean = false,
+    maxLevel: Int = 99,
+    showBi: Boolean = false
+  )(id: Int, params: Any*): Unit =
+    Inspect(clazz, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }

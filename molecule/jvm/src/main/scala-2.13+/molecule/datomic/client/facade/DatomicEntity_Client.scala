@@ -8,7 +8,7 @@ import datomic.Util
 import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
 import molecule.core.util.RegexMatching
-import molecule.datomic.base.api.DatomicEntity
+import molecule.datomic.base.api.DatomicEntityImpl
 import scala.jdk.CollectionConverters._
 import scala.language.existentials
 
@@ -22,7 +22,7 @@ case class DatomicEntity_Client(
   conn: Conn_Client,
   eid: Any,
   showKW: Boolean = true
-) extends DatomicEntity(conn, eid) with RegexMatching {
+) extends DatomicEntityImpl(conn, eid) with RegexMatching {
 
   private def getThisLevel(eid: Any): Map[String, Any] = {
     val res = conn.q(

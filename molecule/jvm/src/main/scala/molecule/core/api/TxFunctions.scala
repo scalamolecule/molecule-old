@@ -9,10 +9,10 @@ import molecule.core.macros.exception.TxFnException
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements.{Composite, Model, TxMetaData}
 import molecule.core.macros.TxFunctionCall
-import molecule.core.util.{BridgeDatomicFuture, Helpers}
+import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.Model2Transaction
+import molecule.datomic.base.transform.Model2DatomicStmts
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.language.experimental.macros
 import scala.language.implicitConversions
@@ -152,7 +152,7 @@ trait TxFunctions {
 }
 
 
-object TxFunctions extends Helpers with BridgeDatomicFuture {
+object TxFunctions extends Helpers {
   def excMissingScalaJar(e: Throwable): String =
     s"""The Datomic transactor needs any dependencies in transactor
        |functions to be available on its classpath. Please copy the scala-library jar to the Datomic transactor lib.
@@ -229,7 +229,7 @@ object TxFunctions extends Helpers with BridgeDatomicFuture {
       }
     }
     val txModel       = Model(Seq(TxMetaData(txElements)))
-    val txTransformer = Model2Transaction(conn, txModel)
+    val txTransformer = Model2DatomicStmts(conn, txModel)
     txTransformer.saveStmts()
   } else Nil
 

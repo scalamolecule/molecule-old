@@ -9,14 +9,16 @@ import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.util.{BridgeDatomicFuture, Helpers, QueryOpsClojure}
+import molecule.core.transform.Model2Statements
+import molecule.core.util.{Helpers, QueryOpsClojure}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.{Query, QueryExpr}
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic, DatomicDb, TxReport}
-import molecule.datomic.base.transform.{Query2String, QueryOptimizer}
-import scala.concurrent.{ExecutionContext, Future, blocking}
+import molecule.datomic.base.transform.{Model2DatomicStmts, Query2String, QueryOptimizer}
+import molecule.datomic.base.util.Inspect
+import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
@@ -36,7 +38,7 @@ object Conn_Peer {
 /** Facade to Datomic connection for peer api.
   * */
 class Conn_Peer(val peerConn: datomic.Connection)
-  extends Conn_Datomic with Helpers with BridgeDatomicFuture {
+  extends Conn_Datomic with Helpers {
 
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over test db)
@@ -213,8 +215,29 @@ class Conn_Peer(val peerConn: datomic.Connection)
       }
     } else {
       // Live transaction
-      val moleculeInvocationFuture = try {
-        bridgeDatomicFuture(peerConn.transactAsync(javaStmts))
+      val moleculeInvocationFuture: Future[util.Map[_, _]] = try {
+        val listenableFuture = peerConn.transactAsync(javaStmts)
+        val p                = Promise[util.Map[_, _]]()
+        listenableFuture.addListener(
+          new java.lang.Runnable {
+            override def run: Unit = {
+              try {
+                p.success(listenableFuture.get())
+              } catch {
+                case e: java.util.concurrent.ExecutionException =>
+                  p.failure(e.getCause)
+                case NonFatal(e)                                =>
+                  p.failure(e)
+              }
+              ()
+            }
+          },
+          (arg0: Runnable) => ec.execute(arg0)
+        )
+        p.future
+
+        //        bridgeDatomicFuture(peerConn.transactAsync(javaStmts))
+
       } catch {
         case NonFatal(ex) => Future.failed(ex)
       }
@@ -502,4 +525,16 @@ class Conn_Peer(val peerConn: datomic.Connection)
   def sync(t: Long): ListenableFuture[Database] = peerConn.sync(t)
 
   def syncIndex(t: Long): ListenableFuture[Database] = peerConn.syncIndex(t)
+
+  def model2stmts(model: Model): Model2Statements = Model2DatomicStmts(this, model)
+
+  def inspect(
+    clazz: String,
+    threshold: Int,
+    max: Int = 9999,
+    showStackTrace: Boolean = false,
+    maxLevel: Int = 99,
+    showBi: Boolean = false
+  )(id: Int, params: Any*): Unit =
+    Inspect(clazz, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }

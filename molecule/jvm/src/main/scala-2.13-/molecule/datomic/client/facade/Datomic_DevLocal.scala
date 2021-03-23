@@ -5,7 +5,6 @@ import datomic.Util.read
 import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
-import molecule.datomic.base.facade.exception.DatomicFacadeException
 import scala.collection.JavaConverters._
 
 

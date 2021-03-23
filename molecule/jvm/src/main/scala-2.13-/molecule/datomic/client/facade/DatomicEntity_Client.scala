@@ -6,9 +6,7 @@ import clojure.lang.{MapEntry, PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util
 import datomicClient.anomaly.Fault
-import molecule.core.api.exception.EntityException
 import molecule.core.util.RegexMatching
-import molecule.datomic.base.api.DatomicEntity
 import scala.collection.JavaConverters._
 import scala.language.existentials
 
@@ -22,7 +20,7 @@ case class DatomicEntity_Client(
   conn: Conn_Client,
   eid: Any,
   showKW: Boolean = true
-) extends DatomicEntity(conn, eid) with RegexMatching {
+) extends DatomicEntityImpl(conn, eid) with RegexMatching {
 
   private def getThisLevel(eid: Any): Map[String, Any] = {
     val res = conn.q(

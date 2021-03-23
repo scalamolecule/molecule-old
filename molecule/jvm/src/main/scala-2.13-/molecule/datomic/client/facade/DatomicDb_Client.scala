@@ -6,8 +6,6 @@ import java.util.stream.{Stream => jStream}
 import datomic.{Peer, Util}
 import datomicScala.client.api.sync.Db
 import datomicScala.client.api.{Datom => ClientDatom}
-import molecule.datomic.base.api.DatomicEntity
-import molecule.datomic.base.facade.{Conn, DatomicDb}
 import scala.collection.JavaConverters._
 
 /** Datomic Db facade for client api (peer-server/cloud/dev-local).

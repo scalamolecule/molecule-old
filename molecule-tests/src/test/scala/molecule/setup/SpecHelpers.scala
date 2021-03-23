@@ -6,7 +6,7 @@ import molecule.core.ast.elements.Model
 import molecule.datomic.base.ast.query.Query
 import molecule.core.util.testing.MoleculeTestHelper
 import molecule.datomic.base.facade.Conn
-import molecule.datomic.base.transform.Model2Transaction
+import molecule.datomic.base.transform.Model2DatomicStmts
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 
@@ -30,12 +30,12 @@ trait SpecHelpers extends Specification with MoleculeTestHelper {
       def -->(data: Seq[Seq[Any]]) = new {
         def -->(txString: String) = {
           //          val (tx, _) = Model2Transaction(conn, model).tx(data)
-          val tx = Model2Transaction(conn, model).insertStmts(data).flatten
+          val tx = Model2DatomicStmts(conn, model).insertStmts(data).flatten
           formatTx(tx) === txString
         }
         // Inspect
         def --->(txString: String) = {
-          val tx = Model2Transaction(conn, model).insertStmts(data).flatten
+          val tx = Model2DatomicStmts(conn, model).insertStmts(data).flatten
           tx foreach println
           formatTx(tx) === txString
         }
@@ -49,7 +49,7 @@ trait SpecHelpers extends Specification with MoleculeTestHelper {
     def -->(data: Seq[Seq[Any]]) = new {
       def -->(txString: String) = {
         //        val (tx, _) = Model2Transaction(conn, molecule._model).tx(data)
-        val tx = Model2Transaction(conn, molecule._model).insertStmts(data).flatten
+        val tx = Model2DatomicStmts(conn, molecule._model).insertStmts(data).flatten
         formatTx(tx) === txString
       }
     }

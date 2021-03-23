@@ -3,8 +3,8 @@ package molecule.tests.core.input2
 import java.net.URI
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.in2_out3._
-import molecule.core.api.exception.Molecule_2_Exception
 import molecule.core.api._
+import molecule.core.api.exception.Molecule_2_Exception
 import molecule.setup.TestSpec
 import scala.reflect.ClassTag
 import scala.annotation.unchecked.uncheckedVariance

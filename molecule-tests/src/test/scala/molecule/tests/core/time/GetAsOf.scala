@@ -1,11 +1,9 @@
 package molecule.tests.core.time
 
-import java.util.{Collection => jCollection, List => jList}
-import datomic.Util.list
 import molecule.core.util.JavaUtil
-import molecule.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out3._
 import molecule.setup.TestSpec
+import molecule.tests.core.base.dsl.CoreTest._
 
 
 class GetAsOf extends TestSpec with JavaUtil {

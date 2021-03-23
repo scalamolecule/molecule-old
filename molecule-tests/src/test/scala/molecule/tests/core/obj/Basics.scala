@@ -50,7 +50,7 @@ class Basics extends TestSpec with Helpers {
     )
 
     // third row not returned since `str` is tacitly required
-    val List(o1, o2) = Ns.int.str_.bool$.getObjList
+    val List(o1, o2) = Ns.int.str_.bool$.getObjList.sortBy(_.int)
 
     o1.int === 1
     o1.bool$ === Some(true)
