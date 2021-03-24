@@ -5,10 +5,6 @@ import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.Model2DatomicStmts
-import molecule.datomic.base.util.Inspect
-import molecule.datomic.client.facade.{Conn_Client, DatomicEntity_Client}
-import molecule.datomic.peer.facade.{Conn_Peer, DatomicEntity_Peer}
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Operations on multiple entities.
@@ -34,11 +30,7 @@ trait EntityOps {
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  implicit final def long2Entity(id: Long)(implicit conn: Conn): DatomicEntity = conn match {
-    case conn: Conn_Peer   => DatomicEntity_Peer(conn.peerConn.db.entity(id), conn, id)
-    case conn: Conn_Client => DatomicEntity_Client(conn, id)
-  }
-
+  implicit final def long2Entity(id: Long)(implicit conn: Conn): DatomicEntity = conn.entity(id)
 
   /** Retract multiple entities with optional transaction meta data.
     * <br><br>
@@ -70,13 +62,13 @@ trait EntityOps {
     } else if (txMetaDataMolecules.size == 1) {
       val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
       VerifyModel(txMetaDataModel, "save")
-      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
+      conn.model2stmts(txMetaDataModel).saveStmts()
     } else {
       val txMetaDataModel = Model(
         txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
       )
       VerifyModel(txMetaDataModel, "save")
-      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
+      conn.model2stmts(txMetaDataModel).saveStmts()
     }
 
     val stmtss = Seq(retractStmts ++ txMetaDataStmts)
@@ -113,13 +105,13 @@ trait EntityOps {
     } else if (txMetaDataMolecules.size == 1) {
       val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
       VerifyModel(txMetaDataModel, "save")
-      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
+      conn.model2stmts(txMetaDataModel).saveStmts()
     } else {
       val txMetaDataModel = Model(
         txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
       )
       VerifyModel(txMetaDataModel, "save")
-      Model2DatomicStmts(conn, txMetaDataModel).saveStmts()
+      conn.model2stmts(txMetaDataModel).saveStmts()
     }
 
     val stmtss = Seq(retractStmts ++ txMetaDataStmts)
@@ -177,16 +169,16 @@ trait EntityOps {
       txMetaDataModel
     }
 
-    val transformer = Model2DatomicStmts(conn, txMetaDataModel)
+    val transformer = conn.model2stmts(txMetaDataModel)
 
     val stmts = try {
       Seq(retractStmts ++ transformer.saveStmts())
     } catch {
       case e: Throwable =>
         println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        Inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.stmtsModel)
+        conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.stmtsModel)
         throw e
     }
-    Inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.stmtsModel, stmts)
+    conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.stmtsModel, stmts)
   }
 }
