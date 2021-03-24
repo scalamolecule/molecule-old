@@ -1,18 +1,13 @@
 package molecule.core.api
 
-import java.util
 import java.util.concurrent.{ExecutionException => ExecutionExc}
-import datomic.Peer.function
-import datomic.Util
-import datomic.Util.{list, read}
-import molecule.core.macros.exception.TxFnException
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements.{Composite, Model, TxMetaData}
 import molecule.core.macros.TxFunctionCall
-import molecule.core.util.Helpers
+import molecule.core.macros.exception.TxFnException
+import molecule.core.util.{Helpers, JavaUtil}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.Model2DatomicStmts
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.language.experimental.macros
 import scala.language.implicitConversions
@@ -152,7 +147,10 @@ trait TxFunctions {
 }
 
 
-object TxFunctions extends Helpers {
+object TxFunctions extends Helpers with JavaUtil {
+
+  import Util._
+
   def excMissingScalaJar(e: Throwable): String =
     s"""The Datomic transactor needs any dependencies in transactor
        |functions to be available on its classpath. Please copy the scala-library jar to the Datomic transactor lib.
@@ -205,45 +203,19 @@ object TxFunctions extends Helpers {
     case NonFatal(e) => throw new TxFnException(e.getMessage.drop(redundant))
   }
 
-  def buildTxFnInstall(txFn: String, args: Seq[Any]): util.Map[_, _] = {
-    val params = args.indices.map(i => ('a' + i).toChar.toString)
-    Util.map(
-      read(":db/ident"), read(s":$txFn"),
-      read(":db/fn"), function(Util.map(
-        read(":lang"), "java",
-        read(":params"), list(read("txDb") +: read("txMetaData") +: params.map(read): _*),
-        read(":code"), s"return $txFn(txDb, txMetaData, ${params.mkString(", ")});"
-      )),
-    )
-  }
-  def buildTxFnInstall2(txFn: String, args: Seq[Any]): String = {
-    val params = args.indices.map(i => ('a' + i).toChar.toString)
-    s"""
-      {
-        :db/ident :$txFn
-        :db/fn    (function {
-          :lang   "java"
-          :params [txDb txMetaData ${params.mkString(" ")}]
-          :code   "return $txFn(txDb, txMetaData, ${params.mkString(", ")});"
-        })
-      }
-      """
-  }
-
 
   private[this] def txStmts(
     txMolecules: Seq[Molecule],
     conn: Conn
   ): Seq[Statement] = if (txMolecules.nonEmpty) {
-    val txElements    = txMolecules.flatMap { mol =>
+    val txElements = txMolecules.flatMap { mol =>
       mol._model.elements.flatMap {
         case Composite(elements) => elements
         case element             => Seq(element)
       }
     }
-    val txModel       = Model(Seq(TxMetaData(txElements)))
-    val txTransformer = Model2DatomicStmts(conn, txModel)
-    txTransformer.saveStmts()
+    val txModel    = Model(Seq(TxMetaData(txElements)))
+    conn.model2stmts(txModel).saveStmts()
   } else Nil
 
 
@@ -258,13 +230,12 @@ object TxFunctions extends Helpers {
   )(implicit conn: Conn): TxReport = tryTransactTxFn {
 
     // Install transaction function if not installed yet
-    if (conn.db.pull("[*]", read(s":$txFn")).size() == 1) {
-//      conn.transact(buildTxFnInstall2(txFn, args))
-      conn.transact(list(buildTxFnInstall(txFn, args)))
+    if (conn.db.pull("[*]", s":$txFn").size() == 1) {
+      conn.transact(conn.buildTxFnInstall(txFn, args))
     }
 
     // Build transaction function call clause
-    val txFnInvocationClauses = list(list(read(txFn) +:
+    val txFnInvocationClauses = list(list(s":$txFn" +:
       txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))
 
     // Invoke transaction function and retrieve result from ListenableFuture synchronously
@@ -293,10 +264,9 @@ object TxFunctions extends Helpers {
     val txFnInstallFuture: Future[Any] = {
       // Install transaction function if not installed yet
       // todo: pull call is blocking - can we make it non-blocking too?
-      if (conn.db.pull("[*]", read(s":$txFn")).size() == 1) {
+      if (conn.db.pull("[*]", s":$txFn").size() == 1) {
         // Install tx function
-//        conn.transactAsync(buildTxFnInstall2(txFn, args))
-        conn.transactAsync(list(buildTxFnInstall(txFn, args)))
+        conn.transactAsync(conn.buildTxFnInstall(txFn, args))
       } else {
         // Tx function already installed
         Future.unit
@@ -305,7 +275,7 @@ object TxFunctions extends Helpers {
 
     txFnInstallFuture flatMap { txFnInstalled =>
       // Build transaction function call clause
-      val txFnInvocationClause = list(list(read(txFn) +:
+      val txFnInvocationClause = list(list(s":$txFn" +:
         txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))
       conn.transactAsync(txFnInvocationClause)
     }

@@ -1,13 +1,15 @@
 package molecule.datomic.peer.facade
 
-import java.{lang, util}
 import java.util.Date
+import java.{lang, util}
 import datomic.{Database, Peer, Util, Datom => PeerDatom}
+import molecule.datomic.base.api.DatomicEntity
+import molecule.datomic.base.facade.{Conn, DatomicDb}
 
 /** Datomic Db facade for peer api.
- *
- * @param peerDb
- */
+  *
+  * @param peerDb
+  */
 case class DatomicDb_Peer(peerDb: Database) extends DatomicDb {
 
   def getDatomicDb: AnyRef = peerDb

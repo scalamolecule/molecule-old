@@ -6,17 +6,15 @@ import datomic.Util.read
 import datomicClient.ClojureBridge
 import datomicScala.client.api.async.AsyncClient
 import datomicScala.client.api.sync.Client
-import molecule.core.data.SchemaTransaction
 import scala.collection.JavaConverters._
 
 /** Base Datomic facade for client api (peer-server/cloud/dev-local).
- *
- * @groupname database  Database operations
- * @groupprio 10
- *
- * @param client
- * @param clientAsync
- */
+  *
+  * @groupname database  Database operations
+  * @groupprio 10
+  * @param client
+  * @param clientAsync
+  */
 abstract class Datomic_Client(val client: Client, val clientAsync: AsyncClient)
   extends ClojureBridge {
 

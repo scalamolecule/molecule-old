@@ -174,6 +174,8 @@ trait Conn {
                    (implicit ec: ExecutionContext): Future[TxReport]
 
 
+  def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_]
+
   /** Query Datomic directly with optional Scala inputs.
     * {{{
     *   // Sample data

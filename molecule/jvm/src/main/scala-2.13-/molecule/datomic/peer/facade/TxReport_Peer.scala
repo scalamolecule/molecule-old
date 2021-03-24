@@ -5,14 +5,16 @@ import datomic.Connection.TEMPIDS
 import datomic.db.{Datum, DbId}
 import datomic.{Database, _}
 import molecule.datomic.base.ast.transactionModel._
+import molecule.datomic.base.facade.TxReport
+import molecule.datomic.base.facade.exception.DatomicFacadeException
 import molecule.datomic.base.util.Inspect
 import scala.collection.JavaConverters._
 
 /** Datomic TxReport facade for peer api.
- *
- * @param rawTxReport
- * @param stmtss
- */
+  *
+  * @param rawTxReport
+  * @param stmtss
+  */
 case class TxReport_Peer(
   rawTxReport: jMap[_, _],
   stmtss: Seq[Seq[Statement]] = Nil

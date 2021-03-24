@@ -9,8 +9,6 @@ import molecule.core.ops.VerifyModel
 import molecule.core.util.Quoted
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.Model2DatomicStmts
-import molecule.datomic.base.util.Inspect
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials

@@ -1,17 +1,18 @@
 package molecule.datomic.peer.facade
 
 import java.util.{Date, UUID, Collection => jCollection}
+import molecule.core.api.exception.EntityException
 import molecule.datomic.base.api.DatomicEntityImpl
 import scala.collection.JavaConverters._
 import scala.language.existentials
 
 /** Datomic Entity facade for peer api.
- *
- * @param entity
- * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
- * @param eid    Entity id of type Object
- * @param showKW
- */
+  *
+  * @param entity
+  * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+  * @param eid  Entity id of type Object
+  * @param showKW
+  */
 case class DatomicEntity_Peer(
   entity: datomic.Entity,
   conn: Conn_Peer,
@@ -20,11 +21,12 @@ case class DatomicEntity_Peer(
 ) extends DatomicEntityImpl(conn, eid) {
 
   def keySet: Set[String] = entity.keySet().asScala.toSet
+
   def keys: List[String] = entity.keySet().asScala.toList
 
   def rawValue(key: String): Any = {
     val raw = entity.get(key)
-    val b = raw
+    val b   = raw
     b
   }
 
@@ -75,14 +77,19 @@ case class DatomicEntity_Peer(
         new Iterable[Any] {
           override def iterator = new Iterator[Any] {
             private val jIter = col.iterator.asInstanceOf[java.util.Iterator[AnyRef]]
+
             override def hasNext = jIter.hasNext
+
             override def next() = if (depth < maxDepth)
               toScala(key, Some(jIter.next()), depth, maxDepth, tpe)
             else
               jIter.next()
           }
+
           override def isEmpty = col.isEmpty
+
           override def size = col.size
+
           override def toString = col.toString
         }
 

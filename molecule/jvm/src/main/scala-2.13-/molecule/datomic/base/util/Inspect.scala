@@ -3,6 +3,7 @@ package molecule.datomic.base.util
 import java.util.{List => jList}
 import molecule.core.ast.elements._
 import molecule.datomic.base.ast.transactionModel._
+import molecule.datomic.base.facade.TxReport
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
@@ -18,6 +19,7 @@ private[molecule] case class Inspect(
   // Helpers ..........................................
 
   def padS(longest: Int, str: String) = pad(longest, str.length) + "  "
+
   def pad(longest: Int, shorter: Int): String = if (longest > shorter) " " * (longest - shorter) + " " else ""
 
 
@@ -72,7 +74,7 @@ private[molecule] case class Inspect(
 
           case l: Iterable[_] =>
             l.headOption match {
-              case None                         =>
+              case None =>
                 indent + "List()"
 
               case Some(stmt: Statement) =>
@@ -95,10 +97,10 @@ private[molecule] case class Inspect(
                 indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString(",\n") + ")"
             }
 
-          case Nested(bond, nested)     => indent + "Nested(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
-          case TxMetaData(elements)     => indent + "TxMetaData(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
+          case Nested(bond, nested)   => indent + "Nested(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
+          case TxMetaData(elements)   => indent + "TxMetaData(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
           case Composite(elements)    => indent + "Composite(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
-          case m: Model       => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
+          case m: Model               => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
           case m: java.util.Map[_, _] => {
             if (m.size() == 4 && m.asScala.keys.map(_.toString).toSeq.contains(":db-before")) {
               val tx = m.asScala.toList

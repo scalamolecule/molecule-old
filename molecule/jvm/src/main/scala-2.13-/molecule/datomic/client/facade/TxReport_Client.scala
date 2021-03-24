@@ -6,14 +6,16 @@ import datomic.db.DbId
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Db, TxReport => clientTxReport}
 import molecule.datomic.base.ast.transactionModel._
+import molecule.datomic.base.facade.TxReport
+import molecule.datomic.base.facade.exception.DatomicFacadeException
 import molecule.datomic.base.util.Inspect
 import scala.collection.JavaConverters._
 
 /** Datomic TxReport facade for client api (peer-server/cloud/dev-local).
- *
- * @param clientTxReport
- * @param stmtss
- */
+  *
+  * @param clientTxReport
+  * @param stmtss
+  */
 case class TxReport_Client(
   clientTxReport: clientTxReport,
   stmtss: Seq[Seq[Statement]] = Nil

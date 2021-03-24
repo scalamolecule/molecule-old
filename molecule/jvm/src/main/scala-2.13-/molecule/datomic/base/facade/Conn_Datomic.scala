@@ -1,15 +1,67 @@
 package molecule.datomic.base.facade
 
+import java.io.{Reader, StringReader}
 import java.net.URI
-import java.util.{Collection => jCollection, Map => jMap}
+import java.util.{Collection => jCollection, List => jList, Map => jMap}
 import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
+import datomic.Peer.function
+import datomic.Util
+import datomic.Util.{list, read, readAll}
+import molecule.core.ast.elements.Model
+import molecule.core.transform.Model2Statements
+import molecule.datomic.base.ast.tempDb.TempDb
+import molecule.datomic.base.ast.transactionModel.{Statement, toJava}
+import molecule.datomic.base.transform.Model2DatomicStmts
+import molecule.datomic.base.util.Inspect
 import scala.collection.JavaConverters._
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Base class for Datomic connection facade
- *
- */
+  *
+  */
 trait Conn_Datomic extends Conn {
+
+  // Temporary db for ad-hoc queries against time variation dbs
+  // (takes precedence over test db)
+  protected var _adhocDb: Option[TempDb] = None
+
+  def transact(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]]): TxReport =
+    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  def transact(edn: String, scalaStmts: Seq[Seq[Statement]]): TxReport =
+    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  def transact(stmtsReader: Reader): TxReport =
+    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
+
+  def transact(edn: String): TxReport =
+    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+
+  def transact(scalaStmts: Seq[Seq[Statement]]): TxReport =
+    transact(toJava(scalaStmts), scalaStmts)
+
+
+  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]])
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  def transactAsync(edn: String, scalaStmts: Seq[Seq[Statement]])
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  def transactAsync(stmtsReader: Reader)
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
+
+  def transactAsync(edn: String)
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+
+  def transactAsync(scalaStmts: Seq[Seq[Statement]])
+                   (implicit ec: ExecutionContext): Future[TxReport] =
+    transactAsync(toJava(scalaStmts), scalaStmts)
+
 
   def q(db: DatomicDb, query: String, inputs: Seq[Any]): List[List[AnyRef]] = {
     val raw = qRaw(db, query, inputs)
@@ -31,4 +83,28 @@ trait Conn_Datomic extends Conn {
         )
     }
   }
+
+  def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = {
+    val params = args.indices.map(i => ('a' + i).toChar.toString)
+    Util.list(Util.map(
+      read(":db/ident"), read(s":$txFn"),
+      read(":db/fn"), function(Util.map(
+        read(":lang"), "java",
+        read(":params"), list(read("txDb") +: read("txMetaData") +: params.map(read): _*),
+        read(":code"), s"return $txFn(txDb, txMetaData, ${params.mkString(", ")});"
+      ))
+    ))
+  }
+
+  def model2stmts(model: Model): Model2Statements = Model2DatomicStmts(this, model)
+
+  def inspect(
+    clazz: String,
+    threshold: Int,
+    max: Int = 9999,
+    showStackTrace: Boolean = false,
+    maxLevel: Int = 99,
+    showBi: Boolean = false
+  )(id: Int, params: Any*): Unit =
+    Inspect(clazz, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }

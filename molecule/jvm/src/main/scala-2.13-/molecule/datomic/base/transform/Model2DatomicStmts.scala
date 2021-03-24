@@ -9,6 +9,7 @@ import molecule.core.ast.elements._
 import molecule.core.transform.Model2Statements
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
+import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import molecule.datomic.base.util.Inspect
 import scala.collection.JavaConverters._

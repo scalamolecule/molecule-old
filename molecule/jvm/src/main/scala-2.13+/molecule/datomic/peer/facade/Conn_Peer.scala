@@ -6,7 +6,7 @@ import java.{lang, util}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
-import datomic.{Database, Datom, ListenableFuture, Peer}
+import datomic.{Database, Datom, ListenableFuture, Peer, Util}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.transform.Model2Statements
@@ -39,10 +39,6 @@ object Conn_Peer {
   * */
 class Conn_Peer(val peerConn: datomic.Connection)
   extends Conn_Datomic with Helpers {
-
-  // Temporary db for ad-hoc queries against time variation dbs
-  // (takes precedence over test db)
-  protected var _adhocDb: Option[TempDb] = None
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
@@ -178,22 +174,6 @@ class Conn_Peer(val peerConn: datomic.Connection)
     }
   }
 
-  def transact(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]]): TxReport =
-    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
-
-  def transact(edn: String, scalaStmts: Seq[Seq[Statement]]): TxReport =
-    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
-
-  def transact(stmtsReader: Reader): TxReport =
-    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
-
-  def transact(edn: String): TxReport =
-    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
-
-  def transact(scalaStmts: Seq[Seq[Statement]]): TxReport =
-    transact(toJava(scalaStmts), scalaStmts)
-
-
   def transactAsync(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil)
                    (implicit ec: ExecutionContext): Future[TxReport] = {
     if (_adhocDb.isDefined) {
@@ -235,9 +215,6 @@ class Conn_Peer(val peerConn: datomic.Connection)
           (arg0: Runnable) => ec.execute(arg0)
         )
         p.future
-
-        //        bridgeDatomicFuture(peerConn.transactAsync(javaStmts))
-
       } catch {
         case NonFatal(ex) => Future.failed(ex)
       }
@@ -246,27 +223,6 @@ class Conn_Peer(val peerConn: datomic.Connection)
       }
     }
   }
-
-  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
-
-  def transactAsync(edn: String, scalaStmts: Seq[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
-
-  def transactAsync(stmtsReader: Reader)
-                   (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
-
-  def transactAsync(edn: String)
-                   (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
-
-  def transactAsync(scalaStmts: Seq[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(toJava(scalaStmts), scalaStmts)
-
 
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any]): jCollection[jList[AnyRef]] = {
     val inputs = inputs0.map {
@@ -525,16 +481,4 @@ class Conn_Peer(val peerConn: datomic.Connection)
   def sync(t: Long): ListenableFuture[Database] = peerConn.sync(t)
 
   def syncIndex(t: Long): ListenableFuture[Database] = peerConn.syncIndex(t)
-
-  def model2stmts(model: Model): Model2Statements = Model2DatomicStmts(this, model)
-
-  def inspect(
-    clazz: String,
-    threshold: Int,
-    max: Int = 9999,
-    showStackTrace: Boolean = false,
-    maxLevel: Int = 99,
-    showBi: Boolean = false
-  )(id: Int, params: Any*): Unit =
-    Inspect(clazz, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }
