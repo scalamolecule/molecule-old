@@ -216,6 +216,19 @@ object TxFunctions extends Helpers {
       )),
     )
   }
+  def buildTxFnInstall2(txFn: String, args: Seq[Any]): String = {
+    val params = args.indices.map(i => ('a' + i).toChar.toString)
+    s"""
+      {
+        :db/ident :$txFn
+        :db/fn    (function {
+          :lang   "java"
+          :params [txDb txMetaData ${params.mkString(" ")}]
+          :code   "return $txFn(txDb, txMetaData, ${params.mkString(", ")});"
+        })
+      }
+      """
+  }
 
 
   private[this] def txStmts(
@@ -246,6 +259,7 @@ object TxFunctions extends Helpers {
 
     // Install transaction function if not installed yet
     if (conn.db.pull("[*]", read(s":$txFn")).size() == 1) {
+//      conn.transact(buildTxFnInstall2(txFn, args))
       conn.transact(list(buildTxFnInstall(txFn, args)))
     }
 
@@ -281,6 +295,7 @@ object TxFunctions extends Helpers {
       // todo: pull call is blocking - can we make it non-blocking too?
       if (conn.db.pull("[*]", read(s":$txFn")).size() == 1) {
         // Install tx function
+//        conn.transactAsync(buildTxFnInstall2(txFn, args))
         conn.transactAsync(list(buildTxFnInstall(txFn, args)))
       } else {
         // Tx function already installed

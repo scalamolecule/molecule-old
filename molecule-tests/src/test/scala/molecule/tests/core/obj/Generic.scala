@@ -79,7 +79,7 @@ class Generic extends TestSpec with Helpers {
       .t.tx.txInstant.getObj
 
     o1.part === "db.part/user"
-    o1.id === 64
+    o1.id === 73
     o1.a === ":Ns/int"
     o1.nsFull === "Ns"
     o1.ns === "Ns"

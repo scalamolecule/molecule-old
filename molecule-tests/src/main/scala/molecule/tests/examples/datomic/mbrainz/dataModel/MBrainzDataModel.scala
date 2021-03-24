@@ -85,8 +85,8 @@ object MBrainzDataModel {
   trait Track {
     val position     = oneLong
     val duration     = oneLong
-    val artistCredit = oneString.fulltext
     val name         = oneString.fulltext
     val artists      = many[Artist]
+    val artistCredit = oneString.fulltext
   }
 }

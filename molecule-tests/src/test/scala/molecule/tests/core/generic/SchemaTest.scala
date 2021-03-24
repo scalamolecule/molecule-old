@@ -134,8 +134,8 @@ class SchemaTest extends TestSpec {
       Schema.id_.attr.get(3) === List("floats", "double", "str1")
 
       // We can though filter by one or more tacit attribute ids
-      Schema.id_(a1).attr.get === List("byteMap")
-      Schema.id_(a2, a3).attr.get === List("int1", "enum1")
+      Schema.id_(a1).attr.get === List("longMap")
+      Schema.id_(a2, a3).attr.get === List("doubleMap", "boolMap")
 
       Schema.id_.not(a1).attr.get.size === attrCount - 1
       Schema.id_.not(a2, a3).attr.get.size === attrCount - 2

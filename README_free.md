@@ -46,7 +46,7 @@ While the transactor is running, create a new tab/process in the terminal to run
     wget https://s3.amazonaws.com/mbrainz/datomic-mbrainz-1968-1973-backup-2017-07-20.tar -O mbrainz.tar 
     tar -xvf mbrainz.tar -C samples 
     rm mbrainz.tar 
-    bin/datomic restore-db file://`pwd`/samples/mbrainz-1968-1973 datomic:free://localhost:4334/mbrainz-1968-1973
+    bin/datomic restore-db file://`pwd`/samples/mbrainz-1968-1973 datomic:dev://localhost:4334/mbrainz-1968-1973
 
 Now you can run molecule tests or projects against Datomic free.
 

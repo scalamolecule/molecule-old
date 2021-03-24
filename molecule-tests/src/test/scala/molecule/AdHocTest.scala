@@ -2,7 +2,10 @@ package molecule
 import molecule.datomic.api.in3_out10._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.peer.facade.Datomic_Peer
+import molecule.datomic.peer.facade.Datomic_Peer._
+
 import molecule.tests.core.base.schema.CoreTestSchema
+import molecule.tests.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 import org.specs2.mutable.Specification
 
 
@@ -78,9 +81,10 @@ class AdHocTest extends Specification {
   //      ok
   //    }
 
+
+
   "core" >> {
     import molecule.tests.core.base.dsl.CoreTest._
-    import molecule.datomic.peer.facade.Datomic_Peer._
 
     implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
 
