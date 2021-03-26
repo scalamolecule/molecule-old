@@ -1,13 +1,14 @@
 package molecule
+
+import _root_.datomic.Peer
 import molecule.datomic.api.in3_out10._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.peer.facade.Datomic_Peer
 import molecule.datomic.peer.facade.Datomic_Peer._
-
 import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 import org.specs2.mutable.Specification
-
+import scala.jdk.CollectionConverters._
 
 //class AdHocTest extends molecule.setup.TestSpec with Helpers {
 class AdHocTest extends Specification {
@@ -84,12 +85,16 @@ class AdHocTest extends Specification {
 
 
   "core" >> {
-    import molecule.tests.core.base.dsl.CoreTest._
+//    import molecule.tests.core.base.dsl.CoreTest._
+//
+//    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
+//
+//    Ns.int(0).save
+//    Ns.int.get.head === 0
 
-    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
-
-    Ns.int(0).save
-    Ns.int.get.head === 0
+    println(
+      Peer.getDatabaseNames("datomic:dev://localhost:4334/*").asScala.toList
+    )
 
     ok
   }

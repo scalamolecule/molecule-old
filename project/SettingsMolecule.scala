@@ -11,7 +11,7 @@ trait SettingsMolecule {
     moduleName := "molecule-tests",
 
     // Generate Molecule boilerplate code with `sbt clean compile -Dmolecule=true`
-    moleculePluginActive := sys.props.get("molecule") == Some("true"),
+    moleculePluginActive := sys.props.get("molecule").contains("true"),
     moleculeDataModelPaths := Seq(
       "molecule/tests/core/base",
       "molecule/tests/core/bidirectionals",

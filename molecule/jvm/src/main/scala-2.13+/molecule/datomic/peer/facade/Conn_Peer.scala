@@ -38,7 +38,7 @@ object Conn_Peer {
 /** Facade to Datomic connection for peer api.
   * */
 class Conn_Peer(val peerConn: datomic.Connection)
-  extends Conn_Datomic with Helpers {
+  extends Conn_Peer_api with Conn_Datomic with Helpers {
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)

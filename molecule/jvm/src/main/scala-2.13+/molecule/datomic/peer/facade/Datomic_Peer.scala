@@ -6,13 +6,12 @@ import molecule.core.data.SchemaTransaction
 import molecule.datomic.base.facade.exception.DatomicFacadeException
 import scala.jdk.CollectionConverters._
 
-
 /** Facade to Datomic Peer with selected methods.
   *
   * @groupname database  Database operations
   * @groupprio 10
   * */
-trait Datomic_Peer {
+class Datomic_Peer extends Datomic_Peer_api {
 
   def getDatabaseNames(protocol: String = "mem", host: String = "localhost:4334/"): List[String] = {
     Peer.getDatabaseNames(s"datomic:$protocol://$host*").asScala.toList

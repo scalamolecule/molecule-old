@@ -42,7 +42,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
   val shared: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "com.marcgrue" %%% "playing-autowire" % "0.1.0-SNAPSHOT"
     )
   )
 
