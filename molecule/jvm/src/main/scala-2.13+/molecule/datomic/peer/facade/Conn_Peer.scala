@@ -1,29 +1,27 @@
 package molecule.datomic.peer.facade
 
-import java.io.{Reader, StringReader}
 import java.util.{Date, Collection => jCollection, List => jList}
 import java.{lang, util}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
-import datomic.{Database, Datom, ListenableFuture, Peer, Util}
+import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.transform.Model2Statements
 import molecule.core.util.{Helpers, QueryOpsClojure}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.{Query, QueryExpr}
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Datomic, DatomicDb, TxReport}
-import molecule.datomic.base.transform.{Model2DatomicStmts, Query2String, QueryOptimizer}
-import molecule.datomic.base.util.Inspect
+import molecule.datomic.base.facade.{Conn, ConnBase, DatomicDb, TxReport}
+import molecule.datomic.base.transform.{Query2String, QueryOptimizer}
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
 /** Factory methods to create facade to Datomic Connection. */
 object Conn_Peer {
+
   def apply(uri: String): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri))
 
   def apply(datomicConn: datomic.Connection): Conn_Peer = new Conn_Peer(datomicConn)
@@ -38,11 +36,11 @@ object Conn_Peer {
 /** Facade to Datomic connection for peer api.
   * */
 class Conn_Peer(val peerConn: datomic.Connection)
-  extends Conn_Peer_api with Conn_Datomic with Helpers {
+  extends ConnBase with Helpers {
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
-  protected var _testDb: Option[Database] = None
+  private var _testDb: Option[Database] = None
 
 
   def usingTempDb(tempDb: TempDb): Conn = {

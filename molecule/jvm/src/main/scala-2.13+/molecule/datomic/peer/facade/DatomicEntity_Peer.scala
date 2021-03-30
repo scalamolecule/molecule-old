@@ -9,8 +9,8 @@ import scala.language.existentials
 /** Datomic Entity facade for peer api.
  *
  * @param entity
- * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
- * @param eid    Entity id of type Object
+ * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+ * @param eid  Entity id of type Object
  * @param showKW
  */
 case class DatomicEntity_Peer(

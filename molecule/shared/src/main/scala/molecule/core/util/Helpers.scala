@@ -5,6 +5,7 @@ import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.{Date, UUID}
 
+object Helpers extends Helpers
 trait Helpers extends DateHandling {
 
   final protected object mkDate {
@@ -33,7 +34,7 @@ trait Helpers extends DateHandling {
 
   def unescStr(s: String) = s.replace("""\"""", """"""").replace("""\\""", """\""")
 
-  protected def cast(value: Any): String = value match {
+  def cast(value: Any): String = value match {
     case (a, b)                             => s"(${cast(a)}, ${cast(b)})"
     case v: Long                            => v.toString + "L"
     case v: Float                           => v.toString + "f"
@@ -45,13 +46,13 @@ trait Helpers extends DateHandling {
     case v                                  => v.toString
   }
 
-  final protected def os(opt: Option[Set[_]]): String =
+  final def os(opt: Option[Set[_]]): String =
     if (opt.isEmpty) "None" else s"""Some(${opt.get.map(cast)})"""
 
-  final protected def o(opt: Option[Any]): String =
+  final def o(opt: Option[Any]): String =
     if (opt.isEmpty) "None" else s"""Some(${cast(opt.get)})"""
 
-  final protected def seq[T](values: Seq[T]): String =
+  final def seq[T](values: Seq[T]): String =
     values.map {
       case set: Set[_] => set.map(cast).mkString("Set(", ", ", ")")
       case seq: Seq[_] => seq.map(cast).mkString("Seq(", ", ", ")")

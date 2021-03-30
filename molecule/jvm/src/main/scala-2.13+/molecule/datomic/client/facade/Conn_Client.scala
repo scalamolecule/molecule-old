@@ -19,7 +19,7 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.{Query, QueryExpr}
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Datomic, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn, ConnBase, DatomicDb, TxReport}
 import molecule.datomic.base.transform.{Model2DatomicStmts, Query2String, QueryOptimizer}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future, blocking}
@@ -30,17 +30,13 @@ import scala.util.control.NonFatal
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
  * */
 case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
-  extends Conn_Datomic with Helpers {
+  extends ConnBase with Helpers {
 
   val clientConn: sync.Connection = client.connect(dbName)
 
   val clientConnAsync: Future[Either[CognitectAnomaly, AsyncConnection]] =
     clientAsync.connect(dbName)
 
-//  // Temporary db for ad-hoc queries against time variation dbs
-//  // (takes precedence over test db)
-//  protected var _adhocDb: Option[TempDb] = None
-//
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
   protected var _testDb: Option[Db] = None
@@ -209,22 +205,6 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
     }
   }
 
-//  def transact(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]]): TxReport =
-//    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
-//
-//  def transact(edn: String, scalaStmts: Seq[Seq[Statement]]): TxReport =
-//    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
-//
-//  def transact(stmtsReader: Reader): TxReport =
-//    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
-//
-//  def transact(edn: String): TxReport =
-//    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
-//
-//  def transact(scalaStmts: Seq[Seq[Statement]]): TxReport =
-//    transact(toJava(scalaStmts), scalaStmts)
-
-
   def transactAsync(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil)
                    (implicit ec: ExecutionContext): Future[TxReport] = {
     if (_adhocDb.isDefined) {
@@ -249,27 +229,6 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
       Future(TxReport_Client(clientConn.transact(javaStmts)))
     }
   }
-//
-//  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]])
-//                   (implicit ec: ExecutionContext): Future[TxReport] =
-//    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
-//
-//  def transactAsync(edn: String, scalaStmts: Seq[Seq[Statement]])
-//                   (implicit ec: ExecutionContext): Future[TxReport] =
-//    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
-//
-//  def transactAsync(stmtsReader: Reader)
-//                   (implicit ec: ExecutionContext): Future[TxReport] =
-//    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
-//
-//  def transactAsync(edn: String)
-//                   (implicit ec: ExecutionContext): Future[TxReport] =
-//    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
-//
-//  def transactAsync(scalaStmts: Seq[Seq[Statement]])
-//                   (implicit ec: ExecutionContext): Future[TxReport] =
-//    transactAsync(toJava(scalaStmts), scalaStmts)
-
 
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any]): jCollection[jList[AnyRef]] = {
     val inputs = inputs0.map {
@@ -554,16 +513,4 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
     }
     jColl
   }
-
-//  def model2stmts(model: Model): Model2Statements = Model2DatomicStmts(this, model)
-//
-//  def inspect(
-//    clazz: String,
-//    threshold: Int,
-//    max: Int = 9999,
-//    showStackTrace: Boolean = false,
-//    maxLevel: Int = 99,
-//    showBi: Boolean = false
-//  )(id: Int, params: Any*): Unit =
-//    Inspect(clazz, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }

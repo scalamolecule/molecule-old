@@ -20,7 +20,7 @@ import scala.jdk.CollectionConverters._
 /** Base class for Datomic connection facade.
   *
   */
-trait Conn_Datomic extends Conn {
+trait ConnBase extends Conn {
 
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over test db)
@@ -62,6 +62,8 @@ trait Conn_Datomic extends Conn {
                    (implicit ec: ExecutionContext): Future[TxReport] =
     transactAsync(toJava(scalaStmts), scalaStmts)
 
+  def q(query: String, inputs: Any*): List[List[AnyRef]] =
+    q(db, query, inputs.toSeq)
 
   def q(db: DatomicDb, query: String, inputs: Seq[Any]): List[List[AnyRef]] = {
     val raw = qRaw(db, query, inputs)
@@ -83,6 +85,9 @@ trait Conn_Datomic extends Conn {
         )
     }
   }
+
+  def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]] =
+    qRaw(db, query, inputs)
 
   def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)

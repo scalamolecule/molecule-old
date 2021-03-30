@@ -13,7 +13,7 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.{Query, QueryExpr}
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Datomic, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn, ConnBase, DatomicDb, TxReport}
 import molecule.datomic.base.transform.{Query2String, QueryOptimizer}
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
@@ -35,7 +35,7 @@ object Conn_Peer {
 /** Facade to Datomic connection for peer api.
   * */
 class Conn_Peer(val peerConn: datomic.Connection)
-  extends Conn_Datomic with Helpers {
+  extends ConnBase with Helpers {
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)

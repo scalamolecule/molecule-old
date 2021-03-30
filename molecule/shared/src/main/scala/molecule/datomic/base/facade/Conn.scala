@@ -209,9 +209,7 @@ trait Conn {
     * @param inputs Optional input(s) to query
     * @return List[List[AnyRef]]
     * */
-  def q(query: String, inputs: Any*): List[List[AnyRef]] =
-    q(db, query, inputs.toSeq)
-
+  def q(query: String, inputs: Any*): List[List[AnyRef]]
 
   /** Query Datomic directly with db value and optional Scala inputs.
     * {{{
@@ -283,9 +281,9 @@ trait Conn {
     * @param inputs Optional input(s) to query
     * @return java.util.Collection[java.util.List[AnyRef]]
     * */
-  def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]] =
-    qRaw(db, query, inputs)
+  def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]]
 
+  def qAsyncRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]] = ???
 
   /** Query Datomic directly with db value and optional Scala inputs and get raw Java result.
     * {{{
@@ -340,7 +338,6 @@ trait Conn {
     * @return java.util.Collection[java.util.List[AnyRef]]
     * */
   def query(model: Model, query: Query): jCollection[jList[AnyRef]]
-
 
   def _query(model: Model, query: Query, _db: Option[DatomicDb] = None): jCollection[jList[AnyRef]]
 

@@ -14,6 +14,23 @@ import scala.jdk.CollectionConverters._
 class AdHocTest extends Specification {
 
 
+  "core" >> {
+    //    import molecule.tests.core.base.dsl.CoreTest._
+    //
+    //    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
+    //
+    //    Ns.int(0).save
+    //    Ns.int.get.head === 0
+
+    Datomic_Peer.createDatabase("mem", "yeah")
+    println(
+      Datomic_Peer.getDatabaseNames()
+      //      Peer.getDatabaseNames("datomic:dev://localhost:4334/*").asScala.toList
+    )
+
+    ok
+  }
+
   //  "Simple hyperedge" in new GraphSetup {
   //
   //    import molecule.tests.examples.datomic.dayOfDatomic.dsl.Graph._
@@ -81,23 +98,6 @@ class AdHocTest extends Specification {
   //
   //      ok
   //    }
-
-
-
-  "core" >> {
-//    import molecule.tests.core.base.dsl.CoreTest._
-//
-//    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
-//
-//    Ns.int(0).save
-//    Ns.int.get.head === 0
-
-    println(
-      Peer.getDatabaseNames("datomic:dev://localhost:4334/*").asScala.toList
-    )
-
-    ok
-  }
 
   //
   //

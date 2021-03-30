@@ -14,8 +14,8 @@ import scala.language.existentials
 
 /** Datomic Entity facade for client api (peer-server/cloud/dev-local).
  *
- * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
- * @param eid    Entity id of type Object
+ * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+ * @param eid  Entity id of type Object
  * @param showKW
  */
 case class DatomicEntity_Client(
