@@ -32,7 +32,7 @@ object schema extends Helpers {
   ) {
     override def toString: String =
       s"""FlatAttr($pos, "$part", ${o(partDescr$)}, "$ns", "$nsFull", ${o(nsDescr$)}, "$attr", $card, "$tpe", """ +
-        s"""${seq(enums)}, ${o(refNs$)}, ${seq(options)}, ${o(doc$)}, """ +
+        s"""${sq(enums)}, ${o(refNs$)}, ${sq(options)}, ${o(doc$)}, """ +
         s"""${o(attrGroup$)}, ${o(entityCount$)}, ${o(distinctValueCount$)}, ${o(descrAttr$)}, Seq(${
           if (topValues.isEmpty) "" else topValues.mkString("\n        ", ",\n        ", "")
         }))"""

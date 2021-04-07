@@ -19,6 +19,9 @@ trait CastHelpers[Obj, Tpl] extends CastHelpersAggr {
   // Row to tuple cast interface to be materialized by macro
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
 
+//  // Row to json build-up with fast StringBuilder to be materialized by macro
+//  protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
+
 
   // One ===========================================================================================
 

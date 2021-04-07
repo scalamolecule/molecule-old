@@ -11,7 +11,7 @@ import scala.jdk.CollectionConverters._
   * @groupname database  Database operations
   * @groupprio 10
   * */
-object Datomic_Peer {
+trait Datomic_Peer {
 
   /** Get database names
     *
@@ -249,3 +249,6 @@ object Datomic_Peer {
     case e: Throwable => throw new DatomicFacadeException(e.toString)
   }
 }
+
+object Datomic_Peer extends Datomic_Peer
+

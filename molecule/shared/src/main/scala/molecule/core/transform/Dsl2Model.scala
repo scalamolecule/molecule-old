@@ -9,20 +9,20 @@ import molecule.core.generic.Log._
 import molecule.core.generic.Schema._
 import molecule.core.generic.VAET._
 import molecule.core.generic._
-import molecule.core.macros.ObjBuilder
+import molecule.core.macros.BuildObj
 import molecule.core.ops.VerifyRawModel
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 
 
-private[molecule] trait Dsl2Model extends ObjBuilder {
+private[molecule] trait Dsl2Model extends BuildObj {
   val c: blackbox.Context
 
   import c.universe._
 
-    val xx = InspectMacro("Dsl2Model", 901, 900)
-//  val xx = InspectMacro("Dsl2Model", 101, 800)
+  val xx = InspectMacro("Dsl2Model", 901, 900)
+  //  val xx = InspectMacro("Dsl2Model", 101, 800)
 
   override def abort(msg: String): Nothing = throw new Dsl2ModelException(msg)
 
@@ -377,8 +377,8 @@ private[molecule] trait Dsl2Model extends ObjBuilder {
           obj = obj.copy(props = newProps)
           //xx(152, props, composites, newProps, obj)
 
-        } else if(txMetaDataDone) {
-          val props = Obj(refCls, refName, 1, obj.props.init)
+        } else if (txMetaDataDone) {
+          val props     = Obj(refCls, refName, 1, obj.props.init)
           val txMetaObj = obj.props.last
           obj = obj.copy(props = List(props, txMetaObj))
           objLevel = 0
@@ -827,6 +827,7 @@ private[molecule] trait Dsl2Model extends ObjBuilder {
         //xx(410, keyedAttr, richTree(q"$prev.$keyedAttr").tpeS)
         val element = resolveOp(q"$prev.$keyedAttr", richTree(q"$prev.$keyedAttr"), keyedAttr.toString(), q"$op", q"Seq(..$values)") match {
           case a: Atom => a.copy(keys = getValues(q"$keys").asInstanceOf[Seq[String]])
+          case other   => abort("Unexpected element: " + other)
         }
         traverseElement(prev, richTree(prev), element)
 

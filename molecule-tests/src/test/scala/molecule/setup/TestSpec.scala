@@ -86,7 +86,7 @@ class TestSpec extends Specification with MoleculeTestHelper with CoreData {
         if (recreateDb)
           peer.recreateDbFrom(schema)
         else
-          peer.connect(uri, protocol)
+          peer.connect(protocol, uri)
 
       case SystemPeerServer =>
         if (recreateDb) {

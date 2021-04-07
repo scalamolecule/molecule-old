@@ -10,7 +10,8 @@ import molecule.core.util.Helpers
   * <br><br>
   * Custom DSL molecule --> Model --> Query --> Datomic query string
   * */
-object elements extends Helpers {
+object elements {
+  import Helpers._
 
   /** Molecule Model representation.
     * <br><br>
@@ -45,9 +46,9 @@ object elements extends Helpers {
     }
   }
 
-  trait Element
+  sealed trait Element
 
-  trait GenericAtom extends Element {
+  sealed trait GenericAtom extends Element {
     val nsFull: String
     val attr  : String
     val tpe   : String
@@ -72,7 +73,7 @@ object elements extends Helpers {
     gvs: Seq[GenericValue] = Nil,
     keys: Seq[String] = Nil) extends GenericAtom {
     override def toString: String =
-      s"""Atom("$nsFull", "$attr", "$tpe", $card, ${tv(tpe, value)}, ${o(enumPrefix)}, ${seq(gvs)}, ${seq(keys)})"""
+      s"""Atom("$nsFull", "$attr", "$tpe", $card, ${tv(tpe, value)}, ${o(enumPrefix)}, ${sq(gvs)}, ${sq(keys)})"""
   }
 
   case class Bond(
@@ -81,7 +82,7 @@ object elements extends Helpers {
     refNs: String = "",
     card: Int,
     gvs: Seq[GenericValue] = Nil) extends Element {
-    override def toString: String = s"""Bond("$nsFull", "$refAttr", "$refNs", $card, ${seq(gvs)})"""
+    override def toString: String = s"""Bond("$nsFull", "$refAttr", "$refNs", $card, ${sq(gvs)})"""
   }
 
   case class ReBond(backRef: String) extends Element {
@@ -110,11 +111,11 @@ object elements extends Helpers {
   case class Fn(name: String, value: Option[Int] = None) extends Value {override def toString: String = s"""Fn("$name", ${o(value)})"""}
 
   // Logic
-  case class And(values: Seq[Any]) extends Value {override def toString: String = s"And(${seq(values)})"}
+  case class And(values: Seq[Any]) extends Value {override def toString: String = s"And(${sq(values)})"}
 
   // Comparison (== != < > <= >=)
-  case class Eq(values: Seq[Any]) extends Value {override def toString: String = s"Eq(${seq(values)})"}
-  case class Neq(values: Seq[Any]) extends Value {override def toString: String = s"Neq(${seq(values)})"}
+  case class Eq(values: Seq[Any]) extends Value {override def toString: String = s"Eq(${sq(values)})"}
+  case class Neq(values: Seq[Any]) extends Value {override def toString: String = s"Neq(${sq(values)})"}
   case class Lt(value: Any) extends Value {override def toString: String = s"Lt(${cast(value)})"}
   case class Gt(value: Any) extends Value {override def toString: String = s"Gt(${cast(value)})"}
   case class Le(value: Any) extends Value {override def toString: String = s"Le(${cast(value)})"}
@@ -125,16 +126,16 @@ object elements extends Helpers {
   case object Distinct extends Value
 
   // Card-many attribute operations
-  case class AssertValue(values: Seq[Any]) extends Value {override def toString: String = s"AssertValue(${seq(values)})"}
-  case class ReplaceValue(oldNew: Seq[(Any, Any)]) extends Value {override def toString: String = s"ReplaceValue(${seq(oldNew)})"}
-  case class RetractValue(values: Seq[Any]) extends Value {override def toString: String = s"RetractValue(${seq(values)})"}
+  case class AssertValue(values: Seq[Any]) extends Value {override def toString: String = s"AssertValue(${sq(values)})"}
+  case class ReplaceValue(oldNew: Seq[(Any, Any)]) extends Value {override def toString: String = s"ReplaceValue(${sq(oldNew)})"}
+  case class RetractValue(values: Seq[Any]) extends Value {override def toString: String = s"RetractValue(${sq(values)})"}
 
   // Map attribute operations
-  case class AssertMapPairs(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"AssertMapPairs(${seq(pairs)})"}
-  case class ReplaceMapPairs(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"ReplaceMapPairs(${seq(pairs)})"}
-  case class RetractMapKeys(keys: Seq[String]) extends Value {override def toString: String = s"RetractMapKeys(${seq(keys)})"}
-  case class MapEq(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"MapEq(${seq(pairs)})"}
-  case class MapKeys(keys: Seq[String]) extends Value {override def toString: String = s"MapKeys(${seq(keys)})"}
+  case class AssertMapPairs(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"AssertMapPairs(${sq(pairs)})"}
+  case class ReplaceMapPairs(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"ReplaceMapPairs(${sq(pairs)})"}
+  case class RetractMapKeys(keys: Seq[String]) extends Value {override def toString: String = s"RetractMapKeys(${sq(keys)})"}
+  case class MapEq(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"MapEq(${sq(pairs)})"}
+  case class MapKeys(keys: Seq[String]) extends Value {override def toString: String = s"MapKeys(${sq(keys)})"}
 
 
   sealed trait GenericValue extends Value
@@ -165,18 +166,18 @@ object elements extends Helpers {
 
 
   /** Expression AST for building OR/AND expressions.
-    * {{{
-    *   // `or` method allows OR-logic to be applied to `name` attribute
-    *   Person.name_("Ben" or "Liz").age.get === List(42, 37)
-    *
-    *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
-    *   val persons = m(Person.name_(?).age(?))
-    *   persons(("Ben" and 42) or ("Liz" and 37)).get === List(42, 37)
-    * }}}
-    */
-  trait Expression
+   * {{{
+   *   // `or` method allows OR-logic to be applied to `name` attribute
+   *   Person.name_("Ben" or "Liz").age.get === List(42, 37)
+   *
+   *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
+   *   val persons = m(Person.name_(?).age(?))
+   *   persons(("Ben" and 42) or ("Liz" and 37)).get === List(42, 37)
+   * }}}
+   */
+  sealed trait Expression
 
-  trait Exp1[T1] extends Expression {
+  sealed trait Exp1[T1] extends Expression {
     def or(b: Exp1[T1]): Or[T1] = Or(this, b)
     def and[T2](b: Exp1[T2]): And2[T1, T2] = And2(this, b)
   }
@@ -184,7 +185,7 @@ object elements extends Helpers {
   case class Not[T1](e: Exp1[T1]) extends Exp1[T1]
   case class Or[T1](e1: Exp1[T1], e2: Exp1[T1]) extends Exp1[T1]
 
-  trait Exp2[T1, T2] extends Expression
+  sealed trait Exp2[T1, T2] extends Expression
   case class And2[T1, T2](e1: Exp1[T1], e2: Exp1[T2]) extends Exp2[T1, T2] {
     def and[T3](e3: Exp1[T3]): And3[T1, T2, T3] = And3(e1, e2, e3)
     def or(that: And2[T1, T2]): Or2[T1, T2] = Or2(this, that)
@@ -193,7 +194,7 @@ object elements extends Helpers {
     def or(e3: Exp2[T1, T2]): Or2[T1, T2] = Or2(e1, Or2(e2, e3))
   }
 
-  trait Exp3[T1, T2, T3] extends Expression
+  sealed trait Exp3[T1, T2, T3] extends Expression
   case class And3[T1, T2, T3](e1: Exp1[T1], e2: Exp1[T2], e3: Exp1[T3]) extends Exp3[T1, T2, T3] {
     def or(that: And3[T1, T2, T3]): Or3[T1, T2, T3] = Or3(this, this, that) // todo: how to nest properly without duplicating?
   }
@@ -214,7 +215,7 @@ object elements extends Helpers {
 
   // Correct output of values given scala-js type mixtures (+ hack for javascript decimal handling)
 
-  final def cast2(tpe: String, value: Any): String = (tpe, value) match {
+  final private def cast2(tpe: String, value: Any): String = (tpe, value) match {
     case ("Long", v)                                               => v.toString + "L"
     case ("Float" | "Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
     case ("Float" | "Double", v)                                   => v.toString
@@ -224,7 +225,7 @@ object elements extends Helpers {
     case (_, v)                                                    => v.toString
   }
 
-  final def getSeq2[T](tpe: String, values: Seq[T]): String =
+  final private def getSeq2[T](tpe: String, values: Seq[T]): String =
     values.map {
       case set: Set[_] => set.map(cast2(tpe, _)).mkString("Set(", ", ", ")")
       case seq: Seq[_] => seq.map(cast2(tpe, _)).mkString("Seq(", ", ", ")")
@@ -232,7 +233,7 @@ object elements extends Helpers {
       case v           => cast2(tpe, v)
     }.mkString("Seq(", ", ", ")")
 
-  final protected def tv(tpe: String, value: Value): String = {
+  final private def tv(tpe: String, value: Value): String = {
     value match {
       case VarValue                              => "VarValue"
       case Eq(Nil)                               => s"Eq(Seq())"

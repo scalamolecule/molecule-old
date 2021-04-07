@@ -3,7 +3,7 @@ package molecule.core.macros
 import scala.reflect.macros.blackbox
 
 
-trait ObjBuilder extends Cast {
+trait BuildObj extends Cast {
   val c: blackbox.Context
 
   import c.universe._

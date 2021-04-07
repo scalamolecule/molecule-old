@@ -9,9 +9,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    version in ThisBuild := "0.25.2-SNAPSHOT",
+    ThisBuild / version := "0.25.2-SNAPSHOT",
     crossScalaVersions := Seq("2.12.13", "2.13.5"),
-    scalaVersion in ThisBuild := "2.13.5",
+    ThisBuild / scalaVersion := "2.13.5",
 
     scalacOptions := List(
       "-feature",
@@ -30,8 +30,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "my.datomic.com" at "https://my.datomic.com/repo",
       Resolver.mavenLocal
     ),
-    unmanagedSourceDirectories in Compile ++= {
-      (unmanagedSourceDirectories in Compile).value.map { dir =>
+    Compile / unmanagedSourceDirectories ++= {
+      (Compile / unmanagedSourceDirectories).value.map { dir =>
         CrossVersion.partialVersion(scalaVersion.value) match {
           case Some((2, 13)) => file(dir.getPath ++ "-2.13+")
           case _             => file(dir.getPath ++ "-2.13-")
@@ -43,7 +43,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val shared: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.marcgrue" %%% "playing-autowire" % "0.1.0-SNAPSHOT"
+      "com.marcgrue" %%% "playing-rpc-autowire" % "0.1.0"
     )
   )
 
@@ -91,7 +91,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     exportJars := true,
 
     // Run sbt tests for all systems sequentially to avoid data locks with db
-    parallelExecution in Test := false,
+    Test / parallelExecution := false,
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,

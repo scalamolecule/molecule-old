@@ -32,6 +32,7 @@ object QueryOps extends Helpers with JavaUtil {
     if (s.contains(".")) s else s + ".0"
   }
 
+  // Hack when we can't access Peer on client side
   // datomic.Peer.toTx(0) === 13194139533312L
   // datomic.Peer.toTx(1) === 13194139533313L
   // etc.

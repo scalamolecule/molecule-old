@@ -91,8 +91,6 @@ object model {
     */
   sealed trait optionBuilder[Self] {
 
-    /** Attribute description. */
-    def doc(s: String) = ??? // can only be last
 
     /** Indexed option (defaults to true).
       * <br><br>
@@ -124,6 +122,16 @@ object model {
 
     lazy val mandatory: Self = ???
 
+
+    /** Alias to non-compatible attribute name like `type` or `first-name` etc.
+      *
+      * Molecule then creates an alias to the special name in the schema so that
+      * queries will match both the attribute name and the alias.
+      * */
+    def alias(altAttrName: String): Self = ???
+
+    /** Attribute description. */
+    def doc(s: String) = ??? // can only be last
   }
 
 

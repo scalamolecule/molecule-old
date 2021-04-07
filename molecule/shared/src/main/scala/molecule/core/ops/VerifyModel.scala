@@ -68,15 +68,19 @@ case class VerifyModel(model: Model, op: String) {
       s"""Applying an eid is only allowed for updates.""")
     case ok                                     => ok
   }
+
   private def missingAppliedId: Boolean = model.elements.head match {
     case Generic(_, "e" | "e_", _, Eq(List(eid))) =>
       true
     case Generic(_, "e" | "e_", _, Eq(eids))      => true
     case Composite(elements)                      => elements.head match {
       case Generic(_, "e" | "e_", _, Eq(eids)) => true
+      case _                                   => false
     }
     case Atom(nsFull, _, _, _, _, _, _, _)        => err("missingAppliedId", s"Update molecule should start with an applied id: `${Ns(nsFull)}(<eid>)...`")
+    case other                                    => err("missingAppliedId", "unexpected element: " + other)
   }
+
   private def onlyAtomsWithValue = model.elements.foreach {
     case a: Atom => a.value match {
       case VarValue | EntValue | EnumVal | IndexVal | Qm | Distinct | NoValue => err("onlyAtomsWithValue",

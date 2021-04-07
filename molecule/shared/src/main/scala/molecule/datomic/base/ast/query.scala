@@ -8,9 +8,10 @@ import molecule.core.util.Helpers
   * <br><br>
   * Custom DSL molecule --> Model --> Query --> Datomic query string
   */
-object query extends Helpers {
+object query  {
+  import Helpers._
 
-  trait QueryExpr
+  sealed trait QueryExpr
 
   /** Molecule Query representation.
     * <br><br>
@@ -58,12 +59,12 @@ object query extends Helpers {
   case class In(inputs: Seq[Input], rules: Seq[Rule] = Seq(), ds: Seq[DataSource] = Seq(DS)) extends QueryExpr
   case class Where(clauses: Seq[Clause]) extends QueryExpr
 
-  trait QueryTerm extends QueryExpr
+  sealed trait QueryTerm extends QueryExpr
   case object Empty extends QueryTerm
 
   sealed trait Output extends QueryExpr
   case class AggrExpr(fn: String, args: Seq[Any], v: Var) extends Output {
-    override def toString: String = s"""AggrExpr("$fn", ${seq(args)}, $v)"""
+    override def toString: String = s"""AggrExpr("$fn", ${sq(args)}, $v)"""
   }
 
   sealed trait QueryValue extends QueryTerm
@@ -122,15 +123,15 @@ object query extends Helpers {
   case object ImplDS extends DataSource
 
   case class Rule(name: String, args: Seq[QueryValue], clauses: Seq[Clause]) extends QueryTerm {
-    override def toString: String = s"""Rule("$name", ${seq(args)}, Seq(""" + clauses.mkString("\n        ", ",\n        ", "))")
+    override def toString: String = s"""Rule("$name", ${sq(args)}, Seq(""" + clauses.mkString("\n        ", ",\n        ", "))")
   }
 
-  trait Input extends QueryTerm
+  sealed trait Input extends QueryTerm
   case class InDataSource(ds: DataSource, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input {
-    override def toString: String = s"""InDataSource($ds, ${seq(argss)})"""
+    override def toString: String = s"""InDataSource($ds, ${sq(argss)})"""
   }
   case class InVar(binding: Binding, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input {
-    override def toString: String = s"""InVar($binding, ${seq(argss)})"""
+    override def toString: String = s"""InVar($binding, ${sq(argss)})"""
   }
   case class Placeholder(e: Var, kw: KW, v: Var, enumPrefix: Option[String] = None) extends Input {
     override def toString: String = s"""Placeholder($e, $kw, $v, ${o(enumPrefix)})"""
@@ -159,16 +160,16 @@ object query extends Helpers {
     override def toString: String = "NotJoinClauses(Seq(" + nonUnifyingVars.mkString(", ") + "), Seq(\n      " + clauses.mkString(",\n      ") + "))"
   }
   case class RuleInvocation(name: String, args: Seq[QueryTerm]) extends Clause {
-    override def toString: String = s"""RuleInvocation("$name", ${seq(args)})"""
+    override def toString: String = s"""RuleInvocation("$name", ${sq(args)})"""
   }
 
   sealed trait ExpressionClause extends Clause
   case class Funct(name: String, ins: Seq[QueryTerm], outs: Binding) extends ExpressionClause {
     override def toString: String =
       if (name.contains("\""))
-        s"""Funct(\"\"\"$name\"\"\", ${seq(ins)}, $outs)"""
+        s"""Funct(\"\"\"$name\"\"\", ${sq(ins)}, $outs)"""
       else
-        s"""Funct("$name", ${seq(ins)}, $outs)"""
+        s"""Funct("$name", ${sq(ins)}, $outs)"""
   }
 
 

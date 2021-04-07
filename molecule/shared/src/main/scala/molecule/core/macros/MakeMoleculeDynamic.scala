@@ -39,7 +39,13 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
         abort(s"Unexpected tree for dynamic molecule:\n$other\n" + showRaw(other))
     }
 
-    val ClassDef(_, _, _, Template(_, _, List(constructor, row2tpl, row2obj)))                           = moleculeBody.last
+    val (constructor, row2tpl, row2obj) = moleculeBody.last match {
+      case ClassDef(_, _, _, Template(_, _, List(constructor, row2tpl, row2obj)))           => (constructor, row2tpl, row2obj)
+      case ClassDef(_, _, _, Template(_, _, List(constructor, row2tpl, row2obj, row2json))) => (constructor, row2tpl, row2obj)
+      case other                                                                            =>
+        abort(s"Unexpected tree for dynamic molecule body:\n$other\n" + showRaw(other))
+    }
+
     val DefDef(_, _, _, _, _, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _)) = row2obj
 
     val propTypes = objTypes.drop(2)

@@ -1,6 +1,7 @@
 package molecule
 
 import _root_.datomic.Peer
+import molecule.core.util.Helpers
 import molecule.datomic.api.in3_out10._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.peer.facade.Datomic_Peer
@@ -10,8 +11,30 @@ import molecule.tests.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSch
 import org.specs2.mutable.Specification
 import scala.jdk.CollectionConverters._
 
-//class AdHocTest extends molecule.setup.TestSpec with Helpers {
-class AdHocTest extends Specification {
+class AdHocTest extends molecule.setup.TestSpec with Helpers {
+//class AdHocTest extends Specification {
+//
+//  trait C {
+//    def c = 8
+//  }
+//  object C extends C
+//
+//
+//  trait A extends C {
+//    val x = c
+//  }
+//  object A extends C
+//
+//
+//  object B {
+//    import C._
+//}
+//
+//  object D {
+//    import B._
+//
+//    val a2 = c
+//  }
 
 
   "core" >> {
@@ -134,4 +157,11 @@ class AdHocTest extends Specification {
   //
   //    ok
   //  }
+
+    "example adhoc" in new MBrainzSetup {
+
+
+
+      ok
+    }
 }

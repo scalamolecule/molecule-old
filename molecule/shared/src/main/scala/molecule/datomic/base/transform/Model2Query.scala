@@ -215,6 +215,9 @@ object Model2Query extends Helpers {
           case ((acc, _), Nested(Bond(nsFull1, refAttr1, _, _, _), elements1)) =>
             nestedLevel += 1
             (acc :+ NestedAttrs(nestedLevel, nsFull1, clean(refAttr1), getNestedAttrs(elements1)), Nil)
+
+          // Could be Composite, EmptyElement, Generic, TxMetaData, ReBond ... todo?
+          case ((acc, rem), elem) => abort("Unexpected pull element: " + elem)
         }
       }._1
 
@@ -837,6 +840,7 @@ object Model2Query extends Helpers {
       case other                    => abort("Unresolved optional cardinality-many Atom$:\nAtom$   : " + s"$a0\nElement: $other")
     }
   }
+
   def resolveAtomOptional1(q: Query, e: String, a0: Atom, v: String, v1: String): Query = {
     val a = a0.copy(attr = a0.attr.init)
     val t = a.tpe
@@ -1060,6 +1064,7 @@ object Model2Query extends Helpers {
           case Funct(".matches ^String", List(_, _), NoBinding)    => Nil
           case Funct("second", ins, outSame)                       => Seq(Funct("second", ins map queryTerm, outSame))
           case Funct(name, ins, outs)                              => Seq(Funct(name, ins map queryTerm, binding(outs)))
+          case _                                                   => Nil
         }
         clauses flatMap makeSelfJoinClauses
       }

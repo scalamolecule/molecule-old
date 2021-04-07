@@ -20,9 +20,13 @@ private[molecule] trait Liftables extends MacroHelpers {
   // General liftables --------------------------------------------------------------
 
   def mkDate(date: Date): c.universe.Tree = q"new Date(${date.getTime})"
+
   def mkBigInt(bigInt: BigInt): c.universe.Tree = q"BigInt.apply(${bigInt.toString()})"
+
   def mkBigDecimal(bigDec: BigDecimal): c.universe.Tree = q"BigDecimal.apply(${bigDec.toString()})"
+
   def mkUUID(uuid: UUID): c.universe.Tree = q"java.util.UUID.fromString(${uuid.toString})"
+
   def mkURI(uri: URI): c.universe.Tree = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
   implicit val liftAny: c.universe.Liftable[Any] = Liftable[Any] {
@@ -317,46 +321,93 @@ private[molecule] trait Liftables extends MacroHelpers {
   implicit val liftGeneric: c.universe.Liftable[Generic] = Liftable[Generic] { m => q"Generic(${m.nsFull}, ${m.attr}, ${m.tpe}, ${m.value})" }
   implicit val liftGroup  : c.universe.Liftable[Nested]  = Liftable[Nested] { n0 =>
     val es0: Seq[c.universe.Tree] = n0.elements map {
-      case a: Atom    => q"$a"
-      case b: Bond    => q"$b"
-      case r: ReBond  => q"$r"
-      case Self       => q"Self"
-      case g: Generic => q"$g"
-      case n1: Nested => {
+      case a: Atom       => q"$a"
+      case b: Bond       => q"$b"
+      case c: Composite  => q"$c"
+      case t: TxMetaData => q"$t"
+      case r: ReBond     => q"$r"
+      case g: Generic    => q"$g"
+      case Self          => q"Self"
+      case EmptyElement  => q"EmptyElement"
+      case n1: Nested    => {
         val es1: Seq[c.universe.Tree] = n1.elements map {
-          case a: Atom    => q"$a"
-          case b: Bond    => q"$b"
-          case r: ReBond  => q"$r"
-          case Self       => q"Self"
-          case g: Generic => q"$g"
-          case n2: Nested => {
+          case a: Atom       => q"$a"
+          case b: Bond       => q"$b"
+          case c: Composite  => q"$c"
+          case t: TxMetaData => q"$t"
+          case r: ReBond     => q"$r"
+          case g: Generic    => q"$g"
+          case Self          => q"Self"
+          case EmptyElement  => q"EmptyElement"
+          case n2: Nested    => {
             val es2: Seq[c.universe.Tree] = n2.elements map {
-              case a: Atom    => q"$a"
-              case b: Bond    => q"$b"
-              case r: ReBond  => q"$r"
-              case Self       => q"Self"
-              case g: Generic => q"$g"
-              case n3: Nested => {
+              case a: Atom       => q"$a"
+              case b: Bond       => q"$b"
+              case c: Composite  => q"$c"
+              case t: TxMetaData => q"$t"
+              case r: ReBond     => q"$r"
+              case g: Generic    => q"$g"
+              case Self          => q"Self"
+              case EmptyElement  => q"EmptyElement"
+              case n3: Nested    => {
                 val es3: Seq[c.universe.Tree] = n3.elements map {
-                  case a: Atom    => q"$a"
-                  case b: Bond    => q"$b"
-                  case r: ReBond  => q"$r"
-                  case Self       => q"Self"
-                  case g: Generic => q"$g"
-                  case n4: Nested => {
+                  case a: Atom       => q"$a"
+                  case b: Bond       => q"$b"
+                  case c: Composite  => q"$c"
+                  case t: TxMetaData => q"$t"
+                  case r: ReBond     => q"$r"
+                  case g: Generic    => q"$g"
+                  case Self          => q"Self"
+                  case EmptyElement  => q"EmptyElement"
+                  case n4: Nested    => {
                     val es4: Seq[c.universe.Tree] = n4.elements map {
-                      case a: Atom    => q"$a"
-                      case b: Bond    => q"$b"
-                      case r: ReBond  => q"$r"
-                      case Self       => q"Self"
-                      case g: Generic => q"$g"
-                      case n5: Nested => {
+                      case a: Atom       => q"$a"
+                      case b: Bond       => q"$b"
+                      case c: Composite  => q"$c"
+                      case t: TxMetaData => q"$t"
+                      case r: ReBond     => q"$r"
+                      case g: Generic    => q"$g"
+                      case Self          => q"Self"
+                      case EmptyElement  => q"EmptyElement"
+                      case n5: Nested    => {
                         val es5: Seq[c.universe.Tree] = n5.elements map {
-                          case a: Atom    => q"$a"
-                          case b: Bond    => q"$b"
-                          case r: ReBond  => q"$r"
-                          case Self       => q"Self"
-                          case g: Generic => q"$g"
+                          case a: Atom       => q"$a"
+                          case b: Bond       => q"$b"
+                          case c: Composite  => q"$c"
+                          case t: TxMetaData => q"$t"
+                          case r: ReBond     => q"$r"
+                          case g: Generic    => q"$g"
+                          case Self          => q"Self"
+                          case EmptyElement  => q"EmptyElement"
+                          case n6: Nested    => {
+                            val es6: Seq[c.universe.Tree] = n6.elements map {
+                              case a: Atom       => q"$a"
+                              case b: Bond       => q"$b"
+                              case c: Composite  => q"$c"
+                              case t: TxMetaData => q"$t"
+                              case r: ReBond     => q"$r"
+                              case g: Generic    => q"$g"
+                              case Self          => q"Self"
+                              case EmptyElement  => q"EmptyElement"
+                              case n7: Nested    => {
+                                val es7: Seq[c.universe.Tree] = n7.elements map {
+                                  case a: Atom       => q"$a"
+                                  case b: Bond       => q"$b"
+                                  case c: Composite  => q"$c"
+                                  case t: TxMetaData => q"$t"
+                                  case r: ReBond     => q"$r"
+                                  case g: Generic    => q"$g"
+                                  case Self          => q"Self"
+                                  case EmptyElement  => q"EmptyElement"
+                                  case _: Nested    => abort(
+                                    s"Can't nest more than 7 levels deep."
+                                  )
+                                }
+                                q"Nested(${n7.bond}, Seq(..$es7))"
+                              }
+                            }
+                            q"Nested(${n6.bond}, Seq(..$es6))"
+                          }
                         }
                         q"Nested(${n5.bond}, Seq(..$es5))"
                       }
@@ -376,29 +427,12 @@ private[molecule] trait Liftables extends MacroHelpers {
     q"Nested(${n0.bond}, Seq(..$es0))"
   }
 
-  implicit val liftTxMetaData: c.universe.Liftable[TxMetaData] = Liftable[TxMetaData] { tm =>
-    val es = tm.elements map {
-      case a: Atom      => q"$a"
-      case b: Bond      => q"$b"
-      case r: ReBond    => q"$r"
-      case Self         => q"Self"
-      case g: Generic   => q"$g"
-      case c: Composite => q"$c"
-      case q"$e "       => e
-    }
-    q"TxMetaData(Seq(..$es))"
+  implicit val liftTxMetaData: c.universe.Liftable[TxMetaData] = Liftable[TxMetaData] { txMetaData =>
+    q"TxMetaData(Seq(..${txMetaData.elements}))"
   }
 
-  implicit val liftComposite: c.universe.Liftable[Composite] = Liftable[Composite] { fm =>
-    val es = fm.elements map {
-      case a: Atom    => q"$a"
-      case b: Bond    => q"$b"
-      case r: ReBond  => q"$r"
-      case Self       => q"Self"
-      case g: Generic => q"$g"
-      case q"$e "     => e
-    }
-    q"Composite(Seq(..$es))"
+  implicit val liftComposite: c.universe.Liftable[Composite] = Liftable[Composite] { composite =>
+    q"Composite(Seq(..${composite.elements}))"
   }
 
   implicit val liftListOfElements: c.universe.Liftable[Seq[Element]] = Liftable[Seq[Element]] { elements =>
@@ -406,11 +440,12 @@ private[molecule] trait Liftables extends MacroHelpers {
       case a: Atom       => q"$a"
       case b: Bond       => q"$b"
       case r: ReBond     => q"$r"
-      case Self          => q"Self"
       case n: Nested     => q"$n"
       case g: Generic    => q"$g"
       case t: TxMetaData => q"$t"
       case c: Composite  => q"$c"
+      case Self          => q"Self"
+      case EmptyElement  => q"EmptyElement"
     }
     q"Seq(..$es)"
   }
@@ -419,11 +454,11 @@ private[molecule] trait Liftables extends MacroHelpers {
     case Atom(nsFull, attr, tpeS, card, value, enumPrefix, gs, keys) => q"Atom($nsFull, $attr, $tpeS, $card, $value, $enumPrefix, Seq(..$gs), Seq(..$keys))"
     case Bond(nsFull, refAttr, refNs, card, gs)                      => q"Bond($nsFull, $refAttr, $refNs, $card, Seq(..$gs))"
     case ReBond(backRef)                                             => q"ReBond($backRef)"
-    case Self                                                        => q"Self"
     case Nested(ref, elements)                                       => q"Nested($ref, $elements)"
     case Generic(nsFull, attr, kind, value)                          => q"Generic($nsFull, $attr, $kind, $value)"
     case TxMetaData(elements)                                        => q"TxMetaData($elements)"
     case Composite(elements)                                         => q"Composite($elements)"
+    case Self                                                        => q"Self"
     case EmptyElement                                                => q"EmptyElement"
   }
 

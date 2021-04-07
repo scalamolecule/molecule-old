@@ -14,6 +14,7 @@ import molecule.datomic.base.api.ShowInspect
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.transform.JsonBuilder
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 
@@ -156,10 +157,12 @@ import scala.language.experimental.macros
  * */
 trait Molecule_0[Obj, Tpl] extends Molecule
   with CastHelpers[Obj, Tpl]
+  with JsonBuilder
   with GetTplArray[Obj, Tpl]
   with GetTplIterable[Obj, Tpl]
   with GetTplList[Obj, Tpl]
   with GetRaw
+  with GetJson
   with GetObjArray[Obj, Tpl]
   with GetObjIterable[Obj, Tpl]
   with GetObjList[Obj, Tpl]

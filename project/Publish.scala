@@ -11,13 +11,14 @@ object Publish {
   lazy val withDocs = Seq(
     publishMavenStyle := true,
     publishTo := (if (isSnapshot.value) Some(snapshots) else Some(releases)),
-    publishArtifact in Test := false,
-    scalacOptions in Compile in doc ++= Seq(
+    Test / publishArtifact := false,
+    Compile / doc / scalacOptions ++= Seq(
+//    scalacOptions in Compile in doc ++= Seq(
       "-doc-root-content", baseDirectory.value + "/src/main/scaladoc/rootdoc.txt",
       "-diagrams", "-groups",
       "-doc-version", version.value,
       "-doc-title", "Molecule",
-      "-sourcepath", (baseDirectory in ThisBuild).value.toString,
+      "-sourcepath", (ThisBuild / baseDirectory).value.toString,
       "-doc-source-url", s"https://github.com/scalamolecule/molecule/tree/master€{FILE_PATH}.scala#L1"
     ),
     pomIncludeRepository := (_ => false),
@@ -41,9 +42,9 @@ object Publish {
   lazy val withoutDocs = Seq(
     publishMavenStyle := true,
     publishTo := (if (isSnapshot.value) Some(snapshots) else Some(releases)),
-    publishArtifact in Test := false,
-    sources in doc := Seq.empty,
-    publishArtifact in packageDoc := false,
+    Test / publishArtifact := false,
+    doc / sources := Seq.empty,
+    packageDoc / publishArtifact := false,
     pomIncludeRepository := (_ => false),
     homepage := Some(url("http://scalamolecule.org")),
     description := "molecule",
@@ -63,10 +64,12 @@ object Publish {
   )
 
   lazy val not = Seq(
-    skip in publish := true,
+    publish / skip := true,
     publish := ((): Unit),
     publishLocal := ((): Unit),
-    publishArtifact in(Compile, packageDoc) := false,
+//    publishArtifact in(Compile, packageDoc) := false,
+//    Compile / publishArtifact / packageDoc := false,
+    Compile / packageDoc / publishArtifact := false,
     sources in(Compile, doc) := Seq.empty
   )
 }

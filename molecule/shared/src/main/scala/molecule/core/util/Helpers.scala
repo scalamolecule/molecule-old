@@ -52,7 +52,7 @@ trait Helpers extends DateHandling {
   final def o(opt: Option[Any]): String =
     if (opt.isEmpty) "None" else s"""Some(${cast(opt.get)})"""
 
-  final def seq[T](values: Seq[T]): String =
+  final def sq[T](values: Seq[T]): String =
     values.map {
       case set: Set[_] => set.map(cast).mkString("Set(", ", ", ")")
       case seq: Seq[_] => seq.map(cast).mkString("Seq(", ", ", ")")

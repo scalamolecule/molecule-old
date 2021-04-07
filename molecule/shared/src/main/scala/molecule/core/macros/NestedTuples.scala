@@ -8,7 +8,7 @@ import molecule.datomic.base.facade.Conn
 /** Builder classes of various arity of nested tuples. */
 trait NestedTuples[Obj, OuterTpl] extends jComparator[jList[AnyRef]] { self: Molecule_0[Obj, OuterTpl] =>
 
-  // Re-use nested list implementation
+  // Cheating and re-using materialized nested list implementation
   final override def getIterable(implicit conn: Conn): Iterable[OuterTpl] = get(conn)
 
   val levels = _nestedQuery.fold(0)(_.f.outputs.size - _query.f.outputs.size)
@@ -96,18 +96,19 @@ trait NestedTuples[Obj, OuterTpl] extends jComparator[jList[AnyRef]] { self: Mol
   }
 
   // java.util.Comparator sorting interface implemented by NestedTuples subclasses (`rows.sort(this)`)
+  // Sorting from outer to nested levels, level by level
   protected def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
     sortIndex = 0
     result = 0
     if (descending) {
       do {
         result = (-a.get(sortIndex).asInstanceOf[jLong]).compareTo(-b.get(sortIndex).asInstanceOf[jLong])
-        sortIndex += 1
+        sortIndex += 1 // 1 level deeper
       } while (sortIndex < levels && result == 0)
     } else {
       do {
         result = a.get(sortIndex).asInstanceOf[jLong].compareTo(b.get(sortIndex).asInstanceOf[jLong])
-        sortIndex += 1
+        sortIndex += 1 // 1 level deeper
       } while (sortIndex < levels && result == 0)
     }
     result
