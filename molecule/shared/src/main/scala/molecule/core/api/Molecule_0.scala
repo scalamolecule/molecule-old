@@ -7,9 +7,10 @@ import molecule.core.api.getObj.{GetObjArray, GetObjIterable, GetObjList}
 import molecule.core.api.getTpl.{GetTplArray, GetTplIterable, GetTplList}
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements._
+import molecule.core.marshalling.{CastHelpers, Marshalling}
 import molecule.core.macros.MakeMoleculeDynamic
 import molecule.core.ops.VerifyModel
-import molecule.core.transform.{CastHelpers, DynamicMolecule}
+import molecule.core.transform.DynamicMolecule
 import molecule.datomic.base.api.ShowInspect
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
@@ -156,13 +157,12 @@ import scala.language.experimental.macros
  * @groupprio internal 710
  * */
 trait Molecule_0[Obj, Tpl] extends Molecule
-  with CastHelpers[Obj, Tpl]
-  with JsonBuilder
+  with Marshalling[Obj, Tpl]
+  with CastHelpers
   with GetTplArray[Obj, Tpl]
   with GetTplIterable[Obj, Tpl]
   with GetTplList[Obj, Tpl]
   with GetRaw
-  with GetJson
   with GetObjArray[Obj, Tpl]
   with GetObjIterable[Obj, Tpl]
   with GetObjList[Obj, Tpl]

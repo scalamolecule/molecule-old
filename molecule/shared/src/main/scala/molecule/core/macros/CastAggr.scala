@@ -7,7 +7,6 @@ private[molecule] trait CastAggr extends CastOptNested {
 
   import c.universe._
 
-
   val castAggrInt   : Int => Tree = (i: Int) => q"row.get($i).toString.toInt"
   val castAggrDouble: Int => Tree = (i: Int) => q"row.get($i).asInstanceOf[Double]"
 

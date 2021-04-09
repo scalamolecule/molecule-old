@@ -5,13 +5,12 @@ import scala.language.higherKinds
 import scala.reflect.macros.blackbox
 
 
-/** Macro to make output molecules. */
 class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  val z = InspectMacro("MakeMolecule", 9, 8)
-  //  val z = InspectMacro("MakeMolecule", 1, 8)
+  //  val z = InspectMacro("MakeMolecule", 9, 8)
+  val z = InspectMacro("MakeMolecule", 1, 8)
   //  val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
 
 
@@ -38,6 +37,21 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"(..${topLevel(castss)})"
       }
 
+      val platform = Platform(c)
+
+//      val
+
+      z(1
+//        ,c.
+//        , c.macroApplication
+//
+//        , "--------------"
+//        , c.enclosingPosition
+//        , c.enclosingPosition.pos
+//        , c.enclosingPosition.pos.source
+
+      )
+
       if (hasVariables) {
         q"""
           ..$imports
@@ -54,7 +68,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
             final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
             final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-            final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ???
+            final override def qr2obj(qr: QueryResult): Obj = ???
+            final override def qr2tpl(qr: QueryResult): Tpl = ???
           }
           new $outMolecule
         """
@@ -121,14 +136,16 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       }
     }
 
-    z(3
-      , model0
-      , objCode(obj)._1
-      , t
-    )
+    //    z(3
+    //      , model0
+    //      , castss
+    ////      , objCode(obj)._1
+    ////      , t
+    //    )
     t
   }
 
+  final def zz[Obj: W, A: W, B: W](dsl: Tree): Tree = generateMolecule(dsl, w[Obj], w[A], w[B])
 
   final def from01attr[Obj: W, A: W                                                                                                                              ](dsl: Tree): Tree = generateMolecule(dsl, w[Obj], w[A])
   final def from02attr[Obj: W, A: W, B: W                                                                                                                        ](dsl: Tree): Tree = generateMolecule(dsl, w[Obj], w[A], w[B])

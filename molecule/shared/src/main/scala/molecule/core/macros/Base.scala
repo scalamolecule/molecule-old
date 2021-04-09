@@ -94,7 +94,6 @@ private[molecule] trait Base extends Dsl2Model {
     }
   }
 
-
   case class resolveNestedTupleMethods(
     castss: List[List[Int => Tree]],
     typess: List[List[Tree]],
@@ -112,6 +111,7 @@ private[molecule] trait Base extends Dsl2Model {
     lazy val t7: Tree = tq"List[(..${typess(7)})]"
 
     var fieldIndex = levels - 1
+
     def castLevel(level: Int): List[Tree] = castss(level).map { castLambda =>
       fieldIndex += 1
       castLambda(fieldIndex)

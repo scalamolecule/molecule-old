@@ -12,18 +12,17 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ThisBuild / version := "0.25.2-SNAPSHOT",
     crossScalaVersions := Seq("2.12.13", "2.13.5"),
     ThisBuild / scalaVersion := "2.13.5",
-
     scalacOptions := List(
       "-feature",
       "-language:implicitConversions",
       "-deprecation",
       "-language:postfixOps",
-      "-language:higherKinds"
+      "-language:higherKinds",
+      "-Yrangepos"
     ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) => Seq("-Ymacro-annotations")
       case _             => Nil
     }),
-
     resolvers ++= Seq(
       "clojars" at "https://clojars.org/repo",
       // If using datomic-pro/starter
@@ -40,26 +39,21 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     }
   )
 
-  val shared: Seq[Def.Setting[_]] = Seq(
-    libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.marcgrue" %%% "playing-rpc-autowire" % "0.1.0"
-    )
-  )
-
-  val js: Seq[Def.Setting[_]] = Seq(
+  val client: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %%% "scala-java-time" % "2.0.0"
-    )
+    ),
+    testFrameworks += new TestFramework("utest.runner.Framework"),
   )
 
-  val jvm: Seq[Def.Setting[_]] = {
+  val server: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
         //        "org.scala-lang" % "scala-reflect" % scalaVersion.value,
         "org.specs2" %% "specs2-core" % "4.10.6",
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0"
-      )
+      ),
+      testFrameworks += new TestFramework("utest.runner.Framework")
     ) ++ (if (datomicProtocol == "free") {
       Seq(libraryDependencies += "com.datomic" % "datomic-free" % "0.9.5697")
     } else {
@@ -71,6 +65,18 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       )
     })
   }
+
+
+  val shared: Seq[Def.Setting[_]] = base ++ Seq(
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "com.lihaoyi" %%% "utest" % "0.7.8",
+      "com.marcgrue" %%% "playing-rpc-autowire" % "0.1.0",
+      "com.marcgrue" %%% "playing-rpc-sloth" % "0.2.1"
+    ),
+    testFrameworks += new TestFramework("utest.runner.Framework")
+  )
+
 
   val tests: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(

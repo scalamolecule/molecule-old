@@ -1,28 +1,37 @@
-import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
+//lazy val root = (project in file("."))
+////  .aggregate(molecule.js, molecule.jvm)
+//  .settings(publish / skip := true)
 
 
 lazy val molecule = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .settings(
-    Settings.base ++
+    //    Settings.base ++
     Settings.shared ++
-    Publish.withoutDocs // save time without doc creation for publishLocal
+      Publish.withoutDocs // save time without doc creation for publishLocal
     //      Publish.withDocs // make docs for publishSigned
   )
-  .jsSettings(Settings.js)
+  .jsSettings(Settings.client)
   //  .jsConfigure(_.enablePlugins(TzdbPlugin))
-  .jvmSettings(Settings.jvm)
+  .jvmSettings(Settings.server)
 
-lazy val js = molecule.js
-lazy val jvm = molecule.jvm
 
-lazy val tests = project.in(file("molecule-tests"))
+lazy val moleculeTests = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Full)
+  .dependsOn(molecule)
   .enablePlugins(BuildInfoPlugin, MoleculePlugin)
-  .dependsOn(jvm)
-  .settings(
-    Settings.base ++
-    Settings.jvm ++
+  .settings(Settings.shared ++
     Settings.moleculeTests ++
     Settings.tests ++
     Publish.not
   )
+  .jsSettings(Settings.client)
+  .jvmSettings(Settings.server)
+
+//  .settings(
+//    //    Settings.base ++
+//    //    Settings.server ++
+//    Settings.moleculeTests ++
+//      Settings.tests ++
+//      Publish.not
+//  )

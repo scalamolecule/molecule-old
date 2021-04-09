@@ -2,8 +2,10 @@ package molecule.core.api.getAsyncTpl
 
 import java.util.{Date, List => jList}
 import molecule.core.api.Molecule_0
+import molecule.core.marshalling.{Col, QueryResult}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -46,6 +48,60 @@ trait GetAsyncTplList[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetAsyncTplArr
     */
   def getAsync(implicit conn: Conn): Future[List[Tpl]] =
     Future(get(conn))
+
+
+//  type Tpl2 = (String, Int)
+//
+//  def qr2tpl(qr: QueryResult): Int => Tpl2 = {
+//    // Arrays with data
+//    val a0 = qr.oneString(0)
+//    val a1 = qr.oneInt(0)
+//    (rowIndex: Int) => (a0(rowIndex), a1(rowIndex))
+//  }
+//
+//  trait QueryApi {
+//    def query(
+//      db: String,
+//      datalogQuery: String,
+//      rules: Option[String],
+//      l: Seq[(Int, (String, String))],
+//      ll: Seq[(Int, Seq[(String, String)])],
+//      lll: Seq[(Int, Seq[Seq[(String, String)]])],
+//      maxRows: Int,
+//      cols: Seq[Col]
+//    ): Future[QueryResult] = ???
+//  }
+//
+
+//  import playing.sloth.WebClient
+//
+//  object wire extends WebClient {
+//    val dto: QueryApi = clientAjax.wire[QueryApi]
+//  }
+//
+//  import wire._
+
+
+//  def getAsync2(implicit conn: Conn): Future[List[Tpl2]] = {
+//    dto.query(
+//    "localhost:4334/mbrainz-1968-1973",
+//    "[:find ?name :where [_ :Artist/name ?name]]",
+//    None, Nil, Nil, Nil,
+//    10,
+//    //      getCols(_model.elements)
+//    Nil
+//    ).map { qr =>
+//      val maxRows  = qr.maxRows
+//      val buf      = new ListBuffer[Tpl2]
+//      val columns  = qr2tpl(qr)
+//      var rowIndex = 0
+//      while (rowIndex < maxRows) {
+//        buf += columns(rowIndex)
+//        rowIndex += 1
+//      }
+//      buf.toList
+//    }
+//  }
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule.

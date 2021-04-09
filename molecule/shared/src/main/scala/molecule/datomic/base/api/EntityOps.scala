@@ -55,8 +55,7 @@ trait EntityOps {
     * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of retract
     */
   def retract(eids: Iterable[Long], txMetaDataMolecules: Molecule*)(implicit conn: Conn): TxReport = {
-    val retractStmts = eids.toSeq.distinct map RetractEntity
-
+    val retractStmts    = eids.toSeq.distinct map RetractEntity
     val txMetaDataStmts = if (txMetaDataMolecules.isEmpty) {
       Nil
     } else if (txMetaDataMolecules.size == 1) {
@@ -98,8 +97,7 @@ trait EntityOps {
     * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of retract
     */
   def retractAsync(eids: Iterable[Long], txMetaDataMolecules: Molecule*)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
-    val retractStmts = eids.toSeq.distinct map RetractEntity
-
+    val retractStmts    = eids.toSeq.distinct map RetractEntity
     val txMetaDataStmts = if (txMetaDataMolecules.isEmpty) {
       Nil
     } else if (txMetaDataMolecules.size == 1) {

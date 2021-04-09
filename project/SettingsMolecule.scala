@@ -8,7 +8,7 @@ trait SettingsMolecule {
   // Paths to folders where `dataModel/<..>DataModel` files reside for your domain.
 
   lazy val moleculeTests: Seq[Def.Setting[_]] = Seq(
-    moduleName := "molecule-tests",
+//    moduleName := "moleculeTests",
 
     // Generate Molecule boilerplate code with `sbt clean compile -Dmolecule=true`
     moleculePluginActive := sys.props.get("molecule").contains("true"),

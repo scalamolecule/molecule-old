@@ -17,6 +17,10 @@ import scala.language.implicitConversions
   * */
 trait GetTplList[Obj, Tpl] extends GetTplArray[Obj, Tpl] with JavaUtil with Quoted { self: Molecule_0[Obj, Tpl] =>
 
+
+  def foo: String = ???
+
+
   // get ================================================================================================
 
   /** Get `List` of all rows as tuples matching molecule.
