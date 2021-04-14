@@ -7,3 +7,5 @@ addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0")
 
 addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "1.0.0")
 
+libraryDependencies += "org.scala-js" %% "scalajs-env-jsdom-nodejs" % "1.1.0"
+

@@ -7,16 +7,12 @@ import java.util.{List => jList}
   */
 trait Marshalling[Obj, Tpl] {
 
+  lazy val isJsPlatform: Boolean = ???
 
-  /** Row to object cast interface to be materialized by macro */
-  protected def row2obj(row: jList[AnyRef]): Obj = ???
 
-  /** Row to tuple cast interface to be materialized by macro */
-  protected def row2tpl(row: jList[AnyRef]): Tpl = ???
+  // Client side ......................
 
-  //  // Row to json build-up with fast StringBuilder to be materialized by macro
-  //  protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-
+  lazy val moleculeWire: QueryExecutor = ???
 
   /** QueryResult to object cast interface to be materialized by macro
     *
@@ -31,4 +27,17 @@ trait Marshalling[Obj, Tpl] {
     * @return rowIndex => Tpl
     */
   protected def qr2tpl(qr: QueryResult): Int => Tpl = ???
+
+
+  // Server side ......................
+
+  /** Row to object cast interface to be materialized by macro */
+  protected def row2obj(row: jList[AnyRef]): Obj = ???
+
+  /** Row to tuple cast interface to be materialized by macro */
+  protected def row2tpl(row: jList[AnyRef]): Tpl = ???
+
+  //  // Row to json build-up with fast StringBuilder to be materialized by macro
+  //  protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
+
 }

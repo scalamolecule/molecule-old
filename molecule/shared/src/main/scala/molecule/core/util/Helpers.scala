@@ -24,6 +24,9 @@ trait Helpers extends DateHandling {
 
   def getKwName(kw: String) = kw.substring(kw.indexOf('/') + 1)
 
+  def thousands(i: Long): String =
+    i.toString.reverse.grouped(3).mkString(" ").reverse
+
   // Uniform Date formatting to allow text comparisons
   final protected def f(a: Any) = a match {
     case date: Date => date2str(date).replace("+", "\\\\+")

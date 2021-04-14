@@ -2,13 +2,17 @@ package molecule.core.api.getAsyncTpl
 
 import java.util.{Date, List => jList}
 import molecule.core.api.Molecule_0
-import molecule.core.marshalling.{Col, QueryResult}
+import molecule.core.marshalling.ConnProxy
+import molecule.core.ops.ColOps
+import molecule.datomic.base.ast.query.QueryExpr
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.transform.Query2String
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.util.{Failure, Success}
 
 
 /** Default asynchronous data getter methods on molecules returning `Future[List[Tpl]]`.
@@ -29,7 +33,7 @@ import scala.language.implicitConversions
   * Each asynchronous getter in this package simply wraps the result of its equivalent synchronous getter (in the
   * `get` package) in a Future. `getAsyncAsOf` thus wraps the result of `getAsOf` in a Future and so on.
   * */
-trait GetAsyncTplList[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetAsyncTplArray[Obj, Tpl] =>
+trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with GetAsyncTplArray[Obj, Tpl] =>
 
 
   // get ================================================================================================
@@ -46,62 +50,10 @@ trait GetAsyncTplList[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetAsyncTplArr
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsync(implicit conn: Conn): Future[List[Tpl]] =
-    Future(get(conn))
+  def getAsync(implicit conn: Conn): Future[List[Tpl]] = Future(get(conn))
 
 
-//  type Tpl2 = (String, Int)
-//
-//  def qr2tpl(qr: QueryResult): Int => Tpl2 = {
-//    // Arrays with data
-//    val a0 = qr.oneString(0)
-//    val a1 = qr.oneInt(0)
-//    (rowIndex: Int) => (a0(rowIndex), a1(rowIndex))
-//  }
-//
-//  trait QueryApi {
-//    def query(
-//      db: String,
-//      datalogQuery: String,
-//      rules: Option[String],
-//      l: Seq[(Int, (String, String))],
-//      ll: Seq[(Int, Seq[(String, String)])],
-//      lll: Seq[(Int, Seq[Seq[(String, String)]])],
-//      maxRows: Int,
-//      cols: Seq[Col]
-//    ): Future[QueryResult] = ???
-//  }
-//
-
-//  import playing.sloth.WebClient
-//
-//  object wire extends WebClient {
-//    val dto: QueryApi = clientAjax.wire[QueryApi]
-//  }
-//
-//  import wire._
-
-
-//  def getAsync2(implicit conn: Conn): Future[List[Tpl2]] = {
-//    dto.query(
-//    "localhost:4334/mbrainz-1968-1973",
-//    "[:find ?name :where [_ :Artist/name ?name]]",
-//    None, Nil, Nil, Nil,
-//    10,
-//    //      getCols(_model.elements)
-//    Nil
-//    ).map { qr =>
-//      val maxRows  = qr.maxRows
-//      val buf      = new ListBuffer[Tpl2]
-//      val columns  = qr2tpl(qr)
-//      var rowIndex = 0
-//      while (rowIndex < maxRows) {
-//        buf += columns(rowIndex)
-//        rowIndex += 1
-//      }
-//      buf.toList
-//    }
-//  }
+  def getAsync2(implicit conn: Conn): Future[Either[String, List[Tpl]]] = getAsync2(-1)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule.
@@ -119,6 +71,55 @@ trait GetAsyncTplList[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetAsyncTplArr
     */
   def getAsync(n: Int)(implicit conn: Conn): Future[List[Tpl]] =
     Future(get(n)(conn))
+
+
+  def getAsync2(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = {
+
+    if (isJsPlatform) {
+      conn match {
+        case ConnProxy(schemaTx, proxyDb) =>
+          val q2s          = Query2String(_query)
+          val datalogQuery = q2s.multiLine(60)
+          val resolve      = (expr: QueryExpr) => q2s.p(expr)
+          val rules        = if (_query.i.rules.isEmpty) Nil else
+            Seq("[" + (_query.i.rules map resolve mkString " ") + "]")
+          val (l, ll, lll) = encodeInputs(_query)
+          val cols         = getCols(_model.elements)(schemaTx.nsMap)
+          //          cols foreach println
+          moleculeWire.query(proxyDb, datalogQuery, rules, l, ll, lll, n, cols)
+            .recover { err =>
+              Left(err.toString)
+            }.map {
+            case Right(qr) =>
+              try {
+                val maxRows    = if (n == -1) qr.maxRows else n
+                val tplsBuffer = new ListBuffer[Tpl]
+                val columns    = qr2tpl(qr) // macro generated extractor
+                var rowIndex   = 0
+                while (rowIndex < maxRows) {
+                  tplsBuffer += columns(rowIndex)
+                  rowIndex += 1
+                }
+                Right(tplsBuffer.toList)
+              } catch {
+                case e: Throwable => Left(e.toString)
+              }
+
+            case Left(err) => Left(err)
+          }
+
+        case otherConn => Future(Left("Please provide an implicit ProxyConn"))
+      }
+    } else {
+      Future(
+        try {
+          Right(get(conn))
+        } catch {
+          case e: Throwable => Left(e.toString)
+        }
+      )
+    }
+  }
 
 
   // get as of ================================================================================================

@@ -21,18 +21,20 @@ object TxCount extends TxCount_0_0_L0[TxCount_, Init] with FirstNS {
 }
 
 trait _TxCount_ {
-  final class db     [Stay, Next] extends OneString[Stay, Next] with Indexed
-  final class basisT [Stay, Next] extends OneLong  [Stay, Next] with Indexed
-  
+  final class db    [Stay, Next] extends OneString[Stay, Next] with Indexed
+  final class basisT[Stay, Next] extends OneLong  [Stay, Next] with Indexed
+
   final class db$    [Stay, Next] extends OneString$[Stay] with Indexed
   final class basisT$[Stay, Next] extends OneLong$  [Stay] with Indexed
 }
 
 trait TxCount_[props] { def TxCount: props = ??? }
 
-trait TxCount_db      { lazy val db     : String = ??? }
-trait TxCount_basisT  { lazy val basisT : Long   = ??? }
+trait TxCount_db      { lazy val db    : String = ??? }
+trait TxCount_basisT  { lazy val basisT: Long   = ??? }
 
-trait TxCount_db$     { lazy val db$    : Option[String] = ??? }
-trait TxCount_basisT$ { lazy val basisT$: Option[Long  ] = ??? }
+// Please note that `$` has been subsituted with `_` to allow packaging to jars.
+// To be interpreted as optional and not tacit
+trait TxCount_db_     { lazy val db$    : Option[String] = ??? }
+trait TxCount_basisT_ { lazy val basisT$: Option[Long  ] = ??? }
 

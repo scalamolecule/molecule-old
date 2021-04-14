@@ -1,5 +1,7 @@
 package molecule.core.data
 
+import molecule.datomic.base.ast.metaSchema.{MetaNs, MetaSchema}
+
 
 /** Generated schema transaction data interface
   * */
@@ -23,4 +25,14 @@ trait SchemaTransaction {
     * and namespaces/attributes.
     * */
   val datomicClient: Seq[String]
+
+
+  /** Auto-generated MetaSchema
+    * */
+  val metaSchema: MetaSchema
+
+
+  /** Auto-generated map of Ns -> MetaNs
+    * */
+  val nsMap: Map[String, MetaNs]
 }

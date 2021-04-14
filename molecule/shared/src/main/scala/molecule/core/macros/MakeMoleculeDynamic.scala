@@ -39,10 +39,14 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
         abort(s"Unexpected tree for dynamic molecule:\n$other\n" + showRaw(other))
     }
 
-    val (constructor, row2tpl, row2obj) = moleculeBody.last match {
-      case ClassDef(_, _, _, Template(_, _, List(constructor, row2tpl, row2obj)))           => (constructor, row2tpl, row2obj)
-      case ClassDef(_, _, _, Template(_, _, List(constructor, row2tpl, row2obj, row2json))) => (constructor, row2tpl, row2obj)
-      case other                                                                            =>
+    val row2obj = moleculeBody.last match {
+      case ClassDef(_, _, _, Template(_, _, bodyElements)) =>
+        // Since we control the Molecule structure in the macros,
+        // we know that the obj marshaller is always the third element:
+        // constructor, row2tpl, row2obj ... or
+        // constructor, qr2tpl, qr2obj ...
+        bodyElements(2)
+      case other                                           =>
         abort(s"Unexpected tree for dynamic molecule body:\n$other\n" + showRaw(other))
     }
 

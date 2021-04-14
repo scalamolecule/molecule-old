@@ -1,9 +1,9 @@
 package molecule.datomic
 
-import molecule.core.generic._
 import molecule.core.api.{Keywords, Qm, TxBundles, TxFunctions}
 import molecule.core.expression.LogicImplicits
 import molecule.core.factory._
+import molecule.core.generic._
 import molecule.datomic.base.api.EntityOps
 
 /** Molecule API to be imported into your project to use Molecule with the Datomic Peer API.
@@ -43,7 +43,7 @@ trait api
     with GenericVAET
 
 object api extends api with Qm
-  // Default max arities (can become a burden on compilation time if number of molecules is in the thousands)
+  // Default max arities (can slow down compilation time if number of molecules is in the thousands)
   with Molecule_Factory22
   with Molecule_In_1_Factory22
   with Molecule_In_2_Factory22

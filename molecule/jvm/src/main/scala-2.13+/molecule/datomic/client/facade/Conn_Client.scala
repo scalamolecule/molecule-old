@@ -29,7 +29,7 @@ import scala.util.control.NonFatal
 
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
  * */
-case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
+case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String, system: String = "")
   extends ConnBase with Helpers {
 
   val clientConn: sync.Connection = client.connect(dbName)

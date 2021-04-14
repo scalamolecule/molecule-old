@@ -1,4 +1,5 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport.{jsEnv, scalaJSUseMainModuleInitializer}
 import sbt._
 import sbt.Keys._
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
@@ -9,7 +10,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    ThisBuild / version := "0.25.2-SNAPSHOT",
+    ThisBuild / version := "0.26.0-SNAPSHOT",
     crossScalaVersions := Seq("2.12.13", "2.13.5"),
     ThisBuild / scalaVersion := "2.13.5",
     scalacOptions := List(
@@ -44,6 +45,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time" % "2.0.0"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
+    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+    scalaJSUseMainModuleInitializer := true,
+    //    mainClass := Some("AdHocJs")
   )
 
   val server: Seq[Def.Setting[_]] = {
@@ -51,7 +55,16 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       libraryDependencies ++= Seq(
         //        "org.scala-lang" % "scala-reflect" % scalaVersion.value,
         "org.specs2" %% "specs2-core" % "4.10.6",
-        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0"
+        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
+        "com.typesafe.akka" %% "akka-stream" % "2.6.14",
+        "com.typesafe.akka" %% "akka-serialization-jackson" % "2.6.14",
+        "com.typesafe.akka" %% "akka-actor" % "2.6.14",
+        "com.typesafe.akka" %% "akka-actor-typed" % "2.6.14",
+        "com.typesafe.akka" %% "akka-slf4j" % "2.6.14",
+        "com.typesafe.akka" %% "akka-protobuf-v3" % "2.6.14",
+        "com.typesafe.akka" %% "akka-http" % "10.2.4",
+        "ch.megard" %% "akka-http-cors" % "1.1.1",
+//        "ch.qos.logback" % "logback-classic" % "1.2.3"
       ),
       testFrameworks += new TestFramework("utest.runner.Framework")
     ) ++ (if (datomicProtocol == "free") {
@@ -64,6 +77,11 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
       )
     })
+//    ++ Seq(
+//      // Avoid double bindings to slf4j
+//      libraryDependencies := libraryDependencies.value
+//        .map(_.exclude("org.slf4j", "slf4j-nop"))
+//    )
   }
 
 
@@ -72,7 +90,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.lihaoyi" %%% "utest" % "0.7.8",
       "com.marcgrue" %%% "playing-rpc-autowire" % "0.1.0",
-      "com.marcgrue" %%% "playing-rpc-sloth" % "0.2.1"
+      "com.marcgrue" %%% "playing-rpc-sloth" % "0.2.2-SNAPSHOT"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")
   )

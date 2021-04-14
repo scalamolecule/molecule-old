@@ -21,6 +21,7 @@ private[molecule] trait Base extends Dsl2Model {
         import molecule.core.dsl.base.Init
         import molecule.core.exceptions.MoleculeException
         ..$genericImports
+        import molecule.core.marshalling.{QueryExecutor, QueryResult}
         import molecule.core.ops.ModelOps._
         import molecule.datomic.base.ast.query._
         import molecule.datomic.base.transform.{Model2Query, QueryOptimizer}

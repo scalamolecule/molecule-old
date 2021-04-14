@@ -12,7 +12,7 @@ import org.specs2.mutable.Specification
 import scala.jdk.CollectionConverters._
 
 //class AdHocTest extends molecule.setup.TestSpec with Helpers {
-class AdHocTest extends Specification {
+class AdHocTestJvm extends Specification {
   //
   //  trait C {
   //    def c = 8
@@ -42,7 +42,9 @@ class AdHocTest extends Specification {
 
     implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
 
-    xx(Ns.int.bool).inspectGet
+
+    m(Ns.str.int)
+//    xx(Ns.int.bool).inspectGet
     //    Ns.int.get.head === 0
 
 //    println(Platform.bar)

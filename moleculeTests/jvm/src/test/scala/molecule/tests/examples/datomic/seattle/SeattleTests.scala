@@ -82,19 +82,19 @@ class SeattleTests extends TestSpec {
   "Querying _by_ attribute values" in new SeattleSetup {
 
     // Find attributes with a certain applied value
-    Community.name.`type`("twitter").get(3).sortBy(_._1) === List(
+    Community.name.tpe("twitter").get(3).sortBy(_._1) === List(
       ("Columbia Citizens", "twitter"),
       ("Discover SLU", "twitter"),
       ("Fremont Universe", "twitter"))
 
     // Append underscore to omit applied value from output (the same anyway)
     // (different results now since order is not guaranteed)
-    Community.name.type_("twitter").get(3) === List(
+    Community.name.tpe_("twitter").get(3) === List(
       "Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
     // Applying values with variables is also possible (form inputs etc)
     val tw = "twitter"
-    Community.name.type_(tw).get(3) === List(
+    Community.name.tpe_(tw).get(3) === List(
       "Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
 
@@ -147,18 +147,18 @@ class SeattleTests extends TestSpec {
 
     // Community input molecule awaiting some type value
     // Adding an underscore means that we don't want to return that value (will be the same for all result sets...)
-    val communitiesOfType = m(Community.name.type_.apply(?))
+    val communitiesOfType = m(Community.name.tpe_.apply(?))
 
     // Re-use input molecules to create new molecules with different community types
     val twitterCommunities  = communitiesOfType("twitter")
     val facebookCommunities = communitiesOfType("facebook_page")
 
-    // Only the `name` attribute is returned since `type` is the same for all results
+    // Only the `name` attribute is returned since tpe is the same for all results
     twitterCommunities.get(3) === List("Magnolia Voice", "Columbia Citizens", "Discover SLU")
     facebookCommunities.get(3) === List("Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
     // If we omit the underscore we can get the type too
-    val communitiesWithType = m(Community.name.`type`(?))
+    val communitiesWithType = m(Community.name.tpe(?))
     communitiesWithType("twitter").get(3) === List(
       ("Discover SLU", "twitter"),
       ("Fremont Universe", "twitter"),
@@ -192,8 +192,8 @@ class SeattleTests extends TestSpec {
 
     // Tuple of input values for multiple attributes - logical AND ------------------------
 
-    // Communities of some `type` AND some `orgtype`
-    val typeAndOrgtype = m(Community.name.type_(?).orgtype_(?))
+    // Communities of some tpe AND some `orgtype`
+    val typeAndOrgtype = m(Community.name.tpe_(?).orgtype_(?))
 
     // Finding communities of type "email_list" AND orgtype "community"
     val emailListCommunities = List(
@@ -219,8 +219,8 @@ class SeattleTests extends TestSpec {
 
     // Multiple tuples of input values ------------------------
 
-    // Communities of some `type` AND some `orgtype` (include input values)
-    val typeAndOrgtype2 = m(Community.name.`type`(?).orgtype(?))
+    // Communities of some tpe AND some `orgtype` (include input values)
+    val typeAndOrgtype2 = m(Community.name.tpe(?).orgtype(?))
 
     val emailListORcommercialWebsites = List(
       ("Fremont Arts Council", "email_list", "community"),
@@ -268,10 +268,10 @@ class SeattleTests extends TestSpec {
       val foodShoppingWebsites = List(
         ("InBallard", Set("nightlife", "food", "shopping", "services")))
 
-      m(Community.name.type_("website").category.contains("food")).get === foodWebsites
-      m(Community.name.type_("website").category.contains("food", "shopping")).get === foodShoppingWebsites
+      m(Community.name.tpe_("website").category.contains("food")).get === foodWebsites
+      m(Community.name.tpe_("website").category.contains("food", "shopping")).get === foodShoppingWebsites
 
-      val typeAndCategory = m(Community.name.type_(?).category contains ?)
+      val typeAndCategory = m(Community.name.tpe_(?).category contains ?)
       typeAndCategory("website", Set("food")).get === foodWebsites
       typeAndCategory("website", Set("food", "shopping")).get === foodShoppingWebsites
     }
@@ -281,7 +281,7 @@ class SeattleTests extends TestSpec {
   "Querying with rules (logical OR)" in new SeattleSetup {
 
     // Social media
-    Community.name.type_("twitter" or "facebook_page").get(3) === List(
+    Community.name.tpe_("twitter" or "facebook_page").get(3) === List(
       "Magnolia Voice", "Columbia Citizens", "Discover SLU")
 
     // NE and SW regions
@@ -295,12 +295,12 @@ class SeattleTests extends TestSpec {
       "MyWallingford",
     )
 
-    Community.name.type_("twitter" or "facebook_page")
+    Community.name.tpe_("twitter" or "facebook_page")
       .Neighborhood.District.region_("sw" or "s" or "se")
       .get.sorted === southernSocialMedia
 
     // Parameterized
-    val typeAndRegion = m(Community.name.type_(?).Neighborhood.District.region_(?))
+    val typeAndRegion = m(Community.name.tpe_(?).Neighborhood.District.region_(?))
 
     typeAndRegion(("twitter" or "facebook_page") and ("sw" or "s" or "se"))
       .get.sorted === southernSocialMedia
@@ -401,14 +401,14 @@ class SeattleTests extends TestSpec {
     Community
       .name("AAA")
       .url("myUrl")
-      .`type`("twitter")
+      .tpe("twitter")
       .orgtype("personal")
       .category("my", "favorites") // many cardinality allows multiple values
       .Neighborhood.name("myNeighborhood")
       .District.name("myDistrict").region("nw").save
 
     // Confirm all data is inserted
-    Community.name("AAA").url.`type`.orgtype.category.Neighborhood.name.District.name.region.get(1) === List(
+    Community.name("AAA").url.tpe.orgtype.category.Neighborhood.name.District.name.region.get(1) === List(
       ("AAA", "myUrl", "twitter", "personal", Set("my", "favorites"), "myNeighborhood", "myDistrict", "nw"))
 
     // Now we have one more community
@@ -417,7 +417,7 @@ class SeattleTests extends TestSpec {
     // We can also insert data in two steps:
 
     // 1. Define an "insert-molecule" (can be re-used!)
-    val insertCommunity = Community.name.url.`type`.orgtype.category.Neighborhood.name.District.name.region.insert
+    val insertCommunity = Community.name.url.tpe.orgtype.category.Neighborhood.name.District.name.region.insert
 
     // 2. Apply data to the insert-molecule
     insertCommunity("BBB", "url B", "twitter", "personal", Set("some", "cat B"), "neighborhood B", "district B", "s")
@@ -453,7 +453,7 @@ class SeattleTests extends TestSpec {
 
     // Data has been added
     if (system == SystemPeer) // Only Peer has fulltext search
-      Community.name.contains("DDD").url.`type`.orgtype.category.Neighborhood.name.District.name.region.get === newCommunitiesData
+      Community.name.contains("DDD").url.tpe.orgtype.category.Neighborhood.name.District.name.region.get === newCommunitiesData
     Community.e.name_.get.size === 157
 
     // 4 new categories added (these are facts, not entities)
@@ -503,7 +503,7 @@ class SeattleTests extends TestSpec {
     // Mixing updates and deletes..........................
 
     // Values before
-    Community.name("belltown 2").`type`.url.category.get === List(
+    Community.name("belltown 2").tpe.url.category.get === List(
       ("belltown 2", "blog", "url 2", Set("Super cool news", "extra category"))
     )
 
@@ -511,10 +511,10 @@ class SeattleTests extends TestSpec {
     Community(belltown).name("belltown 3").url().category().update
 
     // Belltown has no longer a url or any categories
-    Community.name("belltown 3").`type`.url.category.get === List()
+    Community.name("belltown 3").tpe.url.category.get === List()
 
     // ..but we still have a belltown with a name and type
-    Community.name("belltown 3").`type`.get === List(("belltown 3", "blog"))
+    Community.name("belltown 3").tpe.get === List(("belltown 3", "blog"))
 
 
     // Retract entities ...................................

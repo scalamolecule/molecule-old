@@ -10,7 +10,8 @@ case class SeattleData(conn0: Conn) extends SpecHelpers {
   implicit val conn = conn0
 
   // Insert data
-  Community.name.url.`type`.orgtype$.category$.Neighborhood.name.District.name.region$ insert  List(
+//  Community.name.url.`type`.orgtype$.category$.Neighborhood.name.District.name.region$ insert  List(
+  Community.name.url.tpe.orgtype$.category$.Neighborhood.name.District.name.region$ insert  List(
     ("15th Ave Community", "http://groups.yahoo.com/group/15thAve_Community/", "email_list", Some("community"), Some(Set("15th avenue residents")), "Capitol Hill", "East", Some("e")),
     ("Admiral Neighborhood Association", "http://groups.yahoo.com/group/AdmiralNeighborhood/", "email_list", Some("community"), Some(Set("neighborhood association")), "Admiral (West Seattle)", "Southwest", Some("sw")),
     ("Alki News", "http://groups.yahoo.com/group/alkibeachcommunity/", "email_list", Some("community"), Some(Set("members of the Alki Community Council and residents of the Alki Beach neighborhood")), "Alki", "Southwest", Some("sw")),

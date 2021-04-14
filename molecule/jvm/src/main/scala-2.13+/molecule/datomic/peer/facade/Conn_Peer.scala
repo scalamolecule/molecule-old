@@ -22,9 +22,9 @@ import scala.util.control.NonFatal
 /** Factory methods to create facade to Datomic Connection. */
 object Conn_Peer {
 
-  def apply(uri: String): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri))
+  def apply(uri: String): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), uri)
 
-  def apply(datomicConn: datomic.Connection): Conn_Peer = new Conn_Peer(datomicConn)
+//  def apply(datomicConn: datomic.Connection): Conn_Peer = new Conn_Peer(datomicConn)
 
   // Constructor for transaction functions where db is supplied inside transaction by transactor
   def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null) {
@@ -35,7 +35,7 @@ object Conn_Peer {
 
 /** Facade to Datomic connection for peer api.
   * */
-class Conn_Peer(val peerConn: datomic.Connection)
+class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
   extends ConnBase with Helpers {
 
   // In-memory fixed test db for integration testing of domain model

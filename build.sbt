@@ -28,10 +28,3 @@ lazy val moleculeTests = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(Settings.client)
   .jvmSettings(Settings.server)
 
-//  .settings(
-//    //    Settings.base ++
-//    //    Settings.server ++
-//    Settings.moleculeTests ++
-//      Settings.tests ++
-//      Publish.not
-//  )
