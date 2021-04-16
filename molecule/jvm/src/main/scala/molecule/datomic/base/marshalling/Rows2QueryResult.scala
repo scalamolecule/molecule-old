@@ -1,12 +1,13 @@
 package molecule.datomic.base.marshalling
 
-import molecule.core.marshalling.{Col, QueryResult}
+import molecule.core.marshalling.{Column, QueryResult}
+import molecule.datomic.base.marshalling.cast.Clojure2Scala
 
 case class Rows2QueryResult(
   rowCollection: java.util.Collection[java.util.List[AnyRef]],
   rowCountAll: Int,
   maxRows: Int,
-  cols: Seq[Col],
+  cols: Seq[Column],
   queryMs: Long
 ) extends Clojure2Scala(maxRows) {
 
@@ -15,136 +16,209 @@ case class Rows2QueryResult(
   var i                           = 0
 
   def get: QueryResult = {
-
     // Populate mutable arrays
-    //    cols.size match {
-    //      case 1     => get1()
-    //      case 2     => get2()
-    //      case 3     => get3()
-    //      case 4     => get4()
-    //      case 5     => get5()
-    //      case 6     => get6()
-    //      case 7     => get7()
-    //      case 8     => get8()
-    //      case 9     => get9()
-    //      case 10    => get10()
-    //      case 11    => get11()
-    //      case 12    => get12()
-    //      case 13    => get13()
-    //      case 14    => get14()
-    //      case 15    => get15()
-    //      case 16    => get16()
-    //      case 17    => get17()
-    //      case 18    => get18()
-    //      case 19    => get19()
-    //      case 20    => get20()
-    //      case 21    => get21()
-    //      case 22    => get22()
-    //      case 23    => get23()
-    //      case 24    => get24()
-    //      case 25    => get25()
-    //      case 26    => get26()
-    //      case 27    => get27()
-    //      case 28    => get28()
-    //      case 29    => get29()
-    //      case 30    => get30()
-    //      case 31    => get31()
-    //      case 32    => get32()
-    //      case 33    => get33()
-    //      case 34    => get34()
-    //      case 35    => get35()
-    //      case 36    => get36()
-    //      case 37    => get37()
-    //      case 38    => get38()
-    //      case 39    => get39()
-    //      case 40    => get40()
-    //      case 41    => get41()
-    //      case 42    => get42()
-    //      case 43    => get43()
-    //      case 44    => get44()
-    //      case 45    => get45()
-    //      case 46    => get46()
-    //      case 47    => get47()
-    //      case 48    => get48()
-    //      case 49    => get49()
-    //      case 50    => get50()
-    //      case 51    => get51()
-    //      case 52    => get52()
-    //      case 53    => get53()
-    //      case 54    => get54()
-    //      case 55    => get55()
-    //      case 56    => get56()
-    //      case 57    => get57()
-    //      case 58    => get58()
-    //      case 59    => get59()
-    //      case 60    => get60()
-    //      case 61    => get61()
-    //      case 62    => get62()
-    //      case 63    => get63()
-    //      case 64    => get64()
-    //      case 65    => get65()
-    //      case 66    => get66()
-    //      case 67    => get67()
-    //      case 68    => get68()
-    //      case 69    => get69()
-    //      case 70    => get70()
-    //      case 71    => get71()
-    //      case 72    => get72()
-    //      case 73    => get73()
-    //      case 74    => get74()
-    //      case 75    => get75()
-    //      case 76    => get76()
-    //      case 77    => get77()
-    //      case 78    => get78()
-    //      case 79    => get79()
-    //      case 80    => get80()
-    //      case 81    => get81()
-    //      case 82    => get82()
-    //      case 83    => get83()
-    //      case 84    => get84()
-    //      case 85    => get85()
-    //      case 86    => get86()
-    //      case 87    => get87()
-    //      case 88    => get88()
-    //      case 89    => get89()
-    //      case 90    => get90()
-    //      case 91    => get91()
-    //      case 92    => get92()
-    //      case 93    => get93()
-    //      case 94    => get94()
-    //      case 95    => get95()
-    //      case 96    => get96()
-    //      case 97    => get97()
-    //      case 98    => get98()
-    //      case 99    => get99()
-    //      case 100   => get100()
-    //      case other => throw new RuntimeException("Unexpected number of cols: " + other)
-    //    }
+    cols.size match {
+      case 1     => get1()
+      case 2     => get2()
+      case 3     => get3()
+      case 4     => get4()
+      case 5     => get5()
+      case 6     => get6()
+      case 7     => get7()
+      case 8     => get8()
+      case 9     => get9()
+      case 10    => get10()
+      case 11    => get11()
+      case 12    => get12()
+      case 13    => get13()
+      case 14    => get14()
+      case 15    => get15()
+      case 16    => get16()
+      case 17    => get17()
+      case 18    => get18()
+      case 19    => get19()
+      case 20    => get20()
+      case 21    => get21()
+      case 22    => get22()
+      case 23    => get23()
+      case 24    => get24()
+      case 25    => get25()
+      case 26    => get26()
+      case 27    => get27()
+      case 28    => get28()
+      case 29    => get29()
+      case 30    => get30()
+      case 31    => get31()
+      case 32    => get32()
+      case 33    => get33()
+      case 34    => get34()
+      case 35    => get35()
+      case 36    => get36()
+      case 37    => get37()
+      case 38    => get38()
+      case 39    => get39()
+      case 40    => get40()
+      case 41    => get41()
+      case 42    => get42()
+      case 43    => get43()
+      case 44    => get44()
+      case 45    => get45()
+      case 46    => get46()
+      case 47    => get47()
+      case 48    => get48()
+      case 49    => get49()
+      case 50    => get50()
+      case 51    => get51()
+      case 52    => get52()
+      case 53    => get53()
+      case 54    => get54()
+      case 55    => get55()
+      case 56    => get56()
+      case 57    => get57()
+      case 58    => get58()
+      case 59    => get59()
+      case 60    => get60()
+      case 61    => get61()
+      case 62    => get62()
+      case 63    => get63()
+      case 64    => get64()
+      case 65    => get65()
+      case 66    => get66()
+      case 67    => get67()
+      case 68    => get68()
+      case 69    => get69()
+      case 70    => get70()
+      case 71    => get71()
+      case 72    => get72()
+      case 73    => get73()
+      case 74    => get74()
+      case 75    => get75()
+      case 76    => get76()
+      case 77    => get77()
+      case 78    => get78()
+      case 79    => get79()
+      case 80    => get80()
+      case 81    => get81()
+      case 82    => get82()
+      case 83    => get83()
+      case 84    => get84()
+      case 85    => get85()
+      case 86    => get86()
+      case 87    => get87()
+      case 88    => get88()
+      case 89    => get89()
+      case 90    => get90()
+      case 91    => get91()
+      case 92    => get92()
+      case 93    => get93()
+      case 94    => get94()
+      case 95    => get95()
+      case 96    => get96()
+      case 97    => get97()
+      case 98    => get98()
+      case 99    => get99()
+      case 100   => get100()
+      case other => throw new RuntimeException("Unexpected number of cols: " + other)
+    }
 
     // Return populated and empty arrays
-    //    QueryResult(
-    //      strArrays,
-    //      numArrays,
-    //      listStrArrays,
-    //      listNumArrays,
-    //      mapStrArrays,
-    //      mapNumArrays,
-    //      arrayIndexes,
-    //      rowCountAll,
-    //      rowCount,
-    //      queryTime
-    //    )
-
-
     QueryResult(
-      Seq(Array("Ben", "Ann")),
-      Seq(Array(42, 37)),
-      Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil,
-      Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil,
-      Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil,
-      Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil,
-      Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil,
-      Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil, Nil,
+      oneStringArrays,
+      oneIntArrays,
+      oneLongArrays,
+      oneFloatArrays,
+      oneDoubleArrays,
+      oneBooleanArrays,
+      oneDateArrays,
+      oneUUIDArrays,
+      oneURIArrays,
+      oneBigIntArrays,
+      oneBigDecimalArrays,
+
+      optOneStringArrays,
+      optOneIntArrays,
+      optOneLongArrays,
+      optOneFloatArrays,
+      optOneDoubleArrays,
+      optOneBooleanArrays,
+      optOneDateArrays,
+      optOneUUIDArrays,
+      optOneURIArrays,
+      optOneBigIntArrays,
+      optOneBigDecimalArrays,
+
+      manyStringArrays,
+      manyIntArrays,
+      manyLongArrays,
+      manyFloatArrays,
+      manyDoubleArrays,
+      manyBooleanArrays,
+      manyDateArrays,
+      manyUUIDArrays,
+      manyURIArrays,
+      manyBigIntArrays,
+      manyBigDecimalArrays,
+
+      optManyStringArrays,
+      optManyIntArrays,
+      optManyLongArrays,
+      optManyFloatArrays,
+      optManyDoubleArrays,
+      optManyBooleanArrays,
+      optManyDateArrays,
+      optManyUUIDArrays,
+      optManyURIArrays,
+      optManyBigIntArrays,
+      optManyBigDecimalArrays,
+
+      mapStringArrays,
+      mapIntArrays,
+      mapLongArrays,
+      mapFloatArrays,
+      mapDoubleArrays,
+      mapBooleanArrays,
+      mapDateArrays,
+      mapUUIDArrays,
+      mapURIArrays,
+      mapBigIntArrays,
+      mapBigDecimalArrays,
+
+      optMapStringArrays,
+      optMapIntArrays,
+      optMapLongArrays,
+      optMapFloatArrays,
+      optMapDoubleArrays,
+      optMapBooleanArrays,
+      optMapDateArrays,
+      optMapUUIDArrays,
+      optMapURIArrays,
+      optMapBigIntArrays,
+      optMapBigDecimalArrays,
+
+      listOneStringArrays,
+      listOneIntArrays,
+      listOneLongArrays,
+      listOneFloatArrays,
+      listOneDoubleArrays,
+      listOneBooleanArrays,
+      listOneDateArrays,
+      listOneUUIDArrays,
+      listOneURIArrays,
+      listOneBigIntArrays,
+      listOneBigDecimalArrays,
+
+      listManyStringArrays,
+      listManyIntArrays,
+      listManyLongArrays,
+      listManyFloatArrays,
+      listManyDoubleArrays,
+      listManyBooleanArrays,
+      listManyDateArrays,
+      listManyUUIDArrays,
+      listManyURIArrays,
+      listManyBigIntArrays,
+      listManyBigDecimalArrays,
+
       rowCountAll,
       maxRows,
       queryMs
@@ -154,63 +228,47 @@ case class Rows2QueryResult(
 
   def getCastingLambda(colIndex: Int): (java.util.List[AnyRef], Int) => Unit = {
     val col = cols(colIndex)
-    if (col.aggrType.nonEmpty) {
-      if (col.card == 1) {
-        col.aggrType match {
-          case "aggrInt"          => castAggrInt(col, colIndex)
-          case "aggrDouble"       => castAggrDouble(col, colIndex)
-          case "aggrSingle"       => col.colType match {
-            case "string" => castMandatoryOneString(col, colIndex)
-            case "double" => castMandatoryOneDouble(col, colIndex)
-          }
-          case "aggrSingleSample" => castAggrSingleSample(col, colIndex)
-          case "aggrList"         => col.colType match {
-            case "string" => castAggrListString(col, colIndex)
-            case "double" => castAggrListDouble(col, colIndex)
-          }
-          case "aggrListRand"     => col.colType match {
-            case "string" => castAggrListRandString(col, colIndex)
-            case "double" => castAggrListRandDouble(col, colIndex)
-          }
-          case "aggrListDistinct" => castAggrListDistinct(col, colIndex)
-        }
-      } else {
-        col.aggrType match {
-          case "aggrInt"          => castAggrInt(col, colIndex)
-          case "aggrDouble"       => castAggrDouble(col, colIndex)
-          case "aggrSingle"       => col.colType match {
-            case "listString" => castAggrManySingleString(col, colIndex)
-            case "listDouble" => castAggrManySingleDouble(col, colIndex)
-          }
-          case "aggrSingleSample" => castAggrSingleSample(col, colIndex)
-          case "aggrList"         => col.colType match {
-            case "listString" => castAggrListString(col, colIndex)
-            case "listDouble" => castAggrListDouble(col, colIndex)
-          }
-          case "aggrListRand"     => col.colType match {
-            case "listString" => castAggrListRandString(col, colIndex)
-            case "listDouble" => castAggrListRandDouble(col, colIndex)
-          }
-          case "aggrListDistinct" => castAggrListDistinct(col, colIndex)
-        }
+    col.kind match {
+      case "mandatory"        => col.card match {
+        case 1 => castOne(col, colIndex)
+        case 2 => castMany(col, colIndex)
+        case 3 => castMap(col, colIndex)
       }
-    } else if (col.opt) {
-      col.colType match {
-        case "string"     => castOptionalOneString(col, colIndex)
-        case "double"     => castOptionalOneDouble(col, colIndex)
-        case "listString" => castOptionalListString(col, colIndex)
-        case "listDouble" => castOptionalListDouble(col, colIndex)
-        case "mapString"  => castOptionalMapString(col, colIndex)
-        case "mapDouble"  => castOptionalMapDouble(col, colIndex)
+      case "optional"         => col.card match {
+        case 1 => castOptOne(col, colIndex)
+        case 2 => castOptMany(col, colIndex)
+        case 3 => castOptMap(col, colIndex)
       }
-    } else {
-      col.colType match {
-        case "string"     => castMandatoryOneString(col, colIndex)
-        case "double"     => castMandatoryOneDouble(col, colIndex)
-        case "listString" => castMandatoryListString(col, colIndex)
-        case "listDouble" => castMandatoryListDouble(col, colIndex)
-        case "mapString"  => castMandatoryMapString(col, colIndex)
-        case "mapDouble"  => castMandatoryMapDouble(col, colIndex)
+      case "optionalApply"    => col.card match {
+        case 1 => castOptApplyOne(col, colIndex)
+        case 2 => castOptApplyMany(col, colIndex)
+      }
+      case "optionalRef"      => col.card match {
+        case 1 => castOptOneRefAttr(colIndex)
+        case 2 => castOptManyRefAttr(colIndex)
+      }
+      case "optionalApplyMap" => castOptApplyMap(col, colIndex)
+      case "keyedMapApply"    => castKeyedMap(col, colIndex)
+
+      case "aggrInt"    => castAggrInt(colIndex)
+      case "aggrDouble" => castAggrDouble(colIndex)
+
+      case "aggrList"         => col.card match {
+        case 1 => castAggrOneList(col, colIndex)
+        case 2 => castAggrManyList(col, colIndex)
+      }
+      case "aggrListDistinct" => col.card match {
+        case 1 => castAggrOneListDistinct(col, colIndex)
+        case 2 => castAggrManyListDistinct(col, colIndex)
+      }
+      case "aggrListRand"     => col.card match {
+        case 1 => castAggrOneListRand(col, colIndex)
+        case 2 => castAggrManyListRand(col, colIndex)
+      }
+      case "aggrSingleSample" => castAggrSingleSample(col, colIndex)
+      case "aggrSingle"       => col.card match {
+        case 1 => castAggrOneSingle(col, colIndex)
+        case 2 => castAggrManySingle(col, colIndex)
       }
     }
   }

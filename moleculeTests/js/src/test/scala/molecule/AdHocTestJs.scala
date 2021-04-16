@@ -16,18 +16,19 @@ object AdHocTestJs extends TestSuite {
     DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973")
   )
 
-  val tests = Tests {
-    test("first") {
-      Artist.name.endYear.getAsync2(2).flatMap {
-        case Right(res) => Future(res ==> List(("Ben", 42), ("Ann", 37)))
-        case Left(err)  => Future(err ==> 7)
-      }
+  implicit class testFutureEither[T](eitherFuture: Future[Either[String, T]]) {
+    def ===>(expectedValue: T): Future[Unit] = eitherFuture.map {
+      case Right(realValue) => realValue ==> expectedValue
+      case Left(realValue)  => realValue ==> expectedValue
     }
-    test("first2") {
-      Artist.name.endYear.getAsync2(2).foreach {
-        case Right(res) => res ==> List(("Ben", 42), ("Ann", 37))
-        case Left(err)  => err ==> 7
-      }
+  }
+
+
+  val tests = Tests {
+    test("client query") {
+      Artist.name.endYear.getAsync2(2) ===> List(
+        ("Dunn and McCashen", 1968), ("Brüder Grimm", 1863)
+      )
     }
   }
 }

@@ -3,7 +3,7 @@ package molecule.core.ops
 import java.net.URI
 import java.util.{Date, UUID}
 import molecule.core.ast.elements._
-import molecule.core.marshalling.Col
+import molecule.core.marshalling.Column
 import molecule.datomic.base.ast.metaSchema._
 import molecule.datomic.base.ast.query._
 import molecule.datomic.base.transform.Model2Query.coalesce
@@ -13,10 +13,12 @@ import scala.collection.mutable.ListBuffer
 
 trait ColOps  {
 
-  def getCols(elements: Seq[Element])
-             (implicit nsMap: Map[String, MetaNs]): Seq[Col] = {
+  def getCols(elements: Seq[Element], nsMap: Map[String, MetaNs]): Seq[Column] = {
+
+    elements foreach println
+
     var i          = 0
-    val cols       = new ListBuffer[Col]()
+    val cols       = new ListBuffer[Column]()
     var related    = 0
     var curNsAlias = ""
     var prevAttr   = ""
@@ -41,7 +43,7 @@ trait ColOps  {
         else
           ""
 
-        cols += Col(
+        cols += Column(
           i, related, curNsAlias, nsFull, attr, tpe,
           getColType(attr, card, tpe),
 //          tpe,
@@ -64,18 +66,18 @@ trait ColOps  {
 
         attr match {
           case "e" =>
-            cols += Col(i, related, curNsAlias, nsFull, attr, tpe, "double", 1,
+            cols += Column(i, related, curNsAlias, nsFull, attr, tpe, "double", 1,
               aggrType = getAggrType(value),
 //              attrExpr = getExpr(value)
             )
             i += 1
 
           case "t" | "tx" =>
-            cols += Col(i, related, curNsAlias, nsFull, prevAttr, "Long", "double", 1, kind = attr)
+            cols += Column(i, related, curNsAlias, nsFull, prevAttr, "Long", "double", 1, kind = attr)
             i += 1
 
           case "txInstant" =>
-            cols += Col(i, related, curNsAlias, nsFull, prevAttr, "Date", "string", 1, kind = attr)
+            cols += Column(i, related, curNsAlias, nsFull, prevAttr, "Date", "string", 1, kind = attr)
             i += 1
 
           case _ =>

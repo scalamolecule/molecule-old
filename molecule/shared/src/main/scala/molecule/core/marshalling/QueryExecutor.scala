@@ -12,6 +12,6 @@ trait QueryExecutor {
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    cols: Seq[Col]
+    cols: Seq[Column]
   ): Future[Either[String, QueryResult]]
 }

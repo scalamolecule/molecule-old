@@ -884,7 +884,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
 
       } else if (t.isMapAttr$) {
         xx(95, attrStr, value)
-        addCast(castOptionalMapApplyAttr, t)
+        addCast(castOptionalApplyMapAttr, t)
         Atom(t.nsFull, attrStr, t.tpeS, 3, value, None, bi(tree, t))
 
       } else if (t.isRefAttr) {

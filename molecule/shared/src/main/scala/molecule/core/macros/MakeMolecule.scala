@@ -43,7 +43,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"""
           final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
             val a0 = qr.oneString(0)
-            val a1 = qr.oneInt(0)
+            val a1 = qr.oneLong(0)
             (rowIndex: Int) => (a0(rowIndex), a1(rowIndex))
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???

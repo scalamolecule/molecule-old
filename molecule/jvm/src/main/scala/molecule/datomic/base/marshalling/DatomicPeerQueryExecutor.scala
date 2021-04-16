@@ -21,7 +21,7 @@ object DatomicPeerQueryExecutor extends QueryExecutor with DateHandling with Hel
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    cols: Seq[Col]
+    cols: Seq[Column]
   ): Future[Either[String, QueryResult]] = {
     Future(
       try {
@@ -73,7 +73,7 @@ object DatomicPeerQueryExecutor extends QueryExecutor with DateHandling with Hel
         }
       } catch {
         case t: Throwable =>
-          Left(t.getMessage)
+          Left("Error from executing query in DatomicPeerQueryExecutor: " + t.getMessage)
       }
     )
   }

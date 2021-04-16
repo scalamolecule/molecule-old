@@ -1,6 +1,6 @@
 package molecule.core.marshalling
 
-case class Col(
+case class Column(
   colIndex: Int,
   related: Int,
   nsAlias: String,
