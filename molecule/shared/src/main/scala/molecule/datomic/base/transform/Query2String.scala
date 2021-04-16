@@ -20,7 +20,7 @@ case class Query2String(q: Query) extends Helpers {
   // Ugly convenience hack to switch BigInt representation
   var asN = false
 
-  def p(expr: QueryExpr): String = expr match {
+  val p: QueryExpr => String = {
     case Query(find, widh, in, where)                    => pp(find, widh, in, where)
     case Find(outputs)                                   => ":find  " + outputs.map(p).mkString(" ")
     case With(variables)                                 => if (variables.isEmpty) "" else ":with  " + variables.map(s).mkString(" ")

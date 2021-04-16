@@ -252,12 +252,11 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
   }
 
   def _query(model: Model, query: Query, _db: Option[DatomicDb]): jCollection[jList[AnyRef]] = {
-    val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
-    val optimizedQuery  = QueryOptimizer(query)
-    val p               = (expr: QueryExpr) => Query2String(optimizedQuery).p(expr)
+    val p               = Query2String(query).p
     val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
     val allInputs       = rules ++ inputsEvaluated
+    val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
     try {
       blocking {
         clientDatomic.q(query.toMap, adhocDb, allInputs: _*)

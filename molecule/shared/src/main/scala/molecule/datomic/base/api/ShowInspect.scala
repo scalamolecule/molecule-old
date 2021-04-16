@@ -243,7 +243,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       Model2Query(_model)
 
       val ins   = QueryOps(_query).inputs
-      val p     = (expr: QueryExpr) => Query2String(_query).p(expr)
+      val p     = Query2String(_query).p
       val rules = "[" + (_query.i.rules.map(p).mkString(" ")) + "]"
       val db    = conn.db
       val first = if (_query.i.rules.isEmpty) Seq(db) else Seq(db, rules)

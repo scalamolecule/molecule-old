@@ -43,12 +43,12 @@ trait ColOps  {
 
         cols += Col(
           i, related, curNsAlias, nsFull, attr, tpe,
-//          getColType(attr, card, tpe),
-          tpe,
+          getColType(attr, card, tpe),
+//          tpe,
           card,
           attr.last == '$',
           enums,
-          "", //getAggrType(value),
+          getAggrType(value),
           "", //getExpr(value),
           kind = kind
         )
@@ -65,7 +65,7 @@ trait ColOps  {
         attr match {
           case "e" =>
             cols += Col(i, related, curNsAlias, nsFull, attr, tpe, "double", 1,
-//              aggrType = getAggrType(value),
+              aggrType = getAggrType(value),
 //              attrExpr = getExpr(value)
             )
             i += 1
@@ -126,19 +126,29 @@ trait ColOps  {
     case other                                                   => sys.error(s"[molecule.ops.QueryOps] UNEXPECTED inputs: $other")
   }
 
+  private def getColType(attr: String, card: Int, tpe: String): String = (card, tpe) match {
+    case (1, "String" | "Boolean" | "Date" | "UUID" | "URI" | "BigInt" | "BigDecimal") => "string"
+    case (1, "Int" | "Long" | "ref" | "Float" | "Double")                              => "double"
+    case (2, "String" | "Boolean" | "Date" | "UUID" | "URI" | "BigInt" | "BigDecimal") => "listString"
+    case (2, "Int" | "Long" | "ref" | "Float" | "Double")                              => "listDouble"
+    case (_, "String" | "Boolean" | "Date" | "UUID" | "URI" | "BigInt" | "BigDecimal") => "mapString"
+    case (_, "Int" | "Long" | "ref" | "Float" | "Double")                              => "mapDouble"
+    case _                                                                             =>
+      throw new RuntimeException(s"Unexpected colType input: $attr   -   $card   -   $tpe")
+  }
 
-//  def getAggrType(value: Value) = value match {
-//    case fn: Fn   => fn match {
-//      case Fn("count" | "count-distinct", _)                   => "aggrInt"
-//      case Fn("avg" | "variance" | "stddev", _)                => "aggrDouble"
-//      case Fn("min" | "max" | "rand" | "sum" | "median", None) => "aggrSingle"
-//      case Fn("sample", Some(1))                               => "aggrSingleSample"
-//      case Fn("min" | "max" | "sample", Some(_))               => "aggrList"
-//      case Fn("rand", Some(_))                                 => "aggrListRand"
-//      case other                                               =>
-//        throw new RuntimeException(s"Unexpected fn: $other")
-//    }
-//    case Distinct => "aggrListDistinct"
-//    case _        => ""
-//  }
+  def getAggrType(value: Value) = value match {
+    case fn: Fn   => fn match {
+      case Fn("count" | "count-distinct", _)                   => "aggrInt"
+      case Fn("avg" | "variance" | "stddev", _)                => "aggrDouble"
+      case Fn("min" | "max" | "rand" | "sum" | "median", None) => "aggrSingle"
+      case Fn("sample", Some(1))                               => "aggrSingleSample"
+      case Fn("min" | "max" | "sample", Some(_))               => "aggrList"
+      case Fn("rand", Some(_))                                 => "aggrListRand"
+      case other                                               =>
+        throw new RuntimeException(s"Unexpected fn: $other")
+    }
+    case Distinct => "aggrListDistinct"
+    case _        => ""
+  }
 }

@@ -57,7 +57,7 @@ trait MoleculeTestHelper extends RegexMatching {
   def formatInputs(query: Query): String = {
     val rules     = if (query.i.rules.isEmpty) ""
     else {
-      val p = (expr: QueryExpr) => Query2String(query).p(expr)
+      val p = Query2String(query).p
       query.i.rules.map(p).mkString("[", "\n     ", "]")
     }
     val first     = if (query.i.rules.isEmpty) Seq("datomic.db.Db@xxx") else Seq("datomic.db.Db@xxx", rules)

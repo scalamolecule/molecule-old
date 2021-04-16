@@ -23,5 +23,11 @@ object AdHocTestJs extends TestSuite {
         case Left(err)  => Future(err ==> 7)
       }
     }
+    test("first2") {
+      Artist.name.endYear.getAsync2(2).foreach {
+        case Right(res) => res ==> List(("Ben", 42), ("Ann", 37))
+        case Left(err)  => err ==> 7
+      }
+    }
   }
 }

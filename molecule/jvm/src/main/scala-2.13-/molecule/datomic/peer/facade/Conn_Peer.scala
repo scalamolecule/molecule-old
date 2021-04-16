@@ -235,8 +235,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
 
   // Datalog query execution
   def _query(model: Model, query: Query, _db: Option[DatomicDb] = None): jCollection[jList[AnyRef]] = {
-    val optimizedQuery  = QueryOptimizer(query)
-    val p               = (expr: QueryExpr) => Query2String(optimizedQuery).p(expr)
+    val p               = Query2String(query).p
     val rules           = "[" + (query.i.rules map p mkString " ") + "]"
     val adhocDb         = _db.getOrElse(db).getDatomicDb
     val first           = if (query.i.rules.isEmpty) Seq(adhocDb) else Seq(adhocDb, rules)

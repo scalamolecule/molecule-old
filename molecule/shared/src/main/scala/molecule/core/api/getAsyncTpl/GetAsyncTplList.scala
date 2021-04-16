@@ -12,7 +12,6 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
-import scala.util.{Failure, Success}
 
 
 /** Default asynchronous data getter methods on molecules returning `Future[List[Tpl]]`.
@@ -74,18 +73,19 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
 
 
   def getAsync2(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = {
-
     if (isJsPlatform) {
       conn match {
         case ConnProxy(schemaTx, proxyDb) =>
-          val q2s          = Query2String(_query)
+          val query        = _nestedQuery.getOrElse(_query)
+          val q2s          = Query2String(query)
           val datalogQuery = q2s.multiLine(60)
-          val resolve      = (expr: QueryExpr) => q2s.p(expr)
-          val rules        = if (_query.i.rules.isEmpty) Nil else
-            Seq("[" + (_query.i.rules map resolve mkString " ") + "]")
-          val (l, ll, lll) = encodeInputs(_query)
+          val p            = q2s.p
+          val rules        = if (query.i.rules.isEmpty) Nil else
+            Seq("[" + (query.i.rules map p mkString " ") + "]")
+          val (l, ll, lll) = encodeInputs(query)
           val cols         = getCols(_model.elements)(schemaTx.nsMap)
-          //          cols foreach println
+          cols foreach println
+          // Fetch QueryResult with Ajax call
           moleculeWire.query(proxyDb, datalogQuery, rules, l, ll, lll, n, cols)
             .recover { err =>
               Left(err.toString)

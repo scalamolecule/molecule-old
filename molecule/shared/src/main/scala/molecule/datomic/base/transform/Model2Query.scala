@@ -56,6 +56,7 @@ object Model2Query extends Helpers {
     )
     val quer3nestedOpt: Option[Query] = if (nestedEntityClauses.nonEmpty) Some(query3nested) else None
 
+    // Optimize
     (QueryOptimizer(query3), quer3nestedOpt.map(QueryOptimizer.apply), query3, quer3nestedOpt)
   }
 
