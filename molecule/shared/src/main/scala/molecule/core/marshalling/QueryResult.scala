@@ -6,8 +6,8 @@ import java.util.{Date, UUID}
 case class QueryResult(
   oneString: Seq[Array[String]] = Nil,
   oneInt: Seq[Array[Int]] = Nil,
-  oneLong: Seq[Array[Long]] = Nil,
   oneFloat: Seq[Array[Float]] = Nil,
+  oneLong: Seq[Array[Long]] = Nil,
   oneDouble: Seq[Array[Double]] = Nil,
   oneBoolean: Seq[Array[Boolean]] = Nil,
   oneDate: Seq[Array[Date]] = Nil,
@@ -18,8 +18,8 @@ case class QueryResult(
 
   optOneString: Seq[Array[Option[String]]] = Nil,
   optOneInt: Seq[Array[Option[Int]]] = Nil,
-  optOneLong: Seq[Array[Option[Long]]] = Nil,
   optOneFloat: Seq[Array[Option[Float]]] = Nil,
+  optOneLong: Seq[Array[Option[Long]]] = Nil,
   optOneDouble: Seq[Array[Option[Double]]] = Nil,
   optOneBoolean: Seq[Array[Option[Boolean]]] = Nil,
   optOneDate: Seq[Array[Option[Date]]] = Nil,
@@ -30,8 +30,8 @@ case class QueryResult(
 
   manyString: Seq[Array[Set[String]]] = Nil,
   manyInt: Seq[Array[Set[Int]]] = Nil,
-  manyLong: Seq[Array[Set[Long]]] = Nil,
   manyFloat: Seq[Array[Set[Float]]] = Nil,
+  manyLong: Seq[Array[Set[Long]]] = Nil,
   manyDouble: Seq[Array[Set[Double]]] = Nil,
   manyBoolean: Seq[Array[Set[Boolean]]] = Nil,
   manyDate: Seq[Array[Set[Date]]] = Nil,
@@ -42,8 +42,8 @@ case class QueryResult(
 
   optManyString: Seq[Array[Option[Set[String]]]] = Nil,
   optManyInt: Seq[Array[Option[Set[Int]]]] = Nil,
-  optManyLong: Seq[Array[Option[Set[Long]]]] = Nil,
   optManyFloat: Seq[Array[Option[Set[Float]]]] = Nil,
+  optManyLong: Seq[Array[Option[Set[Long]]]] = Nil,
   optManyDouble: Seq[Array[Option[Set[Double]]]] = Nil,
   optManyBoolean: Seq[Array[Option[Set[Boolean]]]] = Nil,
   optManyDate: Seq[Array[Option[Set[Date]]]] = Nil,
@@ -54,8 +54,8 @@ case class QueryResult(
 
   mapString: Seq[Array[Map[String, String]]] = Nil,
   mapInt: Seq[Array[Map[String, Int]]] = Nil,
-  mapLong: Seq[Array[Map[String, Long]]] = Nil,
   mapFloat: Seq[Array[Map[String, Float]]] = Nil,
+  mapLong: Seq[Array[Map[String, Long]]] = Nil,
   mapDouble: Seq[Array[Map[String, Double]]] = Nil,
   mapBoolean: Seq[Array[Map[String, Boolean]]] = Nil,
   mapDate: Seq[Array[Map[String, Date]]] = Nil,
@@ -66,8 +66,8 @@ case class QueryResult(
 
   optMapString: Seq[Array[Option[Map[String, String]]]] = Nil,
   optMapInt: Seq[Array[Option[Map[String, Int]]]] = Nil,
-  optMapLong: Seq[Array[Option[Map[String, Long]]]] = Nil,
   optMapFloat: Seq[Array[Option[Map[String, Float]]]] = Nil,
+  optMapLong: Seq[Array[Option[Map[String, Long]]]] = Nil,
   optMapDouble: Seq[Array[Option[Map[String, Double]]]] = Nil,
   optMapBoolean: Seq[Array[Option[Map[String, Boolean]]]] = Nil,
   optMapDate: Seq[Array[Option[Map[String, Date]]]] = Nil,
@@ -78,8 +78,8 @@ case class QueryResult(
 
   listOneString: Seq[Array[List[String]]] = Nil,
   listOneInt: Seq[Array[List[Int]]] = Nil,
-  listOneLong: Seq[Array[List[Long]]] = Nil,
   listOneFloat: Seq[Array[List[Float]]] = Nil,
+  listOneLong: Seq[Array[List[Long]]] = Nil,
   listOneDouble: Seq[Array[List[Double]]] = Nil,
   listOneBoolean: Seq[Array[List[Boolean]]] = Nil,
   listOneDate: Seq[Array[List[Date]]] = Nil,
@@ -90,8 +90,8 @@ case class QueryResult(
 
   listManyString: Seq[Array[List[Set[String]]]] = Nil,
   listManyInt: Seq[Array[List[Set[Int]]]] = Nil,
-  listManyLong: Seq[Array[List[Set[Long]]]] = Nil,
   listManyFloat: Seq[Array[List[Set[Float]]]] = Nil,
+  listManyLong: Seq[Array[List[Set[Long]]]] = Nil,
   listManyDouble: Seq[Array[List[Set[Double]]]] = Nil,
   listManyBoolean: Seq[Array[List[Set[Boolean]]]] = Nil,
   listManyDate: Seq[Array[List[Set[Date]]]] = Nil,
@@ -109,8 +109,8 @@ case class QueryResult(
     val data   = Seq(
       if (oneString.isEmpty) None else Some("oneString" -> oneString.map(_.toSeq.take(max))),
       if (oneInt.isEmpty) None else Some("oneInt" -> oneInt.map(_.toSeq.take(max))),
-      if (oneLong.isEmpty) None else Some("oneLong" -> oneLong.map(_.toSeq.take(max))),
       if (oneFloat.isEmpty) None else Some("oneFloat" -> oneFloat.map(_.toSeq.take(max))),
+      if (oneLong.isEmpty) None else Some("oneLong" -> oneLong.map(_.toSeq.take(max))),
       if (oneDouble.isEmpty) None else Some("oneDouble" -> oneDouble.map(_.toSeq.take(max))),
       if (oneBoolean.isEmpty) None else Some("oneBoolean" -> oneBoolean.map(_.toSeq.take(max))),
       if (oneDate.isEmpty) None else Some("oneDate" -> oneDate.map(_.toSeq.take(max))),
@@ -121,8 +121,8 @@ case class QueryResult(
 
       if (optOneString.isEmpty) None else Some("optOneString" -> optOneString.map(_.toSeq.take(max))),
       if (optOneInt.isEmpty) None else Some("optOneInt" -> optOneInt.map(_.toSeq.take(max))),
-      if (optOneLong.isEmpty) None else Some("optOneLong" -> optOneLong.map(_.toSeq.take(max))),
       if (optOneFloat.isEmpty) None else Some("optOneFloat" -> optOneFloat.map(_.toSeq.take(max))),
+      if (optOneLong.isEmpty) None else Some("optOneLong" -> optOneLong.map(_.toSeq.take(max))),
       if (optOneDouble.isEmpty) None else Some("optOneDouble" -> optOneDouble.map(_.toSeq.take(max))),
       if (optOneBoolean.isEmpty) None else Some("optOneBoolean" -> optOneBoolean.map(_.toSeq.take(max))),
       if (optOneDate.isEmpty) None else Some("optOneDate" -> optOneDate.map(_.toSeq.take(max))),
@@ -133,8 +133,8 @@ case class QueryResult(
 
       if (manyString.isEmpty) None else Some("manyString" -> manyString.map(_.toSeq.take(max))),
       if (manyInt.isEmpty) None else Some("manyInt" -> manyInt.map(_.toSeq.take(max))),
-      if (manyLong.isEmpty) None else Some("manyLong" -> manyLong.map(_.toSeq.take(max))),
       if (manyFloat.isEmpty) None else Some("manyFloat" -> manyFloat.map(_.toSeq.take(max))),
+      if (manyLong.isEmpty) None else Some("manyLong" -> manyLong.map(_.toSeq.take(max))),
       if (manyDouble.isEmpty) None else Some("manyDouble" -> manyDouble.map(_.toSeq.take(max))),
       if (manyBoolean.isEmpty) None else Some("manyBoolean" -> manyBoolean.map(_.toSeq.take(max))),
       if (manyDate.isEmpty) None else Some("manyDate" -> manyDate.map(_.toSeq.take(max))),
@@ -145,8 +145,8 @@ case class QueryResult(
 
       if (optManyString.isEmpty) None else Some("optManyString" -> optManyString.map(_.toSeq.take(max))),
       if (optManyInt.isEmpty) None else Some("optManyInt" -> optManyInt.map(_.toSeq.take(max))),
-      if (optManyLong.isEmpty) None else Some("optManyLong" -> optManyLong.map(_.toSeq.take(max))),
       if (optManyFloat.isEmpty) None else Some("optManyFloat" -> optManyFloat.map(_.toSeq.take(max))),
+      if (optManyLong.isEmpty) None else Some("optManyLong" -> optManyLong.map(_.toSeq.take(max))),
       if (optManyDouble.isEmpty) None else Some("optManyDouble" -> optManyDouble.map(_.toSeq.take(max))),
       if (optManyBoolean.isEmpty) None else Some("optManyBoolean" -> optManyBoolean.map(_.toSeq.take(max))),
       if (optManyDate.isEmpty) None else Some("optManyDate" -> optManyDate.map(_.toSeq.take(max))),
@@ -157,8 +157,8 @@ case class QueryResult(
 
       if (mapString.isEmpty) None else Some("mapString" -> mapString.map(_.toSeq.take(max))),
       if (mapInt.isEmpty) None else Some("mapInt" -> mapInt.map(_.toSeq.take(max))),
-      if (mapLong.isEmpty) None else Some("mapLong" -> mapLong.map(_.toSeq.take(max))),
       if (mapFloat.isEmpty) None else Some("mapFloat" -> mapFloat.map(_.toSeq.take(max))),
+      if (mapLong.isEmpty) None else Some("mapLong" -> mapLong.map(_.toSeq.take(max))),
       if (mapDouble.isEmpty) None else Some("mapDouble" -> mapDouble.map(_.toSeq.take(max))),
       if (mapBoolean.isEmpty) None else Some("mapBoolean" -> mapBoolean.map(_.toSeq.take(max))),
       if (mapDate.isEmpty) None else Some("mapDate" -> mapDate.map(_.toSeq.take(max))),
@@ -169,8 +169,8 @@ case class QueryResult(
 
       if (optMapString.isEmpty) None else Some("optMapString" -> optMapString.map(_.toSeq.take(max))),
       if (optMapInt.isEmpty) None else Some("optMapInt" -> optMapInt.map(_.toSeq.take(max))),
-      if (optMapLong.isEmpty) None else Some("optMapLong" -> optMapLong.map(_.toSeq.take(max))),
       if (optMapFloat.isEmpty) None else Some("optMapFloat" -> optMapFloat.map(_.toSeq.take(max))),
+      if (optMapLong.isEmpty) None else Some("optMapLong" -> optMapLong.map(_.toSeq.take(max))),
       if (optMapDouble.isEmpty) None else Some("optMapDouble" -> optMapDouble.map(_.toSeq.take(max))),
       if (optMapBoolean.isEmpty) None else Some("optMapBoolean" -> optMapBoolean.map(_.toSeq.take(max))),
       if (optMapDate.isEmpty) None else Some("optMapDate" -> optMapDate.map(_.toSeq.take(max))),
@@ -181,8 +181,8 @@ case class QueryResult(
 
       if (listOneString.isEmpty) None else Some("listOneString" -> listOneString.map(_.toSeq.take(max))),
       if (listOneInt.isEmpty) None else Some("listOneInt" -> listOneInt.map(_.toSeq.take(max))),
-      if (listOneLong.isEmpty) None else Some("listOneLong" -> listOneLong.map(_.toSeq.take(max))),
       if (listOneFloat.isEmpty) None else Some("listOneFloat" -> listOneFloat.map(_.toSeq.take(max))),
+      if (listOneLong.isEmpty) None else Some("listOneLong" -> listOneLong.map(_.toSeq.take(max))),
       if (listOneDouble.isEmpty) None else Some("listOneDouble" -> listOneDouble.map(_.toSeq.take(max))),
       if (listOneBoolean.isEmpty) None else Some("listOneBoolean" -> listOneBoolean.map(_.toSeq.take(max))),
       if (listOneDate.isEmpty) None else Some("listOneDate" -> listOneDate.map(_.toSeq.take(max))),
@@ -193,8 +193,8 @@ case class QueryResult(
 
       if (listManyString.isEmpty) None else Some("listManyString" -> listManyString.map(_.toSeq.take(max))),
       if (listManyInt.isEmpty) None else Some("listManyInt" -> listManyInt.map(_.toSeq.take(max))),
-      if (listManyLong.isEmpty) None else Some("listManyLong" -> listManyLong.map(_.toSeq.take(max))),
       if (listManyFloat.isEmpty) None else Some("listManyFloat" -> listManyFloat.map(_.toSeq.take(max))),
+      if (listManyLong.isEmpty) None else Some("listManyLong" -> listManyLong.map(_.toSeq.take(max))),
       if (listManyDouble.isEmpty) None else Some("listManyDouble" -> listManyDouble.map(_.toSeq.take(max))),
       if (listManyBoolean.isEmpty) None else Some("listManyBoolean" -> listManyBoolean.map(_.toSeq.take(max))),
       if (listManyDate.isEmpty) None else Some("listManyDate" -> listManyDate.map(_.toSeq.take(max))),

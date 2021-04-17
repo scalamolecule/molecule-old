@@ -7,12 +7,14 @@ import java.util.{List => jList}
   */
 trait Marshalling[Obj, Tpl] {
 
-  lazy val isJsPlatform: Boolean = ???
+  protected lazy val isJsPlatform: Boolean = ???
 
 
   // Client side ......................
 
-  lazy val moleculeWire: QueryExecutor = ???
+  protected lazy val moleculeWire: QueryExecutor = ???
+
+  protected lazy val indexes: List[(Int, Int, Int, Int)] = ???
 
   /** QueryResult to object cast interface to be materialized by macro
     *

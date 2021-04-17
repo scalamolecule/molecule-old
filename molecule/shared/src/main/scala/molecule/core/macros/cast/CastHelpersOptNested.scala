@@ -1,4 +1,4 @@
-package molecule.core.marshalling
+package molecule.core.macros.cast
 
 import java.lang.{Double => jDouble, Long => jLong}
 import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}

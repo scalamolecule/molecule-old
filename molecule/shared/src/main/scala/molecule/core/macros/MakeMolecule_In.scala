@@ -17,7 +17,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
 
   private[this] final def generateInputMolecule(dsl: Tree, ObjType: Type, InTypes: Type*)(OutTypes: Type*): Tree = {
     val (
-      genericImports, model0, types, casts, obj,
+      genericImports, model0, types, castss, indexes, obj,
       hasVariables, _, postTypes, postCasts, _, _, _
       )                  = getModel(dsl)
     val imports          = getImports(genericImports)
@@ -25,7 +25,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     val OutMoleculeTpe   = molecule_o(OutTypes.size)
     val inputMolecule    = TypeName(c.freshName("inputMolecule$"))
     val outMolecule      = TypeName(c.freshName("outMolecule$"))
-    val flat             = casts.size == 1
+    val flat             = castss.size == 1
 
     // Methods for applying separate lists of input
     val applySeqs = InTypes match {
@@ -43,7 +43,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), None, boundRawQuery, None)
               ) {
-                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(casts)})
+                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
               }
               new $outMolecule
@@ -58,8 +58,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), Some(QueryOptimizer(boundRawNestedQuery)),
                   boundRawQuery, Some(boundRawNestedQuery))
-              ) with ${nestedTupleClassX(casts.size)}[$ObjType, (..$OutTypes)] {
-                ..${resolveNestedTupleMethods(casts, types, OutTypes, postTypes, postCasts).get}
+              ) with ${nestedTupleClassX(castss.size)}[$ObjType, (..$OutTypes)] {
+                ..${resolveNestedTupleMethods(castss, types, OutTypes, postTypes, postCasts).get}
               }
               new $outMolecule
             }
@@ -78,7 +78,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), None, boundRawQuery, None)
               ) {
-                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(casts)})
+                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
               }
               new $outMolecule
@@ -93,8 +93,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), Some(QueryOptimizer(boundRawNestedQuery)),
                   boundRawQuery, Some(boundRawNestedQuery))
-              ) with ${nestedTupleClassX(casts.size)}[$ObjType, (..$OutTypes)] {
-                ..${resolveNestedTupleMethods(casts, types, OutTypes, postTypes, postCasts).get}
+              ) with ${nestedTupleClassX(castss.size)}[$ObjType, (..$OutTypes)] {
+                ..${resolveNestedTupleMethods(castss, types, OutTypes, postTypes, postCasts).get}
               }
               new $outMolecule
             }
@@ -116,7 +116,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), None, boundRawQuery, None)
               ) {
-                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(casts)})
+                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
               }
               new $outMolecule
@@ -136,7 +136,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), None, boundRawQuery, None)
               ) {
-                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(casts)})
+                final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
               }
               new $outMolecule
@@ -172,8 +172,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), Some(QueryOptimizer(boundRawNestedQuery)),
                   boundRawQuery, Some(boundRawNestedQuery))
-              ) with ${nestedTupleClassX(casts.size)}[$ObjType, (..$OutTypes)] {
-                ..${resolveNestedTupleMethods(casts, types, OutTypes, postTypes, postCasts).get}
+              ) with ${nestedTupleClassX(castss.size)}[$ObjType, (..$OutTypes)] {
+                ..${resolveNestedTupleMethods(castss, types, OutTypes, postTypes, postCasts).get}
               }
               new $outMolecule
             }
@@ -192,8 +192,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 _model,
                 (QueryOptimizer(boundRawQuery), Some(QueryOptimizer(boundRawNestedQuery)),
                   boundRawQuery, Some(boundRawNestedQuery))
-              ) with ${nestedTupleClassX(casts.size)}[$ObjType, (..$OutTypes)] {
-                ..${resolveNestedTupleMethods(casts, types, OutTypes, postTypes, postCasts).get}
+              ) with ${nestedTupleClassX(castss.size)}[$ObjType, (..$OutTypes)] {
+                ..${resolveNestedTupleMethods(castss, types, OutTypes, postTypes, postCasts).get}
               }
               new $outMolecule
             }

@@ -1,4 +1,4 @@
-package molecule.core.marshalling
+package molecule.core.macros.cast
 
 import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
@@ -7,7 +7,7 @@ import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
 
 /** Cast methods for converting raw data to Obj or Tpl
   */
-trait CastHelpers extends CastHelpersAggr {
+trait CastHelpersTypes extends CastHelpersAggr {
 
 
   // One ===========================================================================================

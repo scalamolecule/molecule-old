@@ -21,7 +21,7 @@ object DatomicPeerQueryExecutor extends QueryExecutor with DateHandling with Hel
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    cols: Seq[Column]
+    indexes: List[(Int, Int, Int, Int)]
   ): Future[Either[String, QueryResult]] = {
     Future(
       try {
@@ -63,7 +63,7 @@ object DatomicPeerQueryExecutor extends QueryExecutor with DateHandling with Hel
           Left("Empty result set")
         else {
           val queryResult = Rows2QueryResult(
-            allRows, rowCountAll, rowCount, cols, queryTime
+            allRows, rowCountAll, rowCount, queryTime, indexes
           ).get
 
           println("QueryResult: " + queryResult)

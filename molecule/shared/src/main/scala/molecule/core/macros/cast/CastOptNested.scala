@@ -1,4 +1,4 @@
-package molecule.core.macros
+package molecule.core.macros.cast
 
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
@@ -140,6 +140,9 @@ private[molecule] trait CastOptNested extends TreeOps {
   }
 
 
+  // (castIndex, arrayType) for looking up cast lambda and QueryResult array
+  var ci = (-1, -1)
+
   val castOptNestedOneAttr: String => Int => Tree = {
     case "String"     => (colIndex: Int) => q"castOptNestedOne[String](${TermName("it" + colIndex)})"
     case "Int"        => (colIndex: Int) => q"castOptNestedOneInt(${TermName("it" + colIndex)})"
@@ -154,6 +157,7 @@ private[molecule] trait CastOptNested extends TreeOps {
     case "BigInt"     => (colIndex: Int) => q"castOptNestedOneBigInt(${TermName("it" + colIndex)})"
     case "BigDecimal" => (colIndex: Int) => q"castOptNestedOneBigDecimal(${TermName("it" + colIndex)})"
     case "Any"        => (colIndex: Int) => q"row.get($colIndex)"
+    case "ref"        => (colIndex: Int) => q"castOptNestedOneRefAttr(${TermName("it" + colIndex)})"
   }
 
   val castOptNestedManyAttr: String => Int => Tree = {
@@ -168,19 +172,20 @@ private[molecule] trait CastOptNested extends TreeOps {
     case "URI"        => (colIndex: Int) => q"castOptNestedMany[URI](${TermName("it" + colIndex)})"
     case "BigInt"     => (colIndex: Int) => q"castOptNestedManyBigInt(${TermName("it" + colIndex)})"
     case "BigDecimal" => (colIndex: Int) => q"castOptNestedManyBigDecimal(${TermName("it" + colIndex)})"
+    case "ref"        => (colIndex: Int) => q"castOptNestedManyRefAttr(${TermName("it" + colIndex)})"
   }
 
   val castOptNestedMandatoryAttr: richTree => Int => Tree = (t: richTree) =>
     if (t.card == 1) castOptNestedOneAttr(t.tpeS) else castOptNestedManyAttr(t.tpeS)
 
-  val castOptNestedMandatoryRefAttr: richTree => Int => Tree = (t: richTree) =>
-    if (t.card == 1)
-      (colIndex: Int) => q"castOptNestedOneRefAttr(${TermName("it" + colIndex)})"
-    else
-      (colIndex: Int) => q"castOptNestedManyRefAttr(${TermName("it" + colIndex)})"
+//  val castOptNestedMandatoryRefAttr: richTree => Int => Tree = (t: richTree) =>
+//    if (t.card == 1)
+//      (colIndex: Int) => q"castOptNestedOneRefAttr(${TermName("it" + colIndex)})"
+//    else
+//      (colIndex: Int) => q"castOptNestedManyRefAttr(${TermName("it" + colIndex)})"
 
 
-  val castOptNestedOptionalAttr: richTree => Int => Tree = (t: richTree) =>
+  val castOptNestedOptAttr: richTree => Int => Tree = (t: richTree) =>
     if (t.card == 1) {
       // Optional, card one
       t.tpeS match {
@@ -195,6 +200,7 @@ private[molecule] trait CastOptNested extends TreeOps {
         case "URI"        => (colIndex: Int) => q"castOptNestedOptOne[URI](${TermName("it" + colIndex)})"
         case "BigInt"     => (colIndex: Int) => q"castOptNestedOptOneBigInt(${TermName("it" + colIndex)})"
         case "BigDecimal" => (colIndex: Int) => q"castOptNestedOptOneBigDecimal(${TermName("it" + colIndex)})"
+        case "ref"        => (colIndex: Int) => q"castOptNestedOptOneRefAttr(${TermName("it" + colIndex)})"
       }
     } else {
       // Optional, card many
@@ -210,15 +216,16 @@ private[molecule] trait CastOptNested extends TreeOps {
         case "URI"        => (colIndex: Int) => q"castOptNestedOptMany[URI](${TermName("it" + colIndex)})"
         case "BigInt"     => (colIndex: Int) => q"castOptNestedOptManyBigInt(${TermName("it" + colIndex)})"
         case "BigDecimal" => (colIndex: Int) => q"castOptNestedOptManyBigDecimal(${TermName("it" + colIndex)})"
+        case "ref"        => (colIndex: Int) => q"castOptNestedOptManyRefAttr(${TermName("it" + colIndex)})"
       }
     }
 
 
-  val castOptNestedOptionalRefAttr: richTree => Int => Tree = (t: richTree) =>
-    if (t.card == 1)
-      (colIndex: Int) => q"castOptNestedOptOneRefAttr(${TermName("it" + colIndex)})"
-    else
-      (colIndex: Int) => q"castOptNestedOptManyRefAttr(${TermName("it" + colIndex)})"
+//  val castOptNestedOptRefAttr: richTree => Int => Tree = (t: richTree) =>
+//    if (t.card == 1)
+//      (colIndex: Int) => q"castOptNestedOptOneRefAttr(${TermName("it" + colIndex)})"
+//    else
+//      (colIndex: Int) => q"castOptNestedOptManyRefAttr(${TermName("it" + colIndex)})"
 
   val castOptNestedEnum: richTree => Int => Tree =
     (t: richTree) =>
@@ -228,14 +235,14 @@ private[molecule] trait CastOptNested extends TreeOps {
         (colIndex: Int) => q"castOptNestedManyEnum(${TermName("it" + colIndex)})"
 
 
-  val castOptNestedEnumOpt: richTree => Int => Tree = (t: richTree) => {
+  val castOptNestedOptEnum: richTree => Int => Tree = (t: richTree) => {
     if (t.card == 1)
       (colIndex: Int) => q"castOptNestedOptOneEnum(${TermName("it" + colIndex)})"
     else
       (colIndex: Int) => q"castOptNestedOptManyEnum(${TermName("it" + colIndex)})"
   }
 
-  val castOptNestedMandatoryMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
+  val castOptNestedMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
     case "String"     => (colIndex: Int) => q"castOptNestedMapString(${TermName("it" + colIndex)})"
     case "Int"        => (colIndex: Int) => q"castOptNestedMapInt(${TermName("it" + colIndex)})"
     case "Float"      => (colIndex: Int) => q"castOptNestedMapFloat(${TermName("it" + colIndex)})"
@@ -249,7 +256,7 @@ private[molecule] trait CastOptNested extends TreeOps {
     case "BigDecimal" => (colIndex: Int) => q"castOptNestedMapBigDecimal(${TermName("it" + colIndex)})"
   }
 
-  val castOptNestedOptionalMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
+  val castOptNestedOptMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
     case "String"     => (colIndex: Int) => q"castOptNestedOptMapString(${TermName("it" + colIndex)})"
     case "Int"        => (colIndex: Int) => q"castOptNestedOptMapInt(${TermName("it" + colIndex)})"
     case "Float"      => (colIndex: Int) => q"castOptNestedOptMapFloat(${TermName("it" + colIndex)})"

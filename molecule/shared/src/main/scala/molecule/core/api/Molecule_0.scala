@@ -7,8 +7,9 @@ import molecule.core.api.getObj.{GetObjArray, GetObjIterable, GetObjList}
 import molecule.core.api.getTpl.{GetTplArray, GetTplIterable, GetTplList}
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements._
-import molecule.core.marshalling.{CastHelpers, Marshalling}
+import molecule.core.marshalling.Marshalling
 import molecule.core.macros.MakeMoleculeDynamic
+import molecule.core.macros.cast.CastHelpersTypes
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.datomic.base.api.ShowInspect
@@ -157,7 +158,7 @@ import scala.language.experimental.macros
  * */
 trait Molecule_0[Obj, Tpl] extends Molecule
   with Marshalling[Obj, Tpl]
-  with CastHelpers
+  with CastHelpersTypes
   with GetTplArray[Obj, Tpl]
   with GetTplIterable[Obj, Tpl]
   with GetTplList[Obj, Tpl]

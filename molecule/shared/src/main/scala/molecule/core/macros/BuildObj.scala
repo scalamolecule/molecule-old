@@ -1,9 +1,10 @@
 package molecule.core.macros
 
+import molecule.core.macros.cast.CastArrays
 import scala.reflect.macros.blackbox
 
 
-trait BuildObj extends Cast {
+trait BuildObj extends CastArrays {
   val c: blackbox.Context
 
   import c.universe._

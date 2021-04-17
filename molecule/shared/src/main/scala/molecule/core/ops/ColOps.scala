@@ -13,90 +13,6 @@ import scala.collection.mutable.ListBuffer
 
 trait ColOps  {
 
-  def getCols(elements: Seq[Element], nsMap: Map[String, MetaNs]): Seq[Column] = {
-
-    elements foreach println
-
-    var i          = 0
-    val cols       = new ListBuffer[Column]()
-    var related    = 0
-    var curNsAlias = ""
-    var prevAttr   = ""
-    elements.foreach {
-      case Atom(nsFull, attr, tpe, card, value, enumPrefix, _, keys) if attr.last != '_' => {
-        if (curNsAlias.isEmpty)
-          curNsAlias = nsFull
-
-        val enums = if (enumPrefix.isDefined) {
-          val attr0 = clean(attr)
-          nsMap(nsFull).attrs.collectFirst {
-            case MetaAttr(_, `attr0`, _, _, enumsOpt, _, _, _, _, _, _, _, _) =>
-              enumsOpt
-          }.getOrElse(Seq.empty[String])
-        } else {
-          Seq.empty[String]
-        }
-        val kind  = if (keys == Seq("edit"))
-          "edit"
-        else if (keys.nonEmpty && keys.head == "orig")
-          "orig"
-        else
-          ""
-
-        cols += Column(
-          i, related, curNsAlias, nsFull, attr, tpe,
-          getColType(attr, card, tpe),
-//          tpe,
-          card,
-          attr.last == '$',
-          enums,
-          getAggrType(value),
-          "", //getExpr(value),
-          kind = kind
-        )
-        i += 1
-        prevAttr = attr
-      }
-
-      case _: Atom => // tacit attribute
-
-      case Generic(nsFull, attr, tpe, value) =>
-        if (curNsAlias.isEmpty)
-          curNsAlias = nsFull
-
-        attr match {
-          case "e" =>
-            cols += Column(i, related, curNsAlias, nsFull, attr, tpe, "double", 1,
-              aggrType = getAggrType(value),
-//              attrExpr = getExpr(value)
-            )
-            i += 1
-
-          case "t" | "tx" =>
-            cols += Column(i, related, curNsAlias, nsFull, prevAttr, "Long", "double", 1, kind = attr)
-            i += 1
-
-          case "txInstant" =>
-            cols += Column(i, related, curNsAlias, nsFull, prevAttr, "Date", "string", 1, kind = attr)
-            i += 1
-
-          case _ =>
-        }
-
-      case Bond(_, refAttr1, _, _, _) =>
-        related = 1
-        curNsAlias = refAttr1.capitalize
-
-      case _: ReBond =>
-      case e         => throw new IllegalArgumentException("Unexpected element for table layout: " + e)
-    }
-
-    cols.toSeq
-  }
-
-
-
-
   // Todo - hack to transmit input types because we can't transfer them typed with boopickle - maybe use upickle instead here?
   def c(arg: Any): String = arg match {
     case _: String     => "String"
@@ -126,31 +42,5 @@ trait ColOps  {
     case ((l, ll, lll), (InVar(_, argss), i))                    => (l :+ (i, (c(argss.head.head), argss.head.head.toString)), ll, lll)
     case ((l, ll, lll), (InDataSource(_, argss), i))             => (l :+ (i, (c(argss.head.head), argss.head.head.toString)), ll, lll)
     case other                                                   => sys.error(s"[molecule.ops.QueryOps] UNEXPECTED inputs: $other")
-  }
-
-  private def getColType(attr: String, card: Int, tpe: String): String = (card, tpe) match {
-    case (1, "String" | "Boolean" | "Date" | "UUID" | "URI" | "BigInt" | "BigDecimal") => "string"
-    case (1, "Int" | "Long" | "ref" | "Float" | "Double")                              => "double"
-    case (2, "String" | "Boolean" | "Date" | "UUID" | "URI" | "BigInt" | "BigDecimal") => "listString"
-    case (2, "Int" | "Long" | "ref" | "Float" | "Double")                              => "listDouble"
-    case (_, "String" | "Boolean" | "Date" | "UUID" | "URI" | "BigInt" | "BigDecimal") => "mapString"
-    case (_, "Int" | "Long" | "ref" | "Float" | "Double")                              => "mapDouble"
-    case _                                                                             =>
-      throw new RuntimeException(s"Unexpected colType input: $attr   -   $card   -   $tpe")
-  }
-
-  def getAggrType(value: Value) = value match {
-    case fn: Fn   => fn match {
-      case Fn("count" | "count-distinct", _)                   => "aggrInt"
-      case Fn("avg" | "variance" | "stddev", _)                => "aggrDouble"
-      case Fn("min" | "max" | "rand" | "sum" | "median", None) => "aggrSingle"
-      case Fn("sample", Some(1))                               => "aggrSingleSample"
-      case Fn("min" | "max" | "sample", Some(_))               => "aggrList"
-      case Fn("rand", Some(_))                                 => "aggrListRand"
-      case other                                               =>
-        throw new RuntimeException(s"Unexpected fn: $other")
-    }
-    case Distinct => "aggrListDistinct"
-    case _        => ""
   }
 }

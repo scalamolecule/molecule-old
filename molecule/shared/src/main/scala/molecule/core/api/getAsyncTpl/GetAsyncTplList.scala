@@ -4,7 +4,6 @@ import java.util.{Date, List => jList}
 import molecule.core.api.Molecule_0
 import molecule.core.marshalling.ConnProxy
 import molecule.core.ops.ColOps
-import molecule.datomic.base.ast.query.QueryExpr
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.transform.Query2String
@@ -83,15 +82,12 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
           val rules        = if (query.i.rules.isEmpty) Nil else
             Seq("[" + (query.i.rules map p mkString " ") + "]")
           val (l, ll, lll) = encodeInputs(query)
-          val cols         = getCols(_model.elements, schemaTx.nsMap)
-          cols foreach println
           // Fetch QueryResult with Ajax call
-          moleculeWire.query(proxyDb, datalogQuery, rules, l, ll, lll, n, cols)
+          moleculeWire.query(proxyDb, datalogQuery, rules, l, ll, lll, n, indexes)
             .recover { err =>
               Left("Recovered from moleculeWire Ajax call: " + err.toString)
             }.map {
             case Right(qr) =>
-//              println(qr)
               try {
                 val maxRows    = if (n == -1) qr.maxRows else n
                 val tplsBuffer = new ListBuffer[Tpl]

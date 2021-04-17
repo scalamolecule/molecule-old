@@ -3,7 +3,6 @@ package molecule.core.macros
 import molecule.datomic.base.transform.Model2Query
 import scala.language.higherKinds
 import scala.reflect.macros.blackbox
-import scala.util.{Try => Check}
 
 class MakeMolecule(val c: blackbox.Context) extends Base {
 
@@ -16,7 +15,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
     val (
-      genericImports, model0, typess, castss, obj,
+      genericImports, model0, typess, castss, indexes, obj,
       hasVariables, txMetaCompositesCount,
       postTypes, postCasts, isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes
@@ -29,70 +28,52 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     else
       q"val tpl: Product = row2tpl(row)"
 
+
     val t = if (castss.size == 1 || txMetaCompositesCount > 0) {
-      val casts = if (txMetaCompositesCount > 0) {
-        // Treat tx meta data as composite
-        q"(..${topLevel(List(castss.head))}, ..${compositeCasts(castss.tail, castss.head.length)})"
-      } else {
-        q"(..${topLevel(castss)})"
-      }
+      val typers = if (isJsPlatform) {
+        val (arrays, lookups) = indexes.map{
+          case (colIndex, castIndex, arrayType, arrayIndex) =>
+            (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
+        }.unzip
 
-      val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
 
-      val marshallers = if (isJsPlatform)
         q"""
           final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-            val a0 = qr.oneString(0)
-            val a1 = qr.oneLong(0)
-            (rowIndex: Int) => (a0(rowIndex), a1(rowIndex))
+            ..$arrays
+            (i: Int) => (..$lookups)
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
           final override lazy val moleculeWire: QueryExecutor = molecule.core.marshalling.MoleculeWebClient.moleculeWire
+          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
         """
-      else
+      } else {
+        val casts = if (txMetaCompositesCount > 0) {
+          // Treat tx meta data as composite
+          q"(..${topLevel(List(castss.head))}, ..${compositeCasts(castss.tail, castss.head.length)})"
+        } else {
+          q"(..${topLevel(castss)})"
+        }
         q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
           final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
         """
-
-
-      //      z(1
-      //        , isJsPlatform
-      //        //        ,c.
-      //        //        , c.macroApplication
-      //        //
-      //        //        , "--------------"
-      //        //        , c.enclosingPosition
-      //        //        , c.enclosingPosition.pos
-      //        //        , c.enclosingPosition.pos.source
-      //
-      //      )
-      //            $platformCode
+      }
 
       if (hasVariables) {
         q"""
           ..$imports
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel)) {
-            final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
-            final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+            ..$typers
+            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
       } else {
-        //        q"""
-        //          ..$imports
-        //          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
-        //            final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
-        //            final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-        //          }
-        //          new $outMolecule
-        //        """
-
         q"""
           ..$imports
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
-            ..$marshallers
+            ..$typers
             final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
