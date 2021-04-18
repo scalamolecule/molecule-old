@@ -6,7 +6,7 @@ class CastLambdas(maxRows: Int) extends CastTypes(maxRows) {
 
   // Array with all cast lambdas for fast lookup
   // Array[colIndex => (row, rowIndex) => <dataArray(rowIndex) = row(colIndex)>]
-  val casts: Array[Int => (util.List[AnyRef], Int) => Unit] = Array(
+  val castLambdas: Array[Int => (util.List[AnyRef], Int) => Unit] = Array(
     /*   0 */ castOneString,
     /*   1 */ castOneInt,
     /*   2 */ castOneInt2,

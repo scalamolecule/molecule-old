@@ -35,15 +35,13 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           case (colIndex, castIndex, arrayType, arrayIndex) =>
             (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
         }.unzip
-
-
         q"""
           final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
             ..$arrays
             (i: Int) => (..$lookups)
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-          final override lazy val moleculeWire: QueryExecutor = molecule.core.marshalling.MoleculeWebClient.moleculeWire
+          final override lazy val rpc: RpcApi = molecule.core.marshalling.MoleculeWebClient.rpc
           final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
         """
       } else {

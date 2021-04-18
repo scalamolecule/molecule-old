@@ -74,7 +74,7 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
   def getAsync2(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = {
     if (isJsPlatform) {
       conn match {
-        case ConnProxy(schemaTx, proxyDb) =>
+        case ConnProxy(proxyDb) =>
           val query        = _nestedQuery.getOrElse(_query)
           val q2s          = Query2String(query)
           val datalogQuery = q2s.multiLine(60)
@@ -83,9 +83,9 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
             Seq("[" + (query.i.rules map p mkString " ") + "]")
           val (l, ll, lll) = encodeInputs(query)
           // Fetch QueryResult with Ajax call
-          moleculeWire.query(proxyDb, datalogQuery, rules, l, ll, lll, n, indexes)
+          rpc.query(proxyDb, datalogQuery, rules, l, ll, lll, n, indexes)
             .recover { err =>
-              Left("Recovered from moleculeWire Ajax call: " + err.toString)
+              Left("Recovered from ajax call: " + err.toString)
             }.map {
             case Right(qr) =>
               try {

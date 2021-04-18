@@ -107,9 +107,9 @@ private[molecule] trait Dsl2Model extends BuildObj {
     }
 
     def updateIndexes(): Unit = {
-      arrayIndexes = arrayIndexes + (ci._2 -> (arrayIndexes.getOrElse(ci._2, -1) + 1))
-      indexes = (ci._1, ci._2, arrayIndexes(ci._2)) :: indexes
-      ci = (-1, -1)
+      arrayIndexes = arrayIndexes + (ii._2 -> (arrayIndexes.getOrElse(ii._2, -1) + 1))
+      indexes = (ii._1, ii._2, arrayIndexes(ii._2)) :: indexes
+      ii = (-1, -1)
     }
 
     def addSpecific(

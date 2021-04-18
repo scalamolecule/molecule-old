@@ -12,7 +12,7 @@ import akka.util.ByteString
 import boopickle.Default._
 import cats.implicits._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import molecule.datomic.base.marshalling.DatomicPeerQueryExecutor
+import molecule.datomic.base.marshalling.DatomicRpc
 import playing.sloth.Serializations
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
@@ -29,7 +29,7 @@ object AjaxResponder extends App with Serializations {
   implicit val executionContext = system.executionContext
 
   // todo: refactor out Peer dependency here
-  val router = Router[ByteBuffer, Future].route[QueryExecutor](DatomicPeerQueryExecutor)
+  val router = Router[ByteBuffer, Future].route[Rpc](DatomicRpc)
 
   lazy val route: Route =
     path("ajax" / "QueryExecutor" / "query") {

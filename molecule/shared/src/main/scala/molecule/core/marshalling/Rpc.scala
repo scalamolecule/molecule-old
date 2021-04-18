@@ -2,7 +2,7 @@ package molecule.core.marshalling
 
 import scala.concurrent.Future
 
-trait QueryExecutor {
+trait Rpc {
 
   def query(
     proxyDb: DbProxy,

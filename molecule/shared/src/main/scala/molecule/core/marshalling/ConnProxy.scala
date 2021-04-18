@@ -17,13 +17,9 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * Used to cary information enabling marshalling on both client and server side.
   *
-  * @param schemaTx Schema data to generate Col info from client side
   * @param proxyDb  Db coordinates to access db on server side
   */
-case class ConnProxy(
-  schemaTx: SchemaTransaction,
-//  override val
-  proxyDb: DbProxy) extends Conn {
+case class ConnProxy(proxyDb: DbProxy) extends Conn {
 
   override def usingTempDb(tempDb: TempDb): Conn = ???
 

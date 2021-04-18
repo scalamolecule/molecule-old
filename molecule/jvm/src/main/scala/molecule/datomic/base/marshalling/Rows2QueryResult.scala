@@ -226,7 +226,7 @@ case class Rows2QueryResult(
   }
 
   def getCastingLambda(colIndex: Int): (util.List[AnyRef], Int) => Unit = {
-    casts(indexes(colIndex)._2)(colIndex)
+    castLambdas(indexes(colIndex)._2)(colIndex)
   }
 
   // See indexes in cast.CastLambdas

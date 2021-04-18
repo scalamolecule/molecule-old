@@ -141,7 +141,7 @@ private[molecule] trait CastOptNested extends TreeOps {
 
 
   // (castIndex, arrayType) for looking up cast lambda and QueryResult array
-  var ci = (-1, -1)
+  var ii = (-1, -1)
 
   val castOptNestedOneAttr: String => Int => Tree = {
     case "String"     => (colIndex: Int) => q"castOptNestedOne[String](${TermName("it" + colIndex)})"

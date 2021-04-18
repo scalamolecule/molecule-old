@@ -13,7 +13,6 @@ object MoleculeWebClient extends WebClient {
   /** Wire handle
     *
     */
-  val moleculeWire: QueryExecutor =
-    clientAjax(s"http://localhost:8080/ajax").wire[QueryExecutor]
+  val rpc: Rpc = clientAjax(s"http://localhost:8080/ajax").wire[Rpc]
 
 }

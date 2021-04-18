@@ -11,7 +11,7 @@ import molecule.datomic.peer.facade.Datomic_Peer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object DatomicPeerQueryExecutor extends QueryExecutor with DateHandling with Helpers {
+object DatomicRpc extends Rpc with DateHandling with Helpers {
 
   def query(
     proxyDb: DbProxy,
