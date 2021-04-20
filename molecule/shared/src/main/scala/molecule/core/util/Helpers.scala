@@ -95,6 +95,12 @@ trait Helpers extends DateHandling {
   }
 
 
+  class log {
+    private var buf = Seq.empty[String]
+    def apply(s: String): Unit = buf = buf :+ s
+    def print: Unit = println(buf.mkString("\n"))
+  }
+
   private var time0 = System.currentTimeMillis()
   private val times = collection.mutable.Map.empty[Int, Long]
 

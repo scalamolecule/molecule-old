@@ -17,17 +17,22 @@ object InMem extends TestSuite {
       case Right(realValue) => realValue ==> expectedValue
       case Left(realValue)  => realValue ==> expectedValue
     }
-    def left(expectedValue: String): Future[Unit] = eitherFuture.map {
-      case Right(realValue) => realValue ==> expectedValue
-      case Left(realValue)  => realValue ==> expectedValue
+    def isEmpty: Future[Unit] = eitherFuture.map {
+      case Right(realValue) => realValue ==> "Empty result set"
+      case Left(realValue)  => realValue ==> "Empty result set"
     }
   }
 
 
   lazy val tests = Tests {
 
-    test("String-Int") {
-      Ns.str.int.getAsync2 left "Empty result set"
+    test("Empty result set") {
+      Ns.str.int.getAsync2.isEmpty
     }
+
+//    test("Empty result set") {
+//      Ns.int(1).saveAsync
+//      Ns.str.int.getAsync2.isEmpty
+//    }
   }
 }

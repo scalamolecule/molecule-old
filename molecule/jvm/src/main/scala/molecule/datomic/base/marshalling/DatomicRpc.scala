@@ -30,10 +30,9 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
         println("Found cached " + dbKey)
         queryExecutor
       case _                   =>
-        val t = TimerPrint("getCachedQueryExecutor")
-        println("Connecting to " + dbKey)
+        val t             = TimerPrint("getCachedQueryExecutor")
         val queryExecutor = cacheDb
-        println("Connection time: " + thousands(t.delta) + " ms")
+        println(s"Connected to $dbKey in " + thousands(t.delta) + " ms")
         queryExecutorCache(dbKey) = queryExecutor
         queryExecutor
     }
@@ -95,8 +94,9 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
     indexes: List[(Int, Int, Int, Int)]
   ): Future[Either[String, QueryResult]] = {
     getCachedQueryExecutor(dbProxy).map { queryExecutor =>
+      val log = new log
       try {
-        println(s"\n---- Querying Datomic... --------------------\n" + datalogQuery)
+        log(s"\n---- Querying Datomic... --------------------\n" + datalogQuery)
         val t           = TimerPrint("DatomicPeerQueryExecutor")
         val inputs      = rules +: extractInputs(l ++ ll ++ lll)
         val allRows     = queryExecutor(datalogQuery, inputs)
@@ -104,24 +104,26 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
         val rowCountAll = allRows.size
         val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
 
-        println("Query time : " + thousands(queryTime) + " ms")
-        println("rowCountAll: " + rowCountAll)
-        println("maxRows    : " + (if (maxRows == -1) "all" else maxRows))
-        println("rowCount   : " + rowCount)
+        log("Query time : " + thousands(queryTime) + " ms")
+        log("rowCountAll: " + rowCountAll)
+        log("maxRows    : " + (if (maxRows == -1) "all" else maxRows))
+        log("rowCount   : " + rowCount)
 
         // todo remove - don't loop over all data for this!
         //        allRows.asScala.take(10).foreach(row => log.info(row.toString))
 
-        if (rowCount == 0)
+        if (rowCount == 0) {
+          log.print
           Left("Empty result set")
-        else {
+        } else {
           val queryResult = Rows2QueryResult(
             allRows, rowCountAll, rowCount, queryTime, indexes
           ).get
 
           //          println("QueryResult: " + queryResult)
-          println("Rows2QueryResult took " + t.ms)
-          println("Sending data to client... Total server time: " + t.msTotal)
+          log("Rows2QueryResult took " + t.ms)
+          log("Sending data to client... Total server time: " + t.msTotal)
+          log.print
           Right(queryResult)
         }
       } catch {

@@ -231,6 +231,11 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     conn.transactAsync(Seq(conn.model2stmts(_model).saveStmts()))
   }
 
+  def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
+    VerifyModel(_model, "save")
+    conn.transactAsync(Seq(conn.model2stmts(_model).saveStmts()))
+  }
+
 
   /** Get transaction statements of a call to `save` on a molecule (without affecting the db).
    *
