@@ -16,7 +16,7 @@ trait Marshalling[Obj, Tpl] {
   /** Remote procedure call handle
     *
     */
-  protected lazy val rpc: Rpc = ???
+  protected lazy val moleculeRpc: MoleculeRpc = ???
 
 
   /** Indexes to resolve marshalling for each attribute value in a row:

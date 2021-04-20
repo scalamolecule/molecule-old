@@ -185,18 +185,42 @@ trait Datomic_Peer {
     schema: SchemaTransaction,
     protocol: String = "mem",
     dbIdentifier: String = "",
+  ): Conn_Peer = recreateDbFromEdn(schema.datomicPeer, protocol, dbIdentifier)
+
+
+  /** Deletes existing database (!) and creates a new empty db with schema from Schema Transaction file.
+    * <br><br>
+    * A typical development cycle in the initial stages of creating the db schema:
+    *
+    *  1. Edit schema definition file
+    *  1. `sbt compile` to update boilerplate code in generated jars
+    *  1. Obtain a fresh connection to new empty db with updated schema:<br>
+    *     `implicit val conn = recreateDbFrom(YourDomainSchema)`
+    *
+    * @group database
+    *
+    * @param edns
+    * @param protocol
+    * @param dbIdentifier
+    * @return
+    */
+  def recreateDbFromEdn(
+    edns: Seq[String],
+    protocol: String = "mem",
+    dbIdentifier: String = "",
   ): Conn_Peer = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     try {
       deleteDatabase(protocol, id)
       createDatabase(protocol, id)
       val conn = connect(protocol, id)
-      schema.datomicPeer.foreach(edn => conn.transact(edn))
+      edns.foreach(edn => conn.transact(edn))
       conn
     } catch {
       case e: Throwable => throw new DatomicFacadeException(e.toString)
     }
   }
+
 
   /** Deletes existing database (!) and creates a new empty db with schema from schema data structure.
     * <br><br>

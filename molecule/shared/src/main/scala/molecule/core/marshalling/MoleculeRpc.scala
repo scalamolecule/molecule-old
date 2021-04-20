@@ -2,10 +2,12 @@ package molecule.core.marshalling
 
 import scala.concurrent.Future
 
-trait Rpc {
+trait MoleculeRpc {
 
-  def query(
-    proxyDb: DbProxy,
+//  def connect(dbProxy: DbProxy): Future[Unit]
+
+  def queryAsync(
+    dbProxy: DbProxy,
     datalogQuery: String,
     rules: Seq[String],
     l: Seq[(Int, (String, String))],

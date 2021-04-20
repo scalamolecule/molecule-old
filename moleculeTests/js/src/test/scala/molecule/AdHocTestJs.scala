@@ -1,7 +1,9 @@
 package molecule
 
-import molecule.core.marshalling.{ConnProxy, DatomicPeerProxy}
+import molecule.core.marshalling.MoleculeWebClient.moleculeRpc
+import molecule.core.marshalling.{ClientConn, ConnProxy, DatomicPeerProxy}
 import molecule.datomic.api.out3._
+import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.mbrainz.dsl.MBrainz._
 import molecule.tests.examples.datomic.mbrainz.schema.MBrainzSchema
 import utest._
@@ -10,7 +12,7 @@ import scala.concurrent.Future
 
 object AdHocTestJs extends TestSuite {
 
-  implicit val conn = ConnProxy(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973"))
+  implicit val conn = ClientConn(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973", Nil))
 
   implicit class testFutureEither[T](eitherFuture: Future[Either[String, T]]) {
     def ===(expectedValue: T): Future[Unit] = eitherFuture.map {
@@ -19,7 +21,8 @@ object AdHocTestJs extends TestSuite {
     }
   }
 
-  val tests = Tests {
+
+  lazy val tests = Tests {
 
     test("String-Int") {
       Artist.name.endYear.getAsync2(2) === List(
@@ -29,9 +32,17 @@ object AdHocTestJs extends TestSuite {
     }
 
     test("Int-String") {
+      Artist.endYear.name.getAsync2.map {
+        case Right(v) => v.sorted.take(2) ==> List(
+          (1672, "Heinrich Schütz"),
+          (1741, "Antonio Vivaldi")
+          //          (1980, "Bill Evans")
+        )
+      }
       Artist.endYear.name.getAsync2(2) === List(
         (1976, "The Peddlers"),
         (1978, "Ralfi Pagán")
+        //          (1980, "Bill Evans")
       )
     }
 
@@ -41,5 +52,13 @@ object AdHocTestJs extends TestSuite {
         ("Rusty York", "York, Rusty")
       )
     }
+
+    //    test("String-String") {
+    //      implicit val conn = ConnProxy(DatomicPeerProxy("mem", schema = Some(CoreTestSchema)))
+    //      Artist.name.sortName.getAsync2(2) === List(
+    //        ("Rolf Lundqvist & Arbete & fritid", "Lundqvist, Rolf & Arbete & fritid"),
+    //        ("Rusty York", "York, Rusty")
+    //      )
+    //    }
   }
 }

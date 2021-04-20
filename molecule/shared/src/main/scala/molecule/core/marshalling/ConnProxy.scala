@@ -17,9 +17,13 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * Used to cary information enabling marshalling on both client and server side.
   *
-  * @param proxyDb  Db coordinates to access db on server side
+  * @param dbProxy  Db coordinates to access db on server side
   */
-case class ConnProxy(proxyDb: DbProxy) extends Conn {
+trait ConnProxy extends Conn {
+
+  override lazy val dbProxy: DbProxy = ???
+
+  override lazy val moleculeRpc: MoleculeRpc = ???
 
   override def usingTempDb(tempDb: TempDb): Conn = ???
 

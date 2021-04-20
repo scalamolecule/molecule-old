@@ -230,7 +230,7 @@ case class Rows2QueryResult(
   }
 
   // See indexes in cast.CastLambdas
-  println("indexes:\n  " + indexes.mkString("\n  "))
+  //  println("indexes:\n  " + indexes.mkString("\n  "))
 
   def get1() = {
     // Casting lambda for first column

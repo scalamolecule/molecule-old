@@ -2,15 +2,21 @@ package molecule.core.marshalling
 
 sealed trait DbProxy
 
+case class DatomicInMemProxy(
+  edns: Seq[String]
+) extends DbProxy
+
 case class DatomicPeerProxy(
   protocol: String,
-  dbIdentifier: String
+  dbIdentifier: String,
+  edns: Seq[String]
 ) extends DbProxy
 
 case class DatomicDevLocalProxy(
   system: String,
   storageDir: String,
-  dbName: String
+  dbName: String,
+  edns: Seq[String]
 ) extends DbProxy
 
 case class DatomicPeerServerProxy(

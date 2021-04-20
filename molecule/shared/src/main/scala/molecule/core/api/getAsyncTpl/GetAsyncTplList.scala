@@ -73,40 +73,36 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
 
   def getAsync2(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = {
     if (isJsPlatform) {
-      conn match {
-        case ConnProxy(proxyDb) =>
-          val query        = _nestedQuery.getOrElse(_query)
-          val q2s          = Query2String(query)
-          val datalogQuery = q2s.multiLine(60)
-          val p            = q2s.p
-          val rules        = if (query.i.rules.isEmpty) Nil else
-            Seq("[" + (query.i.rules map p mkString " ") + "]")
-          val (l, ll, lll) = encodeInputs(query)
-          // Fetch QueryResult with Ajax call
-          rpc.query(proxyDb, datalogQuery, rules, l, ll, lll, n, indexes)
-            .recover { err =>
-              Left("Recovered from ajax call: " + err.toString)
-            }.map {
-            case Right(qr) =>
-              try {
-                val maxRows    = if (n == -1) qr.maxRows else n
-                val tplsBuffer = new ListBuffer[Tpl]
-                val columns    = qr2tpl(qr) // macro generated extractor
-                var rowIndex   = 0
-                while (rowIndex < maxRows) {
-                  tplsBuffer += columns(rowIndex)
-                  rowIndex += 1
-                }
-                Right(tplsBuffer.toList)
-              } catch {
-                case e: Throwable => Left("Error extracting data from QueryResult: " + e.toString)
-              }
-
-            case Left(err) => Left(err) // error from QueryExecutor
+      val query        = _nestedQuery.getOrElse(_query)
+      val q2s          = Query2String(query)
+      val datalogQuery = q2s.multiLine(60)
+      val p            = q2s.p
+      val rules        = if (query.i.rules.isEmpty) Nil else
+        Seq("[" + (query.i.rules map p mkString " ") + "]")
+      val (l, ll, lll) = encodeInputs(query)
+      // Fetch QueryResult with Ajax call
+      moleculeRpc.queryAsync(conn.dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
+        .recover { err =>
+          Left("Recovered from ajax call: " + err.toString)
+        }.map {
+        case Right(qr) =>
+          try {
+            val maxRows    = if (n == -1) qr.maxRows else n
+            val tplsBuffer = new ListBuffer[Tpl]
+            val columns    = qr2tpl(qr) // macro generated extractor
+            var rowIndex   = 0
+            while (rowIndex < maxRows) {
+              tplsBuffer += columns(rowIndex)
+              rowIndex += 1
+            }
+            Right(tplsBuffer.toList)
+          } catch {
+            case e: Throwable => Left("Error extracting data from QueryResult: " + e.toString)
           }
 
-        case otherConn => Future(Left("Please provide an implicit ProxyConn"))
+        case Left(err) => Left(err) // error from QueryExecutor
       }
+
     } else {
       Future(
         try {

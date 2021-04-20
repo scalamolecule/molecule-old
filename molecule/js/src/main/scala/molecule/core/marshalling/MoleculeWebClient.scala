@@ -5,7 +5,7 @@ import playing.sloth.WebClient
 
 /** RPC via Sloth ajax web client to server
   *
-  * Will only be called from client side (macros only implement the js side).
+  * Will only be called from client side.
   *
   */
 object MoleculeWebClient extends WebClient {
@@ -13,6 +13,6 @@ object MoleculeWebClient extends WebClient {
   /** Wire handle
     *
     */
-  val rpc: Rpc = clientAjax(s"http://localhost:8080/ajax").wire[Rpc]
+  val moleculeRpc: MoleculeRpc = clientAjax(s"http://localhost:8080/ajax").wire[MoleculeRpc]
 
 }

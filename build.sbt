@@ -5,6 +5,7 @@
 
 lazy val molecule = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
+  .enablePlugins(BuildInfoPlugin)
   .settings(
     //    Settings.base ++
     Settings.shared ++

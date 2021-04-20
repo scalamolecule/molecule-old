@@ -8,8 +8,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-//  val z = InspectMacro("MakeMolecule", 9, 8)
-    val z = InspectMacro("MakeMolecule", 1, 8)
+  val z = InspectMacro("MakeMolecule", 9, 8)
+//    val z = InspectMacro("MakeMolecule", 1, 8)
   //  val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
 
 
@@ -41,7 +41,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             (i: Int) => (..$lookups)
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-          final override lazy val rpc: RpcApi = molecule.core.marshalling.MoleculeWebClient.rpc
+          final override lazy val moleculeRpc: MoleculeRpc = conn.moleculeRpc
           final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
         """
       } else {

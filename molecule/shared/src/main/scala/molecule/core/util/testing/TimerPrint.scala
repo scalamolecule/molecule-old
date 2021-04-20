@@ -1,6 +1,6 @@
 package molecule.core.util.testing
 
-case class Timer(txt: String = "time", on: Boolean = true) {
+case class TimerPrint(txt: String = "time", on: Boolean = true) {
   val time0 = System.currentTimeMillis
   var time1 = time0
   //    println("timer start ---------------------------------")

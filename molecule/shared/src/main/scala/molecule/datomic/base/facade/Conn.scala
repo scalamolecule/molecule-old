@@ -3,6 +3,7 @@ package molecule.datomic.base.facade
 import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
+import molecule.core.marshalling.{DbProxy, MoleculeRpc}
 import molecule.core.transform.Model2Statements
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
@@ -14,6 +15,11 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Facade to Datomic Connection.
   * */
 trait Conn {
+
+  lazy val dbProxy: DbProxy = ???
+
+  /**  */
+  protected lazy val moleculeRpc: MoleculeRpc = ???
 
   def usingTempDb(tempDb: TempDb): Conn
 

@@ -64,6 +64,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-protobuf-v3" % "2.6.14",
         "com.typesafe.akka" %% "akka-http" % "10.2.4",
         "ch.megard" %% "akka-http-cors" % "1.1.1",
+        "com.softwaremill.retry" %% "retry" % "0.3.3"
 //        "ch.qos.logback" % "logback-classic" % "1.2.3"
       ),
       testFrameworks += new TestFramework("utest.runner.Framework")
@@ -88,11 +89,23 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val shared: Seq[Def.Setting[_]] = base ++ Seq(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.lihaoyi" %%% "utest" % "0.7.8",
+      "com.lihaoyi" %%% "utest" % "0.7.9",
       "com.marcgrue" %%% "playing-rpc-autowire" % "0.1.0",
       "com.marcgrue" %%% "playing-rpc-sloth" % "0.2.2-SNAPSHOT"
     ),
-    testFrameworks += new TestFramework("utest.runner.Framework")
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+
+
+    buildInfoKeys := Seq[BuildInfoKey](
+      name, version, scalaVersion, sbtVersion,
+      "datomicProtocol" -> datomicProtocol,
+      "datomicHome" -> datomicHome,
+      "datomicProVersions" -> datomicProVersions,
+      "datomicProVersion" -> datomicProVersion,
+      "datomicDevLocalVersions" -> datomicDevLocalVersions,
+      "datomicDevLocalVersion" -> datomicDevLocalVersion
+    ),
+    buildInfoPackage := "moleculeBuildInfo"
   )
 
 
@@ -116,16 +129,5 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
     // Run sbt tests for all systems sequentially to avoid data locks with db
     Test / parallelExecution := false,
-
-    buildInfoKeys := Seq[BuildInfoKey](
-      name, version, scalaVersion, sbtVersion,
-      "datomicProtocol" -> datomicProtocol,
-      "datomicHome" -> datomicHome,
-      "datomicProVersions" -> datomicProVersions,
-      "datomicProVersion" -> datomicProVersion,
-      "datomicDevLocalVersions" -> datomicDevLocalVersions,
-      "datomicDevLocalVersion" -> datomicDevLocalVersion
-    ),
-    buildInfoPackage := "moleculeBuildInfo"
   )
 }
