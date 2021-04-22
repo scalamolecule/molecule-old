@@ -42,6 +42,16 @@ class AdHocTestJvm extends Specification {
 
     implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
 
+    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")))
+    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).getClass)
+    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).isInstanceOf[java.util.Map[_,_]])
+    println("-------")
+    println(_root_.datomic.Util.read(":db.part/user"))
+    println(_root_.datomic.Util.read(":db.part/user").getClass)
+
+
+
+
 
     m(Ns.str.int)
 //    xx(Ns.int.bool).inspectGet

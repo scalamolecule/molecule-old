@@ -3,7 +3,8 @@ package molecule.core.marshalling
 sealed trait DbProxy
 
 case class DatomicInMemProxy(
-  edns: Seq[String]
+  edns: Seq[String],
+  dbIdentifier: String = ""
 ) extends DbProxy
 
 case class DatomicPeerProxy(

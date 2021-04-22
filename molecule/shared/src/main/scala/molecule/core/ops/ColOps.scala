@@ -28,7 +28,7 @@ trait ColOps  {
     case _: URI        => "URI"
   }
 
-  def encodeInputs(q: Query): (
+  def marshallInputs(q: Query): (
     Seq[(Int, (String, String))],
       Seq[(Int, Seq[(String, String)])],
       Seq[(Int, Seq[Seq[(String, String)]])]

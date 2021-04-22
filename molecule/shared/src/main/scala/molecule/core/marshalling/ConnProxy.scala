@@ -21,10 +21,6 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 trait ConnProxy extends Conn {
 
-  override lazy val dbProxy: DbProxy = ???
-
-  override lazy val moleculeRpc: MoleculeRpc = ???
-
   override def usingTempDb(tempDb: TempDb): Conn = ???
 
   override def liveDbUsed: Boolean = ???

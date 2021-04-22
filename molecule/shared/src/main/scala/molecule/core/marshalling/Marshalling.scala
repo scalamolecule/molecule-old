@@ -1,6 +1,7 @@
 package molecule.core.marshalling
 
 import java.util.{List => jList}
+import molecule.datomic.base.ast.transactionModel.Statement
 
 
 /** Marshalling methods for casting raw row (server) / QueryResult (client) data.
@@ -25,7 +26,7 @@ trait Marshalling[Obj, Tpl] {
     * - castIndex, index for cast code in jvm: molecule.datomic.base.marshalling.cast.CastLambdas.castLambdas
     * - arrayType, index for data array type in [[molecule.core.macros.cast.CastArrays.dataArrays]]
     * - arrayIndex, index within Seq of a specific type of data array
-    *               (two String attributes will occupy two String arrays and then have index 0 and 1 for instance)
+    * (two String attributes will occupy two String arrays and then have index 0 and 1 for instance)
     */
   protected lazy val indexes: List[(Int, Int, Int, Int)] = ???
 
@@ -58,4 +59,13 @@ trait Marshalling[Obj, Tpl] {
 
   //  // Row to json build-up with fast StringBuilder to be materialized by macro
   //  protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
+
+  def stmts2edn(stmts: Seq[Statement]): String = {
+    """[
+      |{
+      |  :db/id #db/id[:db.part/user -1000001]
+      |  :Ns/int 1
+      |}
+      |]""".stripMargin
+  }
 }

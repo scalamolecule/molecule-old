@@ -7,9 +7,9 @@ import molecule.core.api.getObj.{GetObjArray, GetObjIterable, GetObjList}
 import molecule.core.api.getTpl.{GetTplArray, GetTplIterable, GetTplList}
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements._
-import molecule.core.marshalling.Marshalling
 import molecule.core.macros.MakeMoleculeDynamic
 import molecule.core.macros.cast.CastHelpersTypes
+import molecule.core.marshalling.Marshalling
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.datomic.base.api.ShowInspect
@@ -21,141 +21,141 @@ import scala.language.experimental.macros
 
 
 /** Core molecule interface defining actions that can be called on molecules.
- *
- * Groups of interfaces:
- * <table>
- * <tr>
- * <td><b>get</b><td>
- * <td><b>getAsync</b><td>
- * <td>Get molecule data.</td>
- * </tr>
- * <tr>
- * <td><b>getAsOf</b><td>
- * <td><b>getAsyncAsOf</b><td>
- * <td>Get molecule data <i>asOf</i> point in time.</td>
- * </tr>
- * <tr>
- * <td><b>getSince</b><td>
- * <td><b>getAsyncSince</b><td>
- * <td>Get molecule data <i>since</i> point in time.</td>
- * </tr>
- * <tr>
- * <td><b>getWith</b><td>
- * <td><b>getAsyncWith</b><td>
- * <td>Get molecule data <i>with</i> given data set.</td>
- * </tr>
- * <tr>
- * <td><b>getHistory</b><td>
- * <td><b>getAsyncHistory</b> &nbsp;&nbsp;&nbsp;<td>
- * <td>Get molecule data from <i>history</i> of database.</td>
- * </tr>
- * <tr>
- * <td><b>save</b><td>
- * <td><b>saveAsync</b><td>
- * <td>Save molecule with applied data.</td>
- * </tr>
- * <tr>
- * <td><b>insert</b><td>
- * <td><b>insertAsync</b><td>
- * <td>Insert multiple rows of data matching molecule.</td>
- * </tr>
- * <tr>
- * <td><b>update</b><td>
- * <td><b>updateAsync</b><td>
- * <td>Update molecule with applied data.</td>
- * </tr>
- * <tr>
- * <tr>
- * <td><b>tx</b><td>
- * <td><td>
- * <td>Molecule transaction data (input to `getWith`).</td>
- * </tr>
- * <tr>
- * <td><b>inspect get</b><td>
- * <td><td>
- * <td>Inspect calling get method on molecule.</td>
- * </tr>
- * <tr>
- * <td><b>inspect operation</b> &nbsp;&nbsp;&nbsp;<td>
- * <td><td>
- * <td>Inspect calling save/insert/update method on molecule.</td>
- * </tr>
- * </table>
- *
- * @tparam Tpl Type of molecule (tuple of its attribute types)
- * @see For retract ("delete") methods, see molecule.datomic.base.api.EntityOps and molecule.datomic.base.api.DatomicEntity.
- * @groupname get
- * @groupprio get 10
- * @groupname getAsync
- * @groupprio getAsync 11
- * @groupname getAsOf
- * @groupprio getAsOf 110
- * @groupname getArrayAsOf
- * @groupprio getArrayAsOf 120
- * @groupname getIterableAsOf
- * @groupprio getIterableAsOf 130
- * @groupname getRawAsOf
- * @groupprio getRawAsOf 150
- * @groupname getAsyncAsOf
- * @groupprio getAsyncAsOf 111
- * @groupname getAsyncArrayAsOf
- * @groupprio getAsyncArrayAsOf 121
- * @groupname getAsyncIterableAsOf
- * @groupprio getAsyncIterableAsOf 131
- * @groupname getAsyncRawAsOf
- * @groupprio getAsyncRawAsOf 151
- * @groupname getSince
- * @groupprio getSince 210
- * @groupname getArraySince
- * @groupprio getArraySince 220
- * @groupname getIterableSince
- * @groupprio getIterableSince 230
- * @groupname getRawSince
- * @groupprio getRawSince 250
- * @groupname getAsyncSince
- * @groupprio getAsyncSince 211
- * @groupname getAsyncArraySince
- * @groupprio getAsyncArraySince 221
- * @groupname getAsyncIterableSince
- * @groupprio getAsyncIterableSince 231
- * @groupname getAsyncRawSince
- * @groupprio getAsyncRawSince 251
- * @groupname getWith
- * @groupprio getWith 310
- * @groupname getArrayWith
- * @groupprio getArrayWith 320
- * @groupname getIterableWith
- * @groupprio getIterableWith 330
- * @groupname getRawWith
- * @groupprio getRawWith 350
- * @groupname getAsyncWith
- * @groupprio getAsyncWith 311
- * @groupname getAsyncArrayWith
- * @groupprio getAsyncArrayWith 321
- * @groupname getAsyncIterableWith
- * @groupprio getAsyncIterableWith 331
- * @groupname getAsyncRawWith
- * @groupprio getAsyncRawWith 351
- * @groupname getHistory
- * @groupdesc getHistory (only implemented to return List of tuples)
- * @groupprio getHistory 410
- * @groupname save save
- * @groupprio save 510
- * @groupname insert insert
- * @groupprio insert 520
- * @groupname update update
- * @groupprio update 530
- * @groupname getTx Transaction data (input to getWith).
- * @groupprio getTx 610
- * @groupname inspectGet Inspect get
- * @groupdesc inspectGet Molecule getter inspecting methods.
- * @groupprio inspectGet 620
- * @groupname inspectOp Inspect operation
- * @groupdesc inspectOp Molecule operation inspecting methods (no effect on live db).
- * @groupprio inspectOp 630
- * @groupname internal Internal (but public) model/query representations
- * @groupprio internal 710
- * */
+  *
+  * Groups of interfaces:
+  * <table>
+  * <tr>
+  * <td><b>get</b><td>
+  * <td><b>getAsync</b><td>
+  * <td>Get molecule data.</td>
+  * </tr>
+  * <tr>
+  * <td><b>getAsOf</b><td>
+  * <td><b>getAsyncAsOf</b><td>
+  * <td>Get molecule data <i>asOf</i> point in time.</td>
+  * </tr>
+  * <tr>
+  * <td><b>getSince</b><td>
+  * <td><b>getAsyncSince</b><td>
+  * <td>Get molecule data <i>since</i> point in time.</td>
+  * </tr>
+  * <tr>
+  * <td><b>getWith</b><td>
+  * <td><b>getAsyncWith</b><td>
+  * <td>Get molecule data <i>with</i> given data set.</td>
+  * </tr>
+  * <tr>
+  * <td><b>getHistory</b><td>
+  * <td><b>getAsyncHistory</b> &nbsp;&nbsp;&nbsp;<td>
+  * <td>Get molecule data from <i>history</i> of database.</td>
+  * </tr>
+  * <tr>
+  * <td><b>save</b><td>
+  * <td><b>saveAsync</b><td>
+  * <td>Save molecule with applied data.</td>
+  * </tr>
+  * <tr>
+  * <td><b>insert</b><td>
+  * <td><b>insertAsync</b><td>
+  * <td>Insert multiple rows of data matching molecule.</td>
+  * </tr>
+  * <tr>
+  * <td><b>update</b><td>
+  * <td><b>updateAsync</b><td>
+  * <td>Update molecule with applied data.</td>
+  * </tr>
+  * <tr>
+  * <tr>
+  * <td><b>tx</b><td>
+  * <td><td>
+  * <td>Molecule transaction data (input to `getWith`).</td>
+  * </tr>
+  * <tr>
+  * <td><b>inspect get</b><td>
+  * <td><td>
+  * <td>Inspect calling get method on molecule.</td>
+  * </tr>
+  * <tr>
+  * <td><b>inspect operation</b> &nbsp;&nbsp;&nbsp;<td>
+  * <td><td>
+  * <td>Inspect calling save/insert/update method on molecule.</td>
+  * </tr>
+  * </table>
+  *
+  * @tparam Tpl Type of molecule (tuple of its attribute types)
+  * @see For retract ("delete") methods, see molecule.datomic.base.api.EntityOps and molecule.datomic.base.api.DatomicEntity.
+  * @groupname get
+  * @groupprio get 10
+  * @groupname getAsync
+  * @groupprio getAsync 11
+  * @groupname getAsOf
+  * @groupprio getAsOf 110
+  * @groupname getArrayAsOf
+  * @groupprio getArrayAsOf 120
+  * @groupname getIterableAsOf
+  * @groupprio getIterableAsOf 130
+  * @groupname getRawAsOf
+  * @groupprio getRawAsOf 150
+  * @groupname getAsyncAsOf
+  * @groupprio getAsyncAsOf 111
+  * @groupname getAsyncArrayAsOf
+  * @groupprio getAsyncArrayAsOf 121
+  * @groupname getAsyncIterableAsOf
+  * @groupprio getAsyncIterableAsOf 131
+  * @groupname getAsyncRawAsOf
+  * @groupprio getAsyncRawAsOf 151
+  * @groupname getSince
+  * @groupprio getSince 210
+  * @groupname getArraySince
+  * @groupprio getArraySince 220
+  * @groupname getIterableSince
+  * @groupprio getIterableSince 230
+  * @groupname getRawSince
+  * @groupprio getRawSince 250
+  * @groupname getAsyncSince
+  * @groupprio getAsyncSince 211
+  * @groupname getAsyncArraySince
+  * @groupprio getAsyncArraySince 221
+  * @groupname getAsyncIterableSince
+  * @groupprio getAsyncIterableSince 231
+  * @groupname getAsyncRawSince
+  * @groupprio getAsyncRawSince 251
+  * @groupname getWith
+  * @groupprio getWith 310
+  * @groupname getArrayWith
+  * @groupprio getArrayWith 320
+  * @groupname getIterableWith
+  * @groupprio getIterableWith 330
+  * @groupname getRawWith
+  * @groupprio getRawWith 350
+  * @groupname getAsyncWith
+  * @groupprio getAsyncWith 311
+  * @groupname getAsyncArrayWith
+  * @groupprio getAsyncArrayWith 321
+  * @groupname getAsyncIterableWith
+  * @groupprio getAsyncIterableWith 331
+  * @groupname getAsyncRawWith
+  * @groupprio getAsyncRawWith 351
+  * @groupname getHistory
+  * @groupdesc getHistory (only implemented to return List of tuples)
+  * @groupprio getHistory 410
+  * @groupname save save
+  * @groupprio save 510
+  * @groupname insert insert
+  * @groupprio insert 520
+  * @groupname update update
+  * @groupprio update 530
+  * @groupname getTx Transaction data (input to getWith).
+  * @groupprio getTx 610
+  * @groupname inspectGet Inspect get
+  * @groupdesc inspectGet Molecule getter inspecting methods.
+  * @groupprio inspectGet 620
+  * @groupname inspectOp Inspect operation
+  * @groupdesc inspectOp Molecule operation inspecting methods (no effect on live db).
+  * @groupprio inspectOp 630
+  * @groupname internal Internal (but public) model/query representations
+  * @groupprio internal 710
+  * */
 trait Molecule_0[Obj, Tpl] extends Molecule
   with Marshalling[Obj, Tpl]
   with CastHelpersTypes
@@ -184,21 +184,21 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   // Save ============================================================================================================================
 
   /** Save data applied to molecule attributes.
-   * <br><br>
-   * Returns [[molecule.datomic.base.facade.TxReport TxReport]] having info about
-   * the result of the save transaction.
-   * {{{
-   *   val txReport = Person.name("Ben").age(42).save
-   *
-   *   // Data has been saved in db
-   *   Person.name.age.get === List(("Ben", 42))
-   * }}}
-   * The save operation is synchronous and blocking. Use `saveAsync` for non-blocking asynchronous saves.
-   *
-   * @group save
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-   * @return [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
-   */
+    * <br><br>
+    * Returns [[molecule.datomic.base.facade.TxReport TxReport]] having info about
+    * the result of the save transaction.
+    * {{{
+    *   val txReport = Person.name("Ben").age(42).save
+    *
+    *   // Data has been saved in db
+    *   Person.name.age.get === List(("Ben", 42))
+    * }}}
+    * The save operation is synchronous and blocking. Use `saveAsync` for non-blocking asynchronous saves.
+    *
+    * @group save
+    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @return [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
+    */
   def save(implicit conn: Conn): TxReport = {
     VerifyModel(_model, "save")
     conn.transact(Seq(conn.model2stmts(_model).saveStmts()))
@@ -206,43 +206,62 @@ trait Molecule_0[Obj, Tpl] extends Molecule
 
 
   /** Asynchronously save data applied to molecule attributes.
-   * <br><br>
-   * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
-   * the result of the save transaction.
-   * {{{
-   *   val futureSave: Future[TxReport] = Person.name("Ben").age(42).saveAsync
-   *
-   *   for {
-   *     _ <- futureSave
-   *     result <- Person.name.age.getAsync
-   *   } yield {
-   *     // Data was saved
-   *     result.head === ("Ben", 42)
-   *   }
-   * }}}
-   * The save operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
-   *
-   * @group save
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-   * @return [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
-   */
+    * <br><br>
+    * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
+    * the result of the save transaction.
+    * {{{
+    *   val futureSave: Future[TxReport] = Person.name("Ben").age(42).saveAsync
+    *
+    *   for {
+    *     _ <- futureSave
+    *     result <- Person.name.age.getAsync
+    *   } yield {
+    *     // Data was saved
+    *     result.head === ("Ben", 42)
+    *   }
+    * }}}
+    * The save operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
+    *
+    * @group save
+    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @return [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
+    */
   def saveAsync(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
     VerifyModel(_model, "save")
     conn.transactAsync(Seq(conn.model2stmts(_model).saveStmts()))
   }
 
-  def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
+  def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = try {
+    println("################# 1")
     VerifyModel(_model, "save")
-    conn.transactAsync(Seq(conn.model2stmts(_model).saveStmts()))
+    if (isJsPlatform) {
+
+      println("################# 2 " + conn.getClass)
+      val a = conn.model2stmts(_model)
+      println("################# 3")
+      val b = a.saveStmts()
+      println("################# 4")
+
+//      val stmtsEdn = stmts2edn(conn.model2stmts(_model).saveStmts())
+      val stmtsEdn = stmts2edn(b)
+      println("################# 5")
+      moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn).recover { err =>
+        Left("Recovered from ajax call: " + err.toString)
+      }
+    } else {
+      conn.transactAsync(Seq(conn.model2stmts(_model).saveStmts())).map(txReport => Right(txReport))
+    }
+  } catch {
+    case t: Throwable => Future(Left("Error from executing transaction in DatomicRpc: " + t.getMessage))
   }
 
 
   /** Get transaction statements of a call to `save` on a molecule (without affecting the db).
-   *
-   * @group getTx
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-   * @return Transaction statements
-   */
+    *
+    * @group getTx
+    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @return Transaction statements
+    */
   def getSaveStmts(implicit conn: Conn): Seq[Seq[Statement]] = {
     VerifyModel(_model, "save")
     val transformer = conn.model2stmts(_model)
@@ -261,120 +280,120 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   // Insert ============================================================================================================================
 
   /** Insert one or more rows of data matching molecule.
-   * <br><br>
-   * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
-   * the result of the insert transaction.
-   * <br><br>
-   * Data matching the types of the molecule can be inserted either as individual args
-   * or an Iterable (List, Set etc) of tuples:
-   * {{{
-   *   // Insert single row of data with individual args
-   *   Person.name.age.insert("Ann", 28)
-   *
-   *   // Insert multiple rows of data. Accepts Iterable[Tpl]
-   *   Person.name.age insert List(
-   *     ("Ben", 42),
-   *     ("Liz", 37)
-   *   )
-   *
-   *   // Data was inserted
-   *   Person.name.age.get.sorted === List(
-   *     ("Ann", 28),
-   *     ("Ben", 42),
-   *     ("Liz", 37)
-   *   )
-   * }}}
-   * Each insert apply method returns a [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the transaction.
-   * <br><br>
-   * Since `insert` is an object of each arity 1-22 Molecule implementation, we can make an "insert-molecule" at compile time
-   * that we can re-use for inserting data at runtime matching the molecule type:
-   * {{{
-   *   // At compiletime:
-   *
-   *   // Make insert-molecule
-   *   val insertPersonsWithAge = Person.name.age.insert
-   *
-   *   // At runtime:
-   *
-   *   // Apply individual args matching insert-molecule to insert single row
-   *   insertPersonsWithAge("Ann", 28)
-   *
-   *   // .. or apply Iterable of tuples matching insert-molecule to insert multiple rows
-   *   insertPersonsWithAge(
-   *     List(
-   *       ("Ben", 42),
-   *       ("Liz", 37)
-   *     )
-   *   )
-   *
-   *   // Data was inserted
-   *   Person.name.age.get.sorted === List(
-   *     ("Ann", 28),
-   *     ("Ben", 42),
-   *     ("Liz", 37)
-   *   )
-   * }}}
-   * The insert operation is synchronous and blocking. Use `insertAsync` for non-blocking asynchronous inserts.
-   *
-   * @group insert
-   */
+    * <br><br>
+    * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
+    * the result of the insert transaction.
+    * <br><br>
+    * Data matching the types of the molecule can be inserted either as individual args
+    * or an Iterable (List, Set etc) of tuples:
+    * {{{
+    *   // Insert single row of data with individual args
+    *   Person.name.age.insert("Ann", 28)
+    *
+    *   // Insert multiple rows of data. Accepts Iterable[Tpl]
+    *   Person.name.age insert List(
+    *     ("Ben", 42),
+    *     ("Liz", 37)
+    *   )
+    *
+    *   // Data was inserted
+    *   Person.name.age.get.sorted === List(
+    *     ("Ann", 28),
+    *     ("Ben", 42),
+    *     ("Liz", 37)
+    *   )
+    * }}}
+    * Each insert apply method returns a [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the transaction.
+    * <br><br>
+    * Since `insert` is an object of each arity 1-22 Molecule implementation, we can make an "insert-molecule" at compile time
+    * that we can re-use for inserting data at runtime matching the molecule type:
+    * {{{
+    *   // At compiletime:
+    *
+    *   // Make insert-molecule
+    *   val insertPersonsWithAge = Person.name.age.insert
+    *
+    *   // At runtime:
+    *
+    *   // Apply individual args matching insert-molecule to insert single row
+    *   insertPersonsWithAge("Ann", 28)
+    *
+    *   // .. or apply Iterable of tuples matching insert-molecule to insert multiple rows
+    *   insertPersonsWithAge(
+    *     List(
+    *       ("Ben", 42),
+    *       ("Liz", 37)
+    *     )
+    *   )
+    *
+    *   // Data was inserted
+    *   Person.name.age.get.sorted === List(
+    *     ("Ann", 28),
+    *     ("Ben", 42),
+    *     ("Liz", 37)
+    *   )
+    * }}}
+    * The insert operation is synchronous and blocking. Use `insertAsync` for non-blocking asynchronous inserts.
+    *
+    * @group insert
+    */
   trait insert
 
 
   /** Asynchronously insert one or more rows of data matching molecule.
-   * <br><br>
-   * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
-   * the result of the insert transaction.
-   * <br><br>
-   * Data matching the types of the molecule can be inserted either as individual args
-   * or an Iterable (List, Set etc) of tuples:
-   * {{{
-   *   // Insert single row of data with individual args
-   *   val singleInsertFuture: Future[TxReport] = Person.name.age.insertAsync("Ann", 28)
-   *
-   *   // Insert multiple rows of data. Accepts Iterable[Tpl]
-   *   val multipleInsertFuture: Future[TxReport] = Person.name.age insertAsync List(
-   *     ("Ben", 42),
-   *     ("Liz", 37)
-   *   )
-   *
-   *   for {
-   *     _ <- singleInsertFuture
-   *     _ <- multipleInsertFuture
-   *     result <- Person.name.age.getAsync
-   *   } yield {
-   *     // Both inserts applied
-   *     result === List(
-   *       ("Ann", 28),
-   *       ("Ben", 42),
-   *       ("Liz", 37)
-   *     )
-   *   }
-   * }}}
-   *
-   * The insert operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
-   *
-   * @group insert
-   */
+    * <br><br>
+    * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
+    * the result of the insert transaction.
+    * <br><br>
+    * Data matching the types of the molecule can be inserted either as individual args
+    * or an Iterable (List, Set etc) of tuples:
+    * {{{
+    *   // Insert single row of data with individual args
+    *   val singleInsertFuture: Future[TxReport] = Person.name.age.insertAsync("Ann", 28)
+    *
+    *   // Insert multiple rows of data. Accepts Iterable[Tpl]
+    *   val multipleInsertFuture: Future[TxReport] = Person.name.age insertAsync List(
+    *     ("Ben", 42),
+    *     ("Liz", 37)
+    *   )
+    *
+    *   for {
+    *     _ <- singleInsertFuture
+    *     _ <- multipleInsertFuture
+    *     result <- Person.name.age.getAsync
+    *   } yield {
+    *     // Both inserts applied
+    *     result === List(
+    *       ("Ann", 28),
+    *       ("Ben", 42),
+    *       ("Liz", 37)
+    *     )
+    *   }
+    * }}}
+    *
+    * The insert operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
+    *
+    * @group insert
+    */
   trait insertAsync
 
 
   /** Get transaction statements of a call to `insert` on a molecule (without affecting the db).
-   *
-   * @group getTx
-   * @return Transaction statements
-   */
+    *
+    * @group getTx
+    * @return Transaction statements
+    */
   trait getInsertStmts
 
 
   /** Inspect call to `insert` on a molecule (without affecting the db).
-   * <br><br>
-   * Prints internal molecule transformation representations to output:
-   * <br><br>
-   * Model --> Generic statements --> Datomic statements
-   *
-   * @group inspectOp
-   */
+    * <br><br>
+    * Prints internal molecule transformation representations to output:
+    * <br><br>
+    * Model --> Generic statements --> Datomic statements
+    *
+    * @group inspectOp
+    */
   trait inspectInsert
 
 
@@ -414,49 +433,49 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   // Update ============================================================================================================================
 
   /** Update entity with data applied to molecule attributes.
-   * <br><br>
-   * Returns [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the update transaction.
-   * {{{
-   *   // Current data
-   *   val ben = Person.name("Ben").age(42).save.eid
-   *
-   *   // Update entity of of Ben with new age value
-   *   Person(ben).age(43).update
-   *
-   *   // Ben is now 43
-   *   Person.name.age.get === List(("ben", 43))
-   * }}}
-   * The update operation is synchronous and blocking. Use `updateAsync` for non-blocking asynchronous updates.
-   *
-   * @group update
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-   * @return [[molecule.datomic.base.facade.TxReport TxReport]]
-   */
+    * <br><br>
+    * Returns [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the update transaction.
+    * {{{
+    *   // Current data
+    *   val ben = Person.name("Ben").age(42).save.eid
+    *
+    *   // Update entity of of Ben with new age value
+    *   Person(ben).age(43).update
+    *
+    *   // Ben is now 43
+    *   Person.name.age.get === List(("ben", 43))
+    * }}}
+    * The update operation is synchronous and blocking. Use `updateAsync` for non-blocking asynchronous updates.
+    *
+    * @group update
+    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @return [[molecule.datomic.base.facade.TxReport TxReport]]
+    */
   def update(implicit conn: Conn): TxReport = {
     VerifyModel(_model, "update")
     conn.transact(Seq(conn.model2stmts(_model).updateStmts()))
   }
 
   /** Asynchronously update entity with data applied to molecule attributes.
-   * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
-   * the result of the update transaction.
-   * {{{
-   *   for {
-   *     saveTx <- Person.name("Ben").age(42).saveAsync
-   *     benId = saveTx.eid
-   *     updateTx <- Person(benId).age(43).updateAsync
-   *     result <- Person.name.age.getAsync
-   *   } yield {
-   *     // Ben is now 43
-   *     result.head === ("ben", 43)
-   *   }
-   * }}}
-   * The update operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
-   *
-   * @group update
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-   * @return [[molecule.datomic.base.facade.TxReport TxReport]]
-   */
+    * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
+    * the result of the update transaction.
+    * {{{
+    *   for {
+    *     saveTx <- Person.name("Ben").age(42).saveAsync
+    *     benId = saveTx.eid
+    *     updateTx <- Person(benId).age(43).updateAsync
+    *     result <- Person.name.age.getAsync
+    *   } yield {
+    *     // Ben is now 43
+    *     result.head === ("ben", 43)
+    *   }
+    * }}}
+    * The update operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
+    *
+    * @group update
+    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @return [[molecule.datomic.base.facade.TxReport TxReport]]
+    */
   def updateAsync(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
     VerifyModel(_model, "update")
     conn.transactAsync(Seq(conn.model2stmts(_model).updateStmts()))
@@ -464,11 +483,11 @@ trait Molecule_0[Obj, Tpl] extends Molecule
 
 
   /** Get transaction statements of a call to `update` on a molecule (without affecting the db).
-   *
-   * @group getTx
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-   * @return
-   */
+    *
+    * @group getTx
+    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @return
+    */
   def getUpdateStmts(implicit conn: Conn): Seq[Seq[Statement]] = {
     VerifyModel(_model, "update")
     val transformer = conn.model2stmts(_model)

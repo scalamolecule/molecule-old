@@ -71,49 +71,38 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     Future(get(n)(conn))
 
 
-  def getAsync2(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = {
+  def getAsync2(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = try {
     if (isJsPlatform) {
       val query        = _nestedQuery.getOrElse(_query)
       val q2s          = Query2String(query)
       val datalogQuery = q2s.multiLine(60)
       val p            = q2s.p
-      val rules        = if (query.i.rules.isEmpty) Nil else
-        Seq("[" + (query.i.rules map p mkString " ") + "]")
-      val (l, ll, lll) = encodeInputs(query)
+      val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+      val (l, ll, lll) = marshallInputs(query)
       // Fetch QueryResult with Ajax call
       moleculeRpc.queryAsync(conn.dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
         .recover { err =>
           Left("Recovered from ajax call: " + err.toString)
         }.map {
         case Right(qr) =>
-          try {
-            val maxRows    = if (n == -1) qr.maxRows else n
-            val tplsBuffer = new ListBuffer[Tpl]
-            val columns    = qr2tpl(qr) // macro generated extractor
-            var rowIndex   = 0
-            while (rowIndex < maxRows) {
-              tplsBuffer += columns(rowIndex)
-              rowIndex += 1
-            }
-            Right(tplsBuffer.toList)
-          } catch {
-            case e: Throwable => Left("Error extracting data from QueryResult: " + e.toString)
+          val maxRows    = if (n == -1) qr.maxRows else n
+          val tplsBuffer = new ListBuffer[Tpl]
+          val columns    = qr2tpl(qr) // macro generated extractor
+          var rowIndex   = 0
+          while (rowIndex < maxRows) {
+            tplsBuffer += columns(rowIndex)
+            rowIndex += 1
           }
+          Right(tplsBuffer.toList)
 
         case Left(err) => Left(err) // error from QueryExecutor
       }
-
     } else {
-      Future(
-        try {
-          Right(get(conn))
-        } catch {
-          case e: Throwable => Left(e.toString)
-        }
-      )
+      Future(Right(get(conn)))
     }
+  } catch {
+    case t: Throwable => Future(Left("Error extracting data from QueryResult: " + t.toString))
   }
-
 
   // get as of ================================================================================================
 

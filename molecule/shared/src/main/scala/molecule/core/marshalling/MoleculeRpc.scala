@@ -1,10 +1,15 @@
 package molecule.core.marshalling
 
+import molecule.datomic.base.facade.TxReport
 import scala.concurrent.Future
 
 trait MoleculeRpc {
 
-//  def connect(dbProxy: DbProxy): Future[Unit]
+  def transactAsync(
+    dbProxy: DbProxy,
+    stmtsEdn: String
+  ): Future[Either[String, TxReport]]
+
 
   def queryAsync(
     dbProxy: DbProxy,
@@ -16,4 +21,5 @@ trait MoleculeRpc {
     maxRows: Int,
     indexes: List[(Int, Int, Int, Int)]
   ): Future[Either[String, QueryResult]]
+
 }

@@ -1,6 +1,6 @@
 package molecule
 
-import molecule.core.marshalling.{ClientConn, DatomicInMemProxy, DatomicPeerProxy}
+import molecule.core.marshalling.{ClientConn, DatomicInMemProxy}
 import molecule.datomic.api.out3._
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.tests.core.base.schema.CoreTestSchema
@@ -26,13 +26,21 @@ object InMem extends TestSuite {
 
   lazy val tests = Tests {
 
-    test("Empty result set") {
-      Ns.str.int.getAsync2.isEmpty
-    }
-
 //    test("Empty result set") {
-//      Ns.int(1).saveAsync
 //      Ns.str.int.getAsync2.isEmpty
 //    }
+
+    test("Empty result set") {
+      Ns.int(1).saveAsync2.map{res =>
+        println("@@@")
+//        1 ==> 3
+        res ==> 7
+      }
+//      Ns.int(1).saveAsync2.map{
+//        case Right(txReport) => txReport.eids.size ==> 2
+//      }
+//      Ns.str.int.getAsync2.isEmpty
+
+    }
   }
 }

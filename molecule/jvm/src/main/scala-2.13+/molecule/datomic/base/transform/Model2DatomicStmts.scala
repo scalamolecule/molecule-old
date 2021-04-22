@@ -150,11 +150,24 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
     }._2
   }
 
+  var nextTempId = -1000000
   private def tempId(attr: String): AnyRef = attr match {
     case null                 => err("__tempId", "Attribute name unexpectedly null.")
     case "tx"                 => "datomic.tx"
-    case s if s.contains('_') => Peer.tempid(read(":" + attr.substring(1).split("(?=_)").head)) // extract "partition" from ":partition_Namespace/attr"
-    case _                    => Peer.tempid(read(":db.part/user"))
+//    case s if s.contains('_') =>
+//      // extract "partition" from ":partition_Namespace/attr"
+//      val partition = attr.substring(1).split("(?=_)").head
+//      s"#db/id[:db.part/$partition]"
+    case _                    =>
+      "#db/id[:db.part/user]"
+      nextTempId -= 1
+//      "\"" + nextTempId + "\""
+//      "\"" + nextTempId + "\""
+//      s"$nextTempId"
+      s":db/id #db/id[:db.part/user $nextTempId]"
+      s""":db/id "$nextTempId""""
+    //    case s if s.contains('_') => Peer.tempid(read(":" + attr.substring(1).split("(?=_)").head)) // extract "partition" from ":partition_Namespace/attr"
+    //    case _                    => Peer.tempid(read(":db.part/user"))
   }
 
   private def getPairs(e: Any, a: String, key: String = "") = {

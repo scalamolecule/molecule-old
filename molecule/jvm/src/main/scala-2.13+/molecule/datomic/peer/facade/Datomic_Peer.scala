@@ -158,8 +158,7 @@ trait Datomic_Peer {
     dbIdentifier: String = ""
   ): Conn_Peer = try {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-//    Conn_Peer.apply(Peer.connect(s"datomic:$protocol://$id"))
-    Conn_Peer.apply(s"datomic:$protocol://$id")
+    Conn_Peer(s"datomic:$protocol://$id")
   } catch {
     case e: Throwable => throw new DatomicFacadeException(e.toString)
   }

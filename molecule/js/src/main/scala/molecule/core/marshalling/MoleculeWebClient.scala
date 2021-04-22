@@ -8,7 +8,7 @@ import playing.sloth.WebClient
   * Will only be called from client side.
   *
   */
-object MoleculeWebClient extends WebClient {
+object MoleculeWebClient extends WebClient with Picklers {
 
   /** Wire handle
     *
