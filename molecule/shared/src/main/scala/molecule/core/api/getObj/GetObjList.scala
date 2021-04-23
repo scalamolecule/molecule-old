@@ -678,8 +678,8 @@ trait GetObjList[Obj, Tpl] extends GetObjArray[Obj, Tpl] with JavaUtil with Quot
     * @return List[Obj] where Obj is an object type having property types matching the attributes of the molecule
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncObj.GetAsyncObjList.getAsyncObjListWith(txMolecules* getAsyncObjListWith]] method.
     */
-  def getObjListWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): List[Obj] =
-    getObjList(conn.usingTempDb(With(toJavaList(txMolecules.flatten.flatten.map(_.toJava)))))
+  def getObjListWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): List[Obj] =
+    getObjList(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
 
 
   /** Get `List` of n rows as objects matching molecule with applied molecule transaction data.
@@ -735,8 +735,8 @@ trait GetObjList[Obj, Tpl] extends GetObjArray[Obj, Tpl] with JavaUtil with Quot
     * @return List[Obj] where Obj is an object type having property types matching the attributes of the molecule
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncObj.GetAsyncObjList.getAsyncObjListWith(n:Int,txMolecules* getAsyncObjListWith]] method.
     */
-  def getObjListWith(n: Int, txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): List[Obj] =
-    getObjList(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.flatten.map(_.toJava)))))
+  def getObjListWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): List[Obj] =
+    getObjList(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
 
 
   /** Get `List` of all rows as objects matching molecule with applied raw transaction data.

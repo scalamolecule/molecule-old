@@ -20,48 +20,50 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Base class for Datomic connection facade
   *
   */
-trait Conn_Datomic extends Conn {
+trait ConnBase extends Conn {
 
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over test db)
   protected var _adhocDb: Option[TempDb] = None
 
-  def transact(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]]): TxReport =
-    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
+  def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport =
+    transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
 
-  def transact(edn: String, scalaStmts: Seq[Seq[Statement]]): TxReport =
-    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
+  def transact(edn: String, scalaStmts: Seq[Statement]): TxReport =
+    transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
 
   def transact(stmtsReader: Reader): TxReport =
-    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
+    transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
 
   def transact(edn: String): TxReport =
-    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+    transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
 
-  def transact(scalaStmts: Seq[Seq[Statement]]): TxReport =
-    transact(toJava(scalaStmts), scalaStmts)
+  def transact(scalaStmts: Seq[Statement]): TxReport =
+    transactRaw(toJava(scalaStmts), scalaStmts)
 
 
-  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]])
+  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])
                    (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
+    transactAsyncRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
 
-  def transactAsync(edn: String, scalaStmts: Seq[Seq[Statement]])
+  def transactAsync(edn: String, scalaStmts: Seq[Statement])
                    (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
+    transactAsyncRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
 
   def transactAsync(stmtsReader: Reader)
                    (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
+    transactAsyncRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
 
   def transactAsync(edn: String)
                    (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+    transactAsyncRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
 
-  def transactAsync(scalaStmts: Seq[Seq[Statement]])
+  def transactAsync(scalaStmts: Seq[Statement])
                    (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsync(toJava(scalaStmts), scalaStmts)
+    transactAsyncRaw(toJava(scalaStmts), scalaStmts)
 
+  def q(query: String, inputs: Any*): List[List[AnyRef]] =
+    q(db, query, inputs.toSeq)
 
   def q(db: DatomicDb, query: String, inputs: Seq[Any]): List[List[AnyRef]] = {
     val raw = qRaw(db, query, inputs)
@@ -83,6 +85,9 @@ trait Conn_Datomic extends Conn {
         )
     }
   }
+
+  def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]] =
+    qRaw(db, query, inputs)
 
   def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)

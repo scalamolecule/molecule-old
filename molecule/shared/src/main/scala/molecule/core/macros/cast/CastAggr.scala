@@ -7,6 +7,9 @@ private[molecule] trait CastAggr extends CastOptNested {
 
   import c.universe._
 
+  // (castIndex, arrayType) for looking up cast lambda and QueryResult array
+  var ii = (-1, -1)
+
   val castAggrInt   : Int => Tree = {
     ii = (118 , 1)
     (colIndex: Int) => q"row.get($colIndex).toString.toInt"

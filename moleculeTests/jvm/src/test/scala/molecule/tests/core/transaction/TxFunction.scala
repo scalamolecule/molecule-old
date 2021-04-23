@@ -52,7 +52,7 @@ object TxFunctionExamples {
 
   // Example from Stu's presentation:
   // https://www.youtube.com/watch?v=8fY687k7DMA
-  def inc(e: Long, amount: Int)(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def inc(e: Long, amount: Int)(implicit conn: Conn): Seq[Statement] = {
     // Current value is looked up in db
     val curBalance = Ns(e).int.get.headOption.getOrElse(0)
     val newBalance = curBalance + amount
@@ -63,7 +63,7 @@ object TxFunctionExamples {
 
 
   // Constraint check before multiple updates
-  def transfer(from: Long, to: Long, amount: Int)(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def transfer(from: Long, to: Long, amount: Int)(implicit conn: Conn): Seq[Statement] = {
     // Validate sufficient funds in from-account
     val curFromBalance = Ns(from).int.get.headOption.getOrElse(0)
 
@@ -83,7 +83,7 @@ object TxFunctionExamples {
 
 
   // "Sub" tx fn - can be used on its own or in other tx functions
-  def withdraw(from: Long, amount: Int)(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def withdraw(from: Long, amount: Int)(implicit conn: Conn): Seq[Statement] = {
     val curFromBalance = Ns(from).int.get.headOption.getOrElse(0)
     if (curFromBalance < amount)
       throw new TxFnException(
@@ -95,14 +95,14 @@ object TxFunctionExamples {
 
 
   // "Sub" tx fn - can be used on its own or in other tx functions
-  def deposit(to: Long, amount: Int)(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def deposit(to: Long, amount: Int)(implicit conn: Conn): Seq[Statement] = {
     val newToBalance = Ns(to).int.get.headOption.getOrElse(0) + amount
     Ns(to).int(newToBalance).getUpdateStmts
   }
 
 
   // Compose tx function by calling other tx functions
-  def transferComposed(from: Long, to: Long, amount: Int)(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def transferComposed(from: Long, to: Long, amount: Int)(implicit conn: Conn): Seq[Statement] = {
     // This tx function guarantees atomicity when calling multiple sub tx functions.
     // If they were called independently outside a tx function, atomicity wouldn't be guaranteed.
     withdraw(from, amount) ++ deposit(to, amount)
@@ -110,7 +110,7 @@ object TxFunctionExamples {
 
 
   // Constructor enforcing validation rules against db
-  def addUser(username: String, age: Int)(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def addUser(username: String, age: Int)(implicit conn: Conn): Seq[Statement] = {
     // Checking that username hasn't been taken. Since this check runs inside
     // the transaction we are guaranteed Atomicity. The requested
     // username couldn't have been created between the check and saving.
@@ -130,7 +130,7 @@ object TxFunctionExamples {
 
 
   // Constructor enforcing validation rules against db
-  def addUserPartiallyChecked(username: String, age: Int)(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def addUserPartiallyChecked(username: String, age: Int)(implicit conn: Conn): Seq[Statement] = {
     // Checking that username hasn't been taken. Since this check runs inside
     // the transaction we are guaranteed Atomicity. The requested
     // username couldn't have been created between the check and saving.

@@ -87,8 +87,8 @@ object transactionModel extends JavaUtil {
   case class Values(vs: Any, prefix: Option[String] = None) extends AbstractValue
 
 
-  def toJava(stmtss: Seq[Seq[Statement]]): jList[jList[_]] = {
-    val flatList: Seq[jList[_]]   = stmtss.flatten.map {
+  def toJava(stmts: Seq[Statement]): jList[jList[_]] = {
+    val flatList: Seq[jList[_]]   = stmts.map {
       case Add(e, a, i: Int, bi)             => Add(e, a, i.toLong: java.lang.Long, bi).toJava
       case Add(e, a, f: Float, bi)           => Add(e, a, f.toDouble: java.lang.Double, bi).toJava
       case Add(e, a, bigInt: BigInt, bi)     => Add(e, a, bigInt.bigInteger, bi).toJava

@@ -1,11 +1,14 @@
 package molecule
 
 import _root_.datomic.Peer
+import molecule.core.macros.TxFns
 import molecule.core.util.Helpers
 import molecule.datomic.api.out3._
+import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.peer.facade.Datomic_Peer
 import molecule.datomic.peer.facade.Datomic_Peer._
+import molecule.tests.core.base.dsl.CoreTest.Ns
 import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 import org.specs2.mutable.Specification
@@ -13,51 +16,21 @@ import scala.jdk.CollectionConverters._
 
 //class AdHocTest extends molecule.setup.TestSpec with Helpers {
 class AdHocTestJvm extends Specification {
-  //
-  //  trait C {
-  //    def c = 8
-  //  }
-  //  object C extends C
-  //
-  //
-  //  trait A extends C {
-  //    val x = c
-  //  }
-  //  object A extends C
-  //
-  //
-  //  object B {
-  //    import C._
-  //}
-  //
-  //  object D {
-  //    import B._
-  //
-  //    val a2 = c
-  //  }
-  //
-  //
+
+  import molecule.tests.core.base.dsl.CoreTest._
+
+  implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
+
   "core" >> {
-    import molecule.tests.core.base.dsl.CoreTest._
-
-    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
-
-    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")))
-    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).getClass)
-    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).isInstanceOf[java.util.Map[_,_]])
-    println("-------")
-    println(_root_.datomic.Util.read(":db.part/user"))
-    println(_root_.datomic.Util.read(":db.part/user").getClass)
 
 
+    //    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")))
+    //    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).getClass)
+    //    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).isInstanceOf[java.util.Map[_,_]])
+    //    println("-------")
+    //    println(_root_.datomic.Util.read(":db.part/user"))
+    //    println(_root_.datomic.Util.read(":db.part/user").getClass)
 
-
-
-    m(Ns.str.int)
-//    xx(Ns.int.bool).inspectGet
-    //    Ns.int.get.head === 0
-
-//    println(Platform.bar)
 
 
     ok

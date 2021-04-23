@@ -899,7 +899,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
 
   private def resolveStmts(genericStmts: Seq[Statement], row: Seq[Any], forcedE0: Any, edgeB0: Option[AnyRef] = None): Seq[Statement] = {
-    val stmts1 = genericStmts.foldLeft(0, edgeB0, Seq[Statement]()) { case ((cur, edgeB, stmts0), genericStmt0) =>
+    val stmts1 = genericStmts.foldLeft(0, edgeB0, Seq.empty[Statement]) { case ((cur, edgeB, stmts0), genericStmt0) =>
       val arg0      = row.asJava.get(cur)
       val next: Int = if ((cur + 1) < row.size) cur + 1 else cur
 
@@ -959,11 +959,11 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
   private def txRefAttr(stmts: Seq[Statement]): Boolean = stmts.nonEmpty && stmts.last.v.toString.startsWith("#db/id[:db.part/")
 
-  def insertStmts(dataRows: Seq[Seq[Any]]): Seq[Seq[Statement]] = {
-    val (genericStmts, genericTxStmts)  = splitStmts()
-    val dataStmtss: Seq[Seq[Statement]] = dataRows.map(resolveStmts(genericStmts, _, 0))
-    val txId                            = tempId("tx")
-    val txStmtss  : Seq[Seq[Statement]] = Seq(genericTxStmts.foldLeft(Seq[Statement]()) {
+  def insertStmts(dataRows: Iterable[Seq[Any]]): Seq[Statement] = {
+    val (genericStmts, genericTxStmts) = splitStmts()
+    val dataStmts: Seq[Statement]      = dataRows.toSeq.flatMap(resolveStmts(genericStmts, _, 0))
+    val txId                           = tempId("tx")
+    val txStmts  : Seq[Statement]      = genericTxStmts.foldLeft(Seq.empty[Statement]) {
       case (stmts, Add("tx", a, Values(vs, prefix), bi)) if txRefAttr(stmts)      => valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, None)
       case (stmts, Add("tx", a, Values(vs, prefix), bi))                          => valueStmts(stmts, txId, a, vs, prefix, bi, None)
       case (stmts, Add("tx", a, refNs: String, bi)) if !refNs.startsWith("__")    => valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, None)
@@ -971,8 +971,8 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
       case (stmts, Add("txRef", a, Values(vs, prefix), bi))                       => valueStmts(stmts, stmts.last.e.asInstanceOf[Object], a, vs, prefix, bi, None)
       case (stmts, Add("txRef", a, refNs: String, bi)) if !refNs.startsWith("__") => valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, None)
       case (_, unexpected)                                                        => err("insertStmts", "Unexpected insert statement: " + unexpected)
-    })
-    dataStmtss ++ (if (txStmtss.head.isEmpty) Nil else txStmtss)
+    }
+    dataStmts ++ txStmts
   }
 
 

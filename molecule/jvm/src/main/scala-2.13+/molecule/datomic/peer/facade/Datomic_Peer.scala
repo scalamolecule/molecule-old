@@ -245,7 +245,7 @@ trait Datomic_Peer {
       deleteDatabase(protocol, id)
       createDatabase(protocol, id)
       val conn = connect(protocol, id)
-      conn.transact(schemaData)
+      conn.transactRaw(schemaData)
       conn
     } catch {
       case e: Throwable => throw new DatomicFacadeException(e.toString)

@@ -75,7 +75,7 @@ object CleanPeerServer {
         throw new RuntimeException(s"Unexpectedly gathered $retractionCount retractions...")
 
       if (retractionCount > 0) {
-        val txd = dataConn.transact(Seq(cleanupRetractions.toSeq))
+        val txd = dataConn.transact(cleanupRetractions.toSeq)
         //            println(txd)
 
         val tx = TxCount.e.db_(dbIdentifier).get(txCountConn).head

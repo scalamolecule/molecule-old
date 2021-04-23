@@ -96,7 +96,7 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     deleteDatabase(dbName)
     createDatabase(dbName)
     val conn = connect(dbName)
-    conn.transact(schemaData)
+    conn.transactRaw(schemaData)
     conn
   } catch {
     case e: Throwable => throw new DatomicFacadeException(e.toString)

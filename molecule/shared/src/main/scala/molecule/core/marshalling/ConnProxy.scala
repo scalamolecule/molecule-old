@@ -4,7 +4,6 @@ import java.io.Reader
 import java.util
 import java.util.Date
 import molecule.core.ast.elements.Model
-import molecule.core.data.SchemaTransaction
 import molecule.core.transform.Model2Statements
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
@@ -16,8 +15,6 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Dummy connection to satisfy implicit parameter of api calls on client side.
   *
   * Used to cary information enabling marshalling on both client and server side.
-  *
-  * @param dbProxy  Db coordinates to access db on server side
   */
 trait ConnProxy extends Conn {
 
@@ -41,7 +38,7 @@ trait ConnProxy extends Conn {
 
   override def testDbSince(txR: TxReport): Unit = ???
 
-  override def testDbWith(txData: Seq[Seq[Statement]]*): Unit = ???
+  override def testDbWith(txData: Seq[Statement]*): Unit = ???
 
   override def testDbWith(txDataJava: util.List[util.List[AnyRef]]): Unit = ???
 
@@ -51,29 +48,29 @@ trait ConnProxy extends Conn {
 
   override def entity(id: Any): DatomicEntity = ???
 
-  override def transact(javaStmts: util.List[_], scalaStmts: Seq[Seq[Statement]]): TxReport = ???
+  override def transactRaw(javaStmts: util.List[_], scalaStmts: Seq[Statement]): TxReport = ???
 
-  override def transact(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]]): TxReport = ???
+  override def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport = ???
 
-  override def transact(edn: String, scalaStmts: Seq[Seq[Statement]]): TxReport = ???
+  override def transact(edn: String, scalaStmts: Seq[Statement]): TxReport = ???
 
   override def transact(stmtsReader: Reader): TxReport = ???
 
   override def transact(edn: String): TxReport = ???
 
-  override def transact(scalaStmts: Seq[Seq[Statement]]): TxReport = ???
+  override def transact(scalaStmts: Seq[Statement]): TxReport = ???
 
-  override def transactAsync(javaStmts: util.List[_], scalaStmts: Seq[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsyncRaw(javaStmts: util.List[_], scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transactAsync(edn: String, scalaStmts: Seq[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(edn: String, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
   override def transactAsync(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
   override def transactAsync(edn: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transactAsync(scalaStmts: Seq[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
   override def buildTxFnInstall(txFn: String, args: Seq[Any]): util.List[_] = ???
 

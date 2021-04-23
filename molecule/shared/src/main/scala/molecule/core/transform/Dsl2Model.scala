@@ -406,7 +406,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
 
       } else if (t.isRefAttr) {
         //xx(136, t.tpeS)
-        addCast(if (optNestedLevel > 0) castOptNestedMandatoryAttr else castMandatoryAttr, t)
+        addCast(if (optNestedLevel > 0) castOptNestedMandatoryRefAttr else castMandatoryAttr, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
@@ -437,7 +437,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
 
       } else if (t.isRefAttr$) {
         //xx(144, t.tpeS)
-        addCast(if (optNestedLevel > 0) castOptNestedOptAttr else castOptionalRefAttr, t)
+        addCast(if (optNestedLevel > 0) castOptNestedOptRefAttr else castOptionalRefAttr, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
@@ -470,7 +470,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
 
       } else if (t.isRefAttr) {
         if (optNestedLevel > 0)
-          castss = (castOptNestedOptAttr(t) :: castss.head) +: castss.tail
+          castss = (castOptNestedOptRefAttr(t) :: castss.head) +: castss.tail
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {

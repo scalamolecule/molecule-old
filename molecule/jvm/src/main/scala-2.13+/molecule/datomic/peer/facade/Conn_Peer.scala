@@ -105,8 +105,8 @@ class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
     _testDb = Some(peerConn.db.since(txR.t))
   }
 
-  def testDbWith(txData: Seq[Seq[Statement]]*): Unit = {
-    val txDataJava: jList[jList[_]] = txData.flatten.flatten.map(_.toJava).asJava
+  def testDbWith(txData: Seq[Statement]*): Unit = {
+    val txDataJava: jList[jList[_]] = txData.flatten.map(_.toJava).asJava
     _testDb = Some(peerConn.db.`with`(txDataJava).get(DB_AFTER).asInstanceOf[Database])
   }
 
@@ -153,7 +153,7 @@ class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transact(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil): TxReport = {
+  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
     if (_adhocDb.isDefined) {
       // In-memory "transaction"
       TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
@@ -172,8 +172,8 @@ class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
     }
   }
 
-  def transactAsync(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil)
-                   (implicit ec: ExecutionContext): Future[TxReport] = {
+  def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
+                      (implicit ec: ExecutionContext): Future[TxReport] = {
     if (_adhocDb.isDefined) {
       Future {
         TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)

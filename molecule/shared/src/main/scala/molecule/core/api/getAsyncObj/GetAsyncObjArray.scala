@@ -410,7 +410,7 @@ trait GetAsyncObjArray[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetObjArray[O
     * @param tplType     Implicit `ClassTag[Obj]` to capture the object type for Array
     * @return `Future[Array[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
-  def getAsyncObjArrayWith(txMolecules: Seq[Seq[Statement]]*)
+  def getAsyncObjArrayWith(txMolecules: Seq[Statement]*)
                           (implicit conn: Conn, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Obj]] =
     Future(getObjArrayWith(txMolecules: _*)(conn, objType, tplType))
 
@@ -436,7 +436,7 @@ trait GetAsyncObjArray[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetObjArray[O
     * @return `Future[Array[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
     */
-  def getAsyncObjArrayWith(n: Int, txMolecules: Seq[Seq[Statement]]*)
+  def getAsyncObjArrayWith(n: Int, txMolecules: Seq[Statement]*)
                           (implicit conn: Conn, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Obj]] =
     Future(getObjArrayWith(n, txMolecules: _*)(conn, objType, tplType))
 

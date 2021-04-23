@@ -349,7 +349,7 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsyncWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[List[Tpl]] =
+  def getAsyncWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[List[Tpl]] =
     Future(getWith(txMolecules: _*)(conn))
 
 
@@ -367,7 +367,7 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
     */
-  def getAsyncWith(n: Int, txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[List[Tpl]] =
+  def getAsyncWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[List[Tpl]] =
     Future(getWith(n, txMolecules: _*)(conn))
 
 

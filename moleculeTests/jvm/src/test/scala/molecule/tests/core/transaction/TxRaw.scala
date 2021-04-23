@@ -21,9 +21,9 @@ class TxRaw extends TestSpec {
 
     if (system == SystemPeer) {
       // Add raw data from external file with edn transactional data
-      val data = new FileReader("molecule-tests/resources/tests/core/time/save2-3.dtm")
+      val data = new FileReader("moleculeTests/jvm/resources/tests/core/time/save2-3.dtm")
       // contains: "[{:Ns/int 2} {:Ns/int 3}]"
-      conn.transact(Util.readAll(data).get(0).asInstanceOf[java.util.List[AnyRef]])
+      conn.transactRaw(Util.readAll(data).get(0).asInstanceOf[java.util.List[AnyRef]])
 
       // Raw data has been added
       Ns.int.get === List(1, 2, 3)
@@ -39,7 +39,7 @@ class TxRaw extends TestSpec {
 
     // Add raw transactional data
     // (Scala integers are internally stored as Longs)
-    conn.transact(Util.list(
+    conn.transactRaw(Util.list(
       Util.map(Util.read(":Ns/int"), 2L.asInstanceOf[AnyRef]),
       Util.map(Util.read(":Ns/int"), 3L.asInstanceOf[AnyRef])
     ).asInstanceOf[java.util.List[AnyRef]])
@@ -60,7 +60,7 @@ class TxRaw extends TestSpec {
       Await.result(
         // Add raw transactional data
         // (Scala integers are internally stored as Longs)
-        conn.transactAsync(
+        conn.transactAsyncRaw(
           Util.list(
             Util.map(Util.read(":Ns/int"), 2L.asInstanceOf[AnyRef]),
             Util.map(Util.read(":Ns/int"), 3L.asInstanceOf[AnyRef])

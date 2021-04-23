@@ -71,6 +71,113 @@ class TestSpec extends Specification with MoleculeTestHelper with CoreData {
       case e: Throwable => setupException = Some(e)
     }
   }
+  lazy val seattle = Seq(
+    // Attributes
+    """
+     [
+       ;; Community -----------------------------------------
+
+       {:db/ident         :Community/name
+        :db/valueType     :db.type/string
+        :db/cardinality   :db.cardinality/one
+        :db/fulltext      true
+        :db/doc           "A community's name"
+        :db/index         true}
+
+       {:db/ident         :Community/url
+        :db/valueType     :db.type/string
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "A community's url"
+        :db/index         true}
+
+       {:db/ident         :Community/category
+        :db/valueType     :db.type/string
+        :db/cardinality   :db.cardinality/many
+        :db/fulltext      true
+        :db/doc           "Community categories"
+        :db/index         true}
+
+       {:db/ident         :Community/orgtype
+        :db/valueType     :db.type/ref
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "Community organisation type"
+        :db/index         true}
+
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.orgtype/community]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.orgtype/commercial]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.orgtype/nonprofit]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.orgtype/personal]
+
+       {:db/ident         :Community/type
+        :db/valueType     :db.type/ref
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "Community type"
+        :db/index         true}
+
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/email_list]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/twitter]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/facebook_page]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/blog]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/website]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/wiki]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/myspace]
+       [:db/add #db/id[:db.part/user]  :db/ident :Community.tpe/ning]
+
+       {:db/ident         :Community/neighborhood
+        :db/valueType     :db.type/ref
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "A community's neighborhood"
+        :db/index         true}
+
+
+       ;; Neighborhood --------------------------------------
+
+       {:db/ident         :Neighborhood/name
+        :db/valueType     :db.type/string
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "A unique neighborhood name"
+        :db/index         true}
+
+       {:db/ident         :Neighborhood/district
+        :db/valueType     :db.type/ref
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "A neighborhood's district"
+        :db/index         true}
+
+
+       ;; District ------------------------------------------
+
+       {:db/ident         :District/name
+        :db/valueType     :db.type/string
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "A unique district name"
+        :db/index         true}
+
+       {:db/ident         :District/region
+        :db/valueType     :db.type/ref
+        :db/cardinality   :db.cardinality/one
+        :db/doc           "A district region"
+        :db/index         true}
+
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/n]
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/ne]
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/e]
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/se]
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/s]
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/sw]
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/w]
+       [:db/add #db/id[:db.part/user]  :db/ident :District.region/nw]
+     ]
+    """,
+
+    // Aliases
+    """
+     [
+       {:db/id     :Community/type
+        :db/ident  :Community/tpe}
+     ]
+    """
+  )
 
   def getConn(
     schema: SchemaTransaction,
@@ -83,7 +190,9 @@ class TestSpec extends Specification with MoleculeTestHelper with CoreData {
     setupException.fold(())(throw _)
     system match {
       case SystemPeer =>
-        if (recreateDb)
+        if (db == "m_seattle")
+          peer.recreateDbFromEdn(seattle)
+        else if (recreateDb)
           peer.recreateDbFrom(schema)
         else
           peer.connect(protocol, uri)
@@ -146,7 +255,8 @@ class TestSpec extends Specification with MoleculeTestHelper with CoreData {
     implicit val conn = getConn(ProductsOrderSchema, "m_productsOrder")
   }
   class SeattleSetup extends SeattleData(
-    getConn(SeattleSchema, "m_seattle")) with Scope
+    getConn(SeattleSchema, "m_seattle")
+  ) with Scope
 
   class MBrainzSetup extends Scope {
     val dbName = if (system == SystemDevLocal)

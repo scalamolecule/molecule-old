@@ -13,11 +13,11 @@ import scala.jdk.CollectionConverters._
 /** Datomic TxReport facade for peer api.
  *
  * @param rawTxReport
- * @param stmtss
+ * @param stmts
  */
 case class TxReport_Peer(
   rawTxReport: jMap[_, _],
-  stmtss: Seq[Seq[Statement]] = Nil
+  stmts: Seq[Statement] = Nil
 ) extends TxReport {
 
   lazy val eids: List[Long] = {
@@ -34,10 +34,10 @@ case class TxReport_Peer(
       }
       ids.toList
     }
-    if (stmtss.isEmpty) {
+    if (stmts.isEmpty) {
       allIds.distinct
     } else {
-      val assertStmts = stmtss.flatten.filterNot(_.isInstanceOf[RetractEntity])
+      val assertStmts = stmts.filterNot(_.isInstanceOf[RetractEntity])
 
       //      println("-------------------------------------------")
       //      txDataRaw.map(datom2string) foreach println
@@ -67,7 +67,7 @@ case class TxReport_Peer(
   private def datom2string(d: datomic.db.Datum) =
     s"[${d.e}   ${d.a}   ${d.v}       ${d.tx}  ${d.added()}]"
 
-  def inspect: Unit = Inspect("TxReport", 1)(1, stmtss, txDataRaw)
+  def inspect: Unit = Inspect("TxReport", 1)(1, stmts, txDataRaw)
 
   override def toString =
     s"""TxReport {

@@ -8,8 +8,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  val z = InspectMacro("MakeMolecule", 9, 8)
-//    val z = InspectMacro("MakeMolecule", 1, 8)
+    val z = InspectMacro("MakeMolecule", 9, 8)
+//  val z = InspectMacro("MakeMolecule", 1, 8)
   //  val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
 
 
@@ -31,7 +31,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     val t = if (castss.size == 1 || txMetaCompositesCount > 0) {
       val typers = if (isJsPlatform) {
-        val (arrays, lookups) = indexes.map{
+        val (arrays, lookups) = indexes.map {
           case (colIndex, castIndex, arrayType, arrayIndex) =>
             (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
         }.unzip

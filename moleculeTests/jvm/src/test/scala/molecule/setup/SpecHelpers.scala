@@ -29,13 +29,12 @@ trait SpecHelpers extends Specification with MoleculeTestHelper {
       // Input molecule + insert data
       def -->(data: Seq[Seq[Any]]) = new {
         def -->(txString: String) = {
-          //          val (tx, _) = Model2Transaction(conn, model).tx(data)
-          val tx = Model2DatomicStmts(conn, model).insertStmts(data).flatten
+          val tx = Model2DatomicStmts(conn, model).insertStmts(data)
           formatTx(tx) === txString
         }
         // Inspect
         def --->(txString: String) = {
-          val tx = Model2DatomicStmts(conn, model).insertStmts(data).flatten
+          val tx = Model2DatomicStmts(conn, model).insertStmts(data)
           tx foreach println
           formatTx(tx) === txString
         }
@@ -48,8 +47,7 @@ trait SpecHelpers extends Specification with MoleculeTestHelper {
 
     def -->(data: Seq[Seq[Any]]) = new {
       def -->(txString: String) = {
-        //        val (tx, _) = Model2Transaction(conn, molecule._model).tx(data)
-        val tx = Model2DatomicStmts(conn, molecule._model).insertStmts(data).flatten
+        val tx = Model2DatomicStmts(conn, molecule._model).insertStmts(data)
         formatTx(tx) === txString
       }
     }

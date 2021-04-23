@@ -6,7 +6,7 @@ trait Model2Statements {
 
   val stmtsModel: Seq[Statement]
 
-  def insertStmts(dataRows: Seq[Seq[Any]]): Seq[Seq[Statement]]
+  def insertStmts(dataRows: Iterable[Seq[Any]]): Seq[Statement]
 
   def saveStmts(): Seq[Statement]
 

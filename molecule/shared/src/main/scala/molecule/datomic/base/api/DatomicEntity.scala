@@ -142,9 +142,10 @@ trait DatomicEntity {
     * }}}
     *
     * @group retract
-    * @return List[List[Retractentity[Long]]]
+    * @return List[Retractentity[Long]]
     * */
-  def getRetractStmts: List[List[RetractEntity]]
+  def getRetractStmts: List[RetractEntity]
+//  def getRetractStmts: List[List[RetractEntity]]
 
   /** Inspect entity transaction data of method `retract` without affecting the database.
     * {{{

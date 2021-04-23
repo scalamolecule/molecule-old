@@ -748,9 +748,9 @@ trait GetObjArray[Obj, Tpl] extends JavaUtil { self: Molecule_0[Obj, Tpl] =>
     * @return Array[Obj] where Obj is an object of data matching molecule
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncObj.GetAsyncObjArray.getAsyncObjArrayWith(txMolecules* getAsyncArrayWith]] method.
     */
-  def getObjArrayWith(txMolecules: Seq[Seq[Statement]]*)
+  def getObjArrayWith(txMolecules: Seq[Statement]*)
                      (implicit conn: Conn, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Array[Obj] =
-    getObjArray(conn.usingTempDb(With(toJavaList(txMolecules.flatten.flatten.map(_.toJava)))), objType, tplType)
+    getObjArray(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))), objType, tplType)
 
 
   /** Get `Array` of n rows as objects matching molecule with applied molecule transaction data.
@@ -813,9 +813,9 @@ trait GetObjArray[Obj, Tpl] extends JavaUtil { self: Molecule_0[Obj, Tpl] =>
     * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncObj.GetAsyncObjArray.getAsyncObjArrayWith(n:Int,txMolecules* getAsyncArrayWith]] method.
     */
-  def getObjArrayWith(n: Int, txMolecules: Seq[Seq[Statement]]*)
+  def getObjArrayWith(n: Int, txMolecules: Seq[Statement]*)
                      (implicit conn: Conn, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Array[Obj] =
-    getObjArray(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.flatten.map(_.toJava)))), objType, tplType)
+    getObjArray(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))), objType, tplType)
 
 
   /** Get `Array` of all rows as objects matching molecule with applied raw transaction data.

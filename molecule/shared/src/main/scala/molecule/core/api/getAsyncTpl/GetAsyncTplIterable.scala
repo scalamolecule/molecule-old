@@ -178,7 +178,7 @@ trait GetAsyncTplIterable[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetTplIter
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Iterable of molecule data
     */
-  def getAsyncIterableWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[Iterable[Tpl]] =
+  def getAsyncIterableWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[Iterable[Tpl]] =
     Future(getIterableWith(txMolecules: _*)(conn))
 
 

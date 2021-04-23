@@ -1,10 +1,8 @@
 package molecule.datomic.client.facade
 
-import java.io.{Reader, StringReader}
 import java.util
 import java.util.{Date, stream, Collection => jCollection, List => jList}
-import datomic.{Peer, Util}
-import datomic.Peer.function
+import datomic.Peer
 import datomic.Util._
 import datomic.db.DbId
 import datomicClient.anomaly.CognitectAnomaly
@@ -13,15 +11,13 @@ import datomicScala.client.api.sync.{Client, Db, Datomic => clientDatomic}
 import datomicScala.client.api.{Datom, sync}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.transform.Model2Statements
 import molecule.core.util.{Helpers, QueryOpsClojure}
 import molecule.datomic.base.api.DatomicEntity
-import molecule.datomic.base.ast.query.{Query, QueryExpr}
+import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, ConnBase, DatomicDb, TxReport}
-import molecule.datomic.base.transform.{Model2DatomicStmts, Query2String, QueryOptimizer}
-import molecule.datomic.base.util.Inspect
+import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
@@ -106,12 +102,14 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
     withDbInUse = true
   }
+
   def testDbSince(tOrTx: Long): Unit = {
     sinceT = Some(tOrTx)
     sinceD = None
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
     withDbInUse = true
   }
+
   def testDbSince(d: Date): Unit = {
     sinceT = None
     sinceD = Some(d)
@@ -120,8 +118,8 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
   }
 
 
-  def testDbWith(txData: Seq[Seq[Statement]]*): Unit = {
-    val txDataJava: jList[jList[_]] = txData.flatten.flatten.map(_.toJava).asJava
+  def testDbWith(txData: Seq[Statement]*): Unit = {
+    val txDataJava: jList[jList[_]] = txData.flatten.map(_.toJava).asJava
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, txDataJava).dbAfter)
     withDbInUse = true
   }
@@ -177,7 +175,7 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transact(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil): TxReport = {
+  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
     if (_adhocDb.isDefined) {
       // In-memory "transaction"
       val adHocDb = getAdhocDb
@@ -205,8 +203,8 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
     }
   }
 
-  def transactAsync(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil)
-                   (implicit ec: ExecutionContext): Future[TxReport] = {
+  def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
+                      (implicit ec: ExecutionContext): Future[TxReport] = {
     if (_adhocDb.isDefined) {
       Future {
         TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)

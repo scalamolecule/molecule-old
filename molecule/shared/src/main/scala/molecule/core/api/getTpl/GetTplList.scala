@@ -616,12 +616,12 @@ trait GetTplList[Obj, Tpl] extends GetTplArray[Obj, Tpl] with JavaUtil with Quot
     * @return List[Tpl] where Tpl is a tuple of data matching molecule
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncTpl.GetAsyncTplList.getAsyncWith(txMolecules* getAsyncWith]] method.
     */
-  def getWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): List[Tpl] = {
+  def getWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): List[Tpl] = {
     // Manually converting tx statements to avoid 2.12/2.13 versioning
     //    import scala.jdk.CollectionConverters._ // 2.13
     //    import scala.collection.JavaConverters._ // 2.12
     //    get(conn.usingTempDb(With(txMolecules.flatten.flatten.map(_.toJava).asJava)))
-    get(conn.usingTempDb(With(toJavaList(txMolecules.flatten.flatten.map(_.toJava)))))
+    get(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
   }
 
 
@@ -662,8 +662,8 @@ trait GetTplList[Obj, Tpl] extends GetTplArray[Obj, Tpl] with JavaUtil with Quot
     * @return List[Tpl] where Tpl is a tuple of data matching molecule
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncTpl.GetAsyncTplList.getAsyncWith(n:Int,txMolecules* getAsyncWith]] method.
     */
-  def getWith(n: Int, txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): List[Tpl] =
-    get(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.flatten.map(_.toJava)))))
+  def getWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): List[Tpl] =
+    get(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
 
 
   /** Get `List` of all rows as tuples matching molecule with applied raw transaction data.

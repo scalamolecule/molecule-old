@@ -179,7 +179,7 @@ trait GetAsyncObjIterable[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetObjIter
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Iterable of molecule data
     */
-  def getAsyncObjIterableWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[Iterable[Obj]] =
+  def getAsyncObjIterableWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[Iterable[Obj]] =
     Future(getObjIterableWith(txMolecules: _*)(conn))
 
 

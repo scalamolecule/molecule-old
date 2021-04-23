@@ -302,7 +302,7 @@ trait GetAsyncObjList[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetAsyncObjArr
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
-  def getAsyncObjListWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[List[Obj]] =
+  def getAsyncObjListWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[List[Obj]] =
     Future(getObjListWith(txMolecules: _*)(conn))
 
 
@@ -320,7 +320,7 @@ trait GetAsyncObjList[Obj, Tpl] { self: Molecule_0[Obj, Tpl] with GetAsyncObjArr
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
     */
-  def getAsyncObjListWith(n: Int, txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[List[Obj]] =
+  def getAsyncObjListWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[List[Obj]] =
     Future(getObjListWith(n, txMolecules: _*)(conn))
 
 

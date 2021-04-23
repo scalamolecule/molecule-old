@@ -31,20 +31,20 @@ class SeattleTests extends TestSpec {
     // Use the community id to touch all the entity's attribute values
     communityId.touch === Map(
       ":Community/category" -> List("events", "for sale", "services"),
-      ":Community/type" -> ":Community.type/wiki",
       ":Community/neighborhood" -> Map(
-        ":db/id" -> n1,
+        ":db/id" -> 17592186045668L,
         ":Neighborhood/district" -> Map(
-          ":db/id" -> d1,
+          ":db/id" -> 17592186045669L,
           ":District/name" -> "Northwest",
           ":District/region" -> ":District.region/sw"),
         ":Neighborhood/name" -> "Green Lake"),
       ":Community/orgtype" -> ":Community.orgtype/community",
       ":Community/name" -> "Greenlake Community Wiki",
-      ":db/id" -> communityId,
-      ":Community/url" -> "http://greenlake.wetpaint.com/")
+      ":db/id" -> 17592186045667L,
+      ":Community/url" -> "http://greenlake.wetpaint.com/",
+      ":Community/tpe" -> ":Community.tpe/wiki")
 
-    // We can also retrive a single (optional) attribute value
+    // We can also retrieve a single (optional) attribute value
     val untyped: Option[Any]    = communityId(":community/name")
     val typed  : Option[String] = communityId[String](":community/name")
 
@@ -375,7 +375,7 @@ class SeattleTests extends TestSpec {
     communities.getSince(dataTxT).size === 0
 
     // Imagining the future
-    val data_rdr2 = new FileReader("molecule-tests/resources/tests/examples/seattle/seattle-data2upper.dtm")
+    val data_rdr2 = new FileReader("moleculeTests/jvm/resources/tests/examples/seattle/seattle-data2upper.dtm")
     val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
 
     // future db
@@ -385,7 +385,7 @@ class SeattleTests extends TestSpec {
     communities.get.size === 150
 
     // transact
-    conn.transact(newDataTx)
+    conn.transactRaw(newDataTx)
 
     // updated db
     communities.get.size === 258

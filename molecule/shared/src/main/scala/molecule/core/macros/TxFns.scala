@@ -1,6 +1,5 @@
 package molecule.core.macros
 
-//import molecule.core.api.TxFunctions
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 
@@ -17,7 +16,9 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
   import c.universe._
 
-  val x = InspectMacro("TxFns", 1)
+  //  val x = InspectMacro("TxFns", 1, 3, mkError = true)
+  //  val x = InspectMacro("TxFns", 1, 3)
+  //  val x = InspectMacro("TxFns", 1, 0)
 
   def prepareForDatalog(annottees: Tree*): Tree = annottees match {
     case List(obj: ModuleDef) => obj match {
@@ -25,10 +26,11 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
         // Add untyped tx functions with extra initial db arg
         q"""
          object $txFnContainer {
+           import molecule.datomic.base.ast.transactionModel.Statement
            ..$typedTxFns
            ..${typedTxFns.map(untypedTxFn(_))}
          }
-       """
+        """
 
       case _ =>
         c.abort(c.enclosingPosition, s"No self-type allowed in @TxFns-annotated container.")
@@ -41,7 +43,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
   def untypedTxFn(element: Tree): Tree = element match {
 
-    case q"def $txFn(..$args)(implicit $conn: Conn): $jLists = {..$txFnBody}" =>
+    case q"def $txFn(..$args)(implicit $conn: Conn): Seq[Statement] = {..$txFnBody}" =>
       val txFnName = TermName(txFn.toString + "__txfn")
 
       /** Transaction function is invoked by Datomic with the current
@@ -57,14 +59,14 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
           ..${args.map(typedParam(_))}
           ..${txFnBody.init}
           val _txFnStmts = ${txFnBody.last}
-          val _txMetaDataStmts = txMetaData.asInstanceOf[Seq[molecule.datomic.base.ast.transactionModel.Statement]]
-          molecule.datomic.base.ast.transactionModel.toJava(_txFnStmts :+ _txMetaDataStmts)
+          val _txMetaDataStmts = txMetaData.asInstanceOf[Seq[Statement]]
+          molecule.datomic.base.ast.transactionModel.toJava(_txFnStmts ++ _txMetaDataStmts)
         }
       """
 
     case other => c.abort(c.enclosingPosition,
       s"""@txFns-annotated container only allows tx functions with the following signature constraints:
-         |def <txFnName>(<args..>)(implicit conn: Conn): java.util.List[java.util.List[_]] = { <body> }
+         |def <txFnName>(<args..>)(implicit conn: Conn): Seq[Statement] = { <body> }
          |Found:
          |$other
       """.stripMargin)

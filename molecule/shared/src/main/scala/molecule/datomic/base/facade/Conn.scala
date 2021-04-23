@@ -96,7 +96,7 @@ trait Conn {
     *
     * @param txData List of List of transaction [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s
     */
-  def testDbWith(txData: Seq[Seq[Statement]]*): Unit
+  def testDbWith(txData: Seq[Statement]*): Unit
 
   /** Use test database with temporary raw Java transaction data. */
   def testDbWith(txDataJava: jList[jList[AnyRef]]): Unit
@@ -127,11 +127,11 @@ trait Conn {
     * @param javaStmts Raw transaction data, typically from edn file.
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
-  def transact(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil): TxReport
+  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport
 
-  def transact(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]]): TxReport
+  def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport
 
-  def transact(edn: String, scalaStmts: Seq[Seq[Statement]]): TxReport
+  def transact(edn: String, scalaStmts: Seq[Statement]): TxReport
 
   def transact(stmtsReader: Reader): TxReport
 
@@ -142,7 +142,7 @@ trait Conn {
     * @param scalaStmts
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
-  def transact(scalaStmts: Seq[Seq[Statement]]): TxReport
+  def transact(scalaStmts: Seq[Statement]): TxReport
 
   /** Asynchronously transact edn files or other raw transaction data.
     * {{{
@@ -156,13 +156,13 @@ trait Conn {
     * @param javaStmts Raw transaction data, typically from edn file.
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
-  def transactAsync(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil)
+  def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
+                      (implicit ec: ExecutionContext): Future[TxReport]
+
+  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])
                    (implicit ec: ExecutionContext): Future[TxReport]
 
-  def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport]
-
-  def transactAsync(edn: String, scalaStmts: Seq[Seq[Statement]])
+  def transactAsync(edn: String, scalaStmts: Seq[Statement])
                    (implicit ec: ExecutionContext): Future[TxReport]
 
   def transactAsync(stmtsReader: Reader)
@@ -176,7 +176,7 @@ trait Conn {
     * @param scalaStmts
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
-  def transactAsync(scalaStmts: Seq[Seq[Statement]])
+  def transactAsync(scalaStmts: Seq[Statement])
                    (implicit ec: ExecutionContext): Future[TxReport]
 
 

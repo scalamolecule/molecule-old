@@ -27,7 +27,7 @@ trait TxBundles {
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
-  def transactBundle(stmtss: Seq[Seq[Statement]]*)(implicit conn: Conn): TxReport =
+  def transactBundle(stmtss: Seq[Statement]*)(implicit conn: Conn): TxReport =
     conn.transact(stmtss.flatten)
 
 
@@ -57,7 +57,7 @@ trait TxBundles {
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
   def transactBundleAsync(
-    stmtss: Seq[Seq[Statement]]*
+    stmtss: Seq[Statement]*
   )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] =
     conn.transactAsync(stmtss.flatten)
 
@@ -115,7 +115,7 @@ trait TxBundles {
     * @param stmtss [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s from multiple molecule operations
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectTransactBundle(stmtss: Seq[Seq[Statement]]*)(implicit conn: Conn): Unit = {
+  def inspectTransactBundle(stmtss: Seq[Statement]*)(implicit conn: Conn): Unit = {
     // Use temporary branch of db to not changing any live data
     conn.testDbWith()
     // Print tx report to console

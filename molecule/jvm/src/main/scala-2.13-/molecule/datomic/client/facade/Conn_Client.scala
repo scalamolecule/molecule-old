@@ -119,8 +119,8 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
   }
 
 
-  def testDbWith(txData: Seq[Seq[Statement]]*): Unit = {
-    val txDataJava: jList[jList[_]] = txData.flatten.flatten.map(_.toJava).asJava
+  def testDbWith(txData: Seq[Statement]*): Unit = {
+    val txDataJava: jList[jList[_]] = txData.flatten.map(_.toJava).asJava
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, txDataJava).dbAfter)
     withDbInUse = true
   }
@@ -175,7 +175,8 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
 
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
-  def transact(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil): TxReport = {
+
+  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
     if (_adhocDb.isDefined) {
       // In-memory "transaction"
       val adHocDb = getAdhocDb
@@ -203,8 +204,8 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
     }
   }
 
-  def transactAsync(javaStmts: jList[_], scalaStmts: Seq[Seq[Statement]] = Nil)
-                   (implicit ec: ExecutionContext): Future[TxReport] = {
+  def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
+                      (implicit ec: ExecutionContext): Future[TxReport] = {
     if (_adhocDb.isDefined) {
       Future {
         TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)

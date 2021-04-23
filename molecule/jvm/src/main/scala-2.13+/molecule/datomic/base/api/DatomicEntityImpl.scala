@@ -67,7 +67,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
   def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
     conn.transactAsync(getRetractStmts)
 
-  def getRetractStmts: List[List[RetractEntity]] = List(List(RetractEntity(eid)))
+  def getRetractStmts: List[RetractEntity] = List(RetractEntity(eid))
 
   def inspectRetract: Unit = conn.inspect("Inspect `retract` on entity", 1)(1, getRetractStmts)
 
@@ -78,18 +78,17 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
     private val _model = Model(Seq(TxMetaData(txMeta._model.elements)))
     VerifyModel(_model, "save")
-    //    private val txMetaStmts = Model2Transaction(conn, _model).saveStmts()
     private val txMetaStmts = conn.model2stmts(_model).saveStmts()
 
-    private val stmtss = Seq(retractStmts ++ txMetaStmts)
+    private val stmts = retractStmts ++ txMetaStmts
 
-    def retract: TxReport = conn.transact(stmtss)
+    def retract: TxReport = conn.transact(stmts)
 
     def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
-      conn.transactAsync(stmtss)
+      conn.transactAsync(stmts)
 
     def inspectRetract: Unit =
-      conn.inspect("Inspect `retract` on entity with tx meta data", 1)(1, stmtss)
+      conn.inspect("Inspect `retract` on entity with tx meta data", 1)(1, stmts)
   }
 
   // Touch - traverse entity attributes ========================================

@@ -370,8 +370,8 @@ trait GetObjIterable[Obj, Tpl] extends JavaUtil { self: Molecule_0[Obj, Tpl] =>
     * @return Iterable of molecule data
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncObj.GetAsyncObjIterable.getAsyncObjIterableWith(txMolecules* getAsyncObjIterableWith]] method.
     */
-  def getObjIterableWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Iterable[Obj] =
-    getObjIterable(conn.usingTempDb(With(toJavaList(txMolecules.flatten.flatten.map(_.toJava)))))
+  def getObjIterableWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Iterable[Obj] =
+    getObjIterable(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
 
 
   /** Get `Iterable` of all rows as objects matching molecule with applied raw transaction data.

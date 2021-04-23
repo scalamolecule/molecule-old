@@ -334,7 +334,7 @@ trait GetAsyncRaw { self: Molecule with GetRaw =>
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
     */
-  def getAsyncRawWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
+  def getAsyncRawWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     Future(getRawWith(txMolecules: _*)(conn))
 
 
@@ -354,7 +354,7 @@ trait GetAsyncRaw { self: Molecule with GetRaw =>
     * @return `java.util.Collection[java.util.List[AnyRef]]`
     * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
     */
-  def getAsyncRawWith(n: Int, txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
+  def getAsyncRawWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     Future(getRawWith(n, txMolecules: _*)(conn))
 
 

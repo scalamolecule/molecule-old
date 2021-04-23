@@ -461,7 +461,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     val transformer = conn.model2stmts(_model)
     val data        = untupled(dataRows)
     val stmtss      = try {
-      transformer.insertStmts(data)
+      // Separate each row so that we can distinguish each insert row
+      data.map(row => transformer.insertStmts(Iterable(row)))
     } catch {
       case e: Throwable =>
         println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")

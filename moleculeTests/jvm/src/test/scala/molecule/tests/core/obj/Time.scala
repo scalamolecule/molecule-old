@@ -132,7 +132,7 @@ class Time extends TestSpec with Helpers {
 
     // Tx data from edn file
     // contains: "[{:Ns/int 2} {:Ns/int 3}]"
-    val data      = new FileReader("molecule-tests/resources/tests/core/time/save2-3.dtm")
+    val data      = new FileReader("moleculeTests/jvm/resources/tests/core/time/save2-3.dtm")
     val txData2_3 = datomic.Util.readAll(data).get(0).asInstanceOf[java.util.List[Object]]
     
 

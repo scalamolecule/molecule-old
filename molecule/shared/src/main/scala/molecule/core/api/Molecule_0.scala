@@ -201,7 +201,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def save(implicit conn: Conn): TxReport = {
     VerifyModel(_model, "save")
-    conn.transact(Seq(conn.model2stmts(_model).saveStmts()))
+    conn.transact(conn.model2stmts(_model).saveStmts())
   }
 
 
@@ -228,7 +228,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def saveAsync(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
     VerifyModel(_model, "save")
-    conn.transactAsync(Seq(conn.model2stmts(_model).saveStmts()))
+    conn.transactAsync(conn.model2stmts(_model).saveStmts())
   }
 
   def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = try {
@@ -242,14 +242,14 @@ trait Molecule_0[Obj, Tpl] extends Molecule
       val b = a.saveStmts()
       println("################# 4")
 
-//      val stmtsEdn = stmts2edn(conn.model2stmts(_model).saveStmts())
+      //      val stmtsEdn = stmts2edn(conn.model2stmts(_model).saveStmts())
       val stmtsEdn = stmts2edn(b)
       println("################# 5")
       moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn).recover { err =>
         Left("Recovered from ajax call: " + err.toString)
       }
     } else {
-      conn.transactAsync(Seq(conn.model2stmts(_model).saveStmts())).map(txReport => Right(txReport))
+      conn.transactAsync(conn.model2stmts(_model).saveStmts()).map(txReport => Right(txReport))
     }
   } catch {
     case t: Throwable => Future(Left("Error from executing transaction in DatomicRpc: " + t.getMessage))
@@ -262,7 +262,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Transaction statements
     */
-  def getSaveStmts(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def getSaveStmts(implicit conn: Conn): Seq[Statement] = {
     VerifyModel(_model, "save")
     val transformer = conn.model2stmts(_model)
     val stmts       = try {
@@ -273,7 +273,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
         conn.inspect("output.Molecule.getSaveTx", 1)(1, _model, transformer.stmtsModel)
         throw e
     }
-    Seq(stmts)
+    stmts
   }
 
 
@@ -402,11 +402,12 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     VerifyModel(_model, "insert")
   }
 
-  protected def untupled(rawData: Iterable[Seq[Any]]): Seq[Seq[Any]] = {
-    if (this.toString.contains("compositOutMolecule"))
-      (rawData.toSeq map tupleToSeq).map(_ flatMap tupleToSeq)
-    else
-      rawData.toSeq
+  protected def untupled(rawData: Iterable[Seq[Any]]): Iterable[Seq[Any]] = {
+    if (this.toString.contains("compositOutMolecule")) {
+      rawData.map(_ flatMap tupleToSeq)
+    } else {
+      rawData
+    }
   }
 
   protected def _insert(conn: Conn, model: Model, dataRows: Iterable[Seq[Any]]): TxReport = {
@@ -417,9 +418,9 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     conn.transactAsync(conn.model2stmts(model).insertStmts(untupled(dataRows)))
   }
 
-  protected def _getInsertStmts(conn: Conn, dataRows: Iterable[Seq[Any]]): Seq[Seq[Statement]] = {
-    val transformer                 = conn.model2stmts(_model)
-    val stmtss: Seq[Seq[Statement]] = try {
+  protected def _getInsertStmts(conn: Conn, dataRows: Iterable[Seq[Any]]): Seq[Statement] = {
+    val transformer = conn.model2stmts(_model)
+    try {
       transformer.insertStmts(untupled(dataRows))
     } catch {
       case e: Throwable =>
@@ -427,7 +428,6 @@ trait Molecule_0[Obj, Tpl] extends Molecule
         conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.stmtsModel, dataRows, untupled(dataRows))
         throw e
     }
-    stmtss
   }
 
   // Update ============================================================================================================================
@@ -453,7 +453,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def update(implicit conn: Conn): TxReport = {
     VerifyModel(_model, "update")
-    conn.transact(Seq(conn.model2stmts(_model).updateStmts()))
+    conn.transact(conn.model2stmts(_model).updateStmts())
   }
 
   /** Asynchronously update entity with data applied to molecule attributes.
@@ -478,7 +478,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def updateAsync(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
     VerifyModel(_model, "update")
-    conn.transactAsync(Seq(conn.model2stmts(_model).updateStmts()))
+    conn.transactAsync(conn.model2stmts(_model).updateStmts())
   }
 
 
@@ -488,10 +488,10 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  def getUpdateStmts(implicit conn: Conn): Seq[Seq[Statement]] = {
+  def getUpdateStmts(implicit conn: Conn): Seq[Statement] = {
     VerifyModel(_model, "update")
     val transformer = conn.model2stmts(_model)
-    val stmts       = try {
+    try {
       transformer.updateStmts()
     } catch {
       case e: Throwable =>
@@ -499,7 +499,6 @@ trait Molecule_0[Obj, Tpl] extends Molecule
         conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.stmtsModel)
         throw e
     }
-    Seq(stmts)
   }
 }
 
@@ -544,10 +543,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, ax: A*)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, (a +: ax.toList).map(Seq(_)))
+      def apply(a: A, ax: A*)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, (a +: ax.toList).map(Seq(_)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[A])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(Seq(_)))
+      def apply(data: Iterable[A])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(Seq(_)))
     }
   }
 
@@ -588,10 +587,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b)))
+      def apply(a: A, b: B)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2)))
+      def apply(data: Iterable[(A, B)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2)))
     }
   }
 
@@ -633,10 +632,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c)))
+      def apply(a: A, b: B, c: C)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3)))
+      def apply(data: Iterable[(A, B, C)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3)))
     }
   }
 
@@ -678,10 +677,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d)))
+      def apply(a: A, b: B, c: C, d: D)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
+      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
     }
   }
 
@@ -723,10 +722,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e)))
+      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
+      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
     }
   }
 
@@ -768,10 +767,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
+      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
     }
   }
 
@@ -812,10 +811,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
     }
   }
 
@@ -857,10 +856,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
     }
   }
 
@@ -902,10 +901,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
     }
   }
 
@@ -947,10 +946,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
     }
   }
 
@@ -992,10 +991,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
     }
   }
 
@@ -1037,10 +1036,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
     }
   }
 
@@ -1081,10 +1080,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
     }
   }
 
@@ -1126,10 +1125,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
     }
   }
 
@@ -1171,10 +1170,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
     }
   }
 
@@ -1216,10 +1215,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
     }
   }
 
@@ -1261,10 +1260,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
     }
   }
 
@@ -1306,10 +1305,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
     }
   }
 
@@ -1351,10 +1350,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
     }
   }
 
@@ -1396,10 +1395,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
     }
   }
 
@@ -1441,10 +1440,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
     }
   }
 
@@ -1486,10 +1485,10 @@ object Molecule_0 {
     object getInsertStmts extends getInsertStmts with checkInsertModel {
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
 
       /** See [[api.Molecule_0.getInsertStmts getInsertStmts]] */
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Conn): Seq[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Conn): Seq[Statement] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
     }
   }
 }

@@ -70,7 +70,7 @@ trait EntityOps {
       conn.model2stmts(txMetaDataModel).saveStmts()
     }
 
-    val stmtss = Seq(retractStmts ++ txMetaDataStmts)
+    val stmtss = retractStmts ++ txMetaDataStmts
     conn.transact(stmtss)
   }
 
@@ -112,7 +112,7 @@ trait EntityOps {
       conn.model2stmts(txMetaDataModel).saveStmts()
     }
 
-    val stmtss = Seq(retractStmts ++ txMetaDataStmts)
+    val stmtss = retractStmts ++ txMetaDataStmts
     conn.transactAsync(stmtss)
   }
 

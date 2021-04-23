@@ -58,7 +58,7 @@ trait TxFunctions {
     * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
   def transactFn(
-    txFnCall: Seq[Seq[Statement]],
+    txFnCall: Seq[Statement],
     txMolecules: Molecule*
   ): TxReport = macro TxFunctionCall.txFnCall
 
@@ -101,7 +101,7 @@ trait TxFunctions {
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
   def transactFnAsync(
-    txFnCall: Seq[Seq[Statement]],
+    txFnCall: Seq[Statement],
     txMolecules: Molecule*
   ): Future[TxReport] = macro TxFunctionCall.asyncTxFnCall
 
@@ -141,7 +141,7 @@ trait TxFunctions {
     * @param txMolecules Optional tx meta data molecules
     */
   def inspectTransactFn(
-    txFnCall: Seq[Seq[Statement]],
+    txFnCall: Seq[Statement],
     txMolecules: Molecule*
   ): Unit = macro TxFunctionCall.inspectTxFnCall
 }
@@ -231,7 +231,7 @@ object TxFunctions extends Helpers with JavaUtil {
 
     // Install transaction function if not installed yet
     if (conn.db.pull("[*]", s":$txFn").size() == 1) {
-      conn.transact(conn.buildTxFnInstall(txFn, args))
+      conn.transactRaw(conn.buildTxFnInstall(txFn, args))
     }
 
     // Build transaction function call clause
@@ -239,7 +239,7 @@ object TxFunctions extends Helpers with JavaUtil {
       txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))
 
     // Invoke transaction function and retrieve result from ListenableFuture synchronously
-    conn.transact(txFnInvocationClauses)
+    conn.transactRaw(txFnInvocationClauses)
   }
 
 
@@ -266,7 +266,7 @@ object TxFunctions extends Helpers with JavaUtil {
       // todo: pull call is blocking - can we make it non-blocking too?
       if (conn.db.pull("[*]", s":$txFn").size() == 1) {
         // Install tx function
-        conn.transactAsync(conn.buildTxFnInstall(txFn, args))
+        conn.transactAsyncRaw(conn.buildTxFnInstall(txFn, args))
       } else {
         // Tx function already installed
         Future.unit
@@ -277,7 +277,7 @@ object TxFunctions extends Helpers with JavaUtil {
       // Build transaction function call clause
       val txFnInvocationClause = list(list(s":$txFn" +:
         txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))
-      conn.transactAsync(txFnInvocationClause)
+      conn.transactAsyncRaw(txFnInvocationClause)
     }
   } catch {
     case NonFatal(e) => Future.failed(e)
