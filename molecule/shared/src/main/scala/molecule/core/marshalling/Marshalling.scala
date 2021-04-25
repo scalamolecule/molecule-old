@@ -57,15 +57,5 @@ trait Marshalling[Obj, Tpl] {
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
 
 
-  //  // Row to json build-up with fast StringBuilder to be materialized by macro
-  //  protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-
-  def stmts2edn(stmts: Seq[Statement]): String = {
-    """[
-      |{
-      |  :db/id #db/id[:db.part/user -1000001]
-      |  :Ns/int 1
-      |}
-      |]""".stripMargin
-  }
+  def stmts2edn(stmts: Seq[Statement]): String = Stmts2Edn(stmts)
 }

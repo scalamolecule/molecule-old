@@ -1,7 +1,7 @@
 package molecule
 
 import molecule.core.marshalling.MoleculeWebClient.moleculeRpc
-import molecule.core.marshalling.{ClientConn, ConnProxy, DatomicPeerProxy}
+import molecule.core.marshalling.{Conn_Js, ConnProxy, DatomicPeerProxy}
 import molecule.datomic.api.out3._
 import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.mbrainz.dsl.MBrainz._
@@ -12,7 +12,7 @@ import scala.concurrent.Future
 
 object AdHocTestJs extends TestSuite {
 
-  implicit val conn = ClientConn(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973", Nil))
+  implicit val conn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973", Nil))
 
   implicit class testFutureEither[T](eitherFuture: Future[Either[String, T]]) {
     def ===(expectedValue: T): Future[Unit] = eitherFuture.map {

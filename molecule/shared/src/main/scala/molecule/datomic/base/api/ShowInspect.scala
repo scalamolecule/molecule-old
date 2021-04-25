@@ -387,8 +387,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param txMolecules Transaction statements from applied Molecules with test data
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetWith(txMolecules: Seq[Seq[Statement]]*)(implicit conn: Conn): Unit = {
-    inspectGet(conn.usingTempDb(With(txMolecules.flatten.flatten.map(_.toJava).asJava)))
+  def inspectGetWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Unit = {
+    inspectGet(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
     txMolecules.zipWithIndex foreach { case (stmts, i) =>
       conn.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
     }
@@ -444,32 +444,32 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     */
   def inspectSave(implicit conn: Conn): Unit = {
     VerifyModel(_model, "save")
-    val transformer = conn.model2stmts(_model)
+    val transformer = conn.modelTransformer(_model)
     val stmts       = try {
-      transformer.saveStmts()
+      transformer.saveStmts
     } catch {
       case e: Throwable =>
-        println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.stmtsModel)
+        println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
+        conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts)
         throw e
     }
-    conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.stmtsModel, stmts)
+    conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts, stmts)
   }
 
 
   protected def _inspectInsert(conn: Conn, dataRows: Iterable[Seq[Any]]): Unit = {
-    val transformer = conn.model2stmts(_model)
+    val transformer = conn.modelTransformer(_model)
     val data        = untupled(dataRows)
     val stmtss      = try {
       // Separate each row so that we can distinguish each insert row
       data.map(row => transformer.insertStmts(Iterable(row)))
     } catch {
       case e: Throwable =>
-        println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.stmtsModel, dataRows, data)
+        println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
+        conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data)
         throw e
     }
-    conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.stmtsModel, dataRows, data, stmtss)
+    conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data, stmtss)
   }
 
 
@@ -485,15 +485,15 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     */
   def inspectUpdate(implicit conn: Conn): Unit = {
     VerifyModel(_model, "update")
-    val transformer = conn.model2stmts(_model)
+    val transformer = conn.modelTransformer(_model)
     val stmts       = try {
-      transformer.updateStmts()
+      transformer.updateStmts
     } catch {
       case e: Throwable =>
-        println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.stmtsModel)
+        println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
+        conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts)
         throw e
     }
-    conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.stmtsModel, stmts)
+    conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts, stmts)
   }
 }

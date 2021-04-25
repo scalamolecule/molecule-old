@@ -750,7 +750,7 @@ trait GetObjArray[Obj, Tpl] extends JavaUtil { self: Molecule_0[Obj, Tpl] =>
     */
   def getObjArrayWith(txMolecules: Seq[Statement]*)
                      (implicit conn: Conn, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Array[Obj] =
-    getObjArray(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))), objType, tplType)
+    getObjArray(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))), objType, tplType)
 
 
   /** Get `Array` of n rows as objects matching molecule with applied molecule transaction data.
@@ -815,7 +815,7 @@ trait GetObjArray[Obj, Tpl] extends JavaUtil { self: Molecule_0[Obj, Tpl] =>
     */
   def getObjArrayWith(n: Int, txMolecules: Seq[Statement]*)
                      (implicit conn: Conn, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Array[Obj] =
-    getObjArray(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))), objType, tplType)
+    getObjArray(n)(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))), objType, tplType)
 
 
   /** Get `Array` of all rows as objects matching molecule with applied raw transaction data.

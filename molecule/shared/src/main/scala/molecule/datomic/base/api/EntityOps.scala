@@ -61,17 +61,17 @@ trait EntityOps {
     } else if (txMetaDataMolecules.size == 1) {
       val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
       VerifyModel(txMetaDataModel, "save")
-      conn.model2stmts(txMetaDataModel).saveStmts()
+      conn.modelTransformer(txMetaDataModel).saveStmts
     } else {
       val txMetaDataModel = Model(
         txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
       )
       VerifyModel(txMetaDataModel, "save")
-      conn.model2stmts(txMetaDataModel).saveStmts()
+      conn.modelTransformer(txMetaDataModel).saveStmts
     }
 
-    val stmtss = retractStmts ++ txMetaDataStmts
-    conn.transact(stmtss)
+    val stmts = retractStmts ++ txMetaDataStmts
+    conn.transact(stmts)
   }
 
   /** Asynchronously retract multiple entities with optional transaction meta data.
@@ -103,13 +103,13 @@ trait EntityOps {
     } else if (txMetaDataMolecules.size == 1) {
       val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
       VerifyModel(txMetaDataModel, "save")
-      conn.model2stmts(txMetaDataModel).saveStmts()
+      conn.modelTransformer(txMetaDataModel).saveStmts
     } else {
       val txMetaDataModel = Model(
         txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
       )
       VerifyModel(txMetaDataModel, "save")
-      conn.model2stmts(txMetaDataModel).saveStmts()
+      conn.modelTransformer(txMetaDataModel).saveStmts
     }
 
     val stmtss = retractStmts ++ txMetaDataStmts
@@ -167,16 +167,16 @@ trait EntityOps {
       txMetaDataModel
     }
 
-    val transformer = conn.model2stmts(txMetaDataModel)
+    val transformer = conn.modelTransformer(txMetaDataModel)
 
     val stmts = try {
-      Seq(retractStmts ++ transformer.saveStmts())
+      Seq(retractStmts ++ transformer.saveStmts)
     } catch {
       case e: Throwable =>
-        println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
-        conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.stmtsModel)
+        println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
+        conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.genericStmts)
         throw e
     }
-    conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.stmtsModel, stmts)
+    conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.genericStmts, stmts)
   }
 }

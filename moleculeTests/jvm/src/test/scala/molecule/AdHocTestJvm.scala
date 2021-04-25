@@ -1,35 +1,20 @@
 package molecule
 
-import _root_.datomic.Peer
-import molecule.core.macros.TxFns
-import molecule.core.util.Helpers
+import java.util
 import molecule.datomic.api.out3._
-import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.Conn
-import molecule.datomic.peer.facade.Datomic_Peer
 import molecule.datomic.peer.facade.Datomic_Peer._
-import molecule.tests.core.base.dsl.CoreTest.Ns
 import molecule.tests.core.base.schema.CoreTestSchema
-import molecule.tests.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
+import molecule.tests.core.schemaDef.schema.PartitionTestSchema
 import org.specs2.mutable.Specification
-import scala.jdk.CollectionConverters._
 
 //class AdHocTest extends molecule.setup.TestSpec with Helpers {
 class AdHocTestJvm extends Specification {
 
-  import molecule.tests.core.base.dsl.CoreTest._
-
-  implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
 
   "core" >> {
-
-
-    //    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")))
-    //    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).getClass)
-    //    println(Peer.tempid(_root_.datomic.Util.read(":db.part/user")).isInstanceOf[java.util.Map[_,_]])
-    //    println("-------")
-    //    println(_root_.datomic.Util.read(":db.part/user"))
-    //    println(_root_.datomic.Util.read(":db.part/user").getClass)
+    import molecule.tests.core.base.dsl.CoreTest._
+    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
 
 
 
@@ -86,10 +71,46 @@ class AdHocTestJvm extends Specification {
   ////    m(Ns.str.bool).inspectGet
   //  }
   //
-  //  "Insert resolves to correct partitions" in new PartitionSetup {
-  //    import molecule.tests.core.schemaDef.dsl.PartitionTest._
-  //    m(lit_Book.title.Author.name._lit_Book.Reviewers * gen_Person.name).inspectGet
-  //  }
+  //    "Insert resolves to correct partitions" in new PartitionSetup {
+//  "Insert resolves to correct partitions" >> {
+//    import molecule.tests.core.schemaDef.dsl.PartitionTest._
+//    implicit val conn: Conn = recreateDbFrom(PartitionTestSchema)
+//
+//    m(lit_Book.title("yeah")).inspectSave
+//    //      lit_Book.title("yeah").save
+//
+//    //      gen_Person.name
+//
+//    val edn =
+//      """[
+//        |  [:db/add #db/id[:gen] :gen_Person/name "ben"]
+//        |  [:db/add #db/id[:lit] :lit_Book/title "yeah"]
+//        |  [:db/add #db/id[:lit] :lit_Book/author 42]
+//        |]
+//        |""".stripMargin
+//
+//    import _root_.datomic.Util._
+//
+//
+//    val jav: util.List[_] = list(
+//      list(":db/add", "-1", ":lit_Book/title", "yeah")
+//      //        list(":db/add", tempId, ":lit_Book/title", "yeah")
+//      //        list(":db/add", "#dxxxb/ixd[:lit -1000025]", ":lit_Book/title", "yeah")
+//      //        list(":db/add", _root_.datomic.Peer.tempid(read(":gen")), ":gen_Person/name", "ben"),
+//      //        list(":db/add", _root_.datomic.Peer.tempid(read(":lit")), ":lit_Book/title", "yeah"),
+//      //        list(":db/add", _root_.datomic.Peer.tempid(read(":lit")), ":lit_Book/author", 42),
+//    )
+//
+//    val tx1 = conn.transact(edn)
+//    println(tx1)
+//    val tx2 = conn.transactRaw(jav)
+//    println(tx2)
+//
+//
+//    lit_Book.title.get.head === "yeah"
+//
+//    ok
+//  }
   //
   //
   //    "Insert resolves to correct partitions" in new ModernGraph2Setup {

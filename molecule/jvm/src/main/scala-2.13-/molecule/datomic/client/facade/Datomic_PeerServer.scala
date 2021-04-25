@@ -8,12 +8,12 @@ import scala.sys.process._
 
 
 /** Datomic facade for peer-server.
-  *
-  * @param accessKey
-  * @param secret
-  * @param endpoint
-  * @param validateHostnames
-  */
+ *
+ * @param accessKey
+ * @param secret
+ * @param endpoint
+ * @param validateHostnames
+ */
 case class Datomic_PeerServer(
   accessKey: String,
   secret: String,

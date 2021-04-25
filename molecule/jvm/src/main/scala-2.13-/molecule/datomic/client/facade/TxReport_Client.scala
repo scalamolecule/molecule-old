@@ -14,11 +14,11 @@ import scala.collection.JavaConverters._
 /** Datomic TxReport facade for client api (peer-server/cloud/dev-local).
   *
   * @param clientTxReport
-  * @param stmtss
+  * @param stmts
   */
 case class TxReport_Client(
   clientTxReport: clientTxReport,
-  stmtss: Seq[Seq[Statement]] = Nil
+  stmts: Seq[Statement] = Nil
 ) extends TxReport {
 
   lazy val eids: List[Long] = {
@@ -35,10 +35,10 @@ case class TxReport_Client(
       }
       ids.toList
     }
-    if (stmtss.isEmpty) {
+    if (stmts.isEmpty) {
       allIds.distinct
     } else {
-      val assertStmts = stmtss.flatten.filterNot(_.isInstanceOf[RetractEntity])
+      val assertStmts = stmts.filterNot(_.isInstanceOf[RetractEntity])
 
       //        println("-------------------------------------------")
       //        txDataRaw.map(datom2string) foreach println
@@ -67,7 +67,7 @@ case class TxReport_Client(
   private def datom2string(d: Datom) =
     s"[${d.e}   ${d.a}   ${d.v}       ${d.tx}  ${d.added}]"
 
-  def inspect: Unit = Inspect("TxReport", 1)(1, stmtss, this)
+  def inspect: Unit = Inspect("TxReport", 1)(1, stmts, this)
 
   override def toString =
     s"""TxReport {

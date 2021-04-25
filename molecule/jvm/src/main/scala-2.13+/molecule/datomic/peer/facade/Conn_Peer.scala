@@ -10,11 +10,11 @@ import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.util.{Helpers, QueryOpsClojure}
 import molecule.datomic.base.api.DatomicEntity
-import molecule.datomic.base.ast.query.{Query, QueryExpr}
+import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, ConnBase, DatomicDb, TxReport}
-import molecule.datomic.base.transform.{Query2String, QueryOptimizer}
+import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
+import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
@@ -36,7 +36,7 @@ object Conn_Peer {
 /** Facade to Datomic connection for peer api.
   * */
 class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
-  extends ConnBase with Helpers {
+  extends Conn_Datomic213 with Helpers {
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
@@ -55,7 +55,7 @@ class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
   }
 
   // Reverse datoms from next timePoint after as-of t until end
-  private def cleanFrom(nextTimePoint: Any): Unit = {
+  override def cleanFrom(nextTimePoint: Any): Unit = {
     _testDb = Some(peerConn.db)
     val array    = peerConn.log.txRange(nextTimePoint, null).iterator().asScala.toArray
     val txInstId = db.pull("[:db/id]", ":db/txInstant").get(read(":db/id"))
@@ -80,21 +80,12 @@ class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
     }
   }
 
-  def testDbAsOf(tOrTx: Long): Unit = cleanFrom(tOrTx + 1)
-
-  def testDbAsOf(txR: TxReport): Unit = cleanFrom(txR.t + 1)
-
-  def testDbAsOf(d: Date): Unit = {
-    // Cleanup everything 1 ms after this date/time
-    cleanFrom(new Date(d.toInstant.plusMillis(1).toEpochMilli))
-  }
-
   def testDbAsOfNow: Unit = {
     _testDb = Some(peerConn.db)
   }
 
-  def testDbSince(t: Long): Unit = {
-    _testDb = Some(peerConn.db.since(t))
+  def testDbSince(tOrTx: Long): Unit = {
+    _testDb = Some(peerConn.db.since(tOrTx))
   }
 
   def testDbSince(d: Date): Unit = {
@@ -106,12 +97,12 @@ class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
   }
 
   def testDbWith(txData: Seq[Statement]*): Unit = {
-    val txDataJava: jList[jList[_]] = txData.flatten.map(_.toJava).asJava
-    _testDb = Some(peerConn.db.`with`(txDataJava).get(DB_AFTER).asInstanceOf[Database])
+    testDbWith(stmts2java(txData.flatten))
   }
 
   /** Use test database with temporary raw Java transaction data. */
-  def testDbWith(txDataJava: jList[jList[AnyRef]]): Unit = {
+  def testDbWith(txDataJava: jList[jList[_]]): Unit = {
+    tempId.reset()
     _testDb = Some(peerConn.db.`with`(txDataJava).get(DB_AFTER).asInstanceOf[Database])
   }
 

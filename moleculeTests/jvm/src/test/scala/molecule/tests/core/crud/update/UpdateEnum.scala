@@ -130,12 +130,12 @@ class UpdateEnum extends TestSpec {
         (Ns(eid).enums.replace("x" -> "enum9").update must throwA[ExecutionException])
           .message === "Got the exception java.util.concurrent.ExecutionException: " +
           "java.lang.IllegalArgumentException: :db.error/not-an-entity " +
-          s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" :Ns.enums/x]"""
+          s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
       } else {
         // Trying to use a non-existing enum not possible
         (Ns(eid).enums.replace("x" -> "enum9").update must throwA[Incorrect])
           .message === "Got the exception datomicClient.anomaly.Incorrect: " +
-          s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" :Ns.enums/x]"""
+          s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
       }
 
       Ns.enums.get.head.toList.sorted === List("enum1", "enum2", "enum6", "enum7", "enum8")

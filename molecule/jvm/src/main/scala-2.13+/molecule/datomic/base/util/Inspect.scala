@@ -19,6 +19,7 @@ private[molecule] case class Inspect(
   // Helpers ..........................................
 
   def padS(longest: Int, str: String) = pad(longest, str.length) + "  "
+
   def pad(longest: Int, shorter: Int): String = if (longest > shorter) " " * (longest - shorter) + " " else ""
 
 

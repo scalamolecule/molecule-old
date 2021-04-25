@@ -13,11 +13,11 @@ import scala.jdk.CollectionConverters._
 import scala.language.existentials
 
 /** Datomic Entity facade for client api (peer-server/cloud/dev-local).
- *
- * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
- * @param eid  Entity id of type Object
- * @param showKW
- */
+  *
+  * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+  * @param eid  Entity id of type Object
+  * @param showKW
+  */
 case class DatomicEntity_Client(
   conn: Conn_Client,
   eid: Any,
@@ -56,6 +56,7 @@ case class DatomicEntity_Client(
   }
 
   def keySet: Set[String] = map.keySet
+
   def keys: List[String] = map.keySet.toList
 
   def rawValue(key: String): Any = {

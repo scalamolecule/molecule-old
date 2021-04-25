@@ -13,11 +13,11 @@ import scala.collection.JavaConverters._
 import scala.language.existentials
 
 /** Datomic Entity facade for client api (peer-server/cloud/dev-local).
-  *
-  * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-  * @param eid  Entity id of type Object
-  * @param showKW
-  */
+ *
+ * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+ * @param eid  Entity id of type Object
+ * @param showKW
+ */
 case class DatomicEntity_Client(
   conn: Conn_Client,
   eid: Any,
@@ -171,19 +171,14 @@ case class DatomicEntity_Client(
         new Iterable[Any] {
           override def iterator = new Iterator[Any] {
             private val jIter = col.iterator.asInstanceOf[java.util.Iterator[AnyRef]]
-
             override def hasNext = jIter.hasNext
-
             override def next() = if (depth < maxDepth)
               toScala(key, Some(jIter.next()), depth, maxDepth, tpe)
             else
               jIter.next()
           }
-
           override def isEmpty = col.isEmpty
-
           override def size = col.size
-
           override def toString = col.toString
         }
 

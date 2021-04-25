@@ -9,12 +9,18 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb.TempDb
 import molecule.datomic.base.ast.transactionModel.Statement
+import molecule.datomic.base.util.TempIdFactory
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Facade to Datomic Connection.
   * */
 trait Conn {
+
+  /** Flag to indicate if we are on the JS or JVM platform */
+  val isJsPlatform: Boolean
+
+  val tempId = TempIdFactory
 
   lazy val dbProxy: DbProxy = ???
 
@@ -55,9 +61,9 @@ trait Conn {
 
   /** Use test database since time t.
     *
-    * @param t Long
+    * @param tOrTx Long
     */
-  def testDbSince(t: Long): Unit
+  def testDbSince(tOrTx: Long): Unit
 
   /** Use test database since date.
     *
@@ -99,7 +105,7 @@ trait Conn {
   def testDbWith(txData: Seq[Statement]*): Unit
 
   /** Use test database with temporary raw Java transaction data. */
-  def testDbWith(txDataJava: jList[jList[AnyRef]]): Unit
+  def testDbWith(txDataJava: jList[jList[_]]): Unit
 
   /* testDbHistory not implemented.
    * Instead, use `testDbAsOfNow`, make changes and get historic data with getHistory calls.
@@ -350,7 +356,9 @@ trait Conn {
   def _index(model: Model): jCollection[jList[AnyRef]]
 
 
-  def model2stmts(model: Model): Model2Statements
+  def modelTransformer(model: Model): Model2Statements
+
+  def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 
   def inspect(
     clazz: String,

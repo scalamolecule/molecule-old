@@ -60,7 +60,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
           ..${txFnBody.init}
           val _txFnStmts = ${txFnBody.last}
           val _txMetaDataStmts = txMetaData.asInstanceOf[Seq[Statement]]
-          molecule.datomic.base.ast.transactionModel.toJava(_txFnStmts ++ _txMetaDataStmts)
+          conn.stmts2java(_txFnStmts ++ _txMetaDataStmts)
         }
       """
 

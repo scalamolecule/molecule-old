@@ -35,10 +35,10 @@ class Provenance extends TestSpec {
       ) -->
       //       operation     temp id (dummy values)         attribute          value
       s"""List(
-         |  List(:db/add,  #db/id[:db.part/user -1000001],  :Story/title     ,  ElastiCache in 6 minutes                                     ),
-         |  List(:db/add,  #db/id[:db.part/user -1000001],  :Story/url       ,  http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html),
-         |  List(:db/add,  #db/id[:db.part/user -1000002],  :Story/title     ,  Keep Chocolate Love Atomic                                   ),
-         |  List(:db/add,  #db/id[:db.part/user -1000002],  :Story/url       ,  http://blog.datomic.com/2012/08/atomic-chocolate.html        ),
+         |  List(:db/add,  TempId(":db.part/user", -1000001),  :Story/title     ,  ElastiCache in 6 minutes                                     ),
+         |  List(:db/add,  TempId(":db.part/user", -1000001),  :Story/url       ,  http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html),
+         |  List(:db/add,  TempId(":db.part/user", -1000002),  :Story/title     ,  Keep Chocolate Love Atomic                                   ),
+         |  List(:db/add,  TempId(":db.part/user", -1000002),  :Story/url       ,  http://blog.datomic.com/2012/08/atomic-chocolate.html        ),
          |  List(:db/add,  datomic.tx,  :MetaData/user   ,  $stu                                               ),
          |  List(:db/add,  datomic.tx,  :MetaData/usecase,  AddStories                                                   )
          |)""".stripMargin

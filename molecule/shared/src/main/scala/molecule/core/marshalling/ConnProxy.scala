@@ -2,7 +2,7 @@ package molecule.core.marshalling
 
 import java.io.Reader
 import java.util
-import java.util.Date
+import java.util.{Date, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.transform.Model2Statements
 import molecule.datomic.base.api.DatomicEntity
@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /** Dummy connection to satisfy implicit parameter of api calls on client side.
   *
-  * Used to cary information enabling marshalling on both client and server side.
+  * Used to cary information enabling marshalling between client and server.
   */
 trait ConnProxy extends Conn {
 
@@ -32,7 +32,7 @@ trait ConnProxy extends Conn {
 
   override def testDbAsOf(txR: TxReport): Unit = ???
 
-  override def testDbSince(t: Long): Unit = ???
+  override def testDbSince(tOrTx: Long): Unit = ???
 
   override def testDbSince(d: Date): Unit = ???
 
@@ -40,7 +40,7 @@ trait ConnProxy extends Conn {
 
   override def testDbWith(txData: Seq[Statement]*): Unit = ???
 
-  override def testDbWith(txDataJava: util.List[util.List[AnyRef]]): Unit = ???
+  override def testDbWith(txDataJava: util.List[util.List[_]]): Unit = ???
 
   override def useLiveDb: Unit = ???
 
@@ -88,7 +88,9 @@ trait ConnProxy extends Conn {
 
   override def _index(model: Model): util.Collection[util.List[AnyRef]] = ???
 
-  override def model2stmts(model: Model): Model2Statements = ???
+  override def modelTransformer(model: Model): Model2Statements = ???
+
+  override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
 
   override def inspect(clazz: String, threshold: Int, max: Int, showStackTrace: Boolean, maxLevel: Int, showBi: Boolean)(id: Int, params: Any*): Unit = ???
 }

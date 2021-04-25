@@ -145,7 +145,6 @@ trait DatomicEntity {
     * @return List[Retractentity[Long]]
     * */
   def getRetractStmts: List[RetractEntity]
-//  def getRetractStmts: List[List[RetractEntity]]
 
   /** Inspect entity transaction data of method `retract` without affecting the database.
     * {{{

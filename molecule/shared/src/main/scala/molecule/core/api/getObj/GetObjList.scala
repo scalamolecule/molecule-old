@@ -679,7 +679,7 @@ trait GetObjList[Obj, Tpl] extends GetObjArray[Obj, Tpl] with JavaUtil with Quot
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncObj.GetAsyncObjList.getAsyncObjListWith(txMolecules* getAsyncObjListWith]] method.
     */
   def getObjListWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): List[Obj] =
-    getObjList(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
+    getObjList(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
 
 
   /** Get `List` of n rows as objects matching molecule with applied molecule transaction data.
@@ -736,7 +736,7 @@ trait GetObjList[Obj, Tpl] extends GetObjArray[Obj, Tpl] with JavaUtil with Quot
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncObj.GetAsyncObjList.getAsyncObjListWith(n:Int,txMolecules* getAsyncObjListWith]] method.
     */
   def getObjListWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): List[Obj] =
-    getObjList(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
+    getObjList(n)(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
 
 
   /** Get `List` of all rows as objects matching molecule with applied raw transaction data.

@@ -11,10 +11,10 @@ import molecule.datomic.base.util.Inspect
 import scala.jdk.CollectionConverters._
 
 /** Datomic TxReport facade for peer api.
- *
- * @param rawTxReport
- * @param stmts
- */
+  *
+  * @param rawTxReport
+  * @param stmts
+  */
 case class TxReport_Peer(
   rawTxReport: jMap[_, _],
   stmts: Seq[Statement] = Nil
@@ -53,7 +53,7 @@ case class TxReport_Peer(
           s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
         )
       val resolvedIds = assertStmts.zip(allIds).collect {
-        case (Add(_: DbId, _, _, _), eid)      => eid
+        case (Add(_: TempId, _, _, _), eid)    => eid
         case (Add("datomic.tx", _, _, _), eid) => eid
       }.distinct.toList
       resolvedIds

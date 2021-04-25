@@ -78,7 +78,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
     private val _model = Model(Seq(TxMetaData(txMeta._model.elements)))
     VerifyModel(_model, "save")
-    private val txMetaStmts = conn.model2stmts(_model).saveStmts()
+    private val txMetaStmts = conn.modelTransformer(_model).saveStmts
 
     private val stmts = retractStmts ++ txMetaStmts
 

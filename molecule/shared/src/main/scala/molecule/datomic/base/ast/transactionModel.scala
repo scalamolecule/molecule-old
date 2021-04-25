@@ -1,6 +1,5 @@
 package molecule.datomic.base.ast
 
-import java.util.{Collections, List => jList}
 import molecule.core.ast.elements._
 import molecule.core.util.JavaUtil
 
@@ -16,21 +15,6 @@ object transactionModel extends JavaUtil {
     val v     : Any
     val gv    : GenericValue
     val oldV: Any = null
-
-    def value(v: Any): Object = (v match {
-      case i: Int             => i.toLong
-      case f: Float           => f.toDouble
-      case bigInt: BigInt     => bigInt.bigInteger
-      case bigDec: BigDecimal => bigDec.bigDecimal
-      case other              => other
-    }).asInstanceOf[Object]
-
-    // Convert actions and attribute names to Clojure Keywords
-    def toJava: jList[_] = this match {
-      case _: RetractEntity => Util.list(action, e.asInstanceOf[Object])
-      case _: Cas           => Util.list(action, e.asInstanceOf[Object], a, value(oldV), value(v))
-      case _                => Util.list(action, e.asInstanceOf[Object], a, value(v))
-    }
   }
 
   private def eid(e: Any): String = {
@@ -80,29 +64,13 @@ object transactionModel extends JavaUtil {
     }
   }
 
+  case class TempId(part: String, i: Int) {
+    override def toString: String = s"""TempId("$part", $i)"""
+  }
+
   trait AbstractValue
   case class Eid(id: Long) extends AbstractValue
   case class Eids(ids: Seq[Any]) extends AbstractValue
   case class Prefix(s: String) extends AbstractValue
   case class Values(vs: Any, prefix: Option[String] = None) extends AbstractValue
-
-
-  def toJava(stmts: Seq[Statement]): jList[jList[_]] = {
-    val flatList: Seq[jList[_]]   = stmts.map {
-      case Add(e, a, i: Int, bi)             => Add(e, a, i.toLong: java.lang.Long, bi).toJava
-      case Add(e, a, f: Float, bi)           => Add(e, a, f.toDouble: java.lang.Double, bi).toJava
-      case Add(e, a, bigInt: BigInt, bi)     => Add(e, a, bigInt.bigInteger, bi).toJava
-      case Add(e, a, bigDec: BigDecimal, bi) => Add(e, a, bigDec.bigDecimal, bi).toJava
-      case other                             => other.toJava
-    }
-    val length  : Int             = flatList.length
-    val list    : jList[jList[_]] = new java.util.ArrayList[jList[_]](length)
-    var i       : Int             = 0
-    while (i < length) {
-      list.add(flatList(i))
-      i += 1
-      i
-    }
-    Collections.unmodifiableList(list)
-  }
 }

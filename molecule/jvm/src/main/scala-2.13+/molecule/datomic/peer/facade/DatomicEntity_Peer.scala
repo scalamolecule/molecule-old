@@ -7,12 +7,12 @@ import scala.jdk.CollectionConverters._
 import scala.language.existentials
 
 /** Datomic Entity facade for peer api.
- *
- * @param entity
- * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
- * @param eid  Entity id of type Object
- * @param showKW
- */
+  *
+  * @param entity
+  * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+  * @param eid  Entity id of type Object
+  * @param showKW
+  */
 case class DatomicEntity_Peer(
   entity: datomic.Entity,
   conn: Conn_Peer,
@@ -25,7 +25,7 @@ case class DatomicEntity_Peer(
 
   def rawValue(key: String): Any = {
     val raw = entity.get(key)
-    val b = raw
+    val b   = raw
     b
   }
 

@@ -13,11 +13,11 @@ import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.util.{Helpers, QueryOpsClojure}
 import molecule.datomic.base.api.DatomicEntity
-import molecule.datomic.base.ast.query.{Query, QueryExpr}
+import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, ConnBase, DatomicDb, TxReport}
-import molecule.datomic.base.transform.{Query2String, QueryOptimizer}
+import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
+import molecule.datomic.base.transform.Query2String
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.util.control.NonFatal
@@ -26,13 +26,12 @@ import scala.util.control.NonFatal
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
   * */
 case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
-  extends ConnBase with Helpers {
+  extends Conn_Datomic213 with Helpers {
 
   val clientConn: sync.Connection = client.connect(dbName)
 
   val clientConnAsync: Future[Either[CognitectAnomaly, AsyncConnection]] =
     clientAsync.connect(dbName)
-
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
@@ -54,7 +53,7 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
 
 
   // Reverse datoms from next timePoint after as-of t until end
-  private def cleanFrom(nextTimePoint: Any): Unit = {
+  override def cleanFrom(nextTimePoint: Any): Unit = {
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
     val array          = clientConn.txRangeArray(Some(nextTimePoint))
     val txInstId       = db.pull("[:db/id]", ":db/txInstant").get(read(":db/id"))
@@ -80,13 +79,6 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
     withDbInUse = true
   }
 
-  def testDbAsOf(txR: TxReport): Unit = cleanFrom(txR.t + 1)
-
-  def testDbAsOf(tOrTx: Long): Unit = cleanFrom(tOrTx + 1)
-
-  def testDbAsOf(d: Date): Unit = {
-    cleanFrom(new Date(d.toInstant.plusMillis(1).toEpochMilli))
-  }
 
   def testDbAsOfNow: Unit = {
     _testDb = Some(clientConn.db)
@@ -120,12 +112,11 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
 
 
   def testDbWith(txData: Seq[Statement]*): Unit = {
-    val txDataJava: jList[jList[_]] = txData.flatten.map(_.toJava).asJava
-    _testDb = Some(clientConn.db.`with`(clientConn.withDb, txDataJava).dbAfter)
-    withDbInUse = true
+    testDbWith(stmts2java(txData.flatten))
   }
 
-  def testDbWith(txDataJava: jList[jList[AnyRef]]): Unit = {
+  def testDbWith(txDataJava: jList[jList[_]]): Unit = {
+    tempId.reset()
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, txDataJava).dbAfter)
     withDbInUse = true
   }

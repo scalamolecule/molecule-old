@@ -29,15 +29,15 @@ trait MoleculeTestHelper extends RegexMatching {
     val ids: Map[String, String] = tx.foldLeft(Map.empty[String, String]) { case (idStmts, stmt) =>
       val rawId = stmt.e.toString
       rawId match {
-        case r"#db/id\[:db.part/user -\d{7}\]" =>
-          if (idStmts.contains(rawId)) idStmts else idStmts ++ Map(rawId -> ("#db/id[:db.part/user -" + (1000001 + idStmts.size) + "]"))
-        case r"#db/id\[:db.part/tx -\d{7}\]"   =>
+        case r"""TempId\(":db.part/user", -\d{7}\)""" =>
+          if (idStmts.contains(s"$rawId")) idStmts else idStmts ++ Map(s"$rawId" -> (s"""TempId(":db.part/user", -${1000001 + idStmts.size})"""))
+        case r"#db/id\[:db.part/tx -\d{7}\]"          =>
           if (idStmts.contains(rawId)) idStmts else idStmts ++ Map(rawId -> ("#db/id[:db.part/tx   -" + (1000001 + idStmts.size) + "]"))
-        case r"(\d{14,16})$id"                    =>
+        case r"(\d{14,16})$id"                        =>
           if (idStmts.contains(rawId)) idStmts else idStmts ++ Map(rawId -> (id + "                "))
-        case r"#db/id\[:(\w+)$part -\d{7}\]"   =>
-          if (idStmts.contains(rawId)) idStmts else idStmts ++ Map(rawId -> (s"#db/id[:$part -" + (1000001 + idStmts.size) + "]"))
-        case other                             => idStmts ++ Map(other.toString -> other.toString)
+        case r"""Temp\(":(\w+)$part", -\d{7}\)"""     =>
+          if (idStmts.contains(rawId)) idStmts else idStmts ++ Map(rawId -> (s"""Temp(":$part", -""" + (1000001 + idStmts.size) + ")"))
+        case other                                    => idStmts ++ Map(other -> other)
       }
     }
     val tx2                      = tx.map { stmt =>

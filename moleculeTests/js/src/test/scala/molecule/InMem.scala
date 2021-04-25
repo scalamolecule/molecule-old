@@ -1,16 +1,17 @@
 package molecule
 
-import molecule.core.marshalling.{ClientConn, DatomicInMemProxy}
+import java.util
+import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
 import molecule.datomic.api.out3._
-import molecule.tests.core.base.dsl.CoreTest._
+import molecule.datomic.base.facade.Conn
 import molecule.tests.core.base.schema.CoreTestSchema
+import molecule.tests.core.schemaDef.schema.PartitionTestSchema
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object InMem extends TestSuite {
 
-  implicit val conn = ClientConn(DatomicInMemProxy(CoreTestSchema.datomicPeer))
 
   implicit class testFutureEither[T](eitherFuture: Future[Either[String, T]]) {
     def ===(expectedValue: T): Future[Unit] = eitherFuture.map {
@@ -31,6 +32,44 @@ object InMem extends TestSuite {
 //    }
 
     test("Empty result set") {
+      import molecule.tests.core.schemaDef.dsl.PartitionTest._
+      implicit val conn = Conn_Js(DatomicInMemProxy(PartitionTestSchema.datomicPeer))
+
+      m(lit_Book.title("yeah")).inspectSave
+      //      lit_Book.title("yeah").save
+
+      //      gen_Person.name
+
+      val edn =
+        """[
+          |[:db/add #db/id[:gen] :gen_Person/name "ben"]
+          |[:db/add #db/id[:lit] :lit_Book/title "yeah"]
+          |[:db/add #db/id[:lit] :lit_Book/author 42]
+          |]
+          |""".stripMargin
+
+
+      val tx1 = conn.transact(edn)
+      println(tx1)
+
+
+      lit_Book.title.get.head ==> "yeah"
+    }
+
+
+    test("Empty result set") {
+      import molecule.tests.core.base.dsl.CoreTest._
+      implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
+
+      val edn =
+        """[
+          |{
+          |
+          |}
+          |]
+          |""".stripMargin
+
+
       Ns.int(1).saveAsync2.map{res =>
         println("@@@")
 //        1 ==> 3

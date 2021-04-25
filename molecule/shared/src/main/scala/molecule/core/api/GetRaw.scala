@@ -575,7 +575,7 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawWith(txMolecules* getAsyncRawWith]] method.
     */
   def getRawWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): jCollection[jList[AnyRef]] =
-    getRaw(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
+    getRaw(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
 
 
   /** Get `java.util.Collection` of n untyped rows matching molecule with applied molecule transaction data.
@@ -612,7 +612,7 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawWith(n:Int,txMolecules* getAsyncRawWith]] method.
     */
   def getRawWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): jCollection[jList[AnyRef]] =
-    getRaw(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
+    getRaw(n)(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
 
 
   /** Get `java.util.Collection` of all untyped rows matching molecule with applied raw transaction data.

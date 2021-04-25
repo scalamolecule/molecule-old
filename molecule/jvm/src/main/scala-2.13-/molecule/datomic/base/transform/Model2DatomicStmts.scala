@@ -1,10 +1,6 @@
 package molecule.datomic.base.transform
 
 import java.util.Date
-import clojure.lang.Keyword
-import datomic.Peer
-import datomic.Util.read
-import datomic.db.DbId
 import molecule.core.ast.elements._
 import molecule.core.transform.Model2Statements
 import molecule.core.util.Helpers
@@ -25,7 +21,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
     throw new Model2TransactionException(s"[$method]  $msg")
   }
 
-  val stmtsModel: Seq[Statement] = {
+  val genericStmts: Seq[Statement] = {
 
     def resolveTx(elements: Seq[Element]): Seq[Statement] = elements.foldLeft("tx": Any, Seq[Statement]()) {
       case (_, Atom(nsFull, name, _, _, VarValue, _, _, _)) => err("stmtsModel",
@@ -151,19 +147,24 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
   }
 
   private def tempId(attr: String): AnyRef = attr match {
-    case null                 => err("__tempId", "Attribute name unexpectedly null.")
-    case "tx"                 => "datomic.tx"
-    case s if s.contains('_') => Peer.tempid(read(":" + attr.substring(1).split("(?=_)").head)) // extract "partition" from ":partition_Namespace/attr"
-    case _                    => Peer.tempid(read(":db.part/user"))
+    case null => err("__tempId", "Attribute name unexpectedly null.")
+    case "tx" => "datomic.tx"
+    case _    =>
+      if (attr.contains('_')) {
+        // extract "partition" from ":partition_Namespace/attr"
+        TempId(":" + attr.substring(1).split("(?=_)").head, conn.tempId.next)
+      } else {
+        TempId(":db.part/user", conn.tempId.next)
+      }
   }
 
   private def getPairs(e: Any, a: String, key: String = "") = {
     val strs = if (key.isEmpty) {
       val query = "[:find ?v :in $ ?e ?a :where [?e ?a ?v]]"
-      conn.q(query, e.asInstanceOf[Object], read(a)).map(_.head)
+      conn.q(query, e.asInstanceOf[Object], a).map(_.head)
     } else {
       val query = "[:find ?v :in $ ?e ?a ?key :where [?e ?a ?v][(.startsWith ^String ?v ?key)]]"
-      conn.q(query, e.asInstanceOf[Object], read(a), key.asInstanceOf[Object]).map(_.head)
+      conn.q(query, e.asInstanceOf[Object], a, key.asInstanceOf[Object]).map(_.head)
     }
     strs.map {
       case str: String =>
@@ -184,7 +185,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
     def p(v: Any): Any = v match {
       case f: Float              => f.toString.toDouble
-      case _ if prefix.isDefined => Keyword.intern(prefix.get.tail.init, v.toString)
+      case _ if prefix.isDefined => prefix.get + v
       case bd: BigDecimal        => bd + 0.0 // ensure decimal digits
       case _                     => v
     }
@@ -196,7 +197,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
 
     def attrValues(id: Any, attr: String): List[AnyRef] = {
-      if (id.isInstanceOf[DbId]) {
+      if (id.isInstanceOf[TempId]) {
         Nil
       } else {
         val query = if (prefix.isDefined)
@@ -725,7 +726,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
     case v           => Seq(v)
   }
 
-  private def splitStmts(): (Seq[Statement], Seq[Statement]) = stmtsModel.foldLeft(Seq.empty[Statement], Seq.empty[Statement]) {
+  private def splitStmts(): (Seq[Statement], Seq[Statement]) = genericStmts.foldLeft(Seq.empty[Statement], Seq.empty[Statement]) {
     case ((stmts, txStmts), txStmt@Add("tx" | "txRef", _, _, _)) => (stmts, txStmts :+ txStmt)
     case ((stmts, txStmts), stmt)                                => (stmts :+ stmt, txStmts)
   }
@@ -735,7 +736,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
       case BiTargetRef(_, _) => {
         val lastEdgeNs = attr.split("/").head
         stmts.reverse.collectFirst {
-          case Add(e: DbId, a, _, _) if a.startsWith(lastEdgeNs) => e
+          case Add(e: TempId, a, _, _) if a.startsWith(lastEdgeNs) => e
         } getOrElse err("lastE", s"Couldn't find namespace `$lastEdgeNs` in any previous Add statements:\n" + stmts.mkString("\n"))
       }
       case _                 => {
@@ -762,7 +763,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
       stmts.last.v
   }
 
-  private def eidV(stmts: Seq[Statement]): Boolean = stmts.nonEmpty && stmts.last.v.isInstanceOf[DbId]
+  private def eidV(stmts: Seq[Statement]): Boolean = stmts.nonEmpty && stmts.last.v.isInstanceOf[TempId]
 
   private def matchDataStmt(stmts: Seq[Statement], genericStmt: Statement, arg: Any, cur: Int, next: Int, forcedE: Any, edgeB: Option[AnyRef])
   : (Int, Option[AnyRef], Seq[Statement]) = genericStmt match {
@@ -907,7 +908,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
         (stmts0, forcedE0)
       else stmts0.last match {
         case Add("nsFull", _, backRef, _) => (stmts0.init, backRef)
-        case Add(_, _, _: DbId, _)        => (stmts0, 0)
+        case Add(_, _, _: TempId, _)      => (stmts0, 0)
         case Add(-1, _, _, _)             => (stmts0, 0)
         case _                            => (stmts0, stmts0.last.e)
       }
@@ -920,7 +921,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
         case (_, Add("nsFull", nsFull, "", bi)) =>
           // Back reference - with mandatory previous ref
           val backRef = stmts.reverse.collectFirst {
-            case Add(e: DbId, a, _, _) if a.startsWith(nsFull) => e
+            case Add(e: TempId, a, _, _) if a.startsWith(nsFull) => e
           } getOrElse err("resolveStmts", s"Couldn't find namespace `$nsFull` in any previous Add statements.\n" + stmts.mkString("\n"))
           (cur, edgeB, stmts :+ Add("nsFull", nsFull, backRef, bi))
 
@@ -950,20 +951,20 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
     if (stmts1.isEmpty) {
       Seq.empty[Statement]
-    } else if (stmts1.last.v.isInstanceOf[DbId]) {
+    } else if (stmts1.last.v.isInstanceOf[TempId]) {
       stmts1.init
     } else {
       stmts1
     }.filterNot(_.e == -1)
   }
 
-  private def txRefAttr(stmts: Seq[Statement]): Boolean = stmts.nonEmpty && stmts.last.v.toString.startsWith("#db/id[:db.part/")
+  private def txRefAttr(stmts: Seq[Statement]): Boolean = stmts.nonEmpty && stmts.last.v.isInstanceOf[TempId]
 
   def insertStmts(dataRows: Iterable[Seq[Any]]): Seq[Statement] = {
     val (genericStmts, genericTxStmts) = splitStmts()
-    val dataStmts: Seq[Statement]      = dataRows.toSeq.flatMap(resolveStmts(genericStmts, _, 0))
+    val dataStmts                      = dataRows.toSeq.flatMap(resolveStmts(genericStmts, _, 0))
     val txId                           = tempId("tx")
-    val txStmts  : Seq[Statement]      = genericTxStmts.foldLeft(Seq.empty[Statement]) {
+    val txStmts                        = genericTxStmts.foldLeft(Seq.empty[Statement]) {
       case (stmts, Add("tx", a, Values(vs, prefix), bi)) if txRefAttr(stmts)      => valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, None)
       case (stmts, Add("tx", a, Values(vs, prefix), bi))                          => valueStmts(stmts, txId, a, vs, prefix, bi, None)
       case (stmts, Add("tx", a, refNs: String, bi)) if !refNs.startsWith("__")    => valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, None)
@@ -978,7 +979,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
   def saveStmts(): Seq[Statement] = {
     val txId = "datomic.tx"
-    stmtsModel.foldLeft("", Option.empty[AnyRef], Seq.empty[Statement]) { case ((backRef, edgeB, stmts), genericStmt) =>
+    genericStmts.foldLeft("", Option.empty[AnyRef], Seq.empty[Statement]) { case ((backRef, edgeB, stmts), genericStmt) =>
       genericStmt match {
         case Add("__tempId", a, Values(vs, pf), bi@BiEdgePropAttr(_))                               => val edgeB1 = Some(tempId(a)); (backRef, edgeB1, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB1))
         case Add("__tempId", a, Values(vs, pf), bi)                                                 => (backRef, edgeB, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB))
@@ -990,7 +991,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
         case Add(e@("e" | "ec"), a, refNs: String, bi) if !refNs.startsWith("__")                   =>
           val forcedE = if (backRef.isEmpty) 0L else {
             stmts.reverse.collectFirst {
-              case Add(e: DbId, a, _, _) if a.startsWith(backRef) => e
+              case Add(e: TempId, a, _, _) if a.startsWith(backRef) => e
             } getOrElse err("saveStmts", s"Couldn't find backref namespace `$backRef` in any previous Add statements.\n" + stmts.mkString("\n"))
           }
           ("", edgeB, valueStmts(stmts, lastE(stmts, a, forcedE, bi, e), a, tempId(refNs), None, bi, edgeB))

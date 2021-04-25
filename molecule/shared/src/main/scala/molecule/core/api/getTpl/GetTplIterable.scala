@@ -366,7 +366,7 @@ trait GetTplIterable[Obj, Tpl] extends JavaUtil { self: Molecule_0[Obj, Tpl] =>
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncTpl.GetAsyncTplIterable.getAsyncIterableWith(txMolecules* getAsyncIterableWith]] method.
     */
   def getIterableWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): Iterable[Tpl] =
-    getIterable(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
+    getIterable(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
 
 
   /** Get `Iterable` of all rows as tuples matching molecule with applied raw transaction data.

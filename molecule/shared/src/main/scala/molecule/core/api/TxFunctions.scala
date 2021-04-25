@@ -215,7 +215,7 @@ object TxFunctions extends Helpers with JavaUtil {
       }
     }
     val txModel    = Model(Seq(TxMetaData(txElements)))
-    conn.model2stmts(txModel).saveStmts()
+    conn.modelTransformer(txModel).saveStmts
   } else Nil
 
 

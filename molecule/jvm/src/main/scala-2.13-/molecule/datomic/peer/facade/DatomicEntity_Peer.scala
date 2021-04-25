@@ -21,7 +21,6 @@ case class DatomicEntity_Peer(
 ) extends DatomicEntityImpl(conn, eid) {
 
   def keySet: Set[String] = entity.keySet().asScala.toSet
-
   def keys: List[String] = entity.keySet().asScala.toList
 
   def rawValue(key: String): Any = {
@@ -77,19 +76,14 @@ case class DatomicEntity_Peer(
         new Iterable[Any] {
           override def iterator = new Iterator[Any] {
             private val jIter = col.iterator.asInstanceOf[java.util.Iterator[AnyRef]]
-
             override def hasNext = jIter.hasNext
-
             override def next() = if (depth < maxDepth)
               toScala(key, Some(jIter.next()), depth, maxDepth, tpe)
             else
               jIter.next()
           }
-
           override def isEmpty = col.isEmpty
-
           override def size = col.size
-
           override def toString = col.toString
         }
 

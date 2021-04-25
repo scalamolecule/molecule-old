@@ -1,30 +1,37 @@
 package molecule.datomic.base.facade
 
 import java.io.{Reader, StringReader}
-import java.net.URI
-import java.util.{Collection => jCollection, List => jList, Map => jMap}
-import clojure.lang.{PersistentArrayMap, PersistentVector}
-import com.cognitect.transit.impl.URIImpl
+import java.util.{Collections, Date, Collection => jCollection, List => jList}
 import datomic.Peer.function
-import datomic.Util
 import datomic.Util.{list, read, readAll}
+import datomic.{Peer, Util}
 import molecule.core.ast.elements.Model
 import molecule.core.transform.Model2Statements
 import molecule.datomic.base.ast.tempDb.TempDb
-import molecule.datomic.base.ast.transactionModel.{Statement, toJava}
+import molecule.datomic.base.ast.transactionModel.{Cas, RetractEntity, Statement, TempId}
 import molecule.datomic.base.transform.Model2DatomicStmts
 import molecule.datomic.base.util.Inspect
+//import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
 
-/** Base class for Datomic connection facade.
-  *
-  */
-trait ConnBase extends Conn {
+trait Conn_Datomic extends Conn {
+
+  val isJsPlatform: Boolean = false
 
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over test db)
   protected var _adhocDb: Option[TempDb] = None
+
+  protected def cleanFrom(nextTimePoint: Any): Unit
+
+  def testDbAsOf(txR: TxReport): Unit = cleanFrom(txR.t + 1)
+
+  def testDbAsOf(tOrTx: Long): Unit = cleanFrom(tOrTx + 1)
+
+  def testDbAsOf(d: Date): Unit = {
+    cleanFrom(new Date(d.toInstant.plusMillis(1).toEpochMilli))
+  }
+
 
   def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport =
     transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
@@ -39,7 +46,7 @@ trait ConnBase extends Conn {
     transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
 
   def transact(scalaStmts: Seq[Statement]): TxReport =
-    transactRaw(toJava(scalaStmts), scalaStmts)
+    transactRaw(stmts2java(scalaStmts), scalaStmts)
 
 
   def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])
@@ -60,34 +67,15 @@ trait ConnBase extends Conn {
 
   def transactAsync(scalaStmts: Seq[Statement])
                    (implicit ec: ExecutionContext): Future[TxReport] =
-    transactAsyncRaw(toJava(scalaStmts), scalaStmts)
+    transactAsyncRaw(stmts2java(scalaStmts), scalaStmts)
+
 
   def q(query: String, inputs: Any*): List[List[AnyRef]] =
     q(db, query, inputs.toSeq)
 
-  def q(db: DatomicDb, query: String, inputs: Seq[Any]): List[List[AnyRef]] = {
-    val raw = qRaw(db, query, inputs)
-    if (raw.isInstanceOf[PersistentVector]
-      && !raw.asInstanceOf[PersistentVector].isEmpty
-      && raw.asInstanceOf[PersistentVector].nth(0).isInstanceOf[PersistentArrayMap]) {
-      raw.asInstanceOf[jCollection[jMap[_, _]]].asScala.toList.map { rows =>
-        rows.asScala.toList.map { case (k, v) => k.toString -> v }
-      }
-    } else {
-      raw.asScala.toList
-        .map(_.asScala.toList
-          .map {
-            case set: clojure.lang.PersistentHashSet => set.asScala.toSet
-            case uriImpl: URIImpl                    => new URI(uriImpl.toString)
-            case bi: clojure.lang.BigInt             => BigInt(bi.toString)
-            case other                               => other
-          }
-        )
-    }
-  }
-
   def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]] =
     qRaw(db, query, inputs)
+
 
   def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)
@@ -101,7 +89,43 @@ trait ConnBase extends Conn {
     ))
   }
 
-  def model2stmts(model: Model): Model2Statements = Model2DatomicStmts(this, model)
+  def modelTransformer(model: Model): Model2Statements = Model2DatomicStmts(this, model)
+
+  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = {
+    var tempIds = Map.empty[Int, AnyRef]
+
+    def getTempId(part: String, i: Int): AnyRef = tempIds.getOrElse(i, {
+      val tempId = Peer.tempid(read(part))
+      tempIds = tempIds + (i -> tempId)
+      tempId
+    })
+
+    def eid(e: Any): AnyRef = (e match {
+      case l: Long         => l
+      case TempId(part, i) => getTempId(part, i)
+      case "datomic.tx"    => "datomic.tx"
+    }).asInstanceOf[AnyRef]
+
+    def value(v: Any): AnyRef = (v match {
+      case i: Int             => i.toLong
+      case f: Float           => f.toDouble
+      case TempId(part, i)    => getTempId(part, i)
+      case bigInt: BigInt     => bigInt.bigInteger
+      case bigDec: BigDecimal => bigDec.bigDecimal
+      case other              => other
+    }).asInstanceOf[AnyRef]
+
+    val list: jList[jList[_]] = new java.util.ArrayList[jList[_]](stmts.length)
+    stmts.foreach {
+      case s: RetractEntity =>
+        list.add(Util.list(s.action, s.e.asInstanceOf[AnyRef]))
+      case s: Cas           =>
+        list.add(Util.list(s.action, s.e.asInstanceOf[AnyRef], s.a, value(s.oldV), value(s.v)))
+      case s                =>
+        list.add(Util.list(s.action, eid(s.e), s.a, value(s.v)))
+    }
+    Collections.unmodifiableList(list)
+  }
 
   def inspect(
     clazz: String,

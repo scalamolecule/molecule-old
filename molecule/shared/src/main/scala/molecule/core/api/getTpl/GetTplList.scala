@@ -620,8 +620,7 @@ trait GetTplList[Obj, Tpl] extends GetTplArray[Obj, Tpl] with JavaUtil with Quot
     // Manually converting tx statements to avoid 2.12/2.13 versioning
     //    import scala.jdk.CollectionConverters._ // 2.13
     //    import scala.collection.JavaConverters._ // 2.12
-    //    get(conn.usingTempDb(With(txMolecules.flatten.flatten.map(_.toJava).asJava)))
-    get(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
+    get(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
   }
 
 
@@ -663,7 +662,7 @@ trait GetTplList[Obj, Tpl] extends GetTplArray[Obj, Tpl] with JavaUtil with Quot
     * @see Equivalent asynchronous [[molecule.core.api.getAsyncTpl.GetAsyncTplList.getAsyncWith(n:Int,txMolecules* getAsyncWith]] method.
     */
   def getWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): List[Tpl] =
-    get(n)(conn.usingTempDb(With(toJavaList(txMolecules.flatten.map(_.toJava)))))
+    get(n)(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
 
 
   /** Get `List` of all rows as tuples matching molecule with applied raw transaction data.

@@ -21,7 +21,9 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param dbProxy0  Db coordinates to access db on server side
   */
-case class ClientConn(dbProxy0: DbProxy) extends ConnProxy {
+case class Conn_Js(dbProxy0: DbProxy) extends ConnProxy {
+
+  val isJsPlatform: Boolean = true
 
   override lazy val dbProxy: DbProxy = dbProxy0
 
