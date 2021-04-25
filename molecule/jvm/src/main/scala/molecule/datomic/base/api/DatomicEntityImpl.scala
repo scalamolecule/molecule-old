@@ -11,7 +11,6 @@ import molecule.core.util.Quoted
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
 import scala.language.existentials
 
 
@@ -34,16 +33,20 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
         case null    => Option.empty[T]
 
         case results: clojure.lang.PersistentHashSet =>
-          results.asScala.head match {
+          results.toArray.apply(0) match {
             case _: datomic.Entity =>
-              Some(results.asScala.toList
-                .map(_.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long])
-                .sorted.asInstanceOf[T])
+              var list = List.empty[Long]
+              results.forEach(e =>
+                list = e.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long] :: list
+              )
+              Some(list.sorted.asInstanceOf[T])
 
             case _ =>
-              Some(results.asScala.toList.map(v1 =>
-                toScala(key, Some(v1))).asInstanceOf[T]
+              var list = List.empty[Any]
+              results.forEach(v1 =>
+                list = list :+ toScala(key, Some(v1))
               )
+              Some(list.asInstanceOf[T])
           }
 
         case result =>

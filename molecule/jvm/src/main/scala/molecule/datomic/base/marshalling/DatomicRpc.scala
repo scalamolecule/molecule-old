@@ -24,6 +24,7 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
     stmtsEdn: String
   ): Future[Either[String, TxReport]] = Future {
     try {
+      println("€€€")
       println(getCachedConn(dbProxy).getClass)
 
       Right(getCachedConn(dbProxy).transact(stmtsEdn))

@@ -3,11 +3,10 @@ package molecule.setup
 import molecule.core.api.InputMolecule
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements.Model
-import molecule.datomic.base.ast.query.Query
+import molecule.core.transform.ModelTransformer
 import molecule.core.util.testing.MoleculeTestHelper
+import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.facade.Conn
-import molecule.datomic.base.transform.Model2DatomicStmts
-import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 
 
@@ -29,12 +28,12 @@ trait SpecHelpers extends Specification with MoleculeTestHelper {
       // Input molecule + insert data
       def -->(data: Seq[Seq[Any]]) = new {
         def -->(txString: String) = {
-          val tx = Model2DatomicStmts(conn, model).insertStmts(data)
+          val tx = ModelTransformer(conn, model).insertStmts(data)
           formatTx(tx) === txString
         }
         // Inspect
         def --->(txString: String) = {
-          val tx = Model2DatomicStmts(conn, model).insertStmts(data)
+          val tx = ModelTransformer(conn, model).insertStmts(data)
           tx foreach println
           formatTx(tx) === txString
         }
@@ -47,7 +46,7 @@ trait SpecHelpers extends Specification with MoleculeTestHelper {
 
     def -->(data: Seq[Seq[Any]]) = new {
       def -->(txString: String) = {
-        val tx = Model2DatomicStmts(conn, molecule._model).insertStmts(data)
+        val tx = ModelTransformer(conn, molecule._model).insertStmts(data)
         formatTx(tx) === txString
       }
     }

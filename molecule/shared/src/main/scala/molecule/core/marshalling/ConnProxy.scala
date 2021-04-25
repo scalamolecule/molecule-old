@@ -4,7 +4,6 @@ import java.io.Reader
 import java.util
 import java.util.{Date, List => jList}
 import molecule.core.ast.elements.Model
-import molecule.core.transform.Model2Statements
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb.TempDb
@@ -87,8 +86,6 @@ trait ConnProxy extends Conn {
   override def _query(model: Model, query: Query, _db: Option[DatomicDb]): util.Collection[util.List[AnyRef]] = ???
 
   override def _index(model: Model): util.Collection[util.List[AnyRef]] = ???
-
-  override def modelTransformer(model: Model): Model2Statements = ???
 
   override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
 

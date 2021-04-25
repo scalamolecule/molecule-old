@@ -6,12 +6,10 @@ import datomic.Peer.function
 import datomic.Util.{list, read, readAll}
 import datomic.{Peer, Util}
 import molecule.core.ast.elements.Model
-import molecule.core.transform.Model2Statements
+import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.ast.tempDb.TempDb
 import molecule.datomic.base.ast.transactionModel.{Cas, RetractEntity, Statement, TempId}
-import molecule.datomic.base.transform.Model2DatomicStmts
 import molecule.datomic.base.util.Inspect
-//import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Conn_Datomic extends Conn {
@@ -89,7 +87,6 @@ trait Conn_Datomic extends Conn {
     ))
   }
 
-  def modelTransformer(model: Model): Model2Statements = Model2DatomicStmts(this, model)
 
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = {
     var tempIds = Map.empty[Int, AnyRef]

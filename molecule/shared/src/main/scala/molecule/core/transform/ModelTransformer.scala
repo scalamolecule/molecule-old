@@ -1,21 +1,17 @@
-package molecule.datomic.base.transform
+package molecule.core.transform
 
 import java.util.Date
 import molecule.core.ast.elements._
-import molecule.core.transform.Model2Statements
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.datomic.base.util.Inspect
-import scala.collection.JavaConverters._
 
 
-/** Model to transaction transformation.
+/** Model to Statements transformer.
   *
   * */
-case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements with Helpers {
-  val x = Inspect("Model2Transaction", 1, 51, false, 6)
+case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
 
   private def err(method: String, msg: String) = {
     throw new Model2TransactionException(s"[$method]  $msg")
@@ -158,7 +154,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
       }
   }
 
-  private def getPairs(e: Any, a: String, key: String = "") = {
+  private def getPairs(e: Any, a: String, key: String = ""): Map[String, String] = {
     val strs = if (key.isEmpty) {
       val query = "[:find ?v :in $ ?e ?a :where [?e ?a ?v]]"
       conn.q(query, e.asInstanceOf[Object], a).map(_.head)
@@ -172,6 +168,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
         key -> value
     }.toMap
   }
+
 
   private def valueStmts(
     stmts: Seq[Statement],
@@ -471,7 +468,6 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
 
     def biEdgeProp(card: Int): Seq[Statement] = {
-
       val edgeA = e
       val edgeB = otherEdgeId match {
         case Some(eid) if eid == edgeA => err("valueStmts:biEdgeProp", "Other edge id is unexpectedly the same as this edge id.")
@@ -483,15 +479,17 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
         case AssertMapPairs(newPairs) =>
           checkDupKeys(newPairs, "biEdgeProp", "assert")
-          val curPairs = getPairs(edgeA, a)
-          val curKeys  = curPairs.keys
+          val curPairs     = getPairs(edgeA, a)
+          val curPairsList = curPairs.toList
+          val curKeys      = curPairs.keys.toList
           newPairs.flatMap {
-            case (k, v) if curPairs.asJavaCollection.contains((k, d(v).toString)) => Nil
-            case (k, v) if curKeys.asJavaCollection.contains(k)                   => Seq(
+            case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+            case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+            case (k, v) if curKeys.contains(k)                       => Seq(
               Retract(edgeB, a, k + "@" + curPairs(k)), Add(edgeB, a, k + "@" + d(v), Card(card)),
               Retract(edgeA, a, k + "@" + curPairs(k)), Add(edgeA, a, k + "@" + d(v), Card(card))
             )
-            case (k, v)                                                           => Seq(
+            case (k, v)                                              => Seq(
               Add(edgeB, a, k + "@" + d(v), Card(card)),
               Add(edgeA, a, k + "@" + d(v), Card(card))
             )
@@ -499,16 +497,17 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
         case ReplaceMapPairs(newPairs) =>
           checkDupKeys(newPairs, "biEdgeProp", "replace")
-          val curPairs = getPairs(edgeA, a)
-          val curKeys  = curPairs.keys
+          val curPairs     = getPairs(edgeA, a)
+          val curPairsList = curPairs.toList
+          val curKeys      = curPairs.keys.toList
           checkUnknownKeys(newPairs, curKeys.toSeq, "biEdgeProp")
           newPairs.flatMap {
-            case (k, v) if curPairs.asJavaCollection.contains((k, d(v).toString)) => Nil
-            case (k, v) if curKeys.asJavaCollection.contains(k)                   => Seq(
+            case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+            case (k, v) if curKeys.contains(k)                       => Seq(
               Retract(edgeB, a, k + "@" + curPairs(k)), Add(edgeB, a, k + "@" + d(v), Card(card)),
               Retract(edgeA, a, k + "@" + curPairs(k)), Add(edgeA, a, k + "@" + d(v), Card(card))
             )
-            case (k, v)                                                           => Seq(
+            case (k, v)                                              => Seq(
               Add(edgeB, a, k + "@" + d(v), Card(card)),
               Add(edgeA, a, k + "@" + d(v), Card(card))
             )
@@ -617,23 +616,25 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
       case AssertMapPairs(newPairs) =>
         checkDupKeys(newPairs, "default", "assert")
-        val curPairs = getPairs(e, a)
-        val curKeys  = curPairs.keys
+        val curPairs     = getPairs(e, a)
+        val curPairsList = curPairs.toList
+        val curKeys      = curPairs.keys.toList
         newPairs.flatMap {
-          case (k, v) if curPairs.asJavaCollection.contains((k, d(v).toString)) => Nil
-          case (k, v) if curKeys.asJavaCollection.contains(k)                   => Seq(Retract(e, a, s"$k@${curPairs(k)}"), Add(e, a, s"$k@${d(v)}", Card(card)))
-          case (k, v)                                                           => Seq(Add(e, a, s"$k@${d(v)}", Card(card)))
+          case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+          case (k, v) if curKeys.contains(k)                       => Seq(Retract(e, a, s"$k@${curPairs(k)}"), Add(e, a, s"$k@${d(v)}", Card(card)))
+          case (k, v)                                              => Seq(Add(e, a, s"$k@${d(v)}", Card(card)))
         }
 
       case ReplaceMapPairs(newPairs) =>
         checkDupKeys(newPairs, "default", "replace")
-        val curPairs = getPairs(e, a)
-        val curKeys  = curPairs.keys.toSeq
+        val curPairs     = getPairs(e, a)
+        val curPairsList = curPairs.toList
+        val curKeys      = curPairs.keys.toList
         checkUnknownKeys(newPairs, curKeys, "default")
         newPairs.flatMap {
-          case (k, v) if curPairs.asJavaCollection.contains((k, d(v).toString)) => Nil
-          case (k, v) if curKeys.asJavaCollection.contains(k)                   => Seq(Retract(e, a, s"$k@${curPairs(k)}"), Add(e, a, s"$k@${d(v)}", Card(card)))
-          case (k, v)                                                           => Seq(Add(e, a, s"$k@${d(v)}", Card(card)))
+          case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+          case (k, v) if curKeys.contains(k)                       => Seq(Retract(e, a, s"$k@${curPairs(k)}"), Add(e, a, s"$k@${d(v)}", Card(card)))
+          case (k, v)                                              => Seq(Add(e, a, s"$k@${d(v)}", Card(card)))
         }
 
       case RetractMapKeys(removeKeys0) =>
@@ -720,6 +721,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
     stmts ++ newStmts
   }
+
 
   private def flatten(vs: Seq[Any]): Seq[Any] = vs.flatMap {
     case set: Set[_] => set.toSeq
@@ -899,9 +901,35 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
   }
 
 
+  private def untupleNestedArgss(stmts: Seq[Any], arg0: Any): Seq[Seq[Any]] = {
+    val (argArity, arg) = arg0 match {
+      case a: Seq[_]  => a.head match {
+        case None       => err("untupleNestedArgss", "Please use `List()` instead of `List(None)` for nested null values.")
+        case null       => err("untupleNestedArgss", "Please use `List()` instead of `List(null)` for nested null values.")
+        case p: Product => (p.productArity, a)
+        case l: Seq[_]  => (l.size, a)
+        case _          => (1, a)
+      }
+      case unexpected => err("untupleNestedArgss", "Unexpected data: " + unexpected)
+    }
+    val argStmts        = stmts.collect {
+      case a@Add(_, _, "__arg", _)             => a
+      case a@Add(_, _, Values(_, _), _)        => a
+      case a@Add(_, _, nestedStmts: Seq[_], _) => a
+    }
+    val stmtsSize       = argStmts.size
+    if (argArity != stmtsSize) err("untupleNestedArgss", "Arity of statements and arguments should match. Found: \n" +
+      s"Statements (arity $stmtsSize): " + stmts.mkString("\n  ", "\n  ", "\n") +
+      s"Arguments0                  : " + arg0 +
+      s"Arguments  (arity $argArity): " + arg.mkString("\n  ", "\n  ", "\n"))
+
+    arg map tupleToSeq
+  }
+
+
   private def resolveStmts(genericStmts: Seq[Statement], row: Seq[Any], forcedE0: Any, edgeB0: Option[AnyRef] = None): Seq[Statement] = {
     val stmts1 = genericStmts.foldLeft(0, edgeB0, Seq.empty[Statement]) { case ((cur, edgeB, stmts0), genericStmt0) =>
-      val arg0      = row.asJava.get(cur)
+      val arg0      = row(cur)
       val next: Int = if ((cur + 1) < row.size) cur + 1 else cur
 
       val (stmts, forcedE) = if (stmts0.isEmpty)
@@ -960,6 +988,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
 
   private def txRefAttr(stmts: Seq[Statement]): Boolean = stmts.nonEmpty && stmts.last.v.isInstanceOf[TempId]
 
+
   def insertStmts(dataRows: Iterable[Seq[Any]]): Seq[Statement] = {
     val (genericStmts, genericTxStmts) = splitStmts()
     val dataStmts                      = dataRows.toSeq.flatMap(resolveStmts(genericStmts, _, 0))
@@ -977,7 +1006,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
   }
 
 
-  def saveStmts(): Seq[Statement] = {
+  def saveStmts: Seq[Statement] = {
     val txId = "datomic.tx"
     genericStmts.foldLeft("", Option.empty[AnyRef], Seq.empty[Statement]) { case ((backRef, edgeB, stmts), genericStmt) =>
       genericStmt match {
@@ -1012,7 +1041,7 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
   }
 
 
-  def updateStmts(): Seq[Statement] = {
+  def updateStmts: Seq[Statement] = {
     val (genericStmts, genericTxStmts) = splitStmts()
     val dataStmts: Seq[Statement]      = genericStmts.foldLeft(
       Option.empty[AnyRef],
@@ -1052,31 +1081,5 @@ case class Model2DatomicStmts(conn: Conn, model: Model) extends Model2Statements
       case (_, unexpected)                               => err("updateStmts", "Unexpected insert statement: " + unexpected)
     }
     dataStmts ++ txStmts
-  }
-
-
-  private def untupleNestedArgss(stmts: Seq[Any], arg0: Any): Seq[Seq[Any]] = {
-    val (argArity, arg) = arg0 match {
-      case a: Seq[_]  => a.head match {
-        case None       => err("untupleNestedArgss", "Please use `List()` instead of `List(None)` for nested null values.")
-        case null       => err("untupleNestedArgss", "Please use `List()` instead of `List(null)` for nested null values.")
-        case p: Product => (p.productArity, a)
-        case l: Seq[_]  => (l.size, a)
-        case _          => (1, a)
-      }
-      case unexpected => err("untupleNestedArgss", "Unexpected data: " + unexpected)
-    }
-    val argStmts        = stmts.collect {
-      case a@Add(_, _, "__arg", _)             => a
-      case a@Add(_, _, Values(_, _), _)        => a
-      case a@Add(_, _, nestedStmts: Seq[_], _) => a
-    }
-    val stmtsSize       = argStmts.size
-    if (argArity != stmtsSize) err("untupleNestedArgss", "Arity of statements and arguments should match. Found: \n" +
-      s"Statements (arity $stmtsSize): " + stmts.mkString("\n  ", "\n  ", "\n") +
-      s"Arguments0                  : " + arg0 +
-      s"Arguments  (arity $argArity): " + arg.mkString("\n  ", "\n  ", "\n"))
-
-    arg map tupleToSeq
   }
 }

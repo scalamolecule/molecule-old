@@ -4,7 +4,7 @@ import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.marshalling.{DbProxy, MoleculeRpc}
-import molecule.core.transform.Model2Statements
+import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb.TempDb
@@ -356,7 +356,7 @@ trait Conn {
   def _index(model: Model): jCollection[jList[AnyRef]]
 
 
-  def modelTransformer(model: Model): Model2Statements
+  def modelTransformer(model: Model): ModelTransformer = ModelTransformer(this, model)
 
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 

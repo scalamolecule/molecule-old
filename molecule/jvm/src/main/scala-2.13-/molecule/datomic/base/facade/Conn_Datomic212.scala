@@ -9,7 +9,7 @@ import datomic.Peer.function
 import datomic.Util
 import datomic.Util.{list, read, readAll}
 import molecule.core.ast.elements.Model
-import molecule.core.transform.Model2Statements
+import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.ast.tempDb.TempDb
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.transform.Model2DatomicStmts

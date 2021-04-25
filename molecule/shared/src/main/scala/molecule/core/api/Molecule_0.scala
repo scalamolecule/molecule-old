@@ -1,6 +1,5 @@
 package molecule.core.api
 
-import molecule.core.api
 import molecule.core.api.getAsyncObj.{GetAsyncObjArray, GetAsyncObjIterable, GetAsyncObjList}
 import molecule.core.api.getAsyncTpl.{GetAsyncTplArray, GetAsyncTplIterable, GetAsyncTplList}
 import molecule.core.api.getObj.{GetObjArray, GetObjIterable, GetObjList}
@@ -232,18 +231,15 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   }
 
   def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = try {
-    println("################# 1")
     VerifyModel(_model, "save")
     if (isJsPlatform) {
 
-      println("################# 2 " + conn.getClass)
-      val a = conn.modelTransformer(_model)
-      println("################# 3")
-      val b = a.saveStmts
-      println("################# 4")
+      val stmts = conn.modelTransformer(_model).saveStmts
+      val stmtsEdn = Stmts2Edn(stmts)
 
-      val stmtsEdn = Stmts2Edn(b)
-      println("################# 5")
+      println(stmts)
+      println(stmtsEdn)
+
       moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn).recover { err =>
         Left("Recovered from ajax call: " + err.toString)
       }

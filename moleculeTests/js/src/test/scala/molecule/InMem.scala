@@ -27,34 +27,34 @@ object InMem extends TestSuite {
 
   lazy val tests = Tests {
 
-//    test("Empty result set") {
-//      Ns.str.int.getAsync2.isEmpty
-//    }
+    //    test("Empty result set") {
+    //      Ns.str.int.getAsync2.isEmpty
+    //    }
 
-    test("Empty result set") {
-      import molecule.tests.core.schemaDef.dsl.PartitionTest._
-      implicit val conn = Conn_Js(DatomicInMemProxy(PartitionTestSchema.datomicPeer))
-
-      m(lit_Book.title("yeah")).inspectSave
-      //      lit_Book.title("yeah").save
-
-      //      gen_Person.name
-
-      val edn =
-        """[
-          |[:db/add #db/id[:gen] :gen_Person/name "ben"]
-          |[:db/add #db/id[:lit] :lit_Book/title "yeah"]
-          |[:db/add #db/id[:lit] :lit_Book/author 42]
-          |]
-          |""".stripMargin
-
-
-      val tx1 = conn.transact(edn)
-      println(tx1)
-
-
-      lit_Book.title.get.head ==> "yeah"
-    }
+    //    test("Empty result set") {
+    //      import molecule.tests.core.schemaDef.dsl.PartitionTest._
+    //      implicit val conn = Conn_Js(DatomicInMemProxy(PartitionTestSchema.datomicPeer))
+    //
+    //      m(lit_Book.title("yeah")).inspectSave
+    //      //      lit_Book.title("yeah").save
+    //
+    //      //      gen_Person.name
+    //
+    //      val edn =
+    //        """[
+    //          |[:db/add #db/id[:gen] :gen_Person/name "ben"]
+    //          |[:db/add #db/id[:lit] :lit_Book/title "yeah"]
+    //          |[:db/add #db/id[:lit] :lit_Book/author 42]
+    //          |]
+    //          |""".stripMargin
+    //
+    //
+    //      val tx1 = conn.transact(edn)
+    //      println(tx1)
+    //
+    //
+    //      lit_Book.title.get.head ==> "yeah"
+    //    }
 
 
     test("Empty result set") {
@@ -70,15 +70,13 @@ object InMem extends TestSuite {
           |""".stripMargin
 
 
-      Ns.int(1).saveAsync2.map{res =>
-        println("@@@")
-//        1 ==> 3
+      Ns.int(1).saveAsync2.map { res =>
         res ==> 7
       }
-//      Ns.int(1).saveAsync2.map{
-//        case Right(txReport) => txReport.eids.size ==> 2
-//      }
-//      Ns.str.int.getAsync2.isEmpty
+      //      Ns.int(1).saveAsync2.map{
+      //        case Right(txReport) => txReport.eids.size ==> 2
+      //      }
+      //      Ns.str.int.getAsync2.isEmpty
 
     }
   }
