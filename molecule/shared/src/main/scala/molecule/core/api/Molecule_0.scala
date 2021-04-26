@@ -14,7 +14,8 @@ import molecule.core.transform.DynamicMolecule
 import molecule.datomic.base.api.ShowInspect
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
-import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.facade.{Conn, TxReport, TxReportProxy}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 
@@ -230,21 +231,19 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     conn.transactAsync(conn.modelTransformer(_model).saveStmts)
   }
 
-  def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = try {
+  def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReportProxy]] = try {
     VerifyModel(_model, "save")
     if (isJsPlatform) {
-
-      val stmts = conn.modelTransformer(_model).saveStmts
+      val stmts    = conn.modelTransformer(_model).saveStmts
       val stmtsEdn = Stmts2Edn(stmts)
-
-      println(stmts)
-      println(stmtsEdn)
-
+      //      println(stmts)
+      //      println(stmtsEdn)
       moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn).recover { err =>
         Left("Recovered from ajax call: " + err.toString)
       }
     } else {
-      conn.transactAsync(conn.modelTransformer(_model).saveStmts).map(txReport => Right(txReport))
+      Future(Left("testing... "))
+      //      conn.transactAsync(conn.modelTransformer(_model).saveStmts).map(txReport => Right(txReport))
     }
   } catch {
     case t: Throwable => Future(Left("Error from executing transaction in DatomicRpc: " + t.getMessage))

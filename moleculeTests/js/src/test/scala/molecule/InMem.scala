@@ -1,11 +1,10 @@
 package molecule
 
-import java.util
+import java.util.UUID
 import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
 import molecule.datomic.api.out3._
-import molecule.datomic.base.facade.Conn
+import molecule.tests.core.base.dsl.CoreTest._
 import molecule.tests.core.base.schema.CoreTestSchema
-import molecule.tests.core.schemaDef.schema.PartitionTestSchema
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -24,60 +23,39 @@ object InMem extends TestSuite {
     }
   }
 
+  def inMemConn = {
+    val c = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer, UUID.randomUUID()))
+    println(c.dbProxy.uuid + "  ")
+    c
+  }
+
 
   lazy val tests = Tests {
 
-    //    test("Empty result set") {
-    //      Ns.str.int.getAsync2.isEmpty
-    //    }
+    test("save and query 1") {
+      implicit val conn = inMemConn
+      Ns.int(1).saveAsync2.flatMap {
+        case Right(tx) =>
+          Ns.e.int.getAsync2.map {
+            case Right(res) => res ==> List((tx.eid, 1))
+          }
+      }
+    }
 
-    //    test("Empty result set") {
-    //      import molecule.tests.core.schemaDef.dsl.PartitionTest._
-    //      implicit val conn = Conn_Js(DatomicInMemProxy(PartitionTestSchema.datomicPeer))
-    //
-    //      m(lit_Book.title("yeah")).inspectSave
-    //      //      lit_Book.title("yeah").save
-    //
-    //      //      gen_Person.name
-    //
-    //      val edn =
-    //        """[
-    //          |[:db/add #db/id[:gen] :gen_Person/name "ben"]
-    //          |[:db/add #db/id[:lit] :lit_Book/title "yeah"]
-    //          |[:db/add #db/id[:lit] :lit_Book/author 42]
-    //          |]
-    //          |""".stripMargin
-    //
-    //
-    //      val tx1 = conn.transact(edn)
-    //      println(tx1)
-    //
-    //
-    //      lit_Book.title.get.head ==> "yeah"
-    //    }
+    test("save and query 2") {
+      implicit val conn = inMemConn
+      for {
+        Right(tx) <- Ns.int(2).saveAsync2
+        Right(res) <- Ns.e.int.getAsync2
+      } yield {
+        res ==> List((tx.eid, 2))
+      }
+    }
 
 
     test("Empty result set") {
-      import molecule.tests.core.base.dsl.CoreTest._
-      implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
-
-      val edn =
-        """[
-          |{
-          |
-          |}
-          |]
-          |""".stripMargin
-
-
-      Ns.int(1).saveAsync2.map { res =>
-        res ==> 7
-      }
-      //      Ns.int(1).saveAsync2.map{
-      //        case Right(txReport) => txReport.eids.size ==> 2
-      //      }
-      //      Ns.str.int.getAsync2.isEmpty
-
+      implicit val conn = inMemConn
+      Ns.str.int.getAsync2.isEmpty
     }
   }
 }

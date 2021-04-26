@@ -1,13 +1,14 @@
 package molecule.datomic.base.marshalling
 
 import java.util
+import java.util.UUID
 import boopickle.Default._
 import cats.implicits._
 import datomic.{Peer, Util}
 import molecule.core.marshalling._
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
-import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.facade.{Conn, TxReport, TxReportProxy}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
@@ -22,15 +23,13 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
   def transactAsync(
     dbProxy: DbProxy,
     stmtsEdn: String
-  ): Future[Either[String, TxReport]] = Future {
+  ): Future[Either[String, TxReportProxy]] = Future {
     try {
-      println("€€€")
-      println(getCachedConn(dbProxy).getClass)
-
-      Right(getCachedConn(dbProxy).transact(stmtsEdn))
+      println("transact " + dbProxy.uuid + "\n" + stmtsEdn)
+      Right(getCachedConn(dbProxy).transact(stmtsEdn).proxy)
     } catch {
       case t: Throwable =>
-        Left("Error from executing transaction in DatomicRpc: " + t.getMessage)
+        Left("Error from executing transaction in DatomicRpc: " + t.toString)
     }
   }
 
@@ -54,10 +53,11 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
 
       val queryTime = t.delta
       log(s"\n---- Querying Datomic... --------------------\n" + datalogQuery)
-      log("Query time : " + thousands(queryTime) + " ms")
-      log("rowCountAll: " + rowCountAll)
-      log("maxRows    : " + (if (maxRows == -1) "all" else maxRows))
-      log("rowCount   : " + rowCount)
+      log("dbProxy uuid: " + dbProxy.uuid)
+      log("Query time  : " + thousands(queryTime) + " ms")
+      log("rowCountAll : " + rowCountAll)
+      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
+      log("rowCount    : " + rowCount)
 
       if (rowCount == 0) {
         log.print
@@ -67,7 +67,7 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
           allRows, rowCountAll, rowCount, queryTime, indexes
         ).get
 
-        //          println("QueryResult: " + queryResult)
+        // log("QueryResult: " + queryResult)
         log("Rows2QueryResult took " + t.ms)
         log("Sending data to client... Total server time: " + t.msTotal)
         log.print
@@ -80,107 +80,84 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
   }
 
 
-  // Helpers ----------------------------------------------------------------
+  // Cache Conn and QueryExecutors ---------------------------------------------
 
   // (datalogQuery, inputs) => raw data
   type QueryExecutor = (String, Seq[AnyRef]) => util.Collection[util.List[AnyRef]]
 
   // todo: better caching strategy?
-  val queryExecutorCache = mutable.Map.empty[String, QueryExecutor]
-  val connCache          = mutable.Map.empty[String, Conn]
+  val connCache          = mutable.Map.empty[UUID, Conn]
+  val queryExecutorCache = mutable.Map.empty[UUID, QueryExecutor]
 
-  private def cacheConn(dbKey: String)
-                       (makeConn: => Conn): Conn = {
-    connCache.get(dbKey) match {
-      case Some(conn) => conn
-      case _          =>
-        val t    = TimerPrint("cacheConn")
-        val conn = makeConn
-        println(s"---- Connected to $dbKey in " + thousands(t.delta) + " ms")
-        connCache(dbKey) = conn
-        conn
-    }
+  private def getCachedConn(dbProxy: DbProxy): Conn = {
+    connCache.getOrElse(dbProxy.uuid, {
+      val conn = dbProxy match {
+        case DatomicInMemProxy(edns, _) =>
+          //          Datomic_Peer.connect("mem", dbIdentifier)
+          connCache.clear()
+          Datomic_Peer.recreateDbFromEdn(edns)
+
+        case DatomicPeerProxy(protocol, dbIdentifier, _, _) =>
+          if (datomicProtocol != protocol) {
+            throw new RuntimeException(
+              s"\nProject is built with datomic `$datomicProtocol` protocol and " +
+                s"cannot serve supplied `$protocol` protocol. " +
+                s"\nPlease change the build setup or your ConnProxy protocol"
+            )
+          }
+          protocol match {
+            case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier)
+            case "mem"          => throw new IllegalArgumentException(
+              "Please connect with `DatomicInMemProxy` to get an in-memory db.")
+          }
+
+        case DatomicDevLocalProxy(system, storageDir, dbName, _, _) =>
+          Datomic_DevLocal(system, storageDir).connect(dbName)
+
+        case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _) =>
+          Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
+      }
+      connCache(dbProxy.uuid) = conn
+      conn
+    })
   }
 
-  private def getCachedConn(dbProxy: DbProxy): Conn = dbProxy match {
-    case DatomicInMemProxy(edns, dbIdentifier) =>
-      cacheConn("DatomicInMemProxy" + dbIdentifier) {
-        //          Datomic_Peer.connect("mem", dbIdentifier)
-        Datomic_Peer.recreateDbFromEdn(edns)
-      }
+  private def getCachedQueryExecutor(dbProxy: DbProxy): QueryExecutor = {
+    queryExecutorCache.getOrElse(dbProxy.uuid, {
+      val queryExecutor = dbProxy match {
+        case _: DatomicInMemProxy =>
+          val db = getCachedConn(dbProxy).db.getDatomicDb
+          queryExecutorCache.clear()
+          (datalogQuery: String, inputs: Seq[AnyRef]) => {
+            Peer.q(datalogQuery, db +: inputs: _*)
+          }
 
-    case DatomicPeerProxy(protocol, dbIdentifier, edns) =>
-      cacheConn(s"DatomicPeerProxy $protocol $dbIdentifier") {
-        if (datomicProtocol != protocol) {
-          throw new RuntimeException(
-            s"\nProject is built with datomic `$datomicProtocol` protocol and " +
-              s"cannot serve supplied `$protocol` protocol. " +
-              s"\nPlease change the build setup or your ConnProxy protocol"
-          )
-        }
-        protocol match {
-          case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier)
-          case "mem"          => throw new IllegalArgumentException(
-            "Please connect with `DatomicInMemProxy` to get an in-memory db.")
-        }
-      }
+        case _: DatomicPeerProxy =>
+          val db = getCachedConn(dbProxy).db.getDatomicDb
+          (datalogQuery: String, inputs: Seq[AnyRef]) => {
+            Peer.q(datalogQuery, db +: inputs: _*)
+          }
 
-    case DatomicDevLocalProxy(system, storageDir, dbName, schema)    =>
-      cacheConn(s"DatomicDevLocalProxy $system $storageDir $dbName") {
-        Datomic_DevLocal(system, storageDir).connect(dbName)
+        case _: DatomicDevLocalProxy =>
+          val conn = getCachedConn(dbProxy)
+          (datalogQuery: String, inputs: Seq[AnyRef]) => {
+            conn.qRaw(conn.db, datalogQuery, inputs)
+          }
+
+        case _: DatomicPeerServerProxy =>
+          val conn = getCachedConn(dbProxy)
+          (datalogQuery: String, inputs: Seq[AnyRef]) => {
+            conn.qRaw(conn.db, datalogQuery, inputs)
+          }
       }
-    case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName) =>
-      cacheConn(s"DatomicPeerServerProxy $accessKey <secret> $endpoint $dbName") {
-        Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
-      }
+      queryExecutorCache(dbProxy.uuid) = queryExecutor
+      queryExecutor
+    })
   }
 
 
-  private def cacheQueryExecutor(dbKey: String)
-                                (makeQueryExecutor: => QueryExecutor): QueryExecutor = {
-    queryExecutorCache.get(dbKey) match {
-      case Some(queryExecutor) => queryExecutor
-      case _                   =>
-        val t             = TimerPrint("cacheQueryExecutor")
-        val queryExecutor = makeQueryExecutor
-        println(s"---- Connected to $dbKey in " + thousands(t.delta) + " ms")
-        queryExecutorCache(dbKey) = queryExecutor
-        queryExecutor
-    }
-  }
+  // Helpers -------------------------------------------------
 
-  private def getCachedQueryExecutor(dbProxy: DbProxy): QueryExecutor = dbProxy match {
-    case DatomicInMemProxy(edns, dbIdentifier) =>
-      cacheQueryExecutor("DatomicInMemProxy") {
-        val db = getCachedConn(dbProxy).db.getDatomicDb
-        (datalogQuery: String, inputs: Seq[AnyRef]) => {
-          Peer.q(datalogQuery, db +: inputs: _*)
-        }
-      }
-
-    case DatomicPeerProxy(protocol, dbIdentifier, edns) =>
-      cacheQueryExecutor(s"DatomicPeerProxy $protocol $dbIdentifier") {
-        val db = getCachedConn(dbProxy).db.getDatomicDb
-        (datalogQuery: String, inputs: Seq[AnyRef]) => {
-          Peer.q(datalogQuery, db +: inputs: _*)
-        }
-      }
-
-    case DatomicDevLocalProxy(system, storageDir, dbName, schema)    =>
-      cacheQueryExecutor(s"DatomicDevLocalProxy $system $storageDir $dbName") {
-        val conn = getCachedConn(dbProxy)
-        (datalogQuery: String, inputs: Seq[AnyRef]) => {
-          conn.qRaw(conn.db, datalogQuery, inputs)
-        }
-      }
-    case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName) =>
-      cacheQueryExecutor(s"DatomicPeerServerProxy $accessKey <secret> $endpoint $dbName") {
-        val conn = getCachedConn(dbProxy)
-        (datalogQuery: String, inputs: Seq[AnyRef]) => {
-          conn.qRaw(conn.db, datalogQuery, inputs)
-        }
-      }
-  }
   private def unmarshallInputs(lists: Seq[(Int, AnyRef)]): Seq[Object] = {
     lists.sortBy(_._1).map(_._2).map {
       case l: Seq[_] => Util.list(l.map {

@@ -1,6 +1,6 @@
 package molecule.core.marshalling
 
-import molecule.datomic.base.facade.TxReport
+import molecule.datomic.base.facade.{TxReport, TxReportProxy}
 import scala.concurrent.Future
 
 trait MoleculeRpc {
@@ -8,7 +8,7 @@ trait MoleculeRpc {
   def transactAsync(
     dbProxy: DbProxy,
     stmtsEdn: String
-  ): Future[Either[String, TxReport]]
+  ): Future[Either[String, TxReportProxy]]
 
 
   def queryAsync(

@@ -4,9 +4,10 @@ import molecule.datomic.base.ast.transactionModel._
 
 object Stmts2Edn {
 
-  val buf = new StringBuffer()
+  val buf = new StringBuilder()
 
   def apply(stmts: Seq[Statement]): String = {
+    buf.clear()
     stmts.foreach { stmt =>
       buf.append("\n")
       buf.append(addStmt(stmt))

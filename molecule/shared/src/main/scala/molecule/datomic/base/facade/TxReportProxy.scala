@@ -2,11 +2,21 @@ package molecule.datomic.base.facade
 
 import java.util.Date
 
-/** Facade to Datomic transaction report with convenience methods to access tx data. */
-trait TxReport {
-
-  /** Get List of affected entity ids from transaction */
-  def eids: List[Long]
+/** Transaction Report Proxy for marshalling between Server/Client.
+  *
+  * @param eids
+  * @param t
+  * @param tx
+  * @param inst
+  * @param asString
+  */
+case class TxReportProxy(
+  eids: List[Long],
+  t: Long,
+  tx: Long,
+  inst: Date,
+  asString: String
+) {
 
   /** Get Set of affected entity ids from transaction. */
   def eidSet: Set[Long] = eids.toSet
@@ -23,18 +33,8 @@ trait TxReport {
     *
     * @return
     */
-  def eid: Long
+  def eid: Long = eids.head
 
-  def inspect: Unit
-
-  /** Get transaction time t. */
-  def t: Long
-
-  /** Get transaction entity id (Long). */
-  def tx: Long
-
-  /** Get transaction instant (Date). */
-  def inst: Date
-
-  def proxy: TxReportProxy = TxReportProxy(eids, t, tx, inst, toString)
+  /** String representation of raw TxReport */
+  override def toString = asString
 }
