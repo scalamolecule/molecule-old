@@ -16,7 +16,6 @@ trait JavaUtil {
         while (i < items.length) {
           list.add(items(i))
           i += 1
-          i
         }
         Collections.unmodifiableList(list)
       }

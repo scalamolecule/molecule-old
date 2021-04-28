@@ -15,7 +15,6 @@ import molecule.datomic.base.api.ShowInspect
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport, TxReportProxy}
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 
@@ -181,7 +180,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   def apply(body: Obj => Unit): DynamicMolecule with Obj = macro MakeMoleculeDynamic.apply[Obj]
 
 
-  // Save ============================================================================================================================
+  // Save ======================================================================
 
   /** Save data applied to molecule attributes.
     * <br><br>
@@ -234,13 +233,14 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   def saveAsync2(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReportProxy]] = try {
     VerifyModel(_model, "save")
     if (isJsPlatform) {
-      val stmts    = conn.modelTransformer(_model).saveStmts
-      val stmtsEdn = Stmts2Edn(stmts)
-      //      println(stmts)
+      val stmts                = conn.modelTransformer(_model).saveStmts
+      val (stmtsEdn, uriAttrs) = Stmts2Edn(stmts)
+      //      stmts foreach println
       //      println(stmtsEdn)
-      moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn).recover { err =>
-        Left("Recovered from ajax call: " + err.toString)
-      }
+      moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs)
+      //        .recover { err =>
+      //        Left("Recovered from ajax call: " + err.toString)
+      //      }
     } else {
       Future(Left("testing... "))
       //      conn.transactAsync(conn.modelTransformer(_model).saveStmts).map(txReport => Right(txReport))
@@ -271,7 +271,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   }
 
 
-  // Insert ============================================================================================================================
+  // Insert ====================================================================
 
   /** Insert one or more rows of data matching molecule.
     * <br><br>
@@ -424,7 +424,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     }
   }
 
-  // Update ============================================================================================================================
+  // Update ====================================================================
 
   /** Update entity with data applied to molecule attributes.
     * <br><br>

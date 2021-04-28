@@ -1,21 +1,21 @@
 package molecule.core.marshalling
 
-import java.util.UUID
+//import java.util.UUID
 
 sealed trait DbProxy {
-  val uuid: UUID
+  val uuid: String
 }
 
 case class DatomicInMemProxy(
   edns: Seq[String],
-  uuid: UUID
+  uuid: String
 ) extends DbProxy
 
 case class DatomicPeerProxy(
   protocol: String,
   dbIdentifier: String,
   edns: Seq[String],
-  uuid: UUID
+  uuid: String
 ) extends DbProxy
 
 case class DatomicDevLocalProxy(
@@ -23,7 +23,7 @@ case class DatomicDevLocalProxy(
   storageDir: String,
   dbName: String,
   edns: Seq[String],
-  uuid: UUID
+  uuid: String
 ) extends DbProxy
 
 case class DatomicPeerServerProxy(
@@ -31,5 +31,5 @@ case class DatomicPeerServerProxy(
   secret: String,
   endpoint: String,
   dbName: String,
-  uuid: UUID
+  uuid: String
 ) extends DbProxy

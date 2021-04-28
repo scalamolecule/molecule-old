@@ -6,14 +6,11 @@
 lazy val molecule = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .enablePlugins(BuildInfoPlugin)
-  .settings(
-    //    Settings.base ++
-    Settings.shared ++
-      Publish.withoutDocs // save time without doc creation for publishLocal
+  .settings(Settings.shared ++
+    Publish.withoutDocs // save time without doc creation for publishLocal
     //      Publish.withDocs // make docs for publishSigned
   )
   .jsSettings(Settings.client)
-  //  .jsConfigure(_.enablePlugins(TzdbPlugin))
   .jvmSettings(Settings.server)
 
 

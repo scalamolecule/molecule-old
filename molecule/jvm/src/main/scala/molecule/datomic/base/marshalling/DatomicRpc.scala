@@ -1,14 +1,17 @@
 package molecule.datomic.base.marshalling
 
+import java.io.StringReader
 import java.util
-import java.util.UUID
+import java.util.{Collections, List => jList}
 import boopickle.Default._
 import cats.implicits._
+import datomic.Util._
 import datomic.{Peer, Util}
+import datomicClient.ClojureBridge
 import molecule.core.marshalling._
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
-import molecule.datomic.base.facade.{Conn, TxReport, TxReportProxy}
+import molecule.datomic.base.facade.{Conn, TxReportProxy}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
@@ -16,17 +19,26 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
+object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with ClojureBridge {
 
   println("############## DatomicRpc ###############")
 
+  def clearCache: Future[Boolean] = Future {
+    connCache.clear()
+    queryExecutorCache.clear()
+    println("CACHE CLEARED =========================================")
+    true
+  }
+
   def transactAsync(
     dbProxy: DbProxy,
-    stmtsEdn: String
+    stmtsEdn: String,
+    uriAttrs: Set[String]
   ): Future[Either[String, TxReportProxy]] = Future {
     try {
-      println("transact " + dbProxy.uuid + "\n" + stmtsEdn)
-      Right(getCachedConn(dbProxy).transact(stmtsEdn).proxy)
+      //      println("transact " + dbProxy.uuid + "\n" + stmtsEdn)
+      println(stmtsEdn)
+      Right(getCachedConn(dbProxy).transactRaw(javaStmts(stmtsEdn, uriAttrs)).proxy)
     } catch {
       case t: Throwable =>
         Left("Error from executing transaction in DatomicRpc: " + t.toString)
@@ -52,12 +64,14 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
       val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
 
       val queryTime = t.delta
-      log(s"\n---- Querying Datomic... --------------------\n" + datalogQuery)
-      log("dbProxy uuid: " + dbProxy.uuid)
-      log("Query time  : " + thousands(queryTime) + " ms")
-      log("rowCountAll : " + rowCountAll)
-      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
-      log("rowCount    : " + rowCount)
+      //      log(s"\n---- Querying Datomic... --------------------")
+      //      log(datalogQuery)
+      log(qTime(queryTime) + "  " + datalogQuery)
+      //      log("dbProxy uuid: " + dbProxy.uuid)
+      //      log("Query time  : " + thousands(queryTime) + " ms")
+      //      log("rowCountAll : " + rowCountAll)
+      //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
+      //      log("rowCount    : " + rowCount)
 
       if (rowCount == 0) {
         log.print
@@ -68,8 +82,8 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
         ).get
 
         // log("QueryResult: " + queryResult)
-        log("Rows2QueryResult took " + t.ms)
-        log("Sending data to client... Total server time: " + t.msTotal)
+        //        log("Rows2QueryResult took " + t.ms)
+        //        log("Sending data to client... Total server time: " + t.msTotal)
         log.print
         Right(queryResult)
       }
@@ -85,16 +99,15 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
   // (datalogQuery, inputs) => raw data
   type QueryExecutor = (String, Seq[AnyRef]) => util.Collection[util.List[AnyRef]]
 
-  // todo: better caching strategy?
-  val connCache          = mutable.Map.empty[UUID, Conn]
-  val queryExecutorCache = mutable.Map.empty[UUID, QueryExecutor]
+  // todo: proper caching
+  val connCache          = mutable.Map.empty[String, Conn]
+  val queryExecutorCache = mutable.Map.empty[String, QueryExecutor]
 
   private def getCachedConn(dbProxy: DbProxy): Conn = {
     connCache.getOrElse(dbProxy.uuid, {
       val conn = dbProxy match {
         case DatomicInMemProxy(edns, _) =>
           //          Datomic_Peer.connect("mem", dbIdentifier)
-          connCache.clear()
           Datomic_Peer.recreateDbFromEdn(edns)
 
         case DatomicPeerProxy(protocol, dbIdentifier, _, _) =>
@@ -118,6 +131,7 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
           Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
       }
       connCache(dbProxy.uuid) = conn
+      //      println("@@@@@ cached conn         : " + dbProxy.uuid + "   " + connCache.size)
       conn
     })
   }
@@ -126,16 +140,15 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
     queryExecutorCache.getOrElse(dbProxy.uuid, {
       val queryExecutor = dbProxy match {
         case _: DatomicInMemProxy =>
-          val db = getCachedConn(dbProxy).db.getDatomicDb
-          queryExecutorCache.clear()
+          val conn = getCachedConn(dbProxy)
           (datalogQuery: String, inputs: Seq[AnyRef]) => {
-            Peer.q(datalogQuery, db +: inputs: _*)
+            Peer.q(datalogQuery, conn.db.getDatomicDb +: inputs: _*)
           }
 
         case _: DatomicPeerProxy =>
-          val db = getCachedConn(dbProxy).db.getDatomicDb
+          val conn = getCachedConn(dbProxy)
           (datalogQuery: String, inputs: Seq[AnyRef]) => {
-            Peer.q(datalogQuery, db +: inputs: _*)
+            Peer.q(datalogQuery, conn.db.getDatomicDb +: inputs: _*)
           }
 
         case _: DatomicDevLocalProxy =>
@@ -151,12 +164,46 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers {
           }
       }
       queryExecutorCache(dbProxy.uuid) = queryExecutor
+      //      println("@@@@@ cached queryExecutor: " + dbProxy.uuid + "   " + queryExecutorCache.size)
       queryExecutor
     })
   }
 
 
   // Helpers -------------------------------------------------
+
+  // Necessary for `readString`
+  require("clojure.core.async")
+
+  def javaStmts(edn: String, uriAttrs: Set[String]): jList[AnyRef] = {
+    def uri(s: AnyRef): AnyRef = readString(s"""#=(new java.net.URI "$s")""")
+    val stmts = readAll(new StringReader(edn)).get(0).asInstanceOf[jList[AnyRef]]
+    if (uriAttrs.isEmpty) {
+      stmts
+    } else {
+      val stmtsSize = stmts.size()
+      val newStmts  = new util.ArrayList[jList[_]](stmtsSize)
+      stmts.forEach { stmtRaw =>
+        val stmt = stmtRaw.asInstanceOf[jList[AnyRef]]
+        if (uriAttrs.contains(stmt.get(2).toString)) {
+          val uriStmt = stmt.get(0).toString match {
+            case ":db/add"    => list(stmt.get(0), stmt.get(1), stmt.get(2), uri(stmt.get(3)))
+            case ":db.fn/cas" => list(stmt.get(0), stmt.get(1), stmt.get(2), uri(stmt.get(3)), uri(stmt.get(4)))
+            case _            => stmt
+          }
+          newStmts.add(uriStmt)
+        } else {
+          newStmts.add(stmt)
+        }
+      }
+      Collections.unmodifiableList(newStmts)
+    }
+  }
+
+  def qTime(queryTime: Long) = {
+    val indents = 5 - queryTime.toString.length
+    " " * indents + thousands(queryTime) + " ms"
+  }
 
   private def unmarshallInputs(lists: Seq[(Int, AnyRef)]): Seq[Object] = {
     lists.sortBy(_._1).map(_._2).map {

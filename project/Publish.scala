@@ -67,9 +67,7 @@ object Publish {
     publish / skip := true,
     publish := ((): Unit),
     publishLocal := ((): Unit),
-//    publishArtifact in(Compile, packageDoc) := false,
-//    Compile / publishArtifact / packageDoc := false,
     Compile / packageDoc / publishArtifact := false,
-    sources in(Compile, doc) := Seq.empty
+    Compile / doc / sources := Seq.empty
   )
 }

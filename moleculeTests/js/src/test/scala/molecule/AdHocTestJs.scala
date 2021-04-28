@@ -1,6 +1,7 @@
 package molecule
 
-import java.util.UUID
+import java.net.URI
+import java.util.{Date, UUID}
 import molecule.core.marshalling.MoleculeWebClient.moleculeRpc
 import molecule.core.marshalling.{ConnProxy, Conn_Js, DatomicInMemProxy, DatomicPeerProxy}
 import molecule.datomic.api.out3._
@@ -13,7 +14,7 @@ import scala.concurrent.Future
 
 object AdHocTestJs extends TestSuite {
 
-  def peerConn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973", Nil, UUID.randomUUID()))
+  def peerConn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973", Nil, UUID.randomUUID().toString))
 
   implicit val conn = peerConn
 
@@ -22,6 +23,10 @@ object AdHocTestJs extends TestSuite {
     def ===(expectedValue: T): Future[Unit] = eitherFuture.map {
       case Right(realValue) => realValue ==> expectedValue
       case Left(realValue)  => realValue ==> expectedValue
+    }
+    def isEmpty: Future[Unit] = eitherFuture.map {
+      case Right(realValue) => realValue ==> "Empty result set"
+      case Left(realValue)  => realValue ==> "Empty result set"
     }
   }
 

@@ -5,9 +5,12 @@ import scala.concurrent.Future
 
 trait MoleculeRpc {
 
+  def clearCache: Future[Boolean]
+
   def transactAsync(
     dbProxy: DbProxy,
-    stmtsEdn: String
+    stmtsEdn: String,
+    uriAttrs: Set[String]
   ): Future[Either[String, TxReportProxy]]
 
 

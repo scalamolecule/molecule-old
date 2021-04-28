@@ -2,6 +2,7 @@ package molecule.core.marshalling
 
 import java.util.{List => jList}
 import molecule.datomic.base.ast.transactionModel.Statement
+import scala.concurrent.Future
 
 
 /** Marshalling methods for casting raw row (server) / QueryResult (client) data.
@@ -18,6 +19,9 @@ trait Marshalling[Obj, Tpl] {
     *
     */
   protected lazy val moleculeRpc: MoleculeRpc = ???
+
+
+  def clearCache: Future[Boolean] = moleculeRpc.clearCache
 
 
   /** Indexes to resolve marshalling for each attribute value in a row:
@@ -57,5 +61,5 @@ trait Marshalling[Obj, Tpl] {
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
 
 
-  def stmts2edn(stmts: Seq[Statement]): String = Stmts2Edn(stmts)
+//  def stmts2edn(stmts: Seq[Statement]): String = Stmts2Edn(stmts)
 }

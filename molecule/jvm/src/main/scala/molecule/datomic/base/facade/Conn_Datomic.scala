@@ -6,9 +6,10 @@ import datomic.Peer.function
 import datomic.Util.{list, read, readAll}
 import datomic.{Peer, Util}
 import molecule.core.ast.elements.Model
+import molecule.core.marshalling.Stmts2Edn.buf
 import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.ast.tempDb.TempDb
-import molecule.datomic.base.ast.transactionModel.{Cas, RetractEntity, Statement, TempId}
+import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -107,6 +108,7 @@ trait Conn_Datomic extends Conn {
       case i: Int             => i.toLong
       case f: Float           => f.toDouble
       case TempId(part, i)    => getTempId(part, i)
+      case Enum(prefix, enum) => prefix + enum
       case bigInt: BigInt     => bigInt.bigInteger
       case bigDec: BigDecimal => bigDec.bigDecimal
       case other              => other

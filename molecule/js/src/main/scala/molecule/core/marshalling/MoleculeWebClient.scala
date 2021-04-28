@@ -1,7 +1,6 @@
 package molecule.core.marshalling
 
 import boopickle.Default._
-import playing.sloth.{Serializations, WebClient}
 
 /** RPC via Sloth ajax web client to server
   *
@@ -14,7 +13,7 @@ object MoleculeWebClient extends WebClient with Serializations {
     *
     */
   val moleculeRpc: MoleculeRpc =
-    clientAjax(s"http://localhost:8080/ajax")
+    clientAjax("http://localhost:8080/ajax")
       .wire[MoleculeRpc]
 
 }

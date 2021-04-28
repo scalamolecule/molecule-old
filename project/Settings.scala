@@ -42,7 +42,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
   val client: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %%% "scala-java-time" % "2.0.0"
+      "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.2.2",
+      "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
@@ -52,7 +54,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val server: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
-        //        "org.scala-lang" % "scala-reflect" % scalaVersion.value,
         "org.specs2" %% "specs2-core" % "4.10.6",
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
         "com.typesafe.akka" %% "akka-stream" % "2.6.14",
@@ -63,8 +64,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-protobuf-v3" % "2.6.14",
         "com.typesafe.akka" %% "akka-http" % "10.2.4",
         "ch.megard" %% "akka-http-cors" % "1.1.1",
-        "com.softwaremill.retry" %% "retry" % "0.3.3"
-//        "ch.qos.logback" % "logback-classic" % "1.2.3"
       ),
       testFrameworks += new TestFramework("utest.runner.Framework")
     ) ++ (if (datomicProtocol == "free") {
@@ -77,11 +76,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
       )
     })
-//    ++ Seq(
-//      // Avoid double bindings to slf4j
-//      libraryDependencies := libraryDependencies.value
-//        .map(_.exclude("org.slf4j", "slf4j-nop"))
-//    )
   }
 
 
@@ -89,12 +83,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.lihaoyi" %%% "utest" % "0.7.9",
-      "com.marcgrue" %%% "playing-rpc-autowire" % "0.1.0",
-      "com.marcgrue" %%% "playing-rpc-sloth" % "0.2.2-SNAPSHOT"
+      "io.suzaku" %%% "boopickle" % "1.3.3",
+      "com.github.cornerman" %%% "sloth" % "0.3.0"
     ),
-    testFrameworks += new TestFramework("utest.runner.Framework"),
-
-
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,
       "datomicProtocol" -> datomicProtocol,
@@ -126,7 +117,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     // Let IntelliJ detect sbt-molecule-created jars in unmanaged lib directory
     exportJars := true,
 
-    // Run sbt tests for all systems sequentially to avoid data locks with db
-    Test / parallelExecution := false,
+    // Run tests for all systems sequentially to avoid data locks with db
+    Test / parallelExecution := false
   )
 }
