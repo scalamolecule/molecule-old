@@ -73,7 +73,7 @@ object AjaxResponder extends App with Serializations {
     .newServerAt("localhost", 8080)
     .bind(route)
     .onComplete {
-      case Success(b) => println(s"server is running ${b.localAddress} ")
+      case Success(b) => println(s"Ajax server is running ${b.localAddress} ")
       case Failure(e) => println(s"there was an error starting the server $e")
     }
 }

@@ -1,8 +1,8 @@
 package molecule.setup.core
 
 import java.net.URI
-import java.util.{Date, UUID}
 import java.util.UUID._
+import java.util.{Date, UUID}
 import molecule.core.util.DateHandling
 
 trait CoreData extends DateHandling {

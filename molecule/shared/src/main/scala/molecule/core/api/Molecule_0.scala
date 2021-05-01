@@ -238,9 +238,9 @@ trait Molecule_0[Obj, Tpl] extends Molecule
       //      stmts foreach println
       //      println(stmtsEdn)
       moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs)
-      //        .recover { err =>
-      //        Left("Recovered from ajax call: " + err.toString)
-      //      }
+        .recover { err =>
+          Left("Recovered from ajax call: " + err.toString)
+        }
     } else {
       Future(Left("testing... "))
       //      conn.transactAsync(conn.modelTransformer(_model).saveStmts).map(txReport => Right(txReport))

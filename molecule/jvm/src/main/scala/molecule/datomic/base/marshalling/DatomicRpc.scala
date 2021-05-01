@@ -26,7 +26,7 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with Clojur
   def clearCache: Future[Boolean] = Future {
     connCache.clear()
     queryExecutorCache.clear()
-    println("CACHE CLEARED =========================================")
+    println("==== CACHE CLEARED =========================================")
     true
   }
 

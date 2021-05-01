@@ -16,7 +16,7 @@ object Stmts2Edn extends Helpers {
     var following = false
     stmts.foreach { stmt =>
       if (following)
-        buf.append("\n")
+        buf.append("\n ") // Indentation for subsequent clauses to align all
       else
         following = true
       addStmt(stmt)
@@ -25,9 +25,6 @@ object Stmts2Edn extends Helpers {
   }
 
   def addStmt(stmt: Statement): Unit = stmt match {
-    //    case Add(e, a, Values(Eq(Seq(enum)), Some(prefix)), _) =>
-    //      buf.append(s"[:db/add ${eid(e)} $a $prefix$enum]")
-
     case Add(e, a, v, _) =>
       buf.append(s"[:db/add ${eid(e)} $a ")
       value(a, v)
