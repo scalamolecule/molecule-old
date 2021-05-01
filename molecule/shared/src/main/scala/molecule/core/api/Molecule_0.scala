@@ -235,12 +235,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     if (isJsPlatform) {
       val stmts                = conn.modelTransformer(_model).saveStmts
       val (stmtsEdn, uriAttrs) = Stmts2Edn(stmts)
-      //      stmts foreach println
-      //      println(stmtsEdn)
       moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs)
-        .recover { err =>
-          Left("Recovered from ajax call: " + err.toString)
-        }
     } else {
       Future(Left("testing... "))
       //      conn.transactAsync(conn.modelTransformer(_model).saveStmts).map(txReport => Right(txReport))
