@@ -103,7 +103,7 @@ trait TxFunctions {
   def transactFnAsync(
     txFnCall: Seq[Statement],
     txMolecules: Molecule*
-  ): Future[TxReport] = macro TxFunctionCall.asyncTxFnCall
+  ): Future[Either[String, TxReport]] = macro TxFunctionCall.asyncTxFnCall
 
 
   /** Inspect tx function invocation
@@ -260,7 +260,7 @@ object TxFunctions extends Helpers with JavaUtil {
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
+  )(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = try {
     val txFnInstallFuture: Future[Any] = {
       // Install transaction function if not installed yet
       // todo: pull call is blocking - can we make it non-blocking too?
@@ -273,7 +273,7 @@ object TxFunctions extends Helpers with JavaUtil {
       }
     }
 
-    txFnInstallFuture flatMap { txFnInstalled =>
+    txFnInstallFuture.flatMap { txFnInstalled =>
       // Build transaction function call clause
       val txFnInvocationClause = list(list(s":$txFn" +:
         txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))

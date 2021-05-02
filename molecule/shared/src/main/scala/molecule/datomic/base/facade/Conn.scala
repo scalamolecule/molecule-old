@@ -163,19 +163,19 @@ trait Conn {
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[TxReport]
+                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
   def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[TxReport]
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
   def transactAsync(edn: String, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[TxReport]
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
   def transactAsync(stmtsReader: Reader)
-                   (implicit ec: ExecutionContext): Future[TxReport]
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
   def transactAsync(edn: String)
-                   (implicit ec: ExecutionContext): Future[TxReport]
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
   /** Asynchronously transact Seq of Seqs of [[molecule.datomic.base.ast.transactionModel.Statement Statement]]s
     *
@@ -183,7 +183,7 @@ trait Conn {
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
   def transactAsync(scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[TxReport]
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
 
   def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_]

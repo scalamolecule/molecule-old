@@ -128,7 +128,7 @@ trait DatomicEntity {
     * @group retract
     * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
     */
-  def retractAsync(implicit ec: ExecutionContext): Future[TxReport]
+  def retractAsync(implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
   /** Get entity retraction transaction data without affecting the database.
     * <br><br>

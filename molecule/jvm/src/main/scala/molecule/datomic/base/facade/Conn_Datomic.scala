@@ -5,9 +5,6 @@ import java.util.{Collections, Date, Collection => jCollection, List => jList}
 import datomic.Peer.function
 import datomic.Util.{list, read, readAll}
 import datomic.{Peer, Util}
-import molecule.core.ast.elements.Model
-import molecule.core.marshalling.Stmts2Edn.buf
-import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.ast.tempDb.TempDb
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.util.Inspect
@@ -49,23 +46,23 @@ trait Conn_Datomic extends Conn {
 
 
   def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[TxReport] =
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
     transactAsyncRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
 
   def transactAsync(edn: String, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[TxReport] =
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
     transactAsyncRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
 
   def transactAsync(stmtsReader: Reader)
-                   (implicit ec: ExecutionContext): Future[TxReport] =
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
     transactAsyncRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
 
   def transactAsync(edn: String)
-                   (implicit ec: ExecutionContext): Future[TxReport] =
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
     transactAsyncRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
 
   def transactAsync(scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[TxReport] =
+                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
     transactAsyncRaw(stmts2java(scalaStmts), scalaStmts)
 
 

@@ -67,7 +67,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
   def retract: TxReport = conn.transact(getRetractStmts)
 
-  def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
+  def retractAsync(implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
     conn.transactAsync(getRetractStmts)
 
   def getRetractStmts: List[RetractEntity] = List(RetractEntity(eid))
@@ -87,7 +87,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
     def retract: TxReport = conn.transact(stmts)
 
-    def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
+    def retractAsync(implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
       conn.transactAsync(stmts)
 
     def inspectRetract: Unit =

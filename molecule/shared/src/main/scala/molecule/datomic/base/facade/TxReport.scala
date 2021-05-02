@@ -23,7 +23,7 @@ trait TxReport {
     *
     * @return
     */
-  def eid: Long
+  def eid: Long = eids.head
 
   def inspect: Unit
 
@@ -35,6 +35,4 @@ trait TxReport {
 
   /** Get transaction instant (Date). */
   def inst: Date
-
-  def proxy: TxReportProxy = TxReportProxy(eids, t, tx, inst, toString)
 }

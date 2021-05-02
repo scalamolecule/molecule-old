@@ -58,7 +58,7 @@ trait TxBundles {
     */
   def transactBundleAsync(
     stmtss: Seq[Statement]*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] =
+  )(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] =
     conn.transactAsync(stmtss.flatten)
 
 

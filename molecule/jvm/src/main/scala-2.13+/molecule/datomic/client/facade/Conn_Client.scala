@@ -18,6 +18,7 @@ import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
 import molecule.datomic.base.transform.Query2String
+import molecule.datomic.peer.facade.TxReport_Peer
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
@@ -196,14 +197,12 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
   }
 
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[TxReport] = {
-    if (_adhocDb.isDefined) {
-      Future {
-        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
-      }
+                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]] = Future {
+    try {
+      if (_adhocDb.isDefined) {
+        Right(TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts))
 
-    } else if (_testDb.isDefined) {
-      Future {
+      } else if (_testDb.isDefined) {
         // In-memory "transaction"
         val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
@@ -212,11 +211,14 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
         //      val dbAfter = txReport.dbAfter
         val dbAfter = txReport.dbAfter.asOf(txReport.t)
         _testDb = Some(dbAfter)
-        txReport
+        Right(txReport)
+
+      } else {
+        // Live transaction (simply wrapping in future instead using datomic async api)
+        Right(TxReport_Client(clientConn.transact(javaStmts)))
       }
-    } else {
-      // Live transaction (simply wrapping in future instead using datomic async api)
-      Future(TxReport_Client(clientConn.transact(javaStmts)))
+    } catch {
+      case t: Throwable => Left(t.toString)
     }
   }
 

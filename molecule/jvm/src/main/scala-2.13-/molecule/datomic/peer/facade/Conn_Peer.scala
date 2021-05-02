@@ -163,27 +163,37 @@ class Conn_Peer(val peerConn: datomic.Connection)
   }
 
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[TxReport] = {
+                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]] = {
     if (_adhocDb.isDefined) {
-      Future {
-        TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
-      }
+      Future(
+        try {
+          Right(TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts))
+        } catch {
+          case t: Throwable => Left(t.toString)
+        }
+      )
 
     } else if (_testDb.isDefined) {
       Future {
-        // In-memory "transaction"
-        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
+        try {
+          Right(TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts))
+          // In-memory "transaction"
+          val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
 
-        // Continue with updated in-memory db
-        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-        //      val dbAfter = txReport.dbAfter
-        val dbAfter = txReport.dbAfter.asOf(txReport.t)
-        _testDb = Some(dbAfter)
-        txReport
+          // Continue with updated in-memory db
+          // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+          //      val dbAfter = txReport.dbAfter
+          val dbAfter = txReport.dbAfter.asOf(txReport.t)
+          _testDb = Some(dbAfter)
+          Right(txReport)
+        } catch {
+          case t: Throwable => Left(t.toString)
+        }
       }
+
     } else {
       // Live transaction
-      val moleculeInvocationFuture: Future[util.Map[_, _]] = try {
+      try {
         val listenableFuture = peerConn.transactAsync(javaStmts)
         val p                = Promise[util.Map[_, _]]()
         listenableFuture.addListener(
@@ -202,12 +212,11 @@ class Conn_Peer(val peerConn: datomic.Connection)
           },
           (arg0: Runnable) => ec.execute(arg0)
         )
-        p.future
+        p.future.map { moleculeInvocationResult: java.util.Map[_, _] =>
+          Right(TxReport_Peer(moleculeInvocationResult, scalaStmts))
+        }
       } catch {
-        case NonFatal(ex) => Future.failed(ex)
-      }
-      moleculeInvocationFuture map { moleculeInvocationResult: java.util.Map[_, _] =>
-        TxReport_Peer(moleculeInvocationResult, scalaStmts)
+        case NonFatal(ex) => Future(Left(ex.toString))
       }
     }
   }

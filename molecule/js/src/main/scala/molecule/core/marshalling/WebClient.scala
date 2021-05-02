@@ -3,7 +3,7 @@ package molecule.core.marshalling
 import java.nio.ByteBuffer
 import boopickle.Default._
 import cats.implicits._
-import sloth.{Client, ClientException}
+import sloth._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

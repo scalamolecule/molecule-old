@@ -1,6 +1,5 @@
 package molecule.tests.js
 
-import java.util.UUID
 import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
 import molecule.datomic.api.in1_out14._
 import molecule.setup.core.CoreData
@@ -13,9 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object ValueTypes extends TestSuite with CoreData {
 
   lazy val tests = Tests {
-    implicit val conn = Conn_Js(
-      DatomicInMemProxy(CoreTestSchema.datomicPeer, UUID.randomUUID().toString)
-    )
+    implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
 
     test("one") {
       for {
@@ -32,8 +29,9 @@ object ValueTypes extends TestSuite with CoreData {
           .bigInt(bigInt1)
           .bigDec(bigDec1)
           .enum("enum1")
-          .saveAsync2
-        res <- Ns.e.str.int.float.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.getAsync2
+          .saveAsync
+        res <- Ns.e.str.int.float.long.double.bool
+          .date.uuid.uri.bigInt.bigDec.enum.getAsync2
       } yield {
         res ==> Right(List(
           (tx.eid, "a", 1, 1.1f, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, "enum1")
@@ -56,8 +54,9 @@ object ValueTypes extends TestSuite with CoreData {
           .bigInts(bigInt1, bigInt2)
           .bigDecs(bigDec1, bigDec2)
           .enums("enum1", "enum2")
-          .saveAsync2
-        res <- Ns.e.strs.ints.floats.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.getAsync2
+          .saveAsync
+        res <- Ns.e.strs.ints.floats.longs.doubles.bools
+          .dates.uuids.uris.bigInts.bigDecs.enums.getAsync2
       } yield {
         res ==> Right(List((
           tx.eid,
@@ -91,8 +90,9 @@ object ValueTypes extends TestSuite with CoreData {
           .uriMap(Map("a" -> uri1))
           .bigIntMap(Map("a" -> bigInt1))
           .bigDecMap(Map("a" -> bigDec1))
-          .saveAsync2
-        res <- Ns.e.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync2
+          .saveAsync
+        res <- Ns.e.strMap.intMap.floatMap.longMap.doubleMap.boolMap
+          .dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync2
       } yield {
         res ==> Right(List((
           tx.eid,

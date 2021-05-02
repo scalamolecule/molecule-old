@@ -80,14 +80,12 @@ case class TxReport_Client(
        |  eids      : $eids
        |}""".stripMargin
 
-  def printEidStats() = {
+  def printEidStats(): String = {
     s"""
        |
        |  txData    : ${txDataRaw.map(datom2string).mkString("\n              ")}
        |  tempids   : ${clientTxReport.tempIds}""".stripMargin
   }
-
-  lazy val eid: Long = eids.head
 
   /** Get database value before transaction. */
   lazy val dbBefore: Db = clientTxReport.dbBefore

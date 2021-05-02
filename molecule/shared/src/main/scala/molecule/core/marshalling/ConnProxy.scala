@@ -59,17 +59,17 @@ trait ConnProxy extends Conn {
 
   override def transact(scalaStmts: Seq[Statement]): TxReport = ???
 
-  override def transactAsyncRaw(javaStmts: util.List[_], scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsyncRaw(javaStmts: util.List[_], scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = ???
 
-  override def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = ???
 
-  override def transactAsync(edn: String, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(edn: String, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = ???
 
-  override def transactAsync(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = ???
 
-  override def transactAsync(edn: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(edn: String)(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = ???
 
-  override def transactAsync(scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transactAsync(scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = ???
 
   override def buildTxFnInstall(txFn: String, args: Seq[Any]): util.List[_] = ???
 

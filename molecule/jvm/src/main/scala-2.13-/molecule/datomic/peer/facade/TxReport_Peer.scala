@@ -80,8 +80,6 @@ case class TxReport_Peer(
        |  eids      : $eids
        |}""".stripMargin
 
-  lazy val eid: Long = eids.head
-
   /** Get database value before transaction. */
   lazy val dbBefore: Database = rawTxReport.get(Connection.DB_BEFORE).asInstanceOf[Database]
 

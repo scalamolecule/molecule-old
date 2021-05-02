@@ -11,7 +11,7 @@ import datomicClient.ClojureBridge
 import molecule.core.marshalling._
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
-import molecule.datomic.base.facade.{Conn, TxReportProxy}
+import molecule.datomic.base.facade.{Conn, TxReport, TxReportRPC}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
@@ -21,24 +21,21 @@ import scala.concurrent.Future
 
 object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with ClojureBridge {
 
-  println("############## DatomicRpc ###############")
-
-  def clearCache: Future[Boolean] = Future {
-    connCache.clear()
-    queryExecutorCache.clear()
-    println("==== CACHE CLEARED =========================================")
-    true
-  }
 
   def transactAsync(
     dbProxy: DbProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
-  ): Future[Either[String, TxReportProxy]] = Future {
+  ): Future[Either[String, TxReportRPC]] = Future {
     try {
       //      println("transact " + dbProxy.uuid + "\n" + stmtsEdn)
       println(stmtsEdn)
-      Right(getCachedConn(dbProxy).transactRaw(javaStmts(stmtsEdn, uriAttrs)).proxy)
+      val txReport = getCachedConn(dbProxy).transactRaw(javaStmts(stmtsEdn, uriAttrs))
+      Right(
+        TxReportRPC(
+          txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
+        )
+      )
     } catch {
       case t: Throwable =>
         Left("Error from executing transaction in DatomicRpc: " + t.toString)
@@ -66,7 +63,8 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with Clojur
       val queryTime = t.delta
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
-      log(qTime(queryTime) + "  " + datalogQuery)
+      //      log(qTime(queryTime) + "  " + datalogQuery)
+      log(datalogQuery + "         " + qTime(queryTime))
       //      log("dbProxy uuid: " + dbProxy.uuid)
       //      log("Query time  : " + thousands(queryTime) + " ms")
       //      log("rowCountAll : " + rowCountAll)
@@ -93,6 +91,12 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with Clojur
     }
   }
 
+
+  def clearCache: Future[Boolean] = Future {
+    connCache.clear()
+    queryExecutorCache.clear()
+    true
+  }
 
   // Cache Conn and QueryExecutors ---------------------------------------------
 

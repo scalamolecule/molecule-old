@@ -2,7 +2,6 @@ package molecule.core.api.getAsyncTpl
 
 import java.util.{Date, List => jList}
 import molecule.core.api.Molecule_0
-import molecule.core.marshalling.ConnProxy
 import molecule.core.ops.ColOps
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}

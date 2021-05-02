@@ -15,7 +15,7 @@ trait RetractMolecule {
     *
     * @return Future[molecule.facade.TxReport] with result of transaction
     */
-  def retractAsync(implicit ec: ExecutionContext): Future[TxReport]
+  def retractAsync(implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
   /** Inspect entity retraction with transaction meta data.
     * {{{

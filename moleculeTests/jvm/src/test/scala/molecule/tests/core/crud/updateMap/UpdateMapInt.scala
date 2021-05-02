@@ -15,20 +15,30 @@ class UpdateMapInt extends TestSpec {
 
     // todo: remove when async implemented for other systems
     if (system == SystemPeer) {
-      // Update asynchronously and return Future[TxReport]
+      // Update asynchronously and return Future[Either[String, TxReport]]
       // Calls Datomic's transactAsync API
 
-      // Initial data
-      Ns.intMap("str1" -> 1).saveAsync map { tx => // tx report from successful insert transaction
-        // Inserted entity
-        val e = tx.eid
-        Ns.intMap.get === List("str1" -> 1)
+      //      // Initial data
+      //      Ns.intMap("str1" -> 1).saveAsync map { tx => // tx report from successful insert transaction
+      //        // Inserted entity
+      //        val e = tx.eid
+      //        Ns.intMap.get === List("str1" -> 1)
+      //
+      //        // Update entity asynchronously
+      //        Ns(e).intMap.assert("str1" -> 10).updateAsync.map { tx2 => // tx report from successful update transaction
+      //          // Current data
+      //          Ns.intMap.get === List("str1" -> 10)
+      //        }
+      //      }
 
-        // Update entity asynchronously
-        Ns(e).intMap.assert("str1" -> 10).updateAsync.map { tx2 => // tx report from successful update transaction
-          // Current data
-          Ns.intMap.get === List("str1" -> 10)
-        }
+      for {
+        Right(txr) <- Ns.intMap("str1" -> 1).saveAsync
+        e = txr.eid
+        res1 <- Ns.intMap.getAsync2
+        res2 <- Ns(e).intMap.assert("str1" -> 10).updateAsync
+      } yield {
+        res1 === Right(List("str1" -> 1))
+        res2 === Right(List("str1" -> 10))
       }
     }
     // For brevity, the synchronous equivalent `update` is used in the following tests

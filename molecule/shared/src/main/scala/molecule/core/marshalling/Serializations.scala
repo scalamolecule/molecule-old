@@ -3,7 +3,7 @@ package molecule.core.marshalling
 import java.net.URI
 import java.nio.ByteBuffer
 import boopickle.Default._
-import chameleon.{Deserializer, Serializer, SerializerDeserializer}
+import chameleon._
 import scala.util.{Failure, Success, Try}
 
 
