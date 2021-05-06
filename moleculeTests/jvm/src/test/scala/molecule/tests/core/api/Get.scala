@@ -46,12 +46,12 @@ class Get extends TestSpec with JavaUtil {
 
 
   "Async" in new Setup {
-    await(Ns.int.getAsync) === List(1, 2, 3)
+    await(Ns.int.getAsync) === Right(List(1, 2, 3))
     await(Ns.int.getAsyncArray) === Array(1, 2, 3)
     await(Ns.int.getAsyncIterable).iterator.toList === Iterator(1, 2, 3).toList
     await(Ns.int.getAsyncRaw).ints === List(1, 2, 3)
 
-    await(Ns.int.getAsync(2)) === List(1, 2)
+    await(Ns.int.getAsync(2)) === Right(List(1, 2))
     await(Ns.int.getAsyncArray(2)) === Array(1, 2)
     await(Ns.int.getAsyncRaw(2)).ints === List(1, 2)
   }

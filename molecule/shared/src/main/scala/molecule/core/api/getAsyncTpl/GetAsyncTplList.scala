@@ -2,11 +2,10 @@ package molecule.core.api.getAsyncTpl
 
 import java.util.{Date, List => jList}
 import molecule.core.api.Molecule_0
+import molecule.core.marshalling.ConnProxy
 import molecule.core.ops.ColOps
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.Query2String
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -33,6 +32,7 @@ import scala.language.implicitConversions
 trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with GetAsyncTplArray[Obj, Tpl] =>
 
 
+
   // get ================================================================================================
 
   /** Get `Future` with `List` of all rows as tuples matching molecule.
@@ -47,10 +47,13 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsync(implicit conn: Conn): Future[List[Tpl]] = Future(get(conn))
-
-
-  def getAsync2(implicit conn: Conn): Future[Either[String, List[Tpl]]] = getAsync2(-1)
+  def getAsync(implicit conn: Conn): Future[Either[String, List[Tpl]]] = {
+    if (isJsPlatform) {
+      getAsync(-1)
+    } else {
+      Future(Right(get(conn)))
+    }
+  }
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule.
@@ -66,39 +69,11 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsync(n: Int)(implicit conn: Conn): Future[List[Tpl]] =
-    Future(get(n)(conn))
-
-
-  def getAsync2(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = try {
-    if (isJsPlatform) {
-      val query        = _nestedQuery.getOrElse(_query)
-      val q2s          = Query2String(query)
-      val datalogQuery = q2s.multiLine(60)
-      val p            = q2s.p
-      val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-      val (l, ll, lll) = marshallInputs(query)
-      // Fetch QueryResult with Ajax call
-      moleculeRpc.queryAsync(conn.dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
-        .recover { err =>
-          Left("Recovered from ajax call: " + err.toString)
-        }.map {
-        case Right(qr) =>
-          val maxRows    = if (n == -1) qr.maxRows else n
-          val tplsBuffer = new ListBuffer[Tpl]
-          val columns    = qr2tpl(qr) // macro generated extractor
-          var rowIndex   = 0
-          while (rowIndex < maxRows) {
-            tplsBuffer += columns(rowIndex)
-            rowIndex += 1
-          }
-          Right(tplsBuffer.toList)
-
-        case Left(err) => Left(err) // error from QueryExecutor
-      }
-    } else {
-      Future(Right(get(conn)))
-    }
+  def getAsync(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = try {
+    if (isJsPlatform)
+      conn.asInstanceOf[ConnProxy].qAsync(_nestedQuery.getOrElse(_query), n, indexes, qr2tpl)
+    else
+      Future(Right(get(n)(conn)))
   } catch {
     case t: Throwable => Future(Left("Error extracting data from QueryResult: " + t.toString))
   }

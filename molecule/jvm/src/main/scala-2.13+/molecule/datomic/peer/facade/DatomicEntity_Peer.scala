@@ -1,6 +1,7 @@
 package molecule.datomic.peer.facade
 
 import java.util.{Date, UUID, Collection => jCollection}
+import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
 import molecule.datomic.base.api.DatomicEntityImpl
 import scala.jdk.CollectionConverters._
@@ -23,11 +24,7 @@ case class DatomicEntity_Peer(
   def keySet: Set[String] = entity.keySet().asScala.toSet
   def keys: List[String] = entity.keySet().asScala.toList
 
-  def rawValue(key: String): Any = {
-    val raw = entity.get(key)
-    val b   = raw
-    b
-  }
+  def rawValue(key: String): Any = entity.get(key)
 
   private[molecule] def toScala(
     key: String,

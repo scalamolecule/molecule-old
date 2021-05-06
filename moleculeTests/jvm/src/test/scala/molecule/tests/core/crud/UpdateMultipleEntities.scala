@@ -23,7 +23,7 @@ class UpdateMultipleEntities extends TestSpec {
         ("b", 2),
         ("c", 3),
         ("d", 4)
-      ) map { tx => // tx report from successful insert transaction
+      ) map { case Right(tx) => // tx report from successful insert transaction
         // 4 inserted entities
         val List(a, b, c, d) = tx.eids
         Ns.int.get === List(
@@ -34,7 +34,7 @@ class UpdateMultipleEntities extends TestSpec {
         )
 
         // Update multiple entities asynchronously
-        Ns(a, b).int(5).updateAsync.map { tx2 => // tx report from successful update transaction
+        Ns(a, b).int(5).updateAsync.map { case Right(tx2) => // tx report from successful update transaction
           // Current data
           Ns.int.get.sorted === List(
             ("a", 5),

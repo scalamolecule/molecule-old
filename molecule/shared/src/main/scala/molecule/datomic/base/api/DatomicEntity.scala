@@ -7,6 +7,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait DatomicEntity {
 
+  def mapOneLevel: Map[String, Any]
+
+  def map: Map[String, Any]
+
   def keySet: Set[String]
 
   def keys: List[String]

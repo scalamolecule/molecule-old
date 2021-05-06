@@ -6,6 +6,8 @@ import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.exception.Model2TransactionException
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 
 
 /** Model to Statements transformer.
@@ -16,6 +18,8 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
   private def err(method: String, msg: String) = {
     throw new Model2TransactionException(s"[$method]  $msg")
   }
+
+  val datomicTx = "datomic.tx"
 
   val genericStmts: Seq[Statement] = {
 
@@ -136,7 +140,6 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
     }
 
     val model1 = Model(replace$(model.elements))
-    //    x(50, model, model1)
     model1.elements.foldLeft("_": Any, Seq[Statement]()) {
       case ((eSlot, stmts), element) => resolveElement(eSlot, stmts, element)
     }._2
@@ -182,7 +185,6 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
 
     def p(v: Any): Any = v match {
       case f: Float              => f.toString.toDouble
-//      case _ if prefix.isDefined => prefix.get + v
       case _ if prefix.isDefined => Enum(prefix.get, v.toString)
       case bd: BigDecimal        => bd + 0.0 // ensure decimal digits
       case _                     => v
@@ -198,16 +200,29 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
       if (id.isInstanceOf[TempId]) {
         Nil
       } else {
+        //        val query = if (prefix.isDefined)
+        //          s"""[:find ?enums
+        //             | :in $$ ?id
+        //             | :where [?id $attr ?a]
+        //             |        [?a :db/ident ?b]
+        //             |        [(name ?b) ?enums]
+        //             |]""".stripMargin
+        //        else
+        //          s"[:find ?values :in $$ ?id :where [?id $attr ?values]]"
+        //        val res   = conn.q(query, id.asInstanceOf[Object]).map(_.head)
+        //        res
+
+
         val query = if (prefix.isDefined)
           s"""[:find ?enums
-             | :in $$ ?id
-             | :where [?id $attr ?a]
+             | :where [$id $attr ?a]
              |        [?a :db/ident ?b]
              |        [(name ?b) ?enums]
              |]""".stripMargin
         else
-          s"[:find ?values :in $$ ?id :where [?id $attr ?values]]"
-        conn.q(query, id.asInstanceOf[Object]).map(_.head)
+          s"[:find ?values :where [$id $attr ?values]]"
+
+        conn.q(query).map(_.head) // could be empty
       }
     }
 
@@ -473,7 +488,8 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
       val edgeB = otherEdgeId match {
         case Some(eid) if eid == edgeA => err("valueStmts:biEdgeProp", "Other edge id is unexpectedly the same as this edge id.")
         case Some(eid)                 => eid
-        case None                      => otherEdge(edgeA)
+        case None                      =>
+          otherEdge(edgeA)
       }
 
       val stmt = arg match {
@@ -776,7 +792,8 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
     case Add(e@("e" | "ec"), a, refNs: String, bi@BiSelfRef(1)) if !refNs.startsWith("__")      => (cur, edgeB, valueStmts(stmts, lastE(stmts, a, forcedE, bi, e), a, tempId(refNs), None, bi, edgeB))
     case Add(e@("e" | "ec"), a, refNs: String, bi@BiSelfRef(2)) if !refNs.startsWith("__")      => (cur, edgeB, valueStmts(stmts, lastE(stmts, a, forcedE, bi, e), a, tempId(refNs), None, bi, edgeB))
     case Add(e@("e" | "ec"), a, refNs: String, bi@BiEdgeRef(_, _)) if !refNs.startsWith("__")   => val edgeB1 = Some(tempId(a)); (cur, edgeB1, valueStmts(stmts, lastE(stmts, a, 0, bi, e), a, tempId(refNs), None, bi, edgeB1))
-    case Add(e@("e" | "ec"), a, refNs: String, bi@BiTargetRef(_, _)) if !refNs.startsWith("__") => (cur, None, valueStmts(stmts, lastE(stmts, a, 0, bi, e), a, tempId(refNs), None, bi, edgeB))
+    case Add(e@("e" | "ec"), a, refNs: String, bi@BiTargetRef(_, _)) if !refNs.startsWith("__") =>
+      (cur, None, valueStmts(stmts, lastE(stmts, a, 0, bi, e), a, tempId(refNs), None, bi, edgeB))
     case Add(e@("e" | "ec"), a, refNs: String, bi) if !refNs.startsWith("__")                   => (cur, edgeB, valueStmts(stmts, lastE(stmts, a, forcedE, bi, e), a, tempId(refNs), None, bi, edgeB))
     case Add("v", a, refNs: String, bi) if !refNs.startsWith("__")                              => (cur, edgeB, valueStmts(stmts, stmts.last.v, a, tempId(refNs), None, bi, edgeB))
     case Add("v", a, "__tempId", bi) if forcedE != 0                                            => (cur, edgeB, valueStmts(stmts, forcedE, a, tempId(a), None, bi, edgeB))
@@ -784,13 +801,15 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
     case r: Retract                                                                             => (cur, edgeB, stmts)
 
     // Advance cursor for next value in data row
-    case Add("__tempId", a, "__arg", bi@BiEdgePropAttr(_))                 => val edgeB1 = Some(tempId(a)); (next, edgeB1, valueStmts(stmts, tempId(a), a, arg, None, bi, edgeB1))
+    case Add("__tempId", a, "__arg", bi@BiEdgePropAttr(_))                 =>
+      val edgeB1 = Some(tempId(a)); (next, edgeB1, valueStmts(stmts, tempId(a), a, arg, None, bi, edgeB1))
     case Add("__tempId", a, "__arg", bi@BiTargetRefAttr(_, _))             => val edgeB1 = Some(tempId(a)); (next, edgeB1, valueStmts(stmts, tempId(a), a, arg, None, bi, edgeB1))
     case Add("__tempId", a, Values(EnumVal, pf), bi@BiEdgePropAttr(_))     => val edgeB1 = Some(tempId(a)); (next, edgeB1, valueStmts(stmts, tempId(a), a, arg, pf, bi, edgeB1))
     case Add("__tempId", a, Values(EnumVal, pf), bi@BiTargetRefAttr(_, _)) => val edgeB1 = Some(tempId(a)); (next, edgeB1, valueStmts(stmts, tempId(a), a, arg, pf, bi, edgeB1))
     case Add("__tempId", a, Values(vs, pf), bi@BiEdgePropAttr(_))          => val edgeB1 = Some(tempId(a)); (next, edgeB1, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB1))
     case Add("__tempId", a, Values(vs, pf), bi@BiTargetRefAttr(_, _))      => val edgeB1 = Some(tempId(a)); (next, edgeB1, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB1))
-    case Add("__tempId", a, "__arg", bi)                                   => (next, edgeB, valueStmts(stmts, tempId(a), a, arg, None, bi, edgeB))
+    case Add("__tempId", a, "__arg", bi)                                   =>
+      (next, edgeB, valueStmts(stmts, tempId(a), a, arg, None, bi, edgeB))
     case Add("__tempId", a, Values(EnumVal, pf), bi)                       => (next, edgeB, valueStmts(stmts, tempId(a), a, arg, pf, bi, edgeB))
     case Add("__tempId", a, Values(vs, pf), bi)                            => (next, edgeB, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB))
     case Add("remove_me", a, "__arg", bi)                                  => (next, edgeB, valueStmts(stmts, -1, a, arg, None, bi, edgeB))
@@ -799,7 +818,8 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
     case Add(e@("e" | "ec"), a, Values(EnumVal, prefix), bi)               => (next, edgeB, valueStmts(stmts, lastE(stmts, a, forcedE, bi, e), a, arg, prefix, bi, edgeB))
     case Add(e@("e" | "ec"), a, Values(vs, prefix), bi)                    => (next, edgeB, valueStmts(stmts, lastE(stmts, a, forcedE, bi, e), a, vs, prefix, bi, edgeB))
     case Add("v", a, "__arg", bi) if eidV(stmts)                           => (next, edgeB, valueStmts(stmts, stmts.last.v, a, arg, None, bi, edgeB))
-    case Add("v", a, "__arg", bi)                                          => (next, edgeB, valueStmts(stmts, lastV(stmts, a, forcedE), a, arg, None, bi, edgeB))
+    case Add("v", a, "__arg", bi)                                          =>
+      (next, edgeB, valueStmts(stmts, lastV(stmts, a, forcedE), a, arg, None, bi, edgeB))
     case Add("v", a, Values(EnumVal, prefix), bi)                          => (next, edgeB, valueStmts(stmts, lastV(stmts, a, forcedE), a, arg, prefix, bi, edgeB))
     case Add("v", a, Values(vs, prefix), bi)                               => (next, edgeB, valueStmts(stmts, lastV(stmts, a, forcedE), a, vs, prefix, bi, edgeB))
     case Add("tx", a, "__arg", bi)                                         => (next, edgeB, valueStmts(stmts, tempId("tx"), a, arg, None, bi, edgeB))
@@ -929,7 +949,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
 
 
   private def resolveStmts(genericStmts: Seq[Statement], row: Seq[Any], forcedE0: Any, edgeB0: Option[AnyRef] = None): Seq[Statement] = {
-    val stmts1 = genericStmts.foldLeft(0, edgeB0, Seq.empty[Statement]) { case ((cur, edgeB, stmts0), genericStmt0) =>
+    val stmts1 = genericStmts.foldLeft(0, edgeB0, Seq.empty[Statement]) { case ((cur, edgeB, stmts0), genericStmt) =>
       val arg0      = row(cur)
       val next: Int = if ((cur + 1) < row.size) cur + 1 else cur
 
@@ -942,7 +962,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
         case _                            => (stmts0, stmts0.last.e)
       }
 
-      (arg0, genericStmt0) match {
+      (arg0, genericStmt) match {
         case (null, _) =>
           // null values not allowed
           err("resolveStmts", "null values not allowed. Please use `attr$` for Option[tpe] values.")
@@ -993,23 +1013,27 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
   def insertStmts(dataRows: Iterable[Seq[Any]]): Seq[Statement] = {
     val (genericStmts, genericTxStmts) = splitStmts()
     val dataStmts                      = dataRows.toSeq.flatMap(resolveStmts(genericStmts, _, 0))
-    val txId                           = tempId("tx")
     val txStmts                        = genericTxStmts.foldLeft(Seq.empty[Statement]) {
       case (stmts, Add("tx", a, Values(vs, prefix), bi)) if txRefAttr(stmts)      => valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, None)
-      case (stmts, Add("tx", a, Values(vs, prefix), bi))                          => valueStmts(stmts, txId, a, vs, prefix, bi, None)
+      case (stmts, Add("tx", a, Values(vs, prefix), bi))                          => valueStmts(stmts, tempId("tx"), a, vs, prefix, bi, None)
       case (stmts, Add("tx", a, refNs: String, bi)) if !refNs.startsWith("__")    => valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, None)
       case (stmts, Add("txRef", a, Values(vs, prefix), bi)) if txRefAttr(stmts)   => valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, None)
       case (stmts, Add("txRef", a, Values(vs, prefix), bi))                       => valueStmts(stmts, stmts.last.e.asInstanceOf[Object], a, vs, prefix, bi, None)
       case (stmts, Add("txRef", a, refNs: String, bi)) if !refNs.startsWith("__") => valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, None)
       case (_, unexpected)                                                        => err("insertStmts", "Unexpected insert statement: " + unexpected)
     }
+//    println("insertStmts sync:")
+//    (dataStmts ++ txStmts) foreach println
     dataStmts ++ txStmts
+    val asyncRes = Await.result(ModelTransformerAsync(conn, model).insertStmts(dataRows), 10.seconds)
+//    println("insertStmts async:")
+//    asyncRes foreach println
+    asyncRes
   }
 
 
   def saveStmts: Seq[Statement] = {
-    val txId = "datomic.tx"
-    genericStmts.foldLeft("", Option.empty[AnyRef], Seq.empty[Statement]) { case ((backRef, edgeB, stmts), genericStmt) =>
+    val xx = genericStmts.foldLeft("", Option.empty[AnyRef], Seq.empty[Statement]) { case ((backRef, edgeB, stmts), genericStmt) =>
       genericStmt match {
         case Add("__tempId", a, Values(vs, pf), bi@BiEdgePropAttr(_))                               => val edgeB1 = Some(tempId(a)); (backRef, edgeB1, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB1))
         case Add("__tempId", a, Values(vs, pf), bi)                                                 => (backRef, edgeB, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB))
@@ -1027,7 +1051,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
           ("", edgeB, valueStmts(stmts, lastE(stmts, a, forcedE, bi, e), a, tempId(refNs), None, bi, edgeB))
         case Add("v", a, Values(vs, prefix), bi)                                                    => (backRef, edgeB, valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, edgeB))
         case Add("tx", a, Values(vs, prefix), bi) if txRefAttr(stmts)                               => (backRef, edgeB, valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, edgeB))
-        case Add("tx", a, Values(vs, prefix), bi)                                                   => (backRef, edgeB, valueStmts(stmts, txId, a, vs, prefix, bi, edgeB))
+        case Add("tx", a, Values(vs, prefix), bi)                                                   => (backRef, edgeB, valueStmts(stmts, datomicTx, a, vs, prefix, bi, edgeB))
         case Add("tx", a, refNs: String, bi) if !refNs.startsWith("__")                             => (backRef, edgeB, valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, edgeB))
         case Add("txRef", a, Values(vs, prefix), bi) if txRefAttr(stmts)                            => (backRef, edgeB, valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, edgeB))
         case Add("txRef", a, Values(vs, prefix), bi)                                                => (backRef, edgeB, valueStmts(stmts, stmts.last.e.asInstanceOf[Object], a, vs, prefix, bi, edgeB))
@@ -1039,6 +1063,16 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
         case unexpected                                                                             => err("saveStmts", s"Unexpected save statement: $unexpected\nStatements so far:\n" + stmts.mkString("\n"))
       }
     }._3
+
+
+//    println("saveStmts sync:")
+//    xx foreach println
+
+    val res = Await.result(ModelTransformerAsync(conn, model).saveStmts, 10.seconds)
+
+//    println("saveStmts ASYNC:")
+//    res foreach println
+    res
   }
 
 
@@ -1076,11 +1110,15 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
       }
     }._2
 
-    val txId    = "datomic.tx"
     val txStmts = genericTxStmts.foldLeft(Seq[Statement]()) {
-      case (stmts, Add("tx", a, Values(vs, prefix), bi)) => valueStmts(stmts, txId, a, vs, prefix, bi, None)
+      case (stmts, Add("tx", a, Values(vs, prefix), bi)) => valueStmts(stmts, datomicTx, a, vs, prefix, bi, None)
       case (_, unexpected)                               => err("updateStmts", "Unexpected insert statement: " + unexpected)
     }
+
+//    println("updateStmts sync:")
+//    (dataStmts ++ txStmts) foreach println
+//    println("-----------------")
     dataStmts ++ txStmts
+    Await.result(ModelTransformerAsync(conn, model).updateStmts, 10.seconds)
   }
 }

@@ -226,15 +226,17 @@ class ManyOther extends TestSpec {
 
       // Single reference
       Person(ann).buddies.assert(gus).update
+      animalBuddiesOf("Ann").get.sorted === List("Gus")
 
       // Multiple references (vararg)
       Person(ann).buddies.assert(leo, rex).update
+      animalBuddiesOf("Ann").get.sorted === List("Gus", "Leo", "Rex")
 
       // Set of references
       Person(ann).buddies.assert(Seq(zip)).update
+      animalBuddiesOf("Ann").get.sorted === List("Gus", "Leo", "Rex", "Zip")
 
       // Buddieships have been added in both directions
-      animalBuddiesOf("Ann").get.sorted === List("Gus", "Leo", "Rex", "Zip")
       personBuddiesOf("Gus").get === List("Ann")
       personBuddiesOf("Leo").get === List("Ann")
       personBuddiesOf("Rex").get === List("Ann")

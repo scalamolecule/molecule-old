@@ -7,108 +7,35 @@ import java.util.Collections
 import clojure.lang.Keyword
 import datomicClient.ClojureBridge
 import datomicJava.client.api.async.AsyncDatomic.require
-import molecule.core.transform.ModelTransformer
+import molecule.core.ast.elements._
+import molecule.core.transform.{ModelTransformer, ModelTransformerAsync}
 import molecule.core.util.JavaUtil
-import molecule.datomic.api.out3._
+import molecule.core.util.testing.MoleculeTestHelper
+import molecule.datomic.api.in1_out13._
+import molecule.datomic.base.ast.query._
+import molecule.datomic.base.ast.transactionModel
+import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.marshalling.DatomicRpc.readString
 import molecule.datomic.peer.facade.Datomic_Peer._
+import molecule.setup.core.CoreData
 import molecule.tests.core.base.schema.CoreTestSchema
+import molecule.tests.core.bidirectionals.schema.BidirectionalSchema
 import molecule.tests.core.schemaDef.schema.PartitionTestSchema
+import molecule.tests.examples.datomic.dayOfDatomic.schema.SocialNewsSchema
 import org.specs2.mutable.Specification
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 //class AdHocTest extends molecule.setup.TestSpec with Helpers {
-class AdHocTestJvm extends Specification with ClojureBridge with JavaUtil {
+class AdHocTestJvm extends Specification
+  with ClojureBridge with JavaUtil with MoleculeTestHelper with CoreData {
 
 
   "core" >> {
     import molecule.tests.core.base.dsl.CoreTest._
     implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
-
-
-    require("clojure.core.async")
-    require("cognitect.anomalies")
-    require("datomic.client.api.async")
-
-    //    readString("""{:ns/uri #=(new java.net.URI "https://www.datomic.com/details.html")}""") === 7
-
-    val edn =
-      """[
-        |[:db/add #db/id[:db.part/user -1000001] :Ns/str "a"]
-        |[:db/add #db/id[:db.part/user -1000001] :Ns/uri https://www.datomic.com/details.html]
-        |]""".stripMargin
-
-    val edn1 =
-      """[
-        |[:db/add #db/id[:db.part/user -1000001] :Ns/str "a"]
-        |[:db/add #db/id[:db.part/user -1000001] :Ns/uri #=(new java.net.URI "https://www.datomic.com/details.html")]
-        |]""".stripMargin
-
-
-    //    val reader = new StringReader(edn)
-
-    //    import java.io.BufferedReader
-    //    val bufReader = new BufferedReader(reader)
-    //
-    import _root_.datomic.Util._
-    //
-    //    bufReader.lines().forEach(line =>
-    //      println("@ " + line)
-    //    )
-
-    import java.util.{List => jList}
-    //
-    //
-    //    println(readAll(new StringReader(edn)))
-    //    println(readAll(reader).getClass)
-    //
-    //
-    //    val all = readAll(reader)
-
-    val uriAttrs = Set(":Ns/uri")
-
-
-    readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]].forEach { l =>
-      println(l)
-      println(l.asInstanceOf[jList[_]].get(2).getClass)
-    }
-    println("-------")
-    //    println(readString("""#=(new java.net.URI "https://www.datomic.com/details.html")"""))
-    //    println(readString("""#=(new java.net.URI "https://www.datomic.com/details.html")""").getClass)
-
-
-    val javaList = {
-      val stmts = readAll(new StringReader(edn)).get(0).asInstanceOf[jList[AnyRef]]
-      if (uriAttrs.isEmpty) stmts else {
-        val stmtsSize = stmts.size()
-        val newStmts   = new util.ArrayList[jList[_]](stmtsSize)
-        var i         = 0
-        stmts.forEach { stmtRaw =>
-          val stmt = stmtRaw.asInstanceOf[jList[AnyRef]]
-          if (uriAttrs.contains(stmt.get(2).toString)) {
-            val uri = readString(s"""#=(new java.net.URI "${stmt.get(3)}")""")
-            val uriStmt = Util.list(stmt.get(0), stmt.get(1), stmt.get(2), uri)
-            newStmts.add(uriStmt)
-          } else {
-            newStmts.add(stmt)
-          }
-          i += 1
-        }
-        Collections.unmodifiableList(newStmts)
-      }
-    }
-
-    javaList.forEach { stmt =>
-      println(stmt)
-      println(stmt.asInstanceOf[jList[_]].get(3).getClass)
-      println(stmt.asInstanceOf[jList[_]].get(3).isInstanceOf[URI])
-    }
-
-
-
-    //    readAll(new StringReader("""[:db/add #db/id[:db.part/user -1000001] :Ns/uri  #=(new java.net.URI "https://www.datomic.com/details.html")]""")) === 7
-
-    //    readAll()
 
 
     ok
@@ -141,14 +68,22 @@ class AdHocTestJvm extends Specification with ClojureBridge with JavaUtil {
   //
   //      ok
   //    }
-
-  //      "bidirectional" >> {
-  //        import molecule.tests.core.bidirectionals.dsl.Bidirectional._
-  //        implicit val conn: Conn = Datomic_Peer.recreateDbFrom(BidirectionalSchema)
+  //
+  //  "bidirectional" >> {
+  //    import molecule.tests.core.bidirectionals.dsl.Bidirectional._
+  //    implicit val conn: Conn = recreateDbFrom(BidirectionalSchema)
   //
   //
-  //        ok
-  //      }
+  //    ok
+  //  }
+  //
+  //  "socialNews" >> {
+  //    import molecule.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
+  //    implicit val conn: Conn = recreateDbFrom(SocialNewsSchema)
+  //
+  //
+  //    ok
+  //  }
   //
   //
   //
@@ -265,4 +200,29 @@ class AdHocTestJvm extends Specification with ClojureBridge with JavaUtil {
   //
   //      ok
   //    }
+  //    val l1 = List(100, 2, 3)
+  //
+  //    def f(acc: Seq[Int], i: Int): Future[Seq[Int]] = {
+  //      Thread.sleep(i)
+  //      val fut = Future {
+  //        println("blocking " + i)
+  //        i * 10
+  //      }
+  //      fut.map(v => acc :+ v)
+  //    }
+  //
+  //    val n1 = System.currentTimeMillis()
+  //    val l2 = l1.foldLeft(Future(Seq.empty[Int])) {
+  //      case (acc, i) =>
+  //        println("run " + i)
+  //        acc.flatMap(l => f(l, i))
+  //    }
+  //    val n2 = System.currentTimeMillis()
+  //    println("future created in " + (n2 - n1) + " ms")
+  //
+  //    val l3 = await(l2)
+  //    val n3 = System.currentTimeMillis()
+  //    println("await took " + (n3 - n2) + " ms")
+  //
+  //    l3 === List(1000, 20, 30)
 }

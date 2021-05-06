@@ -73,6 +73,19 @@ trait ConnProxy extends Conn {
 
   override def buildTxFnInstall(txFn: String, args: Seq[Any]): util.List[_] = ???
 
+  def qAsync[Tpl](
+    query: Query,
+    n: Int,
+    indexes: List[(Int, Int, Int, Int)],
+    qr2tpl: QueryResult => Int => Tpl
+  )(implicit ec: ExecutionContext): Future[Either[String, List[Tpl]]]
+
+  override def getAttrValuesAsync(
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  )(implicit ec: ExecutionContext): Future[List[String]] = moleculeRpc.getAttrValuesAsync(dbProxy, datalogQuery, card, tpe)
+
   override def q(query: String, inputs: Any*): List[List[AnyRef]] = ???
 
   override def q(db: DatomicDb, query: String, inputs: Seq[Any]): List[List[AnyRef]] = ???

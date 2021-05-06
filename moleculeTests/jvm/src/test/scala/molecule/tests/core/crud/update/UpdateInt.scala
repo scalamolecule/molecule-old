@@ -21,17 +21,17 @@ class UpdateInt extends TestSpec {
 
       for {
         // Initial data
-        saveTx <- Ns.int insertAsync List(1, 2)
+        Right(saveTx) <- Ns.int insertAsync List(1, 2)
         List(id1, id2) = saveTx.eids
 
         // Update 2 to 3
-        updateTx <- Ns(id2).int(3).updateAsync
+        _ <- Ns(id2).int(3).updateAsync
 
         // Get result
         result <- Ns.int.getAsync
       } yield {
         // 2 was updated to 3
-        result === List(1, 3)
+        result === Right(List(1, 3))
       }
 
       // For brevity, the synchronous equivalent `update` is used in the following tests

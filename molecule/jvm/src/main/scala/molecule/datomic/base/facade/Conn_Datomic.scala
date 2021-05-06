@@ -66,6 +66,14 @@ trait Conn_Datomic extends Conn {
     transactAsyncRaw(stmts2java(scalaStmts), scalaStmts)
 
 
+  override def getAttrValuesAsync(
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  )(implicit ec: ExecutionContext): Future[List[String]] = Future(
+    q(datalogQuery).map(_.head.toString)
+  )
+
   def q(query: String, inputs: Any*): List[List[AnyRef]] =
     q(db, query, inputs.toSeq)
 

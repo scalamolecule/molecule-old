@@ -2,7 +2,7 @@ package molecule.datomic.base.marshalling
 
 import java.io.StringReader
 import java.util
-import java.util.{Collections, List => jList}
+import java.util.{Collections, Date, List => jList, Set => jSet}
 import boopickle.Default._
 import cats.implicits._
 import datomic.Util._
@@ -11,7 +11,7 @@ import datomicClient.ClojureBridge
 import molecule.core.marshalling._
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
-import molecule.datomic.base.facade.{Conn, TxReport, TxReportRPC}
+import molecule.datomic.base.facade.{Conn, TxReportRPC}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
@@ -19,7 +19,8 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with ClojureBridge {
+object DatomicRpc extends MoleculeRpc
+  with DateHandling with DateStrLocal with Helpers with ClojureBridge {
 
 
   def transactAsync(
@@ -91,6 +92,35 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with Clojur
     }
   }
 
+  def getAttrValuesAsync(
+    dbProxy: DbProxy,
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  ): Future[List[String]] = Future {
+    var vs   = List.empty[String]
+    val rows = getCachedQueryExecutor(dbProxy)(datalogQuery, Nil).iterator()
+    if (rows.hasNext) {
+      val rawValue = rows.next().get(0)
+      // marshall raw value. Dates need to be standardized
+      card match {
+        case 1 => rawValue match {
+          case d: Date => vs = List(date2strLocal(d))
+          case v       => vs = List(v.toString)
+        }
+        case 2 => tpe match {
+          case "Date" => rawValue.asInstanceOf[jSet[_]].forEach(v =>
+            vs = vs :+ date2strLocal(v.asInstanceOf[Date])
+          )
+          case _      => rawValue.asInstanceOf[jSet[_]].forEach(v =>
+            vs = vs :+ v.toString
+          )
+        }
+        case 3 => rawValue.asInstanceOf[jSet[_]].forEach(v => vs = vs :+ v.toString)
+      }
+      vs
+    } else Nil
+  }
 
   def clearCache: Future[Boolean] = Future {
     connCache.clear()
@@ -176,15 +206,14 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with Clojur
 
   // Helpers -------------------------------------------------
 
-  // Necessary for `readString`
-  require("clojure.core.async")
-
   def javaStmts(edn: String, uriAttrs: Set[String]): jList[AnyRef] = {
-    def uri(s: AnyRef): AnyRef = readString(s"""#=(new java.net.URI "$s")""")
     val stmts = readAll(new StringReader(edn)).get(0).asInstanceOf[jList[AnyRef]]
     if (uriAttrs.isEmpty) {
       stmts
     } else {
+      // Necessary for `readString` to encode uri
+      require("clojure.core.async")
+      def uri(s: AnyRef): AnyRef = readString(s"""#=(new java.net.URI "$s")""")
       val stmtsSize = stmts.size()
       val newStmts  = new util.ArrayList[jList[_]](stmtsSize)
       stmts.forEach { stmtRaw =>
@@ -222,7 +251,7 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with Clojur
       }: _*)
 
       case pair@(_: String, _: String) =>
-        cast(pair.asInstanceOf[(String, String)])
+        cast(pair)
 
       case _ =>
         sys.error("Unexpected input values")
@@ -236,7 +265,7 @@ object DatomicRpc extends MoleculeRpc with DateHandling with Helpers with Clojur
   // to be transferred with autowire/boopickle, we cast all input variable values
   // as String on the client and then cast them back to their original type here
   // and pass them as Object's to Datomic.
-  private def cast(pair: (String, String)): Object = pair match {
+  def cast(pair: (String, String)): Object = pair match {
     case ("String", v)     => v.asInstanceOf[Object]
     case ("Int", v)        => v.toInt.asInstanceOf[Object]
     case ("Long", v)       => v.toLong.asInstanceOf[Object]

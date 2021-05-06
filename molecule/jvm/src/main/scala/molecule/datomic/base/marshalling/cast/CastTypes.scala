@@ -17,7 +17,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex).asInstanceOf[String]
   }
 
-  protected val castOneInt    = (colIndex: Int) => {
+  protected val castOneInt = (colIndex: Int) => {
     val array = new Array[Int](maxRows)
     oneIntArrays = oneIntArrays :+ array
     (row: jList[AnyRef], i: Int) =>
@@ -104,8 +104,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
     oneStringArrays = oneStringArrays :+ array
     (row: jList[AnyRef], i: Int) =>
       array(i) = row.get(colIndex) match {
-        //            case d: Date if col.attrExpr == "txInstant" => date2strLocal(d)
-        //            case d: Date                                => date2str(d)
         case d: Date => date2strLocal(d)
         case other   => other.toString
       }
@@ -1586,8 +1584,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
     oneStringArrays = oneStringArrays :+ array
     (row: jList[AnyRef], i: Int) =>
       array(i) = row.get(colIndex) match {
-        //            case d: Date if col.attrExpr == "txInstant" => date2strLocal(d)
-        //            case d: Date                                => date2str(d)
         case d: Date => date2strLocal(d)
         case other   => other.toString
       }

@@ -4,6 +4,7 @@ package molecule.datomic.base.api
 import java.net.URI
 import java.util.{Date, UUID}
 import clojure.lang.{Keyword, PersistentArrayMap}
+import datomicClient.anomaly.Fault
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
@@ -17,6 +18,36 @@ import scala.language.existentials
 abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity with Quoted {
 
   // Get ================================================================
+
+  def mapOneLevel: Map[String, Any] = {
+    conn.q(
+      s"""[:find ?a1 ?v
+         |  :where
+         |   [$eid ?a ?v]
+         |   [?a :db/ident ?a1]
+         | ]""".stripMargin
+    ).map(l => (l.head.toString, l(1)))
+    .toMap + (":db/id" -> eid)
+  }
+
+  def map: Map[String, Any] = {
+    val res = try {
+      var buildMap = Map.empty[String, Any]
+      conn.db.pull("[*]", eid).forEach {
+        case (k, v) => buildMap = buildMap + (k.toString -> v)
+      }
+      buildMap
+    } catch {
+      // Fetch top level only for cyclic graphs
+      case _: StackOverflowError                                    =>
+        mapOneLevel
+      case Fault("java.lang.StackOverflowError with empty message") =>
+        mapOneLevel
+
+      case e: Throwable => throw e
+    }
+    res
+  }
 
   def keySet: Set[String]
 

@@ -25,6 +25,14 @@ trait MoleculeRpc {
   ): Future[Either[String, QueryResult]]
 
 
+  def getAttrValuesAsync(
+    dbProxy: DbProxy,
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  ): Future[List[String]]
+
+
   /** Clear server Conn/Db cache
     *
     * @return Boolean confirmation

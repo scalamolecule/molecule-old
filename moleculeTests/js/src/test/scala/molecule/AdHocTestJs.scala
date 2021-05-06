@@ -33,21 +33,21 @@ object AdHocTestJs extends TestSuite {
   lazy val tests = Tests {
 
     test("String-Int") {
-      Artist.name.endYear.getAsync2(2) === List(
+      Artist.name.endYear.getAsync(2) === List(
         ("Dunn and McCashen", 1968),
         ("Brüder Grimm", 1863)
       )
     }
 
     test("Int-String") {
-      Artist.endYear.name.getAsync2.map {
+      Artist.endYear.name.getAsync.map {
         case Right(v) => v.sorted.take(2) ==> List(
           (1672, "Heinrich Schütz"),
           (1741, "Antonio Vivaldi")
           //          (1980, "Bill Evans")
         )
       }
-      Artist.endYear.name.getAsync2(2) === List(
+      Artist.endYear.name.getAsync(2) === List(
         (1976, "The Peddlers"),
         (1978, "Ralfi Pagán")
         //          (1980, "Bill Evans")
@@ -55,7 +55,7 @@ object AdHocTestJs extends TestSuite {
     }
 
     test("String-String") {
-      Artist.name.sortName.getAsync2(2) === List(
+      Artist.name.sortName.getAsync(2) === List(
         ("Rolf Lundqvist & Arbete & fritid", "Lundqvist, Rolf & Arbete & fritid"),
         ("Rusty York", "York, Rusty")
       )

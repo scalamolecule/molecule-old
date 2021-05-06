@@ -16,7 +16,7 @@ class EdgeOneOtherSave extends TestSpec {
 
     "new target" in new Setup {
 
-      Person.name("Ann").Favorite.weight(7).Animal.name("Rex").save.eids
+      Person.name("Ann").Favorite.weight(7).Animal.name("Rex").save
 
       // Bidirectional property edges have been saved
       favoriteAnimalOf("Ann").get === List((7, "Rex"))
@@ -29,7 +29,7 @@ class EdgeOneOtherSave extends TestSpec {
       val rex = Animal.name.insert("Rex").eid
 
       // Save Ann with weighed relationship to existing Rex
-      Person.name("Ann").Favorite.weight(7).animal(rex).save.eids
+      Person.name("Ann").Favorite.weight(7).animal(rex).save
 
       // Ann and Rex each others favorite with a weight of 7
       favoriteAnimalOf("Ann").get === List((7, "Rex"))

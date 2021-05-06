@@ -25,14 +25,6 @@ object transactionModel extends JavaUtil {
 
   case class Add(e: Any, a: String, v: Any, gv: GenericValue) extends Statement {
     val action = ":db/add"
-
-    override def toString: String = {
-      val pad = " " * (25 - a.length)
-      if (v.isInstanceOf[AbstractValue])
-        s"""List(":db/add",     ${eid(e)}, "$a", $pad $v, $gv)"""
-      else
-        s"""list(":db/add",     ${eid(e)}, "$a", $pad $v)"""
-    }
   }
 
   // Todo: Implement in updates?
@@ -43,14 +35,6 @@ object transactionModel extends JavaUtil {
 
   case class Retract(e: Any, a: String, v: Any, gv: GenericValue = NoValue) extends Statement {
     val action = ":db/retract"
-
-    override def toString: String = {
-      val pad = " " * (25 - a.length)
-      if (v.isInstanceOf[AbstractValue])
-        s"""List(":db/retract", ${eid(e)}, "$a", $pad $v, $gv)"""
-      else
-        s"""list(":db/retract", ${eid(e)}, "$a", $pad $v)"""
-    }
   }
 
   case class RetractEntity(e: Any) extends Statement {
@@ -58,10 +42,6 @@ object transactionModel extends JavaUtil {
     val a      = ""
     val v      = ""
     val gv     = NoValue
-
-    override def toString: String = {
-      s"""list(":db/retractEntity", ${eid(e)})"""
-    }
   }
 
   case class TempId(part: String, i: Int) {

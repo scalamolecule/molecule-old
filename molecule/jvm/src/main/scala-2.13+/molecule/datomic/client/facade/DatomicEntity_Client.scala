@@ -24,37 +24,6 @@ case class DatomicEntity_Client(
   showKW: Boolean = true
 ) extends DatomicEntityImpl(conn, eid) with RegexMatching {
 
-  private def getThisLevel(eid: Any): Map[String, Any] = {
-    val res = conn.q(
-      """[:find ?a2 ?v
-        | :in $ ?eid
-        | :where
-        |   [?eid ?a ?v]
-        |   [?a :db/ident ?a1]
-        |   [(str ?a1) ?a2]
-        | ]""".stripMargin, eid)
-      .map(l => (l.head.toString, l(1)))
-      .toMap + (":db/id" -> eid)
-    res
-  }
-
-  lazy val map: Map[String, Any] = {
-    val res = try {
-      conn.db.pull("[*]", eid).asScala.toMap.map {
-        case (k, v) => (k.toString, v)
-      }
-    } catch {
-      // Fetch top level only for cyclic graphs
-      case _: StackOverflowError                                    =>
-        getThisLevel(eid)
-      case Fault("java.lang.StackOverflowError with empty message") =>
-        getThisLevel(eid)
-
-      case e: Throwable => throw e
-    }
-    res
-  }
-
   def keySet: Set[String] = map.keySet
 
   def keys: List[String] = map.keySet.toList

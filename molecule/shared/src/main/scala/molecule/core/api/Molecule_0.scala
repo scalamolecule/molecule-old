@@ -10,13 +10,14 @@ import molecule.core.macros.MakeMoleculeDynamic
 import molecule.core.macros.cast.CastHelpersTypes
 import molecule.core.marshalling.{Marshalling, Stmts2Edn}
 import molecule.core.ops.VerifyModel
-import molecule.core.transform.DynamicMolecule
+import molecule.core.transform.{DynamicMolecule, ModelTransformerAsync}
 import molecule.datomic.base.api.ShowInspect
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.experimental.macros
+import scala.concurrent.duration.DurationInt
 
 
 /** Core molecule interface defining actions that can be called on molecules.
@@ -200,7 +201,24 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def save(implicit conn: Conn): TxReport = {
     VerifyModel(_model, "save")
-    conn.transact(conn.modelTransformer(_model).saveStmts)
+//    conn.tempId.reset()
+    val stmts = conn.modelTransformer(_model).saveStmts
+    if (false) {
+//      conn.tempId.reset()
+      val asyncStmts = Await.result(ModelTransformerAsync(conn, _model).saveStmts, 10.seconds)
+      if (asyncStmts != stmts) {
+        println("@@@@@ Save @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        println(_model)
+        println(stmts.mkString("\n"))
+        println("----------")
+        println(asyncStmts.mkString("\n"))
+        println("-----------------------------------")
+      }
+      //    assert(asyncStmts == stmts)
+    }
+
+    conn.transact(stmts)
+    //    conn.transact(conn.modelTransformer(_model).saveStmts)
   }
 
 
@@ -228,8 +246,11 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   def saveAsync(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = {
     VerifyModel(_model, "save")
     if (isJsPlatform) {
-      val (stmtsEdn, uriAttrs) = Stmts2Edn(conn.modelTransformer(_model).saveStmts)
-      moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs)
+      for {
+        saveStmts <- conn.modelTransformerAsync(_model).saveStmts
+        (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts)
+        result <- moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs)
+      } yield result
     } else {
       conn.transactAsync(conn.modelTransformer(_model).saveStmts)
     }
@@ -390,16 +411,50 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     }
   }
 
+
   protected def _insert(conn: Conn, model: Model, dataRows: Iterable[Seq[Any]]): TxReport = {
-    conn.transact(conn.modelTransformer(model).insertStmts(untupled(dataRows)))
+//    conn.tempId.reset()
+    val stmts = conn.modelTransformer(model).insertStmts(untupled(dataRows))
+
+//    println("_insert:")
+//    stmts foreach println
+
+    if (false) {
+
+//      conn.tempId.reset()
+      val asyncStmts = Await.result(ModelTransformerAsync(conn, model).insertStmts(untupled(dataRows)), 10.seconds)
+      if (asyncStmts != stmts) {
+        println("@@@@@ Insert @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        println(model)
+        println(stmts.mkString("\n"))
+        println("----------")
+        println(asyncStmts.mkString("\n"))
+        println("-----------------------------------")
+      }
+      //    assert(asyncStmts == stmts)
+    }
+    conn.transact(stmts)
+    //    conn.transact(conn.modelTransformer(model).insertStmts(untupled(dataRows)))
   }
 
   protected def _insertAsync(
-    conn: Conn, 
-    model: Model, 
+    conn: Conn,
+    model: Model,
     dataRows: Iterable[Seq[Any]]
   )(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = {
-    conn.transactAsync(conn.modelTransformer(model).insertStmts(untupled(dataRows)))
+    if (isJsPlatform) {
+      for {
+        insertStmts <- conn.modelTransformerAsync(model).insertStmts(untupled(dataRows))
+        (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts)
+        result <- moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs)
+      } yield result
+    } else {
+      //      conn.transactAsync(conn.modelTransformerAsync(model).insertStmts(untupled(dataRows)))
+      for {
+        updateStmts <- conn.modelTransformerAsync(model).insertStmts(untupled(dataRows))
+        result <- conn.transactAsync(updateStmts)
+      } yield result
+    }
   }
 
   protected def _getInsertStmts(conn: Conn, dataRows: Iterable[Seq[Any]]): Seq[Statement] = {
@@ -439,7 +494,27 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def update(implicit conn: Conn): TxReport = {
     VerifyModel(_model, "update")
-    conn.transact(conn.modelTransformer(_model).updateStmts)
+//    conn.tempId.reset()
+    val stmts = conn.modelTransformer(_model).updateStmts
+    if (false) {
+
+//      conn.tempId.reset()
+      val asyncStmts = Await.result(ModelTransformerAsync(conn, _model).updateStmts, 10.seconds)
+
+      if (asyncStmts != stmts) {
+        println("@@@@@ Update @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        println(_model)
+        println(stmts.mkString("\n"))
+        println("----------")
+        println(asyncStmts.mkString("\n"))
+        println("-----------------------------------")
+        //      throw new RuntimeException("damn")
+      }
+      //    assert(asyncStmts == stmts)
+    }
+
+    conn.transact(stmts)
+    //    conn.transact(conn.modelTransformer(_model).updateStmts)
   }
 
   /** Asynchronously update entity with data applied to molecule attributes.
@@ -464,7 +539,19 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def updateAsync(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = {
     VerifyModel(_model, "update")
-    conn.transactAsync(conn.modelTransformer(_model).updateStmts)
+    if (isJsPlatform) {
+      for {
+        updateStmts <- conn.modelTransformerAsync(_model).updateStmts
+        (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts)
+        result <- moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs)
+      } yield result
+    } else {
+      //      conn.transactAsync(conn.modelTransformer(_model).updateStmts)
+      for {
+        updateStmts <- conn.modelTransformerAsync(_model).updateStmts
+        result <- conn.transactAsync(updateStmts)
+      } yield result
+    }
   }
 
 

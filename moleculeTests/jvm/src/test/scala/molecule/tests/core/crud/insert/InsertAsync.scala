@@ -16,10 +16,10 @@ class InsertAsync extends TestSpec {
     // todo: remove when async implemented for other systems
     if (system == SystemPeer) {
       // Insert single row of data with individual args
-      val singleInsertFuture: Future[TxReport] = Ns.str.int.insertAsync("Ann", 28)
+      val singleInsertFuture: Future[Either[String, TxReport]] = Ns.str.int.insertAsync("Ann", 28)
 
       // Insert Iterable of multiple rows of data
-      val multipleInsertFuture: Future[TxReport] = Ns.str.int insertAsync List(
+      val multipleInsertFuture: Future[Either[String, TxReport]] = Ns.str.int insertAsync List(
         ("Ben", 42),
         ("Liz", 37))
 
@@ -29,11 +29,11 @@ class InsertAsync extends TestSpec {
         result <- Ns.str.int.getAsync
       } yield {
         // Both inserts applied
-        result === List(
+        result === Right(List(
           ("Ann", 28),
           ("Ben", 42),
           ("Liz", 37)
-        )
+        ))
       }
 
       // For brevity, the synchronous equivalent `insert` is used in the following tests

@@ -3,8 +3,8 @@ package molecule.datomic.base.facade
 import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
-import molecule.core.marshalling.{DbProxy, MoleculeRpc}
-import molecule.core.transform.ModelTransformer
+import molecule.core.marshalling.{DbProxy, MoleculeRpc, QueryResult}
+import molecule.core.transform.{ModelTransformer, ModelTransformerAsync}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb.TempDb
@@ -25,7 +25,7 @@ trait Conn {
   lazy val dbProxy: DbProxy = ???
 
   /**  */
-  protected lazy val moleculeRpc: MoleculeRpc = ???
+  lazy val moleculeRpc: MoleculeRpc = ???
 
   def usingTempDb(tempDb: TempDb): Conn
 
@@ -119,6 +119,7 @@ trait Conn {
 
   /** Convenience method to retrieve entity directly from connection. */
   def entity(id: Any): DatomicEntity
+//  def entityAsync(id: Any): Future[DatomicEntity]
 
 
   /** Transact edn files or other raw transaction data.
@@ -187,6 +188,31 @@ trait Conn {
 
 
   def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_]
+
+  /**
+    *
+    * Only implemented on JS side for rpc
+    *
+    * @param query
+    * @param n
+    * @param indexes
+    * @param qr2tpl
+    * @param ec
+    * @tparam Tpl
+    * @return
+    */
+  def qAsync[Tpl](
+    query: Query,
+    n: Int,
+    indexes: List[(Int, Int, Int, Int)],
+    qr2tpl: QueryResult => Int => Tpl
+  )(implicit ec: ExecutionContext): Future[Either[String, List[Tpl]]] = ???
+
+  def getAttrValuesAsync(
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  )(implicit ec: ExecutionContext): Future[List[String]]
 
   /** Query Datomic directly with optional Scala inputs.
     * {{{
@@ -357,6 +383,7 @@ trait Conn {
 
 
   def modelTransformer(model: Model): ModelTransformer = ModelTransformer(this, model)
+  def modelTransformerAsync(model: Model): ModelTransformerAsync = ModelTransformerAsync(this, model)
 
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 

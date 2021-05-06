@@ -34,7 +34,7 @@ class UpdateMapInt extends TestSpec {
       for {
         Right(txr) <- Ns.intMap("str1" -> 1).saveAsync
         e = txr.eid
-        res1 <- Ns.intMap.getAsync2
+        res1 <- Ns.intMap.getAsync
         res2 <- Ns(e).intMap.assert("str1" -> 10).updateAsync
       } yield {
         res1 === Right(List("str1" -> 1))
