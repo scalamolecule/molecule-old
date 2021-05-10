@@ -4,8 +4,7 @@ import molecule.core.ops.ColOps
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.transform.Query2String
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Client db connection.
   *
@@ -14,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * Make a similar subclass of ConnProxy like this one in order to use an
   * alternative moleculeRpc implementation.
   *
-  * @param dbProxy0  Db coordinates to access db on server side
+  * @param dbProxy0 Db coordinates to access db on server side
   */
 case class Conn_Js(dbProxy0: DbProxy) extends ConnProxy with ColOps {
 
@@ -24,12 +23,12 @@ case class Conn_Js(dbProxy0: DbProxy) extends ConnProxy with ColOps {
 
   override lazy val moleculeRpc: MoleculeRpc = MoleculeWebClient.moleculeRpc
 
-  def qAsync[Tpl](
+  private[molecule] override def qAsync[Tpl](
     query: Query,
     n: Int,
     indexes: List[(Int, Int, Int, Int)],
     qr2tpl: QueryResult => Int => Tpl
-  ): Future[Either[String, List[Tpl]]] = {
+  )(implicit ec: ExecutionContext): Future[Either[String, List[Tpl]]] = {
     val q2s          = Query2String(query)
     val datalogQuery = q2s.multiLine(60)
     val p            = q2s.p
@@ -51,15 +50,9 @@ case class Conn_Js(dbProxy0: DbProxy) extends ConnProxy with ColOps {
         }
         Right(tplsBuffer.toList)
 
+      case Left("Empty result set") => Right(List.empty[Tpl])
+
       case Left(err) => Left(err) // error from QueryExecutor
     }
   }
-
-  override def q(query: String, inputs: Any*): List[List[AnyRef]] = {
-    println("auch2")
-
-//    val x = qAsync(query, -1, )
-    ???
-  }
-
 }

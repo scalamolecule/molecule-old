@@ -1,9 +1,15 @@
 package molecule.core.marshalling
 
 import molecule.datomic.base.facade.TxReportRPC
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MoleculeRpc {
+
+  /** Clear server Conn/Db cache
+    *
+    * @return Boolean confirmation
+    */
+  def clearCache: Future[Boolean]
 
 
   def transactAsync(
@@ -33,9 +39,9 @@ trait MoleculeRpc {
   ): Future[List[String]]
 
 
-  /** Clear server Conn/Db cache
-    *
-    * @return Boolean confirmation
-    */
-  def clearCache: Future[Boolean]
+  def entityAttrKeys(
+    dbProxy: DbProxy,
+    eid: Long
+  ): Future[List[String]]
+
 }

@@ -11,7 +11,7 @@ import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 
-/** Dummy connection to satisfy implicit parameter of api calls on client side.
+/** Dummy connection to satisfy implicit parameter of molecule calls on client side.
   *
   * Used to cary information enabling marshalling between client and server.
   */
@@ -71,20 +71,31 @@ trait ConnProxy extends Conn {
 
   override def transactAsync(scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[Either[String, TxReport]] = ???
 
-  override def buildTxFnInstall(txFn: String, args: Seq[Any]): util.List[_] = ???
+  private[molecule] override def buildTxFnInstall(
+    txFn: String,
+    args: Seq[Any]): util.List[_] = ???
 
-  def qAsync[Tpl](
+
+  // MoleculeRpc api ------------------------------------------------------
+
+  private[molecule] def qAsync[Tpl](
     query: Query,
     n: Int,
     indexes: List[(Int, Int, Int, Int)],
     qr2tpl: QueryResult => Int => Tpl
   )(implicit ec: ExecutionContext): Future[Either[String, List[Tpl]]]
 
-  override def getAttrValuesAsync(
+  private[molecule] override def getAttrValuesAsync(
     datalogQuery: String,
     card: Int,
     tpe: String
-  )(implicit ec: ExecutionContext): Future[List[String]] = moleculeRpc.getAttrValuesAsync(dbProxy, datalogQuery, card, tpe)
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    moleculeRpc.getAttrValuesAsync(dbProxy, datalogQuery, card, tpe)
+
+  private[molecule] override def entityAttrKeys(
+    eid: Long
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    moleculeRpc.entityAttrKeys(dbProxy, eid)
 
   override def q(query: String, inputs: Any*): List[List[AnyRef]] = ???
 
@@ -100,7 +111,7 @@ trait ConnProxy extends Conn {
 
   override def _index(model: Model): util.Collection[util.List[AnyRef]] = ???
 
-  override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
+  private[molecule] override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
 
   override def inspect(clazz: String, threshold: Int, max: Int, showStackTrace: Boolean, maxLevel: Int, showBi: Boolean)(id: Int, params: Any*): Unit = ???
 }

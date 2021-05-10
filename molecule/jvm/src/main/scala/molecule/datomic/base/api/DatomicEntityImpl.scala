@@ -19,18 +19,13 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
   // Get ================================================================
 
-  def mapOneLevel: Map[String, Any] = {
-    conn.q(
-      s"""[:find ?a1 ?v
-         |  :where
-         |   [$eid ?a ?v]
-         |   [?a :db/ident ?a1]
-         | ]""".stripMargin
-    ).map(l => (l.head.toString, l(1)))
-    .toMap + (":db/id" -> eid)
+  lazy val mapOneLevel: Map[String, Any] = {
+    conn.q(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]")
+      .map(l => (l.head.toString, l(1)))
+      .toMap + (":db/id" -> eid)
   }
 
-  def map: Map[String, Any] = {
+  lazy val map: Map[String, Any] = {
     val res = try {
       var buildMap = Map.empty[String, Any]
       conn.db.pull("[*]", eid).forEach {

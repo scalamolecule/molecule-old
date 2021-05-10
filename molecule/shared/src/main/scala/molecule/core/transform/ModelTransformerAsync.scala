@@ -153,7 +153,7 @@ case class ModelTransformerAsync(conn: Conn, model: Model) extends Helpers {
     }
 
     val model1 = Model(replace$(model.elements))
-    model1.elements.foldLeft("_": Any, Seq[Statement]()) {
+    model1.elements.foldLeft("_": Any, Seq.empty[Statement]) {
       case ((eSlot, stmts), element) => resolveElement(eSlot, stmts, element)
     }._2
   }
@@ -171,19 +171,6 @@ case class ModelTransformerAsync(conn: Conn, model: Model) extends Helpers {
   }
 
   private def getPairs(e: Any, a: String, key: String = ""): Future[Map[String, String]] = {
-    //        val strs = if (key.isEmpty) {
-    //          val query = "[:find ?v :in $ ?e ?a :where [?e ?a ?v]]"
-    //          conn.q(query, e.asInstanceOf[Object], a).map(_.head)
-    //        } else {
-    //          val query = "[:find ?v :in $ ?e ?a ?key :where [?e ?a ?v][(.startsWith ^String ?v ?key)]]"
-    //          conn.q(query, e.asInstanceOf[Object], a, key.asInstanceOf[Object]).map(_.head)
-    //        }
-    //        strs.map {
-    //          case str: String =>
-    //            val Seq(key: String, value: String) = str.split("@", 2).toSeq
-    //            key -> value
-    //        }.toMap
-
     val query = if (key.isEmpty) {
       s"[:find ?v :where [$e $a ?v]]"
     } else {
@@ -197,7 +184,6 @@ case class ModelTransformerAsync(conn: Conn, model: Model) extends Helpers {
       }.toMap
     }
   }
-
 
   private def getAttrValues(query: String, attr: String): Future[List[AnyRef]] = {
     val (card, tpe) = attrInfo(attr)
@@ -259,46 +245,85 @@ case class ModelTransformerAsync(conn: Conn, model: Model) extends Helpers {
       if (id.isInstanceOf[TempId]) {
         Future(Nil)
       } else {
-        val query = if (prefix.isDefined) {
-          s"""[:find ?enums
-             | :where [$id $attr ?a]
-             |        [?a :db/ident ?b]
-             |        [(name ?b) ?enums]
-             |]""".stripMargin
-        } else {
-          s"[:find ?values :where [$id $attr ?values]]"
-        }
+        // Sometimes (!) the Clojure `name` function call causes an exception on the second run. Not sure if this affects the Client/rpc implementation.
+        // com.google.common.util.concurrent.UncheckedExecutionException: java.lang.ClassCastException: datomic.extensions$eval36971 cannot be cast to clojure.lang.IFn (LocalCache.java:2051)
         if (conn.isJsPlatform) {
+          val query = if (prefix.isDefined) {
+            s"""[:find ?enums
+               | :where [$id $attr ?a]
+               |        [?a :db/ident ?b]
+               |        [(name ?b) ?enums]
+               |]""".stripMargin
+          } else {
+            s"[:find ?v :where [$id $attr ?v]]"
+          }
           getAttrValues(query, attr)
         } else {
-          Future(conn.q(query).map(_.head)) // could be empty
+          Future {
+            if (prefix.isDefined) {
+              conn.q(
+                // Omitting the [(name ?b) ?enums] clause
+                s"[:find ?enumKW :where [$id $attr ?enumId][?enumId :db/ident ?enumKW]]"
+                // Extracting for instance "enum1" from :Ns.enum/enum1 KW
+              ).map(_.head.toString.split('/').last)
+            } else {
+              conn.q(
+                s"[:find ?v :where [$id $attr ?v]]"
+              ).map(_.head)
+            }
+          }
         }
       }
     }
 
+    //    def attrValues(id: Any, attr: String): Future[Seq[AnyRef]] = {
+    //      if (id.isInstanceOf[TempId]) {
+    //        Future(Nil)
+    //      } else {
+    //        val query = if (prefix.isDefined) {
+    //          s"""[:find ?enums
+    //             | :where [$id $attr ?a]
+    //             |        [?a :db/ident ?b]
+    //             |        [(name ?b) ?enums]
+    //             |]""".stripMargin
+    //        } else {
+    //          s"[:find ?values :where [$id $attr ?values]]"
+    //        }
+    //        if (conn.isJsPlatform) {
+    //          getAttrValues(query, attr)
+    //        } else {
+    //          Future(conn.q(query).map(_.head)) // could be empty
+    //        }
+    //      }
+    //    }
+
     def edgeAB(edge1: Any, targetAttr: String): Future[(Any, Any)] = {
-      // todo: js-impl
-      //      if (conn.isJsPlatform) {
-      //      } else {
-      //      }
       for {
         edge2 <- otherEdge(edge1)
-        ent1 <- Future(conn.entity(edge1))
-        ent2 <- Future(conn.entity(edge2))
+        keys1 <- entityAttrKeys(edge1)
+        keys2 <- entityAttrKeys(edge2)
       } yield {
-        val map1 = ent1.mapOneLevel
-        val map2 = ent2.mapOneLevel
-        val s1   = map1.size
-        val s2   = map2.size
-
+        val s1 = keys1.size
+        val s2 = keys2.size
         if (s1 > s2)
           (edge1, edge2)
         else if (s1 < s2)
           (edge2, edge1)
-        else if (!map1.contains(targetAttr))
+        else if (!keys1.contains(targetAttr))
           (edge2, edge1)
         else
           (edge1, edge2)
+      }
+    }
+
+    def entityAttrKeys(eid: Any): Future[List[String]] = {
+      if (conn.isJsPlatform) {
+        conn.entityAttrKeys(eid.toString.toLong)
+      } else {
+        Future(
+          conn.q(s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]")
+            .map(_.head.toString)
+        )
       }
     }
 

@@ -15,7 +15,7 @@ case class DatomicInMemProxy(
 case class DatomicPeerProxy(
   protocol: String,
   dbIdentifier: String,
-  edns: Seq[String],
+  edns: Seq[String] = Nil,
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy
 
@@ -23,7 +23,7 @@ case class DatomicDevLocalProxy(
   system: String,
   storageDir: String,
   dbName: String,
-  edns: Seq[String],
+  edns: Seq[String] = Nil,
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy
 

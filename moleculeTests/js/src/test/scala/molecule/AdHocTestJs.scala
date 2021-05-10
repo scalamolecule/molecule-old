@@ -7,14 +7,13 @@ import molecule.core.marshalling.{ConnProxy, Conn_Js, DatomicInMemProxy, Datomic
 import molecule.datomic.api.out3._
 import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.mbrainz.dsl.MBrainz._
-import molecule.tests.examples.datomic.mbrainz.schema.MBrainzSchema
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object AdHocTestJs extends TestSuite {
 
-  def peerConn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973", Nil, UUID.randomUUID().toString))
+  def peerConn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973"))
 
   implicit val conn = peerConn
 
@@ -40,7 +39,7 @@ object AdHocTestJs extends TestSuite {
     }
 
     test("Int-String") {
-      Artist.endYear.name.getAsync.map {
+      Artist.endYear.name.getAsync.collect {
         case Right(v) => v.sorted.take(2) ==> List(
           (1672, "Heinrich Schütz"),
           (1741, "Antonio Vivaldi")

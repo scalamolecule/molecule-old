@@ -23,6 +23,12 @@ object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal with Helpers with ClojureBridge {
 
 
+  def clearCache: Future[Boolean] = Future {
+    connCache.clear()
+    queryExecutorCache.clear()
+    true
+  }
+
   def transactAsync(
     dbProxy: DbProxy,
     stmtsEdn: String,
@@ -122,11 +128,18 @@ object DatomicRpc extends MoleculeRpc
     } else Nil
   }
 
-  def clearCache: Future[Boolean] = Future {
-    connCache.clear()
-    queryExecutorCache.clear()
-    true
+  def entityAttrKeys(
+    dbProxy: DbProxy,
+    eid: Long
+  ): Future[List[String]] = Future {
+    val query = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
+    var list  = List.empty[String]
+    getCachedQueryExecutor(dbProxy)(query, Nil).forEach { row =>
+      list = row.get(0).toString :: list
+    }
+    list.sorted
   }
+
 
   // Cache Conn and QueryExecutors ---------------------------------------------
 

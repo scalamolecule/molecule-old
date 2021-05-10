@@ -6,8 +6,10 @@ import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.exception.Model2TransactionException
+import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+//import scala.concurrent.duration.DurationInt
+//import scala.concurrent.{Await, Future}
 
 
 /** Model to Statements transformer.
@@ -1012,8 +1014,8 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
 
   def insertStmts(dataRows: Iterable[Seq[Any]]): Seq[Statement] = {
     val (genericStmts, genericTxStmts) = splitStmts()
-    val dataStmts                      = dataRows.toSeq.flatMap(resolveStmts(genericStmts, _, 0))
-    val txStmts                        = genericTxStmts.foldLeft(Seq.empty[Statement]) {
+    lazy val dataStmts = dataRows.toSeq.flatMap(resolveStmts(genericStmts, _, 0))
+    lazy val txStmts   = genericTxStmts.foldLeft(Seq.empty[Statement]) {
       case (stmts, Add("tx", a, Values(vs, prefix), bi)) if txRefAttr(stmts)      => valueStmts(stmts, stmts.last.v.asInstanceOf[Object], a, vs, prefix, bi, None)
       case (stmts, Add("tx", a, Values(vs, prefix), bi))                          => valueStmts(stmts, tempId("tx"), a, vs, prefix, bi, None)
       case (stmts, Add("tx", a, refNs: String, bi)) if !refNs.startsWith("__")    => valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, None)
@@ -1022,18 +1024,14 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
       case (stmts, Add("txRef", a, refNs: String, bi)) if !refNs.startsWith("__") => valueStmts(stmts, lastE(stmts, a, 0, bi), a, tempId(refNs), None, bi, None)
       case (_, unexpected)                                                        => err("insertStmts", "Unexpected insert statement: " + unexpected)
     }
-//    println("insertStmts sync:")
-//    (dataStmts ++ txStmts) foreach println
+
+    //    Await.result(ModelTransformerAsync(conn, model).insertStmts(dataRows), 10.seconds)
     dataStmts ++ txStmts
-    val asyncRes = Await.result(ModelTransformerAsync(conn, model).insertStmts(dataRows), 10.seconds)
-//    println("insertStmts async:")
-//    asyncRes foreach println
-    asyncRes
   }
 
 
   def saveStmts: Seq[Statement] = {
-    val xx = genericStmts.foldLeft("", Option.empty[AnyRef], Seq.empty[Statement]) { case ((backRef, edgeB, stmts), genericStmt) =>
+    lazy val stmts = genericStmts.foldLeft("", Option.empty[AnyRef], Seq.empty[Statement]) { case ((backRef, edgeB, stmts), genericStmt) =>
       genericStmt match {
         case Add("__tempId", a, Values(vs, pf), bi@BiEdgePropAttr(_))                               => val edgeB1 = Some(tempId(a)); (backRef, edgeB1, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB1))
         case Add("__tempId", a, Values(vs, pf), bi)                                                 => (backRef, edgeB, valueStmts(stmts, tempId(a), a, vs, pf, bi, edgeB))
@@ -1064,21 +1062,14 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
       }
     }._3
 
-
-//    println("saveStmts sync:")
-//    xx foreach println
-
-    val res = Await.result(ModelTransformerAsync(conn, model).saveStmts, 10.seconds)
-
-//    println("saveStmts ASYNC:")
-//    res foreach println
-    res
+    //    Await.result(ModelTransformerAsync(conn, model).saveStmts, 10.seconds)
+    stmts
   }
 
 
   def updateStmts: Seq[Statement] = {
     val (genericStmts, genericTxStmts) = splitStmts()
-    val dataStmts: Seq[Statement]      = genericStmts.foldLeft(
+    lazy val dataStmts: Seq[Statement] = genericStmts.foldLeft(
       Option.empty[AnyRef],
       Seq.empty[Statement],
       0L
@@ -1110,15 +1101,12 @@ case class ModelTransformer(conn: Conn, model: Model) extends Helpers {
       }
     }._2
 
-    val txStmts = genericTxStmts.foldLeft(Seq[Statement]()) {
+    lazy val txStmts = genericTxStmts.foldLeft(Seq[Statement]()) {
       case (stmts, Add("tx", a, Values(vs, prefix), bi)) => valueStmts(stmts, datomicTx, a, vs, prefix, bi, None)
       case (_, unexpected)                               => err("updateStmts", "Unexpected insert statement: " + unexpected)
     }
 
-//    println("updateStmts sync:")
-//    (dataStmts ++ txStmts) foreach println
-//    println("-----------------")
+    //    Await.result(ModelTransformerAsync(conn, model).updateStmts, 10.seconds)
     dataStmts ++ txStmts
-    Await.result(ModelTransformerAsync(conn, model).updateStmts, 10.seconds)
   }
 }

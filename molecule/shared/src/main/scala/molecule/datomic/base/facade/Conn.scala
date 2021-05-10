@@ -187,7 +187,10 @@ trait Conn {
                    (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
 
 
-  def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_]
+  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_]
+
+
+  // Client query rpc api
 
   /**
     *
@@ -201,18 +204,24 @@ trait Conn {
     * @tparam Tpl
     * @return
     */
-  def qAsync[Tpl](
+  private[molecule] def qAsync[Tpl](
     query: Query,
     n: Int,
     indexes: List[(Int, Int, Int, Int)],
     qr2tpl: QueryResult => Int => Tpl
   )(implicit ec: ExecutionContext): Future[Either[String, List[Tpl]]] = ???
 
-  def getAttrValuesAsync(
+  private[molecule] def getAttrValuesAsync(
     datalogQuery: String,
     card: Int,
     tpe: String
   )(implicit ec: ExecutionContext): Future[List[String]]
+
+  private[molecule] def entityAttrKeys(
+    eid: Long
+  )(implicit ec: ExecutionContext): Future[List[String]] = ???
+
+  // Query api
 
   /** Query Datomic directly with optional Scala inputs.
     * {{{
@@ -321,8 +330,6 @@ trait Conn {
     * */
   def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]]
 
-  def qAsyncRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]] = ???
-
   /** Query Datomic directly with db value and optional Scala inputs and get raw Java result.
     * {{{
     *   // Sample data
@@ -385,7 +392,7 @@ trait Conn {
   def modelTransformer(model: Model): ModelTransformer = ModelTransformer(this, model)
   def modelTransformerAsync(model: Model): ModelTransformerAsync = ModelTransformerAsync(this, model)
 
-  def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
+  private[molecule] def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 
   def inspect(
     clazz: String,

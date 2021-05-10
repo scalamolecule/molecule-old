@@ -84,7 +84,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.lihaoyi" %%% "utest" % "0.7.9",
       "io.suzaku" %%% "boopickle" % "1.3.3",
-      "com.github.cornerman" %%% "sloth" % "0.3.0"
+      "com.github.cornerman" %%% "sloth" % "0.3.0",
+
+      "org.specs2" %%% "specs2-core" % "4.10.6"
     ),
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,
