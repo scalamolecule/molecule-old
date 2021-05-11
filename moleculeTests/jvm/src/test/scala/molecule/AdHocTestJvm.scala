@@ -13,53 +13,42 @@ package molecule
 
 //import datomicClient.ClojureBridge
 
+import java.util.concurrent.Executors.newFixedThreadPool
+import datomicClient.ClojureBridge
 import molecule.core.util.{Helpers, JavaUtil}
 import molecule.core.util.testing.MoleculeTestHelper
 import molecule.datomic.api.in1_out13._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.peer.facade.Datomic_Peer._
 import molecule.setup.core.CoreData
+import molecule.tests.core.base.dsl.CoreTest._
 import molecule.tests.core.base.schema.CoreTestSchema
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mutable.Specification
+import scala.concurrent.ExecutionContext
+//import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import _root_.datomic.Peer
+//import scala.concurrent.ExecutionContext.fromExecutorService
 import scala.concurrent.duration._
 
 
 //class AdHocTestJvm extends molecule.setup.TestSpec with Helpers {
 class AdHocTestJvm extends Specification
-  //  with ClojureBridge
-  with JavaUtil with MoleculeTestHelper with CoreData {
+  with ClojureBridge with JavaUtil with MoleculeTestHelper with CoreData {
 
 
   "core" >> {
-    //    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
+    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
 
 
-    //    val tx1 = Ns.int(1).save
-    //    val e   = tx1.eid
-    //    val tx2 = Ns(e).int(2).update
-
-    //    require("clojure.core.async")
-    //    require("datomic.Peer")
-
-    //    Await.result(
-    //      Future {
-    //        _root_.datomic.Peer.q("[:find ?n :where [(+ 1 1) ?n]]")
-    //      },
-    //      5.seconds
-    //    ).iterator().next.get(0) === 2
-
-//    await(Future(Peer.q("[:find ?n :where [(molecule.util.fns/- 2 1) ?n]]"))) === 5
-//    Future(Peer.q("[:find ?n :where [(ground 1) ?n] [(molecule.util.fns/- 2 1) ?n]]"))
+//        await(Future(Peer.q("[:find ?n :where [(+ 1 1) ?n]]"))) === 2
 
 
-
-    await(Future(Peer.q("[:find ?n :where [(+ 1 1) ?n]]"))) === 2
     //        await(Future(Peer.q("[:find ?n :where [(+ 1 1) ?n]]")))
     //        Peer.q("[:find ?n :where [(+ 1 1) ?n]]").iterator().next.get(0) === 2
-    //        await(Future(Peer.q("[:find ?n :where [(+ 1 1) ?n]]"))).iterator().next.get(0) === 2
+        await(Future(Peer.q("[:find ?n :where [(+ 1 1) ?n]]"))).iterator().next.get(0) === 2
     //    await(Future(Peer.q("[:find ?n :where [(+ 1 1) ?n]]"))).iterator().next.get(0) === 2
 
     //    await(Future(
@@ -91,8 +80,18 @@ class AdHocTestJvm extends Specification
     //          |]""".stripMargin, Seq(42)
     //      )
     //    ))
-    //    await(Future(Ns(42).int.t.op.inspectGetHistory))
-    //    await(Future(Ns(42).int.t.op.getObjListHistory))
+    //        await(Future(Ns(42).int.t.op.inspectGetHistory))
+    //        await(Future(Ns(42).int.t.op.getObjListHistory))
+
+    val tx1 = Ns.int(1).save
+    val e   = tx1.eid
+    val tx2 = Ns(e).int(2).update
+
+    await(Ns(e).int.t.op.getAsyncObjListHistory).sortBy(o => (o.t, o.op)).map(o => Vector(o.int, o.t, o.op)) === List(
+      Vector(1, tx1.t, true),
+      Vector(1, tx2.t, false),
+      Vector(2, tx2.t, true)
+    )
 
     //      .sortBy(o => (o.t, o.op)).map(o => Vector(o.int, o.t, o.op)) === List(
     //      Vector(1, tx1.t, true),
@@ -112,9 +111,16 @@ class AdHocTestJvm extends Specification
     //      Vector(2, tx2.t, true)
     //    )
 
-
-    ok
+    //    Await.result(Future(1), Duration.Inf) must_== 1
+    //    ok
   }
+
+  //  Peer.shutdown(true)
+
+
+  //  _root_.datomic.Peer.shutdown(true)
+  //    defaultExecutorService.shutdownNow()
+
   //
   //  "Simple hyperedge" in new GraphSetup {
   //

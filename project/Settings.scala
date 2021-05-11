@@ -63,9 +63,11 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-slf4j" % "2.6.14",
         "com.typesafe.akka" %% "akka-protobuf-v3" % "2.6.14",
         "com.typesafe.akka" %% "akka-http" % "10.2.4",
-        "ch.megard" %% "akka-http-cors" % "1.1.1",
+        "ch.megard" %% "akka-http-cors" % "1.1.1"
       ),
-      testFrameworks += new TestFramework("utest.runner.Framework")
+      testFrameworks += new TestFramework("utest.runner.Framework"),
+      // Ensure clojure loads correctly for async tests run from sbt
+      Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
     ) ++ (if (datomicProtocol == "free") {
       Seq(libraryDependencies += "com.datomic" % "datomic-free" % "0.9.5697")
     } else {

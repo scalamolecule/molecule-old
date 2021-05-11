@@ -29,3 +29,4 @@ project/plugins/project/
 */.DS_Store
 tests/lib/
 project/project/
+node_modules/

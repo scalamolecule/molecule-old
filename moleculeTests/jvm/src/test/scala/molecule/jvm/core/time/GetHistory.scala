@@ -21,19 +21,26 @@ class GetHistory extends TestSpec {
     val e1  = tx1.eid
     val t1  = tx1.t
 
+
+    // Adding time separations to ensure that transactions are not within the
+    // same millisecond. Only necessary if using Dates. For precision, use t or tx.
+    Thread.sleep(10)
     val tx2 = Ns(e1).str("b").update
     val t2  = tx2.t
 
+    Thread.sleep(10)
     val tx3 = Ns(e1).int(2).update
     val t3  = tx3.t
 
 
     // Second entity - 2 transactions
 
+    Thread.sleep(10)
     val tx4 = Ns.str("x").int(4).save
     val e2  = tx4.eid
     val t4  = tx4.t
 
+    Thread.sleep(10)
     val tx5 = Ns(e2).int(5).update
     val t5  = tx5.t
   }
@@ -270,20 +277,17 @@ class GetHistory extends TestSpec {
 
   "Tacit generic attrs" in new Setup {
 
-    // Transaction dates
-    Thread.sleep(100)
-    val date2 = tx2.inst
-    Thread.sleep(100)
-    val date3 = tx3.inst
-    Thread.sleep(100)
-    val date5 = tx5.inst
-
     // Entities with retractions
     Ns.e.a.v.t.op_(false).getHistory.sortBy(_._4) === List(
       (e1, ":Ns/str", "a", t2),
       (e1, ":Ns/int", 1, t3),
       (e2, ":Ns/int", 4, t5)
     )
+
+    // Transaction dates
+    val date2 = tx2.inst
+    val date3 = tx3.inst
+    val date5 = tx5.inst
 
     Ns.e.a.v.txInstant.op_(false).getHistory.sortBy(t => (t._2, t._4)) === List(
       (e1, ":Ns/int", 1, date3),
