@@ -1,92 +1,64 @@
 package molecule
 
-//import _root_.datomic.Peer
-//import datomicClient.ClojureBridge
-//import molecule.core.util.JavaUtil
-//import molecule.core.util.testing.MoleculeTestHelper
-//import molecule.setup.core.CoreData
-//import org.specs2.mutable.Specification
-//import scala.concurrent.ExecutionContext.Implicits.global
-//import scala.concurrent.Future
-
-//import java.util.Date
-
-//import datomicClient.ClojureBridge
-
-import java.util.concurrent.Executors.newFixedThreadPool
-import datomicClient.ClojureBridge
-import molecule.core.api.Molecule_1
-import molecule.core.dsl.base
-import molecule.core.util.{Helpers, JavaUtil}
-import molecule.core.util.testing.MoleculeTestHelper
+import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
 import molecule.datomic.api.in1_out13._
-import molecule.datomic.api.in1_out4.m
-import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.peer.facade.Datomic_Peer._
-import molecule.setup.core.CoreData
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.tests.core.base.schema.CoreTestSchema
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.mutable.Specification
-import scala.concurrent.ExecutionContext
-//import scala.concurrent.ExecutionContext
-//import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
-import _root_.datomic.Peer
-//import scala.concurrent.ExecutionContext.fromExecutorService
-import scala.concurrent.duration._
+import molecule.tests.examples.datomic.dayOfDatomic.schema.GraphSchema
+import utest._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class AdHocTestJvm extends molecule.setup.TestSpec with Helpers {
-  //class AdHocTestJvm extends Specification
-  //  with ClojureBridge with JavaUtil with MoleculeTestHelper with CoreData {
+object AdhocTestJs extends TestSuite {
 
 
-  //  "core" >> {
-  //    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
-  //
-  ////    1 === 2
-  //
-  //    val in: Molecule_1.Molecule_1_01[base.Init with Ns_int, Int, Int] = m(Ns.int(?))
-  //
-  //    in(5).getAsync
-  //
-  //
-  //    Ns.uri(uri1).inspectSave
-  //    Ns.uri(uri1).save
-  //    Ns.uri.get === List(uri1)
-  //
-  //
-  //
-  ////    ok
-  //  }
+  lazy val tests = Tests {
 
-  //  Peer.shutdown(true)
+    test("core") {
+      implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
+
+      for {
+        // Initial value
+        Right(tx) <- Ns.int(1).saveAsync
+        r1 <- Ns.int.getAsync
+        eid = tx.eid
+
+        // Apply new value
+        _ <- Ns(eid).int(2).updateAsync
+        r2 <- Ns.int.getAsync
+
+        // Apply empty value (retract)
+        _ <- Ns(eid).int().updateAsync
+        r3 <- Ns.int.getAsync
+      } yield {
+        r1 ==> Right(List(1))
+        r2 ==> Right(List(2))
+        r3 ==> Right(List())
+      }
+
+//      1 ==> 2
+    }
+  }
 
 
-  //  _root_.datomic.Peer.shutdown(true)
-  //    defaultExecutorService.shutdownNow()
 
+
+//    test("Simple hyperedge") {
+//      import molecule.tests.examples.datomic.dayOfDatomic.dsl.Graph._
+//      implicit val conn = Conn_Js(DatomicInMemProxy(GraphSchema.datomicPeer))
+//
+//      // User 1 Roles in Group 2
+//      User.name_("User1")
+//        .RoleInGroup.Group.name_("Group2")
+//        ._RoleInGroup.Role.name.inspectGet
+//
+//    }
   //
-  //  "Simple hyperedge" in new GraphSetup {
-  //
-  //    import molecule.tests.examples.datomic.dayOfDatomic.dsl.Graph._
-  //
-  //    // User 1 Roles in Group 2
-  //    User.name_("User1")
-  //      .RoleInGroup.Group.name_("Group2")
-  //      ._RoleInGroup.Role.name.inspectGet
-  //
-  //
-  //    ok
-  //  }
-  //
-  //      "adhoc" in new BidirectionalSetup {
-  //        import molecule.tests.core.bidirectionals.dsl.Bidirectional._
-  //
-  //      }
-  //
-  //
+  //    "adhoc" in new BidirectionalSetup {
+  //      import molecule.tests.core.bidirectionals.dsl.Bidirectional._
+  //      Person.name("Ann").Buddies.e(gus)
+  //    }
+
   //    "self-join" >> {
   //      import molecule.tests.core.ref.dsl.SelfJoin._
   //      implicit val conn: Conn = Datomic_Peer.recreateDbFrom(SelfJoinSchema)
@@ -118,14 +90,8 @@ class AdHocTestJvm extends molecule.setup.TestSpec with Helpers {
   //
   //
   //
-  //  "adhoc" in new CoreSetup {
-  //
-  //    import molecule.tests.core.base.dsl.CoreTest._
-  //
-  //    Ns.str.bool.inspectGet
-  ////    Ns.str.bool.inspectGet
-  ////    m(Ns.str.bool).inspectGet
-  //  }
+
+
   //
   //    "Insert resolves to correct partitions" in new PartitionSetup {
   //  "Insert resolves to correct partitions" >> {

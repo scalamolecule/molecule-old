@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import boopickle.Default._
@@ -50,21 +50,36 @@ object AjaxResponder extends App with Serializations {
                   dataAsByteArray
                 }
               case Left(err)                     =>
-                throw new RuntimeException(s"$method error: " + err)
+                Future.failed(new RuntimeException(s"$method error: " + err))
             }
             complete {
-              HttpEntity(
-                ContentTypes.`application/octet-stream`,
-                Await.result(futResult, 20.seconds) // todo...
-              )
+              futResult.map { res =>
+                HttpEntity(ContentTypes.`application/octet-stream`, res)
+              }
             }
+
           } catch {
             case t: Throwable =>
               println("AjaxResponder error encoding response: " + t)
-              throw t
+              complete("AjaxResponder error encoding response: " + t)
+              // todo: make failed Future work
+              val futResult: Future[Array[Byte]] = Future.failed(t)
+              complete {
+                futResult.map { res =>
+                  HttpEntity(ContentTypes.`application/octet-stream`, res)
+                }
+              }
           }
 
-        case _ => complete("Ooops, request entity is not strict!")
+        case _ =>
+          complete("Ooops, request entity is not strict!")
+          // todo: make failed Future work
+          val futResult: Future[Array[Byte]] = Future.failed(new RuntimeException("Ooops, request entity is not strict!"))
+          complete {
+            futResult.map { res =>
+              HttpEntity(ContentTypes.`application/octet-stream`, res)
+            }
+          }
       }
     }
   }

@@ -1,22 +1,15 @@
-package molecule
+package molecule.js.examples.datomic.mbrainz
 
-import java.net.URI
-import java.util.{Date, UUID}
-import molecule.core.marshalling.MoleculeWebClient.moleculeRpc
-import molecule.core.marshalling.{ConnProxy, Conn_Js, DatomicInMemProxy, DatomicPeerProxy}
+import molecule.core.marshalling.{Conn_Js, DatomicPeerProxy}
 import molecule.datomic.api.out3._
-import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.mbrainz.dsl.MBrainz._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object AdHocTestJs extends TestSuite {
+object MBrainz extends TestSuite {
 
-  def peerConn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973"))
-
-  implicit val conn = peerConn
-
+  implicit val conn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973"))
 
   implicit class testFutureEither[T](eitherFuture: Future[Either[String, T]]) {
     def ===(expectedValue: T): Future[Unit] = eitherFuture.map {
@@ -29,7 +22,7 @@ object AdHocTestJs extends TestSuite {
     }
   }
 
-  lazy val tests = Tests {
+  val tests = Tests {
 
     test("String-Int") {
       Artist.name.endYear.getAsync(2) === List(
@@ -37,6 +30,7 @@ object AdHocTestJs extends TestSuite {
         ("Brüder Grimm", 1863)
       )
     }
+
 
     test("Int-String") {
       Artist.endYear.name.getAsync.collect {
@@ -60,12 +54,12 @@ object AdHocTestJs extends TestSuite {
       )
     }
 
-    //    test("String-String") {
-    //      implicit val conn = ConnProxy(DatomicPeerProxy("mem", schema = Some(CoreTestSchema)))
-    //      Artist.name.sortName.getAsync2(2) === List(
-    //        ("Rolf Lundqvist & Arbete & fritid", "Lundqvist, Rolf & Arbete & fritid"),
-    //        ("Rusty York", "York, Rusty")
-    //      )
-    //    }
+    //        test("String-String") {
+    //          implicit val conn = ConnProxy(DatomicPeerProxy("mem", schema = Some(CoreTestSchema)))
+    //          Artist.name.sortName.getAsync2(2) === List(
+    //            ("Rolf Lundqvist & Arbete & fritid", "Lundqvist, Rolf & Arbete & fritid"),
+    //            ("Rusty York", "York, Rusty")
+    //          )
+    //        }
   }
 }

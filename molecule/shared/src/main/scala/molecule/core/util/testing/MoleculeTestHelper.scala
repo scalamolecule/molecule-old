@@ -22,7 +22,7 @@ trait MoleculeTestHelper extends RegexMatching {
 
   def formatTx(tx: Seq[Statement]): String = {
     val longestAction = tx.map(stmt => stmt.action.length).max
-    val longestAttr   = tx.map(stmt => stmt.a.toString.length).max
+    val longestAttr   = tx.map(stmt => stmt.a.length).max
     val longestValue  = tx.map(stmt => stmt.v.toString.length).max
 
     // Increment temporary ids in a controlled way so that we can test

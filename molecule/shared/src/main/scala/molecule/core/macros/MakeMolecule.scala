@@ -89,6 +89,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
+            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -101,6 +102,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
+            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -120,6 +122,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
+            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -133,6 +136,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
+            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """

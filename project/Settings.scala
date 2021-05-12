@@ -48,7 +48,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-    scalaJSUseMainModuleInitializer := true
+    scalaJSUseMainModuleInitializer := true,
+//    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
   val server: Seq[Def.Setting[_]] = {

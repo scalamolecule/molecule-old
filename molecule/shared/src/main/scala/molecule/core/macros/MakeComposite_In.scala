@@ -59,6 +59,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             ) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override lazy val isJsPlatform: Boolean = $isJsPlatform
             }
             new $outMolecule
           }
@@ -77,6 +78,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             ) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override lazy val isJsPlatform: Boolean = $isJsPlatform
             }
             new $outMolecule
           }
@@ -99,6 +101,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             ) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override lazy val isJsPlatform: Boolean = $isJsPlatform
             }
             new $outMolecule
           }
@@ -118,6 +121,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             ) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override lazy val isJsPlatform: Boolean = $isJsPlatform
             }
             new $outMolecule
           }

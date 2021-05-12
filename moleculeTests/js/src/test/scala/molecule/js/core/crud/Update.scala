@@ -11,12 +11,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Update extends TestSuite with CoreData {
 
+  def getConn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
   lazy val tests = Tests {
-    def getConn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
 
     test("Card one") {
-      implicit val conn = getConn
       test("types") {
+        implicit val conn = getConn
         for {
           Right(tx) <- Ns
             .str("a")
@@ -58,6 +58,7 @@ object Update extends TestSuite with CoreData {
       }
 
       test("apply") {
+        implicit val conn = getConn
         for {
           // Initial value
           Right(tx) <- Ns.int(1).saveAsync
