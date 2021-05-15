@@ -11,7 +11,7 @@ class Attribute extends TestSpec {
   "Async" in new CoreSetup {
     Ns.int(1).save
     Ns.int.getAsync.map { result =>
-      result === Right(List(1))
+      result === List(1)
     }
   }
 

@@ -4,6 +4,8 @@ import java.net.URI
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.{Date, UUID}
+import molecule.datomic.base.facade.TxReport
+import scala.concurrent.{ExecutionContext, Future}
 
 object Helpers extends Helpers
 trait Helpers extends DateHandling {
@@ -122,5 +124,11 @@ trait Helpers extends DateHandling {
     val d         = LocalDateTime.ofInstant(Instant.ofEpochMilli(elapsed), ZoneOffset.UTC)
     println(s"TIME $n: " + formatter.format(d))
     time0 = System.currentTimeMillis()
+  }
+
+  def condense[T](either: Future[Either[Throwable, T]])
+              (implicit ec: ExecutionContext): Future[T] = either.flatMap {
+    case Right(res) => Future.successful(res)
+    case Left(err)  => Future.failed(err)
   }
 }

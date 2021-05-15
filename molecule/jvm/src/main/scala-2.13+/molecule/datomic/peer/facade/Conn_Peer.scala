@@ -8,7 +8,7 @@ import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.util.{Helpers, QueryOpsClojure}
+import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb._
@@ -35,8 +35,10 @@ object Conn_Peer {
 
 /** Facade to Datomic connection for peer api.
   * */
-class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
-  extends Conn_Datomic213 with Helpers {
+class Conn_Peer(
+  val peerConn: datomic.Connection,
+  val system: String = ""
+) extends Conn_Datomic213 {
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
@@ -164,62 +166,47 @@ class Conn_Peer(val peerConn: datomic.Connection, val system: String = "")
   }
 
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]] = {
+                      (implicit ec: ExecutionContext): Future[TxReport] = try {
     if (_adhocDb.isDefined) {
-      Future(
-        try {
-          Right(TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts))
-        } catch {
-          case t: Throwable => Left(t.toString)
-        }
-      )
+      Future(TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts))
 
     } else if (_testDb.isDefined) {
       Future {
-        try {
-          Right(TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts))
-          // In-memory "transaction"
-          val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
+        // In-memory "transaction"
+        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
 
-          // Continue with updated in-memory db
-          // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-          //      val dbAfter = txReport.dbAfter
-          val dbAfter = txReport.dbAfter.asOf(txReport.t)
-          _testDb = Some(dbAfter)
-          Right(txReport)
-        } catch {
-          case t: Throwable => Left(t.toString)
-        }
+        // Continue with updated in-memory db
+        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+        //      val dbAfter = txReport.dbAfter
+        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+        _testDb = Some(dbAfter)
+        txReport
       }
 
     } else {
       // Live transaction
-      try {
-        val listenableFuture = peerConn.transactAsync(javaStmts)
-        val p                = Promise[util.Map[_, _]]()
-        listenableFuture.addListener(
-          new java.lang.Runnable {
-            override def run: Unit = {
-              try {
-                p.success(listenableFuture.get())
-              } catch {
-                case e: java.util.concurrent.ExecutionException =>
-                  p.failure(e.getCause)
-                case NonFatal(e)                                =>
-                  p.failure(e)
-              }
-              ()
+      val listenableFuture = peerConn.transactAsync(javaStmts)
+      val p                = Promise[util.Map[_, _]]()
+      listenableFuture.addListener(
+        new java.lang.Runnable {
+          override def run: Unit = {
+            try {
+              p.success(listenableFuture.get())
+            } catch {
+              case e: java.util.concurrent.ExecutionException => p.failure(e.getCause)
+              case NonFatal(e)                                => p.failure(e)
             }
-          },
-          (arg0: Runnable) => ec.execute(arg0)
-        )
-        p.future.map { moleculeInvocationResult: java.util.Map[_, _] =>
-          Right(TxReport_Peer(moleculeInvocationResult, scalaStmts))
-        }
-      } catch {
-        case NonFatal(ex) => Future(Left(ex.toString))
+            ()
+          }
+        },
+        (arg0: Runnable) => ec.execute(arg0)
+      )
+      p.future.map { moleculeInvocationResult: java.util.Map[_, _] =>
+        TxReport_Peer(moleculeInvocationResult, scalaStmts)
       }
     }
+  } catch {
+    case NonFatal(ex) => Future.failed(ex)
   }
 
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any]): jCollection[jList[AnyRef]] = {

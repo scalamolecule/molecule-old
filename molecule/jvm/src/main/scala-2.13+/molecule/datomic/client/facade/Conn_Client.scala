@@ -26,8 +26,12 @@ import scala.util.control.NonFatal
 
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
   * */
-case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String, system: String = "")
-  extends Conn_Datomic213 with Helpers {
+case class Conn_Client(
+  client: Client,
+  clientAsync: AsyncClient,
+  dbName: String,
+  system: String = ""
+) extends Conn_Datomic213 {
 
   val clientConn: sync.Connection = client.connect(dbName)
 
@@ -197,10 +201,10 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
   }
 
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]] = Future {
-    try {
+                      (implicit ec: ExecutionContext): Future[TxReport] = try {
+    Future {
       if (_adhocDb.isDefined) {
-        Right(TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts))
+        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
       } else if (_testDb.isDefined) {
         // In-memory "transaction"
@@ -211,16 +215,17 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String,
         //      val dbAfter = txReport.dbAfter
         val dbAfter = txReport.dbAfter.asOf(txReport.t)
         _testDb = Some(dbAfter)
-        Right(txReport)
+        txReport
 
       } else {
         // Live transaction (simply wrapping in future instead using datomic async api)
-        Right(TxReport_Client(clientConn.transact(javaStmts)))
+        TxReport_Client(clientConn.transact(javaStmts))
       }
-    } catch {
-      case t: Throwable => Left(t.toString)
     }
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
   }
+
 
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any]): jCollection[jList[AnyRef]] = {
     val inputs = inputs0.map {

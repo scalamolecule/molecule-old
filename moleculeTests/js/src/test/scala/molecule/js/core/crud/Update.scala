@@ -18,7 +18,7 @@ object Update extends TestSuite with CoreData {
       test("types") {
         implicit val conn = getConn
         for {
-          Right(tx) <- Ns
+          tx <- Ns
             .str("a")
             .int(1)
             .float(1.1f)
@@ -50,10 +50,10 @@ object Update extends TestSuite with CoreData {
           res <- Ns.e.str.int.float.long.double.bool.date
             .uuid.uri.bigInt.bigDec.enum.getAsync
         } yield {
-          res ==> Right(List(
+          res ==> List(
             (eid, "b", 2, 2.2f, 2L, 2.2, false, date2
               , uuid2, uri2, bigInt2, bigDec2, "enum2")
-          ))
+          )
         }
       }
 
@@ -61,7 +61,7 @@ object Update extends TestSuite with CoreData {
         implicit val conn = getConn
         for {
           // Initial value
-          Right(tx) <- Ns.int(1).saveAsync
+          tx <- Ns.int(1).saveAsync
           r1 <- Ns.int.getAsync
           eid = tx.eid
 
@@ -73,9 +73,9 @@ object Update extends TestSuite with CoreData {
           _ <- Ns(eid).int().updateAsync
           r3 <- Ns.int.getAsync
         } yield {
-          r1 ==> Right(List(1))
-          r2 ==> Right(List(2))
-          r3 ==> Right(List())
+          r1 ==> List(1)
+          r2 ==> List(2)
+          r3 ==> List()
         }
       }
     }
@@ -83,7 +83,7 @@ object Update extends TestSuite with CoreData {
     test("Card many") {
       implicit val conn = getConn
       for {
-        Right(tx) <- Ns
+        tx <- Ns
           .strs("a", "b")
           .ints(1, 2)
           .floats(1.1f, 2.2f)
@@ -100,7 +100,7 @@ object Update extends TestSuite with CoreData {
         res <- Ns.e.strs.ints.floats.longs.doubles.bools.dates
           .uuids.uris.bigInts.bigDecs.enums.getAsync
       } yield {
-        res ==> Right(List((
+        res ==> List((
           tx.eid,
           Set("a", "b"),
           Set(1, 2),
@@ -114,14 +114,14 @@ object Update extends TestSuite with CoreData {
           Set(bigInt1, bigInt2),
           Set(bigDec1, bigDec2),
           Set("enum1", "enum2")
-        )))
+        ))
       }
     }
 
     test("Card map") {
       implicit val conn = getConn
       for {
-        Right(tx) <- Ns
+        tx <- Ns
           .strMap(Map("a" -> "a"))
           .intMap(Map("a" -> 1))
           .floatMap(Map("a" -> 1.1f))
@@ -137,7 +137,7 @@ object Update extends TestSuite with CoreData {
         res <- Ns.e.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap
           .uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
       } yield {
-        res ==> Right(List((
+        res ==> List((
           tx.eid,
           Map("a" -> "a"),
           Map("a" -> 1),
@@ -150,7 +150,7 @@ object Update extends TestSuite with CoreData {
           Map("a" -> uri1),
           Map("a" -> bigInt1),
           Map("a" -> bigDec1)
-        )))
+        ))
       }
     }
 
@@ -160,7 +160,7 @@ object Update extends TestSuite with CoreData {
         _ <- Ns.int(1).Ref1.int1(2).saveAsync
         res <- Ns.int.Ref1.int1.getAsync
       } yield {
-        res ==> Right(List((1, 2)))
+        res ==> List((1, 2))
       }
     }
   }

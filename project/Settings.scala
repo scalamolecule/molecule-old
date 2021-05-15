@@ -1,5 +1,5 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport.{jsEnv, scalaJSUseMainModuleInitializer}
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt._
 import sbt.Keys._
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
@@ -48,8 +48,11 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-    scalaJSUseMainModuleInitializer := true,
-//    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+//    scalaJSUseMainModuleInitializer := true,
+//    scalaJSUseTestModuleInitializer := true,
+//    mainClass := Some("MainApp"),
+//    scalaJSMainModuleInitializer := Some("MainApp"),
+    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
   val server: Seq[Def.Setting[_]] = {

@@ -99,7 +99,7 @@ trait EntityOps {
   def retractAsync(
     eids: Iterable[Long],
     txMetaDataMolecules: Molecule*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] = {
+  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
     val retractStmts    = eids.toSeq.distinct map RetractEntity
     val txMetaDataStmts = if (txMetaDataMolecules.isEmpty) {
       Nil

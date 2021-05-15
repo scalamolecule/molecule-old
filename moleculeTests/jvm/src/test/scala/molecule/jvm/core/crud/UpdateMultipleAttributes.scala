@@ -18,7 +18,7 @@ class UpdateMultipleAttributes extends TestSpec {
       // Calls Datomic's transactAsync API
 
       // Initial data
-      Ns.int.str insertAsync List((1, "a"), (2, "b")) collect { case Right(tx) => // tx report from successful insert transaction
+      Ns.int.str insertAsync List((1, "a"), (2, "b")) collect { tx => // tx report from successful insert transaction
         // 2 inserted entities
         val List(e1, e2) = tx.eids
         Ns.int.get === List((1, "a"), (2, "b"))

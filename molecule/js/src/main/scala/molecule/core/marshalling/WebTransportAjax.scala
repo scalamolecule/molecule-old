@@ -2,8 +2,7 @@ package molecule.core.marshalling
 
 import java.nio.ByteBuffer
 import boopickle.Default._
-import org.scalajs.dom
-import org.scalajs.dom.ext.AjaxException
+import org.scalajs.dom.ext.{Ajax, AjaxException}
 import sloth._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -12,9 +11,7 @@ import scala.scalajs.js.typedarray._
 case class WebTransportAjax(baseAjaxUri: String) extends RequestTransport[ByteBuffer, Future] {
 
   override def apply(req: Request[ByteBuffer]): Future[ByteBuffer] = {
-
-    // Request
-    dom.ext.Ajax.post(
+    Ajax.post(
       url = baseAjaxUri + "/" + req.path.mkString("/"),
       data = Pickle.intoBytes(req.payload), // Param values
       responseType = "arraybuffer",
@@ -34,17 +31,9 @@ case class WebTransportAjax(baseAjaxUri: String) extends RequestTransport[ByteBu
           case n => s"Ajax call failed: XMLHttpRequest.status = $n. $advice"
         }
         println(msg)
-
-        // Pass XMLHttpRequest causing the exception (in Future) to client
         xhr
-
-      case err =>
-        println("Ajax post error: " + err)
-        throw new RuntimeException(err)
-
-    }.map { r =>
-      // Success Future with response
-      TypedArrayBuffer.wrap(r.response.asInstanceOf[ArrayBuffer])
+    }.map { req =>
+      TypedArrayBuffer.wrap(req.response.asInstanceOf[ArrayBuffer])
     }
   }
 }

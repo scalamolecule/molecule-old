@@ -15,7 +15,7 @@ class UpdateMapInt extends TestSpec {
 
     // todo: remove when async implemented for other systems
     if (system == SystemPeer) {
-      // Update asynchronously and return Future[Either[String, TxReport]]
+      // Update asynchronously and return Future[TxReport]
       // Calls Datomic's transactAsync API
 
       //      // Initial data
@@ -32,13 +32,13 @@ class UpdateMapInt extends TestSpec {
       //      }
 
       for {
-        Right(txr) <- Ns.intMap("str1" -> 1).saveAsync
+        txr <- Ns.intMap("str1" -> 1).saveAsync
         e = txr.eid
         res1 <- Ns.intMap.getAsync
         res2 <- Ns(e).intMap.assert("str1" -> 10).updateAsync
       } yield {
-        res1 === Right(List("str1" -> 1))
-        res2 === Right(List("str1" -> 10))
+        res1 === List("str1" -> 1)
+        res2 === List("str1" -> 10)
       }
     }
     // For brevity, the synchronous equivalent `update` is used in the following tests

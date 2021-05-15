@@ -1032,8 +1032,9 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
       }
     }
 
-    Await.result(ModelTransformerAsync(conn, model).insertStmts(dataRows), 10.seconds)
-    //    dataStmts ++ txStmts
+    // Test that async transformer behaves the same
+    //    Await.result(ModelTransformerAsync(conn, model).insertStmts(dataRows), 10.seconds)
+    dataStmts ++ txStmts
   }
 
 
@@ -1129,8 +1130,9 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
         }
     }._3
 
-    Await.result(ModelTransformerAsync(conn, model).saveStmts, 10.seconds)
-    //    stmts
+    // Test that async transformer behaves the same
+    //    Await.result(ModelTransformerAsync(conn, model).saveStmts, 10.seconds)
+    stmts
   }
 
 
@@ -1200,7 +1202,8 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
         err("updateStmts", "Unexpected insert statement: " + unexpected)
     }
 
-    Await.result(ModelTransformerAsync(conn, model).updateStmts, 10.seconds)
-    //    dataStmts ++ txStmts
+    // Test that async transformer behaves the same
+    //    Await.result(ModelTransformerAsync(conn, model).updateStmts, 10.seconds)
+    dataStmts ++ txStmts
   }
 }

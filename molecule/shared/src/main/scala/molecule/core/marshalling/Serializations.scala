@@ -24,4 +24,9 @@ trait Serializations {
   // Some common pickle transformers
   implicit val datePickler = transformPickler((t: Long) => new java.util.Date(t))(_.getTime)
   implicit val uriPickler  = transformPickler((t: String) => new URI(t))(_.toString)
+
+  implicit val trowa = exceptionPickler
+    .addException[DbException](m => DbException(m))
+
+
 }

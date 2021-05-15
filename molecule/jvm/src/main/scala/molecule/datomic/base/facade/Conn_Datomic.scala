@@ -46,23 +46,23 @@ trait Conn_Datomic extends Conn {
 
 
   def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
+                   (implicit ec: ExecutionContext): Future[TxReport] =
     transactAsyncRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
 
   def transactAsync(edn: String, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
+                   (implicit ec: ExecutionContext): Future[TxReport] =
     transactAsyncRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
 
   def transactAsync(stmtsReader: Reader)
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
+                   (implicit ec: ExecutionContext): Future[TxReport] =
     transactAsyncRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
 
   def transactAsync(edn: String)
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
+                   (implicit ec: ExecutionContext): Future[TxReport] =
     transactAsyncRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
 
   def transactAsync(scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
+                   (implicit ec: ExecutionContext): Future[TxReport] =
     transactAsyncRaw(stmts2java(scalaStmts), scalaStmts)
 
 

@@ -1,7 +1,7 @@
 package molecule.core.marshalling
 
 import molecule.datomic.base.facade.TxReportRPC
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MoleculeRpc {
 
@@ -16,7 +16,7 @@ trait MoleculeRpc {
     dbProxy: DbProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
-  ): Future[Either[String, TxReportRPC]]
+  ): Future[Either[Throwable, TxReportRPC]]
 
 
   def queryAsync(
@@ -28,7 +28,7 @@ trait MoleculeRpc {
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
     indexes: List[(Int, Int, Int, Int)]
-  ): Future[Either[String, QueryResult]]
+  ): Future[Either[Throwable, QueryResult]]
 
 
   def getAttrValuesAsync(
@@ -43,5 +43,10 @@ trait MoleculeRpc {
     dbProxy: DbProxy,
     eid: Long
   ): Future[List[String]]
+
+
+  def ping(i: Int): Future[Int]
+
+  def pong(i: Int): Future[Either[Throwable, Int]]
 
 }

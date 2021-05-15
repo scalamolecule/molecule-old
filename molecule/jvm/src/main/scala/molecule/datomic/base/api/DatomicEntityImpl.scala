@@ -8,14 +8,14 @@ import datomicClient.anomaly.Fault
 import molecule.core.ast.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
-import molecule.core.util.Quoted
+import molecule.core.util.{Helpers, Quoted}
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
 
 
-abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity with Quoted {
+abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity with Quoted with Helpers {
 
   // Get ================================================================
 
@@ -93,7 +93,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
   def retract: TxReport = conn.transact(getRetractStmts)
 
-  def retractAsync(implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
+  def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
     conn.transactAsync(getRetractStmts)
 
   def getRetractStmts: List[RetractEntity] = List(RetractEntity(eid))
@@ -113,7 +113,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
     def retract: TxReport = conn.transact(stmts)
 
-    def retractAsync(implicit ec: ExecutionContext): Future[Either[String, TxReport]] =
+    def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
       conn.transactAsync(stmts)
 
     def inspectRetract: Unit =

@@ -21,9 +21,9 @@ object Insert extends TestSuite with CoreData {
         )
         res <- Ns.str.int.float.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.getAsync
       } yield {
-        res ==> Right(List(
+        res ==> List(
           ("a", 1, 1.1f, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, "enum1")
-        ))
+        )
       }
     }
 
@@ -35,7 +35,7 @@ object Insert extends TestSuite with CoreData {
         )
         res <- Ns.str.int.float.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.getAsync
       } yield {
-        res.getOrElse(Nil).sortBy(_._1) ==> List(
+        res.sortBy(_._1) ==> List(
           ("a", 1, 1.1f, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, "enum1"),
           ("b", 2, 2.2f, 2L, 2.2, false, date2, uuid2, uri2, bigInt2, bigDec2, "enum2"),
         )
@@ -60,7 +60,7 @@ object Insert extends TestSuite with CoreData {
         )
         res <- Ns.strs.ints.floats.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.getAsync
       } yield {
-        res ==> Right(List(
+        res ==> List(
           (
             Set("a", "b"),
             Set(1, 2),
@@ -75,13 +75,13 @@ object Insert extends TestSuite with CoreData {
             Set(bigDec1, bigDec2),
             Set("enum1", "enum2")
           )
-        ))
+        )
       }
     }
 
     test("Card many, multiple tuples") {
       for {
-        Right(txr) <- Ns.strs.ints.floats.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums insertAsync List(
+        txr <- Ns.strs.ints.floats.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums insertAsync List(
           (
             Set("a", "b"),
             Set(1, 2),
@@ -117,7 +117,7 @@ object Insert extends TestSuite with CoreData {
         // Cardinality many values coagulate into single Set's
         res2 <- Ns.strs.ints.floats.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.getAsync
       } yield {
-        res1 ==> Right(List(
+        res1 ==> List(
           (
             e1,
             Set("a", "b"),
@@ -148,8 +148,8 @@ object Insert extends TestSuite with CoreData {
             Set(bigDec3, bigDec4),
             Set("enum3", "enum4")
           )
-        ))
-        res2 ==> Right(List(
+        )
+        res2 ==> List(
           (
             Set("a", "b", "c", "d"),
             Set(1, 2, 3, 4),
@@ -164,7 +164,7 @@ object Insert extends TestSuite with CoreData {
             Set(bigDec1, bigDec2, bigDec3, bigDec4),
             Set("enum1", "enum2", "enum3", "enum4"),
           )
-        ))
+        )
       }
     }
 
@@ -185,7 +185,7 @@ object Insert extends TestSuite with CoreData {
         )
         res <- Ns.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
       } yield {
-        res ==> Right(List(
+        res ==> List(
           (
             Map("a" -> "a"),
             Map("a" -> 1),
@@ -199,13 +199,13 @@ object Insert extends TestSuite with CoreData {
             Map("a" -> bigInt1),
             Map("a" -> bigDec1),
           )
-        ))
+        )
       }
     }
 
     test("Card map, multiple tuples") {
       for {
-        Right(txr) <- Ns.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap insertAsync List(
+        txr <- Ns.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap insertAsync List(
           (
             Map("a" -> "a"),
             Map("a" -> 1),
@@ -239,7 +239,7 @@ object Insert extends TestSuite with CoreData {
         // Cardinality many values coagulate into single Maps (Sets)
         res2 <- Ns.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
       } yield {
-        res1 ==> Right(List(
+        res1 ==> List(
           (
             e1,
             Map("a" -> "a"),
@@ -268,8 +268,8 @@ object Insert extends TestSuite with CoreData {
             Map("b" -> bigInt2),
             Map("b" -> bigDec2),
           )
-        ))
-        res2 ==> Right(List(
+        )
+        res2 ==> List(
           (
             Map("a" -> "a", "b" -> "b"),
             Map("a" -> 1, "b" -> 2),
@@ -283,7 +283,7 @@ object Insert extends TestSuite with CoreData {
             Map("a" -> bigInt1, "b" -> bigInt2),
             Map("a" -> bigDec1, "b" -> bigDec2),
           )
-        ))
+        )
       }
     }
   }

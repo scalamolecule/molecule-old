@@ -18,6 +18,7 @@ import moleculeBuildInfo.BuildInfo.datomicProtocol
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal with Helpers with ClojureBridge {
@@ -33,7 +34,7 @@ object DatomicRpc extends MoleculeRpc
     dbProxy: DbProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
-  ): Future[Either[String, TxReportRPC]] = Future {
+  ): Future[Either[Throwable, TxReportRPC]] = Future {
     try {
       //      println("transact " + dbProxy.uuid + "\n" + stmtsEdn)
       println(stmtsEdn)
@@ -44,10 +45,10 @@ object DatomicRpc extends MoleculeRpc
         )
       )
     } catch {
-      case t: Throwable =>
-        Left("Error from executing transaction in DatomicRpc: " + t.toString)
+      case NonFatal(exc) => Left(exc)
     }
   }
+
 
   def queryAsync(
     dbProxy: DbProxy,
@@ -58,7 +59,7 @@ object DatomicRpc extends MoleculeRpc
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
     indexes: List[(Int, Int, Int, Int)]
-  ): Future[Either[String, QueryResult]] = Future {
+  ): Future[Either[Throwable, QueryResult]] = Future {
     val log = new log
     try {
       val t           = TimerPrint("DatomicRpc")
@@ -68,20 +69,16 @@ object DatomicRpc extends MoleculeRpc
       val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
 
       val queryTime = t.delta
+      log(datalogQuery + "         " + qTime(queryTime))
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
       //      log(qTime(queryTime) + "  " + datalogQuery)
-      log(datalogQuery + "         " + qTime(queryTime))
       //      log("dbProxy uuid: " + dbProxy.uuid)
       //      log("Query time  : " + thousands(queryTime) + " ms")
       //      log("rowCountAll : " + rowCountAll)
       //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
       //      log("rowCount    : " + rowCount)
 
-      if (rowCount == 0) {
-        log.print
-        Left("Empty result set")
-      } else {
         val queryResult = Rows2QueryResult(
           allRows, rowCountAll, rowCount, queryTime, indexes
         ).get
@@ -91,10 +88,13 @@ object DatomicRpc extends MoleculeRpc
         //        log("Sending data to client... Total server time: " + t.msTotal)
         log.print
         Right(queryResult)
-      }
+
     } catch {
-      case t: Throwable =>
-        Left("Error from executing query in DatomicRpc: " + t.getMessage)
+      case NonFatal(exc) => Left(exc)
+      //      case NonFatal(err) =>
+      //        Left("Error from executing query in DatomicRpc: " + t.getMessage)
+//      case t: Throwable =>
+//        Left("Error from executing query in DatomicRpc: " + t.getMessage)
     }
   }
 
@@ -132,12 +132,36 @@ object DatomicRpc extends MoleculeRpc
     dbProxy: DbProxy,
     eid: Long
   ): Future[List[String]] = Future {
-    val query = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
-    var list  = List.empty[String]
-    getCachedQueryExecutor(dbProxy)(query, Nil).forEach { row =>
-      list = row.get(0).toString :: list
+    try {
+      val query = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
+      var list  = List.empty[String]
+      getCachedQueryExecutor(dbProxy)(query, Nil).forEach { row =>
+        list = row.get(0).toString :: list
+      }
+      list.sorted
+    } catch {
+      case _: Throwable => Nil
     }
-    list.sorted
+  }
+
+  def ping(i: Int): Future[Int] = {
+    if (i <= 3) {
+      Future.successful(i * 100)
+    } else if (i == 4) {
+      Future.failed(DbException("XXY"))
+    } else {
+      Future.failed(new IllegalArgumentException("XYX"))
+    }
+  }
+
+  def pong(i: Int): Future[Either[Throwable, Int]] = {
+    if (i <= 3) {
+      Future(Right(i * 100))
+    } else if (i == 4) {
+      Future(Left(DbException("XXY")))
+    } else {
+      Future(Left(new IllegalArgumentException("XYX")))
+    }
   }
 
 

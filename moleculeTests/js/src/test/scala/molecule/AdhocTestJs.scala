@@ -1,58 +1,166 @@
 package molecule
 
-import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
+import java.lang.RuntimeException
+import java.nio.ByteBuffer
+import java.util.UUID
+import boopickle.Default._
+import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy, DbException}
 import molecule.datomic.api.in1_out13._
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.dayOfDatomic.schema.GraphSchema
+import org.scalajs.dom
+import org.scalajs.dom.ext.{Ajax, AjaxException}
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-
+import scala.concurrent.{Future, Promise}
+import scala.scalajs.js.Date
+import scala.scalajs.js.timers._
+import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
+import scala.util.{Failure, Success}
+import scala.util.control.Exception
 
 object AdhocTestJs extends TestSuite {
 
 
   lazy val tests = Tests {
 
+    implicit val exPickler = exceptionPickler
+
+
     test("core") {
       implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
 
-      for {
-        // Initial value
-        Right(tx) <- Ns.int(1).saveAsync
-        r1 <- Ns.int.getAsync
-        eid = tx.eid
+      //      conn.moleculeRpc.ping(1)
+      //        .recover { err =>
+      //          println("ERR: " + err)
+      //          err ==> 4
+      //        }
+      //        .map { res =>
+      //          println("RES: " + res)
+      //          res ==> 100
+      //        }
 
-        // Apply new value
-        _ <- Ns(eid).int(2).updateAsync
-        r2 <- Ns.int.getAsync
 
-        // Apply empty value (retract)
-        _ <- Ns(eid).int().updateAsync
-        r3 <- Ns.int.getAsync
-      } yield {
-        r1 ==> Right(List(1))
-        r2 ==> Right(List(2))
-        r3 ==> Right(List())
+      def pong(i: Int): Future[Int] = {
+        (for {
+          either <- conn.moleculeRpc.pong(i)
+        } yield either).flatMap {
+          case Right(res) => Future.successful(res)
+          case Left(err)  => Future.failed(err)
+        }
+      }
+      def pang(i: Int): Future[Either[Throwable, Int]] = {
+        conn.moleculeRpc.pong(i)
       }
 
-//      1 ==> 2
+      //      (for {
+      //        i <- pong(4)
+      //      } yield {
+      //        i ==> 100
+      //      }).recover {
+      //        case err =>
+      //          println("pong: " + err)
+      //      }
+
+      //      pong(2).onComplete{
+      //        case Failure(err) => println(err)
+      //        case Success(res) => res ==> 1001
+      //      }
+
+            pong(2).map(_ ==> 1001)
+
+      (for {
+        r1 <- pong(1)
+        r2 <- pong(2)
+        _ <- pong(4)
+      } yield {
+        r1 ==> 100
+        r2 ==> 200
+        r1 + r2 ==> 301
+      }).recover {
+        case DbException(err) => err ==> "XXY"
+      }
+
+      //      for {
+      //        Right(i) <- pang(4)
+      //      } yield {
+      //        i ==> 100
+      //      }
+      //
+      //      for {
+      //        either <- pang(1)
+      //      } yield {
+      //        either match {
+      //          case Right(res) => res ==> 100
+      //          case Left(re)   => re.getMessage ==> "XXY"
+      //        }
+      //      }
+
+
+      //      val right: Future[Either[String, Int]] = Future(Right(7))
+      //      val left: Future[Either[String, Int]] = Future(Left("x"))
+      //
+      //      for{
+      //        a <- right
+      //        i <- a
+      //        x <- left
+      //
+      //      } yield {
+      //        val j: Int = i
+      //        i
+      //        val y: Int = x
+      //      }
+
+      //
+      ////      val exs: Seq[Throwable] = Seq(
+      ////        new NullPointerException("Noooo!"),
+      ////        new IllegalArgumentException("Your argument is not valid"),
+      ////        new ArrayIndexOutOfBoundsException("There's no such index as 42 here!")
+      ////      )
+      ////      val bb = Pickle.intoBytes(exs)
+      ////      val e  = Unpickle[Seq[Throwable]].fromBytes(bb)
+      ////      assert(e.zip(exs).forall(x => x._1.getMessage == x._2.getMessage && x._1.getClass == x._2.getClass))
+      //
+      //
+      //      val e1:Throwable   = new IllegalArgumentException("XXY")
+      //      val p : ByteBuffer = Pickle.intoBytes(e1)
+      //
+      ////      val p2 = TypedArrayBuffer.wrap(p.asInstanceOf[ArrayBuffer])
+      //
+      //      println("p: " + p)
+      //      println("p: " + p.get(0))
+      //      println("p: " + p.get(1))
+      //      println("p: " + p.get(2))
+      //      println("p: " + p.get(3))
+      //      println("p: " + p.get(4))
+      ////      println("p: " + p.get(5))
+      ////      println("p: " + p2.asCharBuffer())
+      ////      println("p: " + p2.asCharBuffer().array().mkString("Array(", ", ", ")"))
+      ////      println("p: " + p2.array().mkString("Array(", ", ", ")"))
+      //      val e2  = Unpickle.apply[Throwable].fromBytes(p)
+      //      e2.getMessage ==> e1.getMessage
+      //      e2.getClass ==> e1.getClass
+      //
+      //      println(e1.getStackTrace.mkString("Array(\n", "\n", "\n)"))
+
+
     }
   }
 
 
 
 
-//    test("Simple hyperedge") {
-//      import molecule.tests.examples.datomic.dayOfDatomic.dsl.Graph._
-//      implicit val conn = Conn_Js(DatomicInMemProxy(GraphSchema.datomicPeer))
-//
-//      // User 1 Roles in Group 2
-//      User.name_("User1")
-//        .RoleInGroup.Group.name_("Group2")
-//        ._RoleInGroup.Role.name.inspectGet
-//
-//    }
+  //    test("Simple hyperedge") {
+  //      import molecule.tests.examples.datomic.dayOfDatomic.dsl.Graph._
+  //      implicit val conn = Conn_Js(DatomicInMemProxy(GraphSchema.datomicPeer))
+  //
+  //      // User 1 Roles in Group 2
+  //      User.name_("User1")
+  //        .RoleInGroup.Group.name_("Group2")
+  //        ._RoleInGroup.Role.name.inspectGet
+  //
+  //    }
   //
   //    "adhoc" in new BidirectionalSetup {
   //      import molecule.tests.core.bidirectionals.dsl.Bidirectional._

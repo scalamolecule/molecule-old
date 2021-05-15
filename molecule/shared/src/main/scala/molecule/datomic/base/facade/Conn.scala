@@ -164,19 +164,19 @@ trait Conn {
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
+                      (implicit ec: ExecutionContext): Future[TxReport]
 
   def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
+                   (implicit ec: ExecutionContext): Future[TxReport]
 
   def transactAsync(edn: String, scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
+                   (implicit ec: ExecutionContext): Future[TxReport]
 
   def transactAsync(stmtsReader: Reader)
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
+                   (implicit ec: ExecutionContext): Future[TxReport]
 
   def transactAsync(edn: String)
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
+                   (implicit ec: ExecutionContext): Future[TxReport]
 
   /** Asynchronously transact Seq of Seqs of [[molecule.datomic.base.ast.transactionModel.Statement Statement]]s
     *
@@ -184,7 +184,7 @@ trait Conn {
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
   def transactAsync(scalaStmts: Seq[Statement])
-                   (implicit ec: ExecutionContext): Future[Either[String, TxReport]]
+                   (implicit ec: ExecutionContext): Future[TxReport]
 
 
   private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_]
@@ -209,7 +209,7 @@ trait Conn {
     n: Int,
     indexes: List[(Int, Int, Int, Int)],
     qr2tpl: QueryResult => Int => Tpl
-  )(implicit ec: ExecutionContext): Future[Either[String, List[Tpl]]] = ???
+  )(implicit ec: ExecutionContext): Future[List[Tpl]] = ???
 
   private[molecule] def getAttrValuesAsync(
     datalogQuery: String,

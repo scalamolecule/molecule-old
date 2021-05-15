@@ -11,15 +11,9 @@ object MBrainz extends TestSuite {
 
   implicit val conn = Conn_Js(DatomicPeerProxy("dev", "localhost:4334/mbrainz-1968-1973"))
 
-  implicit class testFutureEither[T](eitherFuture: Future[Either[String, T]]) {
-    def ===(expectedValue: T): Future[Unit] = eitherFuture.map {
-      case Right(realValue) => realValue ==> expectedValue
-      case Left(realValue)  => realValue ==> expectedValue
-    }
-    def isEmpty: Future[Unit] = eitherFuture.map {
-      case Right(realValue) => realValue ==> "Empty result set"
-      case Left(realValue)  => realValue ==> "Empty result set"
-    }
+//  implicit class testFutureEither[T](fut: Future[T])(implicit ex: ExecutionContext) {
+  implicit class testFutureEither[T](fut: Future[T]) {
+    def ===(expectedValue: T): Future[Unit] = fut.map(_ ==> expectedValue)
   }
 
   val tests = Tests {
@@ -34,7 +28,7 @@ object MBrainz extends TestSuite {
 
     test("Int-String") {
       Artist.endYear.name.getAsync.collect {
-        case Right(v) => v.sorted.take(2) ==> List(
+        case v => v.sorted.take(2) ==> List(
           (1672, "Heinrich Schütz"),
           (1741, "Antonio Vivaldi")
           //          (1980, "Bill Evans")

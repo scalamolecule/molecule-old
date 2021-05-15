@@ -1,10 +1,11 @@
 package molecule.core.api
 
+import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TxBundles {
+trait TxBundles extends Helpers {
 
   /** Transact bundled transaction statements
     * <br><br>
@@ -58,7 +59,7 @@ trait TxBundles {
     */
   def transactBundleAsync(
     stmtss: Seq[Statement]*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[Either[String, TxReport]] =
+  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] =
     conn.transactAsync(stmtss.flatten)
 
 

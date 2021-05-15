@@ -9,6 +9,7 @@ import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.util.control.NonFatal
 
 
 /** Default asynchronous data getter methods on molecules returning `Future[List[Tpl]]`.
@@ -47,13 +48,7 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsync(implicit conn: Conn): Future[Either[String, List[Tpl]]] = {
-    if (isJsPlatform) {
-      getAsync(-1)
-    } else {
-      Future(Right(get(conn)))
-    }
-  }
+  def getAsync(implicit conn: Conn): Future[List[Tpl]] = getAsync(-1)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule.
@@ -69,13 +64,13 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsync(n: Int)(implicit conn: Conn): Future[Either[String, List[Tpl]]] = try {
+  def getAsync(n: Int)(implicit conn: Conn): Future[List[Tpl]] = try {
     if (isJsPlatform)
       conn.asInstanceOf[ConnProxy].qAsync(_nestedQuery.getOrElse(_query), n, indexes, qr2tpl)
     else
-      Future(Right(get(n)(conn)))
+      Future(get(n)(conn))
   } catch {
-    case t: Throwable => Future(Left("Error extracting data from QueryResult: " + t.toString))
+    case NonFatal(ex) => Future.failed(ex)
   }
 
   // get as of ================================================================================================

@@ -26,14 +26,14 @@ class Save extends TestSpec with ClojureBridge {
       }
 
       // Deferred resolution
-      val futureSave: Future[Either[String, TxReport]] = Ns.str("Ben").int(42).saveAsync
+      val futureSave: Future[TxReport] = Ns.str("Ben").int(42).saveAsync
 
       for {
         _ <- futureSave
         result <- Ns.str.int.getAsync
       } yield {
         // Data was saved
-        result === Right(List(("Ben", 42)))
+        result === List(("Ben", 42))
       }
 
       // For brevity, the synchronous equivalent `save` is used in the following tests

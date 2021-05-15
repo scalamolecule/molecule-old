@@ -196,7 +196,7 @@ case class Conn_Client(client: Client, clientAsync: AsyncClient, dbName: String)
   }
 
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]] = Future {
+                      (implicit ec: ExecutionContext): Future[TxReport] = Future {
     try {
       if (_adhocDb.isDefined) {
         Right(TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts))

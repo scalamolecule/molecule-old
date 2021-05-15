@@ -163,7 +163,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
   }
 
   def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[Either[String, TxReport]] = {
+                      (implicit ec: ExecutionContext): Future[TxReport] = {
     if (_adhocDb.isDefined) {
       Future(
         try {

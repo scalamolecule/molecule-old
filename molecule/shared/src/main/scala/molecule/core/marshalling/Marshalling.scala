@@ -2,7 +2,8 @@ package molecule.core.marshalling
 
 import java.util.{List => jList}
 import molecule.datomic.base.ast.transactionModel.Statement
-import scala.concurrent.Future
+import molecule.datomic.base.facade.TxReport
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Marshalling methods for casting raw row (server) / QueryResult (client) data.
@@ -60,6 +61,4 @@ trait Marshalling[Obj, Tpl] {
   /** Row to tuple cast interface to be materialized by macro */
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
 
-
-//  def stmts2edn(stmts: Seq[Statement]): String = Stmts2Edn(stmts)
 }

@@ -16,7 +16,7 @@ object Save extends TestSuite with CoreData {
 
     test("Card one") {
       for {
-        Right(tx) <- Ns
+        tx <- Ns
           .str("a")
           .int(1)
           .float(1.1f)
@@ -32,15 +32,15 @@ object Save extends TestSuite with CoreData {
           .saveAsync
         res <- Ns.e.str.int.float.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.getAsync
       } yield {
-        res ==> Right(List(
+        res ==> List(
           (tx.eid, "a", 1, 1.1f, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, "enum1")
-        ))
+        )
       }
     }
 
     test("Card many") {
       for {
-        Right(tx) <- Ns
+        tx <- Ns
           .strs("a", "b")
           .ints(1, 2)
           .floats(1.1f, 2.2f)
@@ -56,7 +56,7 @@ object Save extends TestSuite with CoreData {
           .saveAsync
         res <- Ns.e.strs.ints.floats.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.getAsync
       } yield {
-        res ==> Right(List((
+        res ==> List((
           tx.eid,
           Set("a", "b"),
           Set(1, 2),
@@ -70,13 +70,13 @@ object Save extends TestSuite with CoreData {
           Set(bigInt1, bigInt2),
           Set(bigDec1, bigDec2),
           Set("enum1", "enum2")
-        )))
+        ))
       }
     }
 
     test("Card map") {
       for {
-        Right(tx) <- Ns
+        tx <- Ns
           .strMap(Map("a" -> "a"))
           .intMap(Map("a" -> 1))
           .floatMap(Map("a" -> 1.1f))
@@ -91,7 +91,7 @@ object Save extends TestSuite with CoreData {
           .saveAsync
         res <- Ns.e.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
       } yield {
-        res ==> Right(List((
+        res ==> List((
           tx.eid,
           Map("a" -> "a"),
           Map("a" -> 1),
@@ -104,7 +104,7 @@ object Save extends TestSuite with CoreData {
           Map("a" -> uri1),
           Map("a" -> bigInt1),
           Map("a" -> bigDec1)
-        )))
+        ))
       }
     }
 
@@ -113,7 +113,7 @@ object Save extends TestSuite with CoreData {
         _ <- Ns.int(1).Ref1.int1(2).saveAsync
         res <- Ns.int.Ref1.int1.getAsync
       } yield {
-        res ==> Right(List((1, 2)))
+        res ==> List((1, 2))
       }
     }
   }

@@ -18,13 +18,13 @@ class Retract extends TestSpec {
       // Calls Datomic's transactAsync API
 
       // Initial data
-      Ns.int.insertAsync(1, 2).collect { case Right(tx) => // tx report from successful insert transaction
+      Ns.int.insertAsync(1, 2).collect { tx => // tx report from successful insert transaction
         // 2 inserted entities
         val List(e1, e2) = tx.eids
         Ns.int.get === List(1, 2)
 
         // Retract first entity asynchronously
-        e1.retractAsync.collect { case Right(tx2) => // tx report from successful retract transaction
+        e1.retractAsync.collect { tx2 => // tx report from successful retract transaction
           // Current data
           Ns.int.get === List(2)
         }
@@ -44,13 +44,13 @@ class Retract extends TestSpec {
       // Calls Datomic's transactAsync API
 
       // Initial data
-      Ns.int.insertAsync(1, 2, 3).collect { case Right(tx) => // tx report from successful insert transaction
+      Ns.int.insertAsync(1, 2, 3).collect { tx => // tx report from successful insert transaction
         // 2 inserted entities
         val List(e1, e2, e3) = tx.eids
         Ns.int.get === List(1, 2, 3)
 
         // Retract first entity asynchronously
-        retractAsync(Seq(e1, e2)).collect { case Right(tx2) => // tx report from successful retract transaction
+        retractAsync(Seq(e1, e2)).collect { tx2 => // tx report from successful retract transaction
           // Current data
           Ns.int.get === List(3)
         }
