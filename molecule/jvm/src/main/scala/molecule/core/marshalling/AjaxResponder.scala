@@ -49,8 +49,8 @@ object AjaxResponder extends App with Serializations {
                   dataAsByteArray
                 }
                 .recoverWith { t =>
-                  println("-------------------------------------------")
-                  println("Unexpected exception in future: " + t)
+                  println("----- Error in AjaxResponder --------------------------------------")
+                  println(t)
                   println(t.getStackTrace.mkString("\n"))
                   val t2: Throwable   = t
                   val tb              = Pickle.intoBytes(t2)

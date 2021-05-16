@@ -160,6 +160,16 @@ class Conn_Peer(
       txReport
 
     } else {
+      //      println("javaStmts " + javaStmts)
+      //      val a = peerConn.transact(javaStmts)
+      //      println("a " + a)
+      //      val b = a.get
+      //      println("b " + b)
+      //
+      //      val t = TxReport_Peer(b, scalaStmts)
+      //      println("txR " + t)
+      //
+      //      t
       // Live transaction
       TxReport_Peer(peerConn.transact(javaStmts).get, scalaStmts)
     }
@@ -185,16 +195,30 @@ class Conn_Peer(
 
     } else {
       // Live transaction
-      val listenableFuture = peerConn.transactAsync(javaStmts)
-      val p                = Promise[util.Map[_, _]]()
+      //      try {
+      val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
+      //        println("AAA " + listenableFuture.getClass)
+      //        println("AAA " + listenableFuture)
+      val p                                                  = Promise[util.Map[_, _]]()
       listenableFuture.addListener(
         new java.lang.Runnable {
           override def run: Unit = {
             try {
               p.success(listenableFuture.get())
             } catch {
-              case e: java.util.concurrent.ExecutionException => p.failure(e.getCause)
-              case NonFatal(e)                                => p.failure(e)
+              case e: Throwable =>
+                println("javaStmts:\n" + javaStmts)
+                println("Datomic transactAsync error: --------------------------------\n" + listenableFuture)
+
+                e match {
+                  case e: java.util.concurrent.ExecutionException =>
+                    println("Datomic ExecutionException: " + e.getCause)
+                    p.failure(e.getCause)
+
+                  case NonFatal(e) =>
+                    println("Datomic NonFatal exception: " + e)
+                    p.failure(e)
+                }
             }
             ()
           }
@@ -204,6 +228,11 @@ class Conn_Peer(
       p.future.map { moleculeInvocationResult: java.util.Map[_, _] =>
         TxReport_Peer(moleculeInvocationResult, scalaStmts)
       }
+      //      } catch {
+      //        case NonFatal(exc) =>
+      //          println("XXX " + exc)
+      //          Future.failed(exc)
+      //      }
     }
   } catch {
     case NonFatal(ex) => Future.failed(ex)

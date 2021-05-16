@@ -46,6 +46,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time" % "2.2.2",
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
     ),
+//    scalaJSLinkerConfig ~= { _.withSemantics(_.withStrictFloats(true)) },
     testFrameworks += new TestFramework("utest.runner.Framework"),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
 //    scalaJSUseMainModuleInitializer := true,

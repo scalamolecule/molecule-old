@@ -6,6 +6,7 @@ import java.util.UUID
 import boopickle.Default._
 import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy, DbException}
 import molecule.datomic.api.in1_out13._
+import molecule.setup.core.CoreData
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.tests.core.base.schema.CoreTestSchema
 import molecule.tests.examples.datomic.dayOfDatomic.schema.GraphSchema
@@ -20,27 +21,16 @@ import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
 import scala.util.{Failure, Success}
 import scala.util.control.Exception
 
-object AdhocTestJs extends TestSuite {
+object AdhocTestJs extends TestSuite with CoreData {
 
 
   lazy val tests = Tests {
 
-    implicit val exPickler = exceptionPickler
+        implicit val exPickler = exceptionPickler
 
 
     test("core") {
       implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
-
-      //      conn.moleculeRpc.ping(1)
-      //        .recover { err =>
-      //          println("ERR: " + err)
-      //          err ==> 4
-      //        }
-      //        .map { res =>
-      //          println("RES: " + res)
-      //          res ==> 100
-      //        }
-
 
       def pong(i: Int): Future[Int] = {
         (for {
@@ -54,33 +44,67 @@ object AdhocTestJs extends TestSuite {
         conn.moleculeRpc.pong(i)
       }
 
-      //      (for {
-      //        i <- pong(4)
-      //      } yield {
-      //        i ==> 100
-      //      }).recover {
-      //        case err =>
-      //          println("pong: " + err)
-      //      }
+      //      for {
+      //        _ <- pong(1).map(_ ==> 100)
+      //        _ <- pong(4).recover(_ ==> DbException("XXY"))
+      //        _ <- pong(2).map(_ ==> 200)
+      //      } yield ()
 
-      //      pong(2).onComplete{
-      //        case Failure(err) => println(err)
-      //        case Success(res) => res ==> 1001
-      //      }
 
-            pong(2).map(_ ==> 1001)
-
-      (for {
-        r1 <- pong(1)
-        r2 <- pong(2)
-        _ <- pong(4)
-      } yield {
-        r1 ==> 100
-        r2 ==> 200
-        r1 + r2 ==> 301
-      }).recover {
-        case DbException(err) => err ==> "XXY"
+      implicit class testFutureEither[T](fut: Future[T]) {
+        def ===(expectedValue: T): Future[Unit] = fut.map(_ ==> expectedValue)
       }
+
+
+      for {
+        //        _ <- Ns.int(1).saveAsync
+        //        _ <- Ns.int.getAsync.map(_ ==> List(1))
+        //        _ <- Ns.int.getAsync === List(1)
+
+        // Insert single value for one cardinality-1 attribute
+//        _ <- Ns.str insertAsync str1
+//        _ <- Ns.int insertAsync int1
+//        _ <- Ns.long insertAsync long1
+//        _ <- Ns.float insertAsync 1.10007f
+//        _ <- Ns.float insertAsync float1
+//        _ <- Ns.double insertAsync 1.1
+        _ <- Ns.double insertAsync 1.1f.toDouble
+//        _ <- Ns.double insertAsync double1
+//        _ <- Ns.bool insertAsync bool1
+//        _ <- Ns.date insertAsync date1
+//        _ <- Ns.uuid insertAsync uuid1
+//        _ <- Ns.uri insertAsync uri1
+//        _ <- Ns.enum insertAsync enum1
+//
+//        // Calling `get` on explicit molecule
+//        _ <- m(Ns.str).getAsync === List(str1)
+
+//        // Calling `getAsync` on implicit molecule
+//        _ <- Ns.str.getAsync === List(str1)
+//        _ <- Ns.str.getAsync(1) === List(str1)
+//
+//        // Get one value (RuntimeException if no value)
+//        _ <- Ns.str.getAsync === List(str1)
+//        _ <- Ns.int.getAsync === List(int1)
+//        _ <- Ns.long.getAsync === List(long1)
+//        _ <- Ns.float.getAsync === List(float1)
+//        _ <- Ns.double.getAsync === List(double1)
+//        _ <- Ns.bool.getAsync === List(bool1)
+//        _ <- Ns.date.getAsync === List(date1)
+//        _ <- Ns.uuid.getAsync === List(uuid1)
+//        _ <- Ns.uri.getAsync === List(uri1)
+//        _ <- Ns.enum.getAsync === List(enum1)
+      } yield ()
+
+
+      //      pong(1)
+      //        .flatMap { r => r ==> 100
+      //
+      //          pong(2)
+      //        }.flatMap { r => r ==> 200
+      //
+      //      }
+
 
       //      for {
       //        Right(i) <- pang(4)

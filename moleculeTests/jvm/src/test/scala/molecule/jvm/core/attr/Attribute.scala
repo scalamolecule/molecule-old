@@ -37,14 +37,6 @@ class Attribute extends TestSpec {
     Ns.str.get === List(str1)
     Ns.str.get(1) === List(str1)
 
-    // Get optional value
-    Ns.str.get.headOption === Some(str1)
-
-    // Single value from list
-    Ns.str.get.head === str1
-    // same as
-    Ns.str.get.head === str1
-
     // Get one value (RuntimeException if no value)
     Ns.str.get.head === str1
     Ns.int.get.head === int1

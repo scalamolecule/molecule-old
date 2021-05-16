@@ -34,18 +34,18 @@ object DatomicRpc extends MoleculeRpc
     dbProxy: DbProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
-  ): Future[Either[Throwable, TxReportRPC]] = Future {
+  ): Future[Either[Throwable, TxReportRPC]] = {
     try {
-      //      println("transact " + dbProxy.uuid + "\n" + stmtsEdn)
       println(stmtsEdn)
-      val txReport = getCachedConn(dbProxy).transactRaw(javaStmts(stmtsEdn, uriAttrs))
-      Right(
-        TxReportRPC(
-          txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
+      getCachedConn(dbProxy).transactAsyncRaw(javaStmts(stmtsEdn, uriAttrs)).map { txReport =>
+        Right(
+          TxReportRPC(
+            txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
+          )
         )
-      )
+      }
     } catch {
-      case NonFatal(exc) => Left(exc)
+      case NonFatal(exc) => Future(Left(exc))
     }
   }
 
@@ -79,22 +79,18 @@ object DatomicRpc extends MoleculeRpc
       //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
       //      log("rowCount    : " + rowCount)
 
-        val queryResult = Rows2QueryResult(
-          allRows, rowCountAll, rowCount, queryTime, indexes
-        ).get
+      val queryResult = Rows2QueryResult(
+        allRows, rowCountAll, rowCount, queryTime, indexes
+      ).get
 
-        // log("QueryResult: " + queryResult)
-        //        log("Rows2QueryResult took " + t.ms)
-        //        log("Sending data to client... Total server time: " + t.msTotal)
-        log.print
-        Right(queryResult)
+      // log("QueryResult: " + queryResult)
+      //        log("Rows2QueryResult took " + t.ms)
+      //        log("Sending data to client... Total server time: " + t.msTotal)
+      log.print
+      Right(queryResult)
 
     } catch {
       case NonFatal(exc) => Left(exc)
-      //      case NonFatal(err) =>
-      //        Left("Error from executing query in DatomicRpc: " + t.getMessage)
-//      case t: Throwable =>
-//        Left("Error from executing query in DatomicRpc: " + t.getMessage)
     }
   }
 
