@@ -144,7 +144,6 @@ private[molecule] trait CastOptNested extends TreeOps {
     case "String"     => (colIndex: Int) => q"castOptNestedOne[String](${TermName("it" + colIndex)})"
     case "Int"        => (colIndex: Int) => q"castOptNestedOneInt(${TermName("it" + colIndex)})"
     case "Int2"       => (colIndex: Int) => q"castOptNestedOneInt2(${TermName("it" + colIndex)})"
-    case "Float"      => (colIndex: Int) => q"castOptNestedOneFloat(${TermName("it" + colIndex)})"
     case "Long"       => (colIndex: Int) => q"castOptNestedOne[Long](${TermName("it" + colIndex)})"
     case "Double"     => (colIndex: Int) => q"castOptNestedOne[Double](${TermName("it" + colIndex)})"
     case "Boolean"    => (colIndex: Int) => q"castOptNestedOne[Boolean](${TermName("it" + colIndex)})"
@@ -159,7 +158,6 @@ private[molecule] trait CastOptNested extends TreeOps {
   val castOptNestedManyAttr: String => Int => Tree = {
     case "String"     => (colIndex: Int) => q"castOptNestedMany[String](${TermName("it" + colIndex)})"
     case "Int"        => (colIndex: Int) => q"castOptNestedManyInt(${TermName("it" + colIndex)})"
-    case "Float"      => (colIndex: Int) => q"castOptNestedManyFloat(${TermName("it" + colIndex)})"
     case "Long"       => (colIndex: Int) => q"castOptNestedMany[Long](${TermName("it" + colIndex)})"
     case "Double"     => (colIndex: Int) => q"castOptNestedMany[Double](${TermName("it" + colIndex)})"
     case "Boolean"    => (colIndex: Int) => q"castOptNestedMany[Boolean](${TermName("it" + colIndex)})"
@@ -186,7 +184,6 @@ private[molecule] trait CastOptNested extends TreeOps {
       t.tpeS match {
         case "String"     => (colIndex: Int) => q"castOptNestedOptOne[String](${TermName("it" + colIndex)})"
         case "Int"        => (colIndex: Int) => q"castOptNestedOptOneInt(${TermName("it" + colIndex)})"
-        case "Float"      => (colIndex: Int) => q"castOptNestedOptOneFloat(${TermName("it" + colIndex)})"
         case "Long"       => (colIndex: Int) => q"castOptNestedOptOneLong(${TermName("it" + colIndex)})"
         case "Double"     => (colIndex: Int) => q"castOptNestedOptOneDouble(${TermName("it" + colIndex)})"
         case "Boolean"    => (colIndex: Int) => q"castOptNestedOptOne[Boolean](${TermName("it" + colIndex)})"
@@ -201,7 +198,6 @@ private[molecule] trait CastOptNested extends TreeOps {
       t.tpeS match {
         case "String"     => (colIndex: Int) => q"castOptNestedOptMany[String](${TermName("it" + colIndex)})"
         case "Int"        => (colIndex: Int) => q"castOptNestedOptManyInt(${TermName("it" + colIndex)})"
-        case "Float"      => (colIndex: Int) => q"castOptNestedOptManyFloat(${TermName("it" + colIndex)})"
         case "Long"       => (colIndex: Int) => q"castOptNestedOptManyLong(${TermName("it" + colIndex)})"
         case "Double"     => (colIndex: Int) => q"castOptNestedOptManyDouble(${TermName("it" + colIndex)})"
         case "Boolean"    => (colIndex: Int) => q"castOptNestedOptMany[Boolean](${TermName("it" + colIndex)})"
@@ -238,7 +234,6 @@ private[molecule] trait CastOptNested extends TreeOps {
   val castOptNestedMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
     case "String"     => (colIndex: Int) => q"castOptNestedMapString(${TermName("it" + colIndex)})"
     case "Int"        => (colIndex: Int) => q"castOptNestedMapInt(${TermName("it" + colIndex)})"
-    case "Float"      => (colIndex: Int) => q"castOptNestedMapFloat(${TermName("it" + colIndex)})"
     case "Long"       => (colIndex: Int) => q"castOptNestedMapLong(${TermName("it" + colIndex)})"
     case "Double"     => (colIndex: Int) => q"castOptNestedMapDouble(${TermName("it" + colIndex)})"
     case "Boolean"    => (colIndex: Int) => q"castOptNestedMapBoolean(${TermName("it" + colIndex)})"
@@ -252,7 +247,6 @@ private[molecule] trait CastOptNested extends TreeOps {
   val castOptNestedOptMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
     case "String"     => (colIndex: Int) => q"castOptNestedOptMapString(${TermName("it" + colIndex)})"
     case "Int"        => (colIndex: Int) => q"castOptNestedOptMapInt(${TermName("it" + colIndex)})"
-    case "Float"      => (colIndex: Int) => q"castOptNestedOptMapFloat(${TermName("it" + colIndex)})"
     case "Long"       => (colIndex: Int) => q"castOptNestedOptMapLong(${TermName("it" + colIndex)})"
     case "Double"     => (colIndex: Int) => q"castOptNestedOptMapDouble(${TermName("it" + colIndex)})"
     case "Boolean"    => (colIndex: Int) => q"castOptNestedOptMapBoolean(${TermName("it" + colIndex)})"

@@ -50,19 +50,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
       }
   }
 
-  protected val castAggrOneListFloat = (colIndex: Int) => {
-    val array = new Array[List[Float]](maxRows)
-    listOneFloatArrays = listOneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it   = row.get(colIndex).asInstanceOf[jList[_]].iterator
-        var list = List.empty[Float]
-        while (it.hasNext)
-          list = list :+ it.next.asInstanceOf[jDouble].toFloat
-        list
-      }
-  }
-
   protected val castAggrOneListLong = (colIndex: Int) => {
     val array = new Array[List[Long]](maxRows)
     listOneLongArrays = listOneLongArrays :+ array
@@ -195,19 +182,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
         var set = Set.empty[Int]
         while (it.hasNext)
           set += it.next.asInstanceOf[jLong].toInt
-        List(set)
-      }
-  }
-
-  protected val castAggrManyListFloat = (colIndex: Int) => {
-    val array = new Array[List[Set[Float]]](maxRows)
-    listManyFloatArrays = listManyFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it  = row.get(colIndex).asInstanceOf[jList[_]].iterator
-        var set = Set.empty[Float]
-        while (it.hasNext)
-          set += it.next.asInstanceOf[jDouble].toFloat
         List(set)
       }
   }
@@ -348,19 +322,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
       }
   }
 
-  protected val castAggrOneListDistinctFloat = (colIndex: Int) => {
-    val array = new Array[List[Float]](maxRows)
-    listOneFloatArrays = listOneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it   = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-        var list = List.empty[Float]
-        while (it.hasNext)
-          list = list :+ it.next.asInstanceOf[jDouble].toFloat
-        list
-      }
-  }
-
   protected val castAggrOneListDistinctLong = (colIndex: Int) => {
     val array = new Array[List[Long]](maxRows)
     listOneLongArrays = listOneLongArrays :+ array
@@ -493,19 +454,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
         var set = Set.empty[Int]
         while (it.hasNext)
           set += it.next.asInstanceOf[jLong].toInt
-        List(set)
-      }
-  }
-
-  protected val castAggrManyListDistinctFloat = (colIndex: Int) => {
-    val array = new Array[List[Set[Float]]](maxRows)
-    listManyFloatArrays = listManyFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-        var set = Set.empty[Float]
-        while (it.hasNext)
-          set += it.next.asInstanceOf[jDouble].toFloat
         List(set)
       }
   }
@@ -646,19 +594,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
       }
   }
 
-  protected val castAggrOneListRandFloat = (colIndex: Int) => {
-    val array = new Array[List[Float]](maxRows)
-    listOneFloatArrays = listOneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it   = row.get(colIndex).asInstanceOf[jList[_]].iterator
-        var list = List.empty[Float]
-        while (it.hasNext)
-          list = list :+ it.next.asInstanceOf[jDouble].toFloat
-        list
-      }
-  }
-
   protected val castAggrOneListRandLong = (colIndex: Int) => {
     val array = new Array[List[Long]](maxRows)
     listOneLongArrays = listOneLongArrays :+ array
@@ -795,19 +730,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
       }
   }
 
-  protected val castAggrManyListRandFloat = (colIndex: Int) => {
-    val array = new Array[List[Set[Float]]](maxRows)
-    listManyFloatArrays = listManyFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it  = row.get(colIndex).asInstanceOf[jList[_]].iterator
-        var set = Set.empty[Float]
-        while (it.hasNext)
-          set += it.next.asInstanceOf[jDouble].toFloat
-        List(set)
-      }
-  }
-
   protected val castAggrManyListRandLong = (colIndex: Int) => {
     val array = new Array[List[Set[Long]]](maxRows)
     listManyLongArrays = listManyLongArrays :+ array
@@ -932,13 +854,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
       array(i) = row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[jLong].toInt
   }
 
-  protected val castAggrSingleSampleFloat = (colIndex: Int) => {
-    val array = new Array[Float](maxRows)
-    oneFloatArrays = oneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[jDouble].toFloat
-  }
-
   // todo Long" | "ref" | "datom
   protected val castAggrSingleSampleLong  = (colIndex: Int) => {
     val array = new Array[Long](maxRows)
@@ -1018,13 +933,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
       array(i) = row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[jLong].toInt
   }
 
-  protected val castAggrOneSingleFloat = (colIndex: Int) => {
-    val array = new Array[Float](maxRows)
-    oneFloatArrays = oneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[jDouble].toFloat
-  }
-
   // todo Long | "ref" | "datom
   protected val castAggrOneSingleLong = (colIndex: Int) => {
     val array = new Array[Long](maxRows)
@@ -1102,13 +1010,6 @@ class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
     manyIntArrays = manyIntArrays :+ array
     (row: jList[AnyRef], i: Int) =>
       array(i) = Set(row.get(colIndex).asInstanceOf[jLong].toInt)
-  }
-
-  protected val castAggrManySingleFloat = (colIndex: Int) => {
-    val array = new Array[Set[Float]](maxRows)
-    manyFloatArrays = manyFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = Set(row.get(colIndex).asInstanceOf[jDouble].toFloat)
   }
 
   protected val castAggrManySingleLong = (colIndex: Int) => {

@@ -5,10 +5,12 @@ import java.util.UUID
 
 sealed trait DbProxy {
   val uuid: String
+  val attrMap = Map.empty[String, (Int, String)]
 }
 
 case class DatomicInMemProxy(
   edns: Seq[String],
+  override val attrMap: Map[String, (Int, String)],
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy
 

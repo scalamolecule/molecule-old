@@ -12,14 +12,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Save extends TestSuite with CoreData {
 
   lazy val tests = Tests {
-    implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
+    implicit val conn = Conn_Js.inMem(CoreTestSchema)
 
     test("Card one") {
       for {
         tx <- Ns
           .str("a")
           .int(1)
-          .float(1.1f)
           .long(1L)
           .double(1.1)
           .bool(true)
@@ -30,10 +29,10 @@ object Save extends TestSuite with CoreData {
           .bigDec(bigDec1)
           .enum("enum1")
           .saveAsync
-        res <- Ns.e.str.int.float.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.getAsync
+        res <- Ns.e.str.int.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.getAsync
       } yield {
         res ==> List(
-          (tx.eid, "a", 1, 1.1f, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, "enum1")
+          (tx.eid, "a", 1, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, "enum1")
         )
       }
     }
@@ -43,7 +42,6 @@ object Save extends TestSuite with CoreData {
         tx <- Ns
           .strs("a", "b")
           .ints(1, 2)
-          .floats(1.1f, 2.2f)
           .longs(10L, 20L)
           .doubles(10.1, 20.2)
           .bools(true, false)
@@ -54,13 +52,12 @@ object Save extends TestSuite with CoreData {
           .bigDecs(bigDec1, bigDec2)
           .enums("enum1", "enum2")
           .saveAsync
-        res <- Ns.e.strs.ints.floats.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.getAsync
+        res <- Ns.e.strs.ints.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.getAsync
       } yield {
         res ==> List((
           tx.eid,
           Set("a", "b"),
           Set(1, 2),
-          Set(1.1f, 2.2f),
           Set(10L, 20L),
           Set(10.1, 20.2),
           Set(true, false),
@@ -79,7 +76,6 @@ object Save extends TestSuite with CoreData {
         tx <- Ns
           .strMap(Map("a" -> "a"))
           .intMap(Map("a" -> 1))
-          .floatMap(Map("a" -> 1.1f))
           .longMap(Map("a" -> 10L))
           .doubleMap(Map("a" -> 10.1))
           .boolMap(Map("a" -> true))
@@ -89,13 +85,12 @@ object Save extends TestSuite with CoreData {
           .bigIntMap(Map("a" -> bigInt1))
           .bigDecMap(Map("a" -> bigDec1))
           .saveAsync
-        res <- Ns.e.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
+        res <- Ns.e.strMap.intMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
       } yield {
         res ==> List((
           tx.eid,
           Map("a" -> "a"),
           Map("a" -> 1),
-          Map("a" -> 1.1f),
           Map("a" -> 10L),
           Map("a" -> 10.1),
           Map("a" -> true),

@@ -22,8 +22,6 @@ trait LogicImplicits {
   /** @group attrLogicImplicits */
   implicit final def long2Model(v: Long): TermValue[Long] = TermValue(v)
   /** @group attrLogicImplicits */
-  implicit final def float2Model(v: Float): TermValue[Float] = TermValue(v)
-  /** @group attrLogicImplicits */
   implicit final def double2Model(v: Double): TermValue[Double] = TermValue(v)
   /** @group attrLogicImplicits */
   implicit final def bigInt2Model(v: BigInt): TermValue[BigInt] = TermValue(v)
@@ -44,8 +42,6 @@ trait LogicImplicits {
   implicit final def intSet2Model(set: Set[Int]): TermValue[Set[Int]] = TermValue(set)
   /** @group attrLogicImplicits */
   implicit final def longSet2Model(set: Set[Long]): TermValue[Set[Long]] = TermValue(set)
-  /** @group attrLogicImplicits */
-  implicit final def floatSet2Model(set: Set[Float]): TermValue[Set[Float]] = TermValue(set)
   /** @group attrLogicImplicits */
   implicit final def doubleSet2Model(set: Set[Double]): TermValue[Set[Double]] = TermValue(set)
   /** @group attrLogicImplicits */

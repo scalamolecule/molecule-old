@@ -30,12 +30,6 @@ class Values extends Base {
       (3, Map("en" -> 30L, "da" -> 30L)),
       (4, Map("da" -> 30L))
     )
-    Ns.int.floatMap.get === List(
-      (1, Map("en" -> 10f, "da" -> 30f)),
-      (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f, "it" -> 30f)),
-      (3, Map("en" -> 30f, "da" -> 30f)),
-      (4, Map("da" -> 30f))
-    )
     Ns.int.doubleMap.get === List(
       (1, Map("en" -> 10.0, "da" -> 30.0)),
       (2, Map("en" -> 10.0, "da" -> 10.0, "fr" -> 20.0, "it" -> 30.0)),
@@ -95,12 +89,6 @@ class Values extends Base {
       (2, Map("en" -> 10L, "da" -> 10L))
     )
     Ns.int.longMap_(10L).get === List(1, 2)
-
-    Ns.int.floatMap(10f).get === List(
-      (1, Map("en" -> 10f)),
-      (2, Map("en" -> 10f, "da" -> 10f))
-    )
-    Ns.int.floatMap_(10f).get === List(1, 2)
 
     Ns.int.doubleMap(10.0).get === List(
       (1, Map("en" -> 10.0)),
@@ -375,42 +363,6 @@ class Values extends Base {
     Ns.int.intMap_.<(20).get === List(1, 2)
 
 
-    // Float
-
-    Ns.int.floatMap.>(20f).get === List(
-      (1, Map("da" -> 30f)),
-      (2, Map("it" -> 30f)),
-      (3, Map("en" -> 30f, "da" -> 30f)),
-      (4, Map("da" -> 30f))
-    )
-    Ns.int.floatMap.>=(20f).get === List(
-      (1, Map("da" -> 30f)),
-      (2, Map("fr" -> 20f, "it" -> 30f)),
-      (3, Map("en" -> 30f, "da" -> 30f)),
-      (4, Map("da" -> 30f))
-    )
-    Ns.int.floatMap.<=(20f).get === List(
-      (1, Map("en" -> 10f)),
-      (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f))
-    )
-    Ns.int.floatMap.<(20f).get === List(
-      (1, Map("en" -> 10f)),
-      (2, Map("en" -> 10f, "da" -> 10f))
-    )
-
-    Ns.int.floatMap.>(-10f).get === List(
-      (1, Map("en" -> 10f, "da" -> 30f)),
-      (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f, "it" -> 30f)),
-      (3, Map("en" -> 30f, "da" -> 30f)),
-      (4, Map("da" -> 30f))
-    )
-
-    Ns.int.floatMap_.>(20f).get === List(1, 2, 3, 4)
-    Ns.int.floatMap_.>=(20f).get === List(1, 2, 3, 4)
-    Ns.int.floatMap_.<=(20f).get === List(1, 2)
-    Ns.int.floatMap_.<(20f).get === List(1, 2)
-
-
     // Long
 
     Ns.int.longMap.>(20L).get === List(
@@ -596,21 +548,6 @@ class Values extends Base {
 
     Ns.int.longMap_(10L, 20L).get === List(1, 2)
     Ns.int.longMap_(Seq(10L, 20L)).get === List(1, 2)
-
-
-    // Float
-
-    Ns.int.floatMap(10f, 20f).get === List(
-      (1, Map("en" -> 10f)),
-      (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f))
-    )
-    Ns.int.floatMap(Seq(10f, 20f)).get === List(
-      (1, Map("en" -> 10f)),
-      (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f))
-    )
-
-    Ns.int.floatMap_(10f, 20f).get === List(1, 2)
-    Ns.int.floatMap_(Seq(10f, 20f)).get === List(1, 2)
 
 
     // Double

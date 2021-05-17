@@ -11,9 +11,6 @@ import scala.scalajs.js.typedarray._
 case class WebTransportAjax(baseAjaxUri: String) extends RequestTransport[ByteBuffer, Future] {
 
   override def apply(req: Request[ByteBuffer]): Future[ByteBuffer] = {
-
-    println("req.payload " + req.payload)
-
     Ajax.post(
       url = baseAjaxUri + "/" + req.path.mkString("/"),
       data = Pickle.intoBytes(req.payload), // Param values

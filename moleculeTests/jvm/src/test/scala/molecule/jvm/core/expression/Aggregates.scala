@@ -29,11 +29,6 @@ class Aggregates extends TestSpec {
       (2L, Set(2L, 3L)),
       (3L, Set(2L, 4L)))
 
-    Ns.float.floats insert List(
-      (1.1f, Set(1.1f, 2.2f)),
-      (2.2f, Set(2.2f, 3.3f)),
-      (3.3f, Set(3.3f, 4.4f)))
-
     Ns.double.doubles insert List(
       (1.1, Set(1.1, 2.2)),
       (2.2, Set(2.2, 3.3)),
@@ -83,7 +78,6 @@ class Aggregates extends TestSpec {
   "sum" in new Setup {
     Ns.int(sum).get.head === (1 + 2 + 3)
     Ns.long(sum).get.head === 6L
-    Ns.float(sum).get.head === 6.6f
 
     // Peer server seems more picky with precision
     // For full precision, please use BigDecimal or save as Long and divide
@@ -98,7 +92,6 @@ class Aggregates extends TestSpec {
   "median" in new Setup {
     Ns.int(median).get.head === 2
     Ns.long(median).get.head === 2L
-    Ns.float(median).get.head === 2.2f
     Ns.double(median).get.head === 2.2
   }
 
@@ -106,11 +99,6 @@ class Aggregates extends TestSpec {
   "avg" in new Setup {
     Ns.int(avg).get.head === (1 + 2 + 3) / 3
     Ns.long(avg).get.head === 2
-    if (system == SystemPeerServer)
-      round(Ns.float(avg).get.head, 6) === 2.2
-    //          Ns.float(avg).get.head === 2.2
-    else
-      Ns.float(avg).get.head === 2.1999999999999997
 
     // Peer server seems more picky with precision
     // For full precision, please use BigDecimal or save as Long and divide
@@ -124,7 +112,6 @@ class Aggregates extends TestSpec {
   "variance" in new Setup {
     Ns.int(variance).get.head === 0.6666666666666666
     Ns.long(variance).get.head === 0.6666666666666666
-    Ns.float(variance).get.head === 0.8066666666666665
     Ns.double(variance).get.head === 0.8066666666666665
   }
 
@@ -132,7 +119,6 @@ class Aggregates extends TestSpec {
   "stddev" in new Setup {
     Ns.int(stddev).get.head === 0.816496580927726
     Ns.long(stddev).get.head === 0.816496580927726
-    Ns.float(stddev).get.head === 0.8981462390204986
     Ns.double(stddev).get.head === 0.8981462390204986
   }
 
@@ -144,7 +130,6 @@ class Aggregates extends TestSpec {
     Ns.str(min).get.head === "str1"
     Ns.int(min).get.head === 1
     Ns.long(min).get.head === 1L
-    Ns.float(min).get.head === 1.1f
     Ns.double(min).get.head === 1.1
     Ns.bool(min).get.head === false
     Ns.date(min).get.head === date1
@@ -157,7 +142,6 @@ class Aggregates extends TestSpec {
     Ns.str(min(2)).get.head === List("str1", "str2")
     Ns.int(min(2)).get.head === List(1, 2)
     Ns.long(min(2)).get.head === List(1L, 2L)
-    Ns.float(min(2)).get.head === List(1.1f, 2.2f)
     Ns.double(min(2)).get.head === List(1.1, 2.2)
     Ns.bool(min(2)).get.head === List(false, true)
     Ns.date(min(2)).get.head === List(date1, date2)
@@ -173,7 +157,6 @@ class Aggregates extends TestSpec {
     Ns.strs(min).get.head === Set("a")
     Ns.ints(min).get.head === Set(1)
     Ns.longs(min).get.head === Set(1L)
-    Ns.floats(min).get.head === Set(1.1f)
     Ns.doubles(min).get.head === Set(1.1)
     Ns.bools(min).get.head === Set(false)
     Ns.dates(min).get.head === Set(date1)
@@ -186,7 +169,6 @@ class Aggregates extends TestSpec {
     Ns.strs(min(2)).get.head === List(Set("a", "b"))
     Ns.ints(min(2)).get.head === List(Set(1, 2))
     Ns.longs(min(2)).get.head === List(Set(1L, 2L))
-    Ns.floats(min(2)).get.head === List(Set(1.1f, 2.2f))
     Ns.doubles(min(2)).get.head === List(Set(1.1, 2.2))
     Ns.bools(min(2)).get.head === List(Set(false, true))
     Ns.dates(min(2)).get.head === List(Set(date1, date2))
@@ -246,7 +228,6 @@ class Aggregates extends TestSpec {
     Ns.str(max).get.head === "str4"
     Ns.int(max).get.head === 3
     Ns.long(max).get.head === 3L
-    Ns.float(max).get.head === 3.3f
     Ns.double(max).get.head === 3.3
     Ns.bool(max).get.head === true
     Ns.date(max).get.head === date3
@@ -259,7 +240,6 @@ class Aggregates extends TestSpec {
     Ns.str(max(2)).get.head === List("str4", "str3")
     Ns.int(max(2)).get.head === List(3, 2)
     Ns.long(max(2)).get.head === List(3L, 2L)
-    Ns.float(max(2)).get.head === List(3.3f, 2.2f)
     Ns.double(max(2)).get.head === List(3.3, 2.2)
     Ns.bool(max(2)).get.head === List(true, false)
     Ns.date(max(2)).get.head === List(date3, date2)
@@ -275,7 +255,6 @@ class Aggregates extends TestSpec {
     Ns.strs(max).get.head === Set("d")
     Ns.ints(max).get.head === Set(4)
     Ns.longs(max).get.head === Set(4L)
-    Ns.floats(max).get.head === Set(4.4f)
     Ns.doubles(max).get.head === Set(4.4)
     Ns.bools(max).get.head === Set(true)
     Ns.dates(max).get.head === Set(date4)
@@ -288,7 +267,6 @@ class Aggregates extends TestSpec {
     Ns.strs(max(2)).get.head === List(Set("d", "c"))
     Ns.ints(max(2)).get.head === List(Set(4, 3))
     Ns.longs(max(2)).get.head === List(Set(4L, 3L))
-    Ns.floats(max(2)).get.head === List(Set(4.4f, 3.3f))
     Ns.doubles(max(2)).get.head === List(Set(4.4, 3.3))
     Ns.bools(max(2)).get.head === List(Set(true, false))
     Ns.dates(max(2)).get.head === List(Set(date4, date3))
@@ -343,7 +321,6 @@ class Aggregates extends TestSpec {
   val strs    = Seq("str1", "str2", "str3", "str4")
   val ints    = Seq(1, 2, 3)
   val longs   = Seq(1L, 2L, 3L)
-  val floats  = Seq(1.1f, 2.2f, 3.3f)
   val doubles = Seq(1.1, 2.2, 3.3)
   val bools   = Seq(false, true)
   val dates   = Seq(date1, date2, date3)
@@ -358,7 +335,6 @@ class Aggregates extends TestSpec {
     strs.contains(Ns.str(rand).get.head) === true
     ints.contains(Ns.int(rand).get.head) === true
     longs.contains(Ns.long(rand).get.head) === true
-    floats.contains(Ns.float(rand).get.head) === true
     doubles.contains(Ns.double(rand).get.head) === true
     bools.contains(Ns.bool(rand).get.head) === true
     dates.contains(Ns.date(rand).get.head) === true
@@ -371,7 +347,6 @@ class Aggregates extends TestSpec {
     strs.intersect(Ns.str(rand(2)).get.head).nonEmpty === true
     ints.intersect(Ns.int(rand(2)).get.head).nonEmpty === true
     longs.intersect(Ns.long(rand(2)).get.head).nonEmpty === true
-    floats.intersect(Ns.float(rand(2)).get.head).nonEmpty === true
     doubles.intersect(Ns.double(rand(2)).get.head).nonEmpty === true
     bools.intersect(Ns.bool(rand(2)).get.head).nonEmpty === true
     dates.intersect(Ns.date(rand(2)).get.head).nonEmpty === true
@@ -387,7 +362,6 @@ class Aggregates extends TestSpec {
     strs.contains(Ns.str(sample).get.head) === true
     ints.contains(Ns.int(sample).get.head) === true
     longs.contains(Ns.long(sample).get.head) === true
-    floats.contains(Ns.float(sample).get.head) === true
     doubles.contains(Ns.double(sample).get.head) === true
     bools.contains(Ns.bool(sample).get.head) === true
     dates.contains(Ns.date(sample).get.head) === true
@@ -400,7 +374,6 @@ class Aggregates extends TestSpec {
     strs.intersect(Ns.str(sample(2)).get.head).size === 2
     ints.intersect(Ns.int(sample(2)).get.head).size === 2
     longs.intersect(Ns.long(sample(2)).get.head).size === 2
-    floats.intersect(Ns.float(sample(2)).get.head).size === 2
     doubles.intersect(Ns.double(sample(2)).get.head).size === 2
     bools.intersect(Ns.bool(sample(2)).get.head).size === 2
     dates.intersect(Ns.date(sample(2)).get.head).size === 2

@@ -22,7 +22,6 @@ class Attribute extends TestSpec {
     Ns.str insert str1
     Ns.int insert int1
     Ns.long insert long1
-    Ns.float insert float1
     Ns.double insert double1
     Ns.bool insert bool1
     Ns.date insert date1
@@ -41,7 +40,6 @@ class Attribute extends TestSpec {
     Ns.str.get.head === str1
     Ns.int.get.head === int1
     Ns.long.get.head === long1
-    Ns.float.get.head === float1
     Ns.double.get.head === double1
     Ns.bool.get.head === bool1
     Ns.date.get.head === date1
@@ -56,7 +54,6 @@ class Attribute extends TestSpec {
     Ns.strs insert strs1 // Set("str1")
     Ns.ints insert ints1
     Ns.longs insert longs1
-    Ns.floats insert floats1
     Ns.doubles insert doubles1
     // Set of boolean values doesn't make sense
     Ns.dates insert dates1
@@ -68,7 +65,6 @@ class Attribute extends TestSpec {
     Ns.strs.get.head === strs1
     Ns.ints.get.head === ints1
     Ns.longs.get.head === longs1
-    Ns.floats.get.head === floats1
     Ns.doubles.get.head === doubles1
     // No Set of boolean values
     Ns.dates.get.head === dates1
@@ -84,7 +80,6 @@ class Attribute extends TestSpec {
     Ns.str insert List(str1, str2)
     Ns.int insert List(int1, int2)
     Ns.long insert List(long1, long2)
-    Ns.float insert List(float1, float2)
     Ns.double insert List(double1, double2)
     Ns.bool insert List(bool1, bool2)
     Ns.date insert List(date1, date2)
@@ -96,7 +91,6 @@ class Attribute extends TestSpec {
     Ns.str.get === List(str1, str2)
     Ns.int.get === List(int1, int2)
     Ns.long.get === List(long1, long2)
-    Ns.float.get === List(float1, float2)
     Ns.double.get === List(double1, double2)
     Ns.bool.get === List(bool2, bool1)
     Ns.date.get.sorted === List(date1, date2)
@@ -111,7 +105,6 @@ class Attribute extends TestSpec {
     Ns.strs insert List(strs1, strs2) // List(Set("str1"), Set("str1", "str2"))
     Ns.ints insert List(ints1, ints2)
     Ns.longs insert List(longs1, longs2)
-    Ns.floats insert List(floats1, floats2)
     Ns.doubles insert List(doubles1, doubles2)
     // No Set of boolean values
     Ns.dates insert List(dates1, dates2)
@@ -123,7 +116,6 @@ class Attribute extends TestSpec {
     Ns.strs.get === List(strs2) // List(Set("str1", "str2"))
     Ns.ints.get === List(ints2)
     Ns.longs.get === List(longs2)
-    Ns.floats.get === List(floats2)
     Ns.doubles.get === List(doubles2)
     // No Set of boolean values
     Ns.dates.get === List(dates2)
@@ -136,52 +128,52 @@ class Attribute extends TestSpec {
   "Multiple cardinality-1 attributes - one entity" in new CoreSetup {
 
     // Insert single molecule with comma-separated values
-    Ns.str.int.long.float.double.bool.date.uuid.uri.enum.insert(
-      str1, int1, long1, float1, double1, bool1, date1, uuid1, uri1, enum1)
+    Ns.str.int.long.double.bool.date.uuid.uri.enum.insert(
+      str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1)
 
     // Get single molecule as tuple of values
-    Ns.str.int.long.float.double.bool.date.uuid.uri.enum.get.head ===(
-      str1, int1, long1, float1, double1, bool1, date1, uuid1, uri1, enum1)
+    Ns.str.int.long.double.bool.date.uuid.uri.enum.get.head ===(
+      str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1)
   }
 
   "Multiple cardinality-2 attributes - one entity" in new CoreSetup {
 
     // Insert single molecule with comma-separated Sets of values
-    Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums.insert(
-      strs1, ints1, longs1, floats1, doubles1, dates1, uuids1, uris1, enums1)
+    Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.insert(
+      strs1, ints1, longs1, doubles1, dates1, uuids1, uris1, enums1)
 
     // Get single molecule as tuple of Sets of values
-    Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums.get.head ===(
-      strs1, ints1, longs1, floats1, doubles1, dates1, uuids1, uris1, enums1)
+    Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.get.head ===(
+      strs1, ints1, longs1, doubles1, dates1, uuids1, uris1, enums1)
   }
 
 
   "Multiple cardinality-1 attributes - multiple entities" in new CoreSetup {
 
     // Insert two molecules with tuples of values
-    Ns.str.int.long.float.double.date.uuid.uri.enum insert List(
-      (str1, int1, long1, float1, double1, date1, uuid1, uri1, enum1),
-      (str2, int2, long2, float2, double2, date2, uuid2, uri2, enum2)
+    Ns.str.int.long.double.date.uuid.uri.enum insert List(
+      (str1, int1, long1, double1, date1, uuid1, uri1, enum1),
+      (str2, int2, long2, double2, date2, uuid2, uri2, enum2)
     )
 
     // Get two molecules as tuples of values
-    Ns.str.int.long.float.double.date.uuid.uri.enum.get.sortBy(_._1) === List(
-      (str1, int1, long1, float1, double1, date1, uuid1, uri1, enum1),
-      (str2, int2, long2, float2, double2, date2, uuid2, uri2, enum2)
+    Ns.str.int.long.double.date.uuid.uri.enum.get.sortBy(_._1) === List(
+      (str1, int1, long1, double1, date1, uuid1, uri1, enum1),
+      (str2, int2, long2, double2, date2, uuid2, uri2, enum2)
     )
   }
 
   "Multiple cardinality-2 attributes - multiple entities" in new CoreSetup {
 
     // Insert two molecules with tuples of Sets of values
-    Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums insert List(
-      (strs1, ints1, longs1, floats1, doubles1, dates1, uuids1, uris1, enums1),
-      (strs2, ints2, longs2, floats2, doubles2, dates2, uuids2, uris2, enums2)
+    Ns.strs.ints.longs.doubles.dates.uuids.uris.enums insert List(
+      (strs1, ints1, longs1, doubles1, dates1, uuids1, uris1, enums1),
+      (strs2, ints2, longs2, doubles2, dates2, uuids2, uris2, enums2)
     )
 
     // Retrieving Sets only will retrieve one Set of distinct values for each attribute
-    Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums.get === List(
-      (strs2, ints2, longs2, floats2, doubles2, dates2, uuids2, uris2, enums2)
+    Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.get === List(
+      (strs2, ints2, longs2, doubles2, dates2, uuids2, uris2, enums2)
     )
   }
 

@@ -52,7 +52,6 @@ class MakeComposite(val c: blackbox.Context) extends Base {
         final class $outMolecule extends $MoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
           final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
           final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-          final override lazy val isJsPlatform: Boolean = $isJsPlatform
         }
         new $outMolecule
       """
@@ -62,7 +61,6 @@ class MakeComposite(val c: blackbox.Context) extends Base {
         final class $outMolecule extends $MoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)}) {
           final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
           final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-          final override lazy val isJsPlatform: Boolean = $isJsPlatform
         }
         new $outMolecule
       """

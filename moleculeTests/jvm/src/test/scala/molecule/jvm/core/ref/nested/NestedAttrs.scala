@@ -240,12 +240,12 @@ class NestedAttrs extends TestSpec {
 
   "Post attributes after nested" in new CoreSetup {
 
-    Ns.float.str.Refs1.*(Ref1.int1).insert(1f, "a", Seq(11, 12))
+    Ns.double.str.Refs1.*(Ref1.int1).insert(1.1, "a", Seq(11, 12))
 
-    Ns.float.str.Refs1.*(Ref1.int1).get.head === (1f, "a", Seq(11, 12))
+    Ns.double.str.Refs1.*(Ref1.int1).get.head === (1.1, "a", Seq(11, 12))
 
     // Note how we jump back to the namespace (`Ns`) _before_ the nested ns (`Ref1`)
-    Ns.float.Refs1.*(Ref1.int1).str.get.head === (1f, Seq(11, 12), "a")
+    Ns.double.Refs1.*(Ref1.int1).str.get.head === (1.1, Seq(11, 12), "a")
   }
 
   // todo?

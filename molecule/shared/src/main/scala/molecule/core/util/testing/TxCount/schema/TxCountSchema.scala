@@ -60,4 +60,10 @@ object TxCountSchema extends SchemaTransaction {
     "TxCount" -> MetaNs(0, "TxCount", "TxCount", None, None, Seq(
       MetaAttr(0, "db"    , 1, "String", Seq(), None, Seq(), None, None, None, None, None, Nil),
       MetaAttr(1, "basisT", 1, "Long"  , Seq(), None, Seq(), None, None, None, None, None, Nil))))
+
+
+  lazy val attrMap = Map(
+    ":TxCount/db"     -> (1, "String"),
+    ":TxCount/basisT" -> (1, "Long"),
+  )
 }

@@ -5,12 +5,6 @@ import scala.concurrent.Future
 
 trait MoleculeRpc {
 
-  /** Clear server Conn/Db cache
-    *
-    * @return Boolean confirmation
-    */
-  def clearCache: Future[Boolean]
-
 
   def transactAsync(
     dbProxy: DbProxy,

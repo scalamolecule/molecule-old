@@ -108,10 +108,6 @@ class EntityAPI extends TestSpec {
     val e3 = Ns.long(1L).save.eid
     e3.touchList === List(":db/id" -> e3, ":Ns/long" -> 1L)
 
-    val e4 = Ns.float(1.1f).save.eid
-    // Since Datomic uses Double for floating numbers we get a Double back
-    e4.touchList === List(":db/id" -> e4, ":Ns/float" -> 1.1)
-
     val e5 = Ns.double(1.1).save.eid
     e5.touchList === List(":db/id" -> e5, ":Ns/double" -> 1.1)
 
@@ -147,10 +143,6 @@ class EntityAPI extends TestSpec {
 
     val e3 = Ns.longs(1L, 2L).save.eid
     e3.touchList === List(":db/id" -> e3, ":Ns/longs" -> List(1, 2))
-
-    val e4 = Ns.floats(1.1f, 2.2f).save.eid
-    // Since Datomic uses Double for floating numbers we get a Double back
-    e4.touchList === List(":db/id" -> e4, ":Ns/floats" -> List(1.1, 2.2))
 
     val e5 = Ns.doubles(1.1, 2.2).save.eid
     e5.touchList === List(":db/id" -> e5, ":Ns/doubles" -> List(1.1, 2.2))
@@ -188,9 +180,6 @@ class EntityAPI extends TestSpec {
 
     val e3 = Ns.longMap("a" -> 1L, "b" -> 2L).save.eid
     e3.touchList === List(":db/id" -> e3, ":Ns/longMap" -> List("a@1", "b@2"))
-
-    val e4 = Ns.floatMap("a" -> 1.1f, "b" -> 2.2f).save.eid
-    e4.touchList === List(":db/id" -> e4, ":Ns/floatMap" -> List("a@1.1", "b@2.2"))
 
     val e5 = Ns.doubleMap("a" -> 1.1, "b" -> 2.2).save.eid
     e5.touchList === List(":db/id" -> e5, ":Ns/doubleMap" -> List("a@1.1", "b@2.2"))

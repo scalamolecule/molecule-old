@@ -41,7 +41,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             (i: Int) => (..$lookups)
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-          final override lazy val moleculeRpc: MoleculeRpc = conn.moleculeRpc
           final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
         """
       } else {
@@ -63,7 +62,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$typers
-            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -72,7 +70,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           ..$imports
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
             ..$typers
-            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -89,7 +86,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
-            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -102,7 +98,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
-            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -122,7 +117,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
-            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """
@@ -136,7 +130,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               $tpl
               ${objCode(obj, isNested = true)._1}
             }
-            final override lazy val isJsPlatform: Boolean = $isJsPlatform
           }
           new $outMolecule
         """

@@ -65,7 +65,7 @@ trait GetAsyncTplList[Obj, Tpl] extends ColOps { self: Molecule_0[Obj, Tpl] with
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsync(n: Int)(implicit conn: Conn): Future[List[Tpl]] = try {
-    if (isJsPlatform)
+    if (conn.isJsPlatform)
       conn.asInstanceOf[ConnProxy].qAsync(_nestedQuery.getOrElse(_query), n, indexes, qr2tpl)
     else
       Future(get(n)(conn))

@@ -222,7 +222,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
   def sortList(l: List[Any]): List[Any] = l.head match {
     case _: String               => l.asInstanceOf[List[String]].sorted
     case _: Long                 => l.asInstanceOf[List[Long]].sorted
-    case _: Float                => l.asInstanceOf[List[Float]].sorted
+//    case _: Float                => l.asInstanceOf[List[Float]].sorted
     case _: Double               => l.asInstanceOf[List[Double]].sorted
     case _: Boolean              => l.asInstanceOf[List[Boolean]].sorted
     case _: Date                 => l.asInstanceOf[List[Date]].sorted

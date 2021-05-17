@@ -35,4 +35,9 @@ trait SchemaTransaction {
   /** Auto-generated map of Ns -> MetaNs
     * */
   val nsMap: Map[String, MetaNs]
+
+
+  /** Auto-generated map of Attr -> (card, type)
+    * */
+  val attrMap: Map[String, (Int, String)]
 }

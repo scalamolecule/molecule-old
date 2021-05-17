@@ -20,7 +20,7 @@ object QueryOps extends Helpers with JavaUtil {
 
   def castStr(tpe: String): String = tpe match {
     case "Int" | "ref" => "Long"
-    case "Float"       => "Double"
+//    case "Float"       => "Double"
     case "Date"        => "java.util.Date"
     case "UUID"        => "java.util.UUID"
     case "URI"         => "java.net.URI"
@@ -438,7 +438,7 @@ object QueryOps extends Helpers with JavaUtil {
 
     def compareTo(op: String, a: Atom, v: String, qv: QueryValue, i: Int = 0): Query = qv match {
       case Val(arg) if a.tpe == "String"     => compareTo2(op, a.tpe, v, Val(arg.toString.replace("\"", "\\\"")), i)
-      case Val(arg) if a.tpe == "Float"      => compareTo2(op, a.tpe, v, Val(arg.toString.toFloat), i)
+//      case Val(arg) if a.tpe == "Float"      => compareTo2(op, a.tpe, v, Val(arg.toString.toFloat), i)
       case Val(arg) if a.tpe == "Double"     => compareTo2(op, a.tpe, v, Val(arg.toString.toDouble), i)
       case Val(arg) if a.tpe == "BigDecimal" => compareTo2(op, a.tpe, v, Val(BigDecimal(withDecimal(arg))), i)
       case _                                 => compareTo2(op, a.tpe, v, qv, i)
@@ -477,7 +477,8 @@ object QueryOps extends Helpers with JavaUtil {
       case "String" => q.func(s"""ground "${esc1(arg)}"""", Empty, v)
 
       /* Hack for MoleculeAdmin / ScalaJS */
-      case "Float" | "Double" if arg.toString.startsWith("__n__") =>
+//      case "Float" | "Double" if arg.toString.startsWith("__n__") =>
+      case "Double" if arg.toString.startsWith("__n__") =>
         val arg1 = arg.toString.drop(5)
         val arg2 = withDecimal(arg1)
         q.func(s"""ground $arg2""", Empty, v)
@@ -485,7 +486,8 @@ object QueryOps extends Helpers with JavaUtil {
       case "Int" | "Long" | "Boolean" | "ref" =>
         q.func(s"""ground $arg""", Empty, v)
 
-      case "Float" | "Double" =>
+//      case "Float" | "Double" =>
+      case "Double" =>
         q.func(s"""ground ${withDecimal(arg)}""", Empty, v)
 
       case "Date" =>
@@ -672,7 +674,7 @@ object QueryOps extends Helpers with JavaUtil {
 
     private def cast(a: Any): AnyRef = a match {
       case i: Int                                => i.toLong.asInstanceOf[Object]
-      case f: Float                              => f.toDouble.asInstanceOf[Object]
+//      case f: Float                              => f.toDouble.asInstanceOf[Object]
       case bigI: BigInt                          => bigI.bigInteger
       case bigD: BigDecimal                      => bigD.bigDecimal
       case s: String if s.startsWith("__enum__") => s.drop(8).asInstanceOf[Object]

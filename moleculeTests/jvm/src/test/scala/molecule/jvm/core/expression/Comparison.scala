@@ -97,26 +97,6 @@ class Comparison extends Base {
     Ns.long.>=(long1).get.sorted === List(1L, 2L)
 
 
-    Ns.float.<(-2f).get.sorted === List()
-    Ns.float.<(0f).get.sorted === List(-2f, -1f)
-    Ns.float.<(2f).get.sorted === List(-2f, -1f, 0f, 1f)
-    Ns.float.<(float1).get.sorted === List(-2f, -1f, 0f)
-
-    Ns.float.>(2f).get.sorted === List()
-    Ns.float.>(0f).get.sorted === List(1f, 2f)
-    Ns.float.>(-2f).get.sorted === List(-1f, 0f, 1f, 2f)
-    Ns.float.>(float1).get.sorted === List(2f)
-
-    Ns.float.<=(-2f).get.sorted === List(-2f)
-    Ns.float.<=(0f).get.sorted === List(-2f, -1f, 0f)
-    Ns.float.<=(2f).get.sorted === List(-2f, -1f, 0f, 1f, 2f)
-    Ns.float.<=(float1).get.sorted === List(-2f, -1f, 0f, 1f)
-
-    Ns.float.>=(2f).get.sorted === List(2f)
-    Ns.float.>=(0f).get.sorted === List(0f, 1f, 2f)
-    Ns.float.>=(float1).get.sorted === List(1f, 2f)
-
-
     Ns.double.<(-2.0).get.sorted === List()
     Ns.double.<(0.0).get.sorted === List(-2.0, -1.0)
     Ns.double.<(2.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0)
@@ -305,30 +285,6 @@ class Comparison extends Base {
     Ns.int.ints_.>=(2).get.sorted === List(1, 2, 3)
     Ns.int.ints_.<=(2).get.sorted === List(1, 2, 3)
     Ns.int.ints_.<(2).get.sorted === List(1)
-
-
-    // Float
-
-    Ns.float.floats.>(2f).get === List(
-      (2f, Set(3f)),
-      (3f, Set(4f, 2.5f))
-    )
-    Ns.float.floats.>=(2f).get === List(
-      (1f, Set(2f)),
-      (2f, Set(2f, 3f)),
-      (3f, Set(4f, 2.5f))
-    )
-    Ns.float.floats.<=(2f).get === List(
-      (1f, Set(1f, 2f)),
-      (2f, Set(2f))
-    )
-    Ns.float.floats.<(2f).get === List(
-      (1f, Set(1f))
-    )
-    Ns.float.floats_.>(2f).get.sorted === List(2f, 3f)
-    Ns.float.floats_.>=(2f).get.sorted === List(1f, 2f, 3f)
-    Ns.float.floats_.<=(2f).get.sorted === List(1f, 2f)
-    Ns.float.floats_.<(2f).get.sorted === List(1f)
 
 
     // Date

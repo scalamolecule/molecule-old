@@ -43,13 +43,6 @@ class OptionalValues extends TestSpec {
       Ns.int.long.get === List((1, 3L))
     }
 
-    "Float" in new CoreSetup {
-      Ns.int.float$ insert List((1, Some(3.0f)), (2, None))
-
-      Ns.int.float$.get.sortBy(_._1) === List((1, Some(3.0f)), (2, None))
-      Ns.int.float.get === List((1, 3.0f))
-    }
-
     "Boolean" in new CoreSetup {
       Ns.int.bool$ insert List((1, Some(true)), (2, None))
 
@@ -133,13 +126,6 @@ class OptionalValues extends TestSpec {
 
       Ns.int.longs$.get.sortBy(_._1) === List((1, Some(Set(3L, 4L))), (2, None))
       Ns.int.longs.get === List((1, Set(3L, 4L)))
-    }
-
-    "Float" in new CoreSetup {
-      Ns.int.floats$ insert Seq((1, Some(Set(3.0f, 4.0f))), (2, None))
-
-      Ns.int.floats$.get.sortBy(_._1) === List((1, Some(Set(3.0f, 4.0f))), (2, None))
-      Ns.int.floats.get === List((1, Set(3.0f, 4.0f)))
     }
 
     // (Boolean Sets not implemented)

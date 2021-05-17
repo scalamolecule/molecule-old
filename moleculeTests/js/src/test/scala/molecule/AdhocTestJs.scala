@@ -30,7 +30,7 @@ object AdhocTestJs extends TestSuite with CoreData {
 
 
     test("core") {
-      implicit val conn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
+      implicit val conn = Conn_Js.inMem(CoreTestSchema)
 
       def pong(i: Int): Future[Int] = {
         (for {
@@ -65,10 +65,8 @@ object AdhocTestJs extends TestSuite with CoreData {
 //        _ <- Ns.str insertAsync str1
 //        _ <- Ns.int insertAsync int1
 //        _ <- Ns.long insertAsync long1
-//        _ <- Ns.float insertAsync 1.10007f
-//        _ <- Ns.float insertAsync float1
-//        _ <- Ns.double insertAsync 1.1
-        _ <- Ns.double insertAsync 1.1f.toDouble
+        _ <- Ns.double insertAsync 1.0
+//        _ <- m(Ns.double).insertAsync.apply(1.2f)
 //        _ <- Ns.double insertAsync double1
 //        _ <- Ns.bool insertAsync bool1
 //        _ <- Ns.date insertAsync date1
@@ -87,7 +85,6 @@ object AdhocTestJs extends TestSuite with CoreData {
 //        _ <- Ns.str.getAsync === List(str1)
 //        _ <- Ns.int.getAsync === List(int1)
 //        _ <- Ns.long.getAsync === List(long1)
-//        _ <- Ns.float.getAsync === List(float1)
 //        _ <- Ns.double.getAsync === List(double1)
 //        _ <- Ns.bool.getAsync === List(bool1)
 //        _ <- Ns.date.getAsync === List(date1)

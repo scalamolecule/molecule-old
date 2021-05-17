@@ -44,13 +44,6 @@ class Base extends TestSpec {
       (4, Map("da" -> 30L)),
       (5, Map[String, Long]())
     )
-    Ns.int.floatMap insert List(
-      (1, Map("en" -> 10f, "da" -> 30f)),
-      (2, Map("en" -> 10f, "da" -> 10f, "fr" -> 20f, "it" -> 30f)),
-      (3, Map("en" -> 30f, "da" -> 30f)),
-      (4, Map("da" -> 30f)),
-      (5, Map[String, Float]())
-    )
     Ns.int.doubleMap insert List(
       (1, Map("en" -> 10.0, "da" -> 30.0)),
       (2, Map("en" -> 10.0, "da" -> 10.0, "fr" -> 20.0, "it" -> 30.0)),

@@ -5,13 +5,19 @@ import java.util.{Date, UUID}
 import molecule.core.ast.elements._
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
+import molecule.datomic.base.facade.Conn
 
 object Stmts2Edn extends Helpers {
 
   val buf      = new StringBuilder()
   var uriAttrs = Set.empty[String]
+  var attrMap = Map.empty[String, (Int, String)]
 
-  def apply(stmts: Seq[Statement]): (String, Set[String]) = {
+  def apply(stmts: Seq[Statement], conn: Conn): (String, Set[String]) = {
+    attrMap = conn.dbProxy.attrMap
+
+    stmts foreach println
+
     buf.clear()
     var following = false
     stmts.foreach { stmt =>
@@ -52,38 +58,36 @@ object Stmts2Edn extends Helpers {
     case e               => s"$e"
   }
 
-  def value(attr: String, value: Any): Unit = value match {
-    case s: String                                 => quote(s)
-    case TempId(part, i)                           => buf.append(s"#db/id[$part $i]")
-    case v: Int                                    => buf.append(v.toString)
-    case v: Float                                  =>
-//      println("############ " + v)
-//      println(v == 1.1f)
-//      println(String.format("%f", v))
-//      println(String.format("%.10f", v))
-      println("f " + String.format("%.10f", v))
-//      println(String.format("%.10f", scalajs.js.Dynamic.global.parseFloat(1.2f)))
-//      println(String.format("%.10f", v.toDouble))
-      buf.append(v.toDouble.toString)
-    case v: Long                                   => buf.append(v.toString)
-    case v: Double                                 =>
-      println(v)
-      println(String.format("%f", v))
-      println(String.format("%.5f", v))
-      println(String.format("%.5f", 1.000009))
-
-      buf.append(v.toString)
-    case v: Boolean                                => buf.append(v.toString)
-    case v: Date                                   => buf.append("#inst \"" + date2datomicStr(v) + "\"")
-    case v: UUID                                   => buf.append("#uuid \"" + v + "\"")
-    case v: URI                                    => uriAttrs = uriAttrs + attr; buf.append(v.toString)
-    case v: BigInt                                 => buf.append(v.toString + "N")
-    case v: BigDecimal if v.toString.contains(".") => buf.append(v.toString + "M")
-    case v: BigDecimal                             => buf.append(v.toString + ".0M")
-    case Enum(prefix, enum)                        => buf.append(prefix + enum)
-    case other                                     => throw new IllegalArgumentException(
-      s"Unexpected value of type `${other.getClass}`: " + other
-    )
+  def value(attr: String, value: Any): Unit = {
+    println("Z " + attrMap(attr))
+    println("Z " + value)
+    println("Z " + value.getClass)
+    value match {
+      case s: String                                 => quote(s)
+      case TempId(part, i)                           => buf.append(s"#db/id[$part $i]")
+      case v: Int                                    => buf.append(v.toString)
+      case v: Long                                   => buf.append(v.toString)
+      case v: Float                                  =>
+        println("float " + v)
+        throw new IllegalArgumentException(
+          s"Float values not allowed on JS side since they are not precise. Found $v. Please use Double values instead."
+        )
+      case v: Double                                 =>
+        println("double " + v)
+        val s = v.toString
+        buf.append(s + (if (s.contains('.')) "" else ".0"))
+      case v: Boolean                                => buf.append(v.toString)
+      case v: Date                                   => buf.append("#inst \"" + date2datomicStr(v) + "\"")
+      case v: UUID                                   => buf.append("#uuid \"" + v + "\"")
+      case v: URI                                    => uriAttrs = uriAttrs + attr; buf.append(v.toString)
+      case v: BigInt                                 => buf.append(v.toString + "N")
+      case v: BigDecimal if v.toString.contains(".") => buf.append(v.toString + "M")
+      case v: BigDecimal                             => buf.append(v.toString + ".0M")
+      case Enum(prefix, enum)                        => buf.append(prefix + enum)
+      case other                                     => throw new IllegalArgumentException(
+        s"Unexpected value of type `${other.getClass}`: " + other
+      )
+    }
   }
 
   protected def quote(s: String): Unit = {
@@ -92,7 +96,7 @@ object Stmts2Edn extends Helpers {
     buf.append('"')
   }
 
-  // Shamelessly adopted from lift-json:
+  // Shamelessly copied from lift-json:
   // https://github.com/lift/framework/blob/db05d863c290c5fd1081a7632263433153fc9fe3/core/json/src/main/scala/net/liftweb/json/JsonAST.scala#L813-L883
 
   private val jsEscapeChars: Set[Char] =
@@ -106,7 +110,7 @@ object Stmts2Edn extends Helpers {
       ('\u2060', '\u206f'),
       ('\ufeff', '\ufeff'),
       ('\ufff0', '\uffff')
-    ).foldLeft(Set[Char]()) {
+    ).foldLeft(Set.empty[Char]) {
       case (set, (start, end)) =>
         set ++ (start to end).toSet
     }

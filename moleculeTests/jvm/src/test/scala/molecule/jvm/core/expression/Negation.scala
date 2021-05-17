@@ -77,17 +77,6 @@ class Negation extends Base {
     Ns.long.not(longs).get.sorted === List(-2L, -1L, 0L)
 
 
-    Ns.float.not(7f).get.sorted === List(-2f, -1f, 0f, 1f, 2f)
-    Ns.float.not(1f).get.sorted === List(-2f, -1f, 0f, 2f)
-    Ns.float.not(-1f, 0f, 1f).get.sorted === List(-2f, 2f)
-    Ns.float.not(Seq(-1f, 0f, 1f)).get.sorted === List(-2f, 2f)
-    Ns.float.not(float1).get.sorted === List(-2f, -1f, 0f, 2f)
-    Ns.float.not(float1, float2).get.sorted === List(-2f, -1f, 0f)
-    Ns.float.not(Seq(float1, float2)).get.sorted === List(-2f, -1f, 0f)
-    val floats = Seq(float1, float2)
-    Ns.float.not(floats).get.sorted === List(-2f, -1f, 0f)
-
-
     Ns.double.not(7.0).get.sorted === List(-2.0, -1.0, 0.0, 1.0, 2.0)
     Ns.double.not(1.0).get.sorted === List(-2.0, -1.0, 0.0, 2.0)
     Ns.double.not(-1.0, 0.0, 1.0).get.sorted === List(-2.0, 2.0)

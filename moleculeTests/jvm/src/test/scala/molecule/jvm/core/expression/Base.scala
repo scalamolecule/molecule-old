@@ -10,7 +10,6 @@ class Base extends TestSpec {
     Ns.str insert List("", " ", ",", ".", "?", "A", "B", "a", "b")
     Ns.int insert List(-2, -1, 0, 1, 2)
     Ns.long insert List(-2L, -1L, 0L, 1L, 2L)
-    Ns.float insert List(-2f, -1f, 0f, 1f, 2f)
     Ns.double insert List(-2.0, -1.0, 0.0, 1.0, 2.0)
     Ns.bool insert List(true, false)
     Ns.date insert List(date0, date1, date2)
@@ -42,11 +41,6 @@ class Base extends TestSpec {
       (1L, Set(1L, 2L)),
       (2L, Set(2L, 3L)),
       (3L, Set(2L, 4L)))
-
-    Ns.float.floats insert List(
-      (1.0f, Set(1.0f, 2.0f)),
-      (2.0f, Set(2.0f, 3.0f)),
-      (3.0f, Set(2.5f, 4.0f)))
 
     Ns.double.doubles insert List(
       (1.0, Set(1.0, 2.0)),

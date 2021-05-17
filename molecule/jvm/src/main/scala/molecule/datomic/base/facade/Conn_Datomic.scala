@@ -111,7 +111,7 @@ trait Conn_Datomic extends Conn {
 
     def value(v: Any): AnyRef = (v match {
       case i: Int             => i.toLong
-      case f: Float           => f.toDouble
+//      case f: Float           => f.toDouble
       case TempId(part, i)    => getTempId(part, i)
       case Enum(prefix, enum) => prefix + enum
       case bigInt: BigInt     => bigInt.bigInteger

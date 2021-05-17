@@ -274,32 +274,6 @@ object model {
   object mapLong extends mapLong
 
 
-  // Float ---------------------------------------------------------
-
-  /** Card-one Float attribute.
-    *
-    * @group one
-    */
-  trait oneFloat extends number[oneFloat, Float]
-  object oneFloat extends oneFloat
-
-
-  /** Card-many Float attribute.
-    *
-    * @group many
-    */
-  trait manyFloat extends number[manyFloat, Float]
-  object manyFloat extends manyFloat
-
-
-  /** Float map attribute.
-    *
-    * @group map
-    */
-  trait mapFloat extends number[mapFloat, Float]
-  object mapFloat extends mapFloat
-
-
   // Double ---------------------------------------------------------
 
   /** Card-one Double attribute.
@@ -480,32 +454,6 @@ object model {
     */
   trait mapURI extends optionBuilder[mapURI]
   object mapURI extends mapURI
-
-
-  // Bytes ---------------------------------------------------------
-
-  /** Card-one Bytes attribute.
-    *
-    * @group one
-    */
-  trait oneByte extends optionBuilder[oneByte]
-  object oneByte extends oneByte
-
-
-  /** Card-many Bytes attribute.
-    *
-    * @group many
-    */
-  trait manyByte extends optionBuilder[manyByte]
-  object manyByte extends manyByte
-
-
-  /** Bytes map attribute.
-    *
-    * @group map
-    */
-  trait mapByte extends optionBuilder[mapByte]
-  object mapByte extends mapByte
 
 
   // Enum ---------------------------------------------------------

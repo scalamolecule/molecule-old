@@ -11,7 +11,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Update extends TestSuite with CoreData {
 
-  def getConn = Conn_Js(DatomicInMemProxy(CoreTestSchema.datomicPeer))
+  def getConn = Conn_Js.inMem(CoreTestSchema)
+
   lazy val tests = Tests {
 
     test("Card one") {
@@ -21,7 +22,6 @@ object Update extends TestSuite with CoreData {
           tx <- Ns
             .str("a")
             .int(1)
-            .float(1.1f)
             .long(1L)
             .double(1.1)
             .bool(true)
@@ -36,7 +36,6 @@ object Update extends TestSuite with CoreData {
           update <- Ns(eid)
             .str("b")
             .int(2)
-            .float(2.2f)
             .long(2L)
             .double(2.2)
             .bool(false)
@@ -47,11 +46,11 @@ object Update extends TestSuite with CoreData {
             .bigDec(bigDec2)
             .enum("enum2")
             .updateAsync
-          res <- Ns.e.str.int.float.long.double.bool.date
+          res <- Ns.e.str.int.long.double.bool.date
             .uuid.uri.bigInt.bigDec.enum.getAsync
         } yield {
           res ==> List(
-            (eid, "b", 2, 2.2f, 2L, 2.2, false, date2
+            (eid, "b", 2, 2L, 2.2, false, date2
               , uuid2, uri2, bigInt2, bigDec2, "enum2")
           )
         }
@@ -86,7 +85,6 @@ object Update extends TestSuite with CoreData {
         tx <- Ns
           .strs("a", "b")
           .ints(1, 2)
-          .floats(1.1f, 2.2f)
           .longs(10L, 20L)
           .doubles(10.1, 20.2)
           .bools(true, false)
@@ -97,14 +95,13 @@ object Update extends TestSuite with CoreData {
           .bigDecs(bigDec1, bigDec2)
           .enums("enum1", "enum2")
           .saveAsync
-        res <- Ns.e.strs.ints.floats.longs.doubles.bools.dates
+        res <- Ns.e.strs.ints.longs.doubles.bools.dates
           .uuids.uris.bigInts.bigDecs.enums.getAsync
       } yield {
         res ==> List((
           tx.eid,
           Set("a", "b"),
           Set(1, 2),
-          Set(1.1f, 2.2f),
           Set(10L, 20L),
           Set(10.1, 20.2),
           Set(true, false),
@@ -124,7 +121,6 @@ object Update extends TestSuite with CoreData {
         tx <- Ns
           .strMap(Map("a" -> "a"))
           .intMap(Map("a" -> 1))
-          .floatMap(Map("a" -> 1.1f))
           .longMap(Map("a" -> 10L))
           .doubleMap(Map("a" -> 10.1))
           .boolMap(Map("a" -> true))
@@ -134,14 +130,13 @@ object Update extends TestSuite with CoreData {
           .bigIntMap(Map("a" -> bigInt1))
           .bigDecMap(Map("a" -> bigDec1))
           .saveAsync
-        res <- Ns.e.strMap.intMap.floatMap.longMap.doubleMap.boolMap.dateMap
+        res <- Ns.e.strMap.intMap.longMap.doubleMap.boolMap.dateMap
           .uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
       } yield {
         res ==> List((
           tx.eid,
           Map("a" -> "a"),
           Map("a" -> 1),
-          Map("a" -> 1.1f),
           Map("a" -> 10L),
           Map("a" -> 10.1),
           Map("a" -> true),

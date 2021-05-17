@@ -22,14 +22,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
     list
   }
 
-  protected def castAggrOneListFloat(row: jList[_], colIndex: Int): List[Float] = {
-    val it   = row.get(colIndex).asInstanceOf[jList[_]].iterator
-    var list = List.empty[Float]
-    while (it.hasNext)
-      list = list :+ it.next.asInstanceOf[jDouble].toFloat
-    list
-  }
-
   protected def castAggrOneListURI(row: jList[_], colIndex: Int): List[URI] = {
     val it   = row.get(colIndex).asInstanceOf[jList[_]].iterator
     var list = List.empty[URI]
@@ -72,14 +64,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
     var set = Set.empty[Int]
     while (it.hasNext)
       set += it.next.asInstanceOf[jLong].toInt
-    List(set)
-  }
-
-  protected def castAggrManyListFloat(row: jList[_], colIndex: Int): List[Set[Float]] = {
-    val it  = row.get(colIndex).asInstanceOf[jList[_]].iterator
-    var set = Set.empty[Float]
-    while (it.hasNext)
-      set += it.next.asInstanceOf[jDouble].toFloat
     List(set)
   }
 
@@ -128,14 +112,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
     list
   }
 
-  protected def castAggrOneListDistinctFloat(row: jList[_], colIndex: Int): List[Float] = {
-    val it   = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-    var list = List.empty[Float]
-    while (it.hasNext)
-      list = list :+ it.next.asInstanceOf[jDouble].toFloat
-    list
-  }
-
   protected def castAggrOneListDistinctURI(row: jList[_], colIndex: Int): List[URI] = {
     val it   = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     var list = List.empty[URI]
@@ -178,14 +154,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
     var set = Set.empty[Int]
     while (it.hasNext)
       set += it.next.asInstanceOf[jLong].toInt
-    List(set)
-  }
-
-  protected def castAggrManyListDistinctFloat(row: jList[_], colIndex: Int): List[Set[Float]] = {
-    val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-    var set = Set.empty[Float]
-    while (it.hasNext)
-      set += it.next.asInstanceOf[jDouble].toFloat
     List(set)
   }
 
@@ -234,14 +202,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
     list
   }
 
-  protected def castAggrOneListRandFloat(row: jList[_], colIndex: Int): List[Float] = {
-    val it   = row.get(colIndex).asInstanceOf[jList[_]].iterator
-    var list = List.empty[Float]
-    while (it.hasNext)
-      list = list :+ it.next.asInstanceOf[jDouble].toFloat
-    list
-  }
-
   protected def castAggrOneListRandURI(row: jList[_], colIndex: Int): List[URI] = {
     val it   = row.get(colIndex).asInstanceOf[jList[_]].iterator
     var list = List.empty[URI]
@@ -287,14 +247,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
     List(set)
   }
 
-  protected def castAggrManyListRandFloat(row: jList[_], colIndex: Int): List[Set[Float]] = {
-    val it  = row.get(colIndex).asInstanceOf[jList[_]].iterator
-    var set = Set.empty[Float]
-    while (it.hasNext)
-      set += it.next.asInstanceOf[jDouble].toFloat
-    List(set)
-  }
-
   protected def castAggrManyListRandURI(row: jList[_], colIndex: Int): List[Set[URI]] = {
     val it  = row.get(colIndex).asInstanceOf[jList[_]].iterator
     var set = Set.empty[URI]
@@ -335,9 +287,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
   protected def castAggrSingleSampleInt(row: jList[_], colIndex: Int): Int =
     row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[jLong].toInt
 
-  protected def castAggrSingleSampleFloat(row: jList[_], colIndex: Int): Float =
-    row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[jDouble].toFloat
-
   protected def castAggrSingleSampleURI(row: jList[_], colIndex: Int): URI =
     row.get(colIndex).asInstanceOf[jList[_]].iterator.next match {
       case uri: URI => uri
@@ -357,9 +306,6 @@ trait CastHelpersAggr extends CastHelpersOptNested {
 
   protected def castAggrManySingleInt(row: jList[_], colIndex: Int): Set[Int] =
     Set(row.get(colIndex).asInstanceOf[jLong].toInt)
-
-  protected def castAggrManySingleFloat(row: jList[_], colIndex: Int): Set[Float] =
-    Set(row.get(colIndex).asInstanceOf[jDouble].toFloat)
 
   protected def castAggrManySingleURI(row: jList[_], colIndex: Int): Set[URI] =
     Set(row.get(colIndex) match {

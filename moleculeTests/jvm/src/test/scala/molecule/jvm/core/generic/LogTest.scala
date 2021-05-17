@@ -287,12 +287,12 @@ class LogTest extends TestSpec {
     if (system == SystemPeer) {
       // Start - t3 (exclusive)
       // Includes all Datomic database bootstrapping and schema transactions
-      Log(None, Some(tx3)).t.get.size === 426
+      Log(None, Some(tx3)).t.get.size === 396
 
       // Start - end !! The whole database!
-      Log(None, None).t.get.size === 457
+      Log(None, None).t.get.size === 427
       // Same as this shortcut
-      Log().t.get.size === 457
+      Log().t.get.size === 427
 
     } else if (system == SystemDevLocal) {
 

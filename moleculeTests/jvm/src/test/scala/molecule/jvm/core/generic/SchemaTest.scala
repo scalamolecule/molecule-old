@@ -105,8 +105,7 @@ class SchemaTest extends TestSpec {
   class SchemaSetup extends CoreSetup {
     // Differing counts and ids for different systems
     val List(attrCount, a1, a2, a3, card1count, card2count) = system match {
-      case SystemPeer => List(74, 106, 108, 109, 32, 42)
-      //      case DatomicPeer       => List(74, 97, 99, 100, 32, 42)
+      case SystemPeer       => List(68, 106, 108, 109, 30, 38)
       case SystemDevLocal   => List(71, 105, 107, 108, 31, 40)
       case SystemPeerServer => List(71, 104, 106, 107, 31, 40)
     }
@@ -131,11 +130,11 @@ class SchemaTest extends TestSpec {
 
       // Since all attributes have an id, a tacit `id_` makes no difference
       Schema.id_.attr.get.size === attrCount
-      Schema.id_.attr.get(3) === List("floats", "double", "str1")
+      Schema.id_.attr.get(3) === List("double", "str1", "uri")
 
       // We can though filter by one or more tacit attribute ids
-      Schema.id_(a1).attr.get === List("longMap")
-      Schema.id_(a2, a3).attr.get === List("doubleMap", "boolMap")
+      Schema.id_(a1).attr.get === List("uuidMap")
+      Schema.id_(a2, a3).attr.get === List("bigIntMap", "bigDecMap")
 
       Schema.id_.not(a1).attr.get.size === attrCount - 1
       Schema.id_.not(a2, a3).attr.get.size === attrCount - 2
@@ -301,9 +300,9 @@ class SchemaTest extends TestSpec {
 
       Schema.attr.get.size === attrCount
       if (system == SystemPeer)
-        Schema.attr.get(5) === List("floats", "double", "str1", "byte", "uri")
+        Schema.attr.get(5) === List("double", "str1", "uri", "dates", "enum")
       else
-        Schema.attr.get(5) === List("floats", "double", "str1", "uri", "dates")
+        Schema.attr.get(5) === List("double", "str1", "uri", "dates")
 
       Schema.attr("str").get === List("str")
       Schema.attr("str", "int").get === List("str", "int")
@@ -345,7 +344,6 @@ class SchemaTest extends TestSpec {
       // Datomic types of schema attributes
       // Note that attributes defined being of Scala type
       // - `Integer` are internally saved as type `long` in Datomic
-      // - `Float` are internally saved as type `double` in Datomic
       // Molecule transparently converts back and forth so that application code only have to consider the Scala type.
 
       if (system == SystemPeer)
@@ -353,7 +351,6 @@ class SchemaTest extends TestSpec {
           "bigdec",
           "bigint",
           "boolean",
-          "bytes", // not in Client
           "double",
           "instant",
           "long",
@@ -384,7 +381,6 @@ class SchemaTest extends TestSpec {
           "bigdec",
           "bigint",
           "boolean",
-          "bytes",
           "double",
           "long",
           "ref",
@@ -395,7 +391,6 @@ class SchemaTest extends TestSpec {
         Schema.tpe.not("instant", "boolean").get.sorted === List(
           "bigdec",
           "bigint",
-          "bytes",
           "double",
           "long",
           "ref",

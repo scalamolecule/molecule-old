@@ -31,13 +31,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex).toString.toInt
   }
 
-  protected val castOneFloat = (colIndex: Int) => {
-    val array = new Array[Float](maxRows)
-    oneFloatArrays = oneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex).asInstanceOf[jDouble].toFloat
-  }
-
   // todo: Long | ref | datom
   protected val castOneLong = (colIndex: Int) => {
     val array = new Array[Long](maxRows)
@@ -145,16 +138,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Int]
         case v    => Some(v.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[jLong].toInt)
-      }
-  }
-
-  protected val castOptOneFloat = (colIndex: Int) => {
-    val array = new Array[Option[Float]](maxRows)
-    optOneFloatArrays = optOneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex) match {
-        case null => Option.empty[Float]
-        case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next.asInstanceOf[jDouble].toFloat)
       }
   }
 
@@ -298,19 +281,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         var set = Set.empty[Int]
         while (it.hasNext)
           set += it.next.asInstanceOf[jLong].toInt
-        set
-      }
-  }
-
-  protected val castManyFloat = (colIndex: Int) => {
-    val array = new Array[Set[Float]](maxRows)
-    manyFloatArrays = manyFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-        var set = Set.empty[Float]
-        while (it.hasNext)
-          set += it.next.asInstanceOf[jDouble].toFloat
         set
       }
   }
@@ -466,21 +436,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
           var set = Set.empty[Int]
           while (it.hasNext)
             set += it.next.asInstanceOf[jLong].toInt
-          Some(set)
-      }
-  }
-
-  protected val castOptManyFloat = (colIndex: Int) => {
-    val array = new Array[Option[Set[Float]]](maxRows)
-    optManyFloatArrays = optManyFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex) match {
-        case null => Option.empty[Set[Float]]
-        case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-          var set = Set.empty[Float]
-          while (it.hasNext)
-            set += it.next.asInstanceOf[jDouble].toFloat
           Some(set)
       }
   }
@@ -665,22 +620,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       }
   }
 
-  protected val castMapFloat = (colIndex: Int) => {
-    val array = new Array[Map[String, Float]](maxRows)
-    mapFloatArrays = mapFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = {
-        val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-        var map = Map.empty[String, Float]
-        var vs  = new Array[String](2)
-        while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> vs(1).toFloat)
-        }
-        map
-      }
-  }
-
   protected val castMapLong = (colIndex: Int) => {
     val array = new Array[Map[String, Long]](maxRows)
     mapLongArrays = mapLongArrays :+ array
@@ -843,24 +782,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
           while (it.hasNext) {
             vs = it.next.toString.split("@", 2)
             map += (vs(0) -> vs(1).toInt)
-          }
-          Some(map)
-      }
-  }
-
-  protected val castOptMapFloat = (colIndex: Int) => {
-    val array = new Array[Option[Map[String, Float]]](maxRows)
-    optMapFloatArrays = optMapFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex) match {
-        case null => Option.empty[Map[String, Float]]
-        case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-          var map = Map.empty[String, Float]
-          var vs  = new Array[String](2)
-          while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toFloat)
           }
           Some(map)
       }
@@ -1033,16 +954,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       }
   }
 
-  protected val castOptApplyOneFloat = (colIndex: Int) => {
-    val array = new Array[Option[Float]](maxRows)
-    optOneFloatArrays = optOneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex) match {
-        case null => Option.empty[Float]
-        case v    => Some(v.asInstanceOf[jDouble].toFloat)
-      }
-  }
-
   protected val castOptApplyOneLong = (colIndex: Int) => {
     val array = new Array[Option[Long]](maxRows)
     optOneLongArrays = optOneLongArrays :+ array
@@ -1153,21 +1064,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
           var set = Set.empty[Int]
           while (it.hasNext)
             set += it.next.asInstanceOf[jLong].toInt
-          Some(set)
-      }
-  }
-
-  protected val castOptApplyManyFloat = (colIndex: Int) => {
-    val array = new Array[Option[Set[Float]]](maxRows)
-    optManyFloatArrays = optManyFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex) match {
-        case null => Option.empty[Set[Float]]
-        case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-          var set = Set.empty[Float]
-          while (it.hasNext)
-            set += it.next.asInstanceOf[jDouble].toFloat
           Some(set)
       }
   }
@@ -1335,24 +1231,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       }
   }
 
-  protected val castOptApplyMapFloat = (colIndex: Int) => {
-    val array = new Array[Option[Map[String, Float]]](maxRows)
-    optMapFloatArrays = optMapFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex) match {
-        case null => Option.empty[Map[String, Float]]
-        case v    =>
-          val it  = v.asInstanceOf[jSet[_]].iterator
-          var map = Map.empty[String, Float]
-          var vs  = new Array[String](2)
-          while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toFloat)
-          }
-          Some(map)
-      }
-  }
-
   protected val castOptApplyMapLong = (colIndex: Int) => {
     val array = new Array[Option[Map[String, Long]]](maxRows)
     optMapLongArrays = optMapLongArrays :+ array
@@ -1512,13 +1390,6 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
     oneIntArrays = oneIntArrays :+ array
     (row: jList[AnyRef], i: Int) =>
       array(i) = row.get(colIndex).toString.toInt
-  }
-
-  protected val castKeyedMapFloat = (colIndex: Int) => {
-    val array = new Array[Float](maxRows)
-    oneFloatArrays = oneFloatArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex).toString.toFloat
   }
 
   // todo: Long" | "ref" | " datom

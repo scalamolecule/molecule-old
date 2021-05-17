@@ -1,6 +1,7 @@
 package molecule.core.marshalling
 
 import boopickle.Default.compositePickler
+import molecule.core.data.SchemaTransaction
 import molecule.core.ops.ColOps
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
@@ -17,15 +18,12 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param dbProxy0 Db coordinates to access db on server side
   */
-case class Conn_Js(dbProxy0: DbProxy) extends ConnProxy with ColOps with Helpers {
+trait Conn_Js extends ConnProxy with ColOps with Helpers {
 
   val isJsPlatform: Boolean = true
 
-  override lazy val dbProxy: DbProxy = dbProxy0
-
-  //  implicit val trowa = compositePickler[Throwable].addException[RuntimeException](m => new RuntimeException(m))
-
   override lazy val moleculeRpc: MoleculeRpc = MoleculeWebClient.moleculeRpc
+
 
   private[molecule] override def qAsync[Tpl](
     query: Query,
@@ -60,4 +58,17 @@ case class Conn_Js(dbProxy0: DbProxy) extends ConnProxy with ColOps with Helpers
       }.flatten
     )
   }
+}
+
+object Conn_Js {
+  def apply(dbProxy0: DbProxy): Conn_Js = new Conn_Js {
+    override lazy val dbProxy = dbProxy0
+  }
+
+  def inMem(schemaTransaction: SchemaTransaction): Conn_Js = apply(
+    DatomicInMemProxy(
+      schemaTransaction.datomicPeer,
+      schemaTransaction.attrMap
+    )
+  )
 }

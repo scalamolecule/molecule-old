@@ -24,12 +24,6 @@ object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal with Helpers with ClojureBridge {
 
 
-  def clearCache: Future[Boolean] = Future {
-    connCache.clear()
-    queryExecutorCache.clear()
-    true
-  }
-
   def transactAsync(
     dbProxy: DbProxy,
     stmtsEdn: String,
@@ -173,7 +167,7 @@ object DatomicRpc extends MoleculeRpc
   private def getCachedConn(dbProxy: DbProxy): Conn = {
     connCache.getOrElse(dbProxy.uuid, {
       val conn = dbProxy match {
-        case DatomicInMemProxy(edns, _) =>
+        case DatomicInMemProxy(edns, _, _) =>
           //          Datomic_Peer.connect("mem", dbIdentifier)
           Datomic_Peer.recreateDbFromEdn(edns)
 
@@ -302,7 +296,6 @@ object DatomicRpc extends MoleculeRpc
     case ("String", v)     => v.asInstanceOf[Object]
     case ("Int", v)        => v.toInt.asInstanceOf[Object]
     case ("Long", v)       => v.toLong.asInstanceOf[Object]
-    case ("Float", v)      => v.toDouble.asInstanceOf[Object]
     case ("Double", v)     => v.toDouble.asInstanceOf[Object]
     case ("BigInt", v)     => BigInt.apply(v).asInstanceOf[Object]
     case ("BigDecimal", v) => BigDecimal(v).asInstanceOf[Object]

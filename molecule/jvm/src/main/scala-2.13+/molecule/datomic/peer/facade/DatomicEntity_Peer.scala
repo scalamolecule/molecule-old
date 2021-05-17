@@ -37,7 +37,7 @@ case class DatomicEntity_Peer(
       case s: java.lang.String      => s
       case i: java.lang.Integer     => i.toLong: Long
       case l: java.lang.Long        => l: Long
-      case f: java.lang.Float       => f: Float
+//      case f: java.lang.Float       => f: Float
       case d: java.lang.Double      => d: Double
       case b: java.lang.Boolean     => b: Boolean
       case d: Date                  => d

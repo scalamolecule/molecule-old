@@ -125,7 +125,6 @@ case class Rows2QueryResult(
     QueryResult(
       oneStringArrays,
       oneIntArrays,
-      oneFloatArrays,
       oneLongArrays,
       oneDoubleArrays,
       oneBooleanArrays,
@@ -137,7 +136,6 @@ case class Rows2QueryResult(
 
       optOneStringArrays,
       optOneIntArrays,
-      optOneFloatArrays,
       optOneLongArrays,
       optOneDoubleArrays,
       optOneBooleanArrays,
@@ -149,7 +147,6 @@ case class Rows2QueryResult(
 
       manyStringArrays,
       manyIntArrays,
-      manyFloatArrays,
       manyLongArrays,
       manyDoubleArrays,
       manyBooleanArrays,
@@ -161,7 +158,6 @@ case class Rows2QueryResult(
 
       optManyStringArrays,
       optManyIntArrays,
-      optManyFloatArrays,
       optManyLongArrays,
       optManyDoubleArrays,
       optManyBooleanArrays,
@@ -173,7 +169,6 @@ case class Rows2QueryResult(
 
       mapStringArrays,
       mapIntArrays,
-      mapFloatArrays,
       mapLongArrays,
       mapDoubleArrays,
       mapBooleanArrays,
@@ -185,7 +180,6 @@ case class Rows2QueryResult(
 
       optMapStringArrays,
       optMapIntArrays,
-      optMapFloatArrays,
       optMapLongArrays,
       optMapDoubleArrays,
       optMapBooleanArrays,
@@ -197,7 +191,6 @@ case class Rows2QueryResult(
 
       listOneStringArrays,
       listOneIntArrays,
-      listOneFloatArrays,
       listOneLongArrays,
       listOneDoubleArrays,
       listOneBooleanArrays,
@@ -209,7 +202,6 @@ case class Rows2QueryResult(
 
       listManyStringArrays,
       listManyIntArrays,
-      listManyFloatArrays,
       listManyLongArrays,
       listManyDoubleArrays,
       listManyBooleanArrays,

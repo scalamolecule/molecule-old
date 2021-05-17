@@ -200,7 +200,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
     */
-  def save(implicit conn: Conn): TxReport = if (isJsPlatform) {
+  def save(implicit conn: Conn): TxReport = if (conn.isJsPlatform) {
     throw new RuntimeException("Please use asynchronous `saveAsync` on the JS platform.")
   } else {
     VerifyModel(_model, "save")
@@ -231,11 +231,11 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def saveAsync(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
     VerifyModel(_model, "save")
-    if (isJsPlatform) {
+    if (conn.isJsPlatform) {
       for {
         saveStmts <- conn.modelTransformerAsync(_model).saveStmts
-        (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts)
-        result <- condense(moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
+        (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts, conn)
+        result <- condense(conn.moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
       } yield result
     } else {
       for {
@@ -400,7 +400,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
   }
 
 
-  protected def _insert(conn: Conn, dataRows: Iterable[Seq[Any]]): TxReport = if (isJsPlatform) {
+  protected def _insert(conn: Conn, dataRows: Iterable[Seq[Any]]): TxReport = if (conn.isJsPlatform) {
     throw new RuntimeException("Please use asynchronous `insertAsync` on the JS platform.")
   } else {
     conn.transact(conn.modelTransformer(_model).insertStmts(untupled(dataRows)))
@@ -408,11 +408,18 @@ trait Molecule_0[Obj, Tpl] extends Molecule
 
   protected def _insertAsync(conn: Conn, dataRows: Iterable[Seq[Any]])
                             (implicit ec: ExecutionContext): Future[TxReport] = {
-    if (isJsPlatform) {
+
+    dataRows foreach println
+
+    println(dataRows.head.head)
+    println(dataRows.head.head.getClass)
+//    println(conn.dbProxy)
+
+    if (conn.isJsPlatform) {
       for {
         insertStmts <- conn.modelTransformerAsync(_model).insertStmts(untupled(dataRows))
-        (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts)
-        result <- condense(moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
+        (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
+        result <- condense(conn.moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
       } yield result
     } else {
       for {
@@ -457,7 +464,7 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
-  def update(implicit conn: Conn): TxReport = if (isJsPlatform) {
+  def update(implicit conn: Conn): TxReport = if (conn.isJsPlatform) {
     throw new RuntimeException("Please use asynchronous `updateAsync` on the JS platform.")
   } else {
     VerifyModel(_model, "update")
@@ -486,11 +493,11 @@ trait Molecule_0[Obj, Tpl] extends Molecule
     */
   def updateAsync(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
     VerifyModel(_model, "update")
-    if (isJsPlatform) {
+    if (conn.isJsPlatform) {
       for {
         updateStmts <- conn.modelTransformerAsync(_model).updateStmts
-        (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts)
-        result <- condense(moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
+        (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts, conn)
+        result <- condense(conn.moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
       } yield result
     } else {
       for {

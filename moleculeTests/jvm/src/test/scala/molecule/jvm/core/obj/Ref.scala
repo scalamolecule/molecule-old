@@ -9,7 +9,7 @@ import molecule.tests.core.ref.dsl.SelfJoin._
 
 
 class Ref extends TestSpec with Helpers {
-
+  
   "ref/backref" in new CoreSetup {
     Ns.int(0).str("a")
       .Ref1.int1(1).str1("b")
@@ -166,24 +166,24 @@ class Ref extends TestSpec with Helpers {
 
 
   "Multiple same-name ns composites" in new CoreSetup {
-    (Ns.int + Ns.float.str + Ref1.int1.str1).insert(1, (2f, "a"), (3, "b"))
+    (Ns.int + Ns.double.str + Ref1.int1.str1).insert(1, (2.2, "a"), (3, "b"))
 
     // Multiple same-name namespace composites need ++ to allow access to object interface
     // Can't access object properties from same-name namespace composites
-    (m(Ns.int + Ns.float.str + Ref1.int1.str1).getObj must throwA[molecule.core.exceptions.MoleculeException])
+    (m(Ns.int + Ns.double.str + Ref1.int1.str1).getObj must throwA[molecule.core.exceptions.MoleculeException])
       .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
       s"Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
 
-    val o = m(Ns.int ++ Ns.float.str + Ref1.int1.str1).getObj
+    val o = m(Ns.int ++ Ns.double.str + Ref1.int1.str1).getObj
     o.Ns.int === 1
-    o.Ns.float === 2f
+    o.Ns.double === 2.2
     o.Ns.str === "a"
     o.Ref1.int1 === 3
     o.Ref1.str1 === "b"
 
     // Multiple same-name namespace composites behaves equally for tuple output
-    m(Ns.int + Ns.float.str + Ref1.int1.str1).get.head === (1, (2f, "a"), (3, "b"))
-    m(Ns.int ++ Ns.float.str + Ref1.int1.str1).get.head === (1, (2f, "a"), (3, "b"))
+    m(Ns.int + Ns.double.str + Ref1.int1.str1).get.head === (1, (2.2, "a"), (3, "b"))
+    m(Ns.int ++ Ns.double.str + Ref1.int1.str1).get.head === (1, (2.2, "a"), (3, "b"))
   }
 
 

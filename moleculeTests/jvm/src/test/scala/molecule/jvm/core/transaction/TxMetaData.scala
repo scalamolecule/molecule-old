@@ -198,7 +198,6 @@ class TxMetaData extends TestSpec {
       Ns.str.Tx(Ns
         .int_(int1)
         .long_(long1)
-        .float_(float1)
         .double_(double1)
         .bool_(bool1)
         .date_(date1)
@@ -217,7 +216,6 @@ class TxMetaData extends TestSpec {
       // Use transaction meta data to filter
       Ns.str.Tx(Ns.int_(int1)).get === List("With tx meta data")
       Ns.str.Tx(Ns.long_(long1)).get === List("With tx meta data")
-      Ns.str.Tx(Ns.float_(float1)).get === List("With tx meta data")
       Ns.str.Tx(Ns.double_(double1)).get === List("With tx meta data")
       Ns.str.Tx(Ns.bool_(bool1)).get === List("With tx meta data")
       Ns.str.Tx(Ns.date_(date1)).get === List("With tx meta data")
@@ -227,7 +225,6 @@ class TxMetaData extends TestSpec {
       Ns.str.Tx(Ns
         .int_(int1)
         .long_(long1)
-        .float_(float1)
         .double_(double1)
         .bool_(bool1)
         .date_(date1)
@@ -910,12 +907,10 @@ class TxMetaData extends TestSpec {
             .bools_(Set(false))
             .date_(date7)
             .dates_(Set(date8, date9))
-            .double_(7.0)
-            .doubles_(Set(8.0, 9.0))
+            .double_(7.7)
+            .doubles_(Set(8.8, 9.9))
             .enum_(enum7)
             .enums_(Set(enum8, enum9))
-            .float_(7f)
-            .floats_(Set(8f, 9f))
             +
             Ns
               .long_(7L)
@@ -943,16 +938,16 @@ class TxMetaData extends TestSpec {
       )
 
       // Find by some meta data
-      m(Ns.str.int.Tx(Ns.float_(7f))).get.sorted === List(("with tx meta data", 1))
-      m(Ns.str + Ns.int.Tx(Ns.float_(7f))).get.sorted === List(("with tx meta data", 1))
+      m(Ns.str.int.Tx(Ns.double_(7.7))).get.sorted === List(("with tx meta data", 1))
+      m(Ns.str + Ns.int.Tx(Ns.double_(7.7))).get.sorted === List(("with tx meta data", 1))
 
       // Find by other meta data
       m(Ns.str.int.Tx(Ns.long_(7L))).get.sorted === List(("with tx meta data", 1))
       m(Ns.str + Ns.int.Tx(Ns.long_(7L))).get.sorted === List(("with tx meta data", 1))
 
       // Find by two meta values
-      m(Ns.str.int.Tx(Ns.float_(7f).long_(7L))).get === List(("with tx meta data", 1))
-      m(Ns.str + Ns.int.Tx(Ns.float_(7f).long_(7L))).get === List(("with tx meta data", 1))
+      m(Ns.str.int.Tx(Ns.double_(7.7).long_(7L))).get === List(("with tx meta data", 1))
+      m(Ns.str + Ns.int.Tx(Ns.double_(7.7).long_(7L))).get === List(("with tx meta data", 1))
 
       // Entities _without_ meta data
       m(Ns.str.int.Tx(Ns.long_(Nil))).get.sorted === List(("without tx meta data", 2))

@@ -45,14 +45,6 @@ class Insert extends TestSpec {
       Ns.long.get.sorted === List(1L, 2L, 3L, 4L, 5L)
 
 
-      Ns.float.insert(1.0f)
-      Ns.float.insert(2.0f, 3.0f)
-      Ns.float.insert(List(4.0f))
-      Ns.float.insert(List(5.0f, 1.0f))
-      // Unique values coalesced
-      Ns.float.get.sorted === List(1.0f, 2.0f, 3.0f, 4.0f, 5.0f)
-
-
       Ns.double.insert(1.0)
       Ns.double.insert(2.0, 3.0)
       Ns.double.insert(List(4.0))
@@ -142,14 +134,6 @@ class Insert extends TestSpec {
       Ns.longs.insert(List(Set(9L), Set(10L)))
       Ns.longs.get.head.toSeq.sorted === List(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
 
-      Ns.floats.insert(Set(1.0f))
-      Ns.floats.insert(Set(2.0f, 3.0f))
-      Ns.floats.insert(Set(4.0f), Set(5.0f))
-      Ns.floats.insert(List(Set(6.0f)))
-      Ns.floats.insert(List(Set(7.0f, 8.0f)))
-      Ns.floats.insert(List(Set(9.0f), Set(10.0f)))
-      Ns.floats.get.head.toSeq.sorted === List(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f)
-
       Ns.doubles.insert(Set(1.0))
       Ns.doubles.insert(Set(2.0, 3.0))
       Ns.doubles.insert(Set(4.0), Set(5.0))
@@ -199,16 +183,16 @@ class Insert extends TestSpec {
 
       // Insert 3 entities as tuples of values
       // Note that values are typechecked against the attribute types of the molecule
-      Ns.str.int.long.float.double.bool.date.uuid.uri.enum insert List(
-        (" ", 0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0"),
-        ("a", 1, 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1"),
-        ("b", 2, 2L, 2.0f, 2.0, false, date2, uuid2, uri2, "enum2")
+      Ns.str.int.long.double.bool.date.uuid.uri.enum insert List(
+        (" ", 0, 0L, 0.0, false, date0, uuid0, uri0, "enum0"),
+        ("a", 1, 1L, 1.0, true, date1, uuid1, uri1, "enum1"),
+        ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")
       )
 
-      Ns.str.int.long.float.double.bool.date.uuid.uri.enum.get.sortBy(_._1) === List(
-        (" ", 0, 0L, 0.0f, 0.0, false, date0, uuid0, uri0, "enum0"),
-        ("a", 1, 1L, 1.0f, 1.0, true, date1, uuid1, uri1, "enum1"),
-        ("b", 2, 2L, 2.0f, 2.0, false, date2, uuid2, uri2, "enum2")
+      Ns.str.int.long.double.bool.date.uuid.uri.enum.get.sortBy(_._1) === List(
+        (" ", 0, 0L, 0.0, false, date0, uuid0, uri0, "enum0"),
+        ("a", 1, 1L, 1.0, true, date1, uuid1, uri1, "enum1"),
+        ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")
       )
     }
 
@@ -217,11 +201,10 @@ class Insert extends TestSpec {
 
       // Insert 3 entities as tuples of values
       // Note that values are typechecked against the attribute types of the molecule
-      Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums insert List(
+      Ns.strs.ints.longs.doubles.dates.uuids.uris.enums insert List(
         (Set("a", "b"),
           Set(1, 2),
           Set(1L, 2L),
-          Set(1.0f, 2.0f),
           Set(1.0, 2.0),
           Set(date1, date2),
           Set(uuid1, uuid2),
@@ -230,7 +213,6 @@ class Insert extends TestSpec {
         (Set("c", "d"),
           Set(3, 4),
           Set(3L, 4L),
-          Set(3.0f, 4.0f),
           Set(3.0, 4.0),
           Set(date3, date4),
           Set(uuid3, uuid4),
@@ -239,11 +221,10 @@ class Insert extends TestSpec {
       )
 
       // Unique values coalesced
-      Ns.strs.ints.longs.floats.doubles.dates.uuids.uris.enums.get.head === (
+      Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.get.head === (
         Set("d", "a", "b", "c"),
         Set(1, 4, 3, 2),
         Set(1L, 4L, 3L, 2L),
-        Set(2.0f, 4.0f, 1.0f, 3.0f),
         Set(2.0, 4.0, 1.0, 3.0),
         Set(date4, date1, date2, date3),
         Set(uuid3, uuid2, uuid4, uuid1),

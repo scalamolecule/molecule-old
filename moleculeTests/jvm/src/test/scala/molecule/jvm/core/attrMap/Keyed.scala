@@ -15,7 +15,6 @@ class Keyed extends Base {
     Ns.strMapK("fr").get === List("Bonjour")
     Ns.intMapK("fr").get === List(20)
     Ns.longMapK("fr").get === List(20L)
-    Ns.floatMapK("fr").get === List(20.0f)
     Ns.doubleMapK("fr").get === List(20.0)
     Ns.boolMapK("fr").get === List(false)
     Ns.dateMapK("fr").get === List(date2)

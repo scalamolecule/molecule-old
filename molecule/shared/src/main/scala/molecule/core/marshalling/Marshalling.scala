@@ -10,21 +10,6 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 trait Marshalling[Obj, Tpl] {
 
-  /** Flag to indicate if we are on the JS or JVM platform */
-  protected lazy val isJsPlatform: Boolean = ???
-
-
-  // Client side ......................
-
-  /** Remote procedure call handle
-    *
-    */
-  protected lazy val moleculeRpc: MoleculeRpc = ???
-
-
-  def clearCache: Future[Boolean] = moleculeRpc.clearCache
-
-
   /** Indexes to resolve marshalling for each attribute value in a row:
     *
     * - colIndex, column index of the attribute (index in output row from Datomic result)

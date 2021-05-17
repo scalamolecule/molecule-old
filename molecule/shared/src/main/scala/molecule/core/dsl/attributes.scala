@@ -34,15 +34,13 @@ object attributes {
   trait OneString    [Ns, In] extends One[Ns, In, String    ]
   trait OneInt       [Ns, In] extends One[Ns, In, Int       ]
   trait OneLong      [Ns, In] extends One[Ns, In, Long      ]
-  trait OneFloat     [Ns, In] extends One[Ns, In, Float     ]
   trait OneDouble    [Ns, In] extends One[Ns, In, Double    ]
   trait OneBoolean   [Ns, In] extends One[Ns, In, Boolean   ]
-  trait OneBigInt    [Ns, In] extends One[Ns, In, BigInt    ]
-  trait OneBigDecimal[Ns, In] extends One[Ns, In, BigDecimal]
   trait OneDate      [Ns, In] extends One[Ns, In, Date      ]
   trait OneUUID      [Ns, In] extends One[Ns, In, UUID      ]
   trait OneURI       [Ns, In] extends One[Ns, In, URI       ]
-  trait OneByte      [Ns, In] extends One[Ns, In, Byte      ]
+  trait OneBigInt    [Ns, In] extends One[Ns, In, BigInt    ]
+  trait OneBigDecimal[Ns, In] extends One[Ns, In, BigDecimal]
   trait OneAny       [Ns, In] extends One[Ns, In, Any       ]
 
 
@@ -53,15 +51,13 @@ object attributes {
   trait ManyString    [Ns, In] extends Many[Ns, In, Set[String    ], String    ]
   trait ManyInt       [Ns, In] extends Many[Ns, In, Set[Int       ], Int       ]
   trait ManyLong      [Ns, In] extends Many[Ns, In, Set[Long      ], Long      ]
-  trait ManyFloat     [Ns, In] extends Many[Ns, In, Set[Float     ], Float     ]
   trait ManyDouble    [Ns, In] extends Many[Ns, In, Set[Double    ], Double    ]
   trait ManyBoolean   [Ns, In] extends Many[Ns, In, Set[Boolean   ], Boolean   ]
-  trait ManyBigInt    [Ns, In] extends Many[Ns, In, Set[BigInt    ], BigInt    ]
-  trait ManyBigDecimal[Ns, In] extends Many[Ns, In, Set[BigDecimal], BigDecimal]
   trait ManyDate      [Ns, In] extends Many[Ns, In, Set[Date      ], Date      ]
   trait ManyUUID      [Ns, In] extends Many[Ns, In, Set[UUID      ], UUID      ]
   trait ManyURI       [Ns, In] extends Many[Ns, In, Set[URI       ], URI       ]
-  trait ManyByte      [Ns, In] extends Many[Ns, In, Set[Byte      ], Byte      ]
+  trait ManyBigInt    [Ns, In] extends Many[Ns, In, Set[BigInt    ], BigInt    ]
+  trait ManyBigDecimal[Ns, In] extends Many[Ns, In, Set[BigDecimal], BigDecimal]
 
 
   // Map attributes
@@ -73,15 +69,13 @@ object attributes {
   trait MapString    [Ns, In] extends MapAttr[Ns, In, Map[String, String    ], String    ]
   trait MapInt       [Ns, In] extends MapAttr[Ns, In, Map[String, Int       ], Int       ]
   trait MapLong      [Ns, In] extends MapAttr[Ns, In, Map[String, Long      ], Long      ]
-  trait MapFloat     [Ns, In] extends MapAttr[Ns, In, Map[String, Float     ], Float     ]
   trait MapDouble    [Ns, In] extends MapAttr[Ns, In, Map[String, Double    ], Double    ]
   trait MapBoolean   [Ns, In] extends MapAttr[Ns, In, Map[String, Boolean   ], Boolean   ]
-  trait MapBigInt    [Ns, In] extends MapAttr[Ns, In, Map[String, BigInt    ], BigInt    ]
-  trait MapBigDecimal[Ns, In] extends MapAttr[Ns, In, Map[String, BigDecimal], BigDecimal]
   trait MapDate      [Ns, In] extends MapAttr[Ns, In, Map[String, Date      ], Date      ]
   trait MapUUID      [Ns, In] extends MapAttr[Ns, In, Map[String, UUID      ], UUID      ]
   trait MapURI       [Ns, In] extends MapAttr[Ns, In, Map[String, URI       ], URI       ]
-  trait MapByte      [Ns, In] extends MapAttr[Ns, In, Map[String, Byte      ], Byte      ]
+  trait MapBigInt    [Ns, In] extends MapAttr[Ns, In, Map[String, BigInt    ], BigInt    ]
+  trait MapBigDecimal[Ns, In] extends MapAttr[Ns, In, Map[String, BigDecimal], BigDecimal]
 
 
   // Enums
@@ -110,15 +104,13 @@ object attributes {
   trait OneString$    [Ns] extends OneValueAttr$[Ns, String    ]
   trait OneInt$       [Ns] extends OneValueAttr$[Ns, Int       ]
   trait OneLong$      [Ns] extends OneValueAttr$[Ns, Long      ]
-  trait OneFloat$     [Ns] extends OneValueAttr$[Ns, Float     ]
   trait OneDouble$    [Ns] extends OneValueAttr$[Ns, Double    ]
   trait OneBoolean$   [Ns] extends OneValueAttr$[Ns, Boolean   ]
-  trait OneBigInt$    [Ns] extends OneValueAttr$[Ns, BigInt    ]
-  trait OneBigDecimal$[Ns] extends OneValueAttr$[Ns, BigDecimal]
   trait OneDate$      [Ns] extends OneValueAttr$[Ns, Date      ]
   trait OneUUID$      [Ns] extends OneValueAttr$[Ns, UUID      ]
   trait OneURI$       [Ns] extends OneValueAttr$[Ns, URI       ]
-  trait OneByte$      [Ns] extends OneValueAttr$[Ns, Byte      ]
+  trait OneBigInt$    [Ns] extends OneValueAttr$[Ns, BigInt    ]
+  trait OneBigDecimal$[Ns] extends OneValueAttr$[Ns, BigDecimal]
   trait OneAny$       [Ns] extends OneValueAttr$[Ns, Any       ]
 
 
@@ -127,15 +119,13 @@ object attributes {
   trait ManyString$    [Ns] extends ManyValueAttr$[Ns, Set[String    ], String    ]
   trait ManyInt$       [Ns] extends ManyValueAttr$[Ns, Set[Int       ], Int       ]
   trait ManyLong$      [Ns] extends ManyValueAttr$[Ns, Set[Long      ], Long      ]
-  trait ManyFloat$     [Ns] extends ManyValueAttr$[Ns, Set[Float     ], Float     ]
   trait ManyDouble$    [Ns] extends ManyValueAttr$[Ns, Set[Double    ], Double    ]
   trait ManyBoolean$   [Ns] extends ManyValueAttr$[Ns, Set[Boolean   ], Boolean   ]
-  trait ManyBigInt$    [Ns] extends ManyValueAttr$[Ns, Set[BigInt    ], BigInt    ]
-  trait ManyBigDecimal$[Ns] extends ManyValueAttr$[Ns, Set[BigDecimal], BigDecimal]
   trait ManyDate$      [Ns] extends ManyValueAttr$[Ns, Set[Date      ], Date      ]
   trait ManyUUID$      [Ns] extends ManyValueAttr$[Ns, Set[UUID      ], UUID      ]
   trait ManyURI$       [Ns] extends ManyValueAttr$[Ns, Set[URI       ], URI       ]
-  trait ManyByte$      [Ns] extends ManyValueAttr$[Ns, Set[Byte      ], Byte      ]
+  trait ManyBigInt$    [Ns] extends ManyValueAttr$[Ns, Set[BigInt    ], BigInt    ]
+  trait ManyBigDecimal$[Ns] extends ManyValueAttr$[Ns, Set[BigDecimal], BigDecimal]
 
 
   trait MapAttr$[Ns, TT, T] extends Attr with OptionalExpr[Ns, TT]
@@ -143,15 +133,13 @@ object attributes {
   trait MapString$    [Ns] extends MapAttr$[Ns, Map[String, String    ], String    ]
   trait MapInt$       [Ns] extends MapAttr$[Ns, Map[String, Int       ], Int       ]
   trait MapLong$      [Ns] extends MapAttr$[Ns, Map[String, Long      ], Long      ]
-  trait MapFloat$     [Ns] extends MapAttr$[Ns, Map[String, Float     ], Float     ]
   trait MapDouble$    [Ns] extends MapAttr$[Ns, Map[String, Double    ], Double    ]
   trait MapBoolean$   [Ns] extends MapAttr$[Ns, Map[String, Boolean   ], Boolean   ]
-  trait MapBigInt$    [Ns] extends MapAttr$[Ns, Map[String, BigInt    ], BigInt    ]
-  trait MapBigDecimal$[Ns] extends MapAttr$[Ns, Map[String, BigDecimal], BigDecimal]
   trait MapDate$      [Ns] extends MapAttr$[Ns, Map[String, Date      ], Date      ]
   trait MapUUID$      [Ns] extends MapAttr$[Ns, Map[String, UUID      ], UUID      ]
   trait MapURI$       [Ns] extends MapAttr$[Ns, Map[String, URI       ], URI       ]
-  trait MapByte$      [Ns] extends MapAttr$[Ns, Map[String, Byte      ], Byte      ]
+  trait MapBigInt$    [Ns] extends MapAttr$[Ns, Map[String, BigInt    ], BigInt    ]
+  trait MapBigDecimal$[Ns] extends MapAttr$[Ns, Map[String, BigDecimal], BigDecimal]
 
 
 

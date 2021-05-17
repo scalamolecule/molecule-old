@@ -22,9 +22,6 @@ trait CastHelpersOptNested extends Helpers {
   protected def castOptNestedOneInt2(it: jIterator[_]): Int =
     it.next.toString.toInt
 
-  protected def castOptNestedOneFloat(it: jIterator[_]): Float =
-    it.next.asInstanceOf[jDouble].toFloat
-
   protected def castOptNestedOneBigInt(it: jIterator[_]): BigInt =
     BigInt(it.next.toString)
 
@@ -50,14 +47,6 @@ trait CastHelpersOptNested extends Helpers {
     var set = Set.empty[Int]
     while (it1.hasNext)
       set += it1.next.asInstanceOf[jLong].toInt
-    set
-  }
-
-  protected def castOptNestedManyFloat(it: jIterator[_]): Set[Float] = {
-    val it1 = it.next.asInstanceOf[jList[_]].iterator
-    var set = Set.empty[Float]
-    while (it1.hasNext)
-      set += it1.next.asInstanceOf[jDouble].toFloat
     set
   }
 
@@ -110,12 +99,6 @@ trait CastHelpersOptNested extends Helpers {
     it.next match {
       case "__none__" => Option.empty[Int]
       case v          => Some(v.asInstanceOf[jLong].toInt)
-    }
-
-  protected def castOptNestedOptOneFloat(it: jIterator[_]): Option[Float] =
-    it.next match {
-      case "__none__" => Option.empty[Float]
-      case v          => Some(v.asInstanceOf[jDouble].toFloat)
     }
 
   protected def castOptNestedOptOneLong(it: jIterator[_]): Option[Long] =
@@ -177,17 +160,6 @@ trait CastHelpersOptNested extends Helpers {
         var set = Set.empty[Int]
         while (it1.hasNext)
           set += it1.next.asInstanceOf[jLong].toInt
-        Some(set)
-    }
-
-  protected def castOptNestedOptManyFloat(it: jIterator[_]): Option[Set[Float]] =
-    it.next match {
-      case "__none__" => Option.empty[Set[Float]]
-      case v          =>
-        val it1 = v.asInstanceOf[jList[_]].iterator
-        var set = Set.empty[Float]
-        while (it1.hasNext)
-          set += it1.next.asInstanceOf[jDouble].toFloat
         Some(set)
     }
 
@@ -291,17 +263,6 @@ trait CastHelpersOptNested extends Helpers {
     while (it1.hasNext) {
       vs = it1.next.toString.split("@", 2)
       map += (vs(0) -> vs(1).toInt)
-    }
-    map
-  }
-
-  protected def castOptNestedMapFloat(it: jIterator[_]): Map[String, Float] = {
-    val it1 = it.next.asInstanceOf[jList[_]].iterator
-    var map = Map.empty[String, Float]
-    var vs  = new Array[String](2)
-    while (it1.hasNext) {
-      vs = it1.next.toString.split("@", 2)
-      map += (vs(0) -> vs(1).toFloat)
     }
     map
   }
@@ -421,20 +382,6 @@ trait CastHelpersOptNested extends Helpers {
         while (it1.hasNext) {
           vs = it1.next.toString.split("@", 2)
           map += (vs(0) -> vs(1).toInt)
-        }
-        Some(map)
-    }
-
-  protected def castOptNestedOptMapFloat(it: jIterator[_]): Option[Map[String, Float]] =
-    it.next match {
-      case "__none__" => Option.empty[Map[String, Float]]
-      case v          =>
-        val it1 = v.asInstanceOf[jList[_]].iterator
-        var map = Map.empty[String, Float]
-        var vs  = new Array[String](2)
-        while (it1.hasNext) {
-          vs = it1.next.toString.split("@", 2)
-          map += (vs(0) -> vs(1).toFloat)
         }
         Some(map)
     }

@@ -18,9 +18,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
   protected def castOneInt2(row: jList[_], colIndex: Int): Int =
     row.get(colIndex).toString.toInt
 
-  protected def castOneFloat(row: jList[_], colIndex: Int): Float =
-    row.get(colIndex).asInstanceOf[jDouble].toFloat
-
   protected def castOneURI(row: jList[_], colIndex: Int): URI = {
     row.get(colIndex) match {
       case uri: URI => uri
@@ -45,14 +42,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
     var set = Set.empty[Int]
     while (it.hasNext)
       set += it.next.asInstanceOf[jLong].toInt
-    set
-  }
-
-  protected def castManyFloat(row: jList[_], colIndex: Int): Set[Float] = {
-    val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-    var set = Set.empty[Float]
-    while (it.hasNext)
-      set += it.next.asInstanceOf[jDouble].toFloat
     set
   }
 
@@ -110,11 +99,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
     case v    => Some(v.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[jLong].toInt)
   }
 
-  protected def castOptOneFloat(row: jList[_], colIndex: Int): Option[Float] = row.get(colIndex) match {
-    case null => Option.empty[Float]
-    case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next.asInstanceOf[jDouble].toFloat)
-  }
-
   protected def castOptOneLong(row: jList[_], colIndex: Int): Option[Long] = row.get(colIndex) match {
     case null => Option.empty[Long]
     case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next.asInstanceOf[jLong].toLong)
@@ -153,11 +137,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
   protected def castOptApplyOneInt(row: jList[_], colIndex: Int): Option[Int] = row.get(colIndex) match {
     case null => Option.empty[Int]
     case v    => Some(v.asInstanceOf[jLong].toInt)
-  }
-
-  protected def castOptApplyOneFloat(row: jList[_], colIndex: Int): Option[Float] = row.get(colIndex) match {
-    case null => Option.empty[Float]
-    case v    => Some(v.asInstanceOf[jDouble].toFloat)
   }
 
   protected def castOptApplyOneLong(row: jList[_], colIndex: Int): Option[Long] = row.get(colIndex) match {
@@ -202,16 +181,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
       var set = Set.empty[Int]
       while (it.hasNext)
         set += it.next.asInstanceOf[jLong].toInt
-      Some(set)
-  }
-
-  protected def castOptManyFloat(row: jList[_], colIndex: Int): Option[Set[Float]] = row.get(colIndex) match {
-    case null => Option.empty[Set[Float]]
-    case v    =>
-      val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-      var set = Set.empty[Float]
-      while (it.hasNext)
-        set += it.next.asInstanceOf[jDouble].toFloat
       Some(set)
   }
 
@@ -287,16 +256,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
       var set = Set.empty[Int]
       while (it.hasNext)
         set += it.next.asInstanceOf[jLong].toInt
-      Some(set)
-  }
-
-  protected def castOptApplyManyFloat(row: jList[_], colIndex: Int): Option[Set[Float]] = row.get(colIndex) match {
-    case null => Option.empty[Set[Float]]
-    case v    =>
-      val it  = v.asInstanceOf[jSet[_]].iterator
-      var set = Set.empty[Float]
-      while (it.hasNext)
-        set += it.next.asInstanceOf[jDouble].toFloat
       Some(set)
   }
 
@@ -446,17 +405,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
     map
   }
 
-  protected def castMapFloat(row: jList[_], colIndex: Int): Map[String, Float] = {
-    val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
-    var map = Map.empty[String, Float]
-    var vs  = new Array[String](2)
-    while (it.hasNext) {
-      vs = it.next.toString.split("@", 2)
-      map += (vs(0) -> vs(1).toFloat)
-    }
-    map
-  }
-
   protected def castMapLong(row: jList[_], colIndex: Int): Map[String, Long] = {
     val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     var map = Map.empty[String, Long]
@@ -570,19 +518,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
       while (it.hasNext) {
         vs = it.next.toString.split("@", 2)
         map += (vs(0) -> vs(1).toInt)
-      }
-      Some(map)
-  }
-
-  protected def castOptMapFloat(row: jList[_], colIndex: Int): Option[Map[String, Float]] = row.get(colIndex) match {
-    case null => Option.empty[Map[String, Float]]
-    case v    =>
-      val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-      var map = Map.empty[String, Float]
-      var vs  = new Array[String](2)
-      while (it.hasNext) {
-        vs = it.next.toString.split("@", 2)
-        map += (vs(0) -> vs(1).toFloat)
       }
       Some(map)
   }
@@ -716,19 +651,6 @@ trait CastHelpersTypes extends CastHelpersAggr {
       while (it.hasNext) {
         vs = it.next.toString.split("@", 2)
         map += (vs(0) -> vs(1).toInt)
-      }
-      Some(map)
-  }
-
-  protected def castOptApplyMapFloat(row: jList[_], colIndex: Int): Option[Map[String, Float]] = row.get(colIndex) match {
-    case null => Option.empty[Map[String, Float]]
-    case v    =>
-      val it  = v.asInstanceOf[jSet[_]].iterator
-      var map = Map.empty[String, Float]
-      var vs  = new Array[String](2)
-      while (it.hasNext) {
-        vs = it.next.toString.split("@", 2)
-        map += (vs(0) -> vs(1).toFloat)
       }
       Some(map)
   }

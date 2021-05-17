@@ -39,6 +39,10 @@ trait Helpers extends DateHandling {
 
   def unescStr(s: String) = s.replace("""\"""", """"""").replace("""\\""", """\""")
 
+  def padS(longest: Int, str: String): String = pad(longest, str.length)
+
+  def pad(longest: Int, shorter: Int): String = if (longest > shorter) " " * (longest - shorter) else ""
+
   def cast(value: Any): String = value match {
     case (a, b)                             => s"(${cast(a)}, ${cast(b)})"
     case v: Long                            => v.toString + "L"

@@ -4,13 +4,35 @@ import molecule.core.util.Helpers
 
 object metaSchema extends Helpers {
 
-  case class MetaSchema(
-    parts: Seq[MetaPart]
-  ) {
+  case class MetaSchema(parts: Seq[MetaPart]) {
     override def toString =
       s"""MetaSchema(Seq(${
         if (parts.isEmpty) "" else parts.mkString("\n    ", ",\n\n\n    ", "")
       }))"""
+
+    def nsMap: String = {
+      val parts2 = parts.map(part =>
+        part.nss.map(ns => s""""${ns.nameFull}" -> $ns""").mkString("\n      ", ",\n\n      ", "")
+      )
+      val nss   = if (parts2.isEmpty) "" else parts2.mkString(",\n\n      ")
+      s"Map($nss)"
+    }
+
+    def attrMap: String = {
+      val attrData = for{
+        part <- parts
+        ns <- part.nss
+        attr <- ns.attrs
+      } yield {
+        (s":${ns.nameFull}/${attr.name}", attr.card, attr.tpe)
+      }
+      val maxSp = attrData.map(_._1.length).max
+      val attrs = attrData.map{
+        case (a, card, tpe) => s""""$a"${padS(maxSp, a)} -> ($card, "$tpe")"""
+      }
+      val attrsStr = if(attrs.isEmpty) "" else attrs.mkString("\n      ", ",\n      ", "")
+      s"Map($attrsStr)"
+    }
   }
 
 
@@ -25,6 +47,7 @@ object metaSchema extends Helpers {
       s"""MetaPart($pos, "$name", ${o(descr$)}, ${o(entityCount$)}, Seq(${
         if (nss.isEmpty) "" else nss.mkString("\n      ", ",\n\n      ", "")
       }))"""
+
   }
 
 

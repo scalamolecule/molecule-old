@@ -9,7 +9,7 @@ case class QueryOpsClojure(q: Query) extends JavaUtil {
 
   private def cast(a: Any): AnyRef = a match {
     case i: Int                                => i.toLong.asInstanceOf[Object]
-    case f: Float                              => f.toDouble.asInstanceOf[Object]
+//    case f: Float                              => f.toDouble.asInstanceOf[Object]
     case bigI: BigInt                          => bigI.bigInteger
     case bigD: BigDecimal                      => bigD.bigDecimal
 //    case s: String if s.startsWith("__enum__") => Util.read(s.drop(8)) // clojure Keyword

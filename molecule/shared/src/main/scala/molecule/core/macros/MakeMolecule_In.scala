@@ -45,7 +45,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               ) {
                 final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-                final override lazy val isJsPlatform: Boolean = $isJsPlatform
               }
               new $outMolecule
             }
@@ -61,7 +60,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                   boundRawQuery, Some(boundRawNestedQuery))
               ) with ${nestedTupleClassX(castss.size)}[$ObjType, (..$OutTypes)] {
                 ..${resolveNestedTupleMethods(castss, types, OutTypes, postTypes, postCasts).get}
-                final override lazy val isJsPlatform: Boolean = $isJsPlatform
               }
               new $outMolecule
             }
@@ -82,7 +80,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               ) {
                 final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-                final override lazy val isJsPlatform: Boolean = $isJsPlatform
               }
               new $outMolecule
             }
@@ -98,7 +95,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                   boundRawQuery, Some(boundRawNestedQuery))
               ) with ${nestedTupleClassX(castss.size)}[$ObjType, (..$OutTypes)] {
                 ..${resolveNestedTupleMethods(castss, types, OutTypes, postTypes, postCasts).get}
-                final override lazy val isJsPlatform: Boolean = $isJsPlatform
               }
               new $outMolecule
             }
@@ -122,7 +118,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               ) {
                 final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-                final override lazy val isJsPlatform: Boolean = $isJsPlatform
               }
               new $outMolecule
             }
@@ -143,7 +138,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               ) {
                 final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = (..${topLevel(castss)})
                 final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-                final override lazy val isJsPlatform: Boolean = $isJsPlatform
               }
               new $outMolecule
             }

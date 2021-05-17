@@ -11,6 +11,7 @@ import molecule.core.util.Helpers
   * Custom DSL molecule --> Model --> Query --> Datomic query string
   * */
 object elements {
+
   import Helpers._
 
   /** Molecule Model representation.
@@ -102,79 +103,137 @@ object elements {
   // Value
   case object EntValue extends Value
   case object VarValue extends Value
-  case class BackValue(backNs: String) extends Value {override def toString: String = s"""BackValue("$backNs")"""}
+  case class BackValue(backNs: String) extends Value {
+    override def toString: String = s"""BackValue("$backNs")"""
+  }
   case object EnumVal extends Value
   case object IndexVal extends Value
 
   // Function
   case class Fulltext(search: Seq[Any]) extends Value
-  case class Fn(name: String, value: Option[Int] = None) extends Value {override def toString: String = s"""Fn("$name", ${o(value)})"""}
+  case class Fn(name: String, value: Option[Int] = None) extends Value {
+    override def toString: String = s"""Fn("$name", ${o(value)})"""
+  }
 
   // Logic
-  case class And(values: Seq[Any]) extends Value {override def toString: String = s"And(${sq(values)})"}
+  case class And(values: Seq[Any]) extends Value {
+    override def toString: String = s"And(${sq(values)})"
+  }
 
   // Comparison (== != < > <= >=)
-  case class Eq(values: Seq[Any]) extends Value {override def toString: String = s"Eq(${sq(values)})"}
-  case class Neq(values: Seq[Any]) extends Value {override def toString: String = s"Neq(${sq(values)})"}
-  case class Lt(value: Any) extends Value {override def toString: String = s"Lt(${cast(value)})"}
-  case class Gt(value: Any) extends Value {override def toString: String = s"Gt(${cast(value)})"}
-  case class Le(value: Any) extends Value {override def toString: String = s"Le(${cast(value)})"}
-  case class Ge(value: Any) extends Value {override def toString: String = s"Ge(${cast(value)})"}
+  case class Eq(values: Seq[Any]) extends Value {
+    override def toString: String = s"Eq(${sq(values)})"
+  }
+  case class Neq(values: Seq[Any]) extends Value {
+    override def toString: String = s"Neq(${sq(values)})"
+  }
+  case class Lt(value: Any) extends Value {
+    override def toString: String = s"Lt(${cast(value)})"
+  }
+  case class Gt(value: Any) extends Value {
+    override def toString: String = s"Gt(${cast(value)})"
+  }
+  case class Le(value: Any) extends Value {
+    override def toString: String = s"Le(${cast(value)})"
+  }
+  case class Ge(value: Any) extends Value {
+    override def toString: String = s"Ge(${cast(value)})"
+  }
 
   // Question mark placeholder for input molecules
   case object Qm extends Value
   case object Distinct extends Value
 
   // Card-many attribute operations
-  case class AssertValue(values: Seq[Any]) extends Value {override def toString: String = s"AssertValue(${sq(values)})"}
-  case class ReplaceValue(oldNew: Seq[(Any, Any)]) extends Value {override def toString: String = s"ReplaceValue(${sq(oldNew)})"}
-  case class RetractValue(values: Seq[Any]) extends Value {override def toString: String = s"RetractValue(${sq(values)})"}
+  case class AssertValue(values: Seq[Any]) extends Value {
+    override def toString: String = s"AssertValue(${sq(values)})"
+  }
+  case class ReplaceValue(oldNew: Seq[(Any, Any)]) extends Value {
+    override def toString: String = s"ReplaceValue(${sq(oldNew)})"
+  }
+  case class RetractValue(values: Seq[Any]) extends Value {
+    override def toString: String = s"RetractValue(${sq(values)})"
+  }
 
   // Map attribute operations
-  case class AssertMapPairs(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"AssertMapPairs(${sq(pairs)})"}
-  case class ReplaceMapPairs(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"ReplaceMapPairs(${sq(pairs)})"}
-  case class RetractMapKeys(keys: Seq[String]) extends Value {override def toString: String = s"RetractMapKeys(${sq(keys)})"}
-  case class MapEq(pairs: Seq[(String, Any)]) extends Value {override def toString: String = s"MapEq(${sq(pairs)})"}
-  case class MapKeys(keys: Seq[String]) extends Value {override def toString: String = s"MapKeys(${sq(keys)})"}
+  case class AssertMapPairs(pairs: Seq[(String, Any)]) extends Value {
+    override def toString: String = s"AssertMapPairs(${sq(pairs)})"
+  }
+  case class ReplaceMapPairs(pairs: Seq[(String, Any)]) extends Value {
+    override def toString: String = s"ReplaceMapPairs(${sq(pairs)})"
+  }
+  case class RetractMapKeys(keys: Seq[String]) extends Value {
+    override def toString: String = s"RetractMapKeys(${sq(keys)})"
+  }
+  case class MapEq(pairs: Seq[(String, Any)]) extends Value {
+    override def toString: String = s"MapEq(${sq(pairs)})"
+  }
+  case class MapKeys(keys: Seq[String]) extends Value {
+    override def toString: String = s"MapKeys(${sq(keys)})"
+  }
 
 
   sealed trait GenericValue extends Value
 
   case object NoValue extends GenericValue
   case class Id(eid: Any) extends GenericValue
-  case class Card(card: Int) extends GenericValue {override def toString: String = s"Card($card)"}
+  case class Card(card: Int) extends GenericValue {
+    override def toString: String = s"Card($card)"
+  }
 
 
   sealed trait Bidirectional extends GenericValue
 
-  case class BiSelfRef(card: Int) extends Bidirectional {override def toString: String = s"BiSelfRef($card)"}
-  case class BiSelfRefAttr(card: Int) extends Bidirectional {override def toString: String = s"BiSelfRefAttr($card)"}
+  case class BiSelfRef(card: Int) extends Bidirectional {
+    override def toString: String = s"BiSelfRef($card)"
+  }
+  case class BiSelfRefAttr(card: Int) extends Bidirectional {
+    override def toString: String = s"BiSelfRefAttr($card)"
+  }
 
-  case class BiOtherRef(card: Int, attr: String) extends Bidirectional {override def toString: String = s"""BiOtherRef($card, "$attr")"""}
-  case class BiOtherRefAttr(card: Int, attr: String) extends Bidirectional {override def toString: String = s"""BiOtherRefAttr($card, "$attr")"""}
+  case class BiOtherRef(card: Int, attr: String) extends Bidirectional {
+    override def toString: String = s"""BiOtherRef($card, "$attr")"""
+  }
+  case class BiOtherRefAttr(card: Int, attr: String) extends Bidirectional {
+    override def toString: String = s"""BiOtherRefAttr($card, "$attr")"""
+  }
 
   case object BiEdge extends Bidirectional
-  case class BiEdgeRef(card: Int, attr: String) extends Bidirectional {override def toString: String = s"""BiEdgeRef($card, "$attr")"""}
-  case class BiEdgeRefAttr(card: Int, attr: String) extends Bidirectional {override def toString: String = s"""BiEdgeRefAttr($card, "$attr")"""}
+  case class BiEdgeRef(card: Int, attr: String) extends Bidirectional {
+    override def toString: String = s"""BiEdgeRef($card, "$attr")"""
+  }
+  case class BiEdgeRefAttr(card: Int, attr: String) extends Bidirectional {
+    override def toString: String = s"""BiEdgeRefAttr($card, "$attr")"""
+  }
 
-  case class BiEdgePropAttr(card: Int) extends Bidirectional {override def toString: String = s"BiEdgePropAttr($card)"}
-  case class BiEdgePropRefAttr(card: Int) extends Bidirectional {override def toString: String = s"BiEdgePropRefAttr($card)"}
-  case class BiEdgePropRef(card: Int) extends Bidirectional {override def toString: String = s"BiEdgePropRef($card)"}
+  case class BiEdgePropAttr(card: Int) extends Bidirectional {
+    override def toString: String = s"BiEdgePropAttr($card)"
+  }
+  case class BiEdgePropRefAttr(card: Int) extends Bidirectional {
+    override def toString: String = s"BiEdgePropRefAttr($card)"
+  }
+  case class BiEdgePropRef(card: Int) extends Bidirectional {
+    override def toString: String = s"BiEdgePropRef($card)"
+  }
 
-  case class BiTargetRef(card: Int, attr: String) extends Bidirectional {override def toString: String = s"""BiTargetRef($card, "$attr")"""}
-  case class BiTargetRefAttr(card: Int, attr: String) extends Bidirectional {override def toString: String = s"""BiTargetRefAttr($card, "$attr")"""}
+  case class BiTargetRef(card: Int, attr: String) extends Bidirectional {
+    override def toString: String = s"""BiTargetRef($card, "$attr")"""
+  }
+  case class BiTargetRefAttr(card: Int, attr: String) extends Bidirectional {
+    override def toString: String = s"""BiTargetRefAttr($card, "$attr")"""
+  }
 
 
   /** Expression AST for building OR/AND expressions.
-   * {{{
-   *   // `or` method allows OR-logic to be applied to `name` attribute
-   *   Person.name_("Ben" or "Liz").age.get === List(42, 37)
-   *
-   *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
-   *   val persons = m(Person.name_(?).age(?))
-   *   persons(("Ben" and 42) or ("Liz" and 37)).get === List(42, 37)
-   * }}}
-   */
+    * {{{
+    *   // `or` method allows OR-logic to be applied to `name` attribute
+    *   Person.name_("Ben" or "Liz").age.get === List(42, 37)
+    *
+    *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
+    *   val persons = m(Person.name_(?).age(?))
+    *   persons(("Ben" and 42) or ("Liz" and 37)).get === List(42, 37)
+    * }}}
+    */
   sealed trait Expression
 
   sealed trait Exp1[T1] extends Expression {
@@ -216,13 +275,15 @@ object elements {
   // Correct output of values given scala-js type mixtures (+ hack for javascript decimal handling)
 
   final private def cast2(tpe: String, value: Any): String = (tpe, value) match {
-    case ("Long", v)                                               => v.toString + "L"
-    case ("Float" | "Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
-    case ("Float" | "Double", v)                                   => v.toString
-    case ("Date", date: Date)                                      => "\"" + date2str(date) + "\""
-    case ("String", s: String)                                     => "\"" + escStr(s) + "\""
-    case ("UUID" | "URI", v)                                       => "\"" + v + "\""
-    case (_, v)                                                    => v.toString
+    case ("Long", v) => v.toString + "L"
+    //    case ("Float" | "Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
+    //    case ("Float" | "Double", v)                                   => v.toString
+    case ("Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
+    case ("Double", v)                                   => v.toString
+    case ("Date", date: Date)                            => "\"" + date2str(date) + "\""
+    case ("String", s: String)                           => "\"" + escStr(s) + "\""
+    case ("UUID" | "URI", v)                             => "\"" + v + "\""
+    case (_, v)                                          => v.toString
   }
 
   final private def getSeq2[T](tpe: String, values: Seq[T]): String =
