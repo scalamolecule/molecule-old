@@ -26,7 +26,7 @@ object AdhocTestJs extends TestSuite with CoreData {
 
   lazy val tests = Tests {
 
-        implicit val exPickler = exceptionPickler
+    implicit val exPickler = exceptionPickler
 
 
     test("core") {
@@ -62,35 +62,25 @@ object AdhocTestJs extends TestSuite with CoreData {
         //        _ <- Ns.int.getAsync === List(1)
 
         // Insert single value for one cardinality-1 attribute
-//        _ <- Ns.str insertAsync str1
-//        _ <- Ns.int insertAsync int1
-//        _ <- Ns.long insertAsync long1
-        _ <- Ns.double insertAsync 1.0
-//        _ <- m(Ns.double).insertAsync.apply(1.2f)
-//        _ <- Ns.double insertAsync double1
-//        _ <- Ns.bool insertAsync bool1
-//        _ <- Ns.date insertAsync date1
-//        _ <- Ns.uuid insertAsync uuid1
-//        _ <- Ns.uri insertAsync uri1
-//        _ <- Ns.enum insertAsync enum1
-//
-//        // Calling `get` on explicit molecule
-//        _ <- m(Ns.str).getAsync === List(str1)
+        _ <- Ns.str insertAsync str1
+        _ <- Ns.int insertAsync int1
+        _ <- Ns.long insertAsync long1
+        _ <- Ns.double insertAsync double1
+        _ <- Ns.bool insertAsync bool1
+        _ <- Ns.date insertAsync date1
+        _ <- Ns.uuid insertAsync uuid1
+        _ <- Ns.uri insertAsync uri1
+        _ <- Ns.enum insertAsync enum1
 
-//        // Calling `getAsync` on implicit molecule
-//        _ <- Ns.str.getAsync === List(str1)
-//        _ <- Ns.str.getAsync(1) === List(str1)
-//
-//        // Get one value (RuntimeException if no value)
-//        _ <- Ns.str.getAsync === List(str1)
-//        _ <- Ns.int.getAsync === List(int1)
-//        _ <- Ns.long.getAsync === List(long1)
-//        _ <- Ns.double.getAsync === List(double1)
-//        _ <- Ns.bool.getAsync === List(bool1)
-//        _ <- Ns.date.getAsync === List(date1)
-//        _ <- Ns.uuid.getAsync === List(uuid1)
-//        _ <- Ns.uri.getAsync === List(uri1)
-//        _ <- Ns.enum.getAsync === List(enum1)
+        _ <- Ns.str.getAsync === List(str1)
+        _ <- Ns.int.getAsync === List(int1)
+        _ <- Ns.long.getAsync === List(long1)
+        _ <- Ns.double.getAsync === List(double1)
+        _ <- Ns.bool.getAsync === List(bool1)
+        _ <- Ns.date.getAsync === List(date1)
+        _ <- Ns.uuid.getAsync === List(uuid1)
+        _ <- Ns.uri.getAsync === List(uri1)
+        _ <- Ns.enum.getAsync === List(enum1)
       } yield ()
 
 

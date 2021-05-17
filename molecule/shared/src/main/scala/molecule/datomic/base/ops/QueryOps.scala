@@ -20,11 +20,11 @@ object QueryOps extends Helpers with JavaUtil {
 
   def castStr(tpe: String): String = tpe match {
     case "Int" | "ref" => "Long"
-//    case "Float"       => "Double"
-    case "Date"        => "java.util.Date"
-    case "UUID"        => "java.util.UUID"
-    case "URI"         => "java.net.URI"
-    case other         => other
+    //    case "Float"       => "Double"
+    case "Date" => "java.util.Date"
+    case "UUID" => "java.util.UUID"
+    case "URI"  => "java.net.URI"
+    case other  => other
   }
 
   def withDecimal(v: Any): String = {
@@ -437,8 +437,8 @@ object QueryOps extends Helpers with JavaUtil {
       }
 
     def compareTo(op: String, a: Atom, v: String, qv: QueryValue, i: Int = 0): Query = qv match {
-      case Val(arg) if a.tpe == "String"     => compareTo2(op, a.tpe, v, Val(arg.toString.replace("\"", "\\\"")), i)
-//      case Val(arg) if a.tpe == "Float"      => compareTo2(op, a.tpe, v, Val(arg.toString.toFloat), i)
+      case Val(arg) if a.tpe == "String" => compareTo2(op, a.tpe, v, Val(arg.toString.replace("\"", "\\\"")), i)
+      //      case Val(arg) if a.tpe == "Float"      => compareTo2(op, a.tpe, v, Val(arg.toString.toFloat), i)
       case Val(arg) if a.tpe == "Double"     => compareTo2(op, a.tpe, v, Val(arg.toString.toDouble), i)
       case Val(arg) if a.tpe == "BigDecimal" => compareTo2(op, a.tpe, v, Val(BigDecimal(withDecimal(arg))), i)
       case _                                 => compareTo2(op, a.tpe, v, qv, i)
@@ -474,36 +474,24 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
     def ground(a: Atom, arg: Any, v: String): Query = a.tpe match {
-      case "String" => q.func(s"""ground "${esc1(arg)}"""", Empty, v)
+      case "String"                           => q.func(s"""ground "${esc1(arg)}"""", Empty, v)
+      case "Int" | "Long" | "Boolean" | "ref" => q.func(s"""ground $arg""", Empty, v)
 
-      /* Hack for MoleculeAdmin / ScalaJS */
-//      case "Float" | "Double" if arg.toString.startsWith("__n__") =>
-      case "Double" if arg.toString.startsWith("__n__") =>
-        val arg1 = arg.toString.drop(5)
-        val arg2 = withDecimal(arg1)
-        q.func(s"""ground $arg2""", Empty, v)
-
-      case "Int" | "Long" | "Boolean" | "ref" =>
-        q.func(s"""ground $arg""", Empty, v)
-
-//      case "Float" | "Double" =>
       case "Double" =>
-        q.func(s"""ground ${withDecimal(arg)}""", Empty, v)
+        if (arg.toString.startsWith("__n__")) {
+          // Hack for MoleculeAdmin / ScalaJS
+          val arg1 = arg.toString.drop(5)
+          val arg2 = withDecimal(arg1)
+          q.func(s"""ground $arg2""", Empty, v)
+        } else {
+          q.func(s"""ground ${withDecimal(arg)}""", Empty, v)
+        }
 
-      case "Date" =>
-        q.func(s"""ground #inst "${date2datomicStr(arg.asInstanceOf[Date])}"""", Empty, v)
-
-      case "UUID" =>
-        q.func(s"""ground #uuid "$arg"""", Empty, v)
-
-      case "URI" =>
-        q.func(s"""ground (java.net.URI. "$arg")""", Empty, v)
-
-      case "BigInt" =>
-        q.func(s"""ground (java.math.BigInteger. "$arg")""", Empty, v)
-
-      case "BigDecimal" =>
-        q.func(s"""ground (java.math.BigDecimal. "${withDecimal(arg)}")""", Empty, v)
+      case "Date"       => q.func(s"""ground #inst "${date2datomicStr(arg.asInstanceOf[Date])}"""", Empty, v)
+      case "UUID"       => q.func(s"""ground #uuid "$arg"""", Empty, v)
+      case "URI"        => q.func(s"""ground (java.net.URI. "$arg")""", Empty, v)
+      case "BigInt"     => q.func(s"""ground (java.math.BigInteger. "$arg")""", Empty, v)
+      case "BigDecimal" => q.func(s"""ground (java.math.BigDecimal. "${withDecimal(arg)}")""", Empty, v)
     }
 
     def fulltext(e: String, a: Atom, v: String, s: String): Query =
@@ -673,8 +661,8 @@ object QueryOps extends Helpers with JavaUtil {
     // Java conversions ...........................................................
 
     private def cast(a: Any): AnyRef = a match {
-      case i: Int                                => i.toLong.asInstanceOf[Object]
-//      case f: Float                              => f.toDouble.asInstanceOf[Object]
+      case i: Int => i.toLong.asInstanceOf[Object]
+      //      case f: Float                              => f.toDouble.asInstanceOf[Object]
       case bigI: BigInt                          => bigI.bigInteger
       case bigD: BigDecimal                      => bigD.bigDecimal
       case s: String if s.startsWith("__enum__") => s.drop(8).asInstanceOf[Object]

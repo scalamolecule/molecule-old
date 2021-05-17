@@ -408,13 +408,6 @@ trait Molecule_0[Obj, Tpl] extends Molecule
 
   protected def _insertAsync(conn: Conn, dataRows: Iterable[Seq[Any]])
                             (implicit ec: ExecutionContext): Future[TxReport] = {
-
-    dataRows foreach println
-
-    println(dataRows.head.head)
-    println(dataRows.head.head.getClass)
-//    println(conn.dbProxy)
-
     if (conn.isJsPlatform) {
       for {
         insertStmts <- conn.modelTransformerAsync(_model).insertStmts(untupled(dataRows))

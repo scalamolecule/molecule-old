@@ -11,12 +11,10 @@ object Stmts2Edn extends Helpers {
 
   val buf      = new StringBuilder()
   var uriAttrs = Set.empty[String]
-  var attrMap = Map.empty[String, (Int, String)]
+  var attrMap  = Map.empty[String, (Int, String)]
 
   def apply(stmts: Seq[Statement], conn: Conn): (String, Set[String]) = {
     attrMap = conn.dbProxy.attrMap
-
-    stmts foreach println
 
     buf.clear()
     var following = false
@@ -58,34 +56,21 @@ object Stmts2Edn extends Helpers {
     case e               => s"$e"
   }
 
-  def value(attr: String, value: Any): Unit = {
-    println("Z " + attrMap(attr))
-    println("Z " + value)
-    println("Z " + value.getClass)
-    value match {
-      case s: String                                 => quote(s)
-      case TempId(part, i)                           => buf.append(s"#db/id[$part $i]")
-      case v: Int                                    => buf.append(v.toString)
-      case v: Long                                   => buf.append(v.toString)
-      case v: Float                                  =>
-        println("float " + v)
-        throw new IllegalArgumentException(
-          s"Float values not allowed on JS side since they are not precise. Found $v. Please use Double values instead."
-        )
-      case v: Double                                 =>
-        println("double " + v)
-        val s = v.toString
-        buf.append(s + (if (s.contains('.')) "" else ".0"))
-      case v: Boolean                                => buf.append(v.toString)
-      case v: Date                                   => buf.append("#inst \"" + date2datomicStr(v) + "\"")
-      case v: UUID                                   => buf.append("#uuid \"" + v + "\"")
-      case v: URI                                    => uriAttrs = uriAttrs + attr; buf.append(v.toString)
-      case v: BigInt                                 => buf.append(v.toString + "N")
-      case v: BigDecimal if v.toString.contains(".") => buf.append(v.toString + "M")
-      case v: BigDecimal                             => buf.append(v.toString + ".0M")
-      case Enum(prefix, enum)                        => buf.append(prefix + enum)
-      case other                                     => throw new IllegalArgumentException(
-        s"Unexpected value of type `${other.getClass}`: " + other
+  def value(attr: String, v: Any): Unit = {
+    val s = v.toString
+    (attrMap(attr)._2, v) match {
+      case ("String", Enum(prefix, enum))          => buf.append(prefix + enum)
+      case ("String", _)                           => quote(s)
+      case ("Long", TempId(part, i))               => buf.append(s"#db/id[$part $i]")
+      case ("Int" | "Long" | "ref" | "Boolean", _) => buf.append(s)
+      case ("Double", _)                           => buf.append(s + (if (s.contains('.')) "" else ".0"))
+      case ("Date", d: Date)                       => buf.append("#inst \"" + date2datomicStr(d) + "\"")
+      case ("UUID", _)                             => buf.append("#uuid \"" + v + "\"")
+      case ("URI", _)                              => uriAttrs = uriAttrs + attr; buf.append(s)
+      case ("BigInt", _)                           => buf.append(s + "N")
+      case ("BigDecimal", _)                       => buf.append(s + (if (s.contains('.')) "M" else ".0M"))
+      case (tpe, _)                                => throw new IllegalArgumentException(
+        s"Unexpected $tpe value of type ${v.getClass}: " + v
       )
     }
   }
