@@ -47,7 +47,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
     ),
 //    scalaJSLinkerConfig ~= { _.withSemantics(_.withStrictFloats(true)) },
-    testFrameworks += new TestFramework("utest.runner.Framework"),
+//    testFrameworks += new TestFramework("utest.runner.Framework"),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
 //    scalaJSUseMainModuleInitializer := true,
 //    scalaJSUseTestModuleInitializer := true,
@@ -70,7 +70,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-http" % "10.2.4",
         "ch.megard" %% "akka-http-cors" % "1.1.1"
       ),
-      testFrameworks += new TestFramework("utest.runner.Framework"),
+//      testFrameworks += new TestFramework("utest.runner.Framework"),
       // Ensure clojure loads correctly for async tests run from sbt
       Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
     ) ++ (if (datomicProtocol == "free") {
@@ -95,6 +95,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
       "org.specs2" %%% "specs2-core" % "4.10.6"
     ),
+      testFrameworks += new TestFramework("utest.runner.Framework"),
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,
       "datomicProtocol" -> datomicProtocol,
