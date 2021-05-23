@@ -9,13 +9,13 @@ trait RetractMolecule {
     *
     * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
-  def retract: TxReport
+//  def retract: TxReport
 
   /** Perform asynchronous retraction of entity with added transaction meta data against database.
     *
     * @return Future[molecule.facade.TxReport] with result of transaction
     */
-  def retractAsync(implicit ec: ExecutionContext): Future[TxReport]
+  def retract(implicit ec: ExecutionContext): Future[TxReport]
 
   /** Inspect entity retraction with transaction meta data.
     * {{{

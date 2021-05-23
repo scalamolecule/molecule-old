@@ -4,8 +4,11 @@ import java.util.{Date, UUID, Collection => jCollection}
 import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
 import molecule.datomic.base.api.DatomicEntityImpl
+import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.language.existentials
+//import scala.concurrent.ExecutionContext.Implicits.global
+
 
 /** Datomic Entity facade for peer api.
   *
@@ -21,10 +24,10 @@ case class DatomicEntity_Peer(
   showKW: Boolean = true
 ) extends DatomicEntityImpl(conn, eid) {
 
-  def keySet: Set[String] = entity.keySet().asScala.toSet
-  def keys: List[String] = entity.keySet().asScala.toList
+  def keySet(implicit ec: ExecutionContext): Future[Set[String]] = entity.keySet().asScala.toSet
+  def keys(implicit ec: ExecutionContext): Future[List[String]] = entity.keySet().asScala.toList
 
-  def rawValue(key: String): Any = entity.get(key)
+  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = entity.get(key)
 
   private[molecule] def toScala(
     key: String,
@@ -32,12 +35,11 @@ case class DatomicEntity_Peer(
     depth: Int = 1,
     maxDepth: Int = 5,
     tpe: String = "Map"
-  ): Any = {
+  )(implicit ec: ExecutionContext): Future[Any] = {
     vOpt.getOrElse(rawValue(key)) match {
       case s: java.lang.String      => s
       case i: java.lang.Integer     => i.toLong: Long
       case l: java.lang.Long        => l: Long
-//      case f: java.lang.Float       => f: Float
       case d: java.lang.Double      => d: Double
       case b: java.lang.Boolean     => b: Boolean
       case d: Date                  => d

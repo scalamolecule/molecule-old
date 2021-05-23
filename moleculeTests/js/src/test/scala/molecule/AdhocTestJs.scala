@@ -7,7 +7,7 @@ import boopickle.Default._
 import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy, DbException}
 import molecule.datomic.api.in1_out13._
 import molecule.datomic.base.facade.Conn
-import molecule.js.core.attr.Attribute.{bool1, date1, dates1, dates2, double1, doubles1, doubles2, enum1, enums1, enums2, int1, ints1, ints2, long1, longs1, longs2, str1, strs1, strs2, uri1, uris1, uris2, uuid1, uuids1, uuids2}
+import molecule.core.attr.Attribute.{bool1, date1, dates1, dates2, double1, doubles1, doubles2, enum1, enums1, enums2, int1, ints1, ints2, long1, longs1, longs2, str1, strs1, strs2, uri1, uris1, uris2, uuid1, uuids1, uuids2}
 import molecule.setup.AsyncTestSuite
 import molecule.setup.core.CoreData
 import molecule.tests.core.base.dsl.CoreTest._

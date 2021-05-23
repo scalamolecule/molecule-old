@@ -18,6 +18,8 @@ import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 /** Factory methods to create facade to Datomic Connection. */
 object Conn_Peer {
@@ -98,8 +100,10 @@ class Conn_Peer(
     _testDb = Some(peerConn.db.since(txR.t))
   }
 
-  def testDbWith(txData: Seq[Statement]*): Unit = {
-    testDbWith(stmts2java(txData.flatten))
+  def testDbWith(txMolecules: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit] = {
+    Future.sequence(txMolecules).map { stmtss =>
+      testDbWith(stmts2java(stmtss.flatten))
+    }
   }
 
   /** Use test database with temporary raw Java transaction data. */
@@ -146,32 +150,35 @@ class Conn_Peer(
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
+  //  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
+  //    if (_adhocDb.isDefined) {
+  //      // In-memory "transaction"
+  //      TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
+  //
+  //    } else if (_testDb.isDefined) {
+  //      // In-memory "transaction"
+  //      val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
+  //      // Continue with updated in-memory db
+  //      // For some reason we need to "cast" it to time t
+  //      _testDb = Some(txReport.dbAfter.asOf(txReport.t))
+  //      txReport
+  //
+  //    } else {
+  //      // Live transaction
+  //      TxReport_Peer(peerConn.transact(javaStmts).get, scalaStmts)
+  //    }
+  //  }
+
+  def transactRaw(javaStmts: jList[_], futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement]))
+                 (implicit ec: ExecutionContext): Future[TxReport] = try {
     if (_adhocDb.isDefined) {
-      // In-memory "transaction"
-      TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
+      futScalaStmts.map(scalaStmts =>
+        TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
+      )
+      //      Future(TxReport_Peer(getAdhocDb.`with`(javaStmts), futScalaStmts))
 
     } else if (_testDb.isDefined) {
-      // In-memory "transaction"
-      val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
-      // Continue with updated in-memory db
-      // For some reason we need to "cast" it to time t
-      _testDb = Some(txReport.dbAfter.asOf(txReport.t))
-      txReport
-
-    } else {
-      // Live transaction
-      TxReport_Peer(peerConn.transact(javaStmts).get, scalaStmts)
-    }
-  }
-
-  def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[TxReport] = try {
-    if (_adhocDb.isDefined) {
-      Future(TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts))
-
-    } else if (_testDb.isDefined) {
-      Future {
+      futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
 
@@ -182,6 +189,17 @@ class Conn_Peer(
         _testDb = Some(dbAfter)
         txReport
       }
+      //      Future {
+      //        // In-memory "transaction"
+      //        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), futScalaStmts)
+      //
+      //        // Continue with updated in-memory db
+      //        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+      //        //      val dbAfter = txReport.dbAfter
+      //        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+      //        _testDb = Some(dbAfter)
+      //        txReport
+      //      }
 
     } else {
       // Live transaction
@@ -211,7 +229,13 @@ class Conn_Peer(
         },
         (arg0: Runnable) => ec.execute(arg0)
       )
-      p.future.map { moleculeInvocationResult: java.util.Map[_, _] =>
+      //      p.future.map { moleculeInvocationResult: java.util.Map[_, _] =>
+      //        TxReport_Peer(moleculeInvocationResult, futScalaStmts)
+      //      }
+      for {
+        moleculeInvocationResult: java.util.Map[_, _] <- p.future
+        scalaStmts <- futScalaStmts
+      } yield {
         TxReport_Peer(moleculeInvocationResult, scalaStmts)
       }
     }

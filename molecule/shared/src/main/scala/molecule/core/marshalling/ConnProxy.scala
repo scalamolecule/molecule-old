@@ -37,7 +37,7 @@ trait ConnProxy extends Conn {
 
   override def testDbSince(txR: TxReport): Unit = ???
 
-  override def testDbWith(txData: Seq[Statement]*): Unit = ???
+  override def testDbWith(txData: Future[Seq[Statement]]*): Future[Unit] = ???
 
   override def testDbWith(txDataJava: util.List[util.List[_]]): Unit = ???
 
@@ -47,29 +47,29 @@ trait ConnProxy extends Conn {
 
   override def entity(id: Any): DatomicEntity = ???
 
-  override def transactRaw(javaStmts: util.List[_], scalaStmts: Seq[Statement]): TxReport = ???
+//  override def transactRaw(javaStmts: util.List[_], scalaStmts: Seq[Statement]): TxReport = ???
+//
+//  override def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport = ???
+//
+//  override def transact(edn: String, scalaStmts: Seq[Statement]): TxReport = ???
+//
+//  override def transact(stmtsReader: Reader): TxReport = ???
+//
+//  override def transact(edn: String): TxReport = ???
+//
+//  override def transact(scalaStmts: Seq[Statement]): TxReport = ???
 
-  override def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport = ???
+  override def transactRaw(javaStmts: util.List[_], scalaStmts: Future[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transact(edn: String, scalaStmts: Seq[Statement]): TxReport = ???
+  override def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transact(stmtsReader: Reader): TxReport = ???
+  override def transact(edn: String, scalaStmts: Future[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transact(edn: String): TxReport = ???
+  override def transact(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transact(scalaStmts: Seq[Statement]): TxReport = ???
+  override def transact(edn: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  override def transactAsyncRaw(javaStmts: util.List[_], scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
-
-  override def transactAsync(stmtsReader: Reader, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
-
-  override def transactAsync(edn: String, scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
-
-  override def transactAsync(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] = ???
-
-  override def transactAsync(edn: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-
-  override def transactAsync(scalaStmts: Seq[Statement])(implicit ec: ExecutionContext): Future[TxReport] = ???
+  override def transact(scalaStmts: Future[Seq[Statement]])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
   private[molecule] override def buildTxFnInstall(
     txFn: String,

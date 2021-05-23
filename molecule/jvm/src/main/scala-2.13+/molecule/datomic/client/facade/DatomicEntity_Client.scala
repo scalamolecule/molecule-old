@@ -9,6 +9,7 @@ import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
 import molecule.core.util.RegexMatching
 import molecule.datomic.base.api.DatomicEntityImpl
+import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.language.existentials
 
@@ -24,11 +25,11 @@ case class DatomicEntity_Client(
   showKW: Boolean = true
 ) extends DatomicEntityImpl(conn, eid) with RegexMatching {
 
-  def keySet: Set[String] = map.keySet
+  def keySet(implicit ec: ExecutionContext): Future[Set[String]] = entityMap.map(_.keySet)
 
-  def keys: List[String] = map.keySet.toList
+  def keys(implicit ec: ExecutionContext): Future[List[String]] = entityMap.map(_.keySet.toList)
 
-  def rawValue(key: String): Any = {
+  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = {
     key match {
       case r":[^/]+/_.+" =>
         // reverse lookup
@@ -39,7 +40,7 @@ case class DatomicEntity_Client(
             .map(_.asInstanceOf[PersistentArrayMap].get(Util.read(":db/id")).asInstanceOf[Long])
         )
 
-      case k => map.apply(k)
+      case k => entityMap.map(_.apply(k))
     }
   }
 
@@ -59,7 +60,7 @@ case class DatomicEntity_Client(
     depth: Int = 1,
     maxDepth: Int = 5,
     tpe: String = "Map"
-  ): Any = {
+  )(implicit ec: ExecutionContext): Future[Any] = {
     val value = vOpt.getOrElse(rawValue(key))
     value match {
       case Some(v)                  => v

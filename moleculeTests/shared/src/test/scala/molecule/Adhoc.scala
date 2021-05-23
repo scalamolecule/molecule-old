@@ -16,8 +16,8 @@ object Adhoc extends AsyncTestSuite {
     "hej" - core { implicit conn =>
       for {
         // insertAsync single value for one cardinality-1 attribute
-        _ <- Ref1.int1 insertAsync int1
-        _ <- Ref1.int1.getAsync === List(int1)
+        _ <- Ref1.int1 insert int1
+        _ <- Ref1.int1.get === List(int1)
       } yield ()
     }
 

@@ -1,6 +1,7 @@
 package molecule.datomic.base.facade
 
 import java.util.Date
+import scala.concurrent.Future
 
 /** Facade to Datomic transaction report with convenience methods to access tx data. */
 trait TxReport {

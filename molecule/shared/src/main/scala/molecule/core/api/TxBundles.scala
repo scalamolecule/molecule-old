@@ -1,6 +1,7 @@
 package molecule.core.api
 
 import molecule.core.util.Helpers
+import molecule.datomic.base.ast.tempDb.With
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,8 +29,8 @@ trait TxBundles extends Helpers {
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
-  def transactBundle(stmtss: Seq[Statement]*)(implicit conn: Conn): TxReport =
-    conn.transact(stmtss.flatten)
+  //  def transactBundle(stmtss: Seq[Statement]*)(implicit conn: Conn): TxReport =
+  //    conn.transact(stmtss.flatten)
 
 
   /** Asynchronously transact bundled transaction statements
@@ -57,10 +58,11 @@ trait TxBundles extends Helpers {
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
-  def transactBundleAsync(
-    stmtss: Seq[Statement]*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] =
-    conn.transactAsync(stmtss.flatten)
+  def transactBundle(
+    stmtss: Future[Seq[Statement]]*
+  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
+    conn.transact(Future.sequence(stmtss).map(_.flatten))
+  }
 
 
   /** Inspect transaction bundle statements
@@ -116,11 +118,16 @@ trait TxBundles extends Helpers {
     * @param stmtss [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s from multiple molecule operations
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectTransactBundle(stmtss: Seq[Statement]*)(implicit conn: Conn): Unit = {
+  def inspectTransactBundle(stmtss: Future[Seq[Statement]]*)(implicit conn: Conn, ec: ExecutionContext): Future[Unit] = {
     // Use temporary branch of db to not changing any live data
     conn.testDbWith()
     // Print tx report to console
-    conn.transact(stmtss.flatten).inspect
+    conn.transact(Future.sequence(stmtss).map(_.flatten)).foreach(_.inspect)
     conn.useLiveDb
+
+    for{
+      _ <- conn.testDbWith()
+
+    }yield ()
   }
 }

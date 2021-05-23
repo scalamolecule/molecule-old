@@ -5,6 +5,8 @@ import datomic.Peer
 import molecule.core.data.SchemaTransaction
 import molecule.datomic.base.facade.exception.DatomicFacadeException
 import scala.jdk.CollectionConverters._
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 /** Facade to Datomic Peer with selected methods.
   *

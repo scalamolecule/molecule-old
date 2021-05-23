@@ -22,6 +22,7 @@ import molecule.datomic.peer.facade.TxReport_Peer
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
+//import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
@@ -116,8 +117,10 @@ case class Conn_Client(
   }
 
 
-  def testDbWith(txData: Seq[Statement]*): Unit = {
-    testDbWith(stmts2java(txData.flatten))
+  def testDbWith(txMolecules: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit] = {
+    Future.sequence(txMolecules).map { stmtss =>
+      testDbWith(stmts2java(stmtss.flatten))
+    }
   }
 
   def testDbWith(txDataJava: jList[jList[_]]): Unit = {
@@ -172,37 +175,39 @@ case class Conn_Client(
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
-    if (_adhocDb.isDefined) {
-      // In-memory "transaction"
-      val adHocDb = getAdhocDb
-      TxReport_Client(getAdhocDb.`with`(adHocDb, javaStmts), scalaStmts)
+//  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
+//    if (_adhocDb.isDefined) {
+//      // In-memory "transaction"
+//      val adHocDb = getAdhocDb
+//      TxReport_Client(getAdhocDb.`with`(adHocDb, javaStmts), scalaStmts)
+//
+//    } else if (_testDb.isDefined) {
+//      // In-memory "transaction"
+//
+//      // Use special withDb
+//      val withDb = if (withDbInUse) {
+//        _testDb.get.`with`(_testDb.get, javaStmts)
+//      } else {
+//        _testDb.get.`with`(clientConn.withDb, javaStmts)
+//      }
+//      // Special withDb now in use (important for consequent transaction calls)
+//      withDbInUse = true
+//
+//      val txReport = TxReport_Client(withDb, scalaStmts)
+//      _testDb = Some(txReport.dbAfter)
+//      txReport
+//
+//    } else {
+//      // Live transaction
+//      TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
+//    }
+//  }
 
-    } else if (_testDb.isDefined) {
-      // In-memory "transaction"
-
-      // Use special withDb
-      val withDb = if (withDbInUse) {
-        _testDb.get.`with`(_testDb.get, javaStmts)
-      } else {
-        _testDb.get.`with`(clientConn.withDb, javaStmts)
-      }
-      // Special withDb now in use (important for consequent transaction calls)
-      withDbInUse = true
-
-      val txReport = TxReport_Client(withDb, scalaStmts)
-      _testDb = Some(txReport.dbAfter)
-      txReport
-
-    } else {
-      // Live transaction
-      TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
-    }
-  }
-
-  def transactAsyncRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-                      (implicit ec: ExecutionContext): Future[TxReport] = try {
-    Future {
+  def transactRaw(
+    javaStmts: jList[_],
+    futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
+  )(implicit ec: ExecutionContext): Future[TxReport] = try {
+    futScalaStmts.map { scalaStmts =>
       if (_adhocDb.isDefined) {
         TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
@@ -218,8 +223,8 @@ case class Conn_Client(
         txReport
 
       } else {
-        // Live transaction (simply wrapping in future instead using datomic async api)
-        TxReport_Client(clientConn.transact(javaStmts))
+        // Live transaction
+        TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
       }
     }
   } catch {

@@ -8,6 +8,7 @@ import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
 import molecule.datomic.base.facade.exception.DatomicFacadeException
 import molecule.datomic.base.util.Inspect
+import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 
 /** Datomic TxReport facade for peer api.

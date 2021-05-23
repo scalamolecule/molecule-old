@@ -7,15 +7,15 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait DatomicEntity {
 
-  def mapOneLevel: Map[String, Any]
+  def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]]
 
-  def map: Map[String, Any]
+  def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]]
 
-  def keySet: Set[String]
+  def keySet(implicit ec: ExecutionContext): Future[Set[String]]
 
-  def keys: List[String]
+  def keys(implicit ec: ExecutionContext): Future[List[String]]
 
-  def rawValue(key: String): Any
+  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any]
 
 
   /** Get typed attribute value of entity.
@@ -44,7 +44,7 @@ trait DatomicEntity {
     * @tparam T Type of attribute
     * @return Optional typed attribute value
     */
-  def apply[T](key: String): Option[T]
+  def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]]
 
 
   /** Get List of two or more unchecked/untyped attribute values of entity.
@@ -83,31 +83,31 @@ trait DatomicEntity {
     * @param kws Further namespaced attribute names
     * @return List of optional unchecked/untyped attribute values
     */
-  def apply(kw1: String, kw2: String, kws: String*): List[Option[Any]]
+  def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]]
 
 
-  /** Retract single entity using entity id.
-    * <br><br>
-    * Given the implicit conversion of Long's in molecule.datomic.base.api.EntityOps to an [[molecule.datomic.base.api.DatomicEntity Entity]] we can
-    * can call `retract` on an entity id directly:
-    * {{{
-    *   // Get entity id of Ben
-    *   val benId = Person.e.name_("Ben").get.head
-    *
-    *   // Retract Ben entity
-    *   benId.retract
-    * }}}
-    *
-    * To retract single entity id with tx meta data, use<br>
-    * `eid.Tx(MyMetaData.action("my meta data")).retract`
-    * <br><br>
-    * To retract multiple entities (with or without tx meta data), use<br>
-    * `retract(eids, txMetaDataMolecules*)` in molecule.datomic.base.api.EntityOps.
-    *
-    * @group retract
-    * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
-    */
-  def retract: TxReport
+//  /** Retract single entity using entity id.
+//    * <br><br>
+//    * Given the implicit conversion of Long's in molecule.datomic.base.api.EntityOps to an [[molecule.datomic.base.api.DatomicEntity Entity]] we can
+//    * can call `retract` on an entity id directly:
+//    * {{{
+//    *   // Get entity id of Ben
+//    *   val benId = Person.e.name_("Ben").get.head
+//    *
+//    *   // Retract Ben entity
+//    *   benId.retract
+//    * }}}
+//    *
+//    * To retract single entity id with tx meta data, use<br>
+//    * `eid.Tx(MyMetaData.action("my meta data")).retract`
+//    * <br><br>
+//    * To retract multiple entities (with or without tx meta data), use<br>
+//    * `retract(eids, txMetaDataMolecules*)` in molecule.datomic.base.api.EntityOps.
+//    *
+//    * @group retract
+//    * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
+//    */
+////  def retract: TxReport
 
   /** Asynchronously retract single entity using entity id.
     * <br><br>
@@ -118,7 +118,7 @@ trait DatomicEntity {
     *   val benId = Person.e.name_("Ben").get.head
     *
     *   // Retract Ben entity asynchronously
-    *   benId.retractAsync.map { tx =>
+    *   benId.retract.map { tx =>
     *     // ..ben was retracted
     *   }
     * }}}
@@ -132,7 +132,7 @@ trait DatomicEntity {
     * @group retract
     * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
     */
-  def retractAsync(implicit ec: ExecutionContext): Future[TxReport]
+  def retract(implicit ec: ExecutionContext): Future[TxReport]
 
   /** Get entity retraction transaction data without affecting the database.
     * <br><br>
@@ -148,7 +148,7 @@ trait DatomicEntity {
     * @group retract
     * @return List[Retractentity[Long]]
     * */
-  def getRetractStmts: List[RetractEntity]
+  def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]]
 
   /** Inspect entity transaction data of method `retract` without affecting the database.
     * {{{
@@ -167,7 +167,7 @@ trait DatomicEntity {
     *
     * @group retract
     */
-  def inspectRetract: Unit
+  def inspectRetract(implicit ec: ExecutionContext): Future[Unit]
 
   /** Entity retraction transaction meta data constructor.
     * <br><br>
@@ -215,7 +215,7 @@ trait DatomicEntity {
     * @group touch
     * @return Map[key: String, value: Any] where value can be a primitive or another nested Map of the entity graph
     */
-  def touch: Map[String, Any]
+  def touch(implicit ec: ExecutionContext): Future[Map[String, Any]]
 
   /** Get entity graph to some depth as Map.
     *
@@ -248,7 +248,7 @@ trait DatomicEntity {
     * @group touch
     * @return Map[key: String, value: Any] where value can be a primitive or another nested Map of the entity graph
     */
-  def touchMax(maxDepth: Int): Map[String, Any]
+  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]]
 
   /** Get entity graph as Map-string (for presentation).
     * <br><br>
@@ -278,7 +278,7 @@ trait DatomicEntity {
     * @group touch
     * @return String
     */
-  def touchQuoted: String
+  def touchQuoted(implicit ec: ExecutionContext): Future[String]
 
   /** Get entity graph to some depth as Map-string (for presentation).
     * <br><br>
@@ -316,7 +316,7 @@ trait DatomicEntity {
     * @group touch
     * @return String
     */
-  def touchQuotedMax(maxDepth: Int): String
+  def touchQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String]
 
 
   /** Get entity graph as List.
@@ -343,7 +343,7 @@ trait DatomicEntity {
     * @group touch
     * @return List[(key: String, value: Any)] where value can be a primitive or another nested List of the entity graph
     */
-  def touchList: List[(String, Any)]
+  def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]]
 
   /** Get entity graph to some depth as List.
     *
@@ -377,7 +377,7 @@ trait DatomicEntity {
     * @group touch
     * @return List[(key: String, value: Any)] where value can be a primitive or another nested Map of the entity graph
     */
-  def touchListMax(maxDepth: Int): List[(String, Any)]
+  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]]
 
   /** Get entity graph as List-string (for tests).
     * <br><br>
@@ -403,7 +403,7 @@ trait DatomicEntity {
     * @group touch
     * @return String
     */
-  def touchListQuoted: String
+  def touchListQuoted(implicit ec: ExecutionContext): Future[String]
 
   /** Get entity graph to some depth as List-string (for tests).
     *
@@ -437,11 +437,11 @@ trait DatomicEntity {
     * @group touch
     * @return String
     */
-  def touchListQuotedMax(maxDepth: Int): String
+  def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String]
 
-  protected def asMap(depth: Int, maxDepth: Int): Map[String, Any]
+  protected def asMap(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]]
 
-  protected def asList(depth: Int, maxDepth: Int): List[(String, Any)]
+  protected def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]]
 
-  def sortList(l: List[Any]): List[Any]
+  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]]
 }

@@ -6,7 +6,9 @@ import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
 import molecule.datomic.base.facade.exception.DatomicFacadeException
+import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
+//import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Datomic facade for cloud/dev-local.
@@ -70,7 +72,7 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
    * @param dbName Database name
    * @return [[molecule.datomic.base.facade.Conn Conn]]
    */
-  def recreateDbFrom(schema: SchemaTransaction, dbName: String): Conn_Client = try {
+  def recreateDbFrom(schema: SchemaTransaction, dbName: String)(implicit ec: ExecutionContext): Conn_Client = try {
     deleteDatabase(dbName)
     createDatabase(dbName)
     val conn = connect(dbName)
@@ -92,7 +94,7 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
    * @param dbName     Optional String identifier of database (default empty string creates a randomUUID)
    * @return [[molecule.datomic.base.facade.Conn Conn]]
    */
-  def recreateDbFromRaw(schemaData: java.util.List[_], dbName: String): Conn_Client = try {
+  def recreateDbFromRaw(schemaData: java.util.List[_], dbName: String)(implicit ec: ExecutionContext): Conn_Client = try {
     deleteDatabase(dbName)
     createDatabase(dbName)
     val conn = connect(dbName)

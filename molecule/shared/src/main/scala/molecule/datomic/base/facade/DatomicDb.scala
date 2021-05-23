@@ -3,6 +3,7 @@ package molecule.datomic.base.facade
 import java.util
 import java.util.Date
 import molecule.datomic.base.api.DatomicEntity
+import scala.concurrent.{ExecutionContext, Future}
 
 trait DatomicDb {
 
@@ -16,5 +17,5 @@ trait DatomicDb {
 
   def entity(conn: Conn, id: Any): DatomicEntity
 
-  def pull(pattern: String, eid: Any): util.Map[_, _]
+  def pull(pattern: String, eid: Any)(implicit ec: ExecutionContext): Future[util.Map[_, _]]
 }

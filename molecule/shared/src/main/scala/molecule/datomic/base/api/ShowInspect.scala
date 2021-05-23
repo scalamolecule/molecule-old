@@ -1,6 +1,8 @@
 package molecule.datomic.base.api
 
 import java.util.{Date, List => jList, Map => jMap, Set => jSet}
+import scala.concurrent.Future
+import scala.util.control.NonFatal
 //import clojure.lang.{PersistentHashSet, PersistentVector}
 import molecule.core.api.Molecule_0
 import molecule.core.ast.elements._
@@ -15,6 +17,7 @@ import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Inspect methods
@@ -80,14 +83,54 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
       var i = 0
       n.size match {
-        case 0 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2)) }}
-        case 1 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2) + p(row.get(0), n(0)))} }
-        case 2 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)))} }
-        case 3 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)))} }
-        case 4 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)))} }
-        case 5 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)))} }
-        case 6 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)))} }
-        case 7 => rows.forEach { row => i += 1; if (i <= 500) { println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)) + p(row.get(6), n(6)))} }
+        case 0 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2))
+          }
+        }
+        case 1 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2) + p(row.get(0), n(0)))
+          }
+        }
+        case 2 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)))
+          }
+        }
+        case 3 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)))
+          }
+        }
+        case 4 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)))
+          }
+        }
+        case 5 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)))
+          }
+        }
+        case 6 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)))
+          }
+        }
+        case 7 => rows.forEach { row =>
+          i += 1;
+          if (i <= 500) {
+            println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)) + p(row.get(6), n(6)))
+          }
+        }
       }
 
       println("-----" + "-" * pad)
@@ -107,7 +150,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
         case ((i, acc), Generic(_, _, "datom" | "schema", _))               => (i + 1, acc :+ (1, false, false, false))
         case ((i, acc), ga: GenericAtom) if ga.attr.last == '_'             => (i, acc)
         case ((i, acc), Atom(_, _, _, _, Fn(fn, _), _, _, _)) if isAggr(fn) => (i + 1, acc :+ (1, false, false, true))
-        case ((i, acc), Atom(_, attr, "Date", card, _, _, _, _))  => (i + 1, acc :+ (card, attr.last == '$', true, false))
+        case ((i, acc), Atom(_, attr, "Date", card, _, _, _, _))            => (i + 1, acc :+ (card, attr.last == '$', true, false))
         case ((i, acc), Atom(_, attr, _, card, _, _, _, _))                 => (i + 1, acc :+ (card, attr.last == '$', false, false))
         case ((i, acc), Nested(_, nestedElements))                          => recurse(i, acc, nestedElements)
         case ((i, acc), Composite(compositeElements))                       => recurse(i, acc, compositeElements)
@@ -168,7 +211,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
                 set = set + it.next.toString
             }
             Some(set)
-          case _                       =>
+          case _             =>
             val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
             var set = Set.empty[String]
             if (isDate) {
@@ -442,34 +485,37 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Unit
     */
-  def inspectSave(implicit conn: Conn): Unit = {
-    VerifyModel(_model, "save")
-    val transformer = conn.modelTransformer(_model)
-    val stmts       = try {
-      transformer.saveStmts
+  def inspectSave(implicit conn: Conn): Future[Unit] = {
+    val transformer = conn.modelTransformerAsync(_model)
+    try {
+      VerifyModel(_model, "save")
+      transformer.saveStmts.map(stmts =>
+        conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts, stmts)
+      )
     } catch {
-      case e: Throwable =>
+      case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
         conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts)
-        throw e
+        Future.failed(exc)
     }
-    conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts, stmts)
   }
 
 
-  protected def _inspectInsert(conn: Conn, dataRows: Iterable[Seq[Any]]): Unit = {
-    val transformer = conn.modelTransformer(_model)
+  protected def _inspectInsert(conn: Conn, dataRows: Iterable[Seq[Any]]): Future[Unit] = {
+    val transformer = conn.modelTransformerAsync(_model)
     val data        = untupled(dataRows)
-    val stmtss      = try {
-      // Separate each row so that we can distinguish each insert row
-      data.map(row => transformer.insertStmts(Iterable(row)))
+    try {
+      Future {
+        // Separate each row so that we can distinguish each insert row
+        val stmtss = data.map(row => transformer.insertStmts(Iterable(row)))
+        conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data, stmtss)
+      }
     } catch {
-      case e: Throwable =>
+      case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
         conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data)
-        throw e
+        Future.failed(exc)
     }
-    conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data, stmtss)
   }
 
 
@@ -483,17 +529,19 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  def inspectUpdate(implicit conn: Conn): Unit = {
-    VerifyModel(_model, "update")
-    val transformer = conn.modelTransformer(_model)
-    val stmts       = try {
-      transformer.updateStmts
+  def inspectUpdate(implicit conn: Conn): Future[Unit] = {
+    val transformer = conn.modelTransformerAsync(_model)
+    try {
+      Future {
+        VerifyModel(_model, "update")
+        val stmts = transformer.updateStmts
+        conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts, stmts)
+      }
     } catch {
-      case e: Throwable =>
+      case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
         conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts)
-        throw e
+        Future.failed(exc)
     }
-    conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts, stmts)
   }
 }

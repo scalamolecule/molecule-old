@@ -8,10 +8,11 @@ import molecule.core.macros.exception.TxFnException
 import molecule.core.util.{Helpers, JavaUtil}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.util.control.NonFatal
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Transactional methods for bundled transactions and tx functions
@@ -182,25 +183,30 @@ object TxFunctions extends Helpers with JavaUtil {
 
   val redundant = "molecule.core.macros.exception.TxFnException: ".size
 
-  def tryTransactTxFn(body: => TxReport): TxReport = try {
-    blocking {
-      body
-    }
+  def tryTransactTxFn(body: => Future[TxReport]): Future[TxReport] = try {
+    body
   } catch {
     case e: ExecutionExc => e.getMessage match {
       case msg if msg.startsWith("java.lang.NoClassDefFoundError: scala") =>
-        throw new TxFnException(excMissingScalaJar(e))
+        //        throw new TxFnException(excMissingScalaJar(e))
+        Future.failed(new TxFnException(excMissingScalaJar(e)))
 
       case msg if msg.startsWith("java.lang.NoClassDefFoundError: molecule") =>
-        throw new TxFnException(excMissingMoleculeClass(e))
+        //        throw new TxFnException(excMissingMoleculeClass(e))
+        Future.failed(new TxFnException(excMissingMoleculeClass(e)))
 
       case msg if msg.startsWith("java.lang.NoSuchMethodError: molecule") =>
-        throw new TxFnException(excMissingMoleculeMethod(e))
+        //        throw new TxFnException(excMissingMoleculeMethod(e))
+        Future.failed(new TxFnException(excMissingMoleculeMethod(e)))
 
-      case _ => throw new TxFnException(e.getMessage.drop(redundant))
+      case _ =>
+        //        throw new TxFnException(e.getMessage.drop(redundant))
+        Future.failed(new TxFnException(e.getMessage.drop(redundant)))
     }
 
-    case NonFatal(e) => throw new TxFnException(e.getMessage.drop(redundant))
+    case NonFatal(e) =>
+      //      throw new TxFnException(e.getMessage.drop(redundant))
+      Future.failed(new TxFnException(e.getMessage.drop(redundant)))
   }
 
 
@@ -227,7 +233,7 @@ object TxFunctions extends Helpers with JavaUtil {
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Conn): TxReport = tryTransactTxFn {
+  )(implicit conn: Conn): Future[TxReport] = tryTransactTxFn {
 
     // Install transaction function if not installed yet
     if (conn.db.pull("[*]", s":$txFn").size() == 1) {
@@ -251,7 +257,7 @@ object TxFunctions extends Helpers with JavaUtil {
     // Use temporary branch of db to not changing any live data
     conn.testDbWith()
     // Print tx report to console
-    txFnCall(txFn, txMolecules, args: _*)(conn).inspect
+    txFnCall(txFn, txMolecules, args: _*)(conn).foreach(_.inspect)
     conn.useLiveDb
   }
 
@@ -260,13 +266,14 @@ object TxFunctions extends Helpers with JavaUtil {
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
+  )(implicit conn: Conn): Future[TxReport] = try {
+//  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
     val txFnInstallFuture: Future[Any] = {
       // Install transaction function if not installed yet
       // todo: pull call is blocking - can we make it non-blocking too?
       if (conn.db.pull("[*]", s":$txFn").size() == 1) {
         // Install tx function
-        conn.transactAsyncRaw(conn.buildTxFnInstall(txFn, args))
+        conn.transactRaw(conn.buildTxFnInstall(txFn, args))
       } else {
         // Tx function already installed
         Future.unit
@@ -277,7 +284,7 @@ object TxFunctions extends Helpers with JavaUtil {
       // Build transaction function call clause
       val txFnInvocationClause = list(list(s":$txFn" +:
         txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))
-      conn.transactAsyncRaw(txFnInvocationClause)
+      conn.transactRaw(txFnInvocationClause)
     }
   } catch {
     case NonFatal(e) => Future.failed(e)

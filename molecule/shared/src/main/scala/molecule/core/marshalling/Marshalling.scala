@@ -1,6 +1,7 @@
 package molecule.core.marshalling
 
 import java.util.{List => jList}
+import molecule.core.ast.Molecule
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.TxReport
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /** Marshalling methods for casting raw row (server) / QueryResult (client) data.
   */
-trait Marshalling[Obj, Tpl] {
+trait Marshalling[Obj, Tpl] extends Molecule {
 
   /** Indexes to resolve marshalling for each attribute value in a row:
     *

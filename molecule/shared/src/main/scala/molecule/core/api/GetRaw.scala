@@ -2,23 +2,34 @@ package molecule.core.api
 
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.Molecule
-import molecule.core.util.JavaUtil
 import molecule.datomic.base.ast.tempDb.{AsOf, Since, TxDate, TxLong, With}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-/** Data getter methods on molecules that return raw untyped Datomic data.
+/** Asynchronous data getter methods on molecules returning raw untyped Datomic data.
   * <br><br>
-  * Returns raw untyped `java.util.Collection[java.util.List[Object]]` directly from Datomic and is
+  * Returns a `Future` with raw untyped `java.util.Collection[java.util.List[Object]]` directly from Datomic and is
   * therefore the fastest (but untyped) way of retrieving data. Can be useful where typed data is
   * not needed.
+  * {{{
+  *   val rawDataFuture: Future[java.util.Colleciton[java.util.List[Object]] = Person.name.age.getAsyncRaw
+  *   for {
+  *     rawData <- rawDataFuture
+  *   } yield {
+  *     rawData.toString === """[["Ben" 42]["Liz" 37]]"""
+  *   }
+  * }}}
+  * Each asynchronous getter in this package simply wraps the result of its equivalent synchronous getter (in the
+  * `get` package) in a Future. `getAsyncRawAsOf` thus wraps the result of `getRawAsOf` in a Future and so on.
   * */
-trait GetRaw extends JavaUtil { self: Molecule =>
+trait GetRaw { self: Molecule =>
 
 
   // get ================================================================================================
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule.
     * {{{
     *   Person.name.age.getRaw.toString === """[["Ben" 42], ["Liz" 37]]"""
     * }}}
@@ -27,46 +38,47 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * Client returns clojure.lang.PersistentVector
     * We unify the type by copying to an ArrayList
     *
-    * @group get
+    * @group getAsync
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRaw(implicit* getAsyncRaw]] method.
     */
-  def getRaw(implicit conn: Conn): jCollection[jList[AnyRef]] =
-    conn.query(_model, _query)
+  def getRaw(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
+    Future(conn.query(_model, _query))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule.
     * {{{
     *   Person.name.age.getRaw(1).toString === """[["Ben" 42]]"""
     * }}}
     *
-    * @group get
+    * @group getAsync
     * @param n    Number of rows
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRaw(n:Int)* getAsyncRaw]] method.
     */
-  def getRaw(n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] = if (n == -1) {
-    getRaw(conn)
-  } else {
-    val jColl = conn.query(_model, _query)
-    val size  = jColl.size
-    val max   = if (size < n) size else n
-    val it    = jColl.iterator
-    val a     = new java.util.ArrayList[jList[AnyRef]](max)
-    var i     = 0
-    while (it.hasNext && i < max) {
-      a.add(it.next)
-      i += 1
+  def getRaw(n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
+    if (n == -1) {
+      getRaw(conn)
+    } else {
+      Future {
+        val jColl = conn.query(_model, _query)
+        val size  = jColl.size
+        val max   = if (size < n) size else n
+        val it    = jColl.iterator
+        val a     = new java.util.ArrayList[jList[AnyRef]](max)
+        var i     = 0
+        while (it.hasNext && i < max) {
+          a.add(it.next)
+          i += 1
+        }
+        a
+      }
     }
-    a
-  }
 
 
   // get as of ================================================================================================
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule as of transaction time `t`.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule as of transaction time `t`.
     * <br><br>
     * Call `getRawAsOf` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -109,13 +121,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param t    Transaction time t
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawAsOf(t:Long)* getAsyncRawAsOf]] method.
     */
-  def getRawAsOf(t: Long)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawAsOf(t: Long)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(conn.usingTempDb(AsOf(TxLong(t))))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule as of transaction time `t`.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule as of transaction time `t`.
     * <br><br>
     * Call `getRawAsOf` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -152,14 +163,13 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param n    Int Number of rows returned
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawAsOf(t:Long,n:Int)* getAsyncRawAsOf]] method.
     */
-  def getRawAsOf(t: Long, n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawAsOf(t: Long, n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(n)(conn.usingTempDb(AsOf(TxLong(t))))
 
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule as of tx.
-    *
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule as of tx.
+    * <br><br>
     * Call `getRawAsOf` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
     * Datomic's internal `asOf` method can take a transaction entity id as argument to retrieve a database value as of that transaction (including).
@@ -195,13 +205,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]] (returned from all molecule transaction operations)
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawAsOf(tx:molecule\.datomic\.base\.facade\.TxReport)* getAsyncRawAsOf]] method.
     */
-  def getRawAsOf(tx: TxReport)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawAsOf(tx: TxReport)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(conn.usingTempDb(AsOf(TxLong(tx.t))))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule as of tx.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule as of tx.
     * <br><br>
     * The Array is only populated with n rows of type-casted tuples.
     * Call `getRawAsOf` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
@@ -237,13 +246,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param n    Int Number of rows returned
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawAsOf(tx:molecule\.datomic\.base\.facade\.TxReport,n:Int)* getAsyncRawAsOf]] method.
     */
-  def getRawAsOf(tx: TxReport, n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawAsOf(tx: TxReport, n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(n)(conn.usingTempDb(AsOf(TxLong(tx.t))))
 
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule as of date.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule as of date.
     * <br><br>
     * Call getRawAsOf when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -284,13 +292,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param date java.util.Date
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawAsOf(date:java\.util\.Date)* getAsyncRawAsOf]] method.
     */
-  def getRawAsOf(date: Date)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawAsOf(date: Date)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(conn.usingTempDb(AsOf(TxDate(date))))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule as of date.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule as of date.
     * <br><br>
     * Call getRawAsOf when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -329,15 +336,14 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param n    Int Number of rows returned
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawAsOf(date:java\.util\.Date,n:Int)* getAsyncRawAsOf]] method.
     */
-  def getRawAsOf(date: Date, n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawAsOf(date: Date, n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(n)(conn.usingTempDb(AsOf(TxDate(date))))
 
 
   // get since ================================================================================================
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule since transaction time `t`.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule since transaction time `t`.
     * <br><br>
     * Call `getRawSince` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -368,13 +374,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param t    Transaction time t
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawSince(t:Long)* getAsyncRawSince]] method.
     */
-  def getRawSince(t: Long)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawSince(t: Long)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(conn.usingTempDb(Since(TxLong(t))))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule since transaction time `t`.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule since transaction time `t`.
     * <br><br>
     * Call `getRawSince` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -403,13 +408,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param n    Int Number of rows returned
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawSince(t:Long,n:Int)* getAsyncRawSince]] method.
     */
-  def getRawSince(t: Long, n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawSince(t: Long, n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(n)(conn.usingTempDb(Since(TxLong(t))))
 
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule since tx.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule since tx.
     * <br><br>
     * Call `getRawSince` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -441,13 +445,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]] (returned from all molecule transaction operations)
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawSince(tx:molecule\.datomic\.base\.facade\.TxReport)* getAsyncRawSince]] method.
     */
-  def getRawSince(tx: TxReport)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawSince(tx: TxReport)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(conn.usingTempDb(Since(TxLong(tx.t))))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule since tx.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule since tx.
     * <br><br>
     * Call `getRawSince` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -477,13 +480,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param n    Int Number of rows returned
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawSince(tx:molecule\.datomic\.base\.facade\.TxReport,n:Int)* getAsyncRawSince]] method.
     */
-  def getRawSince(tx: TxReport, n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawSince(tx: TxReport, n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(n)(conn.usingTempDb(Since(TxLong(tx.t))))
 
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule since date.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule since date.
     * <br><br>
     * Call `getRawSince` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -511,13 +513,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param date java.util.Date
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawSince(date:java\.util\.Date)* getAsyncRawSince]] method.
     */
-  def getRawSince(date: Date)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawSince(date: Date)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(conn.usingTempDb(Since(TxDate(date))))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule since date.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule since date.
     * <br><br>
     * Call `getRawSince` when data doesn't need to be type-casted. Datomic's raw data is returned as-is.
     * <br><br>
@@ -543,15 +544,14 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param n    Int Number of rows returned
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawSince(date:java\.util\.Date,n:Int)* getAsyncRawSince]] method.
     */
-  def getRawSince(date: Date, n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawSince(date: Date, n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(n)(conn.usingTempDb(Since(TxDate(date))))
 
 
   // get with ================================================================================================
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule with applied molecule transaction data.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule with applied molecule transaction data.
     * <br><br>
     * Apply one or more molecule transactions to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
@@ -572,13 +572,15 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param txMolecules Transaction statements from applied Molecules with test data
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawWith(txMolecules* getAsyncRawWith]] method.
     */
-  def getRawWith(txMolecules: Seq[Statement]*)(implicit conn: Conn): jCollection[jList[AnyRef]] =
-    getRaw(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
+  def getRawWith(txMolecules: Future[Seq[Statement]]*)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] = {
+    Future.sequence(txMolecules).flatMap { stmtss =>
+      getRaw(conn.usingTempDb(With(conn.stmts2java(stmtss.flatten))))
+    }
+  }
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule with applied molecule transaction data.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule with applied molecule transaction data.
     * <br><br>
     * Apply one or more molecule transactions to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
@@ -609,13 +611,15 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
     * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawWith(n:Int,txMolecules* getAsyncRawWith]] method.
     */
-  def getRawWith(n: Int, txMolecules: Seq[Statement]*)(implicit conn: Conn): jCollection[jList[AnyRef]] =
-    getRaw(n)(conn.usingTempDb(With(conn.stmts2java(txMolecules.flatten))))
+  def getRawWith(n: Int, txMolecules: Future[Seq[Statement]]*)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] = {
+    Future.sequence(txMolecules).flatMap { stmtss =>
+      getRaw(n)(conn.usingTempDb(With(conn.stmts2java(stmtss.flatten))))
+    }
+  }
 
 
-  /** Get `java.util.Collection` of all untyped rows matching molecule with applied raw transaction data.
+  /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule with applied raw transaction data.
     * <br><br>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
@@ -634,13 +638,12 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param txData Raw transaction data as java.util.List[Object]
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawWith(txData:java\.util\.List[_])* getAsyncRawWith]] method.
     */
-  def getRawWith(txData: java.util.List[_])(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawWith(txData: java.util.List[_])(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(conn.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]])))
 
 
-  /** Get `java.util.Collection` of n untyped rows matching molecule with applied raw transaction data.
+  /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule with applied raw transaction data.
     * <br><br>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
@@ -663,14 +666,14 @@ trait GetRaw extends JavaUtil { self: Molecule =>
     * @param n      Int Number of rows returned
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `java.util.Collection[java.util.List[AnyRef]]`
-    * @see Equivalent asynchronous [[molecule.core.api.GetAsyncRaw.getAsyncRawWith(txData:java\.util\.List[_],n:Int)* getAsyncRawWith]] method.
     */
-  def getRawWith(txData: java.util.List[_], n: Int)(implicit conn: Conn): jCollection[jList[AnyRef]] =
+  def getRawWith(txData: java.util.List[_], n: Int)(implicit conn: Conn): Future[jCollection[jList[AnyRef]]] =
     getRaw(n)(conn.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]])))
 
 
   // get history ================================================================================================
 
-  // Only `getHistory` (returning a List) is implemented since it is only meaningful
-  // to track the history of one attribute at a time and a sortable List is therefore preferred.
+  // Only `getHistory`/`getHistory` returning List/Future[List] are implemented since it is only meaningful
+  // to track the history of one attribute of one entity at a time and a sortable List is therefore preferred.
+
 }

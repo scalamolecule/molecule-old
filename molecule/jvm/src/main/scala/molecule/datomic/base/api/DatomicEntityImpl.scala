@@ -9,23 +9,25 @@ import molecule.core.ast.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, Quoted}
-import molecule.datomic.base.ast.transactionModel.RetractEntity
+import molecule.datomic.base.ast.transactionModel
+import molecule.datomic.base.ast.transactionModel.{RetractEntity, Statement}
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
+import scala.util.control.NonFatal
 
 
 abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity with Quoted with Helpers {
 
   // Get ================================================================
 
-  lazy val mapOneLevel: Map[String, Any] = {
+  lazy val mapOneLevel: Future[Map[String, Any]] = {
     conn.q(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]")
       .map(l => (l.head.toString, l(1)))
       .toMap + (":db/id" -> eid)
   }
 
-  lazy val map: Map[String, Any] = {
+  def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     val res = try {
       var buildMap = Map.empty[String, Any]
       conn.db.pull("[*]", eid).forEach {
@@ -44,13 +46,13 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
     res
   }
 
-  def keySet: Set[String]
+  def keySet(implicit ec: ExecutionContext): Future[Set[String]]
 
-  def keys: List[String]
+  def keys(implicit ec: ExecutionContext): Future[List[String]]
 
-  def rawValue(key: String): Any
+  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any]
 
-  def apply[T](key: String): Option[T] = {
+  def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
     try {
       val rawV = rawValue(key)
       rawV match {
@@ -84,60 +86,67 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
   }
 
 
-  def apply(kw1: String, kw2: String, kws: String*): List[Option[Any]] = {
+  def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] = {
     (kw1 +: kw2 +: kws.toList) map apply[Any]
   }
 
 
   // Retract =========================================================
 
-  def retract: TxReport = conn.transact(getRetractStmts)
+  def retract(implicit ec: ExecutionContext): Future[TxReport] = {
+    conn.transact(getRetractStmts)
+  }
 
-  def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
-    conn.transactAsync(getRetractStmts)
+  def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = {
+    Future(List(RetractEntity(eid)))
+  }
 
-  def getRetractStmts: List[RetractEntity] = List(RetractEntity(eid))
+  def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = {
+    getRetractStmts.map { stmts =>
+      conn.inspect("Inspect `retract` on entity", 1)(1, stmts)
+    }
+  }
 
-  def inspectRetract: Unit = conn.inspect("Inspect `retract` on entity", 1)(1, getRetractStmts)
+  def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): RetractMolecule = RetractMoleculeImpl(txMeta)
 
-  def Tx(txMeta: Molecule): RetractMolecule = RetractMoleculeImpl(txMeta)
+  case class RetractMoleculeImpl(txMeta: Molecule)(implicit ec: ExecutionContext) extends RetractMolecule {
+    private val stmts: Future[Seq[Statement]] = try {
+      val retractStmts = Seq(RetractEntity(eid))
+      val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
+      VerifyModel(model, "save") // can throw exception
+      conn.modelTransformerAsync(model).saveStmts.map(txMetaStmts => retractStmts ++ txMetaStmts)
+    } catch {
+      case NonFatal(exc) => Future.failed(exc)
+    }
 
-  case class RetractMoleculeImpl(txMeta: Molecule) extends RetractMolecule {
-    private val retractStmts = Seq(RetractEntity(eid))
+    // todo: check that failed future propagates correctly
+    def retract(implicit ec: ExecutionContext): Future[TxReport] = {
+      conn.transact(stmts)
+    }
 
-    private val _model = Model(Seq(TxMetaData(txMeta._model.elements)))
-    VerifyModel(_model, "save")
-    private val txMetaStmts = conn.modelTransformer(_model).saveStmts
-
-    private val stmts = retractStmts ++ txMetaStmts
-
-    def retract: TxReport = conn.transact(stmts)
-
-    def retractAsync(implicit ec: ExecutionContext): Future[TxReport] =
-      conn.transactAsync(stmts)
-
-    def inspectRetract: Unit =
+    def inspectRetract: Unit = {
       conn.inspect("Inspect `retract` on entity with tx meta data", 1)(1, stmts)
+    }
   }
 
   // Touch - traverse entity attributes ========================================
 
-  def touch: Map[String, Any] = asMap(1, 5)
+  def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] = asMap(1, 5)
 
-  def touchMax(maxDepth: Int): Map[String, Any] = asMap(1, maxDepth)
+  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] = asMap(1, maxDepth)
 
-  def touchQuoted: String = quote(asMap(1, 5))
+  def touchQuoted(implicit ec: ExecutionContext): Future[String] = Future(quote(asMap(1, 5)))
 
-  def touchQuotedMax(maxDepth: Int): String = quote(asMap(1, maxDepth))
+  def touchQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = Future(quote(asMap(1, maxDepth)))
 
 
-  def touchList: List[(String, Any)] = asList(1, 5)
+  def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] = asList(1, 5)
 
-  def touchListMax(maxDepth: Int): List[(String, Any)] = asList(1, maxDepth)
+  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] = asList(1, maxDepth)
 
-  def touchListQuoted: String = quote(asList(1, 5))
+  def touchListQuoted(implicit ec: ExecutionContext): Future[String] = Future(quote(asList(1, 5)))
 
-  def touchListQuotedMax(maxDepth: Int): String = quote(asList(1, maxDepth))
+  def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = Future(quote(asList(1, maxDepth)))
 
 
   private[molecule] def toScala(
@@ -149,7 +158,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
   ): Any
 
 
-  protected def asMap(depth: Int, maxDepth: Int): Map[String, Any] = {
+  protected def asMap(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] = Future {
     val builder    = Map.newBuilder[String, Any]
     val keysSorted = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
     if (keysSorted.head != ":db/id")
@@ -178,7 +187,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
   }
 
 
-  protected def asList(depth: Int, maxDepth: Int): List[(String, Any)] = {
+  protected def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] = Future {
     val builder    = List.newBuilder[(String, Any)]
     val keys2      = keys
     val keysSorted = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
@@ -219,25 +228,27 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any) extends DatomicEntity wit
 
   lazy protected val ident = Keyword.intern("db", "ident")
 
-  def sortList(l: List[Any]): List[Any] = l.head match {
-    case _: String               => l.asInstanceOf[List[String]].sorted
-    case _: Long                 => l.asInstanceOf[List[Long]].sorted
-//    case _: Float                => l.asInstanceOf[List[Float]].sorted
-    case _: Double               => l.asInstanceOf[List[Double]].sorted
-    case _: Boolean              => l.asInstanceOf[List[Boolean]].sorted
-    case _: Date                 => l.asInstanceOf[List[Date]].sorted
-    case _: UUID                 => l.asInstanceOf[List[UUID]].sorted
-    case _: URI                  => l.asInstanceOf[List[URI]].sorted
-    case _: java.math.BigInteger => l.asInstanceOf[List[java.math.BigInteger]].map(BigInt(_)).sorted
-    case _: java.math.BigDecimal => l.asInstanceOf[List[java.math.BigDecimal]].map(BigDecimal(_)).sorted
-    case _: BigInt               => l.asInstanceOf[List[BigInt]].sorted
-    case _: BigDecimal           => l.asInstanceOf[List[BigDecimal]].sorted
+  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
+    l.head match {
+      case _: String => l.asInstanceOf[List[String]].sorted
+      case _: Long   => l.asInstanceOf[List[Long]].sorted
+      //    case _: Float                => l.asInstanceOf[List[Float]].sorted
+      case _: Double               => l.asInstanceOf[List[Double]].sorted
+      case _: Boolean              => l.asInstanceOf[List[Boolean]].sorted
+      case _: Date                 => l.asInstanceOf[List[Date]].sorted
+      case _: UUID                 => l.asInstanceOf[List[UUID]].sorted
+      case _: URI                  => l.asInstanceOf[List[URI]].sorted
+      case _: java.math.BigInteger => l.asInstanceOf[List[java.math.BigInteger]].map(BigInt(_)).sorted
+      case _: java.math.BigDecimal => l.asInstanceOf[List[java.math.BigDecimal]].map(BigDecimal(_)).sorted
+      case _: BigInt               => l.asInstanceOf[List[BigInt]].sorted
+      case _: BigDecimal           => l.asInstanceOf[List[BigDecimal]].sorted
 
-    case m: PersistentArrayMap if m.containsKey(ident) =>
-      l.asInstanceOf[List[PersistentArrayMap]].map(pam =>
-        pam.get(ident).toString
-      ).sorted
+      case m: PersistentArrayMap if m.containsKey(ident) =>
+        l.asInstanceOf[List[PersistentArrayMap]].map(pam =>
+          pam.get(ident).toString
+        ).sorted
 
-    case _ => l
+      case _ => l
+    }
   }
 }
