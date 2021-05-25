@@ -6,14 +6,14 @@ import scala.concurrent.Future
 trait MoleculeRpc {
 
 
-  def transactAsync(
+  def transact(
     dbProxy: DbProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
-  ): Future[Either[Throwable, TxReportRPC]]
+  ): Future[TxReportRPC]
 
 
-  def queryAsync(
+  def query(
     dbProxy: DbProxy,
     datalogQuery: String,
     rules: Seq[String],
@@ -22,10 +22,10 @@ trait MoleculeRpc {
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
     indexes: List[(Int, Int, Int, Int)]
-  ): Future[Either[Throwable, QueryResult]]
+  ): Future[QueryResult]
 
 
-  def getAttrValuesAsync(
+  def getAttrValues(
     dbProxy: DbProxy,
     datalogQuery: String,
     card: Int,
@@ -37,10 +37,5 @@ trait MoleculeRpc {
     dbProxy: DbProxy,
     eid: Long
   ): Future[List[String]]
-
-
-  def ping(i: Int): Future[Int]
-
-  def pong(i: Int): Future[Either[Throwable, Int]]
 
 }

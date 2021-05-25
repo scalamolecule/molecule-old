@@ -9,11 +9,11 @@ trait DatomicDb {
 
   def getDatomicDb: AnyRef
 
-  def t: Long
+  def t(implicit ec: ExecutionContext): Future[Long]
 
-  def tx: Long
+  def tx(implicit ec: ExecutionContext): Future[Long]
 
-  def txInstant: Date
+  def txInstant(implicit ec: ExecutionContext): Future[Date]
 
   def entity(conn: Conn, id: Any): DatomicEntity
 

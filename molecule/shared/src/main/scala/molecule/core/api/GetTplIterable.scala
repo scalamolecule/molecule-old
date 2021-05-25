@@ -5,8 +5,7 @@ import molecule.core.marshalling.Marshalling
 import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
@@ -40,18 +39,24 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[Iterable[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getIterable(implicit conn: Conn): Future[Iterable[Tpl]] = Future(
-    new Iterable[Tpl] {
-      private val jColl: jCollection[jList[AnyRef]] = conn.query(_model, _query)
-      override def isEmpty: Boolean = jColl.isEmpty
-      override def size: Int = jColl.size
-      override def iterator: Iterator[Tpl] = new Iterator[Tpl] {
-        private val jIter: jIterator[jList[AnyRef]] = jColl.iterator
-        override def hasNext: Boolean = jIter.hasNext
-        override def next(): Tpl = row2tpl(jIter.next())
-      }
+  def getIterable(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] = {
+    if (conn.isJsPlatform) {
+      Future.failed(new IllegalArgumentException("Please fetch `List`s of data with `get` instead."))
+    } else {
+      conn.query(_model, _query).map(res =>
+        new Iterable[Tpl] {
+          private val jColl: jCollection[jList[AnyRef]] = res
+          override def isEmpty: Boolean = jColl.isEmpty
+          override def size: Int = jColl.size
+          override def iterator: Iterator[Tpl] = new Iterator[Tpl] {
+            private val jIter: jIterator[jList[AnyRef]] = jColl.iterator
+            override def hasNext: Boolean = jIter.hasNext
+            override def next(): Tpl = row2tpl(jIter.next())
+          }
+        }
+      )
     }
-  )
+  }
 
 
   // get as of ================================================================================================
@@ -116,8 +121,8 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[Iterable[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getIterableAsOf(t: Long)(implicit conn: Conn): Future[Iterable[Tpl]] =
-    getIterable(conn.usingTempDb(AsOf(TxLong(t))))
+  def getIterableAsOf(t: Long)(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] =
+    getIterable(conn.usingTempDb(AsOf(TxLong(t))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as tuples matching molecule as of tx.
@@ -171,8 +176,8 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[Iterable[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getIterableAsOf(tx: TxReport)(implicit conn: Conn): Future[Iterable[Tpl]] =
-    getIterable(conn.usingTempDb(AsOf(TxLong(tx.t))))
+  def getIterableAsOf(tx: TxReport)(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] =
+    getIterable(conn.usingTempDb(AsOf(TxLong(tx.t))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as tuples matching molecule as of date.
@@ -232,8 +237,8 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[Iterable[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getIterableAsOf(date: Date)(implicit conn: Conn): Future[Iterable[Tpl]] =
-    getIterable(conn.usingTempDb(AsOf(TxDate(date))))
+  def getIterableAsOf(date: Date)(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] =
+    getIterable(conn.usingTempDb(AsOf(TxDate(date))), ec)
 
 
   // get since ================================================================================================
@@ -271,8 +276,8 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[Iterable[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getIterableSince(t: Long)(implicit conn: Conn): Future[Iterable[Tpl]] =
-    getIterable(conn.usingTempDb(Since(TxLong(t))))
+  def getIterableSince(t: Long)(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] =
+    getIterable(conn.usingTempDb(Since(TxLong(t))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as tuples matching molecule since tx.
@@ -307,8 +312,8 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[Iterable[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getIterableSince(tx: TxReport)(implicit conn: Conn): Future[Iterable[Tpl]] =
-    getIterable(conn.usingTempDb(Since(TxLong(tx.t))))
+  def getIterableSince(tx: TxReport)(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] =
+    getIterable(conn.usingTempDb(Since(TxLong(tx.t))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as tuples matching molecule since date.
@@ -338,8 +343,8 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[Iterable[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getIterableSince(date: Date)(implicit conn: Conn): Future[Iterable[Tpl]] =
-    getIterable(conn.usingTempDb(Since(TxDate(date))))
+  def getIterableSince(date: Date)(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] =
+    getIterable(conn.usingTempDb(Since(TxDate(date))), ec)
 
 
   // get with ================================================================================================
@@ -372,9 +377,9 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Iterable of molecule data
     */
-  def getIterableWith(txMolecules: Future[Seq[Statement]]*)(implicit conn: Conn): Future[Iterable[Tpl]] = {
+  def getIterableWith(txMolecules: Future[Seq[Statement]]*)(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getIterable(conn.usingTempDb(With(conn.stmts2java(stmtss.flatten))))
+      getIterable(conn.usingTempDb(With(conn.stmts2java(stmtss.flatten))), ec)
     }
   }
 
@@ -399,8 +404,8 @@ trait GetTplIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Iterable of molecule data
     */
-  def getIterableWith(txData: jList[_])(implicit conn: Conn): Future[Iterable[Tpl]] =
-    getIterable(conn.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]])))
+  def getIterableWith(txData: jList[_])(implicit conn: Conn, ec: ExecutionContext): Future[Iterable[Tpl]] =
+    getIterable(conn.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]])), ec)
 
 
   // get history ================================================================================================

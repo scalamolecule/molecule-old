@@ -18,31 +18,18 @@ trait Conn_Datomic extends Conn {
   // (takes precedence over test db)
   protected var _adhocDb: Option[TempDb] = None
 
-  protected def cleanFrom(nextTimePoint: Any): Unit
+  // Reset datoms of in-mem with-db from next timePoint after as-of t until end
+  protected def cleanFrom(nextTimePoint: Any)(implicit ec: ExecutionContext): Future[Unit]
 
-  def testDbAsOf(txR: TxReport): Unit = cleanFrom(txR.t + 1)
 
-  def testDbAsOf(tOrTx: Long): Unit = cleanFrom(tOrTx + 1)
 
-  def testDbAsOf(d: Date): Unit = {
+  def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = cleanFrom(t + 1)
+
+  def testDbAsOf(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = cleanFrom(txR.t + 1)
+
+  def testDbAsOf(d: Date)(implicit ec: ExecutionContext): Future[Unit] = {
     cleanFrom(new Date(d.toInstant.plusMillis(1).toEpochMilli))
   }
-
-
-  //  def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport =
-  //    transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
-  //
-  //  def transact(edn: String, scalaStmts: Seq[Statement]): TxReport =
-  //    transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
-  //
-  //  def transact(stmtsReader: Reader): TxReport =
-  //    transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
-  //
-  //  def transact(edn: String): TxReport =
-  //    transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
-  //
-  //  def transact(scalaStmts: Seq[Statement]): TxReport =
-  //    transactRaw(stmts2java(scalaStmts), scalaStmts)
 
 
   def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
@@ -69,22 +56,24 @@ trait Conn_Datomic extends Conn {
   }
 
 
-  override def getAttrValuesAsync(
+  override def jsGetAttrValues(
     datalogQuery: String,
     card: Int,
     tpe: String
-  )(implicit ec: ExecutionContext): Future[List[String]] = Future(
-    q(datalogQuery).map(_.head.toString)
-  )
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    q(datalogQuery).map(_.map(_.head.toString))
 
-  def q(query: String, inputs: Any*): List[List[AnyRef]] =
+
+  def q(query: String, inputs: Any*)
+       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] =
     q(db, query, inputs.toSeq)
 
-  def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]] =
+  def qRaw(query: String, inputs: Any*)
+          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
     qRaw(db, query, inputs)
 
 
-  def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = {
+  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)
     Util.list(Util.map(
       read(":db/ident"), read(s":$txFn"),

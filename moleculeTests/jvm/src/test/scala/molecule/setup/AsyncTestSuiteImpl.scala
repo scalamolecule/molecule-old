@@ -17,6 +17,7 @@ import molecule.tests.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema
 trait AsyncTestSuiteImpl {
 
   def coreImpl[T](func: Conn => T): T = func(Datomic_Peer.recreateDbFrom(CoreTestSchema))
+
   def bidirectionalImpl[T](func: Conn => T): T = func(Datomic_Peer.recreateDbFrom(BidirectionalSchema))
   def partitionImpl[T](func: Conn => T): T = func(Datomic_Peer.recreateDbFrom(PartitionTestSchema))
   def nestedImpl[T](func: Conn => T): T = func(Datomic_Peer.recreateDbFrom(NestedSchema))

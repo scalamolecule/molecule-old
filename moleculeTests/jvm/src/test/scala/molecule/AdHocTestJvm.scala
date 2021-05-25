@@ -18,17 +18,20 @@ import datomicClient.ClojureBridge
 import molecule.core.api.Molecule_1
 import molecule.core.dsl.base
 import molecule.core.util.{Helpers, JavaUtil}
-import molecule.core.util.testing.MoleculeTestHelper
+import molecule.core.util.testing.{MoleculeTestHelper, TimerPrint}
 import molecule.datomic.api.in1_out13._
 import molecule.datomic.api.in1_out4.m
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.marshalling.DatomicRpc.{getCachedQueryExecutor, qTime, unmarshallInputs}
+import molecule.datomic.base.marshalling.Rows2QueryResult
 import molecule.datomic.peer.facade.Datomic_Peer._
 import molecule.setup.core.CoreData
 import molecule.tests.core.base.dsl.CoreTest._
 import molecule.tests.core.base.schema.CoreTestSchema
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mutable.Specification
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Promise}
+import scala.util.control.NonFatal
 //import scala.concurrent.ExecutionContext
 //import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -41,25 +44,66 @@ class AdHocTestJvm extends molecule.setup.TestSpec with Helpers {
   //class AdHocTestJvm extends Specification
   //  with ClojureBridge with JavaUtil with MoleculeTestHelper with CoreData {
 
+  import scala.concurrent.Promise
+  import scala.concurrent.Future
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.util.control.NonFatal
 
-  //  "core" >> {
-  //    implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
-  //
-  ////    1 === 2
-  //
-  //    val in: Molecule_1.Molecule_1_01[base.Init with Ns_int, Int, Int] = m(Ns.int(?))
-  //
-  //    in(5).getAsync
-  //
-  //
-  //    Ns.uri(uri1).inspectSave
-  //    Ns.uri(uri1).save
-  //    Ns.uri.get === List(uri1)
-  //
-  //
-  //
-  ////    ok
+//  def f(i: Int): Future[Int] = {
+//    Future {
+//      if (i == 0)
+//        throw new IllegalArgumentException("auch")
+//      i
+//    }
+//  }
+//
+//  def f3(i: Int): Future[Int] = {
+//    val p = Promise[Int]()
+//    try {
+//      p.success {
+//        if (i == 0) {
+//          throw new IllegalArgumentException("auch")
+//        }
+//        i
+//      }
+//    } catch {
+//      case NonFatal(exc) => p.failure(exc)
+//    }
+//    p.future
+//  }
+
+  //  def f2(i: Int): Future[Int] = {
+  //    Future {
+  //      try {
+  //        if (i == 0)
+  //          throw new IllegalArgumentException("auch")
+  //        i
+  //      } catch {
+  //        case NonFatal(exc) => Future.failed(exc)
+  //      }
+  //    }
   //  }
+//
+//    "core" >> {
+//      implicit val conn: Conn = recreateDbFrom(CoreTestSchema)
+//
+//  //    1 === 2
+//
+//      val in: Molecule_1.Molecule_1_01[base.Init with Ns_int, Int, Int] = m(Ns.int(?))
+//
+//      in(5).getAsync
+//
+//
+//      Ns.uri(uri1).inspectSave
+//      Ns.uri(uri1).save
+//      Ns.uri.get === List(uri1)
+//
+//
+//
+//
+//
+//  //    ok
+//    }
 
   //  Peer.shutdown(true)
 

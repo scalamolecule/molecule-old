@@ -11,40 +11,100 @@ import datomicClient.ClojureBridge
 import molecule.core.marshalling._
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
-import molecule.datomic.base.facade.{Conn, TxReportRPC}
+import molecule.datomic.base.facade.{Conn, Conn_Datomic213, TxReportRPC}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal with Helpers with ClojureBridge {
 
+  // Cache Conn and QueryExecutors ---------------------------------------------
 
-  def transactAsync(
-    dbProxy: DbProxy,
-    stmtsEdn: String,
-    uriAttrs: Set[String]
-  ): Future[Either[Throwable, TxReportRPC]] = {
-    try {
-      println(stmtsEdn)
-      getCachedConn(dbProxy).transactAsyncRaw(javaStmts(stmtsEdn, uriAttrs)).map { txReport =>
-        Right(
-          TxReportRPC(
-            txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
-          )
-        )
+  // (datalogQuery, inputs) => raw data
+  type QueryExecutor = (String, Seq[AnyRef]) => Future[util.Collection[util.List[AnyRef]]]
+
+  // todo: proper caching
+  val connCache          = mutable.Map.empty[String, Future[Conn]]
+  val queryExecutorCache = mutable.Map.empty[String, Future[QueryExecutor]]
+
+
+  private def getCachedConn(
+    dbProxy: DbProxy
+  ): Future[Conn] = {
+    connCache.getOrElse(
+      dbProxy.uuid,
+      {
+        val conn = dbProxy match {
+          case DatomicInMemProxy(edns, _, _) =>
+            //          Datomic_Peer.connect("mem", dbIdentifier)
+            Datomic_Peer.recreateDbFromEdn(edns)
+
+          case DatomicPeerProxy(protocol, dbIdentifier, _, _) =>
+            if (datomicProtocol != protocol) {
+              throw new RuntimeException(
+                s"\nProject is built with datomic `$datomicProtocol` protocol and " +
+                  s"cannot serve supplied `$protocol` protocol. " +
+                  s"\nPlease change the build setup or your ConnProxy protocol"
+              )
+            }
+            protocol match {
+              case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier)
+              case "mem"          => throw new IllegalArgumentException(
+                "Please connect with `DatomicInMemProxy` to get an in-memory db.")
+            }
+
+          case DatomicDevLocalProxy(system, storageDir, dbName, _, _) =>
+            Datomic_DevLocal(system, storageDir).connect(dbName)
+
+          case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _) =>
+            Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
+        }
+        connCache(dbProxy.uuid) = conn
+        conn
       }
-    } catch {
-      case NonFatal(exc) => Future(Left(exc))
-    }
+    )
+  }
+
+  private def getCachedQueryExecutor(
+    dbProxy: DbProxy
+  ): Future[QueryExecutor] = {
+    queryExecutorCache.getOrElse(
+      dbProxy.uuid,
+      {
+        val queryExecutor = getCachedConn(dbProxy).map { conn =>
+          (datalogQuery: String, inputs: Seq[AnyRef]) => {
+            conn.qRaw(conn.db, datalogQuery, inputs)
+          }
+        }
+        queryExecutorCache(dbProxy.uuid) = queryExecutor
+        queryExecutor
+      }
+    )
   }
 
 
-  def queryAsync(
+  // Api ---------------------------------------------
+
+  def transact(
+    dbProxy: DbProxy,
+    stmtsEdn: String,
+    uriAttrs: Set[String]
+  ): Future[TxReportRPC] = {
+    println(stmtsEdn)
+    for {
+      conn <- getCachedConn(dbProxy)
+      txReport <- conn.transactRaw(javaStmts(stmtsEdn, uriAttrs))
+    } yield TxReportRPC(
+      txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
+    )
+  }
+
+  def query(
     dbProxy: DbProxy,
     datalogQuery: String,
     rules: Seq[String],
@@ -53,12 +113,14 @@ object DatomicRpc extends MoleculeRpc
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
     indexes: List[(Int, Int, Int, Int)]
-  ): Future[Either[Throwable, QueryResult]] = Future {
-    val log = new log
-    try {
-      val t           = TimerPrint("DatomicRpc")
-      val inputs      = rules +: unmarshallInputs(l ++ ll ++ lll)
-      val allRows     = getCachedQueryExecutor(dbProxy)(datalogQuery, inputs)
+  ): Future[QueryResult] = {
+    val log                 = new log
+    val t                   = TimerPrint("DatomicRpc")
+    val inputs: Seq[Object] = rules +: unmarshallInputs(l ++ ll ++ lll)
+    for {
+      queryEx <- getCachedQueryExecutor(dbProxy)
+      allRows <- queryEx(datalogQuery, inputs)
+    } yield {
       val rowCountAll = allRows.size
       val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
 
@@ -81,159 +143,70 @@ object DatomicRpc extends MoleculeRpc
       //        log("Rows2QueryResult took " + t.ms)
       //        log("Sending data to client... Total server time: " + t.msTotal)
       log.print
-      Right(queryResult)
-
-    } catch {
-      case NonFatal(exc) => Left(exc)
+      queryResult
     }
   }
 
-  def getAttrValuesAsync(
+
+  def getAttrValues(
     dbProxy: DbProxy,
     datalogQuery: String,
     card: Int,
     tpe: String
-  ): Future[List[String]] = Future {
-    var vs   = List.empty[String]
-    val rows = getCachedQueryExecutor(dbProxy)(datalogQuery, Nil).iterator()
-    if (rows.hasNext) {
-      val rawValue = rows.next().get(0)
-      // marshall raw value. Dates need to be standardized
-      card match {
-        case 1 => rawValue match {
-          case d: Date => vs = List(date2strLocal(d))
-          case v       => vs = List(v.toString)
+  ): Future[List[String]] = {
+    var vs = List.empty[String]
+    for {
+      queryEx <- getCachedQueryExecutor(dbProxy)
+      rows0 <- queryEx(datalogQuery, Nil)
+    } yield {
+      val rows = rows0.iterator
+      if (rows.hasNext) {
+        val rawValue = rows.next().get(0)
+        // marshall raw value. Dates need to be standardized
+        card match {
+          case 1 => rawValue match {
+            case d: Date => vs = List(date2strLocal(d))
+            case v       => vs = List(v.toString)
+          }
+          case 2 => tpe match {
+            case "Date" => rawValue.asInstanceOf[jSet[_]].forEach(v =>
+              vs = vs :+ date2strLocal(v.asInstanceOf[Date])
+            )
+            case _      => rawValue.asInstanceOf[jSet[_]].forEach(v =>
+              vs = vs :+ v.toString
+            )
+          }
+          case 3 => rawValue.asInstanceOf[jSet[_]].forEach(v => vs = vs :+ v.toString)
         }
-        case 2 => tpe match {
-          case "Date" => rawValue.asInstanceOf[jSet[_]].forEach(v =>
-            vs = vs :+ date2strLocal(v.asInstanceOf[Date])
-          )
-          case _      => rawValue.asInstanceOf[jSet[_]].forEach(v =>
-            vs = vs :+ v.toString
-          )
-        }
-        case 3 => rawValue.asInstanceOf[jSet[_]].forEach(v => vs = vs :+ v.toString)
-      }
-      vs
-    } else Nil
+        vs
+      } else Nil
+    }
   }
 
   def entityAttrKeys(
     dbProxy: DbProxy,
     eid: Long
-  ): Future[List[String]] = Future {
-    try {
-      val query = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
-      var list  = List.empty[String]
-      getCachedQueryExecutor(dbProxy)(query, Nil).forEach { row =>
+  ): Future[List[String]] = {
+    val query = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
+    var list  = List.empty[String]
+    for {
+      queryEx <- getCachedQueryExecutor(dbProxy)
+      rows <- queryEx(query, Nil)
+    } yield {
+      rows.forEach { row =>
         list = row.get(0).toString :: list
       }
       list.sorted
-    } catch {
-      case _: Throwable => Nil
     }
-  }
-
-  def ping(i: Int): Future[Int] = {
-    if (i <= 3) {
-      Future.successful(i * 100)
-    } else if (i == 4) {
-      Future.failed(DbException("XXY"))
-    } else {
-      Future.failed(new IllegalArgumentException("XYX"))
-    }
-  }
-
-  def pong(i: Int): Future[Either[Throwable, Int]] = {
-    if (i <= 3) {
-      Future(Right(i * 100))
-    } else if (i == 4) {
-      Future(Left(DbException("XXY")))
-    } else {
-      Future(Left(new IllegalArgumentException("XYX")))
-    }
-  }
-
-
-  // Cache Conn and QueryExecutors ---------------------------------------------
-
-  // (datalogQuery, inputs) => raw data
-  type QueryExecutor = (String, Seq[AnyRef]) => util.Collection[util.List[AnyRef]]
-
-  // todo: proper caching
-  val connCache          = mutable.Map.empty[String, Conn]
-  val queryExecutorCache = mutable.Map.empty[String, QueryExecutor]
-
-  private def getCachedConn(dbProxy: DbProxy): Conn = {
-    connCache.getOrElse(dbProxy.uuid, {
-      val conn = dbProxy match {
-        case DatomicInMemProxy(edns, _, _) =>
-          //          Datomic_Peer.connect("mem", dbIdentifier)
-          Datomic_Peer.recreateDbFromEdn(edns)
-
-        case DatomicPeerProxy(protocol, dbIdentifier, _, _) =>
-          if (datomicProtocol != protocol) {
-            throw new RuntimeException(
-              s"\nProject is built with datomic `$datomicProtocol` protocol and " +
-                s"cannot serve supplied `$protocol` protocol. " +
-                s"\nPlease change the build setup or your ConnProxy protocol"
-            )
-          }
-          protocol match {
-            case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier)
-            case "mem"          => throw new IllegalArgumentException(
-              "Please connect with `DatomicInMemProxy` to get an in-memory db.")
-          }
-
-        case DatomicDevLocalProxy(system, storageDir, dbName, _, _) =>
-          Datomic_DevLocal(system, storageDir).connect(dbName)
-
-        case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _) =>
-          Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
-      }
-      connCache(dbProxy.uuid) = conn
-      //      println("@@@@@ cached conn         : " + dbProxy.uuid + "   " + connCache.size)
-      conn
-    })
-  }
-
-  private def getCachedQueryExecutor(dbProxy: DbProxy): QueryExecutor = {
-    queryExecutorCache.getOrElse(dbProxy.uuid, {
-      val queryExecutor = dbProxy match {
-        case _: DatomicInMemProxy =>
-          val conn = getCachedConn(dbProxy)
-          (datalogQuery: String, inputs: Seq[AnyRef]) => {
-            Peer.q(datalogQuery, conn.db.getDatomicDb +: inputs: _*)
-          }
-
-        case _: DatomicPeerProxy =>
-          val conn = getCachedConn(dbProxy)
-          (datalogQuery: String, inputs: Seq[AnyRef]) => {
-            Peer.q(datalogQuery, conn.db.getDatomicDb +: inputs: _*)
-          }
-
-        case _: DatomicDevLocalProxy =>
-          val conn = getCachedConn(dbProxy)
-          (datalogQuery: String, inputs: Seq[AnyRef]) => {
-            conn.qRaw(conn.db, datalogQuery, inputs)
-          }
-
-        case _: DatomicPeerServerProxy =>
-          val conn = getCachedConn(dbProxy)
-          (datalogQuery: String, inputs: Seq[AnyRef]) => {
-            conn.qRaw(conn.db, datalogQuery, inputs)
-          }
-      }
-      queryExecutorCache(dbProxy.uuid) = queryExecutor
-      //      println("@@@@@ cached queryExecutor: " + dbProxy.uuid + "   " + queryExecutorCache.size)
-      queryExecutor
-    })
   }
 
 
   // Helpers -------------------------------------------------
 
-  def javaStmts(edn: String, uriAttrs: Set[String]): jList[AnyRef] = {
+  def javaStmts(
+    edn: String,
+    uriAttrs: Set[String]
+  ): jList[AnyRef] = {
     val stmts = readAll(new StringReader(edn)).get(0).asInstanceOf[jList[AnyRef]]
     if (uriAttrs.isEmpty) {
       stmts

@@ -2,7 +2,7 @@ package molecule.datomic.client.facade
 
 import java.util
 import java.util.{Date, stream, Collection => jCollection, List => jList}
-import datomic.Peer
+import datomic.{Peer}
 import datomic.Util._
 import datomic.db.DbId
 import datomicClient.anomaly.CognitectAnomaly
@@ -34,9 +34,9 @@ case class Conn_Client(
   system: String = ""
 ) extends Conn_Datomic213 {
 
-  val clientConn: sync.Connection = client.connect(dbName)
+  lazy val clientConn: sync.Connection = client.connect(dbName)
 
-  val clientConnAsync: Future[Either[CognitectAnomaly, AsyncConnection]] =
+  lazy val clientConnAsync: Future[Either[CognitectAnomaly, AsyncConnection]] =
     clientAsync.connect(dbName)
 
   // In-memory fixed test db for integration testing of domain model
@@ -58,31 +58,38 @@ case class Conn_Client(
   }
 
 
-  // Reverse datoms from next timePoint after as-of t until end
-  override def cleanFrom(nextTimePoint: Any): Unit = {
-    _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
-    val array          = clientConn.txRangeArray(Some(nextTimePoint))
-    val txInstId       = db.pull("[:db/id]", ":db/txInstant").get(read(":db/id"))
-    val (retract, add) = (read(":db/retract"), read(":db/add"))
-    def op(datom: Datom) = if (datom.added) retract else add
-    var stmts: jList[jList[_]] = new util.ArrayList[jList[_]]()
-    val size                   = array.length
-    var i                      = size - 1
-    // Reverse datoms backwards from last to timePoint right after as-of t
-    while (i >= 0) {
-      val datoms = array(i)._2
-      stmts = new util.ArrayList[jList[_]](datoms.length)
-      datoms.foreach { datom =>
-        // Don't reverse timestamps
-        if (datom.a != txInstId) {
-          stmts.add(list(op(datom), datom.e, datom.a, datom.v))
+  // Reset datoms of in-mem with-db from next timePoint after as-of t until end
+  override def cleanFrom(nextTimePoint: Any)
+                        (implicit ec: ExecutionContext): Future[Unit] = {
+    for {
+      txInstants <- db.pull("[:db/id]", ":db/txInstant")
+      txInstId = txInstants.get(read(":db/id"))
+    } yield {
+      blocking {
+        _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+        val txs            = clientConn.txRangeArray(Some(nextTimePoint))
+        val (retract, add) = (read(":db/retract"), read(":db/add"))
+        def op(datom: Datom) = if (datom.added) retract else add
+        var txStmts = new util.ArrayList[jList[_]]()
+        val size    = txs.length
+        var i       = size - 1
+        // Reverse datoms backwards from last to timePoint right after as-of t
+        while (i >= 0) {
+          val txDatoms = txs(i)._2
+          txStmts = new util.ArrayList[jList[_]](txDatoms.length)
+          txDatoms.foreach { datom =>
+            // Don't reverse timestamps
+            if (datom.a != txInstId) {
+              txStmts.add(list(op(datom), datom.e, datom.a, datom.v))
+            }
+          }
+          // Update in-memory with-db with datoms of this tx
+          _testDb = Some(_testDb.get.`with`(_testDb.get, txStmts).dbAfter)
+          i -= 1
         }
+        withDbInUse = true
       }
-      // Update in-memory with-db
-      _testDb = Some(_testDb.get.`with`(_testDb.get, stmts).dbAfter)
-      i -= 1
     }
-    withDbInUse = true
   }
 
 
@@ -95,21 +102,21 @@ case class Conn_Client(
   private var sinceT = Option.empty[Long]
   private var sinceD = Option.empty[Date]
 
-  def testDbSince(txR: TxReport): Unit = {
+  def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
+    sinceT = Some(t)
+    sinceD = None
+    _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+    withDbInUse = true
+  }
+
+  def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
     sinceT = Some(txR.t)
     sinceD = None
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
     withDbInUse = true
   }
 
-  def testDbSince(tOrTx: Long): Unit = {
-    sinceT = Some(tOrTx)
-    sinceD = None
-    _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
-    withDbInUse = true
-  }
-
-  def testDbSince(d: Date): Unit = {
+  def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
     sinceT = None
     sinceD = Some(d)
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
@@ -123,7 +130,7 @@ case class Conn_Client(
     }
   }
 
-  def testDbWith(txDataJava: jList[jList[_]]): Unit = {
+  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit] = Future {
     tempId.reset()
     _testDb = Some(clientConn.db.`with`(clientConn.withDb, txDataJava).dbAfter)
     withDbInUse = true
@@ -172,36 +179,9 @@ case class Conn_Client(
     }
   }
 
-  def entity(id: Any): DatomicEntity = db.entity(this, id)
+  def entity(id: Any): DatomicEntity =
+    db.entity(this, id)
 
-
-//  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport = {
-//    if (_adhocDb.isDefined) {
-//      // In-memory "transaction"
-//      val adHocDb = getAdhocDb
-//      TxReport_Client(getAdhocDb.`with`(adHocDb, javaStmts), scalaStmts)
-//
-//    } else if (_testDb.isDefined) {
-//      // In-memory "transaction"
-//
-//      // Use special withDb
-//      val withDb = if (withDbInUse) {
-//        _testDb.get.`with`(_testDb.get, javaStmts)
-//      } else {
-//        _testDb.get.`with`(clientConn.withDb, javaStmts)
-//      }
-//      // Special withDb now in use (important for consequent transaction calls)
-//      withDbInUse = true
-//
-//      val txReport = TxReport_Client(withDb, scalaStmts)
-//      _testDb = Some(txReport.dbAfter)
-//      txReport
-//
-//    } else {
-//      // Live transaction
-//      TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
-//    }
-//  }
 
   def transactRaw(
     javaStmts: jList[_],
@@ -232,7 +212,11 @@ case class Conn_Client(
   }
 
 
-  def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any]): jCollection[jList[AnyRef]] = {
+  def qRaw(
+    db: DatomicDb,
+    query: String,
+    inputs0: Seq[Any]
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     val inputs = inputs0.map {
       case it: Iterable[_] => it.toList.asJava
       case dbId: DbId      => dbId.idx.toString
@@ -248,39 +232,37 @@ case class Conn_Client(
     )
   }
 
-  def query(model: Model, query: Query): jCollection[jList[AnyRef]] = {
+  def query(model: Model, query: Query)
+           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
       case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => _index(model)
       case _                                                           => _query(model, query)
     }
   }
 
-  def _query(model: Model, query: Query, _db: Option[DatomicDb]): jCollection[jList[AnyRef]] = {
-    val p               = Query2String(query).p
-    val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-    val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-    val allInputs       = rules ++ inputsEvaluated
-    val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
+  private[molecule] def _query(
+    model: Model,
+    query: Query,
+    _db: Option[DatomicDb]
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     try {
-      blocking {
+      Future {
+        val p               = Query2String(query).p
+        val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+        val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
+        val allInputs       = rules ++ inputsEvaluated
+        val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
         clientDatomic.q(query.toMap, adhocDb, allInputs: _*)
       }
     } catch {
-      case ex: Throwable if ex.getMessage startsWith "processing" =>
-        val builder = Seq.newBuilder[String]
-        var e       = ex
-        while (e.getCause != null) {
-          builder += e.getMessage
-          e = e.getCause
-        }
-        throw new QueryException(e, model, query, allInputs, p, builder.result())
-      case NonFatal(ex)                                           =>
-        throw new QueryException(ex, model, query, allInputs, p)
+      case NonFatal(exc) =>
+        Future.failed(new QueryException(exc, model, query))
     }
   }
 
   // Datoms API providing direct access to indexes
-  def _index(model: Model): jCollection[jList[AnyRef]] = {
+  private[molecule] def _index(model: Model)
+                              (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     val (api, index, args) = model.elements.head match {
       case Generic("EAVT", _, _, value) =>
         ("datoms", ":eavt", value match {
@@ -382,7 +364,7 @@ case class Conn_Client(
     }
 
 
-    lazy val attrNames: Array[String] = {
+    lazy val attrNames: Future[Array[String]] = {
       // Since the number of definitions is limited we can quickly collect them
       // for fast lookups in an array by index = attr id.
       // 5000 slots should satisfy any schema.
@@ -391,31 +373,38 @@ case class Conn_Client(
         """[:find  ?id ?idIdent
           | :where [_ :db.install/attribute ?id]
           |        [?id :db/ident ?idIdent]
-          |        ]""".stripMargin, db.getDatomicDb).forEach { row =>
-        array(row.get(0).asInstanceOf[Long].toInt) = row.get(1).toString
+          |        ]""".stripMargin, db.getDatomicDb).map { rows =>
+        rows.forEach { row =>
+          array(row.get(0).asInstanceOf[Long].toInt) = row.get(1).toString
+        }
+        array
       }
-      array
     }
 
     lazy val defaultDate = new Date(0)
     lazy val txInstant   = read(":db/txInstant")
 
-    def date(tx: Long): Date = {
+    def date(tx: Long): Future[Date] = {
       // We can't index all txInstants
-      val raw = db.pull("[:db/txInstant]", tx)
       // Some initial transactions lack tx time it seems, so there we default to time 0 (Thu Jan 01 01:00:00 CET 1970)
-      if (raw == null) defaultDate else raw.get(txInstant).asInstanceOf[Date]
+      db.pull("[:db/txInstant]", tx).map {
+        case null => defaultDate
+        case res  => res.get(txInstant).asInstanceOf[Date]
+      }
     }
 
-    def datomElement(tOpt: Option[Long], attr: String): Datom => Any = attr match {
-      case "e"                   => (d: Datom) => d.e
-      case "a"                   => (d: Datom) => attrNames(d.a.toString.toInt)
-      case "v"                   => (d: Datom) => d.v
-      case "t" if tOpt.isDefined => (_: Datom) => tOpt.get // use provided t
-      case "t"                   => (d: Datom) => Peer.toT(d.tx)
-      case "tx"                  => (d: Datom) => d.tx
+    def datomElement(
+      tOpt: Option[Long],
+      attr: String
+    )(implicit ec: ExecutionContext): Datom => Future[Any] = attr match {
+      case "e"                   => (d: Datom) => Future(d.e)
+      case "a"                   => (d: Datom) => attrNames.map(_ (d.a.toString.toInt))
+      case "v"                   => (d: Datom) => Future(d.v)
+      case "t" if tOpt.isDefined => (_: Datom) => Future(tOpt.get) // use provided t
+      case "t"                   => (d: Datom) => Future(Peer.toT(d.tx))
+      case "tx"                  => (d: Datom) => Future(d.tx)
       case "txInstant"           => (d: Datom) => date(d.tx)
-      case "op"                  => (d: Datom) => d.added
+      case "op"                  => (d: Datom) => Future(d.added)
       case a                     => throw new MoleculeException("Unexpected generic attribute: " + a)
     }
 
@@ -424,28 +413,46 @@ case class Conn_Client(
         if attr != "args_" && attr != "range" => attr
     }
 
-    def datom2row(tOpt: Option[Long]): Datom => jList[AnyRef] = attrs.length match {
+    def datom2row(tOpt: Option[Long]): Datom => Future[jList[AnyRef]] = attrs.length match {
       case 1 =>
         val x1 = datomElement(tOpt, attrs.head)
-        (d: Datom) => list(x1(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) =>
+          for {
+            v1 <- x1(d)
+          } yield list(v1).asInstanceOf[jList[AnyRef]]
 
       case 2 =>
         val x1 = datomElement(tOpt, attrs.head)
         val x2 = datomElement(tOpt, attrs(1))
-        (d: Datom) => list(x1(d), x2(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) =>
+          for {
+            v1 <- x1(d)
+            v2 <- x2(d)
+          } yield list(v1, v2).asInstanceOf[jList[AnyRef]]
 
       case 3 =>
         val x1 = datomElement(tOpt, attrs.head)
         val x2 = datomElement(tOpt, attrs(1))
         val x3 = datomElement(tOpt, attrs(2))
-        (d: Datom) => list(x1(d), x2(d), x3(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) =>
+          for {
+            v1 <- x1(d)
+            v2 <- x2(d)
+            v3 <- x3(d)
+          } yield list(v1, v2, v3).asInstanceOf[jList[AnyRef]]
 
       case 4 =>
         val x1 = datomElement(tOpt, attrs.head)
         val x2 = datomElement(tOpt, attrs(1))
         val x3 = datomElement(tOpt, attrs(2))
         val x4 = datomElement(tOpt, attrs(3))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) =>
+          for {
+            v1 <- x1(d)
+            v2 <- x2(d)
+            v3 <- x3(d)
+            v4 <- x4(d)
+          } yield list(v1, v2, v3, v4).asInstanceOf[jList[AnyRef]]
 
       case 5 =>
         val x1 = datomElement(tOpt, attrs.head)
@@ -453,7 +460,14 @@ case class Conn_Client(
         val x3 = datomElement(tOpt, attrs(2))
         val x4 = datomElement(tOpt, attrs(3))
         val x5 = datomElement(tOpt, attrs(4))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d), x5(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) =>
+          for {
+            v1 <- x1(d)
+            v2 <- x2(d)
+            v3 <- x3(d)
+            v4 <- x4(d)
+            v5 <- x5(d)
+          } yield list(v1, v2, v3, v4, v5).asInstanceOf[jList[AnyRef]]
 
       case 6 =>
         val x1 = datomElement(tOpt, attrs.head)
@@ -462,7 +476,15 @@ case class Conn_Client(
         val x4 = datomElement(tOpt, attrs(3))
         val x5 = datomElement(tOpt, attrs(4))
         val x6 = datomElement(tOpt, attrs(5))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d), x5(d), x6(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) =>
+          for {
+            v1 <- x1(d)
+            v2 <- x2(d)
+            v3 <- x3(d)
+            v4 <- x4(d)
+            v5 <- x5(d)
+            v6 <- x6(d)
+          } yield list(v1, v2, v3, v4, v5, v6).asInstanceOf[jList[AnyRef]]
 
       case 7 =>
         val x1 = datomElement(tOpt, attrs.head)
@@ -472,46 +494,56 @@ case class Conn_Client(
         val x5 = datomElement(tOpt, attrs(4))
         val x6 = datomElement(tOpt, attrs(5))
         val x7 = datomElement(tOpt, attrs(6))
-        (d: Datom) => list(x1(d), x2(d), x3(d), x4(d), x5(d), x6(d), x7(d)).asInstanceOf[jList[AnyRef]]
+        (d: Datom) =>
+          for {
+            v1 <- x1(d)
+            v2 <- x2(d)
+            v3 <- x3(d)
+            v4 <- x4(d)
+            v5 <- x5(d)
+            v6 <- x6(d)
+            v7 <- x7(d)
+          } yield list(v1, v2, v3, v4, v5, v6, v7).asInstanceOf[jList[AnyRef]]
     }
 
     // Convert Datoms to standard list of rows so that we can use the same Molecule query API
     val jColl: jCollection[jList[AnyRef]] = new util.ArrayList[jList[AnyRef]]()
     api match {
       case "datoms" =>
-        val datom2row_ : Datom => jList[AnyRef] = datom2row(None)
-        val raw        : stream.Stream[Datom]   =
-          db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1)
-        raw.forEach { datom =>
-          jColl.add(datom2row_(datom))
+        val datom2row_ = datom2row(None)
+        val raw        = db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1)
+        raw.map { datoms =>
+          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
+          jColl
         }
 
       case "indexRange" =>
-        val datom2row_ : Datom => jList[AnyRef] = datom2row(None)
-        val attrId     : String                 = args.head.toString
-        val startValue : Option[Any]            = args(1).asInstanceOf[Option[Any]]
-        val endValue   : Option[Any]            = args(2).asInstanceOf[Option[Any]]
-        val raw        : stream.Stream[Datom]   =
-          db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1)
-        raw.asInstanceOf[java.util.stream.Stream[Datom]].forEach { datom =>
-          jColl.add(datom2row_(datom))
+        val datom2row_ = datom2row(None)
+        val attrId     = args.head.toString
+        val startValue = args(1).asInstanceOf[Option[Any]]
+        val endValue   = args(2).asInstanceOf[Option[Any]]
+        val raw        = db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1)
+        raw.map { datoms =>
+          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
+          jColl
         }
 
       case "txRange" =>
         val from  = args.head.asInstanceOf[Option[Any]]
         val until = args(1).asInstanceOf[Option[Any]]
-
         // Flatten transaction datoms to unified tuples return type
-        val raw: Array[(Long, Array[Datom])] = clientConn.txRangeArray(from, until, limit = -1)
-        raw.foreach {
-          case (t, datoms) =>
-            // Use t from txRange result
-            val datom2row_ : Datom => jList[AnyRef] = datom2row(Some(t))
-            datoms.foreach { datom =>
-              jColl.add(datom2row_(datom))
-            }
+        val raw = Future(clientConn.txRangeArray(from, until, limit = -1))
+        raw.map { datoms =>
+          datoms.foreach {
+            case (t, datoms) =>
+              // Use t from txRange result
+              val datom2row_ = datom2row(Some(t))
+              datoms.foreach { datom =>
+                datom2row_(datom).map(row => jColl.add(row))
+              }
+          }
+          jColl
         }
     }
-    jColl
   }
 }

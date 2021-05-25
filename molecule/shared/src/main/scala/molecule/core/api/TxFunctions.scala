@@ -12,7 +12,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.util.control.NonFatal
-import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Transactional methods for bundled transactions and tx functions
@@ -25,44 +24,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @groupprio txfn 2
   */
 trait TxFunctions {
-
-  /** Transact tx function invocation
-    * <br><br>
-    * Macro that takes a tx function invocation itself as its argument. The tx function is analyzed
-    * by the macro and the necessary transaction preparations done at compile time.
-    * <br><br>
-    * At runtime, the returned statements from the tx function is transacted as
-    * one atomic transaction.
-    * {{{
-    * val txReport = transact(transfer(fromAccount, toAccount, 20))
-    * }}}
-    * Transaction meta data molecules can be added
-    * {{{
-    * // Add tx meta data that John did the transfer and that it is a scheduled transfer
-    * transact(
-    *   transfer(fromAccount, toAccount, 20),
-    *   Person.name("John"),
-    *   UseCase.name("Scheduled transfer"))
-    *
-    * // Query multiple Tx meta data molecules
-    * Account(fromAccount).balance
-    *   .Tx(Person.name_("John"))
-    *   .Tx(UseCase.name_("Scheduled transfer")).get.head === 80
-    * Account(toAccount).balance
-    *   .Tx(Person.name_("John"))
-    *   .Tx(UseCase.name_("Scheduled transfer")).get.head === 720
-    * }}}
-    *
-    * @group txfn
-    * @param txFnCall    Tx function invocation
-    * @param txMolecules Optional tx meta data molecules
-    * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
-    */
-  def transactFn(
-    txFnCall: Seq[Statement],
-    txMolecules: Molecule*
-  ): TxReport = macro TxFunctionCall.txFnCall
-
 
   /** Asynchronously transact tx function invocation
     * <br><br>
@@ -101,10 +62,10 @@ trait TxFunctions {
     * @param txMolecules Optional tx meta data molecules
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
-  def transactFnAsync(
+  def transactFn(
     txFnCall: Seq[Statement],
     txMolecules: Molecule*
-  ): Future[TxReport] = macro TxFunctionCall.asyncTxFnCall
+  ): Future[TxReport] = macro TxFunctionCall.txFnCall
 
 
   /** Inspect tx function invocation
@@ -183,47 +144,6 @@ object TxFunctions extends Helpers with JavaUtil {
 
   val redundant = "molecule.core.macros.exception.TxFnException: ".size
 
-  def tryTransactTxFn(body: => Future[TxReport]): Future[TxReport] = try {
-    body
-  } catch {
-    case e: ExecutionExc => e.getMessage match {
-      case msg if msg.startsWith("java.lang.NoClassDefFoundError: scala") =>
-        //        throw new TxFnException(excMissingScalaJar(e))
-        Future.failed(new TxFnException(excMissingScalaJar(e)))
-
-      case msg if msg.startsWith("java.lang.NoClassDefFoundError: molecule") =>
-        //        throw new TxFnException(excMissingMoleculeClass(e))
-        Future.failed(new TxFnException(excMissingMoleculeClass(e)))
-
-      case msg if msg.startsWith("java.lang.NoSuchMethodError: molecule") =>
-        //        throw new TxFnException(excMissingMoleculeMethod(e))
-        Future.failed(new TxFnException(excMissingMoleculeMethod(e)))
-
-      case _ =>
-        //        throw new TxFnException(e.getMessage.drop(redundant))
-        Future.failed(new TxFnException(e.getMessage.drop(redundant)))
-    }
-
-    case NonFatal(e) =>
-      //      throw new TxFnException(e.getMessage.drop(redundant))
-      Future.failed(new TxFnException(e.getMessage.drop(redundant)))
-  }
-
-
-  private[this] def txStmts(
-    txMolecules: Seq[Molecule],
-    conn: Conn
-  ): Seq[Statement] = if (txMolecules.nonEmpty) {
-    val txElements = txMolecules.flatMap { mol =>
-      mol._model.elements.flatMap {
-        case Composite(elements) => elements
-        case element             => Seq(element)
-      }
-    }
-    val txModel    = Model(Seq(TxMetaData(txElements)))
-    conn.modelTransformer(txModel).saveStmts
-  } else Nil
-
 
   /** Invoke transaction function call synchronously (blocks)
     *
@@ -233,19 +153,50 @@ object TxFunctions extends Helpers with JavaUtil {
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Conn): Future[TxReport] = tryTransactTxFn {
+  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
+    for {
+      // Install transaction function if not installed yet
+      txFns <- conn.db.pull("[*]", s":$txFn")
+      _ <- if (txFns.size() == 1) conn.transactRaw(conn.buildTxFnInstall(txFn, args)) else Future.unit
 
-    // Install transaction function if not installed yet
-    if (conn.db.pull("[*]", s":$txFn").size() == 1) {
-      conn.transactRaw(conn.buildTxFnInstall(txFn, args))
+      txStmts <- if (txMolecules.nonEmpty) {
+        val txElements = txMolecules.flatMap { mol =>
+          mol._model.elements.flatMap {
+            case Composite(elements) => elements
+            case element             => Seq(element)
+          }
+        }
+        val txModel    = Model(Seq(TxMetaData(txElements)))
+        conn.modelTransformer(txModel).saveStmts
+      } else Future(Nil)
+
+      res <- {
+        // Build transaction function call clause
+        val txFnInvocationClauses = list(
+          list(s":$txFn" +: txStmts +: args.map(_.asInstanceOf[AnyRef]): _*)
+        )
+
+        // Invoke transaction function and retrieve result
+        conn.transactRaw(txFnInvocationClauses)
+      }
+    } yield res
+  } catch {
+    case e: ExecutionExc => e.getMessage match {
+      case msg if msg.startsWith("java.lang.NoClassDefFoundError: scala") =>
+        Future.failed(new TxFnException(excMissingScalaJar(e)))
+
+      case msg if msg.startsWith("java.lang.NoClassDefFoundError: molecule") =>
+        Future.failed(new TxFnException(excMissingMoleculeClass(e)))
+
+      case msg if msg.startsWith("java.lang.NoSuchMethodError: molecule") =>
+        Future.failed(new TxFnException(excMissingMoleculeMethod(e)))
+
+      case _ =>
+        Future.failed(new TxFnException(e.getMessage.drop(redundant)))
     }
 
-    // Build transaction function call clause
-    val txFnInvocationClauses = list(list(s":$txFn" +:
-      txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))
-
-    // Invoke transaction function and retrieve result from ListenableFuture synchronously
-    conn.transactRaw(txFnInvocationClauses)
+    case NonFatal(e) =>
+      Future.failed(new TxFnException(e.getMessage.drop(redundant)))
   }
 
 
@@ -253,41 +204,12 @@ object TxFunctions extends Helpers with JavaUtil {
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Conn): Unit = {
+  )(implicit conn: Conn, ec: ExecutionContext): Unit = {
     // Use temporary branch of db to not changing any live data
     conn.testDbWith()
     // Print tx report to console
-    txFnCall(txFn, txMolecules, args: _*)(conn).foreach(_.inspect)
+    txFnCall(txFn, txMolecules, args: _*).foreach(_.inspect)
     conn.useLiveDb
-  }
-
-
-  private[molecule] def asyncTxFnCall(
-    txFn: String,
-    txMolecules: Seq[Molecule],
-    args: Any*
-  )(implicit conn: Conn): Future[TxReport] = try {
-//  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
-    val txFnInstallFuture: Future[Any] = {
-      // Install transaction function if not installed yet
-      // todo: pull call is blocking - can we make it non-blocking too?
-      if (conn.db.pull("[*]", s":$txFn").size() == 1) {
-        // Install tx function
-        conn.transactRaw(conn.buildTxFnInstall(txFn, args))
-      } else {
-        // Tx function already installed
-        Future.unit
-      }
-    }
-
-    txFnInstallFuture.flatMap { txFnInstalled =>
-      // Build transaction function call clause
-      val txFnInvocationClause = list(list(s":$txFn" +:
-        txStmts(txMolecules, conn) +: args.map(_.asInstanceOf[AnyRef]): _*))
-      conn.transactRaw(txFnInvocationClause)
-    }
-  } catch {
-    case NonFatal(e) => Future.failed(e)
   }
 }
 

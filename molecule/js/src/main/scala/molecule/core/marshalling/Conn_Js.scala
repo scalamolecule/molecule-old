@@ -1,10 +1,18 @@
 package molecule.core.marshalling
 
-import boopickle.Default.compositePickler
+import java.io.Reader
+import java.util
+import java.util.{Date, List => jList}
+import boopickle.Default._
+import molecule.core.ast.elements.Model
 import molecule.core.data.SchemaTransaction
 import molecule.core.ops.ColOps
 import molecule.core.util.Helpers
+import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
+import molecule.datomic.base.ast.tempDb.TempDb
+import molecule.datomic.base.ast.transactionModel.Statement
+import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
 import molecule.datomic.base.transform.Query2String
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,46 +26,93 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param dbProxy0 Db coordinates to access db on server side
   */
-trait Conn_Js extends ConnProxy with ColOps with Helpers {
+trait Conn_Js extends Conn with ColOps with Helpers {
 
   val isJsPlatform: Boolean = true
 
   override lazy val moleculeRpc: MoleculeRpc = MoleculeWebClient.moleculeRpc
 
+  override def usingTempDb(tempDb: TempDb): Conn = ???
 
-  private[molecule] override def qAsync[Tpl](
-    query: Query,
-    n: Int,
-    indexes: List[(Int, Int, Int, Int)],
-    qr2tpl: QueryResult => Int => Tpl
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = {
-    condense(
-      Future {
-        val q2s          = Query2String(query)
-        val datalogQuery = q2s.multiLine(60)
-        val p            = q2s.p
-        val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-        val (l, ll, lll) = marshallInputs(query)
-        // Fetch QueryResult with Ajax call via typed Sloth wire
-        moleculeRpc.queryAsync(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
-          .recover { exc => Left(exc) }
-          .map {
-            case Right(qr) =>
-              val maxRows    = if (n == -1) qr.maxRows else n
-              val tplsBuffer = new ListBuffer[Tpl]
-              val columns    = qr2tpl(qr) // macro generated extractor
-              var rowIndex   = 0
-              while (rowIndex < maxRows) {
-                tplsBuffer += columns(rowIndex)
-                rowIndex += 1
-              }
-              Right(tplsBuffer.toList)
+  override def liveDbUsed: Boolean = ???
 
-            case Left(err) => Left(err) // error from QueryExecutor
-          }
-      }.flatten
-    )
-  }
+  override def testDb(db: DatomicDb): Unit = ???
+
+  override def testDbAsOfNow: Unit = ???
+
+  override def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def testDbAsOf(d: Date)(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def testDbAsOf(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def testDbSince(tOrTx: Long)(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def testDbWith(txData: Future[Seq[Statement]]*)
+                         (implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def testDbWith(txDataJava: util.List[util.List[_]])(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  override def useLiveDb: Unit = ???
+
+  override def db: DatomicDb = ???
+
+  override def entity(id: Any): DatomicEntity = ???
+
+
+  override def transactRaw(
+    javaStmts: util.List[_],
+    scalaStmts: Future[Seq[Statement]]
+  )(implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  override def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
+                       (implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  override def transact(edn: String, scalaStmts: Future[Seq[Statement]])
+                       (implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  override def transact(stmtsReader: Reader)
+                       (implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  override def transact(edn: String)
+                       (implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  override def transact(scalaStmts: Future[Seq[Statement]])
+                       (implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  private[molecule] override def buildTxFnInstall(
+    txFn: String,
+    args: Seq[Any]): util.List[_] = ???
+
+
+  override def q(query: String, inputs: Any*)(implicit ec: ExecutionContext): Future[ List[List[AnyRef]]] = ???
+
+  override def q(db: DatomicDb, query: String, inputs: Seq[Any])(implicit ec: ExecutionContext): Future[ List[List[AnyRef]]] = ???
+
+  override def qRaw(query: String, inputs: Any*)(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+
+  override def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+
+  override def query(model: Model, query: Query)(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+
+  override def _query(model: Model, query: Query, _db: Option[DatomicDb])(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+
+  override def _index(model: Model)(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]] ]= ???
+
+  private[molecule] override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
+
+  override def inspect(
+    clazz: String,
+    threshold: Int,
+    max: Int,
+    showStackTrace: Boolean,
+    maxLevel: Int,
+    showBi: Boolean
+  )(id: Int, params: Any*): Unit = ???
 }
 
 object Conn_Js {

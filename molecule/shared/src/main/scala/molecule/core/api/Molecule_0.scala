@@ -154,23 +154,23 @@ import scala.util.control.NonFatal
   * */
 trait Molecule_0[Obj, Tpl]
   extends Marshalling[Obj, Tpl]
-  with CastHelpersTypes
-  with GetTplArray[Obj, Tpl]
-  with GetTplIterable[Obj, Tpl]
-  with GetTplList[Obj, Tpl]
-  with GetObjArray[Obj, Tpl]
-  with GetObjIterable[Obj, Tpl]
-  with GetObjList[Obj, Tpl]
-  with GetRaw
-  with ShowInspect[Obj, Tpl]
-  with Helpers {
+    with CastHelpersTypes
+    with GetTplArray[Obj, Tpl]
+    with GetTplIterable[Obj, Tpl]
+    with GetTplList[Obj, Tpl]
+    with GetObjArray[Obj, Tpl]
+    with GetObjIterable[Obj, Tpl]
+    with GetObjList[Obj, Tpl]
+    with GetRaw
+    with ShowInspect[Obj, Tpl]
+    with Helpers {
 
 
   // Dynamic molecule ==========================================================
 
   def apply(body: Obj => Unit): DynamicMolecule with Obj = macro MakeMoleculeDynamic.apply[Obj]
   // todo
-//  def apply(body: Obj => Unit): Future[DynamicMolecule with Obj] = macro MakeMoleculeDynamic.apply[Obj]
+  //  def apply(body: Obj => Unit): Future[DynamicMolecule with Obj] = macro MakeMoleculeDynamic.apply[Obj]
 
 
   // Save ======================================================================
@@ -196,21 +196,17 @@ trait Molecule_0[Obj, Tpl]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
     */
-  def save(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try{
+  def save(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
     VerifyModel(_model, "save")
     if (conn.isJsPlatform) {
       for {
-        saveStmts <- conn.modelTransformerAsync(_model).saveStmts
+        saveStmts <- conn.modelTransformer(_model).saveStmts
         (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts, conn)
-        result <- condense(conn.moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
+        result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
       } yield result
     } else {
-//      for {
-//        saveStmts <- conn.modelTransformerAsync(_model).saveStmts
-//        result <- conn.transact(saveStmts)
-//      } yield result
       conn.transact(
-        conn.modelTransformerAsync(_model).saveStmts
+        conn.modelTransformer(_model).saveStmts
       )
     }
   } catch {
@@ -225,17 +221,7 @@ trait Molecule_0[Obj, Tpl]
     */
   def getSaveStmts(implicit conn: Conn): Future[Seq[Statement]] = try {
     VerifyModel(_model, "save")
-//    val transformer = conn.modelTransformer(_model)
-//    val stmts       = try {
-//      transformer.saveStmts
-//    } catch {
-//      case e: Throwable =>
-//        println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-//        conn.inspect("output.Molecule.getSaveTx", 1)(1, _model, transformer.genericStmts)
-//        throw e
-//    }
-//    stmts
-    conn.modelTransformerAsync(_model).saveStmts
+    conn.modelTransformer(_model).saveStmts
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
@@ -311,21 +297,21 @@ trait Molecule_0[Obj, Tpl]
 
 
   protected def _insert(conn: Conn, dataRows: Iterable[Seq[Any]])
-                            (implicit ec: ExecutionContext): Future[TxReport] = try{
+                       (implicit ec: ExecutionContext): Future[TxReport] = try {
     VerifyModel(_model, "insert")
     if (conn.isJsPlatform) {
       for {
-        insertStmts <- conn.modelTransformerAsync(_model).insertStmts(untupled(dataRows))
+        insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
         (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
-        result <- condense(conn.moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
+        result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
       } yield result
     } else {
-//      for {
-//        insertStmts <- conn.modelTransformerAsync(_model).insertStmts(untupled(dataRows))
-//        result <- conn.transact(insertStmts)
-//      } yield result
+      //      for {
+      //        insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+      //        result <- conn.transact(insertStmts)
+      //      } yield result
       conn.transact(
-        conn.modelTransformerAsync(_model).insertStmts(untupled(dataRows))
+        conn.modelTransformer(_model).insertStmts(untupled(dataRows))
       )
     }
   } catch {
@@ -334,7 +320,7 @@ trait Molecule_0[Obj, Tpl]
 
   protected def _getInsertStmts(conn: Conn, dataRows: Iterable[Seq[Any]]): Future[Seq[Statement]] = try {
     VerifyModel(_model, "insert")
-    conn.modelTransformerAsync(_model).insertStmts(untupled(dataRows))
+    conn.modelTransformer(_model).insertStmts(untupled(dataRows))
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
@@ -366,17 +352,17 @@ trait Molecule_0[Obj, Tpl]
     VerifyModel(_model, "update")
     if (conn.isJsPlatform) {
       for {
-        updateStmts <- conn.modelTransformerAsync(_model).updateStmts
+        updateStmts <- conn.modelTransformer(_model).updateStmts
         (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts, conn)
-        result <- condense(conn.moleculeRpc.transactAsync(conn.dbProxy, stmtsEdn, uriAttrs))
+        result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
       } yield result
     } else {
-//      for {
-//        updateStmts <- conn.modelTransformerAsync(_model).updateStmts
-//        result <- conn.transact(updateStmts)
-//      } yield result
+      //      for {
+      //        updateStmts <- conn.modelTransformer(_model).updateStmts
+      //        result <- conn.transact(updateStmts)
+      //      } yield result
       conn.transact(
-        conn.modelTransformerAsync(_model).updateStmts
+        conn.modelTransformer(_model).updateStmts
       )
     }
   } catch {
@@ -390,9 +376,9 @@ trait Molecule_0[Obj, Tpl]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  def getUpdateStmts(implicit conn: Conn): Future[Seq[Statement]] = try{
+  def getUpdateStmts(implicit conn: Conn): Future[Seq[Statement]] = try {
     VerifyModel(_model, "update")
-    conn.modelTransformerAsync(_model).updateStmts
+    conn.modelTransformer(_model).updateStmts
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }

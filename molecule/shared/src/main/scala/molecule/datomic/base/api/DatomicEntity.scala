@@ -190,7 +190,7 @@ trait DatomicEntity {
     * @param metaMolecule Transaction meta data molecule
     * @return [[RetractMolecule RetractMolecule]] - a simple wrapper for adding retraction tx meta data
     */
-  def Tx(txMeta: Molecule): RetractMolecule
+  def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): RetractMolecule
 
   /** Get entity graph as Map.
     * <br><br>
@@ -443,5 +443,5 @@ trait DatomicEntity {
 
   protected def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]]
 
-  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]]
+  def sortList(l: List[Any]): List[Any]
 }

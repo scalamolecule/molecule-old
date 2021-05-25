@@ -3,17 +3,19 @@ package molecule.datomic.client.facade
 import datomic.Util.read
 import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
+import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.sys.process._
+import scala.util.control.NonFatal
 
 
 /** Datomic facade for peer-server.
- *
- * @param accessKey
- * @param secret
- * @param endpoint
- * @param validateHostnames
- */
+  *
+  * @param accessKey
+  * @param secret
+  * @param endpoint
+  * @param validateHostnames
+  */
 case class Datomic_PeerServer(
   accessKey: String,
   secret: String,
@@ -24,46 +26,44 @@ case class Datomic_PeerServer(
   AsyncDatomic.clientPeerServer(accessKey, secret, endpoint, validateHostnames)
 ) {
 
-  def connectionError: Option[String] = try {
+  def connectionError(msg: String) = throw new RuntimeException(
+    "\nPeer Server not running. Please start it with something like" +
+      "\nbin/run -m datomic.peer-server -h localhost -p 8998 -a key,secret -d db-name,datomic:mem://db-name" +
+      "\nhttps://docs.datomic.com/on-prem/peer-server.html\n" + msg
+  )
+
+  def connect(dbName: String)
+             (implicit ec: ExecutionContext): Future[Conn_Client] = try {
     s"curl -k -S -s https://$endpoint/health".!!.trim match {
-      case "ok" => None
-      case err  => Some(err)
+      case "ok" => {
+        getServedDatabases().map { servedDbs =>
+          if (servedDbs.isEmpty)
+            throw new RuntimeException("Found no database served by the Peer Server")
+
+          if (!servedDbs.contains(dbName))
+            throw new RuntimeException(
+              s"Couldn't find db `$dbName` among databases currently served by the Peer Server:\n" +
+                servedDbs.mkString("\n")
+            )
+
+          Conn_Client(client, clientAsync, dbName)
+        }
+      }
+      case err  => Future.failed(connectionError(err))
     }
   } catch {
-    case e: Throwable => Some(e.toString)
+    case NonFatal(exc) => Future.failed(connectionError(exc.toString))
   }
 
-  def connect(dbName: String): Conn_Client = {
-    connectionError.map(err =>
-      throw new RuntimeException(
-        "\nPeer Server not running. Please start it with something like" +
-          "\nbin/run -m datomic.peer-server -h localhost -p 8998 -a key,secret -d db-name,datomic:mem://db-name" +
-          "\nhttps://docs.datomic.com/on-prem/peer-server.html\n" + err
-      )
-    )
-
-    val servedDbs = getServedDatabases()
-
-    if (servedDbs.isEmpty)
-      throw new RuntimeException("Found no database served by the Peer Server")
-
-    if (!servedDbs.contains(dbName))
-      throw new RuntimeException(
-        s"Couldn't find db `$dbName` among databases currently served by the Peer Server:\n" +
-          servedDbs.mkString("\n")
-      )
-
-    Conn_Client(client, clientAsync, dbName)
-  }
-
-  def getServedDatabases(timeout: Int = 0): List[String] = {
+  def getServedDatabases(timeout: Int = 0)
+                        (implicit ec: ExecutionContext): Future[List[String]] = Future {
     client.listDatabases(timeout).asScala.toList.sorted
   }
 
 
-  def checkNotLambda: Any => Boolean = {
-    val fulltext = read(":db/fulltext")
-    (k: Any) => k == fulltext
-  }
+  //  def checkNotLambda: Any => Boolean = {
+  //    val fulltext = read(":db/fulltext")
+  //    (k: Any) => k == fulltext
+  //  }
 }
 

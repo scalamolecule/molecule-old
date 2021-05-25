@@ -129,10 +129,4 @@ trait Helpers extends DateHandling {
     println(s"TIME $n: " + formatter.format(d))
     time0 = System.currentTimeMillis()
   }
-
-  def condense[T](either: Future[Either[Throwable, T]])
-              (implicit ec: ExecutionContext): Future[T] = either.flatMap {
-    case Right(res) => Future.successful(res)
-    case Left(err)  => Future.failed(err)
-  }
 }

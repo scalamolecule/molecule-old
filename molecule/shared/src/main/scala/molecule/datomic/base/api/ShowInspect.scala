@@ -1,6 +1,6 @@
 package molecule.datomic.base.api
 
-import java.util.{Date, List => jList, Map => jMap, Set => jSet}
+import java.util.{Date, List => jList, Map => jMap, Set => jSet, Collection => jCollection}
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 //import clojure.lang.{PersistentHashSet, PersistentVector}
@@ -83,59 +83,58 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
       var i = 0
       n.size match {
-        case 0 => rows.forEach { row =>
+        case 0 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2))
           }
-        }
-        case 1 => rows.forEach { row =>
+        })
+        case 1 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2) + p(row.get(0), n(0)))
           }
-        }
-        case 2 => rows.forEach { row =>
+        })
+        case 2 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)))
           }
-        }
-        case 3 => rows.forEach { row =>
+        })
+        case 3 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)))
           }
-        }
-        case 4 => rows.forEach { row =>
+        })
+        case 4 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)))
           }
-        }
-        case 5 => rows.forEach { row =>
+        })
+        case 5 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)))
           }
-        }
-        case 6 => rows.forEach { row =>
+        })
+        case 6 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)))
           }
-        }
-        case 7 => rows.forEach { row =>
+        })
+        case 7 => rows.map(_.forEach { row =>
           i += 1;
           if (i <= 500) {
             println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)) + p(row.get(6), n(6)))
           }
-        }
+        })
       }
 
       println("-----" + "-" * pad)
-      if (rows.size > 500)
-        println(s"(showing 500 out of ${rows.size} rows)")
+      rows.map(rows => if (rows.size > 500) println(s"(showing 500 out of ${rows.size} rows)"))
       println()
     }
 
@@ -163,7 +162,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       recurse(0, Seq.empty[(Int, Boolean, Boolean, Boolean)], _model.elements)._2
     }
 
-    def resolve(rawRows: Iterable[jList[AnyRef]]): Seq[ListBuffer[Any]] = {
+    //    def resolve(rawRows: Future[Iterable[jList[AnyRef]]]): Seq[ListBuffer[Any]] = {
+    def resolve(rawRows: Future[jCollection[jList[AnyRef]]]): Future[Seq[ListBuffer[Any]]] = {
       def cardOneOpt(v: Any, isDate: Boolean): Option[String] = {
         if (v == null) {
           Option.empty[String]
@@ -250,33 +250,37 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
         }
       }
 
-      val rowLength = rawRows.headOption.fold(0)(_.size)
-      val rows1     = new ListBuffer[ListBuffer[Any]]
-      var i         = 0
-      var j         = 0
-      val it        = rawRows.iterator
-      while (it.hasNext) {
-        val oldRow = it.next()
-        val newRow = new ListBuffer[Any]
-        j = 0
-        while (j < rowLength) {
-          val v = oldRow.get(j)
-          newRow += (outputMatrix(j) match {
-            case (_, _, _, true)       => v
-            case (1, false, true, _)   => date2str(v.asInstanceOf[Date])
-            case (1, true, isDate, _)  => cardOneOpt(v, isDate)
-            case (2, false, isDate, _) => cardMany(v, isDate)
-            case (2, true, isDate, _)  => cardManyOpt(v, isDate)
-            case (3, false, _, _)      => cardMap(v)
-            case (3, true, _, _)       => cardMapOpt(v)
-            case (_, _, _, _)          => v
-          })
-          j += 1
+      rawRows.map { rawRows =>
+        var rowLength = 0
+        val rows1     = new ListBuffer[ListBuffer[Any]]
+        var i         = 0
+        var j         = 0
+        val it        = rawRows.iterator
+        while (it.hasNext) {
+          j = 0
+          val rawRow = it.next()
+          if (i == 0)
+            rowLength = rawRow.size()
+          val newRow = new ListBuffer[Any]
+          while (j < rowLength) {
+            val v = rawRow.get(j)
+            newRow += (outputMatrix(j) match {
+              case (_, _, _, true)       => v
+              case (1, false, true, _)   => date2str(v.asInstanceOf[Date])
+              case (1, true, isDate, _)  => cardOneOpt(v, isDate)
+              case (2, false, isDate, _) => cardMany(v, isDate)
+              case (2, true, isDate, _)  => cardManyOpt(v, isDate)
+              case (3, false, _, _)      => cardMap(v)
+              case (3, true, _, _)       => cardMapOpt(v)
+              case (_, _, _, _)          => v
+            })
+            j += 1
+          }
+          rows1 += newRow
+          i += 1
         }
-        rows1 += newRow
-        i += 1
+        rows1.toList
       }
-      rows1.toList
     }
 
     def data(): Unit = {
@@ -291,25 +295,28 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       val db    = conn.db
       val first = if (_query.i.rules.isEmpty) Seq(db) else Seq(db, rules)
       val rows  = try {
-        resolve(conn._query(_model, _query, Some(db)).asScala.take(500))
+        //        resolve(conn._query(_model, _query, Some(db)).asScala.take(500))
+        resolve(conn._query(_model, _query, Some(db)))
       } catch {
-        case ex: Throwable =>
-          throw new QueryException(ex, _model, _query, first ++ ins, p)
+        case NonFatal(exc) =>
+          Future.failed(new QueryException(exc, _model, _query))
       }
 
       val rulesOut: String = if (_query.i.rules.isEmpty) "none\n\n" else "[\n " + _query.i.rules.map(Query2String(_query).p(_)).mkString("\n ") + "\n]\n\n"
       val inputs  : String = if (ins.isEmpty) "none\n\n" else "\n" + ins.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1}").mkString("\n") + "\n\n"
-      val outs    : String = rows.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1.mkString("[", "  ", "]")}").mkString("\n")
-      println(
-        "\n--------------------------------------------------------------------------\n" +
-          _model + "\n\n" +
-          _query + "\n\n" +
-          _query.datalog + "\n\n" +
-          "RULES: " + rulesOut +
-          "INPUTS: " + inputs +
-          "OUTPUTS:\n" + outs + "\n(showing up to 500 rows)" +
-          "\n--------------------------------------------------------------------------\n"
-      )
+      rows.map { rows =>
+        val outs = rows.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1.mkString("[", "  ", "]")}").mkString("\n")
+        println(
+          "\n--------------------------------------------------------------------------\n" +
+            _model + "\n\n" +
+            _query + "\n\n" +
+            _query.datalog + "\n\n" +
+            "RULES: " + rulesOut +
+            "INPUTS: " + inputs +
+            "OUTPUTS:\n" + outs + "\n(showing up to 500 rows)" +
+            "\n--------------------------------------------------------------------------\n"
+        )
+      }
     }
 
     _model.elements.head match {
@@ -486,7 +493,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @return Unit
     */
   def inspectSave(implicit conn: Conn): Future[Unit] = {
-    val transformer = conn.modelTransformerAsync(_model)
+    val transformer = conn.modelTransformer(_model)
     try {
       VerifyModel(_model, "save")
       transformer.saveStmts.map(stmts =>
@@ -502,7 +509,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
 
   protected def _inspectInsert(conn: Conn, dataRows: Iterable[Seq[Any]]): Future[Unit] = {
-    val transformer = conn.modelTransformerAsync(_model)
+    val transformer = conn.modelTransformer(_model)
     val data        = untupled(dataRows)
     try {
       Future {
@@ -530,7 +537,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @return
     */
   def inspectUpdate(implicit conn: Conn): Future[Unit] = {
-    val transformer = conn.modelTransformerAsync(_model)
+    val transformer = conn.modelTransformer(_model)
     try {
       Future {
         VerifyModel(_model, "update")

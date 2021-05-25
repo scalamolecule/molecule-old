@@ -9,6 +9,7 @@ import datomicScala.client.api.{Datom => ClientDatom}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade.{Conn, DatomicDb}
 import scala.collection.JavaConverters._
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Datomic Db facade for client api (peer-server/cloud/dev-local).
  *
@@ -18,20 +19,22 @@ case class DatomicDb_Client(clientDb: Db) extends DatomicDb {
 
   def getDatomicDb: AnyRef = clientDb.datomicDb
 
-  def t: Long = clientDb.t
+  def t(implicit ec: ExecutionContext): Future[Long] = Future(clientDb.t)
 
-  def tx: Long = Peer.toTx(t).asInstanceOf[Long]
+  def tx(implicit ec: ExecutionContext): Future[Long] = t.map(t => Peer.toTx(t).asInstanceOf[Long])
 
-  def txInstant: Date = clientDb.pull("[:db/txInstant]", tx)
-    .get(Util.read(":db/txInstant")).asInstanceOf[Date]
+  def txInstant(implicit ec: ExecutionContext): Future[Date] = tx.map(tx =>
+    clientDb.pull("[:db/txInstant]", tx).get(Util.read(":db/txInstant")).asInstanceOf[Date]
+  )
 
-  def entity(conn: Conn, id: Any): DatomicEntity = {
+  def entity(conn: Conn, id: Any): DatomicEntity =
     DatomicEntity_Client(conn.asInstanceOf[Conn_Client], id)
-  }
 
-  def pull(pattern: String, eid: Any): util.Map[_, _] = {
+
+  def pull(pattern: String, eid: Any)
+          (implicit ec: ExecutionContext): Future[util.Map[_, _]] = Future(
     clientDb.pull(pattern, eid)
-  }
+  )
 
   def datoms(
     index: String,
@@ -39,9 +42,9 @@ case class DatomicDb_Client(clientDb: Db) extends DatomicDb {
     timeout: Int = 0,
     offset: Int = 0,
     limit: Int = 1000
-  ): jStream[ClientDatom] = {
+  )(implicit ec: ExecutionContext): Future[jStream[ClientDatom]] = Future(
     clientDb.datoms(index, components.asJava, timeout, offset, limit)
-  }
+  )
 
   def indexRange(
     attrId: String,
@@ -50,7 +53,7 @@ case class DatomicDb_Client(clientDb: Db) extends DatomicDb {
     timeout: Int = 0,
     offset: Int = 0,
     limit: Int = 1000
-  ): jStream[ClientDatom] = {
+  )(implicit ec: ExecutionContext): Future[jStream[ClientDatom]] = Future(
     clientDb.indexRange(attrId, startValue, endValue, timeout, offset, limit)
-  }
+  )
 }

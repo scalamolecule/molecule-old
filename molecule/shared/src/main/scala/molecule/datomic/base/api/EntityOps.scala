@@ -108,7 +108,7 @@ trait EntityOps {
       try {
         val txMetaDataModel = Model(txMetaDataMolecules.map(m => TxMetaData(m._model.elements)))
         VerifyModel(txMetaDataModel, "save") // can throw exception
-        val txMetaDataStmts = conn.modelTransformerAsync(txMetaDataModel).saveStmts
+        val txMetaDataStmts = conn.modelTransformer(txMetaDataModel).saveStmts
         conn.transact(Future.sequence(Seq(retractStmts, txMetaDataStmts)).map(_.flatten))
       } catch {
         case NonFatal(exc) => Future.failed(exc)
@@ -150,7 +150,10 @@ trait EntityOps {
     * @param conn                Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Unit (prints to output)
     */
-  def inspectRetract(eids: Iterable[Long], txMetaDataMolecules: Molecule*)(implicit conn: Conn): Unit = {
+  def inspectRetract(
+    eids: Iterable[Long],
+    txMetaDataMolecules: Molecule*
+  )(implicit conn: Conn, ec: ExecutionContext): Future[Unit] = {
     val retractStmts = eids.toSeq.distinct map RetractEntity
 
     val txMetaDataModel = if (txMetaDataMolecules.isEmpty) {
@@ -168,15 +171,12 @@ trait EntityOps {
     }
 
     val transformer = conn.modelTransformer(txMetaDataModel)
-
-    val stmts = try {
-      Seq(retractStmts ++ transformer.saveStmts)
-    } catch {
-      case e: Throwable =>
-        println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-        conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.genericStmts)
-        throw e
+    conn.modelTransformer(txMetaDataModel).saveStmts.map{saveStmts =>
+      val stmts = Seq(retractStmts ++ saveStmts)
+      conn.inspect(
+        "molecule.core.Datomic.inspectRetract", 1
+      )(1, txMetaDataModel, transformer.genericStmts, stmts)
     }
-    conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.genericStmts, stmts)
+
   }
 }

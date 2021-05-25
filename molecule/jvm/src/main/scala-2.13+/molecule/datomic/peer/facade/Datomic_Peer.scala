@@ -4,8 +4,10 @@ import java.util.UUID.randomUUID
 import datomic.Peer
 import molecule.core.data.SchemaTransaction
 import molecule.datomic.base.facade.exception.DatomicFacadeException
+import molecule.datomic.client.facade.Conn_Client
 import scala.jdk.CollectionConverters._
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 
 /** Facade to Datomic Peer with selected methods.
@@ -14,125 +16,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @groupprio 10
   * */
 trait Datomic_Peer {
-
-  /** Get database names
-    *
-    * Datomic uses a URI to identify which databases to find and is comprised of
-    * a protocol and a host identifier with an added asterisk '*'.
-    *
-    * Here are some examples of protocol/dbIdentifier settings for various
-    * systems on a local machine:
-    *
-    * | Peer        | protocol | host            | Comment                        |
-    * | ---         | :---:    | ---             | ---                            |
-    * | In-memory   | mem      |                 |                                |
-    * | Free        | free     | localhost:4334/ | With a running Free transactor |
-    * | Starter/Pro | dev      | localhost:4334/ | With a running Pro transactor  |
-    *
-    * Host could also be remote. For more info on the db URI syntax,
-    *
-    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
-    * @param protocol
-    * @param host
-    * @return List of database names
-    */
-  def getDatabaseNames(
-    protocol: String = "mem",
-    host: String = ""): List[String] = try {
-    Peer.getDatabaseNames(s"datomic:$protocol://$host*").asScala.toList
-  } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
-  }
-
-  /** Create database
-    *
-    * Datomic uses a URI to identify a database and is comprised of a protocol
-    * and a database identifier.
-    *
-    * Here are some examples of protocol/dbIdentifier settings for various
-    * systems on a local machine:
-    *
-    * | Peer        | protocol | db identifier         | Comment                        |
-    * | ---         | :---:    | ---                   | ---                            |
-    * | In-memory   | mem      | dbName                |                                |
-    * | Free        | free     | localhost:4334/dbName | With a running Free transactor |
-    * | Starter/Pro | dev      | localhost:4334/dbName | With a running Pro transactor  |
-    *
-    * Host could also be remote. For more info on the db URI syntax,
-    *
-    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
-    * @param protocol
-    * @param dbIdentifier
-    * @return True on success
-    */
-  def createDatabase(
-    protocol: String = "mem",
-    dbIdentifier: String = ""): Boolean = try {
-    Peer.createDatabase(s"datomic:$protocol://$dbIdentifier")
-  } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
-  }
-
-  /** Delete database
-    *
-    * Datomic uses a URI to identify a database and is comprised of a protocol
-    * and a database identifier.
-    *
-    * Here are some examples of protocol/dbIdentifier settings for various
-    * systems on a local machine:
-    *
-    * | Peer        | protocol | db identifier         | Comment                        |
-    * | ---         | :---:    | ---                   | ---                            |
-    * | In-memory   | mem      | dbName                |                                |
-    * | Free        | free     | localhost:4334/dbName | With a running Free transactor |
-    * | Starter/Pro | dev      | localhost:4334/dbName | With a running Pro transactor  |
-    *
-    * Host could also be remote. For more info on the db URI syntax,
-    *
-    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
-    * @param protocol
-    * @param dbIdentifier
-    * @return True on success
-    */
-  def deleteDatabase(
-    protocol: String = "mem",
-    dbIdentifier: String = "localhost:4334/"): Boolean = try {
-    Peer.deleteDatabase(s"datomic:$protocol://$dbIdentifier")
-  } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
-  }
-
-  /** Rename database
-    *
-    * Datomic uses a URI to identify a database and is comprised of a protocol
-    * and a database identifier.
-    *
-    * Here are some examples of protocol/dbIdentifier settings for various
-    * systems on a local machine:
-    *
-    * | Peer        | protocol | db identifier         | new db name | Comment                        |
-    * | ---         | :---:    | ---                   | ---         | ---                            |
-    * | In-memory   | mem      | dbName                | newDbName   |                                |
-    * | Free        | free     | localhost:4334/dbName | newDbName   | With a running Free transactor |
-    * | Starter/Pro | dev      | localhost:4334/dbName | newDbName   | With a running Pro transactor  |
-    *
-    * Host could also be remote. For more info on the db URI syntax,
-    *
-    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
-    * @param protocol
-    * @param dbIdentifier
-    * @return True on success
-    */
-  def renameDatabase(
-    protocol: String = "mem",
-    dbIdentifier: String = "localhost:4334/",
-    newDbName: String,
-  ): Boolean = try {
-    Peer.renameDatabase(s"datomic:$protocol://$dbIdentifier", newDbName)
-  } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
-  }
-
 
   /** Connect to Peer database
     *
@@ -158,11 +41,121 @@ trait Datomic_Peer {
   def connect(
     protocol: String = "mem",
     dbIdentifier: String = ""
-  ): Conn_Peer = try {
-    val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    Conn_Peer(s"datomic:$protocol://$id")
-  } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = Future {
+      val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
+      Conn_Peer(s"datomic:$protocol://$id")
+  }
+
+  /** Get database names
+    *
+    * Datomic uses a URI to identify which databases to find and is comprised of
+    * a protocol and a host identifier with an added asterisk '*'.
+    *
+    * Here are some examples of protocol/dbIdentifier settings for various
+    * systems on a local machine:
+    *
+    * | Peer        | protocol | host            | Comment                        |
+    * | ---         | :---:    | ---             | ---                            |
+    * | In-memory   | mem      |                 |                                |
+    * | Free        | free     | localhost:4334/ | With a running Free transactor |
+    * | Starter/Pro | dev      | localhost:4334/ | With a running Pro transactor  |
+    *
+    * Host could also be remote. For more info on the db URI syntax,
+    *
+    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
+    * @param protocol
+    * @param host
+    * @return List of database names
+    */
+  def getDatabaseNames(
+    protocol: String = "mem",
+    host: String = ""
+  )(implicit ec: ExecutionContext): Future[List[String]] = Future {
+    Peer.getDatabaseNames(s"datomic:$protocol://$host*").asScala.toList
+  }
+
+  /** Create database
+    *
+    * Datomic uses a URI to identify a database and is comprised of a protocol
+    * and a database identifier.
+    *
+    * Here are some examples of protocol/dbIdentifier settings for various
+    * systems on a local machine:
+    *
+    * | Peer        | protocol | db identifier         | Comment                        |
+    * | ---         | :---:    | ---                   | ---                            |
+    * | In-memory   | mem      | dbName                |                                |
+    * | Free        | free     | localhost:4334/dbName | With a running Free transactor |
+    * | Starter/Pro | dev      | localhost:4334/dbName | With a running Pro transactor  |
+    *
+    * Host could also be remote. For more info on the db URI syntax,
+    *
+    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
+    * @param protocol
+    * @param dbIdentifier
+    * @return True on success
+    */
+  def createDatabase(
+    protocol: String = "mem",
+    dbIdentifier: String = ""
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
+    Peer.createDatabase(s"datomic:$protocol://$dbIdentifier")
+  }
+
+  /** Delete database
+    *
+    * Datomic uses a URI to identify a database and is comprised of a protocol
+    * and a database identifier.
+    *
+    * Here are some examples of protocol/dbIdentifier settings for various
+    * systems on a local machine:
+    *
+    * | Peer        | protocol | db identifier         | Comment                        |
+    * | ---         | :---:    | ---                   | ---                            |
+    * | In-memory   | mem      | dbName                |                                |
+    * | Free        | free     | localhost:4334/dbName | With a running Free transactor |
+    * | Starter/Pro | dev      | localhost:4334/dbName | With a running Pro transactor  |
+    *
+    * Host could also be remote. For more info on the db URI syntax,
+    *
+    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
+    * @param protocol
+    * @param dbIdentifier
+    * @return True on success
+    */
+  def deleteDatabase(
+    protocol: String = "mem",
+    dbIdentifier: String = "localhost:4334/"
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
+    Peer.deleteDatabase(s"datomic:$protocol://$dbIdentifier")
+  }
+  /** Rename database
+    *
+    * Datomic uses a URI to identify a database and is comprised of a protocol
+    * and a database identifier.
+    *
+    * Here are some examples of protocol/dbIdentifier settings for various
+    * systems on a local machine:
+    *
+    * | Peer        | protocol | db identifier         | new db name | Comment                        |
+    * | ---         | :---:    | ---                   | ---         | ---                            |
+    * | In-memory   | mem      | dbName                | newDbName   |                                |
+    * | Free        | free     | localhost:4334/dbName | newDbName   | With a running Free transactor |
+    * | Starter/Pro | dev      | localhost:4334/dbName | newDbName   | With a running Pro transactor  |
+    *
+    * Host could also be remote. For more info on the db URI syntax,
+    *
+    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
+    * @param protocol
+    * @param dbIdentifier
+    * @return True on success
+    */
+  def renameDatabase(
+    protocol: String = "mem",
+    dbIdentifier: String = "localhost:4334/",
+    newDbName: String,
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
+    Peer.renameDatabase(s"datomic:$protocol://$dbIdentifier", newDbName)
   }
 
 
@@ -186,7 +179,9 @@ trait Datomic_Peer {
     schema: SchemaTransaction,
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = recreateDbFromEdn(schema.datomicPeer, protocol, dbIdentifier)
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
+    recreateDbFromEdn(schema.datomicPeer, protocol, dbIdentifier)
+  }
 
 
   /** Deletes existing database (!) and creates a new empty db with schema from Schema Transaction file.
@@ -199,7 +194,6 @@ trait Datomic_Peer {
     *     `implicit val conn = recreateDbFrom(YourDomainSchema)`
     *
     * @group database
-    *
     * @param edns
     * @param protocol
     * @param dbIdentifier
@@ -209,17 +203,14 @@ trait Datomic_Peer {
     edns: Seq[String],
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = {
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    try {
-      deleteDatabase(protocol, id)
-      createDatabase(protocol, id)
-      val conn = connect(protocol, id)
-      edns.foreach(edn => conn.transact(edn))
-      conn
-    } catch {
-      case e: Throwable => throw new DatomicFacadeException(e.toString)
-    }
+    for {
+      _ <- deleteDatabase(protocol, id)
+      _ <- createDatabase(protocol, id)
+      conn <- connect(protocol, id)
+      _ <- Future.sequence(edns.map(edn => conn.transact(edn)))
+    } yield conn
   }
 
 
@@ -241,18 +232,16 @@ trait Datomic_Peer {
     schemaData: java.util.List[_],
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = {
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    try {
-      deleteDatabase(protocol, id)
-      createDatabase(protocol, id)
-      val conn = connect(protocol, id)
-      conn.transactRaw(schemaData)
-      conn
-    } catch {
-      case e: Throwable => throw new DatomicFacadeException(e.toString)
-    }
+        for {
+      _ <- deleteDatabase(protocol, id)
+      _ <- createDatabase(protocol, id)
+      conn <- connect(protocol, id)
+      _ <- conn.transactRaw(schemaData)
+    } yield conn
   }
+
 
   /** Transact schema from generated schema transaction data.
     *
@@ -266,13 +255,12 @@ trait Datomic_Peer {
     schema: SchemaTransaction,
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = try {
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id   = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    val conn = connect(protocol, id)
-    schema.datomicPeer.foreach(edn => conn.transact(edn))
-    conn
-  } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+    for {
+      conn <- connect(protocol, id)
+      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
+    } yield conn
   }
 }
 

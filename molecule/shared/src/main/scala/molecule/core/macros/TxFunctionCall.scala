@@ -15,15 +15,12 @@ class TxFunctionCall(val c: blackbox.Context) extends MacroHelpers {
     val ownerType                         = owner.tpe.toString
     val txFnIdentifier                    = ownerType.take(ownerType.length - 4) + txFn + "__txfn"
     op match {
-      case "sync"    => q"_root_.molecule.core.api.TxFunctions.txFnCall($txFnIdentifier, Seq(..$txMolecules), ..$args)"
-      case "async"   => q"_root_.molecule.core.api.TxFunctions.asyncTxFnCall($txFnIdentifier, Seq(..$txMolecules), ..$args)"
+      case "call"    => q"_root_.molecule.core.api.TxFunctions.txFnCall($txFnIdentifier, Seq(..$txMolecules), ..$args)"
       case "inspect" => q"_root_.molecule.core.api.TxFunctions.inspectTxFnCall($txFnIdentifier, Seq(..$txMolecules), ..$args)"
     }
   }
 
-  final def txFnCall(txFnCall: Tree, txMolecules: Tree*): Tree = resolve(txFnCall, txMolecules, "sync")
-
-  final def asyncTxFnCall(txFnCall: Tree, txMolecules: Tree*): Tree = resolve(txFnCall, txMolecules, "async")
+  final def txFnCall(txFnCall: Tree, txMolecules: Tree*): Tree = resolve(txFnCall, txMolecules, "call")
 
   final def inspectTxFnCall(txFnCall: Tree, txMolecules: Tree*): Tree = resolve(txFnCall, txMolecules, "inspect")
 

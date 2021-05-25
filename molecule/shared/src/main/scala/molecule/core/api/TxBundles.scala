@@ -8,49 +8,22 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait TxBundles extends Helpers {
 
-  /** Transact bundled transaction statements
-    * <br><br>
-    * Supply transaction statements of one or more molecule actions to perform a single atomic transaction.
-    * {{{
-    *   transact(
-    *     // retract entity
-    *     e1.getRetractTx,
-    *     // save new entity
-    *     Ns.int(4).getSaveTx,
-    *     // insert multiple new entities
-    *     Ns.int.getInsertTx(List(5, 6)),
-    *     // update entity
-    *     Ns(e2).int(20).getUpdateTx
-    *   )
-    * }}}
-    *
-    * @group bundled
-    * @param stmtss [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s from multiple molecule operations
-    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
-    */
-  //  def transactBundle(stmtss: Seq[Statement]*)(implicit conn: Conn): TxReport =
-  //    conn.transact(stmtss.flatten)
-
 
   /** Asynchronously transact bundled transaction statements
     *
     * Supply transaction statements of one or more molecule actions to asynchronously
     * transact a single atomic transaction.
     * {{{
-    *   Await.result(
-    *     transactAsync(
-    *       e1.getRetractTx,
-    *       Ns.int(4).getSaveTx,
-    *       Ns.int.getInsertTx(List(5, 6)),
-    *       Ns(e2).int(20).getUpdateTx
-    *     ) map { bundleTx =>
-    *       Ns.int.getAsync map { queryResult =>
-    *         queryResult === List(3, 4, 5, 6, 20)
-    *       }
-    *     },
-    *     2.seconds
-    *   )
+    *   transactBundle(
+    *     e1.getRetractTx,
+    *     Ns.int(4).getSaveTx,
+    *     Ns.int.getInsertTx(List(5, 6)),
+    *     Ns(e2).int(20).getUpdateTx
+    *   ) map { bundleTx =>
+    *     Ns.int.getAsync map { queryResult =>
+    *       queryResult === List(3, 4, 5, 6, 20)
+    *     }
+    *   }
     * }}}
     *
     * @group bundled
@@ -118,16 +91,15 @@ trait TxBundles extends Helpers {
     * @param stmtss [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s from multiple molecule operations
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectTransactBundle(stmtss: Future[Seq[Statement]]*)(implicit conn: Conn, ec: ExecutionContext): Future[Unit] = {
-    // Use temporary branch of db to not changing any live data
-    conn.testDbWith()
-    // Print tx report to console
-    conn.transact(Future.sequence(stmtss).map(_.flatten)).foreach(_.inspect)
-    conn.useLiveDb
-
-    for{
+  def inspectTransactBundle(
+    stmtss: Future[Seq[Statement]]*
+  )(implicit conn: Conn, ec: ExecutionContext): Future[Unit] = {
+    for {
+      // Use temporary branch of db to not changing any live data
       _ <- conn.testDbWith()
 
-    }yield ()
+      // Print tx report to console
+      _ <- conn.transact(Future.sequence(stmtss).map(_.flatten)).map(_.inspect)
+    } yield conn.useLiveDb
   }
 }

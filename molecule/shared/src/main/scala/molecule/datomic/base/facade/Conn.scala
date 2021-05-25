@@ -4,18 +4,21 @@ import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.marshalling.{DbProxy, MoleculeRpc, QueryResult}
-import molecule.core.transform.{ModelTransformer, ModelTransformerAsync}
+import molecule.core.ops.ColOps
+import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb.TempDb
 import molecule.datomic.base.ast.transactionModel.Statement
+import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.TempIdFactory
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Facade to Datomic Connection.
   * */
-trait Conn {
+trait Conn extends ColOps {
 
   /** Flag to indicate if we are on the JS or JVM platform */
   val isJsPlatform: Boolean
@@ -24,7 +27,7 @@ trait Conn {
 
   lazy val dbProxy: DbProxy = ???
 
-  /**  */
+  /** */
   lazy val moleculeRpc: MoleculeRpc = ???
 
   def usingTempDb(tempDb: TempDb): Conn
@@ -45,37 +48,37 @@ trait Conn {
     *
     * @param t Long Time t or tx id
     */
-  def testDbAsOf(t: Long): Unit
+  def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database as of date.
     *
     * @param d Date
     */
-  def testDbAsOf(d: Date): Unit
+  def testDbAsOf(d: Date)(implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database as of transaction report.
     *
     * @param txR Transaction report
     */
-  def testDbAsOf(txR: TxReport): Unit
+  def testDbAsOf(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database since time t.
     *
-    * @param tOrTx Long
+    * @param t Long
     */
-  def testDbSince(tOrTx: Long): Unit
+  def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database since date.
     *
     * @param d Date
     */
-  def testDbSince(d: Date): Unit
+  def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database since transaction report.
     *
     * @param txR Transaction report
     */
-  def testDbSince(txR: TxReport): Unit
+  def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit]
 
 
   /** Use test database with temporary transaction data.
@@ -102,10 +105,11 @@ trait Conn {
     *
     * @param txData List of List of transaction [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s
     */
-  def testDbWith(txData: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit]
+  def testDbWith(txData: Future[Seq[Statement]]*)
+                (implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database with temporary raw Java transaction data. */
-  def testDbWith(txDataJava: jList[jList[_]]): Unit
+  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit]
 
   /* testDbHistory not implemented.
    * Instead, use `testDbAsOfNow`, make changes and get historic data with getHistory calls.
@@ -117,9 +121,8 @@ trait Conn {
   /** Get current test/live db. Test db has preference. */
   def db: DatomicDb
 
-  /** Convenience method to retrieve entity directly from connection. */
+  /** Convenience method to retrieve entity. */
   def entity(id: Any): DatomicEntity
-//  def entity(id: Any): Future[DatomicEntity]
 
 
   /** Transact edn files or other raw transaction data.
@@ -133,23 +136,23 @@ trait Conn {
     *
     * @param javaStmts Raw transaction data, typically from edn file.
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
-//    */
-//  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport
-//
-//  def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport
-//
-//  def transact(edn: String, scalaStmts: Seq[Statement]): TxReport
-//
-//  def transact(stmtsReader: Reader): TxReport
-//
-//  def transact(edn: String): TxReport
-//
-//  /** Transact Seq of Seqs of [[molecule.datomic.base.ast.transactionModel.Statement Statement]]s
-//    *
-//    * @param scalaStmts
-//    * @return [[molecule.datomic.base.facade.TxReport TxReport]]
-//    */
-//  def transact(scalaStmts: Seq[Statement]): TxReport
+    *         // */
+  //  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport
+  //
+  //  def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport
+  //
+  //  def transact(edn: String, scalaStmts: Seq[Statement]): TxReport
+  //
+  //  def transact(stmtsReader: Reader): TxReport
+  //
+  //  def transact(edn: String): TxReport
+  //
+  //  /** Transact Seq of Seqs of [[molecule.datomic.base.ast.transactionModel.Statement Statement]]s
+  //    *
+  //    * @param scalaStmts
+  //    * @return [[molecule.datomic.base.facade.TxReport TxReport]]
+  //    */
+  //  def transact(scalaStmts: Seq[Statement]): TxReport
 
   /** Asynchronously transact edn files or other raw transaction data.
     * {{{
@@ -163,20 +166,22 @@ trait Conn {
     * @param javaStmts Raw transaction data, typically from edn file.
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
-  def transactRaw(javaStmts: jList[_], scalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement]))
-                      (implicit ec: ExecutionContext): Future[TxReport]
+  def transactRaw(
+    javaStmts: jList[_],
+    scalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
+  )(implicit ec: ExecutionContext): Future[TxReport]
 
   def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport]
+              (implicit ec: ExecutionContext): Future[TxReport]
 
   def transact(edn: String, scalaStmts: Future[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport]
+              (implicit ec: ExecutionContext): Future[TxReport]
 
   def transact(stmtsReader: Reader)
-                   (implicit ec: ExecutionContext): Future[TxReport]
+              (implicit ec: ExecutionContext): Future[TxReport]
 
   def transact(edn: String)
-                   (implicit ec: ExecutionContext): Future[TxReport]
+              (implicit ec: ExecutionContext): Future[TxReport]
 
   /** Asynchronously transact Seq of Seqs of [[molecule.datomic.base.ast.transactionModel.Statement Statement]]s
     *
@@ -184,44 +189,13 @@ trait Conn {
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
   def transact(scalaStmts: Future[Seq[Statement]])
-                   (implicit ec: ExecutionContext): Future[TxReport]
+              (implicit ec: ExecutionContext): Future[TxReport]
 
 
   private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_]
 
 
-  // Client query rpc api
-
-  /**
-    *
-    * Only implemented on JS side for rpc
-    *
-    * @param query
-    * @param n
-    * @param indexes
-    * @param qr2tpl
-    * @param ec
-    * @tparam Tpl
-    * @return
-    */
-  private[molecule] def qAsync[Tpl](
-    query: Query,
-    n: Int,
-    indexes: List[(Int, Int, Int, Int)],
-    qr2tpl: QueryResult => Int => Tpl
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = ???
-
-  private[molecule] def getAttrValuesAsync(
-    datalogQuery: String,
-    card: Int,
-    tpe: String
-  )(implicit ec: ExecutionContext): Future[List[String]]
-
-  private[molecule] def entityAttrKeys(
-    eid: Long
-  )(implicit ec: ExecutionContext): Future[List[String]] = ???
-
-  // Query api
+  // Query api ....................................................
 
   /** Query Datomic directly with optional Scala inputs.
     * {{{
@@ -256,7 +230,8 @@ trait Conn {
     * @param inputs Optional input(s) to query
     * @return List[List[AnyRef]]
     * */
-  def q(query: String, inputs: Any*): List[List[AnyRef]]
+  def q(query: String, inputs: Any*)
+       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]]
 
   /** Query Datomic directly with db value and optional Scala inputs.
     * {{{
@@ -296,7 +271,8 @@ trait Conn {
     * @param inputs Seq of optional input(s) to query
     * @return List[List[AnyRef]]
     * */
-  def q(db: DatomicDb, query: String, inputs: Seq[Any]): List[List[AnyRef]]
+  def q(db: DatomicDb, query: String, inputs: Seq[Any])
+       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]]
 
 
   /** Query Datomic directly with optional Scala inputs and get raw Java result.
@@ -328,7 +304,8 @@ trait Conn {
     * @param inputs Optional input(s) to query
     * @return java.util.Collection[java.util.List[AnyRef]]
     * */
-  def qRaw(query: String, inputs: Any*): jCollection[jList[AnyRef]]
+  def qRaw(query: String, inputs: Any*)
+          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
   /** Query Datomic directly with db value and optional Scala inputs and get raw Java result.
     * {{{
@@ -364,7 +341,8 @@ trait Conn {
     * @param inputs0 Seq of optional input(s) to query
     * @return java.util.Collection[java.util.List[AnyRef]]
     * */
-  def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any]): jCollection[jList[AnyRef]]
+  def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])
+          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
 
   /** Query Datomic with Model and Query to get raw Java data.
@@ -382,15 +360,20 @@ trait Conn {
     * @param query Query instance
     * @return java.util.Collection[java.util.List[AnyRef]]
     * */
-  def query(model: Model, query: Query): jCollection[jList[AnyRef]]
+  def query(model: Model, query: Query)
+           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
-  def _query(model: Model, query: Query, _db: Option[DatomicDb] = None): jCollection[jList[AnyRef]]
+  private[molecule] def _query(
+    model: Model,
+    query: Query,
+    _db: Option[DatomicDb] = None
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
-  def _index(model: Model): jCollection[jList[AnyRef]]
+  private[molecule] def _index(model: Model)
+                              (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
 
   def modelTransformer(model: Model): ModelTransformer = ModelTransformer(this, model)
-  def modelTransformerAsync(model: Model): ModelTransformerAsync = ModelTransformerAsync(this, model)
 
   private[molecule] def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 
@@ -402,4 +385,46 @@ trait Conn {
     maxLevel: Int = 99,
     showBi: Boolean = false
   )(id: Int, params: Any*): Unit
+
+
+  // JS query rpc api .........................................
+
+  private[molecule] def jsQuery[Tpl](
+    query: Query,
+    n: Int,
+    indexes: List[(Int, Int, Int, Int)],
+    qr2tpl: QueryResult => Int => Tpl
+  )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
+    val q2s          = Query2String(query)
+    val datalogQuery = q2s.multiLine(60)
+    val p            = q2s.p
+    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+    val (l, ll, lll) = marshallInputs(query)
+    // Fetch QueryResult with Ajax call via typed Sloth wire
+    moleculeRpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
+      .map {
+        qr =>
+          val maxRows    = if (n == -1) qr.maxRows else n
+          val tplsBuffer = new ListBuffer[Tpl]
+          val columns    = qr2tpl(qr) // macro generated extractor
+          var rowIndex   = 0
+          while (rowIndex < maxRows) {
+            tplsBuffer += columns(rowIndex)
+            rowIndex += 1
+          }
+          tplsBuffer.toList
+      }
+  }.flatten
+
+  private[molecule] def jsGetAttrValues(
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    moleculeRpc.getAttrValues(dbProxy, datalogQuery, card, tpe)
+
+  private[molecule] def jsEntityAttrKeys(
+    eid: Long
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    moleculeRpc.entityAttrKeys(dbProxy, eid)
 }
