@@ -13,8 +13,6 @@ import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.tempDb.TempDb
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
-import molecule.datomic.base.transform.Query2String
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Client db connection.
@@ -55,7 +53,8 @@ trait Conn_Js extends Conn with ColOps with Helpers {
   override def testDbWith(txData: Future[Seq[Statement]]*)
                          (implicit ec: ExecutionContext): Future[Unit] = ???
 
-  override def testDbWith(txDataJava: util.List[util.List[_]])(implicit ec: ExecutionContext): Future[Unit] = ???
+  override def testDbWith(txDataJava: util.List[util.List[_]])
+                         (implicit ec: ExecutionContext): Future[Unit] = ???
 
   override def useLiveDb: Unit = ???
 
@@ -89,19 +88,26 @@ trait Conn_Js extends Conn with ColOps with Helpers {
     args: Seq[Any]): util.List[_] = ???
 
 
-  override def q(query: String, inputs: Any*)(implicit ec: ExecutionContext): Future[ List[List[AnyRef]]] = ???
+  override def q(query: String, inputs: Any*)
+                (implicit ec: ExecutionContext): Future[ List[List[AnyRef]]] = ???
 
-  override def q(db: DatomicDb, query: String, inputs: Seq[Any])(implicit ec: ExecutionContext): Future[ List[List[AnyRef]]] = ???
+  override def q(db: DatomicDb, query: String, inputs: Seq[Any])
+                (implicit ec: ExecutionContext): Future[ List[List[AnyRef]]] = ???
 
-  override def qRaw(query: String, inputs: Any*)(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+  override def qRaw(query: String, inputs: Any*)
+                   (implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
 
-  override def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+  override def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])
+                   (implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
 
-  override def query(model: Model, query: Query)(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+  override def query(model: Model, query: Query)
+                    (implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
 
-  override def _query(model: Model, query: Query, _db: Option[DatomicDb])(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
+  override def _query(model: Model, query: Query, _db: Option[DatomicDb])
+                     (implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]]] = ???
 
-  override def _index(model: Model)(implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]] ]= ???
+  override def _index(model: Model)
+                     (implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]] ]= ???
 
   private[molecule] override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
 
@@ -115,15 +121,17 @@ trait Conn_Js extends Conn with ColOps with Helpers {
   )(id: Int, params: Any*): Unit = ???
 }
 
+
 object Conn_Js {
   def apply(dbProxy0: DbProxy): Conn_Js = new Conn_Js {
     override lazy val dbProxy = dbProxy0
   }
 
-  def inMem(schemaTransaction: SchemaTransaction): Conn_Js = apply(
+  def inMem(schemaTransaction: SchemaTransaction)
+           (implicit ec: ExecutionContext): Future[Conn_Js] = Future(apply(
     DatomicInMemProxy(
       schemaTransaction.datomicPeer,
       schemaTransaction.attrMap
     )
-  )
+  ))
 }

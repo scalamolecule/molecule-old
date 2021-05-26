@@ -33,8 +33,8 @@ trait TxBundles extends Helpers {
     */
   def transactBundle(
     stmtss: Future[Seq[Statement]]*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
-    conn.transact(Future.sequence(stmtss).map(_.flatten))
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
+    conn.flatMap(_.transact(Future.sequence(stmtss).map(_.flatten)))
   }
 
 
@@ -93,8 +93,9 @@ trait TxBundles extends Helpers {
     */
   def inspectTransactBundle(
     stmtss: Future[Seq[Statement]]*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[Unit] = {
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = {
     for {
+      conn <- conn
       // Use temporary branch of db to not changing any live data
       _ <- conn.testDbWith()
 

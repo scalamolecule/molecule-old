@@ -26,6 +26,7 @@ private[molecule] trait Base extends Dsl2Model {
         import molecule.datomic.base.ast.query._
         import molecule.datomic.base.transform.{Model2Query, QueryOptimizer}
         import molecule.datomic.base.facade.Conn
+        import scala.concurrent.Future
      """
 
   def mapIdents(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {

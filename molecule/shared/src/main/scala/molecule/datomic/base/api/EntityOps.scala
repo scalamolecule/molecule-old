@@ -31,49 +31,10 @@ trait EntityOps {
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  implicit final def long2Entity(id: Long)(implicit conn: Conn): DatomicEntity = conn.entity(id)
+  implicit final def long2Entity(
+    id: Long
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[DatomicEntity] = conn.map(_.entity(id))
 
-  //  /** Retract multiple entities with optional transaction meta data.
-  //    * <br><br>
-  //    * 0 or more transaction meta data molecules can be asserted together with a retraction of entities.
-  //    * <br><br>
-  //    * Here we retract two comment entities with transaction meta data asserting that the retraction was done by Ben Goodman:
-  //    * {{{
-  //    *   retract(Seq(commentEid1, commentEid2), MetaData.user("Ben Goodman"))
-  //    * }}}
-  //    * We can then later see what comments Ben Goodman retracted (`op_(false)`):
-  //    * {{{
-  //    *   Comment.e.text.op_(false).Tx(MetaData.user_("Ben Goodman")).getHistory === List(
-  //    *     (commentEid1, "I like this"),
-  //    *     (commentEid2, "I hate this")
-  //    *   )
-  //    * }}}
-  //    *
-  //    * @group entityOps
-  //    * @param eids                Iterable of entity ids of type Long
-  //    * @param txMetaDataMolecules Zero or more transaction meta data molecules
-  //    * @param conn                Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-  //    * @return [[molecule.datomic.base.facade.TxReport TxReport]] with result of retract
-  //    */
-  //  def retract(eids: Iterable[Long], txMetaDataMolecules: Molecule*)(implicit conn: Conn): TxReport = {
-  //    val retractStmts    = eids.toSeq.distinct map RetractEntity
-  //    val txMetaDataStmts = if (txMetaDataMolecules.isEmpty) {
-  //      Nil
-  //    } else if (txMetaDataMolecules.size == 1) {
-  //      val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
-  //      VerifyModel(txMetaDataModel, "save")
-  //      conn.modelTransformer(txMetaDataModel).saveStmts
-  //    } else {
-  //      val txMetaDataModel = Model(
-  //        txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
-  //      )
-  //      VerifyModel(txMetaDataModel, "save")
-  //      conn.modelTransformer(txMetaDataModel).saveStmts
-  //    }
-  //
-  //    val stmts = retractStmts ++ txMetaDataStmts
-  //    conn.transact(stmts)
-  //  }
 
   /** Asynchronously retract multiple entities with optional transaction meta data.
     * <br><br>
@@ -100,18 +61,20 @@ trait EntityOps {
   def retract(
     eids: Iterable[Long],
     txMetaDataMolecules: Molecule*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = {
-    val retractStmts = Future(eids.toSeq.distinct map RetractEntity)
-    if (txMetaDataMolecules.isEmpty) {
-      conn.transact(retractStmts)
-    } else {
-      try {
-        val txMetaDataModel = Model(txMetaDataMolecules.map(m => TxMetaData(m._model.elements)))
-        VerifyModel(txMetaDataModel, "save") // can throw exception
-        val txMetaDataStmts = conn.modelTransformer(txMetaDataModel).saveStmts
-        conn.transact(Future.sequence(Seq(retractStmts, txMetaDataStmts)).map(_.flatten))
-      } catch {
-        case NonFatal(exc) => Future.failed(exc)
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
+    conn.flatMap { conn =>
+      val retractStmts = Future(eids.toSeq.distinct map RetractEntity)
+      if (txMetaDataMolecules.isEmpty) {
+        conn.transact(retractStmts)
+      } else {
+        try {
+          val txMetaDataModel = Model(txMetaDataMolecules.map(m => TxMetaData(m._model.elements)))
+          VerifyModel(txMetaDataModel, "save") // can throw exception
+          val txMetaDataStmts = conn.modelTransformer(txMetaDataModel).saveStmts
+          conn.transact(Future.sequence(Seq(retractStmts, txMetaDataStmts)).map(_.flatten))
+        } catch {
+          case NonFatal(exc) => Future.failed(exc)
+        }
       }
     }
   }
@@ -153,30 +116,31 @@ trait EntityOps {
   def inspectRetract(
     eids: Iterable[Long],
     txMetaDataMolecules: Molecule*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[Unit] = {
-    val retractStmts = eids.toSeq.distinct map RetractEntity
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = {
+    conn.flatMap { conn =>
+      val retractStmts = eids.toSeq.distinct map RetractEntity
 
-    val txMetaDataModel = if (txMetaDataMolecules.isEmpty) {
-      Model(Nil)
-    } else if (txMetaDataMolecules.size == 1) {
-      val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
-      VerifyModel(txMetaDataModel, "save")
-      txMetaDataModel
-    } else {
-      val txMetaDataModel = Model(
-        txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
-      )
-      VerifyModel(txMetaDataModel, "save")
-      txMetaDataModel
+      val txMetaDataModel = if (txMetaDataMolecules.isEmpty) {
+        Model(Nil)
+      } else if (txMetaDataMolecules.size == 1) {
+        val txMetaDataModel = Model(Seq(TxMetaData(txMetaDataMolecules.head._model.elements)))
+        VerifyModel(txMetaDataModel, "save")
+        txMetaDataModel
+      } else {
+        val txMetaDataModel = Model(
+          txMetaDataMolecules.map(m => TxMetaData(m._model.elements))
+        )
+        VerifyModel(txMetaDataModel, "save")
+        txMetaDataModel
+      }
+
+      val transformer = conn.modelTransformer(txMetaDataModel)
+      conn.modelTransformer(txMetaDataModel).saveStmts.map { saveStmts =>
+        val stmts = Seq(retractStmts ++ saveStmts)
+        conn.inspect(
+          "molecule.core.Datomic.inspectRetract", 1
+        )(1, txMetaDataModel, transformer.genericStmts, stmts)
+      }
     }
-
-    val transformer = conn.modelTransformer(txMetaDataModel)
-    conn.modelTransformer(txMetaDataModel).saveStmts.map{saveStmts =>
-      val stmts = Seq(retractStmts ++ saveStmts)
-      conn.inspect(
-        "molecule.core.Datomic.inspectRetract", 1
-      )(1, txMetaDataModel, transformer.genericStmts, stmts)
-    }
-
   }
 }

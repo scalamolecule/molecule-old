@@ -66,7 +66,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
     case other => c.abort(c.enclosingPosition,
       s"""@txFns-annotated container only allows tx functions with the following signature constraints:
-         |def <txFnName>(<args..>)(implicit conn: Conn): Seq[Statement] = { <body> }
+         |def <txFnName>(<args..>)(implicit conn: Future[Conn]): Seq[Statement] = { <body> }
          |Found:
          |$other
       """.stripMargin)

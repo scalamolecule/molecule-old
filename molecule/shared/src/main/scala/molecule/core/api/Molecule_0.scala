@@ -196,18 +196,20 @@ trait Molecule_0[Obj, Tpl]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
     */
-  def save(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
-    VerifyModel(_model, "save")
-    if (conn.isJsPlatform) {
-      for {
-        saveStmts <- conn.modelTransformer(_model).saveStmts
-        (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts, conn)
-        result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
-      } yield result
-    } else {
-      conn.transact(
-        conn.modelTransformer(_model).saveStmts
-      )
+  def save(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
+    conn.flatMap { conn =>
+      VerifyModel(_model, "save")
+      if (conn.isJsPlatform) {
+        for {
+          saveStmts <- conn.modelTransformer(_model).saveStmts
+          (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts, conn)
+          result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+        } yield result
+      } else {
+        conn.transact(
+          conn.modelTransformer(_model).saveStmts
+        )
+      }
     }
   } catch {
     case NonFatal(exc) => Future.failed(exc)
@@ -219,9 +221,11 @@ trait Molecule_0[Obj, Tpl]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Transaction statements
     */
-  def getSaveStmts(implicit conn: Conn): Future[Seq[Statement]] = try {
-    VerifyModel(_model, "save")
-    conn.modelTransformer(_model).saveStmts
+  def getSaveStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
+    conn.flatMap { conn =>
+      VerifyModel(_model, "save")
+      conn.modelTransformer(_model).saveStmts
+    }
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
@@ -296,31 +300,34 @@ trait Molecule_0[Obj, Tpl]
   }
 
 
-  protected def _insert(conn: Conn, dataRows: Iterable[Seq[Any]])
+  protected def _insert(conn: Future[Conn], dataRows: Iterable[Seq[Any]])
                        (implicit ec: ExecutionContext): Future[TxReport] = try {
-    VerifyModel(_model, "insert")
-    if (conn.isJsPlatform) {
-      for {
-        insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
-        (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
-        result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
-      } yield result
-    } else {
-      //      for {
-      //        insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
-      //        result <- conn.transact(insertStmts)
-      //      } yield result
-      conn.transact(
-        conn.modelTransformer(_model).insertStmts(untupled(dataRows))
-      )
+    conn.flatMap { conn =>
+      VerifyModel(_model, "insert")
+      if (conn.isJsPlatform) {
+        for {
+          insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+          (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
+          result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+        } yield result
+      } else {
+        conn.transact(
+          conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+        )
+      }
     }
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  protected def _getInsertStmts(conn: Conn, dataRows: Iterable[Seq[Any]]): Future[Seq[Statement]] = try {
-    VerifyModel(_model, "insert")
-    conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+  protected def _getInsertStmts(
+    conn: Future[Conn],
+    dataRows: Iterable[Seq[Any]]
+  )(implicit ec: ExecutionContext): Future[Seq[Statement]] = try {
+    conn.flatMap { conn =>
+      VerifyModel(_model, "insert")
+      conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+    }
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
@@ -348,22 +355,20 @@ trait Molecule_0[Obj, Tpl]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
-  def update(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
-    VerifyModel(_model, "update")
-    if (conn.isJsPlatform) {
-      for {
-        updateStmts <- conn.modelTransformer(_model).updateStmts
-        (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts, conn)
-        result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
-      } yield result
-    } else {
-      //      for {
-      //        updateStmts <- conn.modelTransformer(_model).updateStmts
-      //        result <- conn.transact(updateStmts)
-      //      } yield result
-      conn.transact(
-        conn.modelTransformer(_model).updateStmts
-      )
+  def update(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
+    conn.flatMap { conn =>
+      VerifyModel(_model, "update")
+      if (conn.isJsPlatform) {
+        for {
+          updateStmts <- conn.modelTransformer(_model).updateStmts
+          (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts, conn)
+          result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+        } yield result
+      } else {
+        conn.transact(
+          conn.modelTransformer(_model).updateStmts
+        )
+      }
     }
   } catch {
     case NonFatal(exc) => Future.failed(exc)
@@ -376,9 +381,11 @@ trait Molecule_0[Obj, Tpl]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  def getUpdateStmts(implicit conn: Conn): Future[Seq[Statement]] = try {
-    VerifyModel(_model, "update")
-    conn.modelTransformer(_model).updateStmts
+  def getUpdateStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
+    conn.flatMap { conn =>
+      VerifyModel(_model, "update")
+      conn.modelTransformer(_model).updateStmts
+    }
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
@@ -392,18 +399,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, ax: A*)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, (a +: ax.toList).map(Seq(_)))
-      def apply(data: Iterable[A])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(Seq(_)))
+      def apply(a: A, ax: A*)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, (a +: ax.toList).map(Seq(_)))
+      def apply(data: Iterable[A])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(Seq(_)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, ax: A*)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, (a +: ax.toList).map(Seq(_)))
-      def apply(data: Iterable[A])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(Seq(_)))
+      def apply(a: A, ax: A*)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, (a +: ax.toList).map(Seq(_)))
+      def apply(data: Iterable[A])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(Seq(_)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, ax: A*)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, (a +: ax.toList).map(Seq(_)))
-      def apply(data: Iterable[A])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(Seq(_)))
+      def apply(a: A, ax: A*)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, (a +: ax.toList).map(Seq(_)))
+      def apply(data: Iterable[A])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(Seq(_)))
     }
   }
 
@@ -411,18 +418,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b)))
-      def apply(data: Iterable[(A, B)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2)))
+      def apply(a: A, b: B)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b)))
+      def apply(data: Iterable[(A, B)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b)))
-      def apply(data: Iterable[(A, B)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2)))
+      def apply(a: A, b: B)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b)))
+      def apply(data: Iterable[(A, B)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b)))
-      def apply(data: Iterable[(A, B)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2)))
+      def apply(a: A, b: B)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b)))
+      def apply(data: Iterable[(A, B)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2)))
     }
   }
 
@@ -431,18 +438,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c)))
-      def apply(data: Iterable[(A, B, C)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3)))
+      def apply(a: A, b: B, c: C)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c)))
+      def apply(data: Iterable[(A, B, C)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c)))
-      def apply(data: Iterable[(A, B, C)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3)))
+      def apply(a: A, b: B, c: C)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c)))
+      def apply(data: Iterable[(A, B, C)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c)))
-      def apply(data: Iterable[(A, B, C)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3)))
+      def apply(a: A, b: B, c: C)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c)))
+      def apply(data: Iterable[(A, B, C)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3)))
     }
   }
 
@@ -451,18 +458,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d)))
-      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
+      def apply(a: A, b: B, c: C, d: D)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d)))
+      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d)))
-      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
+      def apply(a: A, b: B, c: C, d: D)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d)))
+      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d)))
-      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
+      def apply(a: A, b: B, c: C, d: D)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d)))
+      def apply(data: Iterable[(A, B, C, D)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
     }
   }
 
@@ -471,18 +478,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e)))
-      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
+      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e)))
+      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e)))
-      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
+      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e)))
+      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e)))
-      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
+      def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e)))
+      def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
     }
   }
 
@@ -491,18 +498,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f)))
-      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f)))
+      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f)))
-      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f)))
+      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f)))
-      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f)))
+      def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
     }
   }
 
@@ -510,18 +517,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
     }
   }
 
@@ -530,18 +537,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
     }
   }
 
@@ -550,18 +557,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
     }
   }
 
@@ -570,18 +577,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
     }
   }
 
@@ -590,18 +597,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
     }
   }
 
@@ -610,18 +617,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
     }
   }
 
@@ -629,18 +636,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
     }
   }
 
@@ -649,18 +656,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
     }
   }
 
@@ -669,18 +676,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
     }
   }
 
@@ -689,18 +696,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
     }
   }
 
@@ -709,18 +716,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
     }
   }
 
@@ -729,18 +736,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
     }
   }
 
@@ -749,18 +756,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
     }
   }
 
@@ -769,18 +776,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
     }
   }
 
@@ -789,18 +796,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
     }
   }
 
@@ -809,18 +816,18 @@ object Molecule_0 {
     val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
 
     object insert extends insert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
     }
 
     object inspectInsert extends inspectInsert {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Conn): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = _inspectInsert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
     }
 
     object getInsertStmts extends getInsertStmts {
-      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
-      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Conn): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
+      def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
+      def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = _getInsertStmts(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))
     }
   }
 }

@@ -153,8 +153,10 @@ object TxFunctions extends Helpers with JavaUtil {
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Conn, ec: ExecutionContext): Future[TxReport] = try {
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
     for {
+      conn <- conn
+
       // Install transaction function if not installed yet
       txFns <- conn.db.pull("[*]", s":$txFn")
       _ <- if (txFns.size() == 1) conn.transactRaw(conn.buildTxFnInstall(txFn, args)) else Future.unit
@@ -204,12 +206,15 @@ object TxFunctions extends Helpers with JavaUtil {
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Conn, ec: ExecutionContext): Unit = {
-    // Use temporary branch of db to not changing any live data
-    conn.testDbWith()
-    // Print tx report to console
-    txFnCall(txFn, txMolecules, args: _*).foreach(_.inspect)
-    conn.useLiveDb
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = {
+    conn.map { conn2 =>
+      // Use temporary branch of db to not changing any live data
+      conn2.testDbWith()
+      // Print tx report to console
+//      txFnCall(txFn, txMolecules, args: _*)(conn, ec).foreach(_.inspect)
+      txFnCall(txFn, txMolecules, args: _*).foreach(_.inspect)
+      conn2.useLiveDb
+    }
   }
 }
 

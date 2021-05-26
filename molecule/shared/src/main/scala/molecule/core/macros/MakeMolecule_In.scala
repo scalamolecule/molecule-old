@@ -37,7 +37,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         val (inParams, inTerm1, inTerm2) = (Seq(q"$i1: $t1", q"$i2: $t2"), i1, i2)
         if (flat) {
           q"""
-            def apply(..$inParams)(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(..$inParams)(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindSeqs(_rawQuery, $inTerm1, $inTerm2)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
                 _model,
@@ -51,7 +51,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
           """
         } else {
           q"""
-            def apply(..$inParams)(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(..$inParams)(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindSeqs(_rawQuery, $inTerm1, $inTerm2)
               val boundRawNestedQuery = bindSeqs(_rawNestedQuery.get, $inTerm1, $inTerm2)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
@@ -72,7 +72,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         val (inParams, inTerm1, inTerm2, inTerm3) = (Seq(q"$i1: $t1", q"$i2: $t2", q"$i3: $t3"), i1, i2, i3)
         if (flat) {
           q"""
-            def apply(..$inParams)(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(..$inParams)(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindSeqs(_rawQuery, $inTerm1, $inTerm2, $inTerm3)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
                 _model,
@@ -86,7 +86,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
           """
         } else {
           q"""
-            def apply(..$inParams)(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(..$inParams)(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindSeqs(_rawQuery, $inTerm1, $inTerm2, $inTerm3)
               val boundRawNestedQuery = bindSeqs(_rawNestedQuery.get, $inTerm1, $inTerm2, $inTerm3)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
@@ -110,7 +110,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
           final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
             _resolvedModel, Model2Query(_resolvedModel)
           ) {
-            def apply(args: Seq[(..$InTypes)])(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(args: Seq[(..$InTypes)])(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindValues(_rawQuery, args)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
                 _model,
@@ -130,7 +130,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
           q"""
           ..$imports
           final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes]($model0, ${Model2Query(model0)}) {
-            def apply(args: Seq[(..$InTypes)])(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(args: Seq[(..$InTypes)])(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindValues(_rawQuery, args)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
                 _model,
@@ -165,7 +165,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
           final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
             _resolvedModel, Model2Query(_resolvedModel)
           ) {
-            def apply(args: Seq[(..$InTypes)])(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(args: Seq[(..$InTypes)])(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindValues(_rawQuery, args)
               val boundRawNestedQuery = bindValues(_rawNestedQuery.get, args)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
@@ -185,7 +185,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         q"""
           ..$imports
           final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes]($model0, ${Model2Query(model0)}) {
-            def apply(args: Seq[(..$InTypes)])(implicit conn: Conn): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+            def apply(args: Seq[(..$InTypes)])(implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
               val boundRawQuery = bindValues(_rawQuery, args)
               val boundRawNestedQuery = bindValues(_rawNestedQuery.get, args)
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](
