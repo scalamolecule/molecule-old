@@ -12,11 +12,11 @@ private[molecule] trait CastAggr extends CastOptNested {
   // - data arrays index in CastArrays
   var ii = (-1, -1)
 
-  val castAggrInt   : Int => Tree = {
+  def castAggrInt   : Int => Tree = {
     ii = (108 , 1)
     (colIndex: Int) => q"row.get($colIndex).toString.toInt"
   }
-  val castAggrDouble: Int => Tree = {
+  def castAggrDouble: Int => Tree = {
     ii = (109, 3)
     (colIndex: Int) => q"row.get($colIndex).asInstanceOf[Double]"
   }
@@ -123,15 +123,15 @@ private[molecule] trait CastAggr extends CastOptNested {
     case "BigDecimal" => ii = (189, 9); (colIndex: Int) => q"castOneBigDecimal(row, $colIndex)"
   }
   val castAggrManySingle: String => Int => Tree = {
-    case "String"     => ii = (190, 10); (colIndex: Int) => q"castAggrManySingle[String](row, $colIndex)"
-    case "Int"        => ii = (191, 11); (colIndex: Int) => q"castAggrManySingleInt(row, $colIndex)"
-    case "Long"       => ii = (192, 12); (colIndex: Int) => q"castAggrManySingle[Long](row, $colIndex)"
-    case "Double"     => ii = (193, 13); (colIndex: Int) => q"castAggrManySingle[Double](row, $colIndex)"
-    case "Boolean"    => ii = (194, 14); (colIndex: Int) => q"castAggrManySingle[Boolean](row, $colIndex)"
-    case "Date"       => ii = (195, 15); (colIndex: Int) => q"castAggrManySingle[Date](row, $colIndex)"
-    case "UUID"       => ii = (196, 16); (colIndex: Int) => q"castAggrManySingle[UUID](row, $colIndex)"
-    case "URI"        => ii = (197, 17); (colIndex: Int) => q"castAggrManySingleURI(row, $colIndex)"
-    case "BigInt"     => ii = (198, 18); (colIndex: Int) => q"castAggrManySingleBigInt(row, $colIndex)"
-    case "BigDecimal" => ii = (199, 19); (colIndex: Int) => q"castAggrManySingleBigDecimal(row, $colIndex)"
+    case "String"     => ii = (190, 20); (colIndex: Int) => q"castAggrManySingle[String](row, $colIndex)"
+    case "Int"        => ii = (191, 21); (colIndex: Int) => q"castAggrManySingleInt(row, $colIndex)"
+    case "Long"       => ii = (192, 22); (colIndex: Int) => q"castAggrManySingle[Long](row, $colIndex)"
+    case "Double"     => ii = (193, 23); (colIndex: Int) => q"castAggrManySingle[Double](row, $colIndex)"
+    case "Boolean"    => ii = (194, 24); (colIndex: Int) => q"castAggrManySingle[Boolean](row, $colIndex)"
+    case "Date"       => ii = (195, 25); (colIndex: Int) => q"castAggrManySingle[Date](row, $colIndex)"
+    case "UUID"       => ii = (196, 26); (colIndex: Int) => q"castAggrManySingle[UUID](row, $colIndex)"
+    case "URI"        => ii = (197, 27); (colIndex: Int) => q"castAggrManySingleURI(row, $colIndex)"
+    case "BigInt"     => ii = (198, 28); (colIndex: Int) => q"castAggrManySingleBigInt(row, $colIndex)"
+    case "BigDecimal" => ii = (199, 29); (colIndex: Int) => q"castAggrManySingleBigDecimal(row, $colIndex)"
   }
 }

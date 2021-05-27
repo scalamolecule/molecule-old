@@ -88,11 +88,34 @@ private[molecule] trait Base extends Dsl2Model {
     subTuples
   }
 
+  def compositeLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): Seq[Tree] = {
+    var i              = -1 + offset
+    var subTupleFields = Seq.empty[Tree]
+    val subTuples      = castss.flatMap {
+      case Nil   => None
+      case casts =>
+        subTupleFields = casts.map { _ =>
+          i += 1
+          lookups(i)
+        }
+        Some(q"(..$subTupleFields)")
+    }
+    subTuples
+  }
+
   def topLevel(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
     var i = -1 + offset
     castss.head.map { cast =>
       i += 1
       cast(i)
+    }
+  }
+
+  def topLevelLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): List[Tree] = {
+    var i = -1 + offset
+    castss.head.map { _ =>
+      i += 1
+      lookups(i)
     }
   }
 

@@ -28,7 +28,6 @@ import scala.language.implicitConversions
   * */
 trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
-
   // get ================================================================================================
 
   /** Get `Future` with `List` of all rows as objects matching molecule.

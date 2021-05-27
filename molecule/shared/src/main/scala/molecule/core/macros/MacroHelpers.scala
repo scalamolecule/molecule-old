@@ -71,7 +71,7 @@ private[molecule] trait MacroHelpers {
           }
         }
 
-        val output = s"## $id ## $clazz \n" +
+        val output = s"$clazz  $id\n" +
           params.toList.zipWithIndex.map { case (e, i) => traverse(e, 0, i + 1) }
             .mkString("\n------------------------------------------------\n") +
           s"\n====================================================== \n$stackTrace"

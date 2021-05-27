@@ -1,8 +1,6 @@
 package moleculeTests.tests.examples.datomic.dayOfDatomic
 
 import molecule.datomic.api.out4._
-import org.specs2.mutable.Specification
-import molecule.datomic.peer.facade.Datomic_Peer._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -1,12 +1,9 @@
 package moleculeTests.tests.examples.datomic.dayOfDatomic
 
 import molecule.datomic.api.in2_out3._
-import molecule.datomic.base.facade.{Conn, TxReport}
-import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
-import molecule.datomic.peer.facade.Datomic_Peer._
+import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest.Ns
-import moleculeTests.tests.core.input1.expression.Input1Int.{int1, int2, int3, str1, str2, str3, str4}
+import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

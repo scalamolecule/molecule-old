@@ -137,10 +137,7 @@ object Time extends AsyncTestSuite with Helpers {
       val saveTx2 = Ns.int(2).getSaveStmts
       val saveTx3 = Ns.int(3).getSaveStmts
 
-      // Tx data from edn file
-      // contains: "[{:Ns/int 2} {:Ns/int 3}]"
-      val data      = new FileReader("moleculeTests/jvm/resources/tests/core/time/save2-3.dtm")
-      val txData2_3 = datomic.Util.readAll(data).get(0).asInstanceOf[jList[jList[_]]]
+      // See raw data api on jvm platform: jvm.obj.Time
 
       for {
         _ <- Ns.int(1).save
@@ -150,18 +147,13 @@ object Time extends AsyncTestSuite with Helpers {
         // Note how the parameter for number of rows returned is first (since we
         // need the vararg for tx molecules last)
         _ <- Ns.int.getObjListWith(2, saveTx2, saveTx3).map(_.map(_.int) ==> List(1, 2))
-        _ <- Ns.int.getObjListWith(txData2_3).map(_.map(_.int) ==> List(1, 2, 3))
-        _ <- Ns.int.getObjListWith(txData2_3, 2).map(_.map(_.int) ==> List(1, 2))
 
         _ <- Ns.int.getObjArrayWith(saveTx2).map(_.map(_.int) ==> Array(1, 2))
         _ <- Ns.int.getObjArrayWith(saveTx2, saveTx3).map(_.map(_.int) ==> Array(1, 2, 3))
         _ <- Ns.int.getObjArrayWith(2, saveTx2, saveTx3).map(_.map(_.int) ==> Array(1, 2))
-        _ <- Ns.int.getObjArrayWith(txData2_3).map(_.map(_.int) ==> Array(1, 2, 3))
-        _ <- Ns.int.getObjArrayWith(txData2_3, 2).map(_.map(_.int) ==> Array(1, 2))
 
         _ <- Ns.int.getObjIterableWith(saveTx2).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2).toList)
         _ <- Ns.int.getObjIterableWith(saveTx2, saveTx3).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2, 3).toList)
-        _ <- Ns.int.getObjIterableWith(txData2_3).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2, 3).toList)
       } yield ()
     }
 

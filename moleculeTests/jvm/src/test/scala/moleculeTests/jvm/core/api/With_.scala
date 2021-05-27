@@ -1,4 +1,4 @@
-package moleculeTests.jvm.api
+package moleculeTests.jvm.core.api
 
 import java.io.FileReader
 import java.util.{List => jList}

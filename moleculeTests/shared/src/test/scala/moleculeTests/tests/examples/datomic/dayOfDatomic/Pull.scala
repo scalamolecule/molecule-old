@@ -1,15 +1,12 @@
 package moleculeTests.tests.examples.datomic.dayOfDatomic
 
 import java.util.UUID
-import datomic.Util
-import molecule.datomic.base.util.SystemDevLocal
 import molecule.datomic.api.out8._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer}
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews.{Parent, Story, User}
-import utest._
 import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
@@ -53,21 +50,6 @@ object Pull extends AsyncTestSuite {
 
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
-
-    "raw pull" - core { implicit conn =>
-      for {
-        (ledZeppelinUUID, _, _, _, _, _, _, _, _, _, _) <- data
-
-        // Pull raw java.util.Map's with clojure.lang.Keyword -> <data> pairs
-        _ <- conn.map(_.db.pull(
-          "[:Artist/name :Artist/gid]",
-          Util.list(Util.read(":Artist/gid"), ledZeppelinUUID)
-        ) ==> Util.map(
-          Util.read(":Artist/name"), "Led Zeppelin",
-          Util.read(":Artist/gid"), ledZeppelinUUID
-        ))
-      } yield ()
-    }
 
     "query" - core { implicit conn =>
       for {

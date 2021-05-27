@@ -22,6 +22,8 @@ trait Marshalling[Obj, Tpl] extends Molecule {
   protected lazy val indexes: List[(Int, Int, Int, Int)] = ???
 
 
+  // JS ......................
+
   /** QueryResult to object cast interface to be materialized by macro
     *
     * @param qr
@@ -38,7 +40,7 @@ trait Marshalling[Obj, Tpl] extends Molecule {
   protected def qr2tpl(qr: QueryResult): Int => Tpl = ???
 
 
-  // Server side ......................
+  // JVM ......................
 
   /** Row to object cast interface to be materialized by macro */
   protected def row2obj(row: jList[AnyRef]): Obj = ???

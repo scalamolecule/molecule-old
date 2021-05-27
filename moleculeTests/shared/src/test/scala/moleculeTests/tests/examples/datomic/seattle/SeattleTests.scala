@@ -1,14 +1,11 @@
 package moleculeTests.tests.examples.datomic.seattle
 
-import java.io.FileReader
-import java.util.{List => jList}
-import datomic.Util
 import molecule.datomic.api.in2_out8._
 import molecule.datomic.base.facade.Conn
-import moleculeTests.tests.examples.datomic.seattle.dsl.Seattle._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.setup.examples.seattle.SeattleData
+import moleculeTests.tests.examples.datomic.seattle.dsl.Seattle._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,32 +42,32 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         eids <- Community.e.name_("Greenlake Community Wiki").Neighborhood.e.District.e.get
         (communityId, n1, d1) = eids.head
 
-            // Use the community id to touch all the entity's attribute values
-            _ <- communityId.map(_.touch ==> Map(
-              ":Community/category" -> List("events", "for sale", "services"),
-              ":Community/neighborhood" -> Map(
-                ":db/id" -> 17592186045668L,
-                ":Neighborhood/district" -> Map(
-                  ":db/id" -> 17592186045669L,
-                  ":District/name" -> "Northwest",
-                  ":District/region" -> ":District.region/sw"),
-                ":Neighborhood/name" -> "Green Lake"),
-              ":Community/orgtype" -> ":Community.orgtype/community",
-              ":Community/name" -> "Greenlake Community Wiki",
-              ":db/id" -> 17592186045667L,
-              ":Community/url" -> "http://greenlake.wetpaint.com/",
-              ":Community/tpe" -> ":Community.tpe/wiki"))
+        // Use the community id to touch all the entity's attribute values
+        _ <- communityId.map(_.touch ==> Map(
+          ":Community/category" -> List("events", "for sale", "services"),
+          ":Community/neighborhood" -> Map(
+            ":db/id" -> 17592186045668L,
+            ":Neighborhood/district" -> Map(
+              ":db/id" -> 17592186045669L,
+              ":District/name" -> "Northwest",
+              ":District/region" -> ":District.region/sw"),
+            ":Neighborhood/name" -> "Green Lake"),
+          ":Community/orgtype" -> ":Community.orgtype/community",
+          ":Community/name" -> "Greenlake Community Wiki",
+          ":db/id" -> 17592186045667L,
+          ":Community/url" -> "http://greenlake.wetpaint.com/",
+          ":Community/tpe" -> ":Community.tpe/wiki"))
 
-            // We can also retrieve a single (optional) attribute value
-            untyped: Option[Any]    <- communityId.flatMap(_(":community/name"))
-            typed  : Option[String] <- communityId.flatMap(_[String](":community/name"))
+        // We can also retrieve a single (optional) attribute value
+        untyped: Option[Any] <- communityId.flatMap(_ (":community/name"))
+        typed: Option[String] <- communityId.flatMap(_[String](":community/name"))
 
-            _ <- communityId.flatMap(_[String](":Community/name")) === Some("Greenlake Community Wiki")
-            _ <- communityId.flatMap(_[String](":Community/url")) === Some("http://greenlake.wetpaint.com/")
-            _ <- communityId.flatMap(_[List[String]](":Community/category")).map(
-              _.get.map(_.sorted ==> List("events", "for sale", "services"))
-            )
-            _ <- communityId.flatMap(_(":Community/emptyOrBogusAttribute")) === None
+        _ <- communityId.flatMap(_[String](":Community/name")) === Some("Greenlake Community Wiki")
+        _ <- communityId.flatMap(_[String](":Community/url")) === Some("http://greenlake.wetpaint.com/")
+        _ <- communityId.flatMap(_[List[String]](":Community/category")).map(
+          _.get.map(_.sorted ==> List("events", "for sale", "services"))
+        )
+        _ <- communityId.flatMap(_ (":Community/emptyOrBogusAttribute")) === None
 
         // We can also use the entity id to query for an attribute value
         _ <- Community(communityId).name.get.map(_.head ==> "Greenlake Community Wiki")
@@ -309,7 +306,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           typeAndCategory = m(Community.name.tpe_(?).category contains ?)
           _ <- typeAndCategory("website", Set("food")).get === foodWebsites
           res <- typeAndCategory("website", Set("food", "shopping")).get === foodShoppingWebsites
-        }yield()
+        } yield ()
       }
     }
 
@@ -418,24 +415,27 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- communities.getSince(schemaTxT).map(_.size ==> 150)
         _ <- communities.getSince(dataTxT).map(_.size ==> 0)
 
-        // Imagining the future
-        data_rdr2 = new FileReader("moleculeTests/jvm/resources/tests/examples/seattle/seattle-data2upper.dtm")
-        newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[jList[jList[_]]]
 
-        // future db
-        _ <- communities.getWith(newDataTx).map(_.size ==> 258)
+        // This depends on jvm-only datomic dependency - tested in jvm.examples.datomic.seattle.Seattle
 
-        // existing db
-        _ <- communities.get.map(_.size ==> 150)
-
-        // transact
-        _ <- conn.map(_.transactRaw(newDataTx))
-
-        // updated db
-        _ <- communities.get.map(_.size ==> 258)
-
-        // number of new transactions
-        _ <- communities.getSince(dataTxT).map(_.size ==> 108)
+        //        // Imagining the future
+        //        data_rdr2 = new FileReader("moleculeTests/jvm/resources/tests/examples/seattle/seattle-data2upper.dtm")
+        //        newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[jList[jList[_]]]
+        //
+        //        // future db
+        //        _ <- communities.getWith(newDataTx).map(_.size ==> 258)
+        //
+        //        // existing db
+        //        _ <- communities.get.map(_.size ==> 150)
+        //
+        //        // transact
+        //        _ <- conn.map(_.transactRaw(newDataTx))
+        //
+        //        // updated db
+        //        _ <- communities.get.map(_.size ==> 258)
+        //
+        //        // number of new transactions
+        //        _ <- communities.getSince(dataTxT).map(_.size ==> 108)
       } yield ()
     }
 

@@ -1,4 +1,4 @@
-package moleculeTests.tests.core.transaction
+package moleculeTests.jvm.core.transaction
 
 import java.io.FileReader
 import java.util.{List => jList}
