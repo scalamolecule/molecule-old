@@ -51,20 +51,22 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    conn.flatMap { conn =>
-      if (conn.isJsPlatform) {
-        conn.jsQuery(_nestedQuery.getOrElse(_query), -1, indexes, qr2tpl)
-      } else {
-        conn.query(_model, _query).map { jColl =>
-          val it  = jColl.iterator
-          val buf = new ListBuffer[Tpl]
-          while (it.hasNext) {
-            buf += row2tpl(it.next)
+    _inputThrowable.fold(
+      conn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          conn.jsQuery(_nestedQuery.getOrElse(_query), -1, indexes, qr2tpl)
+        } else {
+          conn.query(_model, _query).map { jColl =>
+            val it  = jColl.iterator
+            val buf = new ListBuffer[Tpl]
+            while (it.hasNext) {
+              buf += row2tpl(it.next)
+            }
+            buf.toList
           }
-          buf.toList
         }
       }
-    }
+    )(Future.failed) // Pass on exceptions from input failure
   }
 
   /** Get `Future` with `List` of n rows as tuples matching molecule.
@@ -85,32 +87,34 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def get(n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    conn.flatMap { conn2 =>
-      if (conn2.isJsPlatform) {
-        conn2.jsQuery(_nestedQuery.getOrElse(_query), n, indexes, qr2tpl)
-      } else {
-        if (n == -1) {
-          get(conn, ec)
+    _inputThrowable.fold(
+      conn.flatMap { conn2 =>
+        if (conn2.isJsPlatform) {
+          conn2.jsQuery(_nestedQuery.getOrElse(_query), n, indexes, qr2tpl)
         } else {
-          conn2.query(_model, _query).map { jColl =>
-            val size = jColl.size
-            val max  = if (size < n) size else n
-            if (max == 0) {
-              List.empty[Tpl]
-            } else {
-              val it  = jColl.iterator
-              val buf = new ListBuffer[Tpl]
-              var i   = 0
-              while (it.hasNext && i < max) {
-                buf += row2tpl(it.next)
-                i += 1
+          if (n == -1) {
+            get(conn, ec)
+          } else {
+            conn2.query(_model, _query).map { jColl =>
+              val size = jColl.size
+              val max  = if (size < n) size else n
+              if (max == 0) {
+                List.empty[Tpl]
+              } else {
+                val it  = jColl.iterator
+                val buf = new ListBuffer[Tpl]
+                var i   = 0
+                while (it.hasNext && i < max) {
+                  buf += row2tpl(it.next)
+                  i += 1
+                }
+                buf.toList
               }
-              buf.toList
             }
           }
         }
       }
-    }
+    )(Future.failed) // Pass on exceptions from input failure
   }
 
 

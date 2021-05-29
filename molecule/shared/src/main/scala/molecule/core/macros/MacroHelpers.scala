@@ -26,11 +26,11 @@ private[molecule] trait MacroHelpers {
 
   def abortTree(tree: Tree, msg: String, inspect: Boolean = true) = {
     val e    : StackTraceElement = Thread.currentThread.getStackTrace.tail.find(mth => mth.getMethodName != "abortTree").getOrElse {
-      throw new MoleculeCompileException("[MacroHelpers:abortTree] Couldn't find method where `abortTree` was called!")
+      throw MoleculeCompileException("[MacroHelpers:abortTree] Couldn't find method where `abortTree` was called!")
     }
     val tr   : String            = s"${e.getClassName}   ${e.getMethodName}   line ${e.getLineNumber}"
     val stack: String            = if (inspect) Seq("----------", tree.raw, "----------", tr, "----------") ++ Thread.currentThread.getStackTrace mkString "\n" else ""
-    throw new MoleculeCompileException(s"$msg:\n$tree \n$stack")
+    throw MoleculeCompileException(s"$msg:\n$tree \n$stack")
   }
 
   implicit class Regex(sc: StringContext) {

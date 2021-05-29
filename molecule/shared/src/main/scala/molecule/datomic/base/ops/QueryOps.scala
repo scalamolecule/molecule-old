@@ -152,7 +152,7 @@ object QueryOps extends Helpers with JavaUtil {
           )
           q1.copy(wh = Where(q1.wh.clauses :+ NotClauses(notClauses)))
         case _                                        =>
-          throw new QueryOpsException(s"Expected Seq[Set[T]], got: " + argss)
+          throw QueryOpsException(s"Expected Seq[Set[T]], got: " + argss)
       }
     }
 
@@ -679,7 +679,7 @@ object QueryOps extends Helpers with JavaUtil {
       case InVar(_, argss)                        => cast(argss.head.head)
       case InDataSource(_, Nil)                   => Util.list()
       case InDataSource(_, argss)                 => cast(argss.head.head)
-      case other                                  => throw new QueryOpsException(s"UNEXPECTED input: $other\nquery:\n$q")
+      case other                                  => throw QueryOpsException(s"UNEXPECTED input: $other\nquery:\n$q")
     }
   }
 }

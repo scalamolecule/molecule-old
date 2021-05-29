@@ -50,7 +50,7 @@ case class TxReport_Client(
       //        assertStmts foreach println
 
       if (allIds.size != assertStmts.size) {
-        throw new DatomicFacadeException(
+        throw DatomicFacadeException(
           s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
         )
       }

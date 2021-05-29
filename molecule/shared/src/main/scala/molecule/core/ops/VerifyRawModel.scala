@@ -6,7 +6,7 @@ import molecule.core.util.Helpers
 
 object VerifyRawModel extends Helpers {
 
-  def abort(msg: String) = throw new VerifyRawModelException(msg)
+  def abort(msg: String) = throw VerifyRawModelException(msg)
 
   val mandatoryGenericDatom = Seq("e", "tx", "t", "txInstant", "op", "a", "v")
   val allowedDupl           = Seq(

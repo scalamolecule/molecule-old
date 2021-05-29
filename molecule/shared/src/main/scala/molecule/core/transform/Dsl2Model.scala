@@ -27,7 +27,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
 
-  override def abort(msg: String): Nothing = throw new Dsl2ModelException(msg)
+  override def abort(msg: String): Nothing = throw Dsl2ModelException(msg)
 
   private[molecule] final def getModel(dsl: Tree): (
     List[Tree],
@@ -1081,7 +1081,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
         Seq(BiTargetRefAttr(t.card, extractNsAttr(weakTypeOf[BiTargetRefAttr_[_]], tree)))
 
       } else {
-        throw new Dsl2ModelException("Unexpected Bidirectional: " + t)
+        throw Dsl2ModelException("Unexpected Bidirectional: " + t)
       }
     } else {
       Seq.empty[GenericValue]

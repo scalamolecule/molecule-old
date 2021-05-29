@@ -7,17 +7,9 @@ import molecule.datomic.base.ast.query.{Query, QueryExpr}
 package object exceptions {
 
 
-  case class MoleculeException(message: String, cause: Throwable) extends RuntimeException(message, cause) {
-    def this(message: String) = {
-      this(message, null)
-    }
-  }
+  case class MoleculeException(message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
-  case class MoleculeCompileException(message: String, cause: Throwable) extends RuntimeException(message, cause) {
-    def this(message: String) = {
-      this(message, null)
-    }
-  }
+  case class MoleculeCompileException(message: String, cause: Throwable = null) extends RuntimeException(message, cause)
 
 
   /** Query exception */

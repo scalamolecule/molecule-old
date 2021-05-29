@@ -53,7 +53,7 @@ case class VerifyModel(model: Model, op: String) {
   //  living_Person.knows(count).inspectUpdate
 
   private def err(method: String, msg: String): Nothing = {
-    throw new VerifyModelException(s"[$method]  $msg")
+    throw VerifyModelException(s"[$method]  $msg")
   }
 
   private def extractNs(fullAttr: String): String = {

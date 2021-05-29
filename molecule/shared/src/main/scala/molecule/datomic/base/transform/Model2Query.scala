@@ -23,10 +23,10 @@ object Model2Query extends Helpers {
   var _model             : Model       = null
   val datomGeneric                     = Seq("e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
 
-  def abort(msg: String): Nothing = throw new Model2QueryException(msg)
+  def abort(msg: String): Nothing = throw Model2QueryException(msg)
 
 
-  def apply(model: Model): (Query, Option[Query], Query, Option[Query]) = {
+  def apply(model: Model): (Query, Option[Query], Query, Option[Query], Option[Throwable]) = {
 
     // reset on each apply
     nestedEntityClauses = Nil
@@ -57,7 +57,7 @@ object Model2Query extends Helpers {
     val quer3nestedOpt: Option[Query] = if (nestedEntityClauses.nonEmpty) Some(query3nested) else None
 
     // Optimize
-    (QueryOptimizer(query3), quer3nestedOpt.map(QueryOptimizer.apply), query3, quer3nestedOpt)
+    (QueryOptimizer(query3), quer3nestedOpt.map(QueryOptimizer.apply), query3, quer3nestedOpt, None) // todo: handle exceptions!?
   }
 
 

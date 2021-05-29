@@ -15,7 +15,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 import scala.util.control.NonFatal
 
-
 /** Core molecule interface defining actions that can be called on molecules.
   *
   * Groups of interfaces:
@@ -152,18 +151,20 @@ import scala.util.control.NonFatal
   * @groupname internal Internal (but public) model/query representations
   * @groupprio internal 710
   * */
-trait Molecule_0[Obj, Tpl]
-  extends Marshalling[Obj, Tpl]
-    with CastHelpersTypes
-    with GetTplArray[Obj, Tpl]
-    with GetTplIterable[Obj, Tpl]
-    with GetTplList[Obj, Tpl]
-    with GetObjArray[Obj, Tpl]
-    with GetObjIterable[Obj, Tpl]
-    with GetObjList[Obj, Tpl]
-    with GetRaw
-    with ShowInspect[Obj, Tpl]
-    with Helpers {
+abstract class Molecule_0[Obj, Tpl](
+  model: Model,
+  queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
+) extends Marshalling[Obj, Tpl](model, queryData)
+  with CastHelpersTypes
+  with GetTplArray[Obj, Tpl]
+  with GetTplIterable[Obj, Tpl]
+  with GetTplList[Obj, Tpl]
+  with GetObjArray[Obj, Tpl]
+  with GetObjIterable[Obj, Tpl]
+  with GetObjList[Obj, Tpl]
+  with GetRaw
+  with ShowInspect[Obj, Tpl]
+  with Helpers {
 
 
   // Dynamic molecule ==========================================================
@@ -292,7 +293,7 @@ trait Molecule_0[Obj, Tpl]
 
 
   protected def untupled(rawData: Iterable[Seq[Any]]): Iterable[Seq[Any]] = {
-    if (this.toString.contains("compositOutMolecule")) {
+    if (this.toString.contains("compositeOutMolecule")) {
       rawData.map(_ flatMap tupleToSeq)
     } else {
       rawData
@@ -395,9 +396,7 @@ trait Molecule_0[Obj, Tpl]
 /** Arity 1-22 molecule implementation interfaces. */
 object Molecule_0 {
 
-  abstract class Molecule_0_01[Obj, A](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, A] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_01[Obj, A](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, A](model, queryData) {
     object insert extends insert {
       def apply(a: A, ax: A*)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, (a +: ax.toList).map(Seq(_)))
       def apply(data: Iterable[A])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(Seq(_)))
@@ -414,9 +413,7 @@ object Molecule_0 {
     }
   }
 
-  abstract class Molecule_0_02[Obj, A, B](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_02[Obj, A, B](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b)))
       def apply(data: Iterable[(A, B)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2)))
@@ -434,9 +431,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_03[Obj, A, B, C](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_03[Obj, A, B, C](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c)))
       def apply(data: Iterable[(A, B, C)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3)))
@@ -454,9 +449,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_04[Obj, A, B, C, D](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_04[Obj, A, B, C, D](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d)))
       def apply(data: Iterable[(A, B, C, D)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4)))
@@ -474,9 +467,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_05[Obj, A, B, C, D, E](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_05[Obj, A, B, C, D, E](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e)))
       def apply(data: Iterable[(A, B, C, D, E)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5)))
@@ -494,9 +485,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_06[Obj, A, B, C, D, E, F](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_06[Obj, A, B, C, D, E, F](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f)))
       def apply(data: Iterable[(A, B, C, D, E, F)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6)))
@@ -513,9 +502,7 @@ object Molecule_0 {
     }
   }
 
-  abstract class Molecule_0_07[Obj, A, B, C, D, E, F, G](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_07[Obj, A, B, C, D, E, F, G](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g)))
       def apply(data: Iterable[(A, B, C, D, E, F, G)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7)))
@@ -533,9 +520,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_08[Obj, A, B, C, D, E, F, G, H](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_08[Obj, A, B, C, D, E, F, G, H](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8)))
@@ -553,9 +538,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_09[Obj, A, B, C, D, E, F, G, H, I](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_09[Obj, A, B, C, D, E, F, G, H, I](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)))
@@ -573,9 +556,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_10[Obj, A, B, C, D, E, F, G, H, I, J](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_10[Obj, A, B, C, D, E, F, G, H, I, J](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10)))
@@ -593,9 +574,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_11[Obj, A, B, C, D, E, F, G, H, I, J, K](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_11[Obj, A, B, C, D, E, F, G, H, I, J, K](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11)))
@@ -613,9 +592,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_12[Obj, A, B, C, D, E, F, G, H, I, J, K, L](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_12[Obj, A, B, C, D, E, F, G, H, I, J, K, L](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12)))
@@ -632,9 +609,7 @@ object Molecule_0 {
     }
   }
 
-  abstract class Molecule_0_13[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_13[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13)))
@@ -652,9 +627,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_14[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_14[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14)))
@@ -672,9 +645,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_15[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_15[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15)))
@@ -692,9 +663,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_16[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_16[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16)))
@@ -712,9 +681,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_17[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_17[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17)))
@@ -732,9 +699,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_18[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_18[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18)))
@@ -752,9 +717,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_19[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_19[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19)))
@@ -772,9 +735,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_20[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_20[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20)))
@@ -792,9 +753,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_21[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_21[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21)))
@@ -812,9 +771,7 @@ object Molecule_0 {
   }
 
 
-  abstract class Molecule_0_22[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](val _model: Model, queryData: (Query, Option[Query], Query, Option[Query])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)] {
-    val (_query, _nestedQuery, _rawQuery, _rawNestedQuery) = queryData
-
+  abstract class Molecule_0_22[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_0[Obj, (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)](model, queryData) {
     object insert extends insert {
       def apply(a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H, i: I, j: J, k: K, l: L, m: M, n: N, o: O, p: P, q: Q, r: R, s: S, t: T, u: U, v: V)(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, Seq(Seq(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)))
       def apply(data: Iterable[(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V)])(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = _insert(conn, data.map(d => Seq(d._1, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9, d._10, d._11, d._12, d._13, d._14, d._15, d._16, d._17, d._18, d._19, d._20, d._21, d._22)))

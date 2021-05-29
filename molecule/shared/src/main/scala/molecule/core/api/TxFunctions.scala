@@ -1,7 +1,6 @@
 package molecule.core.api
 
 import java.util.concurrent.{ExecutionException => ExecutionExc}
-import molecule.core.ast.Molecule
 import molecule.core.ast.elements.{Composite, Model, TxMetaData}
 import molecule.core.macros.TxFunctionCall
 import molecule.core.macros.exception.TxFnException

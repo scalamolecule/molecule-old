@@ -897,7 +897,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
       case BiTargetRef(card, attr)     => biTarget(card, attr)
       case BiTargetRefAttr(card, attr) => biTarget(card, attr)
       case Card(card)                  => default(card)
-      case other                       => throw new Model2TransactionException(
+      case other                       => throw Model2TransactionException(
         s"""Unexpected Generic `$other`:
            |e  : $e
            |a  : $a

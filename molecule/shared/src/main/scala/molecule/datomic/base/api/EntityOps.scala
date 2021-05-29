@@ -1,6 +1,6 @@
 package molecule.datomic.base.api
 
-import molecule.core.ast.Molecule
+import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.ast.transactionModel.RetractEntity

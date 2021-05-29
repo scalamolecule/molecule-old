@@ -149,7 +149,7 @@ trait Quoted {
 
 
         case other =>
-          throw new EntityException(
+          throw EntityException(
             "Unexpected element traversed in Quoted#quote2: " + other)
       }
     }

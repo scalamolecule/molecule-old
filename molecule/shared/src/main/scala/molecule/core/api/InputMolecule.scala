@@ -2,11 +2,11 @@ package molecule.core.api
 
 import java.net.URI
 import java.util.Date
-import molecule.core.ast.Molecule
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.fns
 import molecule.datomic.base.ast.query._
+import scala.util.control.NonFatal
 
 /** Shared interface of all input molecules.
   * <br><br>
@@ -43,15 +43,18 @@ import molecule.datomic.base.ast.query._
   *   ageOfPersons("Liz").get.map(_ ==> List(34))
   * }}}
   */
-trait InputMolecule extends Molecule {
+abstract class InputMolecule(
+  model: Model,
+  queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
+) extends Molecule(model, queryData) {
 
-  protected def resolveOr[I1](or: Or[I1]): Seq[I1] = {
-    def traverse(or0: Or[I1]): Seq[I1] = or0 match {
-      case Or(TermValue(v1), TermValue(v2)) => Seq(v1, v2)
-      case Or(or1: Or[I1], TermValue(v2))   => traverse(or1) :+ v2
-      case Or(TermValue(v1), or2: Or[I1])   => v1 +: traverse(or2)
-      case Or(or1: Or[I1], or2: Or[I1])     => traverse(or1) ++ traverse(or2)
-      case _                                => throw new MoleculeException(s"Unexpected expression: " + or0)
+  protected def resolveOr[I1](or: Or[I1]): Either[Throwable, Seq[I1]] = {
+    def traverse(or0: Or[I1]): Either[Throwable, Seq[I1]] = or0 match {
+      case Or(TermValue(v1), TermValue(v2)) => Right(Seq(v1, v2))
+      case Or(or1: Or[I1], TermValue(v2))   => traverse(or1).map(_ :+ v2)
+      case Or(TermValue(v1), or2: Or[I1])   => traverse(or2).map(v1 +: _)
+      case Or(or1: Or[I1], or2: Or[I1])     => traverse(or1).flatMap(a => traverse(or2).map(b => a ++ b))
+      case _                                => Left(MoleculeException(s"Unexpected expression: " + or0, null))
     }
     traverse(or)
   }
@@ -75,7 +78,7 @@ trait InputMolecule extends Molecule {
     }
     isTacit_(_model.elements, None) match {
       case Some(result) => result
-      case None         => throw new MoleculeException(s"Couldn't find atom of attribute `:$nsFull/$attr` in model:\n" + _model)
+      case None         => throw MoleculeException(s"Couldn't find atom of attribute `:$nsFull/$attr` in model:\n" + _model)
     }
   }
 
@@ -92,7 +95,7 @@ trait InputMolecule extends Molecule {
     }
     isTacit_(_model.elements, None) match {
       case Some(result) => result
-      case None         => throw new MoleculeException(s"Couldn't find atom of attribute `:$nsFull/$attr` in model:\n" + _model)
+      case None         => throw MoleculeException(s"Couldn't find atom of attribute `:$nsFull/$attr` in model:\n" + _model)
     }
   }
 
@@ -122,7 +125,7 @@ trait InputMolecule extends Molecule {
     }
     if (found) newClauses else {
       val KW(nsFull, attr, _) = kw
-      throw new MoleculeException(s"Couldn't find input attribute `:$nsFull/$attr` placeholder variable `$v0` to be null among clauses:\n" + clauses.mkString("\n"))
+      throw MoleculeException(s"Couldn't find input attribute `:$nsFull/$attr` placeholder variable `$v0` to be null among clauses:\n" + clauses.mkString("\n"))
     }
   }
 
@@ -208,13 +211,13 @@ trait InputMolecule extends Molecule {
       }
 
       val argss: Seq[Seq[_]] = inputs.flatMap {
-        case map: Map[_, _]             => throw new MoleculeException("Unexpected Map input: " + map)
+        case map: Map[_, _]             => throw MoleculeException("Unexpected Map input: " + map)
         case set: Set[_] if set.isEmpty => Nil
         case set: Set[_]                => Seq(set.toSeq)
         case arg                        => Seq(Seq(arg))
       }
       val args : Seq[Any]    = inputs.flatMap {
-        case map: Map[_, _] => throw new MoleculeException("Unexpected Map input: " + map)
+        case map: Map[_, _] => throw MoleculeException("Unexpected Map input: " + map)
         case set: Set[_]    => set.toSeq
         case arg            => Seq(arg)
       }
@@ -247,7 +250,7 @@ trait InputMolecule extends Molecule {
           case Seq(enum, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil && tacit  => (Nil, Nil, Seq(enum))
           case Seq(enum, ident, getName, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil => (Nil, Nil, Seq(enum, ident, getName))
           case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one          => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
-          case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))                     => throw new MoleculeException("Can't apply multiple values to comparison function.")
+          case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))                     => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Qm
           case _ if nil && tacit    => (Nil, Nil, Seq(Funct("missing?", Seq(DS(), e, kw), NoBinding)))
@@ -284,7 +287,7 @@ trait InputMolecule extends Molecule {
               // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
               case Seq(dc, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
               case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
-              case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw new MoleculeException("Can't apply multiple values to comparison function.")
+              case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
             }
           }
 
@@ -315,7 +318,7 @@ trait InputMolecule extends Molecule {
           // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
           case Seq(dc, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
           case cls@Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
-          case Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw new MoleculeException("Can't apply multiple values to comparison function.")
+          case Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Fulltext(Seq(Qm))
           case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(f))
@@ -376,7 +379,7 @@ trait InputMolecule extends Molecule {
           case Seq(enum, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil && tacit  => (Nil, Nil, Seq(enum))
           case Seq(enum, ident, getName, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil => (Nil, Nil, Seq(enum, ident, getName))
           case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one          => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
-          case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))                     => throw new MoleculeException("Can't apply multiple values to comparison function.")
+          case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))                     => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Fulltext(Seq(Qm))
           case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(f))
@@ -431,7 +434,7 @@ trait InputMolecule extends Molecule {
               // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm) BigInt
               case Seq(dc, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
               case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
-              case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw new MoleculeException("Can't apply multiple values to comparison function.")
+              case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
             }
           }
 
@@ -467,7 +470,7 @@ trait InputMolecule extends Molecule {
           // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
           case Seq(dc, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
           case cls@Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
-          case Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw new MoleculeException("Can't apply multiple values to comparison function.")
+          case Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Fulltext(Seq(Qm))
           case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(f))
@@ -504,7 +507,7 @@ trait InputMolecule extends Molecule {
             }._2
             (unifiedRules, newClauses1)
           }
-          case unexpected => throw new MoleculeException(s"Didn't expect $unexpected rules to be unified in query:\n" + query)
+          case unexpected => throw MoleculeException(s"Didn't expect $unexpected rules to be unified in query:\n" + query)
         }
       } else {
         (query.i.rules ++ newRules, before ++ newClauses ++ after)

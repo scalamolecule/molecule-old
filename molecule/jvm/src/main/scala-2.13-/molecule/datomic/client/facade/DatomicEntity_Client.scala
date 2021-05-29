@@ -182,10 +182,10 @@ case class DatomicEntity_Client(
           override def toString = col.toString
         }
 
-      case None => throw new EntityException("Unexpectedly received null")
-      case null => throw new EntityException("Unexpectedly received null")
+      case None => throw EntityException("Unexpectedly received null")
+      case null => throw EntityException("Unexpectedly received null")
 
-      case unexpected => throw new EntityException(
+      case unexpected => throw EntityException(
         "Unexpected Datalog type to convert: " + unexpected.getClass.toString)
     }
   }

@@ -132,7 +132,7 @@
 //
 //              case Some(aggrTpe) =>
 //                val err = s"""Object property `$prop` not available since the aggregate changes its type to `$aggrTpe`. Please use tuple output instead to access aggregate value."""
-//                Some(q"""final override lazy val ${TermName(prop)}: $tpe = throw new MoleculeException($err)""")
+//                Some(q"""final override lazy val ${TermName(prop)}: $tpe = throw MoleculeException($err)""")
 //            }
 //          } else None
 //
@@ -220,7 +220,7 @@
 //    }
 //
 //    val tree = if (hasSameNss) {
-//      q"""throw new MoleculeException(
+//      q"""throw MoleculeException(
 //            "Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
 //          )"""
 //    } else {

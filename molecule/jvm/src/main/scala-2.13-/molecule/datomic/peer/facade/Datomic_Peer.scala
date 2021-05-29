@@ -40,7 +40,7 @@ trait Datomic_Peer {
     host: String = ""): List[String] = try {
     Peer.getDatabaseNames(s"datomic:$protocol://$host*").asScala.toList
   } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
   /** Create database
@@ -69,7 +69,7 @@ trait Datomic_Peer {
     dbIdentifier: String = ""): Boolean = try {
     Peer.createDatabase(s"datomic:$protocol://$dbIdentifier")
   } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
   /** Delete database
@@ -98,7 +98,7 @@ trait Datomic_Peer {
     dbIdentifier: String = "localhost:4334/"): Boolean = try {
     Peer.deleteDatabase(s"datomic:$protocol://$dbIdentifier")
   } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
   /** Rename database
@@ -129,7 +129,7 @@ trait Datomic_Peer {
   ): Boolean = try {
     Peer.renameDatabase(s"datomic:$protocol://$dbIdentifier", newDbName)
   } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
 
@@ -161,7 +161,7 @@ trait Datomic_Peer {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     Conn_Peer(s"datomic:$protocol://$id")
   } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
 
@@ -217,7 +217,7 @@ trait Datomic_Peer {
       edns.foreach(edn => conn.transact(edn))
       conn
     } catch {
-      case e: Throwable => throw new DatomicFacadeException(e.toString)
+      case e: Throwable => throw DatomicFacadeException(e.toString)
     }
   }
 
@@ -249,7 +249,7 @@ trait Datomic_Peer {
       conn.transactRaw(schemaData)
       conn
     } catch {
-      case e: Throwable => throw new DatomicFacadeException(e.toString)
+      case e: Throwable => throw DatomicFacadeException(e.toString)
     }
   }
 
@@ -271,7 +271,7 @@ trait Datomic_Peer {
     schema.datomicPeer.foreach(edn => conn.transact(edn))
     conn
   } catch {
-    case e: Throwable => throw new DatomicFacadeException(e.toString)
+    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 }
 

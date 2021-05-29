@@ -1,6 +1,6 @@
 package molecule.datomic.base.api
 
-import molecule.core.ast.Molecule
+import molecule.core.api.Molecule
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.TxReport
 import scala.concurrent.{ExecutionContext, Future}

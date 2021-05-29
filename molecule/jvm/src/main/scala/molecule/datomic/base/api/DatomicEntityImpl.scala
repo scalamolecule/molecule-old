@@ -5,7 +5,7 @@ import java.net.URI
 import java.util.{Date, UUID}
 import clojure.lang.{Keyword, PersistentArrayMap}
 import datomicClient.anomaly.Fault
-import molecule.core.ast.Molecule
+import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, Quoted}

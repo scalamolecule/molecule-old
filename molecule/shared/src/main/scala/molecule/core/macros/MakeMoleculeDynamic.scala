@@ -10,7 +10,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
 
   import c.universe._
 
-  override def abort(msg: String): Nothing = throw new MoleculeException(msg)
+  override def abort(msg: String): Nothing = throw MoleculeException(msg)
 
   val zz = InspectMacro("MakeMolecule", 9, 8)
   //    val zz = InspectMacro("MakeMoleculeDynamic", 1, 10)

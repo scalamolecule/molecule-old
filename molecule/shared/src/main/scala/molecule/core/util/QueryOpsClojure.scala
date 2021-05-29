@@ -27,6 +27,6 @@ case class QueryOpsClojure(q: Query) extends JavaUtil {
     case InVar(_, argss)                        => cast(argss.head.head)
     case InDataSource(_, Nil)                   => Util.list()
     case InDataSource(_, argss)                 => cast(argss.head.head)
-    case other                                  => throw new QueryOpsException(s"UNEXPECTED input: $other\nquery:\n$q")
+    case other                                  => throw QueryOpsException(s"UNEXPECTED input: $other\nquery:\n$q")
   }
 }

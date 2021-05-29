@@ -79,7 +79,7 @@ case class Query2String(q: Query) extends Helpers {
     case RuleInvocation(name, args)                      => s"($name " + args.map(p).mkString(" ") + ")"
     case Rule(name, args, clauses) if clauses.size > 1   => asN = true; val rc = clauses.map(p).mkString("\n   "); asN = false; s"[($name " + args.map(p).mkString(" ") + ")\n   " + rc + "]"
     case Rule(name, args, clauses)                       => asN = true; val rc = clauses.map(p).mkString(" "); asN = false; s"[($name " + args.map(p).mkString(" ") + ") " + rc + "]"
-    case unresolvedQuery                                 => throw new Query2StringException(s"\nUNRESOLVED query expression: $unresolvedQuery")
+    case unresolvedQuery                                 => throw Query2StringException(s"\nUNRESOLVED query expression: $unresolvedQuery")
   }
 
   def pp(es: QueryExpr*): String = es.toList.map(p).filter(_.trim.nonEmpty).mkString("[", " ", "]")
@@ -114,7 +114,7 @@ case class Query2String(q: Query) extends Helpers {
       case ((acc, 1), (o, _))          => (acc + "\n        " + p(o), 0)
       case ((acc, _), (o, _))          => (acc + " " + p(o), 0)
 
-      case v => throw new MoleculeException("Unexpected multiline value: " + v)
+      case v => throw MoleculeException("Unexpected multiline value: " + v)
     }._1
     lazy val finds      = ":find " + outputs
     lazy val firstParts = List(finds, p(q.wi), p(q.i)).filter(_.trim.nonEmpty)

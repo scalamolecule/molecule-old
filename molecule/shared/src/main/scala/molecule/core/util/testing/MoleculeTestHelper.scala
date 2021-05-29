@@ -41,7 +41,7 @@ trait MoleculeTestHelper extends RegexMatching {
       }
     }
     val tx2                      = tx.map { stmt =>
-      val newId    = ids.getOrElse(stmt.e.toString, throw new MoleculeSpecException("missing stmt id"))
+      val newId    = ids.getOrElse(stmt.e.toString, throw MoleculeSpecException("missing stmt id"))
       val newValue = ids.getOrElse(stmt.v.toString, stmt.v.toString)
       List(
         stmt.action + " " * (longestAction - stmt.action.toString.length),

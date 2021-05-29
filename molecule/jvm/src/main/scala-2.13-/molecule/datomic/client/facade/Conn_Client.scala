@@ -276,7 +276,7 @@ case class Conn_Client(
           case Eq(Seq(e, a, v))          => Seq(e, read(a.toString), v)
           case Eq(Seq(e, a, v, d: Date)) => Seq(e, read(a.toString), v, d)
           case Eq(Seq(e, a, v, t))       => Seq(e, read(a.toString), v, t)
-          case v                         => throw new MoleculeException("Unexpected EAVT value: " + v)
+          case v                         => throw MoleculeException("Unexpected EAVT value: " + v)
         })
 
       case Generic("AEVT", _, _, value) =>
@@ -288,7 +288,7 @@ case class Conn_Client(
           case Eq(Seq(a, e, v))          => Seq(read(a.toString), e, v)
           case Eq(Seq(a, e, v, d: Date)) => Seq(read(a.toString), e, v, d)
           case Eq(Seq(a, e, v, t))       => Seq(read(a.toString), e, v, t)
-          case v                         => throw new MoleculeException("Unexpected AEVT value: " + v)
+          case v                         => throw MoleculeException("Unexpected AEVT value: " + v)
         })
 
       case Generic("AVET", attr, _, value) =>
@@ -300,9 +300,9 @@ case class Conn_Client(
               case Eq(Seq(a, None, until)) => Seq(a, None, Some(until))
               case Eq(Seq(a, from, until)) =>
                 if (from.getClass != until.getClass)
-                  throw new MoleculeException("Please supply range arguments of same type as attribute.")
+                  throw MoleculeException("Please supply range arguments of same type as attribute.")
                 Seq(a, Some(from), Some(until))
-              case v                       => throw new MoleculeException("Unexpected AVET range value: " + v)
+              case v                       => throw MoleculeException("Unexpected AVET range value: " + v)
             })
           case _       =>
             ("datoms", ":avet", value match {
@@ -312,7 +312,7 @@ case class Conn_Client(
               case Eq(Seq(a, v, e))          => Seq(read(a.toString), v, e)
               case Eq(Seq(a, v, e, d: Date)) => Seq(read(a.toString), v, e, d)
               case Eq(Seq(a, v, e, t))       => Seq(read(a.toString), v, e, t)
-              case v                         => throw new MoleculeException("Unexpected AVET datoms value: " + v)
+              case v                         => throw MoleculeException("Unexpected AVET datoms value: " + v)
             })
         }
 
@@ -324,7 +324,7 @@ case class Conn_Client(
           case Eq(Seq(v, a, e))          => Seq(v, read(a.toString), e)
           case Eq(Seq(v, a, e, d: Date)) => Seq(v, read(a.toString), e, d)
           case Eq(Seq(v, a, e, t))       => Seq(v, read(a.toString), e, t)
-          case v                         => throw new MoleculeException("Unexpected VAET value: " + v)
+          case v                         => throw MoleculeException("Unexpected VAET value: " + v)
         })
 
       case Generic("Log", _, _, value) =>
@@ -358,13 +358,13 @@ case class Conn_Client(
           // All !!
           case Eq(Nil) => Seq(None, None)
 
-          case Eq(other) => throw new MoleculeException(
+          case Eq(other) => throw MoleculeException(
             "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found: " + other)
 
-          case v => throw new MoleculeException("Unexpected Log value: " + v)
+          case v => throw MoleculeException("Unexpected Log value: " + v)
         })
 
-      case other => throw new MoleculeException(s"Only Index queries accepted (EAVT, AEVT, AVET, VAET, Log). Found `$other`")
+      case other => throw MoleculeException(s"Only Index queries accepted (EAVT, AEVT, AVET, VAET, Log). Found `$other`")
     }
 
 
@@ -409,7 +409,7 @@ case class Conn_Client(
       case "tx"                  => (d: Datom) => Future(d.tx)
       case "txInstant"           => (d: Datom) => date(d.tx)
       case "op"                  => (d: Datom) => Future(d.added)
-      case a                     => throw new MoleculeException("Unexpected generic attribute: " + a)
+      case a                     => throw MoleculeException("Unexpected generic attribute: " + a)
     }
 
     val attrs: Seq[String] = model.elements.collect {

@@ -254,9 +254,9 @@ class Conn_Peer(val peerConn: datomic.Connection)
           builder += e.getMessage
           e = e.getCause
         }
-        throw new QueryException(e, model, query, allInputs, p, builder.result())
+        throw QueryException(e, model, query, allInputs, p, builder.result())
       case NonFatal(ex)                                           =>
-        throw new QueryException(ex, model, query, allInputs, p)
+        throw QueryException(ex, model, query, allInputs, p)
     }
   }
 
@@ -271,7 +271,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
           case Eq(Seq(e, a, v))          => Seq(e, a, v)
           case Eq(Seq(e, a, v, d: Date)) => Seq(e, a, v, d)
           case Eq(Seq(e, a, v, t))       => Seq(e, a, v, t)
-          case v                         => throw new MoleculeException("Unexpected EAVT value: " + v)
+          case v                         => throw MoleculeException("Unexpected EAVT value: " + v)
         })
 
       case Generic("AEVT", _, _, value) =>
@@ -283,7 +283,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
           case Eq(Seq(a, e, v))          => Seq(a, e, v)
           case Eq(Seq(a, e, v, d: Date)) => Seq(a, e, v, d)
           case Eq(Seq(a, e, v, t))       => Seq(a, e, v, t)
-          case v                         => throw new MoleculeException("Unexpected AEVT value: " + v)
+          case v                         => throw MoleculeException("Unexpected AEVT value: " + v)
         })
 
       case Generic("AVET", attr, _, value) =>
@@ -295,9 +295,9 @@ class Conn_Peer(val peerConn: datomic.Connection)
               case Eq(Seq(a, None, until)) => Seq(a, null, until)
               case Eq(Seq(a, from, until)) =>
                 if (from.getClass != until.getClass)
-                  throw new MoleculeException("Please supply range arguments of same type as attribute.")
+                  throw MoleculeException("Please supply range arguments of same type as attribute.")
                 Seq(a, from, until)
-              case v                       => throw new MoleculeException("Unexpected AVET range value: " + v)
+              case v                       => throw MoleculeException("Unexpected AVET range value: " + v)
             })
           case _       =>
             ("datoms", datomic.Database.AVET, value match {
@@ -307,7 +307,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
               case Eq(Seq(a, v, e))          => Seq(a, v, e)
               case Eq(Seq(a, v, e, d: Date)) => Seq(a, v, e, d)
               case Eq(Seq(a, v, e, t))       => Seq(a, v, e, t)
-              case v                         => throw new MoleculeException("Unexpected AVET datoms value: " + v)
+              case v                         => throw MoleculeException("Unexpected AVET datoms value: " + v)
             })
         }
 
@@ -319,7 +319,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
           case Eq(Seq(v, a, e))          => Seq(v, a, e)
           case Eq(Seq(v, a, e, d: Date)) => Seq(v, a, e, d)
           case Eq(Seq(v, a, e, t))       => Seq(v, a, e, t)
-          case v                         => throw new MoleculeException("Unexpected VAET value: " + v)
+          case v                         => throw MoleculeException("Unexpected VAET value: " + v)
         })
 
       case Generic("Log", _, _, value) =>
@@ -353,13 +353,13 @@ class Conn_Peer(val peerConn: datomic.Connection)
           // All !!
           case Eq(Nil) => Seq(null, null)
 
-          case Eq(other) => throw new MoleculeException(
+          case Eq(other) => throw MoleculeException(
             "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found: " + other)
 
-          case v => throw new MoleculeException("Unexpected Log value: " + v)
+          case v => throw MoleculeException("Unexpected Log value: " + v)
         })
 
-      case other => throw new MoleculeException(s"Only Index queries accepted (EAVT, AEVT, AVET, VAET, Log). Found `$other`")
+      case other => throw MoleculeException(s"Only Index queries accepted (EAVT, AEVT, AVET, VAET, Log). Found `$other`")
     }
 
     // This one is important for Peer to keep db stable when
@@ -376,7 +376,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
       case "tx"                  => (d: Datom) => d.tx
       case "txInstant"           => (d: Datom) => adhocDb.entity(this, d.tx).rawValue(":db/txInstant").asInstanceOf[Date]
       case "op"                  => (d: Datom) => d.added
-      case a                     => throw new MoleculeException("Unexpected generic attribute: " + a)
+      case a                     => throw MoleculeException("Unexpected generic attribute: " + a)
     }
 
     val attrs: Seq[String] = model.elements.collect {
@@ -434,7 +434,7 @@ class Conn_Peer(val peerConn: datomic.Connection)
         val x7 = datomElement(tOpt, attrs(6))
         (d: Datom) => list(x1(d).asInstanceOf[Object], x2(d).asInstanceOf[Object], x3(d).asInstanceOf[Object], x4(d).asInstanceOf[Object], x5(d).asInstanceOf[Object], x6(d).asInstanceOf[Object], x7(d).asInstanceOf[Object]).asInstanceOf[jList[AnyRef]]
 
-      case n => throw new MoleculeException("Unexpected datom2row count: " + n)
+      case n => throw MoleculeException("Unexpected datom2row count: " + n)
     }
 
     // Convert Datoms to standard list of rows so that we can use the same Molecule query API

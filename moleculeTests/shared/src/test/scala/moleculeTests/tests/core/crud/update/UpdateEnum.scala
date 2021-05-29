@@ -1,6 +1,5 @@
 package moleculeTests.tests.core.crud.update
 
-import datomicClient.anomaly.Incorrect
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException

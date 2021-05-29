@@ -72,7 +72,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
             case (Generic(_, "tx", _, _), i)        => print(p("Tx", pE)); pad += pE + 3; i -> pE
             case (Generic(_, "txInstant", _, _), i) => print(p("TxInstant", pD)); pad += pD + 3; i -> pD
             case (Generic(_, "op", _, _), i)        => print(p("Op", pT)); pad += pT + 3; i -> pT
-            case other                              => throw new MoleculeException("Unexpected element: " + other)
+            case other                              => throw MoleculeException("Unexpected element: " + other)
           }.toMap
         }
 
@@ -90,46 +90,71 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
           case 1 => rows.forEach { row =>
             i += 1;
             if (i <= 500) {
-              println(p(i, 2) + p(row.get(0), n(0)))
+              println(p(i, 2) +
+                p(row.get(0), n(0)))
             }
           }
           case 2 => rows.forEach { row =>
             i += 1;
             if (i <= 500) {
-              println(p(i, 2) + p(row.get(0), n(0)) + p(row
-                .get(1), n(1)))
+              println(p(i, 2) +
+                p(row.get(0), n(0)) +
+                p(row.get(1), n(1)))
             }
           }
           case 3 => rows.forEach { row =>
             i += 1;
             if (i <= 500) {
-              println(p(i, 2) + p(row.
-                get(0), n(0)) + p
-              (row.get(1), n(1)) + p(row.get(2), n(2)))
+              println(p(i, 2) +
+                p(row.get(0), n(0)) +
+                p(row.get(1), n(1)) +
+                p(row.get(2), n(2)))
             }
           }
           case 4 => rows.forEach { row =>
             i += 1;
             if (i <= 500) {
-              println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)))
+              println(p(i, 2) +
+                p(row.get(0), n(0)) +
+                p(row.get(1), n(1)) +
+                p(row.get(2), n(2)) +
+                p(row.get(3), n(3)))
             }
           }
           case 5 => rows.forEach { row =>
             i += 1;
             if (i <= 500) {
-              println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)))
+              println(p(i, 2) +
+                p(row.get(0), n(0)) +
+                p(row.get(1), n(1)) +
+                p(row.get(2), n(2)) +
+                p(row.get(3), n(3)) +
+                p(row.get(4), n(4)))
             }
           }
           case 6 => rows.forEach { row =>
             i += 1;
             if (i <= 500) {
-              println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)))
+              println(p(i, 2) +
+                p(row.get(0), n(0)) +
+                p(row.get(1), n(1)) +
+                p(row.get(2), n(2)) +
+                p(row.get(3), n(3)) +
+                p(row.get(4), n(4)) +
+                p(row.get(5), n(5)))
             }
           }
           case 7 => rows.forEach { row =>
             i += 1;
             if (i <= 500) {
-              println(p(i, 2) + p(row.get(0), n(0)) + p(row.get(1), n(1)) + p(row.get(2), n(2)) + p(row.get(3), n(3)) + p(row.get(4), n(4)) + p(row.get(5), n(5)) + p(row.get(6), n(6)))
+              println(p(i, 2) +
+                p(row.get(0), n(0)) +
+                p(row.get(1), n(1)) +
+                p(row.get(2), n(2)) +
+                p(row.get(3), n(3)) +
+                p(row.get(4), n(4)) +
+                p(row.get(5), n(5)) +
+                p(row.get(6), n(6)))
             }
           }
         }
@@ -302,10 +327,20 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
         val rules = "[" + (_query.i.rules.map(p).mkString(" ")) + "]"
         val db    = conn.db
         conn._query(_model, _query, Some(db)).map { res =>
-          val rows             = resolve(res.asScala.take(500))
-          val rulesOut: String = if (_query.i.rules.isEmpty) "none\n\n" else "[\n " + _query.i.rules.map(Query2String(_query).p(_)).mkString("\n ") + "\n]\n\n"
-          val inputs  : String = if (ins.isEmpty) "none\n\n" else "\n" + ins.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1}").mkString("\n") + "\n\n"
-          val outs             = rows.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1.mkString("[", "  ", "]")}").mkString("\n")
+          val rows = resolve(res.asScala.take(500))
+
+          val rulesOut: String = if (_query.i.rules.isEmpty)
+            "none\n\n"
+          else
+            "[\n " + _query.i.rules.map(Query2String(_query).p(_)).mkString("\n ") + "\n]\n\n"
+
+          val inputs: String = if (ins.isEmpty)
+            "none\n\n"
+          else
+            "\n" + ins.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1}").mkString("\n") + "\n\n"
+
+          val outs = rows.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1.mkString("[", "  ", "]")}").mkString("\n")
+
           println(
             "\n--------------------------------------------------------------------------\n" +
               _model + "\n\n" +
@@ -342,7 +377,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param t
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetAsOf(t: Long)(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingTempDb(AsOf(TxLong(t)))))
+  def inspectGetAsOf(t: Long)(implicit conn: Future[Conn]): Future[Unit] =
+    inspectGet(conn.map(_.usingTempDb(AsOf(TxLong(t)))))
 
 
   /** Inspect call to `getAsOf(tx)` on a molecule (without affecting the db).
@@ -358,7 +394,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetAsOf(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))))
+  def inspectGetAsOf(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] =
+    inspectGet(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))))
 
 
   /** Inspect call to `getAsOf(date)` on a molecule (without affecting the db).
@@ -374,7 +411,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param date
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scsope
     */
-  def inspectGetAsOf(date: Date)(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingTempDb(AsOf(TxDate(date)))))
+  def inspectGetAsOf(date: Date)(implicit conn: Future[Conn]): Future[Unit] =
+    inspectGet(conn.map(_.usingTempDb(AsOf(TxDate(date)))))
 
 
   /** Inspect call to `getSince(t)` on a molecule (without affecting the db).
@@ -390,7 +428,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param t
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetSince(t: Long)(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingTempDb(Since(TxLong(t)))))
+  def inspectGetSince(t: Long)(implicit conn: Future[Conn]): Future[Unit] =
+    inspectGet(conn.map(_.usingTempDb(Since(TxLong(t)))))
 
 
   /** Inspect call to `getSince(tx)` on a molecule (without affecting the db).
@@ -406,7 +445,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetSince(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingTempDb(Since(TxLong(tx.t)))))
+  def inspectGetSince(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] =
+    inspectGet(conn.map(_.usingTempDb(Since(TxLong(tx.t)))))
 
 
   /** Inspect call to `getSince(date)` on a molecule (without affecting the db).
@@ -422,7 +462,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param date
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetSince(date: Date)(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingTempDb(Since(TxDate(date)))))
+  def inspectGetSince(date: Date)(implicit conn: Future[Conn]): Future[Unit] =
+    inspectGet(conn.map(_.usingTempDb(Since(TxDate(date)))))
 
 
   /** Inspect call to `getWith(txMolecules)` on a molecule (without affecting the db).
@@ -445,7 +486,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       conn.map { conn2 =>
         conn2.usingTempDb(With(conn2.stmts2java(txMolecules.flatten)))
       }
-    ).map { _ =>
+    ).flatMap { _ =>
       conn.map { conn2 =>
         println("Transaction data:\n========================================================================")
         txMolecules.zipWithIndex foreach { case (stmts, i) =>
@@ -504,17 +545,21 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return Unit
     */
-  def inspectSave(implicit conn: Future[Conn]): Future[Unit] = conn.map { conn =>
+  def inspectSave(implicit conn: Future[Conn]): Future[Unit] = conn.flatMap { conn =>
     val transformer = conn.modelTransformer(_model)
     try {
       VerifyModel(_model, "save")
       transformer.saveStmts.map(stmts =>
-        conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts, stmts)
+        conn.inspect(
+          "output.Molecule.inspectSave", 1
+        )(1, _model, transformer.genericStmts, stmts)
       )
     } catch {
       case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-        conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts)
+        conn.inspect(
+          "output.Molecule.inspectSave", 1
+        )(1, _model, transformer.genericStmts)
         Future.failed(exc)
     }
   }
@@ -523,20 +568,22 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
   protected def _inspectInsert(
     conn: Future[Conn],
     dataRows: Iterable[Seq[Any]]
-  ): Future[Unit] = conn.map { conn =>
-
+  ): Future[Unit] = conn.flatMap { conn =>
     val transformer = conn.modelTransformer(_model)
     val data        = untupled(dataRows)
     try {
-      Future {
-        // Separate each row so that we can distinguish each insert row
-        val stmtss = data.map(row => transformer.insertStmts(Iterable(row)))
-        conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data, stmtss)
+      // Separate each row so that we can distinguish each insert row
+      Future.sequence(data.map(row => transformer.insertStmts(Iterable(row)))).map { stmtss =>
+        conn.inspect(
+          "output.Molecule._inspectInsert", 1
+        )(1, _model, transformer.genericStmts, dataRows, data, stmtss)
       }
     } catch {
       case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-        conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data)
+        conn.inspect(
+          "output.Molecule._inspectInsert", 1
+        )(1, _model, transformer.genericStmts, dataRows, data)
         Future.failed(exc)
     }
   }
@@ -552,18 +599,21 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  def inspectUpdate(implicit conn: Future[Conn]): Future[Unit] = conn.map { conn =>
+  def inspectUpdate(implicit conn: Future[Conn]): Future[Unit] = conn.flatMap { conn =>
     val transformer = conn.modelTransformer(_model)
     try {
-      Future {
-        VerifyModel(_model, "update")
-        val stmts = transformer.updateStmts
-        conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts, stmts)
-      }
+      VerifyModel(_model, "update")
+      transformer.updateStmts.map(stmts =>
+        conn.inspect(
+          "output.Molecule.inspectUpdate", 1
+        )(1, _model, transformer.genericStmts, stmts)
+      )
     } catch {
       case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-        conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts)
+        conn.inspect(
+          "output.Molecule.inspectUpdate", 1
+        )(1, _model, transformer.genericStmts)
         Future.failed(exc)
     }
   }

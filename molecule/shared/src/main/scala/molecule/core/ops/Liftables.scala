@@ -15,7 +15,7 @@ private[molecule] trait Liftables extends MacroHelpers {
 
   import c.universe._
 
-  def abort(msg: String) = throw new LiftablesException(msg)
+  def abort(msg: String) = throw LiftablesException(msg)
 
   // General liftables --------------------------------------------------------------
 
@@ -59,7 +59,7 @@ private[molecule] trait Liftables extends MacroHelpers {
       case s: HashSet[_] => q"Set(..${s map any})"
       case emptySet      => q"Set()"
     }
-    case q"scala.None   "              => q"None"
+    case q"scala.None"                 => q"None"
     case null                          => q"null"
     case other                         =>
       abort("Can't lift unexpected code:" +
@@ -103,6 +103,22 @@ private[molecule] trait Liftables extends MacroHelpers {
     case (k: URI, v: URI)               => q"(${mkURI(k)}, ${mkURI(v)})"
     case (a, b)                         => abort(s"Can't lift unexpected Tuple2: ($a, $b)")
     case other                          => abort(s"Can't lift unexpected product type: $other")
+  }
+
+
+  // Liftables for Throwables --------------------------------------------------------------
+
+  implicit val liftStackTraceElement: c.universe.Liftable[StackTraceElement] = Liftable[StackTraceElement] { s =>
+    q"new StackTraceElement(${s.getClassName}, ${s.getMethodName}, ${s.getFileName}, ${s.getLineNumber})"
+  }
+
+  implicit val liftStackTraceElements: c.universe.Liftable[Array[StackTraceElement]] = Liftable[Array[StackTraceElement]] { a =>
+    val stackTraceElements = a.map(e => q"$e")
+    q"Array(..$stackTraceElements)"
+  }
+
+  implicit val liftThrowable: c.universe.Liftable[Throwable] = Liftable[Throwable] { t =>
+    q"new Throwable(${t.toString}, Array(..${t.getStackTrace}))"
   }
 
 
@@ -399,7 +415,7 @@ private[molecule] trait Liftables extends MacroHelpers {
                                   case g: Generic    => q"$g"
                                   case Self          => q"Self"
                                   case EmptyElement  => q"EmptyElement"
-                                  case _: Nested    => abort(
+                                  case _: Nested     => abort(
                                     s"Can't nest more than 7 levels deep."
                                   )
                                 }

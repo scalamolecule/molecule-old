@@ -17,7 +17,7 @@ import scala.concurrent.Future
 abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
 
   protected def err(method: String, msg: String) = {
-    throw new Model2TransactionException(s"[$method]  $msg")
+    throw Model2TransactionException(s"[$method]  $msg")
   }
 
   val datomicTx = "datomic.tx"

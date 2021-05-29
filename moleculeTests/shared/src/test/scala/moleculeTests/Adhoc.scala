@@ -1,8 +1,8 @@
 package moleculeTests
 
+import molecule.core.exceptions.MoleculeException
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.in1_out11._
-import molecule.datomic.api.out5.m
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
@@ -45,11 +45,31 @@ object Adhoc extends AsyncTestSuite {
       //        msg ==> "[noTacitAttrs]  Tacit attributes like `str_` not allowed in insert molecules."
       //      }
 
+
+//      val inputMolecule1 = m(Ns.enum.enums_.not(?)) // or m(Ns.enum.enums.!=(?))
+//      val inputMolecule2 = m(Ns.enum.enums.not(?)) // or m(Ns.enum.enums.!=(?))
+      val inputMolecule3 = m(Ns.enums.not(?)) // or m(Ns.enum.enums.!=(?))
+      val all           = List(
+        (enum1, Set(enum1, enum2, enum3)),
+        (enum2, Set(enum2, enum3, enum4)),
+        (enum3, Set(enum3, enum4, enum5))
+      )
+
+
+
       for {
-        tx <- Ns.uuidMap(str1 -> uuid3).save
-        eid = tx.eid
-        _ <- Ns(eid).uuidMap(str1 -> uuid1, str1 -> uuid2).update
-        _ <- Ns.uuidMap.get.map(_ ==> List(Map(str1 -> uuid1)))
+        _ <- Ns.enum.enums$ insert List(
+          (enum1, Some(Set(enum1, enum2))),
+          (enum2, Some(Set(enum2, enum3))),
+          (enum3, Some(Set(enum3, enum4))),
+          (enum4, Some(Set(enum4, enum5))),
+          (enum5, Some(Set(enum4, enum5, enum6))),
+          (enum6, None)
+        )
+//        _ <- inputMolecule1(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
+//        _ <- inputMolecule2(Nil).get.map(_ ==> all)
+        _ <- inputMolecule3(Nil).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5)))
+
       } yield ()
 
       //      Ns.str_.int$.insert.apply(Some(1)).flatMap{res =>

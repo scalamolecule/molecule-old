@@ -49,7 +49,7 @@ case class TxReport_Peer(
       //      assertStmts foreach println
 
       if (allIds.size != assertStmts.size)
-        throw new DatomicFacadeException(
+        throw DatomicFacadeException(
           s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
         )
       val resolvedIds = assertStmts.zip(allIds).collect {

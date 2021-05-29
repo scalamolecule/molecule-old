@@ -268,7 +268,7 @@ object elements {
     case Nested(Bond(nsFull, _, _, _, _), _) => nsFull
     case Generic(nsFull, _, _, _)            => nsFull
     case unexpected                          =>
-      throw new ModelException("Unexpected element: " + unexpected)
+      throw ModelException("Unexpected element: " + unexpected)
   }
 
 

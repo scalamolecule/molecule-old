@@ -92,7 +92,7 @@ case class DatomicEntity_Peer(
           }
         )
 
-      case unexpected => throw new EntityException(
+      case unexpected => throw EntityException(
         "Unexpected Datalog type to convert: " + unexpected.getClass.toString)
     }
     vOpt match {

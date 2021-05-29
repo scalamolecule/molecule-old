@@ -1,7 +1,6 @@
 package molecule.core.api
 
 import java.util.{Date, Collection => jCollection, List => jList}
-import molecule.core.ast.Molecule
 import molecule.datomic.base.ast.tempDb.{AsOf, Since, TxDate, TxLong, With}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
