@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.edgeSelf
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import molecule.datomic.api.out3._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,16 +16,16 @@ object EdgeOneSelfSave extends AsyncTestSuite {
       "new target" - bidirectional { implicit conn =>
         for {
           /*
-          When a "property edge" is created, Molecule automatically creates a reverse reference in the opposite direction:
+            When a "property edge" is created, Molecule automatically creates a reverse reference in the opposite direction:
 
-          Ann --> annLovesBen (7) -->  Ben
-            \                         /
-              <-- benLovesAnn (7) <--
+            Ann --> annLovesBen (7) -->  Ben
+              \                         /
+                <-- benLovesAnn (7) <--
 
-          This allow us to query from Ann to Ben and Ben to Ann in a uniform way.
+            This allow us to query from Ann to Ben and Ben to Ann in a uniform way.
 
-          So we get 4 entities:
-      */
+            So we get 4 entities:
+          */
           tx <- Person.name("Ann").Loves.weight(7).Person.name("Ben").save
           List(ann, annLovesBen, benLovesAnn, ben) = tx.eids
 
@@ -62,7 +62,6 @@ object EdgeOneSelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name.insert("Ben")
           ben = tx.eid
 
@@ -84,13 +83,13 @@ object EdgeOneSelfSave extends AsyncTestSuite {
       "new target" - bidirectional { implicit conn =>
         for {
           /*
-          Create love edges to/from Ben
-          Ben and bidirectional edges created
+            Create love edges to/from Ben
+            Ben and bidirectional edges created
 
-                (-->)  lovesBen  -->
-          (Ann)                       Ben
-                (<--)  benLoves  <--
-      */
+                  (-->)  lovesBen  -->
+            (Ann)                       Ben
+                  (<--)  benLoves  <--
+          */
           tx <- Loves.weight(7).Person.name("Ben").save
           List(lovesBen, benLoves, ben) = tx.eids
 
@@ -123,8 +122,8 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           ))
 
           // Two edges pointing to and from Ben
-          _ <- Loves.e.weight_(7).Person.name_("Ben").get === List(lovesBen)
-          _ <- Person.name_("Ben").Loves.weight_(7).e.get === List(benLoves)
+          _ <- Loves.e.weight_(7).Person.name_("Ben").get.map(_ ==> List(lovesBen))
+          _ <- Person.name_("Ben").Loves.weight_(7).e.get.map(_ ==> List(benLoves))
 
           // Base entity Ann points to one of the edges (doesn't matter which of them)
           tx <- Person.name("Ann").loves(lovesBen).save
@@ -135,11 +134,11 @@ object EdgeOneSelfSave extends AsyncTestSuite {
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
-          //
-          //      // Narcissistic tendencies not allowed
-          //      (Person(ann).loves(ann).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        s"[valueStmts:biEdgeRefAttr]  Current entity and referenced entity ids can't be the same."
+
+          // Narcissistic tendencies not allowed
+          _ <- Person(ann).loves(ann).update.recover { case Model2TransactionException(err) =>
+            err ==> s"[valueStmts:biEdgeRefAttr]  Current entity and referenced entity ids can't be the same."
+          }
 
           // Ann and Ben know each other with a weight of 7
           _ <- Person.name.Loves.weight.Person.name.get.map(_.sorted ==> List(
@@ -151,7 +150,6 @@ object EdgeOneSelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name.insert("Ben")
           ben = tx.eid
 

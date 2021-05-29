@@ -4,9 +4,9 @@ package molecule.core.expression
   * <br><br>
   * Apply `count` or `countDistinct` keywords to generic attributes.
   * {{{
-  *   Schema.e(count).get.head === 27                  // count of all attributes in schema
-  *   Schema.a(countDistinct).get.head === 23          // count of all distinct attribute names in schema
-  *   Schema.ns("myNamepace").a(count).get.head === 3  // count of attributes in MyNamespace
+  *   Schema.e(count).get.map(_.head ==> 27                  )// count of all attributes in schema
+  *   Schema.a(countDistinct).get.map(_.head ==> 23)          // count of all distinct attribute names in schema
+  *   Schema.ns("myNamepace").a(count).get.map(_.head ==> 3)  // count of attributes in MyNamespace
   * }}}
   *
   * @groupname aggregates Aggregate keywords

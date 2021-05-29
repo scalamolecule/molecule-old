@@ -1,9 +1,8 @@
 package moleculeTests.tests.core.ref.composite
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out6._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -42,85 +41,74 @@ object CompositeAttrs extends AsyncTestSuite {
 
         _ <- m(Ref1.int1 + Ref1.str1_).get.map(_.sorted ==> List(11, 22))
 
-        _ <- m(Ns.int + Ns.str_).get === List(111)
+        _ <- m(Ns.int + Ns.str_).get.map(_ ==> List(111))
 
 
         // 2 namespaces, 1 tacit
 
         _ <- m(Ref2.int2 + Ref1.str1_).get.map(_.sorted ==> List(1, 2))
-        _ <- m(Ref2.int2 + Ns.str_).get === List(1)
-        _ <- m(Ref1.int1 + Ns.str_).get === List(11)
+        _ <- m(Ref2.int2 + Ns.str_).get.map(_ ==> List(1))
+        _ <- m(Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
 
 
         // 3 namespaces, 2 tacits
 
-        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.str_).get === List(1)
-        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.str_).get === List(11)
+        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.str_).get.map(_ ==> List(1))
+        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
         _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int).get.map(_.sorted ==> List(111, 222))
 
 
         // 3 namespaces, 3 tacits, 4 composite parts (to test second `+` method)
 
-        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.int_ + Ns.str_).get === List(1)
-        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.int_ + Ns.str_).get === List(11)
-        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int + Ns.str_).get === List(111)
-        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int_ + Ns.str).get === List("aaa")
+        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.int_ + Ns.str_).get.map(_ ==> List(1))
+        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.int_ + Ns.str_).get.map(_ ==> List(11))
+        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int + Ns.str_).get.map(_ ==> List(111))
+        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int_ + Ns.str).get.map(_ ==> List("aaa"))
       } yield ()
     }
 
     "Duplicate attributes" - {
 
       "Duplicate attrs/refs with same entity on top-level not allowed" - core { implicit conn =>
-
         // 1 + 1 attr
-        compileError(
-          """m(Ns.int + Ns.int)""").check(
+        compileError("""m(Ns.int + Ns.int)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite molecules can't contain the same attribute more than once. Found multiple instances of `:Ns/int`")
 
         // 0 + 2 attr
-        compileError(
-          """m(Ns.int + Ns.str.str)""").check(
+        compileError("""m(Ns.int + Ns.str.str)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite molecules can't contain the same attribute more than once. Found multiple instances of `:Ns/str`")
 
         // 1 + 1 ref
-        compileError(
-          """m(Ns.bool.Ref1.int1 + Ns.str.Ref1.int1)""").check(
+        compileError("""m(Ns.bool.Ref1.int1 + Ns.str.Ref1.int1)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite molecules can't contain the same ref more than once. Found multiple instances of `:Ns/ref1`")
 
         // 0 + 2 attr after backref
-        compileError(
-          """m(Ns.int + Ref1.int1.Ref2.int2._Ref1.int1)""").check(
+        compileError("""m(Ns.int + Ref1.int1.Ref2.int2._Ref1.int1)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite molecules can't contain the same attribute more than once. Found multiple instances of `:Ref1/int1`")
 
         // 0 + 2 ref after backref
-        compileError(
-          """m(Ns.int + Ref1.int1.Ref2.int2._Ref1.str1.Ref2.str2)""").check(
+        compileError("""m(Ns.int + Ref1.int1.Ref2.int2._Ref1.str1.Ref2.str2)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite molecules can't contain the same ref more than once. Found multiple instances of `:Ref1/ref2`")
-
       }
 
       "Duplicate attrs/refs with same entity within sub-molecule not allowed" - core { implicit conn =>
-
         // 2 attr
-        compileError(
-          """m(Ref1.int1 + Ns.int.Ref1.int1.int1)""").check(
+        compileError("""m(Ref1.int1 + Ns.int.Ref1.int1.int1)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite sub-molecules can't contain the same attribute more than once. Found multiple instances of `:Ref1/int1`")
 
         // 2 attr after backref
-        compileError(
-          """m(Ref1.int1 + Ns.int.Ref1.int1.Ref2.int2._Ref1.int1)""").check(
+        compileError("""m(Ref1.int1 + Ns.int.Ref1.int1.Ref2.int2._Ref1.int1)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite sub-molecules can't contain the same attribute more than once. Found multiple instances of `:Ref1/int1`")
 
         // 2 ref
-        compileError(
-          """m(Ref1.int1 + Ns.int.Ref1.int1.Ref2.int2._Ref1.str1.Ref2.str2)""").check(
+        compileError("""m(Ref1.int1 + Ns.int.Ref1.int1.Ref2.int2._Ref1.str1.Ref2.str2)""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: " +
             "Composite sub-molecules can't contain the same ref more than once. Found multiple instances of `:Ref1/ref2`")
 

@@ -40,7 +40,7 @@ trait AttrExpressions {
     *   val ageOfPersons = m(Person.name_(?).age) // awaiting name of type String
     *
     *   // At runtime, "Ben" is applied as input replacing the `?` placeholder and we can get the age.
-    *   ageOfPersons("Ben").get === List(42)
+    *   ageOfPersons("Ben").get.map(_ ==> List(42))
     * }}}
     *
     * @note Data can only be retrieved from input molecules once they have been resolved with input.<br>
@@ -64,7 +64,7 @@ trait AttrExpressions {
     *   // What beverages do pairs of 23- AND 25-year-olds like in common?
     *   // Drink name is unified - Joe and Ben both drink coffee, etc..
     *   Person.age_(23).name.Beverages.name._Ns.Self
-    *         .age_(25).name.Beverages.name_(unify).get.sorted === List(
+    *         .age_(25).name.Beverages.name_(unify).get.map(_.sorted ==> List()
     *     ("Joe", "Coffee", "Ben"),
     *     ("Liz", "Coffee", "Ben"),
     *     ("Liz", "Tea", "Ben")
@@ -83,11 +83,11 @@ trait AttrExpressions {
     /** Apply empty value to retract datom in an update.
       * {{{
       *   val benId = Person.name("Ben").age(42).save.eid
-      *   Person.name.age$ === List(("Ben", Some(42)))
+      *   Person.name.age$.get.map(_ ==> List(("Ben", Some(42))))
       *
       *   // Retract Ben's age
       *   Person(benId).age().update
-      *   Person.name.age$ === List(("Ben", None))
+      *   Person.name.age$.get.map(_ ==> List(("Ben", None)))
       * }}}
       * For cardinality-many attributes, ''all'' values of the attribute are retracted.
       */
@@ -98,10 +98,10 @@ trait AttrExpressions {
       * Applying value(s) to an attribute has different semantics depending on what operation is performed:
       * {{{
       *   // Querying with `get` - Ben is 42
-      *   Person.name_("Ben").age.get === List(42)
+      *   Person.name_("Ben").age.get.map(_ ==> List(42))
       *
       *   // OR-semantics when multiple values are queried
-      *   Person.name_("Ben", "Liz").age.get === List(42, 37)
+      *   Person.name_("Ben", "Liz").age.get.map(_ ==> List(42, 37))
       *
       *   // Saving new value (any old value is retracted)
       *   Person.name("Joe").save
@@ -131,15 +131,15 @@ trait AttrExpressions {
       * Applying value(s) to an attribute has different semantics depending on what operation is performed:
       * {{{
       *   // Querying with `get` - Ben is 42
-      *   Person.name_(Set("Ben")).age.get === List(42)
+      *   Person.name_(Set("Ben")).age.get.map(_ ==> List(42))
       *
       *   val members = List("Ben", "Liz")
       *   val associates = List("Don", "Ann")
       *
       *   // OR-semantics when multiple values are queried
-      *   Person.name_(members).age.get === List(42, 37)
+      *   Person.name_(members).age.get.map(_ ==> List(42, 37))
       *   // Multiple Iterables concatenated
-      *   Person.name_(members, associates).age.get === List(42, 37, 71, 28)
+      *   Person.name_(members, associates).age.get.map(_ ==> List(42, 37, 71, 28))
       *
       *   // Single value in Iterable can be added when saving
       *   // (although easier to apply the value directly)
@@ -176,11 +176,11 @@ trait AttrExpressions {
       * {{{
       *   Person.name.age(23).Drinks.beverage._Person.Self // create self join
       *         .name.age(25).Drinks.beverage_(unify)      // unify by beverage
-      *         .get === List(
+      *         .get.map(_ ==> List(
       *           ("Joe", 23, "Coffee", "Ben", 25),  // Joe (23) and Ben(25) both like coffee
       *           ("Liz", 23, "Coffee", "Ben", 25),  // Liz (23) and Ben(25) both like coffee
       *           ("Liz", 23, "Tea", "Ben", 25)      // Liz (23) and Ben(25) both like tea
-      *         )
+      *         ))
       * }}}
       * `unify` marker can only be applied to tacit attribute (with underscore).
       *
@@ -192,16 +192,16 @@ trait AttrExpressions {
 
     /** Match attribute values different from one or more applied values.
       * {{{
-      *   Person.name.get === List("Ben", "Liz", "Joe")
+      *   Person.name.get.map(_ ==> List("Ben", "Liz", "Joe"))
       *
       *   // Negate one value
-      *   Person.name.not("Ben").get === List("Liz", "Joe")
+      *   Person.name.not("Ben").get.map(_ ==> List("Liz", "Joe"))
       *
       *   // Negate multiple values
-      *   Person.name.not("Ben", "Liz").get === List("Joe")
+      *   Person.name.not("Ben", "Liz").get.map(_ ==> List("Joe"))
       *
       *   // same as
-      *   Person.name.!=("Ben", "Liz").get === List("Joe")
+      *   Person.name.!=("Ben", "Liz").get.map(_ ==> List("Joe"))
       * }}}
       *
       * @param value      Negated attribute value
@@ -213,13 +213,13 @@ trait AttrExpressions {
 
     /** Match attribute values different from applied Iterable of values.
       * {{{
-      *   Person.name.get === List("Ben", "Liz", "Joe")
+      *   Person.name.get.map(_ ==> List("Ben", "Liz", "Joe"))
       *
       *   // Negate Iterable of values
-      *   Person.name.not(List("Ben", "Joe")).get === List("Liz")
+      *   Person.name.not(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
       *
       *   // same as
-      *   Person.name.!=(List("Ben", "Joe")).get === List("Liz")
+      *   Person.name.!=(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
       * }}}
       *
       * @param values Iterable of negated attribute values
@@ -230,16 +230,16 @@ trait AttrExpressions {
 
     /** Match attribute values different from one or more applied values.
       * {{{
-      *   Person.name.get === List("Ben", "Liz", "Joe")
+      *   Person.name.get.map(_ ==> List("Ben", "Liz", "Joe"))
       *
       *   // Negate one value
-      *   Person.name.!=("Ben").get === List("Liz", "Joe")
+      *   Person.name.!=("Ben").get.map(_ ==> List("Liz", "Joe"))
       *
       *   // Negate multiple values
-      *   Person.name.!=("Ben", "Liz").get === List("Joe")
+      *   Person.name.!=("Ben", "Liz").get.map(_ ==> List("Joe"))
       *
       *   // same as
-      *   Person.name.not("Ben", "Liz").get === List("Joe")
+      *   Person.name.not("Ben", "Liz").get.map(_ ==> List("Joe"))
       * }}}
       *
       * @param value      Negated attribute value
@@ -251,13 +251,13 @@ trait AttrExpressions {
 
     //    /** Match attribute values different from applied value.
     //      * {{{
-    //      *   Person.name.get === List("Ben", "Liz", "Joe")
+    //      *   Person.name.get.map(_ ==> List("Ben", "Liz", "Joe"))
     //      *
     //      *   // Negate value
-    //      *   Person.name.!=("Ben").get === List("Liz", "Joe")
+    //      *   Person.name.!=("Ben").get.map(_ ==> List("Liz", "Joe"))
     //      *
     //      *   // same as
-    //      *   Person.name.not("Ben").get === List("Liz", "Joe")
+    //      *   Person.name.not("Ben").get.map(_ ==> List("Liz", "Joe"))
     //      * }}}
     //      *
     //      * @param value Negated attribute value
@@ -268,13 +268,13 @@ trait AttrExpressions {
 
     /** Match attribute values different from applied Iterable of values.
       * {{{
-      *   Person.name.get === List("Ben", "Liz", "Joe")
+      *   Person.name.get.map(_ ==> List("Ben", "Liz", "Joe"))
       *
       *   // Negate Iterable of values
-      *   Person.name.!=(List("Ben", "Joe")).get === List("Liz")
+      *   Person.name.!=(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
       *
       *   // same as
-      *   Person.name.not(List("Ben", "Joe")).get === List("Liz")
+      *   Person.name.not(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
       * }}}
       *
       * @param values Iterable of negated attribute values
@@ -289,7 +289,7 @@ trait AttrExpressions {
 
     /** Assert one or more card-many attribute values.
       * {{{
-      *   Person.hobbies.get === List(Set("golf", "diving"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving")))
       *
       *   // Assert/add value
       *   Person(benId).hobbies.assert("stamps").update
@@ -297,7 +297,7 @@ trait AttrExpressions {
       *   // Assert multiple values
       *   Person(benId).hobbies.assert("walking", "theater").update
       *
-      *   Person.hobbies.get === List(Set("golf", "diving", "stamps", "walking", "theater"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving", "stamps", "walking", "theater")))
       * }}}
       *
       * @param value      New attribute value
@@ -309,12 +309,12 @@ trait AttrExpressions {
 
     /** Assert Iterable of card-many attribute values.
       * {{{
-      *   Person.hobbies.get === List(Set("golf", "diving"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving")))
       *
       *   // Assert/add values of Iterable
       *   Person(benId).hobbies.assert(Seq("stamps", "walking", "theater")).update
       *
-      *   Person.hobbies.get === List(Set("golf", "diving", "stamps", "walking", "theater"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving", "stamps", "walking", "theater")))
       * }}}
       *
       * @param values Iterable of attribute values
@@ -327,7 +327,7 @@ trait AttrExpressions {
       * <br><br>
       * Retracts old value and asserts new value.
       * {{{
-      *   Person.hobbies.get === List(Set("golf", "diving"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving")))
       *
       *   // Replace value by applying old/new value pair
       *   Person(benId).hobbies.replace("golf" -> "theater").update
@@ -335,7 +335,7 @@ trait AttrExpressions {
       *   // Replace multiple values by applying multiple old/new value pairs
       *   Person(benId).hobbies.replace("theater" -> "concerts", "diving" -> "football").update
       *
-      *   Person.hobbies.get === List(Set("concerts", "football"))
+      *   Person.hobbies.get.map(_ ==> List(Set("concerts", "football")))
       * }}}
       *
       * @param oldNew  Pair of old/new value
@@ -349,12 +349,12 @@ trait AttrExpressions {
       * <br><br>
       * Retracts old value and asserts new value.
       * {{{
-      *   Person.hobbies.get === List(Set("golf", "diving"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving")))
       *
       *   // Replace values by applying Iterable of old/new value pairs
       *   Person(benId).hobbies.replace("theater" -> "concerts", "diving" -> "football").update
       *
-      *   Person.hobbies.get === List(Set("concerts", "football"))
+      *   Person.hobbies.get.map(_ ==> List(Set("concerts", "football")))
       * }}}
       *
       * @param oldNews Iterable of old/new attribute values. For map attributes it's key/value pairs.
@@ -365,7 +365,7 @@ trait AttrExpressions {
 
     /** Retract one or more card-many attribute values.
       * {{{
-      *   Person.hobbies.get === List(Set("golf", "diving", "stamps", "walking", "theater"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving", "stamps", "walking", "theater")))
       *
       *   // Retract value
       *   Person(benId).hobbies.retract("theater").update
@@ -373,7 +373,7 @@ trait AttrExpressions {
       *   // Retract multiple values
       *   Person(benId).hobbies.retract("stamps", "walking").update
       *
-      *   Person.hobbies.get === List(Set("golf", "diving"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving")))
       * }}}
       *
       * @param value      Attribute value to be retracted
@@ -385,12 +385,12 @@ trait AttrExpressions {
 
     /** Retract Iterable of card-many attribute values.
       * {{{
-      *   Person.hobbies.get === List(Set("golf", "diving", "stamps", "walking", "theater"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving", "stamps", "walking", "theater")))
       *
       *   // Retract multiple values
       *   Person(benId).hobbies.retract(List("walking", "theater")).update
       *
-      *   Person.hobbies.get === List(Set("golf", "diving", "stamps"))
+      *   Person.hobbies.get.map(_ ==> List(Set("golf", "diving", "stamps")))
       * }}}
       *
       * @param values Iterable of attribute values to be retracted
@@ -405,8 +405,8 @@ trait AttrExpressions {
 
     /** Match attribute values less than upper value.
       * {{{
-      *   Person.age.get === List(5, 12, 28)
-      *   Person.age.<(12).get === List(5)
+      *   Person.age.get.map(_ ==> List(5, 12, 28))
+      *   Person.age.<(12).get.map(_ ==> List(5))
       * }}}
       *
       * @param upper Upper value
@@ -417,8 +417,8 @@ trait AttrExpressions {
 
     /** Match attribute values less than or equal to upper value.
       * {{{
-      *   Person.age.get === List(5, 12, 28)
-      *   Person.age.<=(12).get === List(5, 12)
+      *   Person.age.get.map(_ ==> List(5, 12, 28))
+      *   Person.age.<=(12).get.map(_ ==> List(5, 12))
       * }}}
       *
       * @param upper Upper value
@@ -429,8 +429,8 @@ trait AttrExpressions {
 
     /** Match attribute values bigger than lower value
       * {{{
-      *   Person.age.get === List(5, 12, 28)
-      *   Person.age.>(12).get === List(28)
+      *   Person.age.get.map(_ ==> List(5, 12, 28))
+      *   Person.age.>(12).get.map(_ ==> List(28))
       * }}}
       *
       * @param lower Lower value
@@ -441,8 +441,8 @@ trait AttrExpressions {
 
     /** Match attribute values bigger than or equal to lower value.
       * {{{
-      *   Person.age.get === List(5, 12, 28)
-      *   Person.age.>=(12).get === List(12, 28)
+      *   Person.age.get.map(_ ==> List(5, 12, 28))
+      *   Person.age.>=(12).get.map(_ ==> List(12, 28))
       * }}}
       *
       * @param lower Lower value
@@ -454,13 +454,13 @@ trait AttrExpressions {
 
     /** Mark molecule as input molecule awaiting attribute value(s) to be matched.
       * {{{
-      *   Person.name.age.get === List(("Ben", 42), ("Liz", 37))
+      *   Person.name.age.get.map(_ ==> List(("Ben", 42), ("Liz", 37)))
       *
       *   // Create input molecule at compile time by applying `?` marker to attribute
       *   val ageOfPerson = m(Person.name_(?).age)
       *
       *   // Apply `name` attribute value at runtime to get age
-      *   ageOfPerson("Ben").get === List(42)
+      *   ageOfPerson("Ben").get.map(_ ==> List(42))
       * }}}
       *
       * @param value Input marker `?` for equality match
@@ -471,13 +471,13 @@ trait AttrExpressions {
 
     /** Mark molecule as input molecule awaiting attribute negation value(s).
       * {{{
-      *   Person.name.age.get === List(("Ben", 42), ("Liz", 37))
+      *   Person.name.age.get.map(_ ==> List(("Ben", 42), ("Liz", 37)))
       *
       *   // Create input molecule at compile time by applying `?` marker to attribute
       *   val ageOfPersonsOtherThan = m(Person.name_.not(?).age)
       *
       *   // Apply `name` attribute value at runtime to get ages of all other than Ben
-      *   ageOfPersonsOtherThan("Ben").get === List(37) // Liz' age
+      *   ageOfPersonsOtherThan("Ben").get.map(_ ==> List(37)) // Liz' age
       * }}}
       *
       * @param value Input marker `?` for negation value
@@ -488,13 +488,13 @@ trait AttrExpressions {
 
     /** Mark molecule as input molecule awaiting attribute negation value(s).
       * {{{
-      *   Person.name.age.get === List(("Ben", 42), ("Liz", 37))
+      *   Person.name.age.get.map(_ ==> List(("Ben", 42), ("Liz", 37)))
       *
       *   // Create input molecule at compile time by applying `?` marker to attribute
       *   val ageOfPersonsOtherThan = m(Person.name_.!=(?).age)
       *
       *   // Apply `name` attribute value at runtime to get ages of all other than Ben
-      *   ageOfPersonsOtherThan("Ben").get === List(37) // Liz' age
+      *   ageOfPersonsOtherThan("Ben").get.map(_ ==> List(37)) // Liz' age
       * }}}
       *
       * @param value Input marker `?` for negation value
@@ -505,13 +505,13 @@ trait AttrExpressions {
 
     /** Mark molecule as input molecule awaiting attribute upper value.
       * {{{
-      *   Person.name.age.get === List(("Liz", 37), ("Ben", 42), ("Don", 71))
+      *   Person.name.age.get.map(_ ==> List(("Liz", 37), ("Ben", 42), ("Don", 71)))
       *
       *   // Create input molecule at compile time by applying `?` marker to attribute
       *   val personsUnder = m(Person.name.age_.<(?))
       *
       *   // Apply upper value at runtime to get names of all under 42
-      *   personsUnder(42).get === List("Liz")
+      *   personsUnder(42).get.map(_ ==> List("Liz"))
       * }}}
       *
       * @param upper Input marker `?` for upper value
@@ -522,13 +522,13 @@ trait AttrExpressions {
 
     /** Mark molecule as input molecule awaiting attribute upper value.
       * {{{
-      *   Person.name.age.get === List(("Liz", 37), ("Ben", 42), ("Don", 71))
+      *   Person.name.age.get.map(_ ==> List(("Liz", 37), ("Ben", 42), ("Don", 71)))
       *
       *   // Create input molecule at compile time by applying `?` marker to attribute
       *   val personsUnderOrExactly = m(Person.name.age_.<=(?))
       *
       *   // Apply upper value at runtime to get names of all under or exactly 42
-      *   personsUnderOrExactly(42).get === List("Liz", "Ben")
+      *   personsUnderOrExactly(42).get.map(_ ==> List("Liz", "Ben"))
       * }}}
       *
       * @param upper Input marker `?` for upper value
@@ -539,13 +539,13 @@ trait AttrExpressions {
 
     /** Mark molecule as input molecule awaiting attribute lower value.
       * {{{
-      *   Person.name.age.get === List(("Liz", 37), ("Ben", 42), ("Don", 71))
+      *   Person.name.age.get.map(_ ==> List(("Liz", 37), ("Ben", 42), ("Don", 71)))
       *
       *   // Create input molecule at compile time by applying `?` marker to attribute
       *   val personsOver = m(Person.name.age_.>(?))
       *
       *   // Apply lower value at runtime to get names of all over 42
-      *   personsOver(42).get === List("Don")
+      *   personsOver(42).get.map(_ ==> List("Don"))
       * }}}
       *
       * @param lower Input marker `?` for lower value
@@ -556,13 +556,13 @@ trait AttrExpressions {
 
     /** Mark molecule as input molecule awaiting attribute lower value.
       * {{{
-      *   Person.name.age.get === List(("Liz", 37), ("Ben", 42), ("Don", 71))
+      *   Person.name.age.get.map(_ ==> List(("Liz", 37), ("Ben", 42), ("Don", 71)))
       *
       *   // Create input molecule at compile time by applying `?` marker to attribute
       *   val personsOverOrExactly = m(Person.name.age_.>=(?))
       *
       *   // Apply lower value at runtime to get names of all over or exactly 42
-      *   personsOverOrExactly(42).get === List("Ben", "Don")
+      *   personsOverOrExactly(42).get.map(_ ==> List("Ben", "Don"))
       * }}}
       *
       * @param lower Input marker `?` for lower value
@@ -573,15 +573,15 @@ trait AttrExpressions {
 
     /** Filter attribute values with logical expression.
       * {{{
-      *   Person.name.age.get === List(
+      *   Person.name.age.get.map(_ ==> List(
       *     ("Liz", 37),
       *     ("Ben", 42),
       *     ("Don", 71)
-      *   )
+      *   ))
       *
       *   // Apply OR expression
       *   // Match all entities with `name` attribute having value "Liz" or "Ben"
-      *   Person.name_("Liz" or "Ben").age.get === List(37, 42)
+      *   Person.name_("Liz" or "Ben").age.get.map(_ ==> List(37, 42))
       * }}}
       *
       * @param expr1 OR expression
@@ -592,18 +592,18 @@ trait AttrExpressions {
 
     /** Filter attribute values with logical expression.
       * {{{
-      *   Person.name.age.hobbies.get === List(
+      *   Person.name.age.hobbies.get.map(_ ==> List(
       *     ("Joe", 42, Set("golf", "reading")),
       *     ("Ben", 42, Set("golf", "diving", "reading")),
       *     ("Liz", 37, Set("golf", "diving"))
-      *   )
+      *   ))
       *
       *   // Apply AND expression for card-many attributes
-      *   Person.name.hobbies_("golf" and "diving").get === List("Ben", "Liz")
+      *   Person.name.hobbies_("golf" and "diving").get.map(_ ==> List("Ben", "Liz"))
       *
       *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
       *   val persons = m(Person.name_(?).age(?))
-      *   persons(("Ben" and 42) or ("Liz" and 37)).get === List(42, 37)
+      *   persons(("Ben" and 42) or ("Liz" and 37)).get.map(_ ==> List(42, 37))
       * }}}
       *
       * @param expr2 OR/AND expression
@@ -614,25 +614,25 @@ trait AttrExpressions {
 
     /** Expression AST for building OR/AND expressions.
       * {{{
-      *   Person.name.age.hobbies.get === List(
+      *   Person.name.age.hobbies.get.map(_ ==> List(
       *     ("Liz", 37, Set("golf", "diving")),
       *     ("Ben", 42, Set("golf", "diving", "reading")),
       *     ("Joe", 42, Set("golf", "reading"))
-      *   )
+      *   ))
       *
       *   // Apply two AND expression for card-many attributes
-      *   Person.name.hobbies_("golf" and "diving" and "reading").get === List("Ben")
+      *   Person.name.hobbies_("golf" and "diving" and "reading").get.map(_ ==> List("Ben"))
       * }}}
       * With input molecules we can apply logic to multiple attributes at once.
       * {{{
-      *   Person.name.age.noOfCars.noOfKids.get === List(
+      *   Person.name.age.noOfCars.noOfKids.get.map(_ ==> List(
       *     ("Joe", 42, 1, 2),
       *     ("Ben", 42, 1, 1),
       *     ("Liz", 37, 2, 3)
-      *   )
+      *   ))
       *   // Apply AND-triples to OR expression:
       *   val persons = m(Person.name.age_(?).noOfCars(?).noOfKids_(?))
-      *   persons((42 and 1 and 1) or (37 and 2 and 3)).get === List("Ben", "Liz")
+      *   persons((42 and 1 and 1) or (37 and 2 and 3)).get.map(_ ==> List("Ben", "Liz"))
       * }}}
       *
       * @param expr3 OR/AND expression
@@ -674,10 +674,10 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply key/value pair
-      *   Greeting.id.strMap_("da" -> "Hej").get === List(3, 4)
+      *   Greeting.id.strMap_("da" -> "Hej").get.map(_ ==> List(3, 4))
       *
       *   // Apply multiple key/value pairs (OR semantics)
-      *   Greeting.id.strMap_("da" -> "Hej", "en" -> "Hi there").get === List(1, 3, 4)
+      *   Greeting.id.strMap_("da" -> "Hej", "en" -> "Hi there").get.map(_ ==> List(1, 3, 4))
       * }}}
       *
       * @param keyValue      Key/value pair
@@ -697,7 +697,7 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply Iterable of key/value pairs (OR semantics)
-      *   Greeting.id.strMap_(List("da" -> "Hej", "en" -> "Hi there")).get === List(1, 3, 4)
+      *   Greeting.id.strMap_(List("da" -> "Hej", "en" -> "Hi there")).get.map(_ ==> List(1, 3, 4))
       * }}}
       *
       * @param keyValues Iterable of key/value pairs
@@ -716,8 +716,8 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply OR expression(s) of key/value pairs
-      *   Greeting.id.strMap_("en" -> "Hi there" or "fr" -> "Bonjour").get === List(1, 2)
-      *   Greeting.id.strMap_("en" -> "Hi there" or "fr" -> "Bonjour" or "en" -> "Hello").get === List(1, 2, 3)
+      *   Greeting.id.strMap_("en" -> "Hi there" or "fr" -> "Bonjour").get.map(_ ==> List(1, 2))
+      *   Greeting.id.strMap_("en" -> "Hi there" or "fr" -> "Bonjour" or "en" -> "Hello").get.map(_ ==> List(1, 2, 3))
       * }}}
       *
       * @param keyValues One or more OR expressions of key/value pairs
@@ -736,7 +736,7 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply Map of key/value pairs (OR semantics)
-      *   Greeting.id.strMap_(Map("da" -> "Hej", "en" -> "Hi there")).get === List(1, 3, 4)
+      *   Greeting.id.strMap_(Map("da" -> "Hej", "en" -> "Hi there")).get.map(_ ==> List(1, 3, 4))
       * }}}
       *
       * @param map Map of key/value pairs
@@ -755,12 +755,12 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply key
-      *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
-      *   Greeting.id.strMap.k("en").get === List(
+      *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
+      *   Greeting.id.strMap.k("en").get.map(_ ==> List(
       *     (1, Map("en" -> "Hi there")),
       *     (2, Map("en" -> "Oh, Hi")),
       *     (3, Map("en" -> "Hello"))
-      *   )
+      *   ))
       * }}}
       *
       * @param key Map attribute key (String)
@@ -779,12 +779,12 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply keys
-      *   Greeting.id.strMap_.k("en", "fr").get === List(1, 2, 3)
-      *   Greeting.id.strMap.k("en", "fr").get === List(
+      *   Greeting.id.strMap_.k("en", "fr").get.map(_ ==> List(1, 2, 3))
+      *   Greeting.id.strMap.k("en", "fr").get.map(_ ==> List(
       *     (1, Map("en" -> "Hi there")),
       *     (2, Map("en" -> "Oh, Hi", "fr" -> "Bonjour")),
       *     (3, Map("en" -> "Hello"))
-      *   )
+      *   ))
       * }}}
       *
       * @param key      Map attribute key (String)
@@ -804,12 +804,12 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply Iterable of keys
-      *   Greeting.id.strMap_.k(List("en", "fr")).get === List(1, 2, 3)
-      *   Greeting.id.strMap.k(List("en", "fr")).get === List(
+      *   Greeting.id.strMap_.k(List("en", "fr")).get.map(_ ==> List(1, 2, 3))
+      *   Greeting.id.strMap.k(List("en", "fr")).get.map(_ ==> List(
       *     (1, Map("en" -> "Hi there")),
       *     (2, Map("en" -> "Oh, Hi", "fr" -> "Bonjour")),
       *     (3, Map("en" -> "Hello"))
-      *   )
+      *   ))
       * }}}
       *
       * @param keys Iterable of attribute keys
@@ -828,15 +828,15 @@ trait AttrExpressions {
       *   )
       *
       *   // Apply OR expression of keys
-      *   Greeting.id.strMap_.k("en" or "fr").get === List(1, 2, 3)
-      *   Greeting.id.strMap.k("en" or "fr").get === List(
+      *   Greeting.id.strMap_.k("en" or "fr").get.map(_ ==> List(1, 2, 3))
+      *   Greeting.id.strMap.k("en" or "fr").get.map(_ ==> List(
       *     (1, Map("en" -> "Hi there")),
       *     (2, Map("en" -> "Oh, Hi", "fr" -> "Bonjour")),
       *     (3, Map("en" -> "Hello"))
-      *   )
+      *   ))
       *
       *   // Apply multiple OR expressions of keys
-      *   Greeting.id.strMap_.k("en" or "fr" or "da").get === List(1, 2, 3, 4)
+      *   Greeting.id.strMap_.k("en" or "fr" or "da").get.map(_ ==> List(1, 2, 3, 4))
       * }}}
       *
       * @param or OR expression(s) of attribute keys
@@ -858,13 +858,13 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("da").get === List(1, 2, 3, 4)
+        *   Greeting.id.strMap_.k("da").get.map(_ ==> List(1, 2, 3, 4))
         *
         *   // Apply additional value filter
-        *   Greeting.id.strMap_.k("da")("Hej").get === List(3, 4)
+        *   Greeting.id.strMap_.k("da")("Hej").get.map(_ ==> List(3, 4))
         *
         *   // Apply additional value filters as OR expression
-        *   Greeting.id.strMap_.k("da")("Hej", "Hejsa").get === List(1, 3, 4)
+        *   Greeting.id.strMap_.k("da")("Hej", "Hejsa").get.map(_ ==> List(1, 3, 4))
         * }}}
         *
         * @param value      Filtering value
@@ -884,10 +884,10 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("da").get === List(1, 2, 3, 4)
+        *   Greeting.id.strMap_.k("da").get.map(_ ==> List(1, 2, 3, 4))
         *
         *   // Apply Seq of additional value filters (OR semantics)
-        *   Greeting.id.strMap_.k("da")(Seq("Hej", "Hejsa")).get === List(1, 3, 4)
+        *   Greeting.id.strMap_.k("da")(Seq("Hej", "Hejsa")).get.map(_ ==> List(1, 3, 4))
         * }}}
         *
         * @param values Iterable of filtering value(s)
@@ -906,11 +906,11 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("da").get === List(1, 2, 3, 4)
+        *   Greeting.id.strMap_.k("da").get.map(_ ==> List(1, 2, 3, 4))
         *
         *   // Apply additional value filters as OR expression
-        *   Greeting.id.strMap_.k("da")("Hej" or "Hejsa").get === List(1, 3, 4)
-        *   Greeting.id.strMap_.k("da")("Hej" or "Hejsa" or "Hilser").get === List(1, 2, 3, 4)
+        *   Greeting.id.strMap_.k("da")("Hej" or "Hejsa").get.map(_ ==> List(1, 3, 4))
+        *   Greeting.id.strMap_.k("da")("Hej" or "Hejsa" or "Hilser").get.map(_ ==> List(1, 2, 3, 4))
         * }}}
         *
         * @param or OR expression of filtering values
@@ -929,20 +929,20 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
         *
         *   // Apply additional negation value filter
-        *   Greeting.id.strMap_.k("en").not("Hello").get === List(1, 2)
-        *   Greeting.id.strMap.k("en").not("Hello").get === List(
+        *   Greeting.id.strMap_.k("en").not("Hello").get.map(_ ==> List(1, 2))
+        *   Greeting.id.strMap.k("en").not("Hello").get.map(_ ==> List(
         *     (1, Map("en" -> "Hi there")),
         *     (2, Map("en" -> "Oh, Hi"))
-        *   )
+        *   ))
         *
         *   // Apply multiple negation value filters (OR semantics)
-        *   Greeting.id.strMap_.k("en").not("Hello", "Hi there").get === List(2)
+        *   Greeting.id.strMap_.k("en").not("Hello", "Hi there").get.map(_ ==> List(2))
         *
         *   // Same as
-        *   Greeting.id.strMap_.k("en").!=("Hello", "Hi there").get === List(2)
+        *   Greeting.id.strMap_.k("en").!=("Hello", "Hi there").get.map(_ ==> List(2))
         * }}}
         *
         * @param value      Filter value
@@ -962,20 +962,20 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
         *
         *   // Apply additional negation value filter
-        *   Greeting.id.strMap_.k("en").!=("Hello").get === List(1, 2)
-        *   Greeting.id.strMap.k("en").!=("Hello").get === List(
+        *   Greeting.id.strMap_.k("en").!=("Hello").get.map(_ ==> List(1, 2))
+        *   Greeting.id.strMap.k("en").!=("Hello").get.map(_ ==> List(
         *     (1, Map("en" -> "Hi there")),
         *     (2, Map("en" -> "Oh, Hi"))
-        *   )
+        *   ))
         *
         *   // Apply multiple negation value filters (OR semantics)
-        *   Greeting.id.strMap_.k("en").!=("Hello", "Hi there").get === List(2)
+        *   Greeting.id.strMap_.k("en").!=("Hello", "Hi there").get.map(_ ==> List(2))
         *
         *   // Same as
-        *   Greeting.id.strMap_.k("en").not("Hello", "Hi there").get === List(2)
+        *   Greeting.id.strMap_.k("en").not("Hello", "Hi there").get.map(_ ==> List(2))
         * }}}
         *
         * @param value      Filter value
@@ -995,13 +995,13 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
         *
         *   // Apply additional less-than value filter
-        *   Greeting.id.strMap_.k("en").<("Hi").get === List(3)
-        *   Greeting.id.strMap.k("en").<("Hi").get === List(
+        *   Greeting.id.strMap_.k("en").<("Hi").get.map(_ ==> List(3))
+        *   Greeting.id.strMap.k("en").<("Hi").get.map(_ ==> List(
         *     (3, Map("en" -> "Hello"))
-        *   )
+        *   ))
         * }}}
         *
         * @param upper Upper value
@@ -1020,14 +1020,14 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
         *
         *   // Apply additional less-than-or-equal-to value filter
-        *   Greeting.id.strMap_.k("en").<=("Hi").get === List(1, 3)
-        *   Greeting.id.strMap.k("en").<=("Hi").get === List(
+        *   Greeting.id.strMap_.k("en").<=("Hi").get.map(_ ==> List(1, 3))
+        *   Greeting.id.strMap.k("en").<=("Hi").get.map(_ ==> List(
         *     (1, Map("en" -> "Hi there")),
         *     (3, Map("en" -> "Hello"))
-        *   )
+        *   ))
         * }}}
         *
         * @param upper Upper value
@@ -1046,13 +1046,13 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
         *
         *   // Apply additional bigger-than value filter
-        *   Greeting.id.strMap_.k("en").>("Hi").get === List(2)
-        *   Greeting.id.strMap.k("en").>("Hi").get === List(
+        *   Greeting.id.strMap_.k("en").>("Hi").get.map(_ ==> List(2))
+        *   Greeting.id.strMap.k("en").>("Hi").get.map(_ ==> List(
         *     (2, Map("en" -> "Oh, Hi"))
-        *   )
+        *   ))
         * }}}
         *
         * @param lower Lower value
@@ -1071,14 +1071,14 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
         *
         *   // Apply additional bigger-than-or-equal-to value filter
-        *   Greeting.id.strMap_.k("en").>=("Hi").get === List(1, 2)
-        *   Greeting.id.strMap.k("en").>=("Hi").get === List(
+        *   Greeting.id.strMap_.k("en").>=("Hi").get.map(_ ==> List(1, 2))
+        *   Greeting.id.strMap.k("en").>=("Hi").get.map(_ ==> List(
         *     (1, Map("en" -> "Hi there")),
         *     (2, Map("en" -> "Oh, Hi"))
-        *   )
+        *   ))
         * }}}
         *
         * @param lower Lower value
@@ -1099,17 +1099,17 @@ trait AttrExpressions {
         *   )
         *
         *   // Apply key filter only
-        *   Greeting.id.strMap_.k("en").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
         *
         *   // Apply additional less-than-or-equal-to value filter
-        *   Greeting.id.strMap_.k("en").contains("Hi").get === List(1, 2)
-        *   Greeting.id.strMap.k("en").contains("Hi").get === List(
+        *   Greeting.id.strMap_.k("en").contains("Hi").get.map(_ ==> List(1, 2))
+        *   Greeting.id.strMap.k("en").contains("Hi").get.map(_ ==> List(
         *     (1, Map("en" -> "Hi there")),
         *     (2, Map("en" -> "Oh, Hi"))
-        *   )
+        *   ))
         *
         *   // Regex can be used
-        *   Greeting.id.strMap_.k("en").contains("Hi|Hello").get === List(1, 2, 3)
+        *   Greeting.id.strMap_.k("en").contains("Hi|Hello").get.map(_ ==> List(1, 2, 3))
         * }}}
         *
         * @note Fulltext search is constrained by several defaults (which cannot be altered):
@@ -1140,10 +1140,10 @@ trait AttrExpressions {
       *   Person.name("Ben").age$(benAge).save
       *   Person.name("Liz").age$(lizAge).save
       *
-      *   Person.name.age$.get === List(
+      *   Person.name.age$.get.map(_ ==> List(
       *     ("Ben", Some(42)),
       *     ("Liz", None),
-      *   )
+      *   ))
       * }}}
       *
       * @param some Optional attribute value to be saved
@@ -1159,27 +1159,27 @@ trait AttrExpressions {
       * <br><br>
       * Fulltext searches are case-insensitive and only searches for whole words.
       * {{{
-      *   Phrase.id.txt.get === List(
+      *   Phrase.id.txt.get.map(_ ==> List(
       *     (1, "The quick fox jumps"),
       *     (2, "Ten slow monkeys")
-      *   )
+      *   ))
       *
-      *   Phrase.id.txt_.contains("jumps").get === List(1)
+      *   Phrase.id.txt_.contains("jumps").get.map(_ ==> List(1))
       *
       *   // Only whole words matched
-      *   Phrase.id.txt_.contains("jump").get === Nil
+      *   Phrase.id.txt_.contains("jump").get.map(_ ==> Nil)
       *
       *   // Searches are case-insensitive
-      *   Phrase.id.txt_.contains("JuMpS").get === List(1)
+      *   Phrase.id.txt_.contains("JuMpS").get.map(_ ==> List(1))
       *
       *   // Empty spaces ignored
-      *   Phrase.id.txt_.contains("   jumps   ").get === List(1)
+      *   Phrase.id.txt_.contains("   jumps   ").get.map(_ ==> List(1))
       *
       *   // Multiple search words have OR semantics
-      *   Phrase.id.txt_.contains("jumps", "slow").get === List(1, 2)
+      *   Phrase.id.txt_.contains("jumps", "slow").get.map(_ ==> List(1, 2))
       *
       *   // Common words ignored
-      *   Phrase.id.txt_.contains("The").get === Nil
+      *   Phrase.id.txt_.contains("The").get.map(_ ==> Nil)
       * }}}
       *
       * @note Fulltext search is constrained by several defaults (which cannot be altered):
@@ -1207,32 +1207,32 @@ trait AttrExpressions {
       * <br><br>
       * Fulltext searches are case-insensitive and only searches for whole words.
       * {{{
-      *   Phrase.id.txt.get === List(
+      *   Phrase.id.txt.get.map(_ ==> List(
       *     (1, "The quick fox jumps"),
       *     (2, "Ten slow monkeys")
-      *   )
+      *   ))
       *
       *   // Mark as input molecule awaiting word(s) to search for
       *   val phraseFinder = m(Phrase.id.txt_.contains(?))
       *
       *   // Then we can apply words to the input molecule at runtime:
       *
-      *   phraseFinder("jumps").get === List(1)
+      *   phraseFinder("jumps").get.map(_ ==> List(1))
       *
       *   // Only whole words matched
-      *   phraseFinder("jump").get === Nil
+      *   phraseFinder("jump").get.map(_ ==> Nil)
       *
       *   // Searches are case-insensitive
-      *   phraseFinder("JuMpS").get === List(1)
+      *   phraseFinder("JuMpS").get.map(_ ==> List(1))
       *
       *   // Empty spaces ignored
-      *   phraseFinder("   jumps   ").get === List(1)
+      *   phraseFinder("   jumps   ").get.map(_ ==> List(1))
       *
       *   // Multiple search words have OR semantics
-      *   phraseFinder("jumps", "slow").get === List(1, 2)
+      *   phraseFinder("jumps", "slow").get.map(_ ==> List(1, 2))
       *
       *   // Common words ignored
-      *   phraseFinder("The").get === Nil
+      *   phraseFinder("The").get.map(_ ==> Nil)
       * }}}
       *
       * @note Fulltext search is constrained by several defaults (which cannot be altered):

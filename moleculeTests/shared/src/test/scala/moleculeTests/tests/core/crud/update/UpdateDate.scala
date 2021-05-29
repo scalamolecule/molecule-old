@@ -1,12 +1,11 @@
 package moleculeTests.tests.core.crud.update
 
 import java.util.Date
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -31,15 +30,15 @@ object UpdateDate extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).date().update
-          _ <- Ns.date.get === List()
+          _ <- Ns.date.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).date(date2, date3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... date($date2, $date3)"
+          _ <- Ns(eid).date(date2, date3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... date($date2, $date3)"
+          }
         } yield ()
       }
     }
@@ -127,30 +126,28 @@ object UpdateDate extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).dates.replace(date7 -> date8, date8 -> date8).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/dates`:" +
-                    "\n__ident__date8")
+          _ = compileError(            """Ns(eid).dates.replace(date7 -> date8, date8 -> date8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/dates`:" +
+              "\n__ident__date8")
 
-                _ = compileError(
-                  """Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> date8)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/dates`:" +
-                    "\n__ident__date8")
+          _ = compileError(            """Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> date8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/dates`:" +
+              "\n__ident__date8")
 
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = date8
 
-          //      (Ns(eid).dates.replace(date7 -> date8, date8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
-          //        "\n" + date8
-          //
-          //      // Conflicting new values
-          //      (Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
-          //        "\n" + date8
+          _ <- Ns(eid).dates.replace(date7 -> date8, date8 -> other8).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
+              "\n" + date8
+          }
+
+          // Conflicting new values
+          _ <- Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> other8)).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
+              "\n" + date8
+          }
         } yield ()
       }
     }
@@ -184,7 +181,7 @@ object UpdateDate extends AsyncTestSuite {
         // Retract Seq of values as variable
         values = Seq(date1)
         _ <- Ns(eid).dates.retract(values).update
-        _ <- Ns.dates.get === List()
+        _ <- Ns.dates.get.map(_ ==> List())
 
         // Retracting empty Seq of values has no effect
         _ <- Ns(eid).dates(date1).update
@@ -213,7 +210,7 @@ object UpdateDate extends AsyncTestSuite {
 
         // Apply empty Seq of values (retracting all values!)
         _ <- Ns(eid).dates(Set[Date]()).update
-        _ <- Ns.dates.get === List()
+        _ <- Ns.dates.get.map(_ ==> List())
 
         // Apply Seq of values as variable
         values = Set(date1, date2)
@@ -222,7 +219,7 @@ object UpdateDate extends AsyncTestSuite {
 
         // Delete all (apply no values)
         _ <- Ns(eid).dates().update
-        _ <- Ns.dates.get === List()
+        _ <- Ns.dates.get.map(_ ==> List())
 
 
         // Redundant duplicate values are discarded

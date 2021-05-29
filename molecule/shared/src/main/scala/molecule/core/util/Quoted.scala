@@ -2,6 +2,7 @@ package molecule.core.util
 
 import java.util.{Date, UUID}
 import molecule.core.api.exception.EntityException
+//import molecule.core.api.exception.EntityException
 import molecule.core.util.fns.date2str
 
 trait Quoted {
@@ -58,8 +59,7 @@ trait Quoted {
           sb.append(s""""$k" -> """)
           traverse(v, tabs)
         case other                    =>
-          throw new EntityException(
-            "Unexpected element traversed in Quoted#quote: " + other)
+          throw MoleculeSpecException("Unexpected element traversed in Quoted#quote: " + other)
       }
     }
     traverse(value, 1)

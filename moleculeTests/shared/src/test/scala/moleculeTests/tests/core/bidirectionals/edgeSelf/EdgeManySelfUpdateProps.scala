@@ -1,11 +1,10 @@
 package moleculeTests.tests.core.bidirectionals.edgeSelf
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import molecule.datomic.api.in1_out9._
 import molecule.core.ops.exception.VerifyModelException
-import moleculeTests.setup.AsyncTestSuite
+import molecule.datomic.api.in1_out9._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -54,7 +53,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           .CoreQuality.name._Knows
           .InCommon.*(Quality.name)
           .Person.name
-          .get === List(
+          .get.map(_ ==> List(
           ("Ann"
             , 7
             , "atWork"
@@ -73,7 +72,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
             , "Love"
             , List("Patience", "Humor")
             , "Ann")
-        )
+        ))
       } yield ()
     }
     "Card-one" - {
@@ -82,12 +81,12 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
         for {
           Seq(love, patience, humor, ann, annBen) <- testData
 
-          //      // Updating edge properties from the base entity is not allowed
-          //      (Person(ann).Knows.howWeMet("inSchool").update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[update_edgeComplete]  Can't update edge `Knows` " +
-          //        s"of base entity `Person` without knowing which target entity the edge is pointing too. " +
-          //        s"Please update the edge itself, like `Knows(<edgeId>).edgeProperty(<new value>).update`."
+          // Updating edge properties from the base entity is not allowed
+          _ <- Person(ann).Knows.howWeMet("inSchool").update.recover { case VerifyModelException(err) =>
+            err ==> s"[update_edgeComplete]  Can't update edge `Knows` " +
+              s"of base entity `Person` without knowing which target entity the edge is pointing too. " +
+              s"Please update the edge itself, like `Knows(<edgeId>).edgeProperty(<new value>).update`."
+          }
 
           // Instead update the edge entity itself:
 
@@ -106,7 +105,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // Retract value
           _ <- Knows(annBen).weight().update
-          _ <- Person.name("Ann" or "Ben").Knows.weight.get === List()
+          _ <- Person.name("Ann" or "Ben").Knows.weight.get.map(_ ==> List())
         } yield ()
       }
 
@@ -129,7 +128,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // Retract enum value
           _ <- Knows(annBen).howWeMet().update
-          _ <- Person.name("Ann" or "Ben").Knows.howWeMet.get === List()
+          _ <- Person.name("Ann" or "Ben").Knows.howWeMet.get.map(_ ==> List())
         } yield ()
       }
 
@@ -143,10 +142,10 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
             ("Ben", "Love")
           ))
 
-          //      // We can't update across namespaces
-          //      (Knows(annBen).CoreQuality.name("Compassion").update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Quality`."
+          // We can't update across namespaces
+          _ <- Knows(annBen).CoreQuality.name("Compassion").update.recover { case VerifyModelException(err) =>
+            err ==> s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Quality`."
+          }
 
           // Instead we can either update the referenced entity or replace the reference to another existing Quality entity
 
@@ -175,7 +174,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // Retract reference
           _ <- Knows(annBen).coreQuality().update
-          _ <- Knows(annBen).CoreQuality.name.get === List()
+          _ <- Knows(annBen).CoreQuality.name.get.map(_ ==> List())
         } yield ()
       }
     }
@@ -224,7 +223,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // Retract all
           _ <- Knows(annBen).commonInterests().update
-          _ <- commonInterestsOf("Ann" or "Ben").get === List()
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List())
         } yield ()
       }
 
@@ -270,7 +269,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // Retract all
           _ <- Knows(annBen).commonLicences().update
-          _ <- commonLicencesOf.apply("Ann" or "Ben").get === List()
+          _ <- commonLicencesOf.apply("Ann" or "Ben").get.map(_ ==> List())
         } yield ()
       }
 
@@ -338,7 +337,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // Retract all references
           _ <- Knows(annBen).inCommon().update
-          _ <- inCommonOf("Ann" or "Ben").get === List()
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List())
 
         } yield ()
       }
@@ -386,7 +385,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
         // Delete all
         _ <- Knows(annBen).commonScores().update
-        _ <- commonScoresOf("Ann" or "Ben").get === List()
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List())
       } yield ()
     }
   }

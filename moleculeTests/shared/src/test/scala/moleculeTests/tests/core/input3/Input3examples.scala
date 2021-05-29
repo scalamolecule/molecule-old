@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.input3
 
+import molecule.core.api.exception.Molecule_3_Exception
 import molecule.datomic.api.in3_out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -24,10 +25,10 @@ object Input3examples extends AsyncTestSuite {
         // Triples of input ..............................................................
 
         // Varargs (single triple)
-        _ <- inputMolecule(37, 5L, 1.0).get === List("Ann")
+        _ <- inputMolecule(37, 5L, 1.0).get.map(_ ==> List("Ann"))
 
         // One or more triples
-        _ <- inputMolecule((37, 5L, 1.0)).get === List("Ann")
+        _ <- inputMolecule((37, 5L, 1.0)).get.map(_ ==> List("Ann"))
         _ <- inputMolecule((37, 5L, 1.0), (28, 5L, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
 
         // One or more logical triples
@@ -35,13 +36,13 @@ object Input3examples extends AsyncTestSuite {
         _ <- inputMolecule((37 and 5L and 1.0) or (28 and 4L and 1.0) or (28 and 3L and 2.0)).get.map(_.sorted ==> List("Ann", "Joe", "Liz"))
 
         // List of triples
-        _ <- inputMolecule(Seq((37, 5L, 1.0))).get === List("Ann")
+        _ <- inputMolecule(Seq((37, 5L, 1.0))).get.map(_ ==> List("Ann"))
         _ <- inputMolecule(Seq((37, 5L, 1.0), (28, 5L, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
 
 
         // 3 groups of input, each group matches an input attribute ......................
 
-        _ <- inputMolecule(Seq(37), Seq(5L), Seq(1.0)).get === List("Ann")
+        _ <- inputMolecule(Seq(37), Seq(5L), Seq(1.0)).get.map(_ ==> List("Ann"))
 
         _ <- inputMolecule(Seq(37, 28), Seq(5L), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
         _ <- inputMolecule(Seq(37), Seq(5L, 4L), Seq(1.0)).get.map(_.sorted ==> List("Ann"))
@@ -54,13 +55,13 @@ object Input3examples extends AsyncTestSuite {
         _ <- inputMolecule(Seq(37, 28), Seq(5L, 4L), Seq(1.0, 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
 
         // Nil as any input returns Nil
-        _ <- inputMolecule(Seq(37), Seq(5L), Nil).get === Nil
-        _ <- inputMolecule(Seq(37), Nil, Seq(1.0)).get === Nil
-        _ <- inputMolecule(Nil, Seq(5L), Seq(1.0)).get === Nil
+        _ <- inputMolecule(Seq(37), Seq(5L), Nil).get.map(_ ==> Nil)
+        _ <- inputMolecule(Seq(37), Nil, Seq(1.0)).get.map(_ ==> Nil)
+        _ <- inputMolecule(Nil, Seq(5L), Seq(1.0)).get.map(_ ==> Nil)
 
 
         // 3 groups all with 1 value
-        _ <- inputMolecule(37 and 5L and 1.0).get === List("Ann")
+        _ <- inputMolecule(37 and 5L and 1.0).get.map(_ ==> List("Ann"))
 
         // 1 group with 2 values
         _ <- inputMolecule((37 or 28) and 5L and 1.0).get.map(_.sorted ==> List("Ann", "Ben"))
@@ -90,25 +91,25 @@ object Input3examples extends AsyncTestSuite {
         )
 
         // Individual args matching input attributes
-        _ <- inputExpression(1, 0L, 1.0).get === List("c", "d")
-        _ <- inputExpression(1, 1L, 2.0).get === List("d", "e")
+        _ <- inputExpression(1, 0L, 1.0).get.map(_ ==> List("c", "d"))
+        _ <- inputExpression(1, 1L, 2.0).get.map(_ ==> List("d", "e"))
 
         // Triple matching input attributes
-        _ <- inputExpression((1, 0L, 1.0)).get === List("c", "d")
-        _ <- inputExpression((1, 1L, 2.0)).get === List("d", "e")
+        _ <- inputExpression((1, 0L, 1.0)).get.map(_ ==> List("c", "d"))
+        _ <- inputExpression((1, 1L, 2.0)).get.map(_ ==> List("d", "e"))
 
         // Seq of values matching input attributes
-        _ <- inputExpression(Seq((1, 0L, 1.0))).get === List("c", "d")
-        _ <- inputExpression(Seq((1, 1L, 2.0))).get === List("d", "e")
+        _ <- inputExpression(Seq((1, 0L, 1.0))).get.map(_ ==> List("c", "d"))
+        _ <- inputExpression(Seq((1, 1L, 2.0))).get.map(_ ==> List("d", "e"))
 
 
         // <expression1> and <expression2> and <expression3>
-        _ <- inputExpression(1 and 0L and 1.0).get === List("c", "d")
-        _ <- inputExpression(1 and 1L and 2.0).get === List("d", "e")
+        _ <- inputExpression(1 and 0L and 1.0).get.map(_ ==> List("c", "d"))
+        _ <- inputExpression(1 and 1L and 2.0).get.map(_ ==> List("d", "e"))
 
         // Two sequences, each matching corresponding input attribute
-        _ <- inputExpression(Seq(1), Seq(0L), Seq(1.0)).get === List("c", "d")
-        _ <- inputExpression(Seq(1), Seq(1L), Seq(2.0)).get === List("d", "e")
+        _ <- inputExpression(Seq(1), Seq(0L), Seq(1.0)).get.map(_ ==> List("c", "d"))
+        _ <- inputExpression(Seq(1), Seq(1L), Seq(2.0)).get.map(_ ==> List("d", "e"))
       } yield ()
     }
 
@@ -120,21 +121,24 @@ object Input3examples extends AsyncTestSuite {
           List(Set(1L, 2L), Set(5L)), // 1, 3, 4
           List(Set("enum1")), // 1
           List(Set(uri2)) // 1, 2
-        ).get === List(1)
+        ).get.map(_ ==> List(1))
 
         _ <- inputMolecule(
           List(Set(1L, 2L), Set(5L)), // 1, 3, 4
           List(Set("enum4")), // 2, 3
           List(Set(uri3)) // 1, 2, 3, 6
-        ).get === List(3)
+        ).get.map(_ ==> List(3))
 
-        //            (m(Ns.int.ints(?).longs(?).strs(?)).apply(Nil, List(Set(1L)), List(Set("a"))).get must throwA[Molecule_3_Exception])
-        //              .message === "Got the exception molecule.core.input.exception.Molecule_3_Exception: " +
-        //              "Can only apply empty list (Nil) to a tacit input attribute. Please make input attr tacit: `ints` --> `ints_`"
-        //
-        //        (m(Ns.int.ints_.<=(?).longs_(?).strs_(?)).apply(List(Set(1), Set(2)), List(Set(1L)), List(Set("a"))).get must throwA[Molecule_3_Exception])
-        //        .message === "Got the exception molecule.core.input.exception.Molecule_3_Exception: " +
-        //          s"Can't apply multiple values to input attribute `:Ns/ints` having expression (<, >, <=, >=, !=)"
+        _ <- m(Ns.int.ints(?).longs(?).strs(?)).apply(Nil, List(Set(1L)), List(Set("a"))).get.recover {
+          case Molecule_3_Exception(err) =>
+            err ==> "Can only apply empty list (Nil) to a tacit input attribute. Please make input attr tacit: `ints` --> `ints_`"
+        }
+
+        _ <- m(Ns.int.ints_.<=(?).longs_(?).strs_(?)).apply(
+          List(Set(1), Set(2)), List(Set(1L)), List(Set("a"))
+        ).get.recover { case Molecule_3_Exception(err) =>
+          err ==> s"Can't apply multiple values to input attribute `:Ns/ints` having expression (<, >, <=, >=, !=)"
+        }
       } yield ()
     }
   }

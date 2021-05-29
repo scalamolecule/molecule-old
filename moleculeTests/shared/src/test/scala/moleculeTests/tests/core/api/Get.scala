@@ -18,8 +18,8 @@ object Get extends AsyncTestSuite with JavaUtil {
       for {
         _ <- Ns.int insert List(1, 2, 3)
 
-        _ <- Ns.int.get === List(1, 2, 3)
-        _ <- Ns.int.getArray === Array(1, 2, 3)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
+        _ <- Ns.int.getArray.map(_ ==> Array(1, 2, 3))
         _ <- Ns.int.getIterable.map(_.iterator.toList ==> Iterator(1, 2, 3).toList)
 
         // Raw output has different implementations but same interface
@@ -44,8 +44,8 @@ object Get extends AsyncTestSuite with JavaUtil {
         }
         _ <- Ns.int.getRaw.map(_.ints ==> List(1, 2, 3))
 
-        _ <- Ns.int.get(2) === List(1, 2)
-        _ <- Ns.int.getArray(2) === Array(1, 2)
+        _ <- Ns.int.get(2).map(_ ==> List(1, 2))
+        _ <- Ns.int.getArray(2).map(_ ==> Array(1, 2))
         _ <- Ns.int.getRaw(2).map(_.ints ==> List(1, 2))
       } yield ()
     }

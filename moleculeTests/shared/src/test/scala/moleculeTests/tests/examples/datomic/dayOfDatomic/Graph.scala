@@ -12,7 +12,6 @@ object Graph extends AsyncTestSuite {
   lazy val tests = Tests {
 
     "Simple hyperedge" - graph { implicit conn =>
-
       import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Graph._
       for {
         tx <- Role.name insert List("Role1", "Role2")
@@ -37,15 +36,15 @@ object Graph extends AsyncTestSuite {
         // User 1 ..........................
 
         // User 1's Roles
-        _ <- User.name_("User1").RoleInGroup.Role.name.get === List("Role2", "Role1")
+        _ <- User.name_("User1").RoleInGroup.Role.name.get.map(_ ==> List("Role2", "Role1"))
 
         // User 1's Groups
-        _ <- User.name_("User1").RoleInGroup.Group.name.get === List("Group2", "Group1")
+        _ <- User.name_("User1").RoleInGroup.Group.name.get.map(_ ==> List("Group2", "Group1"))
 
         // User 1 Roles in Group 2
         _ <- User.name_("User1")
           .RoleInGroup.Group.name_("Group2")
-          ._RoleInGroup.Role.name.get === List("Role1")
+          ._RoleInGroup.Role.name.get.map(_ ==> List("Role1"))
         /* Query in Neo4J:
         MATCH ({ name: 'User1' })-[:hasRoleInGroup]->(hyperEdge)-[:hasGroup]->({ name: 'Group2' }),
           (hyperEdge)-[:hasRole]->(role)
@@ -55,47 +54,47 @@ object Graph extends AsyncTestSuite {
         // User 1's Groups having Role 1
         _ <- User.name_("User1")
           .RoleInGroup.Role.name_("Role1")
-          ._RoleInGroup.Group.name.get === List("Group2")
+          ._RoleInGroup.Group.name.get.map(_ ==> List("Group2"))
 
 
         // Role 1 ............................
 
         // Users having Role 1
-        _ <- User.name.RoleInGroup.Role.name_("Role1").get === List("User1")
+        _ <- User.name.RoleInGroup.Role.name_("Role1").get.map(_ ==> List("User1"))
 
         // Groups with Role 1
         _ <- RoleInGroup.Role.name_("Role1")
-          ._RoleInGroup.Group.name.get === List("Group2")
+          ._RoleInGroup.Group.name.get.map(_ ==> List("Group2"))
 
         // Users in Group 2 having Role 1
         _ <- User.name
           .RoleInGroup.Group.name_("Group2")
-          ._RoleInGroup.Role.name_("Role1").get === List("User1")
+          ._RoleInGroup.Role.name_("Role1").get.map(_ ==> List("User1"))
 
         // Groups where User 1 has Role 1
         _ <- User.name_("User1")
           .RoleInGroup.Group.name
-          ._RoleInGroup.Role.name_("Role1").get === List("Group2")
+          ._RoleInGroup.Role.name_("Role1").get.map(_ ==> List("Group2"))
 
 
         // Group 2 ...........................
 
         // Users in Group 2
-        _ <- User.name.RoleInGroup.Group.name_("Group2").get === List("User1")
+        _ <- User.name.RoleInGroup.Group.name_("Group2").get.map(_ ==> List("User1"))
 
         // Roles of Group 2
         _ <- RoleInGroup.Group.name_("Group2")
-          ._RoleInGroup.Role.name.get === List("Role1")
+          ._RoleInGroup.Role.name.get.map(_ ==> List("Role1"))
 
         // Users with Role 1 in Group 2
         _ <- User.name
           .RoleInGroup.Role.name_("Role1")
-          ._RoleInGroup.Group.name_("Group2").get === List("User1")
+          ._RoleInGroup.Group.name_("Group2").get.map(_ ==> List("User1"))
 
         // Roles of User 1 in Group 2
         _ <- User.name_("User1")
           .RoleInGroup.Group.name_("Group2")
-          ._RoleInGroup.Role.name.get === List("Role1")
+          ._RoleInGroup.Role.name.get.map(_ ==> List("Role1"))
 
 
         // All groups and the roles a user has, sorted by the name of the role
@@ -117,7 +116,6 @@ object Graph extends AsyncTestSuite {
 
     // Load graph 2 where RoleInGroup references multiple Roles
     "Advanced hyperedge" - graph2 { implicit conn =>
-
       import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Graph2._
       for {
         tx1 <- Role.name insert List("Role1", "Role2", "Role3", "Role4", "Role5", "Role6")
@@ -171,9 +169,9 @@ object Graph extends AsyncTestSuite {
 
         // If we are only interest in how many roles they have in common we can do this:
 
-        _ <- User.name_("User1" and "User2").RoleInGroup.Group.name._RoleInGroup.roles(count).get === List(
+        _ <- User.name_("User1" and "User2").RoleInGroup.Group.name._RoleInGroup.roles(count).get.map(_ ==> List(
           ("Group1", 1),
-          ("Group2", 1))
+          ("Group2", 1)))
         // .. or
         _ <- User.name_("User1").RoleInGroup.Group.name._RoleInGroup.roles(count)._User.Self
           .name_("User2").RoleInGroup.Group.name_(unify)._RoleInGroup.roles_(unify).get.map(_.sortBy(_._1) ==> List(

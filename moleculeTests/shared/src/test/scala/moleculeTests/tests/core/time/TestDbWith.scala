@@ -3,9 +3,9 @@ package moleculeTests.tests.core.time
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import moleculeTests.tests.core.time.domain.Crud
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -28,13 +28,13 @@ object TestDbWith extends AsyncTestSuite {
         (e1, e2, e3) <- data
 
         // Current live state
-        _ <- Ns.int.get === List(1, 2, 3)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use current state with extra save tx as a test db "branch"
         _ <- conn.map(_.testDbWith(Ns.int(4).getSaveStmts))
 
         // Adjusted test state to work on
-        _ <- Ns.int.get === List(1, 2, 3, 4)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
 
         // Update
         _ <- Ns(e1).int(0).update
@@ -174,25 +174,25 @@ object TestDbWith extends AsyncTestSuite {
           (e1, e2, e3) <- data
 
           // Current live state
-          _ <- crud.read === List(1, 2, 3)
+          _ <- crud.read.map(_ ==> List(1, 2, 3))
 
           // Use state with extra save tx as a test db "branch"
           _ = conn.map(_.testDbWith(Ns.int(4).getSaveStmts))
 
           // Adjusted test state to work on
-          _ <- crud.read === List(1, 2, 3, 4)
+          _ <- crud.read.map(_ ==> List(1, 2, 3, 4))
 
           // Update test db
           _ <- crud.update(1 -> 0)
 
           // Updated test state
-          _ <- crud.read === List(0, 2, 3, 4)
+          _ <- crud.read.map(_ ==> List(0, 2, 3, 4))
 
           // Discard test db and go back to live db
           _ = conn.map(_.useLiveDb)
 
           // Current live state is correctly unchanged
-          _ <- crud.read === List(1, 2, 3)
+          _ <- crud.read.map(_ ==> List(1, 2, 3))
         } yield ()
       }
 
@@ -205,7 +205,7 @@ object TestDbWith extends AsyncTestSuite {
           // Some domain object
 
           // Current live state
-          _ <- crud.read === List(1, 2, 3)
+          _ <- crud.read.map(_ ==> List(1, 2, 3))
 
           // Apply a set of transactions to get a
           // test db in a certain state
@@ -224,31 +224,32 @@ object TestDbWith extends AsyncTestSuite {
           ))
 
           // Adjusted test state to work on
-          _ <- crud.read === List(0, 3, 4, 5, 6)
+          _ <- crud.read.map(_ ==> List(0, 3, 4, 5, 6))
 
 
           // 3 -> 7
           _ <- crud.update(3 -> 7)
 
           // Updated test state
-          _ <- crud.read === List(0, 4, 5, 6, 7)
+          _ <- crud.read.map(_ ==> List(0, 4, 5, 6, 7))
 
           // add 8
           _ <- crud.create(8)
-          _ <- crud.read === List(0, 4, 5, 6, 7, 8)
+          _ <- crud.read.map(_ ==> List(0, 4, 5, 6, 7, 8))
 
           // remove value 0
           _ <- crud.delete(0)
-          _ <- crud.read === List(4, 5, 6, 7, 8)
+          _ <- crud.read.map(_ ==> List(4, 5, 6, 7, 8))
 
           // retract entity 3 (value 7)
           // We can mix domain updates with local changes here
           _ <- e3.map(_.retract)
-          _ <- crud.read === List(4, 5, 6, 8)
+          _ <- crud.read.map(_ ==> List(4, 5, 6, 8))
 
-          //      // Test updating non-existing value
-          //      (crud.update(2 -> 42) must throwA[IllegalArgumentException]).message === "Got the exception java.lang.IllegalArgumentException: " +
-          //        "Old number (2) doesn't exist in db."
+          // Test updating non-existing value
+          _ <- crud.update(2 -> 42).recover { case e: IllegalArgumentException =>
+            e.getMessage ==> "Old number (2) doesn't exist in db."
+          }
 
           // Etc...
 
@@ -256,7 +257,7 @@ object TestDbWith extends AsyncTestSuite {
           _ <- conn.map(_.useLiveDb)
 
           // Current live state is correctly unchanged
-          _ <- crud.read === List(1, 2, 3)
+          _ <- crud.read.map(_ ==> List(1, 2, 3))
         } yield ()
       }
     }

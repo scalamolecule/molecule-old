@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.crud.insert
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out10._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -44,7 +44,6 @@ object InsertInput extends AsyncTestSuite {
     }
 
     "Card many" - core { implicit conn =>
-
       // 1. Define "Insert-molecule"
       val insertStrs = Ns.strs.insert
 
@@ -77,7 +76,6 @@ object InsertInput extends AsyncTestSuite {
     }
 
     "Relationships" - core { implicit conn =>
-
       // 1. Define Input-molecule
       val insertAddress = Ns.str.Ref1.int1.str1.Ref2.str2.insert
 
@@ -86,10 +84,10 @@ object InsertInput extends AsyncTestSuite {
         _ <- insertAddress("273 Broadway", 10700, "New York", "USA")
         _ <- insertAddress("2054, 5th Ave", 10800, "New York", "USA")
 
-        _ <- Ns.str.Ref1.int1.str1.Ref2.str2.get === List(
+        _ <- Ns.str.Ref1.int1.str1.Ref2.str2.get.map(_ ==> List(
           ("2054, 5th Ave", 10800, "New York", "USA"),
           ("273 Broadway", 10700, "New York", "USA")
-        )
+        ))
       } yield ()
     }
   }

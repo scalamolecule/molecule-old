@@ -1,10 +1,10 @@
 package moleculeTests.tests.core.bidirectionals.self
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.in1_out3._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -17,7 +17,6 @@ object OneSelf extends AsyncTestSuite {
 
     "Save new" - bidirectional { implicit conn =>
       for {
-
         // Save Adam, Lisa and bidirectional references between them
         tx <- Person.name("Adam").Spouse.name("Lisa").save
         List(adam, lisa) = tx.eids
@@ -52,18 +51,17 @@ object OneSelf extends AsyncTestSuite {
           ("Lisa", "Adam")
         ))
 
-        //    // Saving reference to generic `e` not allowed.
-        //    // (instead apply ref to ref attribute as shown above)
-        //    (Person.name("Adam").Spouse.e(lisa).save must throwA[VerifyModelException])
-        //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
-        //      s"not allowed in save molecules. Found `e($lisa)`"
+        // Saving reference to generic `e` not allowed.
+        // (instead apply ref to ref attribute as shown above)
+        _ <- Person.name("Adam").Spouse.e(lisa).save.recover { case VerifyModelException(err) =>
+          err ==> s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
+            s"not allowed in save molecules. Found `e($lisa)`"
+        }
       } yield ()
     }
 
     "Insert new" - bidirectional { implicit conn =>
       for {
-
         // Insert 2 pairs of bidirectionally referenced entities
         _ <- Person.name.Spouse.name insert List(
           ("Adam", "Lisa"),
@@ -83,7 +81,6 @@ object OneSelf extends AsyncTestSuite {
 
     "Insert id" - bidirectional { implicit conn =>
       for {
-
         tx <- Person.name insert List("Lisa", "Nina")
         List(lisa, nina) = tx.eids
 
@@ -123,7 +120,6 @@ object OneSelf extends AsyncTestSuite {
 
       "replacing ref to new" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name("Adam").Spouse.name("Lisa").save
           List(adam, lisa) = tx.eids
 
@@ -164,16 +160,15 @@ object OneSelf extends AsyncTestSuite {
             ("Lisa", "Adam")
           ))
 
-          //      // Referencing the same id is not allowed
-          //      (Person(adam).spouse(adam).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:biSelfRef]  Current entity and referenced entity ids can't be the same."
+          // Referencing the same id is not allowed
+          _ <- Person(adam).spouse(adam).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:biSelfRef]  Current entity and referenced entity ids can't be the same."
+          }
         } yield ()
       }
 
       "replacing ref to other existing" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name("Adam").Spouse.name("Lisa").save
           List(adam, lisa) = tx.eids
 
@@ -200,7 +195,6 @@ object OneSelf extends AsyncTestSuite {
 
     "Update removing reference" - bidirectional { implicit conn =>
       for {
-
         tx <- Person.name("Adam").Spouse.name("Lisa").save
         List(adam, lisa) = tx.eids
 
@@ -220,7 +214,6 @@ object OneSelf extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-
         tx <- Person.name.insert("Adam")
         adam = tx.eid
 
@@ -228,8 +221,8 @@ object OneSelf extends AsyncTestSuite {
         tx2 <- Person(adam).Spouse.name("Lisa").update
         lisa = tx2.eid
 
-        _ <- Person(adam).Spouse.name.get === List("Lisa")
-        _ <- Person(lisa).Spouse.name.get === List("Adam")
+        _ <- Person(adam).Spouse.name.get.map(_ ==> List("Lisa"))
+        _ <- Person(lisa).Spouse.name.get.map(_ ==> List("Adam"))
 
         _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
           ("Adam", "Lisa"),
@@ -240,9 +233,9 @@ object OneSelf extends AsyncTestSuite {
         _ <- adam.map(_.retract)
 
         // Lisa remains and both references retracted
-        _ <- Person.name.get === List("Lisa")
-        _ <- Person(adam).Spouse.name.get === List()
-        _ <- Person(lisa).Spouse.name.get === List()
+        _ <- Person.name.get.map(_ ==> List("Lisa"))
+        _ <- Person(adam).Spouse.name.get.map(_ ==> List())
+        _ <- Person(lisa).Spouse.name.get.map(_ ==> List())
         _ <- Person.name.Spouse.name.get.map(_.sorted ==> List())
       } yield ()
     }

@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.time
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.in1_out6._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -55,8 +55,8 @@ object GetHistory extends AsyncTestSuite {
         (tx1, e1, t1, tx2, t2, tx3, t3, tx4, e2, t4, tx5, t5) <- data
 
         // Current values are always the last asserted value
-        _ <- Ns(e1).int.op_(true).get === List(2)
-        _ <- Ns(e1).int.op_(false).get === List()
+        _ <- Ns(e1).int.op_(true).get.map(_ ==> List(2))
+        _ <- Ns(e1).int.op_(false).get.map(_ ==> List())
 
         // str updated at t2
         _ <- Ns(e1).str.t.op.getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
@@ -91,13 +91,13 @@ object GetHistory extends AsyncTestSuite {
         ))
 
         // int values over time
-        _ <- Ns(e1).int.getHistory === List(1, 2)
+        _ <- Ns(e1).int.getHistory.map(_ ==> List(1, 2))
 
         // Asserted int values of entity e1 over time
-        _ <- Ns(e1).int.op_(true).getHistory === List(1, 2)
+        _ <- Ns(e1).int.op_(true).getHistory.map(_ ==> List(1, 2))
 
         // Retracted int values of entity e1 over time
-        _ <- Ns(e1).int.op_(false).getHistory === List(1)
+        _ <- Ns(e1).int.op_(false).getHistory.map(_ ==> List(1))
       } yield ()
     }
 

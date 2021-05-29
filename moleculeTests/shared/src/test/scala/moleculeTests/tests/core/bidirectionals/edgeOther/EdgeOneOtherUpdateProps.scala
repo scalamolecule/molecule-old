@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.bidirectionals.edgeOther
 
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out9._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
@@ -55,7 +56,7 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           .CoreQuality.name._Favorite
           .InCommon.*(Quality.name)
           .Animal.name
-          .get === List(
+          .get.map(_ ==> List(
           ("Ann"
             , 7
             , "atWork"
@@ -65,7 +66,7 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
             , "Love"
             , List("Patience", "Humor")
             , "Rex")
-        )
+        ))
 
         // Animal -> Person
         _ <- Animal.name
@@ -78,7 +79,7 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           .CoreQuality.name._Favorite
           .InCommon.*(Quality.name)
           .Person.name
-          .get === List(
+          .get.map(_ ==> List(
           ("Rex"
             , 7
             , "atWork"
@@ -88,7 +89,7 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
             , "Love"
             , List("Patience", "Humor")
             , "Ann")
-        )
+        ))
       } yield ()
     }
 
@@ -98,28 +99,28 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
         for {
           Seq(love, patience, humor, ann, annRex) <- testData
 
-          //      // Updating edge properties from the base entity is not allowed
-          //      (Person(ann).Favorite.howWeMet("inSchool").update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[update_edgeComplete]  Can't update edge `Favorite` " +
-          //        s"of base entity `Person` without knowing which target entity the edge is pointing too. " +
-          //        s"Please update the edge itself, like `Favorite(<edgeId>).edgeProperty(<new value>).update`."
+          // Updating edge properties from the base entity is not allowed
+          _ <- Person(ann).Favorite.howWeMet("inSchool").update.recover { case VerifyModelException(err) =>
+            err ==> s"[update_edgeComplete]  Can't update edge `Favorite` " +
+              s"of base entity `Person` without knowing which target entity the edge is pointing too. " +
+              s"Please update the edge itself, like `Favorite(<edgeId>).edgeProperty(<new value>).update`."
+          }
 
           // Instead update the edge entity itself:
 
           // Current weight value
-          _ <- Person.name_("Ann").Favorite.weight.Animal.name.get === List((7, "Rex"))
-          _ <- Animal.name_("Rex").Favorite.weight.Person.name.get === List((7, "Ann"))
+          _ <- Person.name_("Ann").Favorite.weight.Animal.name.get.map(_ ==> List((7, "Rex")))
+          _ <- Animal.name_("Rex").Favorite.weight.Person.name.get.map(_ ==> List((7, "Ann")))
 
           // Apply new value
           _ <- Favorite(annRex).weight(2).update
-          _ <- Person.name_("Ann").Favorite.weight.Animal.name.get === List((2, "Rex"))
-          _ <- Animal.name_("Rex").Favorite.weight.Person.name.get === List((2, "Ann"))
+          _ <- Person.name_("Ann").Favorite.weight.Animal.name.get.map(_ ==> List((2, "Rex")))
+          _ <- Animal.name_("Rex").Favorite.weight.Person.name.get.map(_ ==> List((2, "Ann")))
 
           // Retract value
           _ <- Favorite(annRex).weight().update
-          _ <- Person.name("Ann").Favorite.weight.get === List()
-          _ <- Animal.name("Rex").Favorite.weight.get === List()
+          _ <- Person.name("Ann").Favorite.weight.get.map(_ ==> List())
+          _ <- Animal.name("Rex").Favorite.weight.get.map(_ ==> List())
         } yield ()
       }
 
@@ -128,18 +129,18 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annRex) <- testData
 
           // Current howWeMet enum value
-          _ <- Person.name_("Ann").Favorite.howWeMet.Animal.name.get === List(("atWork", "Rex"))
-          _ <- Animal.name_("Rex").Favorite.howWeMet.Person.name.get === List(("atWork", "Ann"))
+          _ <- Person.name_("Ann").Favorite.howWeMet.Animal.name.get.map(_ ==> List(("atWork", "Rex")))
+          _ <- Animal.name_("Rex").Favorite.howWeMet.Person.name.get.map(_ ==> List(("atWork", "Ann")))
 
           // Apply new enum value
           _ <- Favorite(annRex).howWeMet("throughFriend").update
-          _ <- Person.name_("Ann").Favorite.howWeMet.Animal.name.get === List(("throughFriend", "Rex"))
-          _ <- Animal.name_("Rex").Favorite.howWeMet.Person.name.get === List(("throughFriend", "Ann"))
+          _ <- Person.name_("Ann").Favorite.howWeMet.Animal.name.get.map(_ ==> List(("throughFriend", "Rex")))
+          _ <- Animal.name_("Rex").Favorite.howWeMet.Person.name.get.map(_ ==> List(("throughFriend", "Ann")))
 
           // Retract enum value
           _ <- Favorite(annRex).howWeMet().update
-          _ <- Person.name("Ann").Favorite.howWeMet.get === List()
-          _ <- Animal.name("Rex").Favorite.howWeMet.get === List()
+          _ <- Person.name("Ann").Favorite.howWeMet.get.map(_ ==> List())
+          _ <- Animal.name("Rex").Favorite.howWeMet.get.map(_ ==> List())
         } yield ()
       }
 
@@ -148,13 +149,13 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annRex) <- testData
 
           // Current value
-          _ <- Person.name_("Ann").Favorite.CoreQuality.name._Favorite.Animal.name.get === List(("Love", "Rex"))
-          _ <- Animal.name_("Rex").Favorite.CoreQuality.name._Favorite.Person.name.get === List(("Love", "Ann"))
+          _ <- Person.name_("Ann").Favorite.CoreQuality.name._Favorite.Animal.name.get.map(_ ==> List(("Love", "Rex")))
+          _ <- Animal.name_("Rex").Favorite.CoreQuality.name._Favorite.Person.name.get.map(_ ==> List(("Love", "Ann")))
 
-          //      // We can't update across namespaces
-          //      (Favorite(annRex).CoreQuality.name("Compassion").update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Quality`."
+          // We can't update across namespaces
+          _ <- Favorite(annRex).CoreQuality.name("Compassion").update.recover { case VerifyModelException(err) =>
+            err ==> s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Quality`."
+          }
 
           // Instead we can either update the referenced entity or replace the reference to another existing Quality entity
 
@@ -163,8 +164,8 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           _ <- Quality(love).name("Compassion").update
 
           // Same reference, new value
-          _ <- Person.name_("Ann").Favorite.CoreQuality.name._Favorite.Animal.name.get === List(("Compassion", "Rex"))
-          _ <- Animal.name_("Rex").Favorite.CoreQuality.name._Favorite.Person.name.get === List(("Compassion", "Ann"))
+          _ <- Person.name_("Ann").Favorite.CoreQuality.name._Favorite.Animal.name.get.map(_ ==> List(("Compassion", "Rex")))
+          _ <- Animal.name_("Rex").Favorite.CoreQuality.name._Favorite.Person.name.get.map(_ ==> List(("Compassion", "Ann")))
 
 
           // 2. Update reference
@@ -174,13 +175,13 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           _ <- Favorite(annRex).coreQuality(trust).update
 
           // New reference/value
-          _ <- Person.name_("Ann").Favorite.CoreQuality.name._Favorite.Animal.name.get === List(("Trust", "Rex"))
-          _ <- Animal.name_("Rex").Favorite.CoreQuality.name._Favorite.Person.name.get === List(("Trust", "Ann"))
+          _ <- Person.name_("Ann").Favorite.CoreQuality.name._Favorite.Animal.name.get.map(_ ==> List(("Trust", "Rex")))
+          _ <- Animal.name_("Rex").Favorite.CoreQuality.name._Favorite.Person.name.get.map(_ ==> List(("Trust", "Ann")))
 
 
           // Retract reference
           _ <- Favorite(annRex).coreQuality().update
-          _ <- Favorite(annRex).CoreQuality.name.get === List()
+          _ <- Favorite(annRex).CoreQuality.name.get.map(_ ==> List())
         } yield ()
       }
     }
@@ -192,33 +193,33 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
         for {
           Seq(love, patience, humor, ann, annRex) <- testData
           // Current values
-          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get === List((Set("Food", "Travelling", "Walking"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get === List((Set("Food", "Travelling", "Walking"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get.map(_ ==> List((Set("Food", "Travelling", "Walking"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get.map(_ ==> List((Set("Food", "Travelling", "Walking"), "Ann")))
 
           // Replace
           _ <- Favorite(annRex).commonInterests.replace("Food" -> "Cuisine").update
-          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get === List((Set("Travelling", "Walking", "Cuisine"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get === List((Set("Travelling", "Walking", "Cuisine"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get.map(_ ==> List((Set("Travelling", "Walking", "Cuisine"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get.map(_ ==> List((Set("Travelling", "Walking", "Cuisine"), "Ann")))
 
           // Remove
           _ <- Favorite(annRex).commonInterests.retract("Travelling").update
-          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get === List((Set("Walking", "Cuisine"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get === List((Set("Walking", "Cuisine"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get.map(_ ==> List((Set("Walking", "Cuisine"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get.map(_ ==> List((Set("Walking", "Cuisine"), "Ann")))
 
           // Add
           _ <- Favorite(annRex).commonInterests.assert("Meditating").update
-          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get === List((Set("Walking", "Cuisine", "Meditating"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get === List((Set("Walking", "Cuisine", "Meditating"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get.map(_ ==> List((Set("Walking", "Cuisine", "Meditating"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get.map(_ ==> List((Set("Walking", "Cuisine", "Meditating"), "Ann")))
 
           // Apply new values
           _ <- Favorite(annRex).commonInterests("Running", "Cycling").update
-          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get === List((Set("Running", "Cycling"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get === List((Set("Running", "Cycling"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonInterests.Animal.name.get.map(_ ==> List((Set("Running", "Cycling"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonInterests.Person.name.get.map(_ ==> List((Set("Running", "Cycling"), "Ann")))
 
           // Retract all
           _ <- Favorite(annRex).commonInterests().update
-          _ <- Person.name_("Ann").Favorite.commonInterests.get === List()
-          _ <- Animal.name_("Rex").Favorite.commonInterests.get === List()
+          _ <- Person.name_("Ann").Favorite.commonInterests.get.map(_ ==> List())
+          _ <- Animal.name_("Rex").Favorite.commonInterests.get.map(_ ==> List())
         } yield ()
       }
 
@@ -227,34 +228,34 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annRex) <- testData
 
           // Current enum values
-          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get === List((Set("climbing", "flying"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get === List((Set("climbing", "flying"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get.map(_ ==> List((Set("climbing", "flying"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get.map(_ ==> List((Set("climbing", "flying"), "Ann")))
 
           // Replace
           _ <- Favorite(annRex).commonLicences.replace("flying" -> "diving").update
-          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get === List((Set("climbing", "diving"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get === List((Set("climbing", "diving"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get.map(_ ==> List((Set("climbing", "diving"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get.map(_ ==> List((Set("climbing", "diving"), "Ann")))
 
           // Remove
           _ <- Favorite(annRex).commonLicences.retract("climbing").update
-          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get === List((Set("diving"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get === List((Set("diving"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get.map(_ ==> List((Set("diving"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get.map(_ ==> List((Set("diving"), "Ann")))
 
           // Add
           _ <- Favorite(annRex).commonLicences.assert("parachuting").update
-          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get === List((Set("diving", "parachuting"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get === List((Set("diving", "parachuting"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get.map(_ ==> List((Set("diving", "parachuting"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get.map(_ ==> List((Set("diving", "parachuting"), "Ann")))
 
           // Apply new values
           _ <- Favorite(annRex).commonLicences("climbing", "flying").update
-          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get === List((Set("climbing", "flying"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get === List((Set("climbing", "flying"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.commonLicences.Animal.name.get.map(_ ==> List((Set("climbing", "flying"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.commonLicences.Person.name.get.map(_ ==> List((Set("climbing", "flying"), "Ann")))
 
           // Retract all
           _ <- Favorite(annRex).commonLicences().update
-          _ <- Person.name_("Ann").Favorite.commonLicences.get === List()
-          _ <- Animal.name_("Rex").Favorite.commonLicences.get === List()
-          _ <- Person.name("Ann" or "Rex").Favorite.commonLicences.get === List()
+          _ <- Person.name_("Ann").Favorite.commonLicences.get.map(_ ==> List())
+          _ <- Animal.name_("Rex").Favorite.commonLicences.get.map(_ ==> List())
+          _ <- Person.name("Ann" or "Rex").Favorite.commonLicences.get.map(_ ==> List())
         } yield ()
       }
 
@@ -263,8 +264,8 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annRex) <- testData
 
           // Current value
-          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get === List((Seq("Patience", "Humor"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get === List((Seq("Patience", "Humor"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List((Seq("Patience", "Humor"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get.map(_ ==> List((Seq("Patience", "Humor"), "Ann")))
 
           // As with card-one references we have two choices to change referenced value(s)
 
@@ -274,8 +275,8 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           _ <- Quality(humor).name("Funny").update
 
           // Same references, new value(s)
-          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get === List((Seq("Waiting ability", "Funny"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get === List((Seq("Waiting ability", "Funny"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List((Seq("Waiting ability", "Funny"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get.map(_ ==> List((Seq("Waiting ability", "Funny"), "Ann")))
 
 
           // 2. Update reference(s)
@@ -295,8 +296,8 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
 
           // remove
           _ <- Favorite(annRex).inCommon.retract(patience).update
-          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get === List((Seq("Sporty"), "Rex"))
-          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get === List((Seq("Sporty"), "Ann"))
+          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List((Seq("Sporty"), "Rex")))
+          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get.map(_ ==> List((Seq("Sporty"), "Ann")))
 
           // add
           _ <- Favorite(annRex).inCommon.assert(patience).update
@@ -320,8 +321,8 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
 
           // Retract all references
           _ <- Favorite(annRex).inCommon().update
-          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get === List()
-          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get === List()
+          _ <- Person.name_("Ann").Favorite.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List())
+          _ <- Animal.name_("Rex").Favorite.InCommon.*(Quality.name).Person.name.get.map(_ ==> List())
 
         } yield ()
       }
@@ -333,33 +334,33 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
         Seq(love, patience, humor, ann, annRex) <- testData
 
         // Current values
-        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get === List((Map("baseball" -> 9, "golf" -> 7), "Rex"))
-        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get === List((Map("baseball" -> 9, "golf" -> 7), "Ann"))
+        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get.map(_ ==> List((Map("baseball" -> 9, "golf" -> 7), "Rex")))
+        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get.map(_ ==> List((Map("baseball" -> 9, "golf" -> 7), "Ann")))
 
         // Replace values by key
         _ <- Favorite(annRex).commonScores.replace("baseball" -> 8, "golf" -> 6).update
-        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get === List((Map("baseball" -> 8, "golf" -> 6), "Rex"))
-        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get === List((Map("baseball" -> 8, "golf" -> 6), "Ann"))
+        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get.map(_ ==> List((Map("baseball" -> 8, "golf" -> 6), "Rex")))
+        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get.map(_ ==> List((Map("baseball" -> 8, "golf" -> 6), "Ann")))
 
         // Remove by key
         _ <- Favorite(annRex).commonScores.retract("golf").update
-        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get === List((Map("baseball" -> 8), "Rex"))
-        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get === List((Map("baseball" -> 8), "Ann"))
+        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get.map(_ ==> List((Map("baseball" -> 8), "Rex")))
+        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get.map(_ ==> List((Map("baseball" -> 8), "Ann")))
 
         // Add
         _ <- Favorite(annRex).commonScores.assert("parachuting" -> 4).update
-        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get === List((Map("baseball" -> 8, "parachuting" -> 4), "Rex"))
-        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get === List((Map("baseball" -> 8, "parachuting" -> 4), "Ann"))
+        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get.map(_ ==> List((Map("baseball" -> 8, "parachuting" -> 4), "Rex")))
+        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get.map(_ ==> List((Map("baseball" -> 8, "parachuting" -> 4), "Ann")))
 
         // Apply new values (replacing all current values!)
         _ <- Favorite(annRex).commonScores("volleball" -> 4, "handball" -> 5).update
-        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get === List((Map("volleball" -> 4, "handball" -> 5), "Rex"))
-        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get === List((Map("volleball" -> 4, "handball" -> 5), "Ann"))
+        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get.map(_ ==> List((Map("volleball" -> 4, "handball" -> 5), "Rex")))
+        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get.map(_ ==> List((Map("volleball" -> 4, "handball" -> 5), "Ann")))
 
         // Delete all
         _ <- Favorite(annRex).commonScores().update
-        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get === List()
-        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get === List()
+        _ <- Person.name_("Ann").Favorite.commonScores.Animal.name.get.map(_ ==> List())
+        _ <- Animal.name_("Rex").Favorite.commonScores.Person.name.get.map(_ ==> List())
       } yield ()
     }
   }

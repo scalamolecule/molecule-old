@@ -30,7 +30,7 @@ trait GetRaw { self: Molecule =>
 
   /** Get `Future` with `java.util.Collection` of all untyped rows matching molecule.
     * {{{
-    *   Person.name.age.getRaw.toString === """[["Ben" 42], ["Liz" 37]]"""
+    *   Person.name.age.getRaw.map(_.toString ==> """[["Ben" 42], ["Liz" 37]]""")
     * }}}
     *
     * Peer returns java.util.HashSet
@@ -54,7 +54,7 @@ trait GetRaw { self: Molecule =>
 
   /** Get `Future` with `java.util.Collection` of n untyped rows matching molecule.
     * {{{
-    *   Person.name.age.getRaw(1).toString === """[["Ben" 42]]"""
+    *   Person.name.age.getRaw(1).map(_.toString ==> """[["Ben" 42]]""")
     * }}}
     *
     * @group getAsync
@@ -109,7 +109,7 @@ trait GetRaw { self: Molecule =>
     *   ben.retract
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
@@ -117,13 +117,13 @@ trait GetRaw { self: Molecule =>
     *   )
     *
     *   // Get raw data as of transaction t 1028 (after insert)
-    *   Person.name.age.getRawAsOf(1028).toString === """[["Ben" 42], ["Liz" 37]]"""
+    *   Person.name.age.getRawAsOf(1028).map(_.toString ==> """[["Ben" 42], ["Liz" 37]]""")
     *
     *   // Get raw data as of transaction t 1031 (after update)
-    *   Person.name.age.getRawAsOf(1031).toString === """[["Ben" 43], ["Liz" 37]]""" // Ben now 43
+    *   Person.name.age.getRawAsOf(1031).map(_.toString ==> """[["Ben" 43], ["Liz" 37]]""") // Ben now 43
     *
     *   // Get raw data as of transaction t 1032 (after retract)
-    *   Person.name.age.getRawAsOf(1032).toString === """[["Liz" 37]]""" // Ben gone
+    *   Person.name.age.getRawAsOf(1032).map(_.toString ==> """[["Liz" 37]]""") // Ben gone
     * }}}
     *
     * @group getRawAsOf
@@ -154,17 +154,17 @@ trait GetRaw { self: Molecule =>
     *   Person(ben).age(43).update
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
     *   )
     *
     *   // Get all rows of raw data as of transaction t 1031 (after update)
-    *   Person.name.age.getRawAsOf(1028).toString === """[["Ben" 43], ["Liz" 37]]"""
+    *   Person.name.age.getRawAsOf(1028).map(_.toString ==> """[["Ben" 43], ["Liz" 37]]""")
     *
     *   // Get n (1) rows of raw data as of transaction t 1031 (after update)
-    *   Person.name.age.getRawAsOf(1031, 1).toString === """[["Ben" 43]]"""
+    *   Person.name.age.getRawAsOf(1031, 1).map(_.toString ==> """[["Ben" 43]]""")
     * }}}
     *
     * @group getRawAsOf
@@ -201,13 +201,13 @@ trait GetRaw { self: Molecule =>
     *   val tx3 = ben.retract
     *
     *   // Get raw data as of tx1 (after insert)
-    *   Person.name.age.getRawAsOf(tx1).toString === """[["Liz" 37], ["Ben" 42]]"""
+    *   Person.name.age.getRawAsOf(tx1).map(_.toString ==> """[["Liz" 37], ["Ben" 42]]""")
     *
     *   // Get raw data as of tx2 (after update)
-    *   Person.name.age.getRawAsOf(tx2).toString === """[["Liz" 37], ["Ben" 43]]""" // Ben now 43
+    *   Person.name.age.getRawAsOf(tx2).map(_.toString ==> """[["Liz" 37], ["Ben" 43]]""") // Ben now 43
     *
     *   // Get raw data as of tx3 (after retract)
-    *   Person.name.age.getRawAsOf(tx3).toString === """[["Liz" 37]]""" // Ben gone
+    *   Person.name.age.getRawAsOf(tx3).map(_.toString ==> """[["Liz" 37]]""") // Ben gone
     * }}}
     *
     * @group getRawAsOf
@@ -244,10 +244,10 @@ trait GetRaw { self: Molecule =>
     *   val tx3 = ben.retract
     *
     *   // Get all rows of raw data as of tx1 (after insert)
-    *   Person.name.age.getRawAsOf(tx1).toString === """[["Liz" 37], ["Ben" 42]]"""
+    *   Person.name.age.getRawAsOf(tx1).map(_.toString ==> """[["Liz" 37], ["Ben" 42]]""")
     *
     *   // Get n (1) rows of raw data as of tx1 (after insert)
-    *   Person.name.age.getRawAsOf(tx1, 1).toString === """[["Liz" 37]]"""
+    *   Person.name.age.getRawAsOf(tx1, 1).map(_.toString ==> """[["Liz" 37]]""")
     * }}}
     *
     * @group getRawAsOf
@@ -285,16 +285,16 @@ trait GetRaw { self: Molecule =>
     *   val afterRetract = new java.util.Date
     *
     *   // Get raw data as of beforeInsert
-    *   Person.name.age.getRawAsOf(beforeInsert).toString === """[]"""
+    *   Person.name.age.getRawAsOf(beforeInsert).map(_.toString ==> """[]""")
     *
     *   // Get raw data as of afterInsert
-    *   Person.name.age.getRawAsOf(afterInsert).toString === """[["Liz" 37], ["Ben" 42]]"""
+    *   Person.name.age.getRawAsOf(afterInsert).map(_.toString ==> """[["Liz" 37], ["Ben" 42]]""")
     *
     *   // Get raw data as of afterUpdate
-    *   Person.name.age.getRawAsOf(afterUpdate).toString === """[["Liz" 37], ["Ben" 43]]""" // Ben now 43
+    *   Person.name.age.getRawAsOf(afterUpdate).map(_.toString ==> """[["Liz" 37], ["Ben" 43]]""") // Ben now 43
     *
     *   // Get raw data as of afterRetract
-    *   Person.name.age.getRawAsOf(afterRetract).toString === """[["Liz" 37]]""" // Ben gone
+    *   Person.name.age.getRawAsOf(afterRetract).map(_.toString ==> """[["Liz" 37]]""") // Ben gone
     * }}}
     *
     * @group getRawAsOf
@@ -331,13 +331,13 @@ trait GetRaw { self: Molecule =>
     *   val afterRetract = new java.util.Date
     *
     *   // Get all rows of raw data as of beforeInsert
-    *   Person.name.age.getRawAsOf(beforeInsert).toString === """[]"""
+    *   Person.name.age.getRawAsOf(beforeInsert).map(_.toString ==> """[]""")
     *
     *   // Get all rows of raw data as of afterInsert
-    *   Person.name.age.getRawAsOf(afterInsert).toString === """[["Liz" 37], ["Ben" 42]]"""
+    *   Person.name.age.getRawAsOf(afterInsert).map(_.toString ==> """[["Liz" 37], ["Ben" 42]]""")
     *
     *   // Get n (1) rows of raw data as of afterInsert
-    *   Person.name.age.getRawAsOf(afterInsert, 1).toString === """[["Liz" 37]]"""
+    *   Person.name.age.getRawAsOf(afterInsert, 1).map(_.toString ==> """[["Liz" 37]]""")
     * }}}
     *
     * @group getRawAsOf
@@ -367,16 +367,16 @@ trait GetRaw { self: Molecule =>
     *   val t3 = Person.name("Cay").save.t
     *
     *   // Current values as Iterable
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since transaction time t1
-    *   Person.name.getRawSince(t1).toString === """[["Ben"], ["Cay"]]"""
+    *   Person.name.getRawSince(t1).map(_.toString ==> """[["Ben"], ["Cay"]]""")
     *
     *   // Cay added since transaction time t2
-    *   Person.name.getRawSince(t2).toString === """[["Cay"]]"""
+    *   Person.name.getRawSince(t2).map(_.toString ==> """[["Cay"]]""")
     *
     *   // Nothing added since transaction time t3
-    *   Person.name.getRawSince(t3).toString === """[]"""
+    *   Person.name.getRawSince(t3).map(_.toString ==> """[]""")
     * }}}
     *
     * @group getRawSince
@@ -403,13 +403,13 @@ trait GetRaw { self: Molecule =>
     *   val t3 = Person.name("Cay").save.t
     *
     *   // Current values as Iterable
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since transaction time t1
-    *   Person.name.getRawSince(t1).toString === """[["Ben"], ["Cay"]]"""
+    *   Person.name.getRawSince(t1).map(_.toString ==> """[["Ben"], ["Cay"]]""")
     *
     *   // Ben and Cay added since transaction time t1 - only n (1) rows returned
-    *   Person.name.getRawSince(t1).toString === """[["Ben"]]"""
+    *   Person.name.getRawSince(t1).map(_.toString ==> """[["Ben"]]""")
     * }}}
     *
     * @group getRawSince
@@ -438,16 +438,16 @@ trait GetRaw { self: Molecule =>
     *   val tx3 = Person.name("Cay").save
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since tx1
-    *   Person.name.getRawSince(tx1).toString === """[["Ben"], ["Cay"]]"""
+    *   Person.name.getRawSince(tx1).map(_.toString ==> """[["Ben"], ["Cay"]]""")
     *
     *   // Cay added since tx2
-    *   Person.name.getRawSince(tx2).toString === """[["Cay"]]"""
+    *   Person.name.getRawSince(tx2).map(_.toString ==> """[["Cay"]]""")
     *
     *   // Nothing added since tx3
-    *   Person.name.getRawSince(tx3).toString === """[]"""
+    *   Person.name.getRawSince(tx3).map(_.toString ==> """[]""")
     * }}}
     *
     * @group getRawSince
@@ -475,13 +475,13 @@ trait GetRaw { self: Molecule =>
     *   val tx3 = Person.name("Cay").save
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since tx1
-    *   Person.name.getRawSince(tx1).toString === """[["Ben"], ["Cay"]]"""
+    *   Person.name.getRawSince(tx1).map(_.toString ==> """[["Ben"], ["Cay"]]""")
     *
     *   // Ben and Cay added since tx1 - only n (1) rows returned
-    *   Person.name.getRawSince(tx1, 1).toString === """[["Ben"]]"""
+    *   Person.name.getRawSince(tx1, 1).map(_.toString ==> """[["Ben"]]""")
     * }}}
     *
     * @group getRawSince
@@ -506,16 +506,16 @@ trait GetRaw { self: Molecule =>
     *   val date3 = Person.name("Cay").save.inst
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since date1
-    *   Person.name.getRawSince(date1).toString === """[["Ben"], ["Cay"]]"""
+    *   Person.name.getRawSince(date1).map(_.toString ==> """[["Ben"], ["Cay"]]""")
     *
     *   // Cay added since date2
-    *   Person.name.getRawSince(date2).toString === """[["Cay"]]"""
+    *   Person.name.getRawSince(date2).map(_.toString ==> """[["Cay"]]""")
     *
     *   // Nothing added since date3
-    *   Person.name.getRawSince(date3).toString === """[]"""
+    *   Person.name.getRawSince(date3).map(_.toString ==> """[]""")
     * }}}
     *
     * @group getRawSince
@@ -539,13 +539,13 @@ trait GetRaw { self: Molecule =>
     *   val date3 = Person.name("Cay").save.inst
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since date1
-    *   Person.name.getRawSince(date1).toString === """[["Ben"], ["Cay"]]"""
+    *   Person.name.getRawSince(date1).map(_.toString ==> """[["Ben"], ["Cay"]]""")
     *
     *   // Ben and Cay added since date1 - only n (1) rows returned
-    *   Person.name.getRawSince(date1, 1).toString === """[["Ben"]]"""
+    *   Person.name.getRawSince(date1, 1).map(_.toString ==> """[["Ben"]]""")
     * }}}
     *
     * @group getRawSince
@@ -573,7 +573,7 @@ trait GetRaw { self: Molecule =>
     *   ).toString ==== """[["Ben" "sushi"]]"""
     *
     *   // Current state is still the same
-    *   Person.name.likes.get === List(("Ben", "pasta"))
+    *   Person.name.likes.get.map(_ ==> List(("Ben", "pasta")))
     * }}}
     * Multiple transactions can be applied to test more complex what-if scenarios!
     *
@@ -635,14 +635,14 @@ trait GetRaw { self: Molecule =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getRawWith(newDataTx).size === 250
+    *   Person.name.getRawWith(newDataTx).map(_.size ==> 250)
     * }}}
     *
     * @group getRawWith
@@ -660,17 +660,17 @@ trait GetRaw { self: Molecule =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getRawWith(newDataTx).size === 250
+    *   Person.name.getRawWith(newDataTx).map(_.size ==> 250)
     *
     *   // Imagine future db - Let's just take 10
-    *   Person.name.getRawWith(newDataTx, 10).size === 10
+    *   Person.name.getRawWith(newDataTx, 10).map(_.size ==> 10)
     * }}}
     *
     * @group getRawWith

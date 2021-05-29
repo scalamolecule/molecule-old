@@ -37,10 +37,10 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
   /** Get `Future` with `List` of all rows as tuples matching molecule.
     * <br><br>
     * {{{
-    *   Person.name.age.get === List(
+    *   Person.name.age.get.map(_ ==> List(
     *     ("Ben", 42),
     *     ("Liz", 37),
-    *   )
+    *   ))
     * }}}
     * <br><br>
     * Since retrieving a List is considered the default fetch format, the getter method is
@@ -71,7 +71,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * <br><br>
     * Only n rows are type-casted.
     * {{{
-    *   Person.name.age.get(1) === List(
+    *   Person.name.age.get(1).map(_ ==> List(
     *     ("Ben", 42)
     *   )
     * }}}
@@ -136,7 +136,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   ben.retract
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op..get(History.sortBy(r => )(r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
@@ -144,19 +144,19 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   )
     *
     *   // Get List of all rows as of transaction t 1028 (after insert)
-    *   Person.name.age.getAsOf(1028) === List(
+    *   Person.name.age.getAsOf(1028).map(_ ==> List(
     *     ("Liz", 37),
     *     ("Ben", 42)
     *   )
     *
     *   // Get List of all rows as of transaction t 1031 (after update)
-    *   Person.name.age.getAsOf(1031) === List(
+    *   Person.name.age.getAsOf(1031).map(_ ==> List(
     *     ("Liz", 37),
     *     ("Ben", 43)
     *   )
     *
     *   // Get List of all rows as of transaction t 1032 (after retract)
-    *   Person.name.age.getAsOf(1032) === List(
+    *   Person.name.age.getAsOf(1032).map(_ ==> List(
     *     ("Liz", 37)
     *   )
     * }}}
@@ -190,20 +190,20 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   Person(ben).age(43).update
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
     *   )
     *
     *   // Get List of all all rows as of transaction t 1031 (after update)
-    *   Person.name.age.getAsOf(1031) === List(
+    *   Person.name.age.getAsOf(1031).map(_ ==> List(
     *     ("Ben", 43),
     *     ("Liz", 37)
     *   )
     *
     *   // Get List of n rows as of transaction t 1031 (after update)
-    *   Person.name.age.getAsOf(1031, 1) === List(
+    *   Person.name.age.getAsOf(1031, 1).map(_ ==> List(
     *     ("Ben", 43)
     *   )
     * }}}
@@ -245,19 +245,19 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val tx3 = ben.retract
     *
     *   // Get List of all rows as of tx1 (after insert)
-    *   Person.name.age.getAsOf(tx1) === List(
+    *   Person.name.age.getAsOf(tx1).map(_ ==> List(
     *     ("Ben", 42),
     *     ("Liz", 37)
     *   )
     *
     *   // Get List of all rows as of tx2 (after update)
-    *   Person.name.age.getAsOf(tx2) === List(
+    *   Person.name.age.getAsOf(tx2).map(_ ==> List(
     *     ("Ben", 43), // Ben now 43
     *     ("Liz", 37)
     *   )
     *
     *   // Get List of all rows as of tx3 (after retract)
-    *   Person.name.age.getAsOf(tx3) === List(
+    *   Person.name.age.getAsOf(tx3).map(_ ==> List(
     *     ("Liz", 37) // Ben gone
     *   )
     * }}}
@@ -293,13 +293,13 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *
     *
     *   // Get List of all rows as of tx2 (after update)
-    *   Person.name.age.getAsOf(tx2) === List(
+    *   Person.name.age.getAsOf(tx2).map(_ ==> List(
     *     ("Ben", 43),
     *     ("Liz", 37)
     *   )
     *
     *   // Get List of n rows as of tx2 (after update)
-    *   Person.name.age.getAsOf(tx2, 1) === List(
+    *   Person.name.age.getAsOf(tx2, 1).map(_ ==> List(
     *     ("Ben", 43)
     *   )
     * }}}
@@ -337,22 +337,22 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val afterRetract = new java.util.Date
     *
     *   // No data yet before insert
-    *   Person.name.age.getAsOf(beforeInsert) === Nil
+    *   Person.name.age.getAsOf(beforeInsert).map(_ ==> Nil)
     *
     *   // Get List of all rows as of afterInsert
-    *   Person.name.age.getAsOf(afterInsert) === List(
+    *   Person.name.age.getAsOf(afterInsert).map(_ ==> List(
     *     ("Ben", 42),
     *     ("Liz", 37)´
     *   )
     *
     *   // Get List of all rows as of afterUpdate
-    *   Person.name.age.getAsOf(afterUpdate) === List(
+    *   Person.name.age.getAsOf(afterUpdate).map(_ ==> List(
     *     ("Ben", 43), // Ben now 43
     *     ("Liz", 37)
     *   )
     *
     *   // Get List of all rows as of afterRetract
-    *   Person.name.age.getAsOf(afterRetract) === List(
+    *   Person.name.age.getAsOf(afterRetract).map(_ ==> List(
     *     ("Liz", 37) // Ben gone
     *   )
     * }}}
@@ -385,13 +385,13 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val afterUpdate = new java.util.Date
     *
     *   // Get List of all rows as of afterUpdate
-    *   Person.name.age.getAsOf(afterUpdate) === List(
+    *   Person.name.age.getAsOf(afterUpdate).map(_ ==> List(
     *     ("Ben", 43),
     *     ("Liz", 37)
     *   )
     *
     *   // Get List of n rows as of afterUpdate
-    *   Person.name.age.getAsOf(afterUpdate, 1) === List(
+    *   Person.name.age.getAsOf(afterUpdate, 1).map(_ ==> List(
     *     ("Ben", 43)
     *   )
     * }}}
@@ -421,16 +421,16 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val t3 = Person.name("Cay").save.t
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since transaction time t1
-    *   Person.name.getSince(t1) === List("Ben", "Cay")
+    *   Person.name.getSince(t1).map(_ ==> List("Ben", "Cay"))
     *
     *   // Cay added since transaction time t2
-    *   Person.name.getSince(t2) === List("Cay")
+    *   Person.name.getSince(t2).map(_ ==> List("Cay"))
     *
     *   // Nothing added since transaction time t3
-    *   Person.name.getSince(t3) === Nil
+    *   Person.name.getSince(t3).map(_ ==> Nil)
     * }}}
     *
     * @group getSince
@@ -455,13 +455,13 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val t3 = Person.name("Cay").save.t
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since transaction time t1
-    *   Person.name.getSince(t1) === List("Ben", "Cay")
+    *   Person.name.getSince(t1).map(_ ==> List("Ben", "Cay"))
     *
     *   // Ben and Cay added since transaction time t1 - only n (1) rows returned
-    *   Person.name.getSince(t1, 1) === List("Ben")
+    *   Person.name.getSince(t1, 1).map(_ ==> List("Ben"))
     * }}}
     *
     * @group getSince
@@ -489,16 +489,16 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val tx3 = Person.name("Cay").save
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since tx1
-    *   Person.name.getSince(tx1) === List("Ben", "Cay")
+    *   Person.name.getSince(tx1).map(_ ==> List("Ben", "Cay"))
     *
     *   // Cay added since tx2
-    *   Person.name.getSince(tx2) === List("Cay")
+    *   Person.name.getSince(tx2).map(_ ==> List("Cay"))
     *
     *   // Nothing added since tx3
-    *   Person.name.getSince(tx3) === Nil
+    *   Person.name.getSince(tx3).map(_ ==> Nil)
     * }}}
     *
     * @group getSince
@@ -525,13 +525,13 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val tx3 = Person.name("Cay").save
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since tx1
-    *   Person.name.getSince(tx1) === List("Ben", "Cay")
+    *   Person.name.getSince(tx1).map(_ ==> List("Ben", "Cay"))
     *
     *   // Ben and Cay added since tx1 - only n (1) rows returned
-    *   Person.name.getSince(tx1, 1) === List("Ben")
+    *   Person.name.getSince(tx1, 1).map(_ ==> List("Ben"))
     * }}}
     *
     * @group getSince
@@ -554,16 +554,16 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val date3 = Person.name("Cay").save.inst
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since date1
-    *   Person.name.getSince(date1) === List("Ben", "Cay")
+    *   Person.name.getSince(date1).map(_ ==> List("Ben", "Cay"))
     *
     *   // Cay added since date2
-    *   Person.name.getSince(date2) === List("Cay")
+    *   Person.name.getSince(date2).map(_ ==> List("Cay"))
     *
     *   // Nothing added since date3
-    *   Person.name.getSince(date3) === Nil
+    *   Person.name.getSince(date3).map(_ ==> Nil)
     * }}}
     *
     * @group getSince
@@ -585,13 +585,13 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   val date3 = Person.name("Cay").save.inst
     *
     *   // Current values
-    *   Person.name.get === List("Ann", "Ben", "Cay")
+    *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since date1
-    *   Person.name.getSince(date1) === List("Ben", "Cay")
+    *   Person.name.getSince(date1).map(_ ==> List("Ben", "Cay"))
     *
     *   // Ben and Cay added since date1 - only n (1) rows returned
-    *   Person.name.getSince(date1, 1) === List("Ben")
+    *   Person.name.getSince(date1, 1).map(_ ==> List("Ben"))
     * }}}
     *
     * @group getSince
@@ -617,13 +617,13 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   Person.name.likes.getWith(
     *     // apply imaginary transaction data
     *     Person(ben).likes("sushi").getUpdateTx
-    *   ) === List(
+    *   ).map(_ ==> List(
     *     // Effect: Ben would like sushi if tx was applied
     *     ("Ben", "sushi")
     *   )
     *
     *   // Current state is still the same
-    *   Person.name.likes.get === List(("Ben", "pasta"))
+    *   Person.name.likes.get.map(_ ==> List(("Ben", "pasta")))
     * }}}
     * Multiple transactions can be applied to test more complex what-if scenarios!
     *
@@ -654,7 +654,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   Person.name.likes.getWith(
     *     Person(ben).likes("sushi").getUpdateTx,
     *     Person(liz).likes("cake").getUpdateTx
-    *   ) === List(
+    *   ).map(_ ==> List(
     *     ("Ben", "sushi")
     *     ("Liz", "cake")
     *   )
@@ -664,7 +664,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *     1
     *     Person(ben).likes("sushi").getUpdateTx,
     *     Person(liz).likes("cake").getUpdateTx
-    *   ) === List(
+    *   ).map(_ ==> List(
     *     ("Ben", "sushi")
     *   )
     * }}}
@@ -689,14 +689,14 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).size === 250
+    *   Person.name.getWith(newDataTx).map(_.size ==> 250
     * }}}
     *
     * @group getWith
@@ -713,17 +713,17 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).size === 250
+    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
     *
     *   // Imagine future db - Let's just take 10
-    *   Person.name.getWith(newDataTx, 10).size === 10
+    *   Person.name.getWith(newDataTx, 10).map(_.size ==> 10)
     * }}}
     *
     * @group getWith
@@ -766,7 +766,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     *   ben.retract
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted

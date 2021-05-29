@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.input1.resolution
 
+import molecule.core.exceptions.MoleculeException
 import molecule.datomic.api.in1_out2._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
@@ -29,25 +30,25 @@ object EnumCard1 extends AsyncTestSuite {
         for {
           _ <- oneData
           // Can return other mandatory attribute values having missing tacit attribute value
-          _ <- Ns.str.enum_().get === List(str4)
-          _ <- Ns.str.enum_(Nil).get === List(str4)
-          _ <- Ns.str.enum$(None).get === List((str4, None))
+          _ <- Ns.str.enum_().get.map(_ ==> List(str4))
+          _ <- Ns.str.enum_(Nil).get.map(_ ==> List(str4))
+          _ <- Ns.str.enum$(None).get.map(_ ==> List((str4, None)))
 
           // Can't return mandatory attribute value that is missing
-          _ <- Ns.str.enum().get === Nil
-          // Ns.str.enum(Nil).get === Nil // not allowed to compile (mandatory/Nil is contradictive)
+          _ <- Ns.str.enum().get.map(_ ==> Nil)
+          // Ns.str.enum(Nil).get.map(_ ==> Nil) // not allowed to compile (mandatory/Nil is contradictive)
           // same as
-          _ <- inputMolecule(Nil).get === Nil
-          _ <- inputMolecule(List(enum1)).get === List(enum1)
-          _ <- inputMolecule(List(enum1, enum1)).get === List(enum1)
-          _ <- inputMolecule(List(enum1, enum2)).get === List(enum2, enum1)
+          _ <- inputMolecule(Nil).get.map(_ ==> Nil)
+          _ <- inputMolecule(List(enum1)).get.map(_ ==> List(enum1))
+          _ <- inputMolecule(List(enum1, enum1)).get.map(_ ==> List(enum1))
+          _ <- inputMolecule(List(enum1, enum2)).get.map(_ ==> List(enum2, enum1))
 
           // Varargs
-          _ <- inputMolecule(enum1).get === List(enum1)
-          _ <- inputMolecule(enum1, enum2).get === List(enum2, enum1)
+          _ <- inputMolecule(enum1).get.map(_ ==> List(enum1))
+          _ <- inputMolecule(enum1, enum2).get.map(_ ==> List(enum2, enum1))
 
           // `or`
-          _ <- inputMolecule(enum1 or enum2).get === List(enum2, enum1)
+          _ <- inputMolecule(enum1 or enum2).get.map(_ ==> List(enum2, enum1))
         } yield ()
       }
 
@@ -69,9 +70,9 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum3))
 
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
 
@@ -81,9 +82,9 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum2, enum3))
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
 
@@ -92,10 +93,10 @@ object EnumCard1 extends AsyncTestSuite {
         for {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
-          _ <- inputMolecule(List(enum2)).get === List(enum1)
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(enum1))
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
 
@@ -105,9 +106,9 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum1, enum2))
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
     }
@@ -121,18 +122,18 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
 
           // Can't return mandatory attribute value that is missing
-          _ <- Ns.str.enum().get === Nil
-          // Ns.str.enum(Nil).get === Nil // not allowed to compile (mandatory/Nil is contradictive)
+          _ <- Ns.str.enum().get.map(_ ==> Nil)
+          // Ns.str.enum(Nil).get.map(_ ==> Nil) // not allowed to compile (mandatory/Nil is contradictive)
 
           // Can return other mandatory attribute values having missing tacit attribute value
-          _ <- Ns.str.enum_().get === List(str4)
-          _ <- Ns.str.enum_(Nil).get === List(str4)
-          _ <- Ns.str.enum$(None).get === List((str4, None))
+          _ <- Ns.str.enum_().get.map(_ ==> List(str4))
+          _ <- Ns.str.enum_(Nil).get.map(_ ==> List(str4))
+          _ <- Ns.str.enum$(None).get.map(_ ==> List((str4, None)))
           // same as
-          _ <- inputMolecule(Nil).get === List(str4)
-          _ <- inputMolecule(List(enum1)).get === List(str1)
-          _ <- inputMolecule(List(enum1, enum1)).get === List(str1)
-          _ <- inputMolecule(List(enum1, enum2)).get === List(str1, str2)
+          _ <- inputMolecule(Nil).get.map(_ ==> List(str4))
+          _ <- inputMolecule(List(enum1)).get.map(_ ==> List(str1))
+          _ <- inputMolecule(List(enum1, enum1)).get.map(_ ==> List(str1))
+          _ <- inputMolecule(List(enum1, enum2)).get.map(_ ==> List(str1, str2))
         } yield ()
       }
 
@@ -143,7 +144,7 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
           _ <- inputMolecule(List(enum1)).get.map(_.sorted ==> List(str2, str3))
           _ <- inputMolecule(List(enum1, enum1)).get.map(_.sorted ==> List(str2, str3))
-          _ <- inputMolecule(List(enum1, enum2)).get === List(str3)
+          _ <- inputMolecule(List(enum1, enum2)).get.map(_ ==> List(str3))
         } yield ()
       }
 
@@ -151,12 +152,12 @@ object EnumCard1 extends AsyncTestSuite {
         val inputMolecule = m(Ns.str.enum_.>(?))
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get === List(str1, str2, str3)
-          _ <- inputMolecule(List(enum2)).get === List(str3)
+          _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str3))
 
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
 
@@ -164,11 +165,11 @@ object EnumCard1 extends AsyncTestSuite {
         val inputMolecule = m(Ns.str.enum_.>=(?))
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get === List(str1, str2, str3)
-          _ <- inputMolecule(List(enum2)).get === List(str2, str3)
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str2, str3))
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
 
@@ -176,11 +177,11 @@ object EnumCard1 extends AsyncTestSuite {
         val inputMolecule = m(Ns.str.enum_.<(?))
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get === List(str1, str2, str3)
-          _ <- inputMolecule(List(enum2)).get === List(str1)
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str1))
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
 
@@ -188,11 +189,11 @@ object EnumCard1 extends AsyncTestSuite {
         val inputMolecule = m(Ns.str.enum_.<=(?))
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get === List(str1, str2, str3)
-          _ <- inputMolecule(List(enum2)).get === List(str1, str2)
-          //(_ <- inputMolecule(List(enum2, enum3)).get must throwA[MoleculeException])
-          // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          // "Can't apply multiple values to comparison function."
+          _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str1, str2))
+          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+            err ==> "Can't apply multiple values to comparison function."
+          }
         } yield ()
       }
     }

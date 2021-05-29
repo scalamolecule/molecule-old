@@ -3,8 +3,8 @@ package moleculeTests.tests.examples.datomic.dayOfDatomic
 import molecule.datomic.api.out4._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -97,7 +97,7 @@ object SocialNews extends AsyncTestSuite {
         john = tx.eid
 
         // Users with upvotes
-        _ <- User.email.upVotes.get === List(("john@example.com", Set(s1, s2, s3)))
+        _ <- User.email.upVotes.get.map(_ ==> List(("john@example.com", Set(s1, s2, s3))))
 
         // Update John's first name
         _ <- User(john).firstName("Jonathan").update
@@ -115,7 +115,7 @@ object SocialNews extends AsyncTestSuite {
         _ <- User(john).upVotes.get.map(_.head.size ==> 2)
 
         // Only John's 2 upvotes exist
-        _ <- User.email.upVotes.get === List(("john@example.com", Set(s1, s2)))
+        _ <- User.email.upVotes.get.map(_ ==> List(("john@example.com", Set(s1, s2))))
 
         // Retract all John's upvotes
         _ <- User(john).upVotes().update
@@ -124,7 +124,7 @@ object SocialNews extends AsyncTestSuite {
         _ <- User(john).upVotes.get.map(_.size ==> 0)
 
         // No Users with upvotes anymore
-        _ <- User.email.upVotes.get === List()
+        _ <- User.email.upVotes.get.map(_ ==> List())
 
         // Let Stuart upvote a story
         _ <- User(stu).upVotes(paulGrahamStory).update

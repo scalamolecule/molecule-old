@@ -3,11 +3,10 @@ package moleculeTests.tests.core.input1.expression
 import java.net.URI
 import molecule.core.exceptions.MoleculeException
 import molecule.datomic.api.in1_out2._
-import molecule.datomic.base.ast.query._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -44,14 +43,14 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uri(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get === Nil
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
 
-            _ <- inputMolecule(List(uri1)).get === List(uri1)
-            _ <- inputMolecule(List(uri1, uri1)).get === List(uri1)
+            _ <- inputMolecule(List(uri1)).get.map(_ ==> List(uri1))
+            _ <- inputMolecule(List(uri1, uri1)).get.map(_ ==> List(uri1))
             _ <- inputMolecule(List(uri1, uri2)).get.map(_.sorted ==> List(uri1, uri2))
 
             // Varargs
-            _ <- inputMolecule(uri1).get === List(uri1)
+            _ <- inputMolecule(uri1).get.map(_ ==> List(uri1))
             _ <- inputMolecule(uri1, uri2).get.map(_.sorted ==> List(uri1, uri2))
 
             // `or`
@@ -76,9 +75,9 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uri1, uri2, uri3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(uri3))
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -88,9 +87,9 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uri1, uri2, uri3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(uri2, uri3))
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -99,10 +98,10 @@ object Input1URI extends AsyncTestSuite {
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uri1, uri2, uri3))
-            _ <- inputMolecule(List(uri2)).get === List(uri1)
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2)).get.map(_ ==> List(uri1))
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -112,9 +111,9 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uri1, uri2, uri3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(uri1, uri2))
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
       }
@@ -126,9 +125,9 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.str.uri_(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get === List(str4)
-            _ <- inputMolecule(List(uri1)).get === List(str1)
-            _ <- inputMolecule(List(uri1, uri1)).get === List(str1)
+            _ <- inputMolecule(Nil).get.map(_ ==> List(str4))
+            _ <- inputMolecule(List(uri1)).get.map(_ ==> List(str1))
+            _ <- inputMolecule(List(uri1, uri1)).get.map(_ ==> List(str1))
             _ <- inputMolecule(List(uri1, uri2)).get.map(_.sorted ==> List(str1, str2))
           } yield ()
         }
@@ -150,9 +149,9 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(str3))
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -162,9 +161,9 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(str2, str3))
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -173,10 +172,10 @@ object Input1URI extends AsyncTestSuite {
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
-            _ <- inputMolecule(List(uri2)).get === List(str1)
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2)).get.map(_ ==> List(str1))
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -186,9 +185,9 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(str1, str2))
-            //(inputMolecule(List(uri2, uri3)).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
       }
@@ -202,59 +201,59 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uri.uris(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === Nil
-            _ <- inputMolecule(List(Set[URI]())).get === Nil
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> Nil)
 
 
             // Values of 1 Set match values of 1 card-many attribute at a time
 
-            _ <- inputMolecule(List(Set(uri1))).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(List(Set(uri1, uri1))).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(List(Set(uri1, uri2))).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(List(Set(uri1, uri3))).get === Nil
-            _ <- inputMolecule(List(Set(uri2, uri3))).get === List((uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(List(Set(uri4, uri5))).get === List((uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(List(Set(uri1))).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(List(Set(uri1, uri1))).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(List(Set(uri1, uri2))).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(List(Set(uri1, uri3))).get.map(_ ==> Nil)
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.map(_ ==> List((uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(List(Set(uri4, uri5))).get.map(_ ==> List((uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
             // 1 arg
-            _ <- inputMolecule(Set(uri1)).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(Set(uri1, uri1)).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(Set(uri1, uri2)).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(Set(uri1, uri3)).get === Nil
-            _ <- inputMolecule(Set(uri2, uri3)).get === List((uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(Set(uri4, uri5)).get === List((uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(Set(uri1)).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(Set(uri1, uri1)).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(Set(uri1, uri2)).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(Set(uri1, uri3)).get.map(_ ==> Nil)
+            _ <- inputMolecule(Set(uri2, uri3)).get.map(_ ==> List((uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(Set(uri4, uri5)).get.map(_ ==> List((uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
 
             // Values of each Set matches values of 1 card-many attributes respectively
 
-            _ <- inputMolecule(List(Set(uri1, uri2), Set[URI]())).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(List(Set(uri1), Set(uri1))).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(List(Set(uri1), Set(uri2))).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(List(Set(uri1), Set(uri3))).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(List(Set(uri1, uri2), Set(uri3))).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(List(Set(uri1), Set(uri2, uri3))).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(List(Set(uri1), Set(uri2), Set(uri3))).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(List(Set(uri1, uri2), Set(uri3, uri4))).get === List((uri1, Set(uri1, uri2)), (uri3, Set(uri4, uri3)))
+            _ <- inputMolecule(List(Set(uri1, uri2), Set[URI]())).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(List(Set(uri1), Set(uri1))).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(List(Set(uri1), Set(uri2))).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(List(Set(uri1), Set(uri3))).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(List(Set(uri1, uri2), Set(uri3))).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(List(Set(uri1), Set(uri2, uri3))).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(List(Set(uri1), Set(uri2), Set(uri3))).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(List(Set(uri1, uri2), Set(uri3, uri4))).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri3, Set(uri4, uri3))))
 
 
             // Multiple varargs
-            _ <- inputMolecule(Set(uri1, uri2), Set[URI]()).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(Set(uri1), Set(uri1)).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(Set(uri1), Set(uri2)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(Set(uri1), Set(uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(Set(uri1), Set(uri2, uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri3, uri4)).get === List((uri1, Set(uri1, uri2)), (uri3, Set(uri4, uri3)))
+            _ <- inputMolecule(Set(uri1, uri2), Set[URI]()).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(Set(uri1), Set(uri1)).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(Set(uri1), Set(uri2)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(Set(uri1), Set(uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(Set(uri1), Set(uri2, uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri3, uri4)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri3, Set(uri4, uri3))))
 
             // `or`
-            _ <- inputMolecule(Set(uri1, uri2) or Set[URI]()).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(Set(uri1) or Set(uri1)).get === List((uri1, Set(uri1, uri2)))
-            _ <- inputMolecule(Set(uri1) or Set(uri2)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(Set(uri1) or Set(uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(Set(uri1, uri2) or Set(uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(Set(uri1) or Set(uri2, uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)))
-            _ <- inputMolecule(Set(uri1) or Set(uri2) or Set(uri3)).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)))
-            _ <- inputMolecule(Set(uri1, uri2) or Set(uri3, uri4)).get === List((uri1, Set(uri1, uri2)), (uri3, Set(uri4, uri3)))
+            _ <- inputMolecule(Set(uri1, uri2) or Set[URI]()).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(Set(uri1) or Set(uri1)).get.map(_ ==> List((uri1, Set(uri1, uri2))))
+            _ <- inputMolecule(Set(uri1) or Set(uri2)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(Set(uri1) or Set(uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(Set(uri1, uri2) or Set(uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(Set(uri1) or Set(uri2, uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2))))
+            _ <- inputMolecule(Set(uri1) or Set(uri2) or Set(uri3)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3))))
+            _ <- inputMolecule(Set(uri1, uri2) or Set(uri3, uri4)).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri3, Set(uri4, uri3))))
           } yield ()
         }
 
@@ -269,82 +268,82 @@ object Input1URI extends AsyncTestSuite {
             _ <- manyData
             _ <- Ns.uri.uris insert all
 
-            _ <- inputMolecule(Nil).get === all
-            _ <- inputMolecule(Set[URI]()).get === all
+            _ <- inputMolecule(Nil).get.map(_ ==> all)
+            _ <- inputMolecule(Set[URI]()).get.map(_ ==> all)
 
             // Vararg/List(args*) syntax/semantics not available for card-many attributes of input molecules
-            // inputMolecule(uri1).get === ...
-            // inputMolecule(List(uri1)).get === ...
+            // inputMolecule(uri1).get.map(_ ==> ...)
+            // inputMolecule(List(uri1)).get.map(_ ==> ...)
 
             // Set semantics omit the whole set with one or more matching values
-            _ <- inputMolecule(Set(uri1)).get === List(
+            _ <- inputMolecule(Set(uri1)).get.map(_ ==> List(
               // (uri1, Set(uri1, uri2, uri3)),  // uri1 match
               (uri2, Set(uri2, uri3, uri4)),
               (uri3, Set(uri3, uri4, uri5))
-            )
+            ))
             // Same as
-            _ <- inputMolecule(List(Set(uri1))).get === List(
+            _ <- inputMolecule(List(Set(uri1))).get.map(_ ==> List(
               (uri2, Set(uri2, uri3, uri4)),
               (uri3, Set(uri3, uri4, uri5))
-            )
+            ))
 
-            _ <- inputMolecule(Set(uri2)).get === List(
+            _ <- inputMolecule(Set(uri2)).get.map(_ ==> List(
               // (uri1, Set(uri1, uri2, uri3)),  // uri2 match
               // (uri2, Set(uri2, uri3, uri4)),  // uri2 match
               (uri3, Set(uri3, uri4, uri5))
-            )
+            ))
 
-            _ <- inputMolecule(Set(uri3)).get === Nil // uri3 match all
+            _ <- inputMolecule(Set(uri3)).get.map(_ ==> Nil) // uri3 match all
 
 
-            _ <- inputMolecule(Set(uri1), Set(uri2)).get === List(
+            _ <- inputMolecule(Set(uri1), Set(uri2)).get.map(_ ==> List(
               // (uri1, Set(uri1, uri2, uri3)),  // uri1 match, uri2 match
               // (uri2, Set(uri2, uri3, uri4)),  // uri2 match
               (uri3, Set(uri3, uri4, uri5))
-            )
+            ))
             // Multiple values in a Set matches matches set-wise
-            _ <- inputMolecule(Set(uri1, uri2)).get === List(
+            _ <- inputMolecule(Set(uri1, uri2)).get.map(_ ==> List(
               // (uri1, Set(uri1, uri2, uri3)),  // uri1 AND uri2 match
               (uri2, Set(uri2, uri3, uri4)),
               (uri3, Set(uri3, uri4, uri5))
-            )
+            ))
 
 
-            _ <- inputMolecule(Set(uri1), Set(uri3)).get === Nil // uri3 match all
-            _ <- inputMolecule(Set(uri1, uri3)).get === List(
+            _ <- inputMolecule(Set(uri1), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
+            _ <- inputMolecule(Set(uri1, uri3)).get.map(_ ==> List(
               // (uri1, Set(uri1, uri2, uri3)),  // uri1 AND uri3 match
               (uri2, Set(uri2, uri3, uri4)),
               (uri3, Set(uri3, uri4, uri5))
-            )
+            ))
 
 
-            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get === Nil // uri3 match all
-            _ <- inputMolecule(Set(uri1, uri2, uri3)).get === List(
+            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
+            _ <- inputMolecule(Set(uri1, uri2, uri3)).get.map(_ ==> List(
               // (uri1, Set(uri1, uri2, uri3)),  // uri1 AND uri2 AND uri3 match
               (uri2, Set(uri2, uri3, uri4)),
               (uri3, Set(uri3, uri4, uri5))
-            )
+            ))
 
 
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri1)).get === List(
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri1)).get.map(_ ==> List(
               (uri2, Set(uri2, uri3, uri4)),
               (uri3, Set(uri3, uri4, uri5))
-            )
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri2)).get === List(
+            ))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri2)).get.map(_ ==> List(
               (uri3, Set(uri3, uri4, uri5))
-            )
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get === Nil
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri4)).get === Nil
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri5)).get === List(
+            ))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get.map(_ ==> Nil)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri4)).get.map(_ ==> Nil)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri5)).get.map(_ ==> List(
               (uri2, Set(uri2, uri3, uri4))
-            )
+            ))
 
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri2, uri3)).get === List(
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri2, uri3)).get.map(_ ==> List(
               (uri3, Set(uri3, uri4, uri5))
-            )
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri4, uri5)).get === List(
+            ))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri4, uri5)).get.map(_ ==> List(
               (uri2, Set(uri2, uri3, uri4))
-            )
+            ))
           } yield ()
         }
 
@@ -352,19 +351,19 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uri.uris.>(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
-            _ <- inputMolecule(List(Set[URI]())).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(Nil).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
             // (uri3, uri4), (uri4, uri5), (uri4, uri5, uri6)
-            _ <- inputMolecule(List(Set(uri2))).get === List((uri2, Set(uri3)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List((uri2, Set(uri3)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -372,19 +371,19 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uri.uris.>=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
-            _ <- inputMolecule(List(Set[URI]())).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(Nil).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
             // (uri2, uri4), (uri3, uri4), (uri4, uri5), (uri4, uri5, uri6)
-            _ <- inputMolecule(List(Set(uri2))).get === List((uri1, Set(uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List((uri1, Set(uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -392,18 +391,18 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uri.uris.<(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
-            _ <- inputMolecule(List(Set[URI]())).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(Nil).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
-            _ <- inputMolecule(List(Set(uri2))).get === List((uri1, Set(uri1)))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List((uri1, Set(uri1))))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -411,18 +410,18 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uri.uris.<=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
-            _ <- inputMolecule(List(Set[URI]())).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5)))
+            _ <- inputMolecule(Nil).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri3, uri2)), (uri3, Set(uri4, uri3)), (uri4, Set(uri4, uri5)), (uri5, Set(uri4, uri6, uri5))))
 
-            _ <- inputMolecule(List(Set(uri2))).get === List((uri1, Set(uri1, uri2)), (uri2, Set(uri2)))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List((uri1, Set(uri1, uri2)), (uri2, Set(uri2))))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
       }
@@ -433,31 +432,31 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uris(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === Nil
-            _ <- inputMolecule(List(Set[URI]())).get === Nil
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> Nil)
 
             // Values of 1 Set match values of 1 card-many attribute at a time
 
-            _ <- inputMolecule(List(Set(uri1))).get === List(Set(uri1, uri2))
-            _ <- inputMolecule(List(Set(uri2))).get === List(Set(uri1, uri2, uri3)) // (uri1, uri2) + (uri2, uri3)
-            _ <- inputMolecule(List(Set(uri3))).get === List(Set(uri2, uri3, uri4)) // (uri2, uri3) + (uri3, uri4)
+            _ <- inputMolecule(List(Set(uri1))).get.map(_ ==> List(Set(uri1, uri2)))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List(Set(uri1, uri2, uri3))) // (uri1, uri2) + (uri2, uri3)
+            _ <- inputMolecule(List(Set(uri3))).get.map(_ ==> List(Set(uri2, uri3, uri4))) // (uri2, uri3) + (uri3, uri4)
 
-            _ <- inputMolecule(List(Set(uri1, uri2))).get === List(Set(uri1, uri2))
-            _ <- inputMolecule(List(Set(uri1, uri3))).get === Nil
-            _ <- inputMolecule(List(Set(uri2, uri3))).get === List(Set(uri2, uri3))
-            _ <- inputMolecule(List(Set(uri4, uri5))).get === List(Set(uri4, uri5, uri6)) // (uri4, uri5) + (uri4, uri5, uri6)
+            _ <- inputMolecule(List(Set(uri1, uri2))).get.map(_ ==> List(Set(uri1, uri2)))
+            _ <- inputMolecule(List(Set(uri1, uri3))).get.map(_ ==> Nil)
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.map(_ ==> List(Set(uri2, uri3)))
+            _ <- inputMolecule(List(Set(uri4, uri5))).get.map(_ ==> List(Set(uri4, uri5, uri6))) // (uri4, uri5) + (uri4, uri5, uri6)
 
 
             // Values of each Set matches values of 1 card-many attributes respectively
 
-            _ <- inputMolecule(List(Set(uri1), Set(uri1))).get === List(Set(uri1, uri2))
-            _ <- inputMolecule(List(Set(uri1), Set(uri2))).get === List(Set(uri1, uri2, uri3)) // (uri1, uri2) + (uri2, uri3)
-            _ <- inputMolecule(List(Set(uri1), Set(uri3))).get === List(Set(uri1, uri4, uri3, uri2)) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
-            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get === List(Set(uri1, uri2, uri3, uri4)) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
+            _ <- inputMolecule(List(Set(uri1), Set(uri1))).get.map(_ ==> List(Set(uri1, uri2)))
+            _ <- inputMolecule(List(Set(uri1), Set(uri2))).get.map(_ ==> List(Set(uri1, uri2, uri3))) // (uri1, uri2) + (uri2, uri3)
+            _ <- inputMolecule(List(Set(uri1), Set(uri3))).get.map(_ ==> List(Set(uri1, uri4, uri3, uri2))) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4))) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
 
-            _ <- inputMolecule(List(Set(uri1, uri2), Set(uri3))).get === List(Set(uri1, uri2, uri3, uri4)) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
-            _ <- inputMolecule(List(Set(uri1), Set(uri2, uri3))).get === List(Set(uri1, uri3, uri2)) // (uri1, uri2) + (uri2, uri3)
-            _ <- inputMolecule(List(Set(uri1), Set(uri2), Set(uri3))).get === List(Set(uri1, uri2, uri3, uri4)) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
+            _ <- inputMolecule(List(Set(uri1, uri2), Set(uri3))).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4))) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
+            _ <- inputMolecule(List(Set(uri1), Set(uri2, uri3))).get.map(_ ==> List(Set(uri1, uri3, uri2))) // (uri1, uri2) + (uri2, uri3)
+            _ <- inputMolecule(List(Set(uri1), Set(uri2), Set(uri3))).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4))) // (uri1, uri2) + (uri2, uri3) + (uri3, uri4)
           } yield ()
         }
 
@@ -471,38 +470,38 @@ object Input1URI extends AsyncTestSuite {
               (uri3, Set(uri3, uri4, uri5))
             )
 
-            _ <- inputMolecule(Nil).get === List(Set(uri1, uri2, uri3, uri4, uri5))
-            _ <- inputMolecule(Set[URI]()).get === List(Set(uri1, uri2, uri3, uri4, uri5))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5)))
+            _ <- inputMolecule(Set[URI]()).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5)))
 
             // Vararg/List(args*) syntax/semantics not available for card-many attributes of input molecules
-            // inputMolecule(uri1).get === ...
+            // inputMolecule(uri1).get.map(_ ==> ...)
 
             // Set semantics omit the whole set with one or more matching values
-            _ <- inputMolecule(Set(uri1)).get === List(Set(uri2, uri3, uri4, uri5))
+            _ <- inputMolecule(Set(uri1)).get.map(_ ==> List(Set(uri2, uri3, uri4, uri5)))
             // Same as
-            _ <- inputMolecule(List(Set(uri1))).get === List(Set(uri2, uri3, uri4, uri5))
+            _ <- inputMolecule(List(Set(uri1))).get.map(_ ==> List(Set(uri2, uri3, uri4, uri5)))
 
-            _ <- inputMolecule(Set(uri2)).get === List(Set(uri3, uri4, uri5))
-            _ <- inputMolecule(Set(uri3)).get === Nil // uri3 match all
+            _ <- inputMolecule(Set(uri2)).get.map(_ ==> List(Set(uri3, uri4, uri5)))
+            _ <- inputMolecule(Set(uri3)).get.map(_ ==> Nil) // uri3 match all
 
-            _ <- inputMolecule(Set(uri1), Set(uri2)).get === List(Set(uri3, uri4, uri5))
-            _ <- inputMolecule(Set(uri1), Set(uri3)).get === Nil // uri3 match all
+            _ <- inputMolecule(Set(uri1), Set(uri2)).get.map(_ ==> List(Set(uri3, uri4, uri5)))
+            _ <- inputMolecule(Set(uri1), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
 
             // Multiple values in a Set matches matches set-wise
-            _ <- inputMolecule(Set(uri1, uri2)).get === List(Set(uri2, uri3, uri4, uri5))
-            _ <- inputMolecule(Set(uri1, uri3)).get === List(Set(uri2, uri3, uri4, uri5))
+            _ <- inputMolecule(Set(uri1, uri2)).get.map(_ ==> List(Set(uri2, uri3, uri4, uri5)))
+            _ <- inputMolecule(Set(uri1, uri3)).get.map(_ ==> List(Set(uri2, uri3, uri4, uri5)))
 
-            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get === Nil // uri3 match all
-            _ <- inputMolecule(Set(uri1, uri2, uri3)).get === List(Set(uri2, uri3, uri4, uri5))
+            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
+            _ <- inputMolecule(Set(uri1, uri2, uri3)).get.map(_ ==> List(Set(uri2, uri3, uri4, uri5)))
 
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri1)).get === List(Set(uri2, uri3, uri4, uri5))
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri2)).get === List(Set(uri3, uri4, uri5))
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get === Nil
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri4)).get === Nil
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri5)).get === List(Set(uri2, uri3, uri4))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri1)).get.map(_ ==> List(Set(uri2, uri3, uri4, uri5)))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri2)).get.map(_ ==> List(Set(uri3, uri4, uri5)))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get.map(_ ==> Nil)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri4)).get.map(_ ==> Nil)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri5)).get.map(_ ==> List(Set(uri2, uri3, uri4)))
 
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri2, uri3)).get === List(Set(uri3, uri4, uri5))
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri4, uri5)).get === List(Set(uri2, uri3, uri4))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri2, uri3)).get.map(_ ==> List(Set(uri3, uri4, uri5)))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri4, uri5)).get.map(_ ==> List(Set(uri2, uri3, uri4)))
           } yield ()
         }
 
@@ -510,18 +509,18 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uris.>(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
-            _ <- inputMolecule(List(Set[URI]())).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
 
-            _ <- inputMolecule(List(Set(uri2))).get === List(Set(uri3, uri4, uri5, uri6))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List(Set(uri3, uri4, uri5, uri6)))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -529,18 +528,18 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uris.>=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
-            _ <- inputMolecule(List(Set[URI]())).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
 
-            _ <- inputMolecule(List(Set(uri2))).get === List(Set(uri2, uri3, uri4, uri5, uri6))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List(Set(uri2, uri3, uri4, uri5, uri6)))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -548,18 +547,18 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uris.<(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
-            _ <- inputMolecule(List(Set[URI]())).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
 
-            _ <- inputMolecule(List(Set(uri2))).get === List(Set(uri1))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List(Set(uri1)))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -567,18 +566,18 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uris.<=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
-            _ <- inputMolecule(List(Set[URI]())).get === List(Set(uri1, uri2, uri3, uri4, uri5, uri6))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List(Set(uri1, uri2, uri3, uri4, uri5, uri6)))
 
-            _ <- inputMolecule(List(Set(uri2))).get === List(Set(uri1, uri2))
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List(Set(uri1, uri2)))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
       }
@@ -589,27 +588,27 @@ object Input1URI extends AsyncTestSuite {
           val inputMolecule = m(Ns.uri.uris_(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List(uri6)
-            _ <- inputMolecule(List(Set[URI]())).get === List(uri6)
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uri6))
+            _ <- inputMolecule(List(Set[URI]())).get.map(_ ==> List(uri6))
 
 
             // Values of 1 Set match values of 1 card-many attribute at a time
 
-            _ <- inputMolecule(List(Set(uri1))).get === List(uri1)
+            _ <- inputMolecule(List(Set(uri1))).get.map(_ ==> List(uri1))
             _ <- inputMolecule(List(Set(uri2))).get.map(_.sorted ==> List(uri1, uri2))
             _ <- inputMolecule(List(Set(uri3))).get.map(_.sorted ==> List(uri2, uri3))
 
-            _ <- inputMolecule(List(Set(uri1, uri1))).get === List(uri1)
-            _ <- inputMolecule(List(Set(uri1, uri2))).get === List(uri1)
-            _ <- inputMolecule(List(Set(uri1, uri3))).get === Nil
-            _ <- inputMolecule(List(Set(uri2, uri3))).get === List(uri2)
+            _ <- inputMolecule(List(Set(uri1, uri1))).get.map(_ ==> List(uri1))
+            _ <- inputMolecule(List(Set(uri1, uri2))).get.map(_ ==> List(uri1))
+            _ <- inputMolecule(List(Set(uri1, uri3))).get.map(_ ==> Nil)
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.map(_ ==> List(uri2))
             _ <- inputMolecule(List(Set(uri4, uri5))).get.map(_.sorted ==> List(uri4, uri5))
 
 
             // Values of each Set matches values of 1 card-many attributes respectively
 
-            _ <- inputMolecule(List(Set(uri1, uri2), Set[URI]())).get === List(uri1)
-            _ <- inputMolecule(List(Set(uri1), Set(uri1))).get === List(uri1)
+            _ <- inputMolecule(List(Set(uri1, uri2), Set[URI]())).get.map(_ ==> List(uri1))
+            _ <- inputMolecule(List(Set(uri1), Set(uri1))).get.map(_ ==> List(uri1))
             _ <- inputMolecule(List(Set(uri1), Set(uri2))).get.map(_.sorted ==> List(uri1, uri2))
             _ <- inputMolecule(List(Set(uri1), Set(uri3))).get.map(_.sorted ==> List(uri1, uri2, uri3))
 
@@ -635,8 +634,8 @@ object Input1URI extends AsyncTestSuite {
             _ <- inputMolecule(Set[URI]()).get.map(_.sorted ==> List(uri1, uri2, uri3))
 
             // Vararg/List(args*) syntax/semantics not available for card-many attributes of input molecules
-            // inputMolecule(uri1).get === ...
-            // inputMolecule(List(uri1)).get === ...
+            // inputMolecule(uri1).get.map(_ ==> ...)
+            // inputMolecule(List(uri1)).get.map(_ ==> ...)
 
             // Set semantics omit the whole set with one or more matching values
 
@@ -644,28 +643,28 @@ object Input1URI extends AsyncTestSuite {
             // Same as
             _ <- inputMolecule(List(Set(uri1))).get.map(_.sorted ==> List(uri2, uri3))
 
-            _ <- inputMolecule(Set(uri2)).get === List(uri3)
-            _ <- inputMolecule(Set(uri3)).get === Nil // uri3 match all
+            _ <- inputMolecule(Set(uri2)).get.map(_ ==> List(uri3))
+            _ <- inputMolecule(Set(uri3)).get.map(_ ==> Nil) // uri3 match all
 
 
-            _ <- inputMolecule(Set(uri1), Set(uri2)).get === List(uri3)
+            _ <- inputMolecule(Set(uri1), Set(uri2)).get.map(_ ==> List(uri3))
             // Multiple values in a Set matches matches set-wise
             _ <- inputMolecule(Set(uri1, uri2)).get.map(_.sorted ==> List(uri2, uri3))
 
-            _ <- inputMolecule(Set(uri1), Set(uri3)).get === Nil // uri3 match all
+            _ <- inputMolecule(Set(uri1), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
             _ <- inputMolecule(Set(uri1, uri3)).get.map(_.sorted ==> List(uri2, uri3))
 
-            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get === Nil // uri3 match all
+            _ <- inputMolecule(Set(uri1), Set(uri2), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
             _ <- inputMolecule(Set(uri1, uri2, uri3)).get.map(_.sorted ==> List(uri2, uri3))
 
             _ <- inputMolecule(Set(uri1, uri2), Set(uri1)).get.map(_.sorted ==> List(uri2, uri3))
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri2)).get === List(uri3)
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get === Nil
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri4)).get === Nil
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri5)).get === List(uri2)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri2)).get.map(_ ==> List(uri3))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri3)).get.map(_ ==> Nil)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri4)).get.map(_ ==> Nil)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri5)).get.map(_ ==> List(uri2))
 
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri2, uri3)).get === List(uri3)
-            _ <- inputMolecule(Set(uri1, uri2), Set(uri4, uri5)).get === List(uri2)
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri2, uri3)).get.map(_ ==> List(uri3))
+            _ <- inputMolecule(Set(uri1, uri2), Set(uri4, uri5)).get.map(_ ==> List(uri2))
           } yield ()
         }
 
@@ -679,13 +678,13 @@ object Input1URI extends AsyncTestSuite {
             // (uri3, uri4), (uri4, uri5), (uri4, uri5, uri6)
             _ <- inputMolecule(List(Set(uri2))).get.map(_.sorted ==> List(uri2, uri3, uri4, uri5))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -699,13 +698,13 @@ object Input1URI extends AsyncTestSuite {
             // (uri2, uri4), (uri3, uri4), (uri4, uri5), (uri4, uri5, uri6)
             _ <- inputMolecule(List(Set(uri2))).get.map(_.sorted ==> List(uri1, uri2, uri3, uri4, uri5))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -716,15 +715,15 @@ object Input1URI extends AsyncTestSuite {
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uri1, uri2, uri3, uri4, uri5))
             _ <- inputMolecule(List(Set[URI]())).get.map(_.sorted ==> List(uri1, uri2, uri3, uri4, uri5))
 
-            _ <- inputMolecule(List(Set(uri2))).get === List(uri1)
+            _ <- inputMolecule(List(Set(uri2))).get.map(_ ==> List(uri1))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
 
@@ -737,13 +736,13 @@ object Input1URI extends AsyncTestSuite {
 
             _ <- inputMolecule(List(Set(uri2))).get.map(_.sorted ==> List(uri1, uri2))
 
-            //(inputMolecule(List(Set(uri2, uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2, uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
 
-            //(inputMolecule(List(Set(uri2), Set(uri3))).get must throwA[MoleculeException])
-            // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            // "Can't apply multiple values to comparison function."
+            _ <- inputMolecule(List(Set(uri2), Set(uri3))).get.recover { case MoleculeException(err, _) =>
+              err ==> "Can't apply multiple values to comparison function."
+            }
           } yield ()
         }
       }

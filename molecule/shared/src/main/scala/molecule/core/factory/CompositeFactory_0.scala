@@ -31,10 +31,10 @@ trait CompositeFactory_0_2 {
     * {{{
     *   // Explicitly calling `m` to create composite molecule
     *   // with 1 output attribute (`name`) and 1 tacit attribute (`score`).
-    *   m(Person.name + Tag.score_).get.head === "Ben"
+    *   m(Person.name + Tag.score_).get.map(_.head ==> "Ben")
     *
     *   // Alternatively we can create the composite molecule implicitly
-    *   Person.name.+(Tag.score_).get.head === "Ben"
+    *   Person.name.+(Tag.score_).get.map(_.head ==> "Ben")
     * }}}
     * Composite molecules of arity 1 has only one sub-molecule with output attribute(s).
     * If the sub-molecule has multiple output attributes, a tuple is returned, otherwise
@@ -55,7 +55,7 @@ trait CompositeFactory_0_2 {
     * }}}
     * So, given two output attributes, a tuple is returned:
     * {{{
-    *   m(Person.name.age + Tag.score_).get.head === ("Ben", 42)
+    *   m(Person.name.age + Tag.score_).get.map(_.head ==> ("Ben", 42))
     *   //  A   . a1 . a2 +  B .  b1              => (  a1 , a2)
     * }}}
     * @group composite
@@ -77,10 +77,10 @@ trait CompositeFactory_0_2 {
     * we can call various actions on it, like `get` that retrieves matching data from the database.
     * {{{
     *   // Explicitly calling `m` to create composite molecule with 2 output attributes
-    *   m(Person.name + Tag.score).get.head === ("Ben", 7)
+    *   m(Person.name + Tag.score).get.map(_.head ==> ("Ben", 7))
     *
     *   // Alternatively we can create the composite molecule implicitly
-    *   Person.name.+(Tag.score).get.head === ("Ben", 7)
+    *   Person.name.+(Tag.score).get.map(_.head ==> ("Ben", 7))
     * }}}
     * Composite molecules of arity 2 has two sub-molecules with output attribute(s). If a sub-molecule
     * has multiple output attributes, a tuple is returned, otherwise just the single value. The two
@@ -98,13 +98,13 @@ trait CompositeFactory_0_2 {
     * }}}
     * Translating into the example:
     * {{{
-    *   m(Person.name + Tag.score.flags).get.head                         === ("Ben", (7, 3))
-    *   m(Person.name.age + Tag.score).get.head                           === (("Ben", 42), 7)
-    *   m(Person.name.age + Tag.score.flags).get.head                     === (("Ben", 42), (7, 3))
+    *   m(Person.name + Tag.score.flags).get.map(_.head                         ==> ("Ben", (7, 3)))
+    *   m(Person.name.age + Tag.score).get.map(_.head                           ==> (("Ben", 42), 7))
+    *   m(Person.name.age + Tag.score.flags).get.map(_.head                     ==> (("Ben", 42), (7, 3)))
     *
     *   m(Person.name.age +
     *     Tag.score.flags +
-    *     Cat.name_("pitcher")).get.head === (("Ben", 42), (7, 3))
+    *     Cat.name_("pitcher")).get.map(_.head ==> (("Ben", 42), (7, 3)))
     * }}}
     * @group composite
     * @param dsl User-defined DSL structure modelling the composite molecule

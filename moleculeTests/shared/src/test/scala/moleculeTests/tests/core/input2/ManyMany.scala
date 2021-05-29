@@ -38,7 +38,7 @@ object ManyMany extends AsyncTestSuite {
     //        } yield {
     //          try {
     //            i += 1
-    //            im.apply(in1, in2).get === out1.intersect(out2)
+    //            im.apply(in1, in2).get.map(_ ==> out1.intersect(out2))
     //          } catch {
     //            case e: Throwable =>
     //              val expected =
@@ -120,7 +120,7 @@ object ManyMany extends AsyncTestSuite {
     //            val output1     : Map[A, B]      = out1.toMap
     //            val output2     : Map[A, C]      = out2.toMap
     //            val out         : Seq[(A, B, C)] = intersection.map(i => (i, output1(i), output2(i)))
-    //            im.apply(in1, in2).get === out
+    //            im.apply(in1, in2).get.map(_ ==> out)
     //          } catch {
     //            case e: Throwable =>
     //              val intersection: Seq[A]         = out1.map(_._1).intersect(out2.map(_._1))
@@ -935,58 +935,58 @@ object ManyMany extends AsyncTestSuite {
 
     "Enum/URI" - core { implicit conn =>
       for {
-        _ <- m(Ns.int.enums_(?).uris_(?)).apply(List(Set("enum2")), List(Set(uri3))).get === List(1, 2)
-        _ <- m(Ns.int.enums_(?).uris_.not(?)).apply(List(Set("enum2")), List(Set(uri3))).get === Nil
-        _ <- m(Ns.int.enums_(?).uris_.>(?)).apply(List(Set("enum2")), List(Set(uri3))).get === List(2)
-        _ <- m(Ns.int.enums_.not(?).uris_(?)).apply(List(Set("enum2")), List(Set(uri3))).get === List(3)
-        _ <- m(Ns.int.enums_.not(?).uris_.not(?)).apply(List(Set("enum2")), List(Set(uri3))).get === Nil
-        _ <- m(Ns.int.enums_.not(?).uris_.>(?)).apply(List(Set("enum2")), List(Set(uri3))).get === List(3)
-        _ <- m(Ns.int.enums_.<(?).uris_(?)).apply(List(Set("enum2")), List(Set(uri3))).get === List(1)
-        _ <- m(Ns.int.enums_.<(?).uris_.not(?)).apply(List(Set("enum2")), List(Set(uri3))).get === Nil
-        _ <- m(Ns.int.enums_.<(?).uris_.>(?)).apply(List(Set("enum2")), List(Set(uri3))).get === Nil
+        _ <- m(Ns.int.enums_(?).uris_(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> List(1, 2))
+        _ <- m(Ns.int.enums_(?).uris_.not(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> Nil)
+        _ <- m(Ns.int.enums_(?).uris_.>(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> List(2))
+        _ <- m(Ns.int.enums_.not(?).uris_(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> List(3))
+        _ <- m(Ns.int.enums_.not(?).uris_.not(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> Nil)
+        _ <- m(Ns.int.enums_.not(?).uris_.>(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> List(3))
+        _ <- m(Ns.int.enums_.<(?).uris_(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> List(1))
+        _ <- m(Ns.int.enums_.<(?).uris_.not(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> Nil)
+        _ <- m(Ns.int.enums_.<(?).uris_.>(?)).apply(List(Set("enum2")), List(Set(uri3))).get.map(_ ==> Nil)
       } yield ()
     }
 
     "`and` syntax" - core { implicit conn =>
       val im = m(Ns.int.ints_(?).longs_(?))
       for {
-        _ <- im(Set(1) and Set(2L)).get === List(1)
-        _ <- im(List(Set(1)), List(Set(2L))).get === List(1)
+        _ <- im(Set(1) and Set(2L)).get.map(_ ==> List(1))
+        _ <- im(List(Set(1)), List(Set(2L))).get.map(_ ==> List(1))
 
-        _ <- im(Set(1) and Set(2L, 3L)).get === List(1)
-        _ <- im(List(Set(1)), List(Set(2L, 3L))).get === List(1)
+        _ <- im(Set(1) and Set(2L, 3L)).get.map(_ ==> List(1))
+        _ <- im(List(Set(1)), List(Set(2L, 3L))).get.map(_ ==> List(1))
 
-        _ <- im(Set(1) and (Set(2L) or Set(3L))).get === List(1)
-        _ <- im(List(Set(1)), List(Set(2L), Set(3L))).get === List(1)
+        _ <- im(Set(1) and (Set(2L) or Set(3L))).get.map(_ ==> List(1))
+        _ <- im(List(Set(1)), List(Set(2L), Set(3L))).get.map(_ ==> List(1))
 
-        _ <- im(Set(1) and (Set(1L, 2L) or Set(3L))).get === List(1)
-        _ <- im(List(Set(1)), List(Set(1L, 2L), Set(3L))).get === List(1)
-
-
-        _ <- im(Set(2, 3) and Set(2L)).get === List(1, 2)
-        _ <- im(List(Set(2, 3)), List(Set(2L))).get === List(1, 2)
-
-        _ <- im(Set(2, 3) and Set(2L, 3L)).get === List(1, 2)
-        _ <- im(List(Set(2, 3)), List(Set(2L, 3L))).get === List(1, 2)
-
-        _ <- im(Set(2, 3) and (Set(2L) or Set(3L))).get === List(1, 2)
-        _ <- im(List(Set(2, 3)), List(Set(2L), Set(3L))).get === List(1, 2)
-
-        _ <- im(Set(2, 3) and (Set(1L, 2L) or Set(3L))).get === List(1, 2)
-        _ <- im(List(Set(2, 3)), List(Set(1L, 2L), Set(3L))).get === List(1, 2)
+        _ <- im(Set(1) and (Set(1L, 2L) or Set(3L))).get.map(_ ==> List(1))
+        _ <- im(List(Set(1)), List(Set(1L, 2L), Set(3L))).get.map(_ ==> List(1))
 
 
-        _ <- im((Set(2) or Set(3)) and Set(2L)).get === List(1, 2)
-        _ <- im(List(Set(2), Set(3)), List(Set(2L))).get === List(1, 2)
+        _ <- im(Set(2, 3) and Set(2L)).get.map(_ ==> List(1, 2))
+        _ <- im(List(Set(2, 3)), List(Set(2L))).get.map(_ ==> List(1, 2))
 
-        _ <- im((Set(2) or Set(3)) and Set(2L, 3L)).get === List(1, 2)
-        _ <- im(List(Set(2), Set(3)), List(Set(2L, 3L))).get === List(1, 2)
+        _ <- im(Set(2, 3) and Set(2L, 3L)).get.map(_ ==> List(1, 2))
+        _ <- im(List(Set(2, 3)), List(Set(2L, 3L))).get.map(_ ==> List(1, 2))
 
-        _ <- im((Set(2) or Set(3)) and (Set(2L) or Set(3L))).get === List(1, 2, 3)
-        _ <- im(List(Set(2), Set(3)), List(Set(2L), Set(3L))).get === List(1, 2, 3)
+        _ <- im(Set(2, 3) and (Set(2L) or Set(3L))).get.map(_ ==> List(1, 2))
+        _ <- im(List(Set(2, 3)), List(Set(2L), Set(3L))).get.map(_ ==> List(1, 2))
 
-        _ <- im((Set(2) or Set(3)) and (Set(1L, 2L) or Set(3L))).get === List(1, 2, 3)
-        _ <- im(List(Set(2), Set(3)), List(Set(1L, 2L), Set(3L))).get === List(1, 2, 3)
+        _ <- im(Set(2, 3) and (Set(1L, 2L) or Set(3L))).get.map(_ ==> List(1, 2))
+        _ <- im(List(Set(2, 3)), List(Set(1L, 2L), Set(3L))).get.map(_ ==> List(1, 2))
+
+
+        _ <- im((Set(2) or Set(3)) and Set(2L)).get.map(_ ==> List(1, 2))
+        _ <- im(List(Set(2), Set(3)), List(Set(2L))).get.map(_ ==> List(1, 2))
+
+        _ <- im((Set(2) or Set(3)) and Set(2L, 3L)).get.map(_ ==> List(1, 2))
+        _ <- im(List(Set(2), Set(3)), List(Set(2L, 3L))).get.map(_ ==> List(1, 2))
+
+        _ <- im((Set(2) or Set(3)) and (Set(2L) or Set(3L))).get.map(_ ==> List(1, 2, 3))
+        _ <- im(List(Set(2), Set(3)), List(Set(2L), Set(3L))).get.map(_ ==> List(1, 2, 3))
+
+        _ <- im((Set(2) or Set(3)) and (Set(1L, 2L) or Set(3L))).get.map(_ ==> List(1, 2, 3))
+        _ <- im(List(Set(2), Set(3)), List(Set(1L, 2L), Set(3L))).get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
   }

@@ -1,10 +1,9 @@
 package moleculeTests.tests.core.ref
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
-import molecule.datomic.api.out4._
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -73,37 +72,37 @@ object Relations extends AsyncTestSuite {
         tx <- Ns.str("a").save
         id = tx.eid
 
-        //    // Avoid mixing update/save semantics
-        //    (Ns(id).Refs1.int1(1).save must throwA[VerifyModelException])
-        //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[unexpectedAppliedId]  Applying an eid is only allowed for updates."
-        //
-        //    // Updating across namespaces not allowed
-        //
-        //    (Ns(id).Refs1.int1(1).update must throwA[VerifyModelException])
-        //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Ref1`."
+        // Avoid mixing update/save semantics
+        _ <- Ns(id).Refs1.int1(1).save.recover { case VerifyModelException(err) =>
+          err ==> "[unexpectedAppliedId]  Applying an eid is only allowed for updates."
+        }
+
+        // Updating across namespaces not allowed
+
+        _ <- Ns(id).Refs1.int1(1).update.recover { case VerifyModelException(err) =>
+          err ==> "[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Ref1`."
+        }
       } yield ()
     }
 
     "Enum" - core { implicit conn =>
       for {
         _ <- Ns.str.enum insert List(("a", "enum0"))
-        _ <- Ns.str.enum.get === List(("a", "enum0"))
+        _ <- Ns.str.enum.get.map(_ ==> List(("a", "enum0")))
       } yield ()
     }
 
     "Ref enum after ref" - core { implicit conn =>
       for {
         _ <- Ns.str.Ref1.enum1 insert List(("b", "enum10"))
-        _ <- Ns.str.Ref1.enum1.get === List(("b", "enum10"))
+        _ <- Ns.str.Ref1.enum1.get.map(_ ==> List(("b", "enum10")))
       } yield ()
     }
 
     "Ref enum after attr" - core { implicit conn =>
       for {
         _ <- Ns.str.Ref1.int1.enum1 insert List(("c", 11, "enum11"))
-        _ <- Ns.str.Ref1.int1.enum1.get === List(("c", 11, "enum11"))
+        _ <- Ns.str.Ref1.int1.enum1.get.map(_ ==> List(("c", 11, "enum11")))
       } yield ()
     }
 
@@ -113,13 +112,13 @@ object Relations extends AsyncTestSuite {
           ("a", "a1", 1),
           ("b", "b1", 2))
 
-        _ <- Ns.str.Ref1.str1._Ns.Refs1.int1.get === List(
+        _ <- Ns.str.Ref1.str1._Ns.Refs1.int1.get.map(_ ==> List(
           ("a", "a1", 1),
-          ("b", "b1", 2))
+          ("b", "b1", 2)))
 
-        _ <- Ns.str.Refs1.int1._Ns.Ref1.str1.get === List(
+        _ <- Ns.str.Refs1.int1._Ns.Ref1.str1.get.map(_ ==> List(
           ("a", 1, "a1"),
-          ("b", 2, "b1"))
+          ("b", 2, "b1")))
       } yield ()
     }
 
@@ -129,17 +128,17 @@ object Relations extends AsyncTestSuite {
           ("a", "a1", "a2", 1),
           ("b", "b1", "b2", 2))
 
-        _ <- Ns.str.Ref1.str1.Ref2.str2._Ref1._Ns.Refs1.int1.get === List(
+        _ <- Ns.str.Ref1.str1.Ref2.str2._Ref1._Ns.Refs1.int1.get.map(_ ==> List(
           ("a", "a1", "a2", 1),
-          ("b", "b1", "b2", 2))
+          ("b", "b1", "b2", 2)))
       } yield ()
     }
 
     "Back ref, Adjacent" - core { implicit conn =>
       for {
         _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1) insert List(("book", "John", "Marc"))
-        _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1).get === List(("book", "John", "Marc"))
-        _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).get === List(("book", "John", List("Marc")))
+        _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1).get.map(_ ==> List(("book", "John", "Marc")))
+        _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).get.map(_ ==> List(("book", "John", List("Marc"))))
       } yield ()
     }
 
@@ -150,9 +149,9 @@ object Relations extends AsyncTestSuite {
           ("b", 21, 22))
 
         // We can jump from namespace to namespace in queries
-        _ <- Ns.str.Ref1.Ref2.int2.get === List(
+        _ <- Ns.str.Ref1.Ref2.int2.get.map(_ ==> List(
           ("b", 22),
-          ("a", 12))
+          ("a", 12)))
       } yield ()
     }
 
@@ -167,10 +166,10 @@ object Relations extends AsyncTestSuite {
           ("a", Some(1)),
           ("b", Some(2))))
 
-        //    // But in insert molecules we don't want to create referenced orphan entities
-        //    (m(Ns.str.Ref1.int1$).insert must throwA[VerifyModelException])
-        //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[missingAttrInStartEnd]  Missing mandatory attributes of last namespace."
+        // But in insert molecules we don't want to create referenced orphan entities
+        _ <- m(Ns.str.Ref1.int1$).insert("a", Some(1)).recover { case VerifyModelException(err) =>
+          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of last namespace."
+        }
       } yield ()
     }
 
@@ -180,9 +179,9 @@ object Relations extends AsyncTestSuite {
           ("a", 1L),
           ("b", 2L))
 
-        _ <- m(Ns.str.ref1(count)).get === List(
+        _ <- m(Ns.str.ref1(count)).get.map(_ ==> List(
           ("a", 1),
-          ("b", 1))
+          ("b", 1)))
       } yield ()
     }
 
@@ -192,9 +191,9 @@ object Relations extends AsyncTestSuite {
           ("a", Set(1L)),
           ("b", Set(2L, 3L)))
 
-        _ <- m(Ns.str.refs1(count)).get === List(
+        _ <- m(Ns.str.refs1(count)).get.map(_ ==> List(
           ("a", 1),
-          ("b", 2))
+          ("b", 2)))
       } yield ()
     }
 
@@ -202,11 +201,11 @@ object Relations extends AsyncTestSuite {
       for {
         // OBS: not considered "Self-joins" in this context
         _ <- m(Ns.str.Parent.str) insert List(("child", "parent"))
-        _ <- m(Ns.str.Parent.str).get === List(("child", "parent"))
+        _ <- m(Ns.str.Parent.str).get.map(_ ==> List(("child", "parent")))
 
         _ <- m(Ns.str.Parents * Ns.str) insert List(("child", List("parent1", "parent2")))
-        _ <- m(Ns.str.Parents * Ns.str).get === List(("child", List("parent1", "parent2")))
-        _ <- m(Ns.str.Parents.str).get === List(("child", "parent1"), ("child", "parent2"))
+        _ <- m(Ns.str.Parents * Ns.str).get.map(_ ==> List(("child", List("parent1", "parent2"))))
+        _ <- m(Ns.str.Parents.str).get.map(_ ==> List(("child", "parent1"), ("child", "parent2")))
       } yield ()
     }
 
@@ -214,28 +213,24 @@ object Relations extends AsyncTestSuite {
       for {
         _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(("a", List(1, 2)))
 
-            _ = compileError(
-              "m(Ns.str.refs1.Refs1.int1)").check(
-              "molecule.core.ops.exception.VerifyRawModelException: Instead of getting the ref id with `refs1` please get it via the referenced namespace: `Refs1.e ...`")
+        _ = compileError("m(Ns.str.refs1.Refs1.int1)").check("",
+          "molecule.core.ops.exception.VerifyRawModelException: Instead of getting the ref id with `refs1` please get it via the referenced namespace: `Refs1.e ...`")
 
-            _ = compileError(
-              "m(Ns.refs1.str.Refs1.int1)").check(
-              "molecule.core.ops.exception.VerifyRawModelException: Instead of getting the ref id with `refs1` please get it via the referenced namespace: `Refs1.e ...`")
+        _ = compileError("m(Ns.refs1.str.Refs1.int1)").check("",
+          "molecule.core.ops.exception.VerifyRawModelException: Instead of getting the ref id with `refs1` please get it via the referenced namespace: `Refs1.e ...`")
       } yield ()
     }
 
-      "Molecule has to end with attribute" - {
-        "Ending with ref" - core { implicit conn =>
-          compileError(
-            "m(Ns.str.Ref1)").check(
-            "molecule.core.ops.exception.VerifyRawModelException: Molecule not allowed to end with a reference. Please add one or more attribute to the reference.")
-        }
+    "Molecule has to end with attribute" - {
+      "Ending with ref" - core { implicit conn =>
+        compileError("m(Ns.str.Ref1)").check("",
+          "molecule.core.ops.exception.VerifyRawModelException: Molecule not allowed to end with a reference. Please add one or more attribute to the reference.")
+      }
 
-    "Ending with refs" - core {   implicit conn =>
-          compileError(
-            "m(Ns.str.Refs1)").check(
-                    "molecule.core.ops.exception.VerifyRawModelException: Molecule not allowed to end with a reference. Please add one or more attribute to the reference.")
-        }
+      "Ending with refs" - core { implicit conn =>
+        compileError("m(Ns.str.Refs1)").check("",
+          "molecule.core.ops.exception.VerifyRawModelException: Molecule not allowed to end with a reference. Please add one or more attribute to the reference.")
+      }
+    }
   }
-}
 }

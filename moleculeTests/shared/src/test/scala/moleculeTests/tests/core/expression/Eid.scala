@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.expression
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
-import molecule.datomic.api.in1_out2._
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.api.in1_out2._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -19,10 +19,10 @@ object Eid extends AsyncTestSuite {
         set = Seq(e3, e4)
         iterable = Iterable(e3, e4)
 
-        _ <- Ns.int.get === List(1, 2, 3, 4)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
 
         // Single eid
-        _ <- Ns(e1).int.get === List(1)
+        _ <- Ns(e1).int.get.map(_ ==> List(1))
 
         // Vararg
         _ <- Ns(e1, e2).int.get.map(_.sorted ==> List(1, 2))
@@ -49,7 +49,7 @@ object Eid extends AsyncTestSuite {
 
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
 
-        _ <- Ns(e1).int.get === List(1)
+        _ <- Ns(e1).int.get.map(_ ==> List(1))
 
         _ <- Ns(e1, e2).int.get.map(_.sorted ==> List(1, 2))
 
@@ -67,10 +67,10 @@ object Eid extends AsyncTestSuite {
         tx <- Ns.int.insert(1, 2, 3)
         List(e1, e2, e3) = tx.eids
 
-        _ <- Ns.int.get === List(1, 2, 3)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
-        _ <- Ns.e(e1).int.get === List((e1, 1))
-        _ <- Ns.e_(e1).int.get === List(1)
+        _ <- Ns.e(e1).int.get.map(_ ==> List((e1, 1)))
+        _ <- Ns.e_(e1).int.get.map(_ ==> List(1))
 
         _ <- Ns.e(e1, e2).int.get.map(_.sorted ==> List((e1, 1), (e2, 2)))
         _ <- Ns.e_(e1, e2).int.get.map(_.sorted ==> List(1, 2))
@@ -89,7 +89,7 @@ object Eid extends AsyncTestSuite {
 
         ints = m(Ns(?).int)
 
-        _ <- ints(e1).get === List(1)
+        _ <- ints(e1).get.map(_ ==> List(1))
 
         _ <- ints(e1, e2).get.map(_.sorted ==> List(1, 2))
 
@@ -108,22 +108,22 @@ object Eid extends AsyncTestSuite {
 
         // Applying attribute values
 
-        _ <- Ns.e.int_(1).get === List(e1)
-        _ <- Ns.e.int_(2).get === List(e2)
+        _ <- Ns.e.int_(1).get.map(_ ==> List(e1))
+        _ <- Ns.e.int_(2).get.map(_ ==> List(e2))
 
-        _ <- Ns.e.int(1).get === List((e1, 1))
-        _ <- Ns.e.int(2).get === List((e2, 2))
+        _ <- Ns.e.int(1).get.map(_ ==> List((e1, 1)))
+        _ <- Ns.e.int(2).get.map(_ ==> List((e2, 2)))
 
         _ <- Ns.e.int_(1, 2).get.map(_.sorted ==> List(e1, e2))
         _ <- Ns.e.int(1, 2).get.map(_.sorted ==> List((e1, 1), (e2, 2)))
 
 
         // Applying entity id values
-        _ <- Ns.e_(e1).int.get === List(1)
-        _ <- Ns.e_(e2).int.get === List(2)
+        _ <- Ns.e_(e1).int.get.map(_ ==> List(1))
+        _ <- Ns.e_(e2).int.get.map(_ ==> List(2))
         // Same semantics as
-        _ <- Ns(e1).int.get === List(1)
-        _ <- Ns(e2).int.get === List(2)
+        _ <- Ns(e1).int.get.map(_ ==> List(1))
+        _ <- Ns(e2).int.get.map(_ ==> List(2))
 
         _ <- Ns.e(e1).int.get.map(_.sorted ==> List((e1, 1)))
         _ <- Ns.e(e2).int.get.map(_.sorted ==> List((e2, 2)))
@@ -147,16 +147,16 @@ object Eid extends AsyncTestSuite {
       } yield ()
     }
 
-    //"Saving generic `e` values not allowed" - core {   implicit conn =>
-    //      for {
-    //    (Ns(42L).str("man").save must throwA[VerifyModelException])
-    //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-    //      s"[unexpectedAppliedId]  Applying an eid is only allowed for updates."
-    //
-    //    (Ns.e(42L).str("man").save must throwA[VerifyModelException])
-    //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-    //      s"[unexpectedAppliedId]  Applying an eid is only allowed for updates."
-    //  }yield()
-    //  }
+    "Saving generic `e` values not allowed" - core { implicit conn =>
+      for {
+        _ <- Ns(42L).str("man").save.recover { case VerifyModelException(err) =>
+          err ==> s"[unexpectedAppliedId]  Applying an eid is only allowed for updates."
+        }
+
+        _ <- Ns.e(42L).str("man").save.recover { case VerifyModelException(err) =>
+          err ==> s"[unexpectedAppliedId]  Applying an eid is only allowed for updates."
+        }
+      } yield ()
+    }
   }
 }

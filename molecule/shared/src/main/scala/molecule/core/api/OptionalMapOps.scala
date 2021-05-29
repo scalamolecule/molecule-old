@@ -24,14 +24,14 @@ trait OptionalMapOps {
       *   )
       *
       *   // Value from key with flatMap and get
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.flatMap(_.get("en"))) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.flatMap(_.get("en"))) } ==> List(
       *     (1, Some("Hi there")),
       *     (2, Some("Oh, Hi")),
       *     (3, None)
       *   )
       *
       *   // Value `at` key convenience method
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.at("en")) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.at("en")) } ==> List(
       *     (1, Some("Hi there")),
       *     (2, Some("Oh, Hi")),
       *     (3, None)
@@ -52,7 +52,7 @@ trait OptionalMapOps {
       *   )
       *
       *   // Value `at` key or default value
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.atOrElse("en", "Default")) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.atOrElse("en", "Default")) } ==> List(
       *     (1, "Hi there"),
       *     (2, "Oh, Hi"),
       *     (3, "Default")
@@ -74,7 +74,7 @@ trait OptionalMapOps {
       *   )
       *
       *   // Map values filtered by keys
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.mapAt("fr", "da")) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.mapAt("fr", "da")) } ==> List(
       *     (1, Map()),
       *     (2, Map("fr" -> "Bonjour")),
       *     (3, Map("da" -> "Hejsa"))
@@ -105,14 +105,14 @@ trait OptionalMapOps {
       *   )
       *
       *   // Maps filtered by regex on values
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.values("jou")) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.values("jou")) } ==> List(
       *     (1, Map()),
       *     (2, Map("fr" -> "Bonjour")),
       *     (3, Map())
       *   )
       *
       *   // Maps filtered by regexes on value
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.values("jou", "hej")) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.values("jou", "hej")) } ==> List(
       *     (1, Map()),
       *     (2, Map("fr" -> "Bonjour")),
       *     (3, Map("da" -> "Hejsa"))
@@ -152,7 +152,7 @@ trait OptionalMapOps {
       *   )
       *
       *   // Maps filtered by key and value
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.keyValue("en" -> "he")) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.keyValue("en" -> "he")) } ==> List(
       *     (1, Map("en" -> "Hi there")),
       *     (2, Map()),
       *     (3, Map())
@@ -183,7 +183,7 @@ trait OptionalMapOps {
       *   )
       *
       *   // Maps filtered by key and value
-      *   Ns.int.strMap$.get.map { case (i, s) => (i, s.keyValues("en" -> Seq("he", "hi"))) } === List(
+      *   Ns.int.strMap$.get.map(_.map { case (i, s) => (i, s.keyValues("en" -> Seq("he", "hi"))) } ==> List(
       *     (1, Map("en" -> "Hi there")),
       *     (2, Map("en" -> "Oh, Hi")),
       *     (3, Map())

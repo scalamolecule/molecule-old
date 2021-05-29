@@ -1,13 +1,10 @@
 package moleculeTests.tests.core.expression
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.expression.Aggregates._
-import utest._
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import scala.concurrent.{ExecutionContext, Future}
-//import scala.concurrent.ExecutionContext.Implicits.global
 
 trait Base extends AsyncTestSuite {
 

@@ -1,15 +1,12 @@
 package moleculeTests.tests.core.txMetaData
 
-//import datomic.Peer
-
 import molecule.datomic.api.in3_out10._
 import molecule.datomic.base.ops.QueryOps
-import molecule.datomic.base.util.{SystemPeer, SystemPeerServer}
+import molecule.datomic.base.util.SystemPeerServer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 object MetaRetract extends AsyncTestSuite {
 
@@ -33,10 +30,10 @@ object MetaRetract extends AsyncTestSuite {
             (e, 1, tx2, false, "meta")
           ))
         } else {
-          Ns.e.int.tx.op.Tx(Ns.str).getHistory === List(
+          Ns.e.int.tx.op.Tx(Ns.str).getHistory.map(_ ==> List(
             // 1 was retracted with tx meta data "meta"
             (e, 1, tx2, false, "meta")
-          )
+          ))
         }
       } yield ()
     }
@@ -46,12 +43,12 @@ object MetaRetract extends AsyncTestSuite {
         tx <- Ns.int insert List(1, 2, 3)
         List(e1, e2, e3) = tx.eids
 
-        _ <- Ns.int.get === List(1, 2, 3)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Retract multiple entities (without tx meta data)
         _ <- retract(Seq(e1, e2))
 
-        _ <- Ns.int.get === List(3)
+        _ <- Ns.int.get.map(_ ==> List(3))
       } yield ()
     }
 
@@ -115,7 +112,7 @@ object MetaRetract extends AsyncTestSuite {
             ))
 
             // Or: What int values were retracted with tx meta data "b"?
-            res <- Ns.int.op_(false).Tx(Ns.str_("b")).getHistory === List(1, 2)
+            res <- Ns.int.op_(false).Tx(Ns.str_("b")).getHistory.map(_ ==> List(1, 2))
           } yield res
         }
       } yield ()
@@ -187,10 +184,10 @@ object MetaRetract extends AsyncTestSuite {
             ))
 
             // Or: What int values where retracted in tx "b"?
-            _ <- Ns.int.op_(false).Tx(Ns.str_("b").Ref1.int1_(8)).getHistory === List(1, 2)
+            _ <- Ns.int.op_(false).Tx(Ns.str_("b").Ref1.int1_(8)).getHistory.map(_ ==> List(1, 2))
 
             // OBS: Note how referenced tx meta data is not asserted directly with the tx entity:
-            _ <- Ns.e.int.op(false).Tx(Ref1.int1(8)).getHistory === Nil
+            _ <- Ns.e.int.op(false).Tx(Ref1.int1(8)).getHistory.map(_ ==> Nil)
             // While Ns.str is:
             res <- Ns.e.int.op(false).Tx(Ns.str("b")).getHistory.map(_.sortBy(_._2) ==> List(
               (e1, 1, false, "b"),

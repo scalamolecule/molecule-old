@@ -12,7 +12,7 @@ import molecule.core.generic.Log._
   * and add Log attributes to be returned as tuples of data:
   * {{{
   *   // Data from transaction t1 until t4 (exclusive)
-  *   Log(Some(t1), Some(t4)).t.e.a.v.op.get === List(
+  *   Log(Some(t1), Some(t4)).t.e.a.v.op.get.map(_ ==> List(
   *     (t1, e1, ":Person/name", "Ben", true),
   *     (t1, e1, ":Person/age", 41, true),
   *
@@ -21,10 +21,10 @@ import molecule.core.generic.Log._
   *
   *     (t3, e1, ":Person/age", 41, false),
   *     (t3, e1, ":Person/age", 42, true)
-  *   )
+  *   ))
   *
   *   // If `from` is None, the range starts from the beginning
-  *   Log(None, Some(t3)).v.e.t.get === List(
+  *   Log(None, Some(t3)).v.e.t.get.map(_ ==> List(
   *     (t1, e1, ":Person/name", "Ben", true),
   *     (t1, e1, ":Person/age", 41, true),
   *
@@ -32,10 +32,10 @@ import molecule.core.generic.Log._
   *     (t2, e2, ":Person/age", 37, true)
   *
   *     // t3 not included
-  *   )
+  *   ))
   *
   *   // If `until` is None, the range goes to the end
-  *   Log(Some(t2), None).v.e.t.get === List(
+  *   Log(Some(t2), None).v.e.t.get.map(_ ==> List(
   *     // t1 not included
   *
   *     (t2, e2, ":Person/name", "Liz", true),
@@ -43,7 +43,7 @@ import molecule.core.generic.Log._
   *
   *     (t3, e1, ":Person/age", 41, false),
   *     (t3, e1, ":Person/age", 42, true)
-  *   )
+  *   ))
   * }}}
   *
   * Log attributes available:

@@ -46,7 +46,7 @@ trait Molecule_In_3_Factory2 {
     *   val personAgeScoreFlag = m(Person.name.age_(?).score_(?).flags_(?))
     *
     *   // At runtime `age`, `score` and `flags` values are applied to get the Person's name.
-    *   personAgeScoreFlag(42, 7, 3).get.head === "Ben"
+    *   personAgeScoreFlag(42, 7, 3).get.map(_.head ==> "Ben")
     * }}}
     * For arity-many molecules, data structures are returned as tuples. But for arity-1
     * molecules (like the example having only 1 output attribute, `name`) there's no need for
@@ -80,7 +80,7 @@ trait Molecule_In_3_Factory2 {
     *
     *   // At runtime `age`, `score` and `flags` values are applied to get the Person's name and score.
     *   // Since `score` was mandatory (without underscore), its value is also returned.
-    *   personAgeScoreFlag(42, 7, 3).get.head === ("Ben", 7)
+    *   personAgeScoreFlag(42, 7, 3).get.map(_.head ==> ("Ben", 7))
     * }}}
     * @group input3
     * @param dsl User-defined DSL structure modelling the input molecule

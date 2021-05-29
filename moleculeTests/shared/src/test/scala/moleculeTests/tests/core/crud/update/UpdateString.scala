@@ -1,11 +1,10 @@
 package moleculeTests.tests.core.crud.update
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -30,15 +29,15 @@ object UpdateString extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).str().update
-          _ <- Ns.str.get === List()
+          _ <- Ns.str.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).str("b", "c").update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... str(b, c)"
+          _ <- Ns(eid).str("b", "c").update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... str(b, c)"
+          }
         } yield ()
       }
     }
@@ -61,15 +60,15 @@ object UpdateString extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).str().update
-          _ <- Ns.str.get === List()
+          _ <- Ns.str.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).str(str2, str3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... str($str2, $str3)"
+          _ <- Ns(eid).str(str2, str3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... str($str2, $str3)"
+          }
         } yield ()
       }
     }
@@ -144,15 +143,13 @@ object UpdateString extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).strs.replace("g" -> "h", "h" -> "h").update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
-                    "\nh")
+          _ = compileError(            """Ns(eid).strs.replace("g" -> "h", "h" -> "h").update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
+              "\nh")
 
-                _ = compileError(
-                  """Ns(eid).strs.replace(Seq("g" -> "h", "h" -> "h")).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
-                    "\nh")
+          _ = compileError(            """Ns(eid).strs.replace(Seq("g" -> "h", "h" -> "h")).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
+              "\nh")
         } yield ()
       }
 
@@ -206,13 +203,13 @@ object UpdateString extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).strs(Set[String]()).update
-          _ <- Ns.strs.get === List()
+          _ <- Ns.strs.get.map(_ ==> List())
 
           _ <- Ns(eid).strs(Set("a", "b")).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).strs().update
-          _ <- Ns.strs.get === List()
+          _ <- Ns.strs.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded (at compile time)
@@ -308,30 +305,30 @@ object UpdateString extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).strs.replace(str7 -> str8, str8 -> str8).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
-                    "\n__ident__str8")
+          _ = compileError(            """Ns(eid).strs.replace(str7 -> str8, str8 -> str8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
+              "\n__ident__str8")
 
-                _ = compileError(
-                  """Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> str8)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
-                    "\n__ident__str8")
+          _ = compileError(            """Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> str8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
+              "\n__ident__str8")
 
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = str8
 
-          //      (Ns(eid).strs.replace(str7 -> str8, str8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
-          //        "\nh"
-          //
-          //      // Conflicting new values
-          //      (Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
-          //        "\nh"
+          _ <- Ns(eid).strs.replace(str7 -> str8, str8 -> other8).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
+                "\nh"
+          }
+
+          // Conflicting new values
+          _ <- Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> other8)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
+                "\nh"
+          }
         } yield ()
       }
 
@@ -363,7 +360,7 @@ object UpdateString extends AsyncTestSuite {
           // Retract Seq of values as variable
           values = Seq(str1)
           _ <- Ns(eid).strs.retract(values).update
-          _ <- Ns.strs.get === List()
+          _ <- Ns.strs.get.map(_ ==> List())
 
           // Retracting empty Seq of values has no effect
           _ <- Ns(eid).strs(str1).update
@@ -391,7 +388,7 @@ object UpdateString extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).strs(Set[String]()).update
-          _ <- Ns.strs.get === List()
+          _ <- Ns.strs.get.map(_ ==> List())
 
           // Apply Seq of values as variable
           values = Set(str1, str2)
@@ -400,7 +397,7 @@ object UpdateString extends AsyncTestSuite {
 
           // Delete all (apply no values)
           _ <- Ns(eid).strs().update
-          _ <- Ns.strs.get === List()
+          _ <- Ns.strs.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded

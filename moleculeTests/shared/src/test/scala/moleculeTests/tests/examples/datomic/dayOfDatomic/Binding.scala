@@ -33,7 +33,7 @@ object Binding extends AsyncTestSuite {
         List(stewartBrand, johnStewart, stuartSmalley, stuartHalloway) <- data
 
         // Find all the Stewart first names
-        _ <- personFirst("Stewart").get === List(stewartBrand)
+        _ <- personFirst("Stewart").get.map(_ ==> List(stewartBrand))
 
         // Find all the Stewart or Stuart first names
         _ <- personFirst("Stewart" or "Stuart").get.map(_.sorted ==>
@@ -49,7 +49,7 @@ object Binding extends AsyncTestSuite {
         ))
 
         // Find only the Smalley Stuarts
-        _ <- person("Stuart", "Smalley").get === List(stuartSmalley)
+        _ <- person("Stuart", "Smalley").get.map(_ ==> List(stuartSmalley))
       } yield ()
     }
 
@@ -59,10 +59,10 @@ object Binding extends AsyncTestSuite {
         List(stewartBrand, johnStewart, stuartSmalley, stuartHalloway) <- data
 
         // Bind vars
-        _ <- person("John", "Stewart").get === List(johnStewart)
+        _ <- person("John", "Stewart").get.map(_ ==> List(johnStewart))
 
         // Bind tuple
-        _ <- person(("John", "Stewart")).get === List(johnStewart)
+        _ <- person(("John", "Stewart")).get.map(_ ==> List(johnStewart))
 
         // Bind collection
         _ <- personFirst(List("John", "Stuart")).get.map(_.sorted ==>
@@ -72,7 +72,7 @@ object Binding extends AsyncTestSuite {
         _ <- person(("John", "Stewart"), ("Stuart", "Halloway")).get.map(_.sorted ==>
           List(johnStewart, stuartHalloway).sorted)
 
-        _ <- person(("John", "Stewart"), ("Stuart", "Hallowey")).get === List(johnStewart)
+        _ <- person(("John", "Stewart"), ("Stuart", "Hallowey")).get.map(_ ==> List(johnStewart))
       } yield ()
     }
   }

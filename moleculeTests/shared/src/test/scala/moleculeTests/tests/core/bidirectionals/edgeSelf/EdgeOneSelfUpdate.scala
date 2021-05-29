@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.edgeSelf
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import molecule.datomic.api.in1_out3._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,17 +30,17 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
         _ <- Person(ann).Loves.weight(5).Person.name("Ben").update
 
         // Ann and Ben loves each other
-        _ <- loveOf("Ann").get === List((5, "Ben"))
-        _ <- loveOf("Ben").get === List((5, "Ann"))
-        _ <- loveOf("Joe").get === List() // Joe doesn't exist yet
+        _ <- loveOf("Ann").get.map(_ ==> List((5, "Ben")))
+        _ <- loveOf("Ben").get.map(_ ==> List((5, "Ann")))
+        _ <- loveOf("Joe").get.map(_ ==> List()) // Joe doesn't exist yet
 
         // Ann now loves Joe
         _ <- Person(ann).Loves.weight(8).Person.name("Joe").update
 
         // Both bidirectional edges have been added from/to Ann
-        _ <- loveOf("Ann").get === List((8, "Joe"))
-        _ <- loveOf("Ben").get === List()
-        _ <- loveOf("Joe").get === List((8, "Ann"))
+        _ <- loveOf("Ann").get.map(_ ==> List((8, "Joe")))
+        _ <- loveOf("Ben").get.map(_ ==> List())
+        _ <- loveOf("Joe").get.map(_ ==> List((8, "Ann")))
 
         // Even though Ann now loves Joe, Ben still exists
         _ <- Person.name.get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
@@ -57,16 +57,16 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
 
         _ <- Person(ann).Loves.weight(5).person(ben).update
 
-        _ <- loveOf("Ann").get === List((5, "Ben"))
-        _ <- loveOf("Ben").get === List((5, "Ann"))
-        _ <- loveOf("Joe").get === List()
+        _ <- loveOf("Ann").get.map(_ ==> List((5, "Ben")))
+        _ <- loveOf("Ben").get.map(_ ==> List((5, "Ann")))
+        _ <- loveOf("Joe").get.map(_ ==> List())
 
         // Ann now loves Joe
         _ <- Person(ann).Loves.weight(8).person(joe).update
 
-        _ <- loveOf("Ann").get === List((8, "Joe"))
-        _ <- loveOf("Ben").get === List()
-        _ <- loveOf("Joe").get === List((8, "Ann"))
+        _ <- loveOf("Ann").get.map(_ ==> List((8, "Joe")))
+        _ <- loveOf("Ben").get.map(_ ==> List())
+        _ <- loveOf("Joe").get.map(_ ==> List((8, "Ann")))
       } yield ()
     }
 
@@ -78,15 +78,15 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
         tx <- Person.name("Ann").Loves.weight(5).Person.name("Ben").save
         List(_, annBen, _, _) = tx.eids
 
-        _ <- loveOf("Ann").get === List((5, "Ben"))
-        _ <- loveOf("Ben").get === List((5, "Ann"))
+        _ <- loveOf("Ann").get.map(_ ==> List((5, "Ben")))
+        _ <- loveOf("Ben").get.map(_ ==> List((5, "Ann")))
 
         // Retract edge
         _ <- annBen.map(_.retract)
 
         // Divorce complete
-        _ <- loveOf("Ann").get === List()
-        _ <- loveOf("Ben").get === List()
+        _ <- loveOf("Ann").get.map(_ ==> List())
+        _ <- loveOf("Ben").get.map(_ ==> List())
       } yield ()
     }
 
@@ -98,18 +98,18 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
         tx <- Person.name("Ann").Loves.weight(5).Person.name("Ben").save
         List(_, _, _, ben) = tx.eids
 
-        _ <- loveOf("Ann").get === List((5, "Ben"))
-        _ <- loveOf("Ben").get === List((5, "Ann"))
+        _ <- loveOf("Ann").get.map(_ ==> List((5, "Ben")))
+        _ <- loveOf("Ben").get.map(_ ==> List((5, "Ann")))
 
         // Retract base entity with single edge
         _ <- ben.map(_.retract)
 
         // Ann becomes widow
-        _ <- Person.name("Ann").get === List("Ann")
-        _ <- Person.name("Ben").get === List()
+        _ <- Person.name("Ann").get.map(_ ==> List("Ann"))
+        _ <- Person.name("Ben").get.map(_ ==> List())
 
-        _ <- loveOf("Ann").get === List()
-        _ <- loveOf("Ben").get === List()
+        _ <- loveOf("Ann").get.map(_ ==> List())
+        _ <- loveOf("Ben").get.map(_ ==> List())
       } yield ()
     }
   }

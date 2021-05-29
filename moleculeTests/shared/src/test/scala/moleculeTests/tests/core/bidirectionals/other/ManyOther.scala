@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.other
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import molecule.datomic.api.in1_out3._
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.api.in1_out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -23,52 +23,52 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person.name("Ann").Buddies.name("Gus").save
 
           // Reference is bidirectional - both point to each other
-          _ <- Person.name.Buddies.name.get === List(
+          _ <- Person.name.Buddies.name.get.map(_ ==> List(
             ("Ann", "Gus")
-          )
-          _ <- Animal.name.Buddies.name.get === List(
+          ))
+          _ <- Animal.name.Buddies.name.get.map(_ ==> List(
             ("Gus", "Ann")
-          )
+          ))
 
           // We can now use a uniform query from both ends:
           // Ann and Gus are buddies with each other
-          _ <- animalBuddiesOf("Ann").get === List("Gus")
-          _ <- personBuddiesOf("Gus").get === List("Ann")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
 
           // Forth and back should bring os to the starting point
-          _ <- Person.name_("Ann").Buddies.Buddies.name.get === List("Ann")
-          _ <- Animal.name_("Gus").Buddies.Buddies.name.get === List("Gus")
+          _ <- Person.name_("Ann").Buddies.Buddies.name.get.map(_ ==> List("Ann"))
+          _ <- Animal.name_("Gus").Buddies.Buddies.name.get.map(_ ==> List("Gus"))
         } yield ()
       }
 
       "n new" - bidirectional { implicit conn =>
         for {
-          //      // Can't save multiple values to cardinality-one attribute
-          //      // It could become unwieldy if different referenced attributes had different number of
-          //      // values (arities) - how many related entities should be created then?
-          //      (Person.name("Ann").Buddies.name("Gus", "Leo").save must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
-          //        "\n  Animal ... name(Gus, Leo)"
+          // Can't save multiple values to cardinality-one attribute
+          // It could become unwieldy if different referenced attributes had different number of
+          // values (arities) - how many related entities should be created then?
+          _ <- Person.name("Ann").Buddies.name("Gus", "Leo").save.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
+              "\n  Animal ... name(Gus, Leo)"
+          }
 
           // We can save a single value though...
           _ <- Person.name("Ann").Buddies.name("Leo").save
 
-          _ <- Person.name.Buddies.name.get === List(
+          _ <- Person.name.Buddies.name.get.map(_ ==> List(
             ("Ann", "Leo")
-          )
-          _ <- Animal.name.Buddies.name.get === List(
+          ))
+          _ <- Animal.name.Buddies.name.get.map(_ ==> List(
             ("Leo", "Ann")
-          )
+          ))
 
           // Ann and Gus are buddies with each other
-          _ <- animalBuddiesOf("Ann").get === List("Leo")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Leo"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 
-          //      // Can't `save` nested data structures - use nested `insert` instead for that (see tests further down)
-          //      (Person.name("Ann").Buddies.*(Animal.name("Gus")).save must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[noNested]  Nested data structures not allowed in save molecules"
+          // Can't `save` nested data structures - use nested `insert` instead for that (see tests further down)
+          _ <- Person.name("Ann").Buddies.*(Animal.name("Gus")).save.recover { case VerifyModelException(err) =>
+            err ==> s"[noNested]  Nested data structures not allowed in save molecules"
+          }
 
           // So, we can't create multiple referenced entities in one go with the `save` command.
           // Use `insert` for this or save existing entity ids (see below).
@@ -84,19 +84,19 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person.name("Ann").buddies(gus).save
 
           // Ann and Gus are buddies with each other
-          _ <- Person.name.Buddies.name.get === List(
+          _ <- Person.name.Buddies.name.get.map(_ ==> List(
             ("Ann", "Gus")
-          )
-          _ <- Animal.name.Buddies.name.get === List(
+          ))
+          _ <- Animal.name.Buddies.name.get.map(_ ==> List(
             ("Gus", "Ann")
-          )
+          ))
 
-          //      // Saving reference to generic `e` not allowed.
-          //      // (instead apply ref to ref attribute as shown above)
-          //      (Person.name("Ann").Buddies.e(gus).save must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
-          //        s"not allowed in save molecules. Found `e($gus)`"
+          // Saving reference to generic `e` not allowed.
+          // (instead apply ref to ref attribute as shown above)
+          _ <- Person.name("Ann").Buddies.e(gus).save.recover { case VerifyModelException(err) =>
+            err ==> s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
+              s"not allowed in save molecules. Found `e($gus)`"
+          }
         } yield ()
       }
 
@@ -109,8 +109,8 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person.name("Ann").buddies(gusLeo).save
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
         } yield ()
       }
     }
@@ -124,8 +124,8 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person.name.Buddies.name.insert("Ann", "Gus")
 
           // Bidirectional references have been inserted
-          _ <- animalBuddiesOf("Ann").get === List("Gus")
-          _ <- personBuddiesOf("Gus").get === List("Ann")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -138,8 +138,8 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person.name.buddies.insert("Ann", Set(gus))
 
           // Bidirectional references have been inserted
-          _ <- animalBuddiesOf("Ann").get === List("Gus")
-          _ <- personBuddiesOf("Gus").get === List("Ann")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -152,10 +152,10 @@ object ManyOther extends AsyncTestSuite {
           )
 
           // Bidirectional references have been inserted
-          _ <- animalBuddiesOf("Ann").get === List("Gus")
-          _ <- animalBuddiesOf("Bob").get === List("Leo")
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Bob")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus"))
+          _ <- animalBuddiesOf("Bob").get.map(_ ==> List("Leo"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Bob"))
         } yield ()
       }
 
@@ -171,16 +171,15 @@ object ManyOther extends AsyncTestSuite {
           )
 
           // Bidirectional references have been inserted
-          _ <- animalBuddiesOf("Ann").get === List("Gus")
-          _ <- animalBuddiesOf("Bob").get === List("Leo")
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Bob")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus"))
+          _ <- animalBuddiesOf("Bob").get.map(_ ==> List("Leo"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Bob"))
         } yield ()
       }
 
       "nested new" - bidirectional { implicit conn =>
         for {
-
           // Insert molecules allow nested data structures. So we can conveniently
           // insert 2 entities each connected to 2 target entites
           _ <- Person.name.Buddies.*(Animal.name) insert List(
@@ -252,10 +251,10 @@ object ManyOther extends AsyncTestSuite {
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo", "Rex", "Zip"))
 
           // Buddieships have been added in both directions
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List("Ann")
-          _ <- personBuddiesOf("Zip").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Zip").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -269,11 +268,11 @@ object ManyOther extends AsyncTestSuite {
 
           // Buddieships have been inserted in both directions
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo", "Rex", "Zip", "Zup"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List("Ann")
-          _ <- personBuddiesOf("Zip").get === List("Ann")
-          _ <- personBuddiesOf("Zup").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Zip").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Zup").get.map(_ ==> List("Ann"))
 
           // Remove some buddieships in various ways
 
@@ -287,12 +286,12 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person(ann).buddies.retract(Seq(zip)).update
 
           // Correct buddieships have been removed in both directions
-          _ <- animalBuddiesOf("Ann").get === List("Zup")
-          _ <- personBuddiesOf("Gus").get === List()
-          _ <- personBuddiesOf("Leo").get === List()
-          _ <- personBuddiesOf("Rex").get === List()
-          _ <- personBuddiesOf("Zip").get === List()
-          _ <- personBuddiesOf("Zup").get === List("Ann")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Zup"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List())
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List())
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List())
+          _ <- personBuddiesOf("Zip").get.map(_ ==> List())
+          _ <- personBuddiesOf("Zup").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -304,19 +303,19 @@ object ManyOther extends AsyncTestSuite {
           tx2 <- Animal.name("Rex").save
           rex = tx2.eid
 
-          _ <- animalBuddiesOf("Ann").get === List("Leo", "Gus")
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List()
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Leo", "Gus"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List())
 
           // Ann replaces Gus with Rex
           _ <- Person(ann).buddies.replace(gus -> rex).update
 
           // Ann now buddies with Rex instead of Gus
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Leo", "Rex"))
-          _ <- personBuddiesOf("Gus").get === List()
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List())
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -329,10 +328,10 @@ object ManyOther extends AsyncTestSuite {
           List(rex, zip) = tx2.eids
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List()
-          _ <- personBuddiesOf("Zip").get === List()
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List())
+          _ <- personBuddiesOf("Zip").get.map(_ ==> List())
 
           // Ann replaces Gus and Leo with Rex and Zip
           _ <- Person(ann).buddies.replace(gus -> rex, leo -> zip).update
@@ -340,10 +339,10 @@ object ManyOther extends AsyncTestSuite {
           // Ann is now buddies with Rex and Zip instead of Gus and Leo
           // Gus and Leo are no longer buddies with Ann either
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Rex", "Zip"))
-          _ <- personBuddiesOf("Gus").get === List()
-          _ <- personBuddiesOf("Leo").get === List()
-          _ <- personBuddiesOf("Rex").get === List("Ann")
-          _ <- personBuddiesOf("Zip").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List())
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List())
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Zip").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -356,9 +355,9 @@ object ManyOther extends AsyncTestSuite {
           rex = tx2.eid
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List()
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List())
 
           // Applying value(s) replaces all existing values!
 
@@ -366,16 +365,15 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person(ann).buddies(rex).update
 
           // Leo and Ann no longer buddies
-          _ <- animalBuddiesOf("Ann").get === List("Rex")
-          _ <- personBuddiesOf("Gus").get === List()
-          _ <- personBuddiesOf("Leo").get === List()
-          _ <- personBuddiesOf("Rex").get === List("Ann")
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Rex"))
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List())
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List())
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "replace all with multiple (apply varargs)" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo")))
           List(ann, gus, leo) = tx1.eids
 
@@ -383,9 +381,9 @@ object ManyOther extends AsyncTestSuite {
           rex = tx2.eid
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List()
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List())
 
           // Ann now has Gus and Rex as buddies
           _ <- Person(ann).buddies(gus, rex).update
@@ -393,9 +391,9 @@ object ManyOther extends AsyncTestSuite {
           // Ann and Rex new buddies
           // Ann and Leo no longer buddies
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Rex"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List()
-          _ <- personBuddiesOf("Rex").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List())
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -408,9 +406,9 @@ object ManyOther extends AsyncTestSuite {
           rex = tx2.eid
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
-          _ <- personBuddiesOf("Rex").get === List()
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List())
 
           // Ann now has Gus and Rex as buddies
           _ <- Person(ann).buddies(Seq(gus, rex)).update
@@ -418,9 +416,9 @@ object ManyOther extends AsyncTestSuite {
           // Ann and Rex new buddies
           // Ann and Leo no longer buddies
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Rex"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List()
-          _ <- personBuddiesOf("Rex").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List())
+          _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
@@ -430,16 +428,16 @@ object ManyOther extends AsyncTestSuite {
           List(ann, gus, leo) = tx.eids
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 
           // Ann has no buddies any longer
           _ <- Person(ann).buddies().update
 
           // Ann's buddieships replaced with no buddieships (in both directions)
-          _ <- animalBuddiesOf("Ann").get === List()
-          _ <- personBuddiesOf("Gus").get === List()
-          _ <- personBuddiesOf("Leo").get === List()
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List())
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List())
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List())
         } yield ()
       }
 
@@ -449,17 +447,17 @@ object ManyOther extends AsyncTestSuite {
           List(ann, gus, leo) = tx.eids
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-          _ <- personBuddiesOf("Gus").get === List("Ann")
-          _ <- personBuddiesOf("Leo").get === List("Ann")
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 
           // Ann has no buddies any longer
           noBuddies = Seq.empty[Long]
           _ <- Person(ann).buddies(noBuddies).update
 
           // Ann's buddieships replaced with no buddieships (in both directions)
-          _ <- animalBuddiesOf("Ann").get === List()
-          _ <- personBuddiesOf("Gus").get === List()
-          _ <- personBuddiesOf("Leo").get === List()
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List())
+          _ <- personBuddiesOf("Gus").get.map(_ ==> List())
+          _ <- personBuddiesOf("Leo").get.map(_ ==> List())
 
         } yield ()
       }
@@ -472,20 +470,20 @@ object ManyOther extends AsyncTestSuite {
         List(ann, gus, leo) = tx.eids
 
         _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
-        _ <- personBuddiesOf("Gus").get === List("Ann")
-        _ <- personBuddiesOf("Leo").get === List("Ann")
+        _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
+        _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 
         // Retract Leo and his relationship to Ann
         _ <- leo.map(_.retract)
 
         // Leo is gone
-        _ <- Person.name.get === List("Ann")
-        _ <- Animal.name.get === List("Gus")
+        _ <- Person.name.get.map(_ ==> List("Ann"))
+        _ <- Animal.name.get.map(_ ==> List("Gus"))
 
         // Ann and Gus remain buddies
-        _ <- Person(ann).Buddies.name.get === List("Gus")
-        _ <- Animal(gus).Buddies.name.get === List("Ann")
-        _ <- Animal(leo).Buddies.name.get === List()
+        _ <- Person(ann).Buddies.name.get.map(_ ==> List("Gus"))
+        _ <- Animal(gus).Buddies.name.get.map(_ ==> List("Ann"))
+        _ <- Animal(leo).Buddies.name.get.map(_ ==> List())
       } yield ()
     }
   }

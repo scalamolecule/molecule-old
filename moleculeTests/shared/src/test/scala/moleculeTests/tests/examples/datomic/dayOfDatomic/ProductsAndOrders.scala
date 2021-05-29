@@ -2,9 +2,9 @@ package moleculeTests.tests.examples.datomic.dayOfDatomic
 
 import molecule.datomic.api.out5._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
 
 // See: http://blog.datomic.com/2013/06/component-entities.html
 
@@ -46,20 +46,20 @@ object ProductsAndOrders extends AsyncTestSuite {
             ":LineItem/quantity" -> 2))))
 
         // We can get the created order entity id and its lineItem's data
-        _ <- m(Order.e.LineItems * LineItem.product.price.quantity).get === List(
+        _ <- m(Order.e.LineItems * LineItem.product.price.quantity).get.map(_ ==> List(
           (order, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)))
-        )
+        ))
 
         // Or we can omit the order entity id and get the lineItem data in groups
         // for each Order found (only 1 here)
-        _ <- m(Order.LineItems * LineItem.product.price.quantity).get === List(
+        _ <- m(Order.LineItems * LineItem.product.price.quantity).get.map(_ ==> List(
           List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))
-        )
+        ))
 
         // If we query for only 1 attribute we get a list of values instead of tuples of values
-        _ <- m(Order.LineItems * LineItem.product).get === List(
+        _ <- m(Order.LineItems * LineItem.product).get.map(_ ==> List(
           List(chocolateId, whiskyId)
-        )
+        ))
       } yield ()
     }
 
@@ -96,9 +96,9 @@ object ProductsAndOrders extends AsyncTestSuite {
           ":Order/orderid" -> 23))
 
         // We can re-use the `order` molecule
-        _ <- order.get === List(
+        _ <- order.get.map(_ ==> List(
           (23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)))
-        )
+        ))
 
         // Retract nested data ............................
 
@@ -106,8 +106,8 @@ object ProductsAndOrders extends AsyncTestSuite {
         _ <- orderId.map(_.retract)
 
         // The products are still there
-        _ <- Product.e.description_("Expensive Chocolate" or "Cheap Whisky").get ===
-          List(chocolateId, whiskyId)
+        _ <- Product.e.description_("Expensive Chocolate" or "Cheap Whisky").get.map(_ ==>
+          List(chocolateId, whiskyId))
       } yield ()
     }
 
@@ -137,8 +137,8 @@ object ProductsAndOrders extends AsyncTestSuite {
 
 
         // Find id of orders containing various products
-        _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get ===
-          List(order23)
+        _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get.map(_ ==>
+          List(order23))
 
         _ <- Order.e.LineItems.Product.description_("Licorice").get.map(_.sorted ==>
           List(order23, order24))
@@ -194,17 +194,17 @@ object ProductsAndOrders extends AsyncTestSuite {
         ))
 
         // Get nested data
-        _ <- m(Order.e.orderid.LineItems * LineItem.quantity.price).get === List(
+        _ <- m(Order.e.orderid.LineItems * LineItem.quantity.price).get.map(_ ==> List(
           (order23, 23, List((1, 48.0), (2, 77.0))),
-          (order24, 24, List((3, 38.0), (4, 77.0))))
+          (order24, 24, List((3, 38.0), (4, 77.0)))))
 
-        _ <- m(Order.orderid.LineItems * LineItem.quantity.price).get === List(
+        _ <- m(Order.orderid.LineItems * LineItem.quantity.price).get.map(_ ==> List(
           (23, List((1, 48.0), (2, 77.0))),
-          (24, List((3, 38.0), (4, 77.0))))
+          (24, List((3, 38.0), (4, 77.0)))))
 
-        _ <- m(Order.orderid.LineItems * LineItem.quantity).get === List(
+        _ <- m(Order.orderid.LineItems * LineItem.quantity).get.map(_ ==> List(
           (23, List(1, 2)),
-          (24, List(3, 4)))
+          (24, List(3, 4))))
 
 
         // Retract ............................
@@ -214,7 +214,7 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // The products are still there
         _ <- Product.e.description_("Expensive Chocolate" or "Cheap Whisky")
-          .get === List(chocolateId, whiskyId)
+          .get.map(_ ==> List(chocolateId, whiskyId))
       } yield ()
     }
 
@@ -236,8 +236,8 @@ object ProductsAndOrders extends AsyncTestSuite {
         List(order23, l1, p1, l2, p2, l3, p3, order24, ll1, pp1, ll2, pp2) = tx.eids
 
         // Find id of orders containing various products
-        _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get ===
-          List(order23)
+        _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get.map(_ ==>
+          List(order23))
 
         _ <- Order.e.LineItems.Product.description_("Licorice").get.map(_.sorted ==>
           List(order23, order24))
@@ -270,14 +270,14 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Get ................................
 
         // Get nested data
-        _ <- m(Order.orderid.LineItems * LineItem.price.quantity$.Product.description).get === List(
+        _ <- m(Order.orderid.LineItems * LineItem.price.quantity$.Product.description).get.map(_ ==> List(
           (23, List(
             (48.00, Some(1), "Expensive Chocolate"),
             (38.00, None, "Cheap Whisky"),
             (77.00, Some(2), "Licorice"))),
           (24, List(
             (38.00, Some(3), "Cheap Whisky"),
-            (77.00, Some(4), "Licorice"))))
+            (77.00, Some(4), "Licorice")))))
       } yield ()
     }
 
@@ -298,10 +298,10 @@ object ProductsAndOrders extends AsyncTestSuite {
         List(o1, l1, c1, c2, l2, c3, c4, c5) = tx2.eids
 
         // Order lines with correct products added
-        _ <- Order(o1).LineItems.product.get === List(chocolateId, whiskyId)
+        _ <- Order(o1).LineItems.product.get.map(_ ==> List(chocolateId, whiskyId))
 
         // Order line comments are correct
-        _ <- LineItem.product_(chocolateId).Comments.text.get === List("first", "product")
+        _ <- LineItem.product_(chocolateId).Comments.text.get.map(_ ==> List("first", "product"))
 
         // 2 levels of nested data entered
         _ <- o1.map(_.touch ==> Map(
@@ -326,12 +326,12 @@ object ProductsAndOrders extends AsyncTestSuite {
 
 
         _ <- m(Order.orderid.LineItems * (
-          LineItem.product.price.quantity.Comments * Comment.text)).get === List(
+          LineItem.product.price.quantity.Comments * Comment.text)).get.map(_ ==> List(
           (23, List(
             (chocolateId, 48.00, 1, List("first", "product")),
             (whiskyId, 38.00, 2, List("second", "is", "best"))
           ))
-        )
+        ))
       } yield ()
     }
 
@@ -381,7 +381,7 @@ object ProductsAndOrders extends AsyncTestSuite {
 
 
         _ <- m(Order.orderid.LineItems * (
-          LineItem.quantity.price.Comments * Comment.text.descr)).get === List(
+          LineItem.quantity.price.Comments * Comment.text.descr)).get.map(_ ==> List(
           (23, List(
             (1, 48.00, List(
               ("first", "1a"),
@@ -391,7 +391,7 @@ object ProductsAndOrders extends AsyncTestSuite {
               ("is", "2b"),
               ("best", "2c")))
           ))
-        )
+        ))
       } yield ()
     }
 
@@ -461,7 +461,7 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         _ <- m(Order.orderid.LineItems * (
           LineItem.product.price.quantity.Comments * (
-            Comment.text.descr.Authors * Person.name))).get === List(
+            Comment.text.descr.Authors * Person.name))).get.map(_ ==> List(
           (23, List(
             (chocolateId, 48.00, 1, List(
               ("first", "1a", List("Marc Grue")),
@@ -471,7 +471,7 @@ object ProductsAndOrders extends AsyncTestSuite {
               ("is", "2b", List("Nick Smith")),
               ("best", "2c", List("test"))))
           ))
-        )
+        ))
       } yield ()
     }
 
@@ -517,12 +517,12 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Comments with no author are not fetched
         _ <- m(Order.orderid.LineItems * (
           LineItem.product.price.quantity.Comments * (
-            Comment.text.descr.Authors * Person.name))).get === List(
+            Comment.text.descr.Authors * Person.name))).get.map(_ ==> List(
           (23, List(
             (whiskyId, 38.00, 2, List(
               ("second", "2b", List("Don Juan"))))
           ))
-        )
+        ))
       } yield ()
     }
 
@@ -568,25 +568,25 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Comment with no `description` is not fetched
         _ <- m(Order.orderid.LineItems * (
           LineItem.product.price.quantity.Comments * (
-            Comment.text.descr.Authors * Person.name))).get === List(
+            Comment.text.descr.Authors * Person.name))).get.map(_ ==> List(
           (23, List(
             (whiskyId, 38.00, 2, List(
               ("chance", "foo", List("Marc"))
             ))
           ))
-        )
+        ))
 
         // Comment with optional `description` is fetched
         _ <- m(Order.orderid.LineItems * (
           LineItem.product.price.quantity.Comments * (
-            Comment.text.descr$.Authors * Person.name))).get === List(
+            Comment.text.descr$.Authors * Person.name))).get.map(_ ==> List(
           (23, List(
             (whiskyId, 38.00, 2, List(
               ("second", None, List("Don Juan")),
               ("chance", Some("foo"), List("Marc"))
             ))
           ))
-        )
+        ))
       } yield ()
     }
 
@@ -613,11 +613,11 @@ object ProductsAndOrders extends AsyncTestSuite {
         _ <- Order.orderid_(23).LineItems.text
           .Comments.*(Comment.text
           .Authors.*(Person.name
-        )).get === List(
+        )).get.map(_ ==> List(
           ("in stock", List(
             ("second", List("Don Juan")),
             ("chance", List("Marc"))))
-        )
+        ))
       } yield ()
     }
   }

@@ -34,7 +34,7 @@ object Manipulation extends Base {
         // finds and retract all values of an attribute
 
         _ <- Ns(eid).strMap().update
-        _ <- Ns.strMap.get === List()
+        _ <- Ns.strMap.get.map(_ ==> List())
       } yield ()
     }
   }

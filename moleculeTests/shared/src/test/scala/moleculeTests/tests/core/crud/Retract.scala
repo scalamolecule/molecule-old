@@ -26,9 +26,9 @@ object Retract extends AsyncTestSuite {
 
         _ <- e1.map(_.retract)
 
-        _ <- Ns.int.str.get === List(
+        _ <- Ns.int.str.get.map(_ ==> List(
           (2, "b")
-        )
+        ))
       } yield ()
     }
 
@@ -37,11 +37,11 @@ object Retract extends AsyncTestSuite {
         tx <- Ns.int.insert(1, 2, 3)
         List(e1, e2, e3) = tx.eids
 
-        _ <- Ns.int.apply(count).get === List(3)
+        _ <- Ns.int.apply(count).get.map(_ ==> List(3))
 
         _ <- retract(Seq(e1, e2))
 
-        _ <- Ns.int(count).get === List(1)
+        _ <- Ns.int(count).get.map(_ ==> List(1))
       } yield ()
     }
 
@@ -50,11 +50,11 @@ object Retract extends AsyncTestSuite {
         tx <- Ns.int.insert(1, 2, 3)
         List(e1, e2, e3) = tx.eids
 
-        _ <- Ns.int(count).get === List(3)
+        _ <- Ns.int(count).get.map(_ ==> List(3))
 
         _ <- retract(Seq(e1, e2), Ref1.str1("Some tx info"))
 
-        _ <- Ns.int(count).get === List(1)
+        _ <- Ns.int(count).get.map(_ ==> List(1))
       } yield ()
     }
 
@@ -77,11 +77,11 @@ object Retract extends AsyncTestSuite {
 
           _ <- e1.map(_.retract)
 
-          _ <- Ns.int.RefSub1.int1.get === List(
+          _ <- Ns.int.RefSub1.int1.get.map(_ ==> List(
             (2, 20)
-          )
+          ))
           // Card-one sub-entity was retracted
-          _ <- Ref1.int1.get === List(20)
+          _ <- Ref1.int1.get.map(_ ==> List(20))
         } yield ()
       }
 
@@ -101,11 +101,11 @@ object Retract extends AsyncTestSuite {
 
           _ <- e1.map(_.retract)
 
-          _ <- m(Ns.int.RefsSub1 * Ref1.int1).get === List(
+          _ <- m(Ns.int.RefsSub1 * Ref1.int1).get.map(_ ==> List(
             (2, Seq(20, 21))
-          )
+          ))
           // Card-many sub-entitities were retracted
-          _ <- Ref1.int1.get === List(20, 21)
+          _ <- Ref1.int1.get.map(_ ==> List(20, 21))
         } yield ()
       }
 
@@ -121,24 +121,24 @@ object Retract extends AsyncTestSuite {
           ))
           e1 = tx.eid
 
-          _ <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).get === List(
+          _ <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).get.map(_ ==> List(
             (1, Seq(
               (10, Seq(100, 101)),
               (11, Seq(110, 111)))),
             (2, Seq(
               (20, Seq(200, 201)),
               (21, Seq(210, 211))))
-          )
+          ))
           _ <- Ref1.int1.get.map(_.sorted ==> List(10, 11, 20, 21))
           _ <- Ref2.int2.get.map(_.sorted ==> List(100, 101, 110, 111, 200, 201, 210, 211))
 
           _ <- e1.map(_.retract)
 
-          _ <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).get === List(
+          _ <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).get.map(_ ==> List(
             (2, Seq(
               (20, Seq(200, 201)),
               (21, Seq(210, 211))))
-          )
+          ))
           _ <- Ref1.int1.get.map(_.sorted ==> List(20, 21))
           _ <- Ref2.int2.get.map(_.sorted ==> List(200, 201, 210, 211))
         } yield ()

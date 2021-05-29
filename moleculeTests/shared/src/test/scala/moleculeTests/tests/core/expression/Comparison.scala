@@ -1,9 +1,8 @@
 package moleculeTests.tests.core.expression
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -203,27 +202,27 @@ object Comparison extends Base {
       for {
         _ <- Ns.int(1).str("""Hi "Ann"""").save
 
-        _ <- Ns.str.>(""""H"""").get === List("""Hi "Ann"""")
-        _ <- Ns.str.>=(""""H"""").get === List("""Hi "Ann"""")
-        _ <- Ns.str.<=(""""H"""").get === Nil
-        _ <- Ns.str.<(""""H"""").get === Nil
+        _ <- Ns.str.>(""""H"""").get.map(_ ==> List("""Hi "Ann""""))
+        _ <- Ns.str.>=(""""H"""").get.map(_ ==> List("""Hi "Ann""""))
+        _ <- Ns.str.<=(""""H"""").get.map(_ ==> Nil)
+        _ <- Ns.str.<(""""H"""").get.map(_ ==> Nil)
 
         str: String = """Hi "Ann""""
         letter = "H"
-        _ <- Ns.str.>(letter).get === List("""Hi "Ann"""")
-        _ <- Ns.str.>=(letter).get === List("""Hi "Ann"""")
-        _ <- Ns.str.<=(letter).get === Nil
-        _ <- Ns.str.<(letter).get === Nil
+        _ <- Ns.str.>(letter).get.map(_ ==> List("""Hi "Ann""""))
+        _ <- Ns.str.>=(letter).get.map(_ ==> List("""Hi "Ann""""))
+        _ <- Ns.str.<=(letter).get.map(_ ==> Nil)
+        _ <- Ns.str.<(letter).get.map(_ ==> Nil)
 
-        _ <- Ns.int.str_.>(""""H"""").get === List(1)
-        _ <- Ns.int.str_.>=(""""H"""").get === List(1)
-        _ <- Ns.int.str_.<=(""""H"""").get === Nil
-        _ <- Ns.int.str_.<(""""H"""").get === Nil
+        _ <- Ns.int.str_.>(""""H"""").get.map(_ ==> List(1))
+        _ <- Ns.int.str_.>=(""""H"""").get.map(_ ==> List(1))
+        _ <- Ns.int.str_.<=(""""H"""").get.map(_ ==> Nil)
+        _ <- Ns.int.str_.<(""""H"""").get.map(_ ==> Nil)
 
-        _ <- Ns.int.str_.>(letter).get === List(1)
-        _ <- Ns.int.str_.>=(letter).get === List(1)
-        _ <- Ns.int.str_.<=(letter).get === Nil
-        _ <- Ns.int.str_.<(letter).get === Nil
+        _ <- Ns.int.str_.>(letter).get.map(_ ==> List(1))
+        _ <- Ns.int.str_.>=(letter).get.map(_ ==> List(1))
+        _ <- Ns.int.str_.<=(letter).get.map(_ ==> Nil)
+        _ <- Ns.int.str_.<(letter).get.map(_ ==> Nil)
       } yield ()
     }
 
@@ -234,16 +233,16 @@ object Comparison extends Base {
 
         _ <- Ns.int.insert(1, 2, 3, 4)
 
-        _ <- Ns.int_.>(1).int.<(4).get === List(2, 3)
-        _ <- Ns.int_.>(1).int.<=(4).get === List(2, 3, 4)
-        _ <- Ns.int_.>=(1).int.<(4).get === List(1, 2, 3)
-        _ <- Ns.int_.>=(1).int.<=(4).get === List(1, 2, 3, 4)
+        _ <- Ns.int_.>(1).int.<(4).get.map(_ ==> List(2, 3))
+        _ <- Ns.int_.>(1).int.<=(4).get.map(_ ==> List(2, 3, 4))
+        _ <- Ns.int_.>=(1).int.<(4).get.map(_ ==> List(1, 2, 3))
+        _ <- Ns.int_.>=(1).int.<=(4).get.map(_ ==> List(1, 2, 3, 4))
 
 
-        _ <- Ns.int_.<(4).int.>(1).get === List(2, 3)
-        _ <- Ns.int_.<=(4).int.>(1).get === List(2, 3, 4)
-        _ <- Ns.int_.<(4).int.>=(1).get === List(1, 2, 3)
-        _ <- Ns.int_.<=(4).int.>=(1).get === List(1, 2, 3, 4)
+        _ <- Ns.int_.<(4).int.>(1).get.map(_ ==> List(2, 3))
+        _ <- Ns.int_.<=(4).int.>(1).get.map(_ ==> List(2, 3, 4))
+        _ <- Ns.int_.<(4).int.>=(1).get.map(_ ==> List(1, 2, 3))
+        _ <- Ns.int_.<=(4).int.>=(1).get.map(_ ==> List(1, 2, 3, 4))
       } yield ()
     }
 
@@ -256,22 +255,22 @@ object Comparison extends Base {
 
         // Note how 'ba' is "greater than" 'b'
         // (See java.util.String.compareTo)
-        _ <- Ns.str.strs.>("b").get === List(
+        _ <- Ns.str.strs.>("b").get.map(_ ==> List(
           ("str2", Set("c")),
           ("str3", Set("d", "ba"))
-        )
-        _ <- Ns.str.strs.>=("b").get === List(
+        ))
+        _ <- Ns.str.strs.>=("b").get.map(_ ==> List(
           ("str1", Set("b")),
           ("str2", Set("b", "c")),
           ("str3", Set("d", "ba"))
-        )
-        _ <- Ns.str.strs.<=("b").get === List(
+        ))
+        _ <- Ns.str.strs.<=("b").get.map(_ ==> List(
           ("str1", Set("a", "b")),
           ("str2", Set("b"))
-        )
-        _ <- Ns.str.strs.<("b").get === List(
+        ))
+        _ <- Ns.str.strs.<("b").get.map(_ ==> List(
           ("str1", Set("a"))
-        )
+        ))
         _ <- Ns.str.strs_.>("b").get.map(_.sorted ==> List("str2", "str3"))
         _ <- Ns.str.strs_.>=("b").get.map(_.sorted ==> List("str1", "str2", "str3"))
         _ <- Ns.str.strs_.<=("b").get.map(_.sorted ==> List("str1", "str2"))
@@ -280,23 +279,23 @@ object Comparison extends Base {
 
         // Int
 
-        _ <- Ns.int.ints.>(2).get === List(
+        _ <- Ns.int.ints.>(2).get.map(_ ==> List(
           (2, Set(3)),
           (3, Set(4))
-        )
-        _ <- Ns.int.ints.>=(2).get === List(
+        ))
+        _ <- Ns.int.ints.>=(2).get.map(_ ==> List(
           (1, Set(2)),
           (2, Set(2, 3)),
           (3, Set(4, 2))
-        )
-        _ <- Ns.int.ints.<=(2).get === List(
+        ))
+        _ <- Ns.int.ints.<=(2).get.map(_ ==> List(
           (1, Set(1, 2)),
           (2, Set(2)),
           (3, Set(2))
-        )
-        _ <- Ns.int.ints.<(2).get === List(
+        ))
+        _ <- Ns.int.ints.<(2).get.map(_ ==> List(
           (1, Set(1))
-        )
+        ))
         _ <- Ns.int.ints_.>(2).get.map(_.sorted ==> List(2, 3))
         _ <- Ns.int.ints_.>=(2).get.map(_.sorted ==> List(1, 2, 3))
         _ <- Ns.int.ints_.<=(2).get.map(_.sorted ==> List(1, 2, 3))
@@ -305,23 +304,23 @@ object Comparison extends Base {
 
         // Date
 
-        _ <- Ns.date.dates.>(date2).get === List(
+        _ <- Ns.date.dates.>(date2).get.map(_ ==> List(
           (date2, Set(date3)),
           (date3, Set(date4))
-        )
-        _ <- Ns.date.dates.>=(date2).get === List(
+        ))
+        _ <- Ns.date.dates.>=(date2).get.map(_ ==> List(
           (date1, Set(date2)),
           (date2, Set(date2, date3)),
           (date3, Set(date4, date2))
-        )
-        _ <- Ns.date.dates.<=(date2).get === List(
+        ))
+        _ <- Ns.date.dates.<=(date2).get.map(_ ==> List(
           (date1, Set(date1, date2)),
           (date2, Set(date2)),
           (date3, Set(date2))
-        )
-        _ <- Ns.date.dates.<(date2).get === List(
+        ))
+        _ <- Ns.date.dates.<(date2).get.map(_ ==> List(
           (date1, Set(date1))
-        )
+        ))
         _ <- Ns.date.dates_.>(date2).get.map(_.sorted ==> List(date2, date3))
         _ <- Ns.date.dates_.>=(date2).get.map(_.sorted ==> List(date1, date2, date3))
         _ <- Ns.date.dates_.<=(date2).get.map(_.sorted ==> List(date1, date2, date3))
@@ -330,69 +329,69 @@ object Comparison extends Base {
 
         // UUID (comparisons not of much relevance - only works here because we sorted the values)
 
-        _ <- Ns.uuid.uuids.>(uuid2).get === List(
+        _ <- Ns.uuid.uuids.>(uuid2).get.map(_ ==> List(
           (uuid2, Set(uuid3)),
           (uuid3, Set(uuid4))
-        )
-        _ <- Ns.uuid.uuids.>=(uuid2).get === List(
+        ))
+        _ <- Ns.uuid.uuids.>=(uuid2).get.map(_ ==> List(
           (uuid1, Set(uuid2)),
           (uuid2, Set(uuid2, uuid3)),
           (uuid3, Set(uuid4, uuid2))
-        )
-        _ <- Ns.uuid.uuids.<=(uuid2).get === List(
+        ))
+        _ <- Ns.uuid.uuids.<=(uuid2).get.map(_ ==> List(
           (uuid1, Set(uuid1, uuid2)),
           (uuid2, Set(uuid2)),
           (uuid3, Set(uuid2))
-        )
-        _ <- Ns.uuid.uuids.<(uuid2).get === List(
+        ))
+        _ <- Ns.uuid.uuids.<(uuid2).get.map(_ ==> List(
           (uuid1, Set(uuid1))
-        )
+        ))
         _ <- Ns.uuid.uuids_.>(uuid2).get.map(_.sorted ==> List(uuid2, uuid3))
         _ <- Ns.uuid.uuids_.>=(uuid2).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
         _ <- Ns.uuid.uuids_.<=(uuid2).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
         _ <- Ns.uuid.uuids_.<(uuid2).get.map(_.sorted ==> List(uuid1))
 
 
-        _ <- Ns.bigInt.bigInts.>(bigInt2).get === List(
+        _ <- Ns.bigInt.bigInts.>(bigInt2).get.map(_ ==> List(
           (bigInt2, Set(bigInt3)),
           (bigInt3, Set(bigInt4))
-        )
-        _ <- Ns.bigInt.bigInts.>=(bigInt2).get === List(
+        ))
+        _ <- Ns.bigInt.bigInts.>=(bigInt2).get.map(_ ==> List(
           (bigInt1, Set(bigInt2)),
           (bigInt2, Set(bigInt2, bigInt3)),
           (bigInt3, Set(bigInt4, bigInt2))
-        )
-        _ <- Ns.bigInt.bigInts.<=(bigInt2).get === List(
+        ))
+        _ <- Ns.bigInt.bigInts.<=(bigInt2).get.map(_ ==> List(
           (bigInt1, Set(bigInt1, bigInt2)),
           (bigInt2, Set(bigInt2)),
           (bigInt3, Set(bigInt2))
-        )
-        _ <- Ns.bigInt.bigInts.<(bigInt2).get === List(
+        ))
+        _ <- Ns.bigInt.bigInts.<(bigInt2).get.map(_ ==> List(
           (bigInt1, Set(bigInt1))
-        )
+        ))
         _ <- Ns.bigInt.bigInts_.>(bigInt2).get.map(_.sorted ==> List(bigInt2, bigInt3))
         _ <- Ns.bigInt.bigInts_.>=(bigInt2).get.map(_.sorted ==> List(bigInt1, bigInt2, bigInt3))
         _ <- Ns.bigInt.bigInts_.<=(bigInt2).get.map(_.sorted ==> List(bigInt1, bigInt2, bigInt3))
         _ <- Ns.bigInt.bigInts_.<(bigInt2).get.map(_.sorted ==> List(bigInt1))
 
 
-        _ <- Ns.bigDec.bigDecs.>(bigDec2).get === List(
+        _ <- Ns.bigDec.bigDecs.>(bigDec2).get.map(_ ==> List(
           (bigDec2, Set(bigDec3)),
           (bigDec3, Set(bigDec4))
-        )
-        _ <- Ns.bigDec.bigDecs.>=(bigDec2).get === List(
+        ))
+        _ <- Ns.bigDec.bigDecs.>=(bigDec2).get.map(_ ==> List(
           (bigDec1, Set(bigDec2)),
           (bigDec2, Set(bigDec2, bigDec3)),
           (bigDec3, Set(bigDec4, bigDec2))
-        )
-        _ <- Ns.bigDec.bigDecs.<=(bigDec2).get === List(
+        ))
+        _ <- Ns.bigDec.bigDecs.<=(bigDec2).get.map(_ ==> List(
           (bigDec1, Set(bigDec1, bigDec2)),
           (bigDec2, Set(bigDec2)),
           (bigDec3, Set(bigDec2))
-        )
-        _ <- Ns.bigDec.bigDecs.<(bigDec2).get === List(
+        ))
+        _ <- Ns.bigDec.bigDecs.<(bigDec2).get.map(_ ==> List(
           (bigDec1, Set(bigDec1))
-        )
+        ))
         _ <- Ns.bigDec.bigDecs_.>(bigDec2).get.map(_.sorted ==> List(bigDec2, bigDec3))
         _ <- Ns.bigDec.bigDecs_.>=(bigDec2).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))
         _ <- Ns.bigDec.bigDecs_.<=(bigDec2).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))

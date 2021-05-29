@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.crud.insert
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out10._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -100,7 +100,6 @@ object Insert extends AsyncTestSuite {
 
       "Card many" - core { implicit conn =>
         for {
-
           // The `insert` method performs the compile time analysis of the molecule
           // The `apply` method inserts the type-inferred data at runtime
           _ <- Ns.strs.insert.apply(Set("a"))
@@ -205,7 +204,6 @@ object Insert extends AsyncTestSuite {
 
       "Card many" - core { implicit conn =>
         for {
-
           // Insert 3 entities as tuples of values
           // Note that values are typechecked against the attribute types of the molecule
           _ <- Ns.strs.ints.longs.doubles.dates.uuids.uris.enums insert List(
@@ -251,33 +249,32 @@ object Insert extends AsyncTestSuite {
             (2, Some("a"))
           )
 
-          _ <- Ns.int.str$.get === List(
+          _ <- Ns.int.str$.get.map(_ ==> List(
             (1, None),
             (2, Some("a"))
-          )
+          ))
 
-          _ <- Ns.int.str.get === List(
+          _ <- Ns.int.str.get.map(_ ==> List(
             (2, "a")
-          )
+          ))
         } yield ()
       }
 
       "Card many attrs" - core { implicit conn =>
         for {
-
           _ <- Ns.int.strs$ insert List(
             (1, None),
             (2, Some(Set("a", "b")))
           )
 
-          _ <- Ns.int.strs$.get === List(
+          _ <- Ns.int.strs$.get.map(_ ==> List(
             (1, None),
             (2, Some(Set("a", "b")))
-          )
+          ))
 
-          _ <- Ns.int.strs.get === List(
+          _ <- Ns.int.strs.get.map(_ ==> List(
             (2, Set("a", "b"))
-          )
+          ))
 
           // Alternatively we can apply typed empty Sets
 
@@ -291,9 +288,9 @@ object Insert extends AsyncTestSuite {
             (date2, Some(Set(20L, 21L))),
           ))
 
-          _ <- Ns.date.longs.get === List(
+          _ <- Ns.date.longs.get.map(_ ==> List(
             (date2, Set(20L, 21L))
-          )
+          ))
         } yield ()
       }
     }
@@ -301,7 +298,6 @@ object Insert extends AsyncTestSuite {
 
     ">22 inserts/upserts" - core { implicit conn =>
       for {
-
         // If we need to insert more than 22 facts for a single namespace
         // we can start asserting those 22 facts, then use the returned eid
         // to continue (here shown with only 1 fact):
@@ -314,17 +310,17 @@ object Insert extends AsyncTestSuite {
         _ <- Ns.e.int.insert(eid, 42)
 
         // Only a single entity has been created
-        _ <- Ns.e.str.int.get === List(
+        _ <- Ns.e.str.int.get.map(_ ==> List(
           (eid, "a", 42)
-        )
+        ))
 
         // Optional attribute after `e` works too
         _ <- Ns.e.long$.bool.insert(eid, None, true)
 
         // Only a single entity has been created
-        _ <- Ns.e.str.int.long$.bool.get === List(
+        _ <- Ns.e.str.int.long$.bool.get.map(_ ==> List(
           (eid, "a", 42, None, true)
-        )
+        ))
       } yield ()
     }
   }

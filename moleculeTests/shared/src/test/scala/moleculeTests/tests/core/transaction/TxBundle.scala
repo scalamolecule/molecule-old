@@ -1,12 +1,13 @@
 package moleculeTests.tests.core.transaction
 
+import java.util.concurrent.ExecutionException
 import molecule.datomic.api.out3._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.Future
 
 
 object TxBundle extends AsyncTestSuite {
@@ -43,18 +44,18 @@ object TxBundle extends AsyncTestSuite {
           20 // 2 updated
         ))
 
-        //    // Can't transact conflicting datoms
-        //    // (different systems throws different exceptions)
-        //    _ <- if (system == SystemPeer) {
-        //      (transactBundle(
-        //        _ <- Ns(e3).int(31).getUpdateStmts,
-        //        _ <- Ns(e3).int(32).getUpdateStmts
-        //      ) must throwA[java.util.concurrent.ExecutionException]).message ===
-        //        "Got the exception java.util.concurrent.ExecutionException: java.lang.IllegalArgumentException: " +
-        //          ":db.error/datoms-conflict Two datoms in the same transaction conflict\n" +
-        //          "{:d1 [17592186045455 :Ns/int 31 13194139534356 true],\n" +
-        //          " :d2 [17592186045455 :Ns/int 32 13194139534356 true]}\n"
-        //    }
+        // Can't transact conflicting datoms
+        // (different systems throws different exceptions)
+        _ <- if (system == SystemPeer) {
+          transactBundle(
+            Ns(e3).int(31).getUpdateStmts,
+            Ns(e3).int(32).getUpdateStmts
+          ).recover { case exc: ExecutionException =>
+            exc.getMessage ==> ":db.error/datoms-conflict Two datoms in the same transaction conflict\n" +
+              "{:d1 [17592186045455 :Ns/int 31 13194139534356 true],\n" +
+              " :d2 [17592186045455 :Ns/int 32 13194139534356 true]}\n"
+          }
+        } else Future.unit
       } yield ()
     }
 
@@ -83,38 +84,38 @@ object TxBundle extends AsyncTestSuite {
         //            tx datoms from dbAfter (op - tx id - entity - attribute - value)
         //            (minus added to help indicate retractions)
         /*
-  ## 1 ## TxReport
-  ================================================================================================================
-  1          ArrayBuffer(
-    1          List(
-      1          :db.fn/retractEntity     17592186045454)
-    2          List(
-      1          :db/add      #db/id[:db.part/user -1000267]     :Ns/int                4)
-    3          List(
-      1          :db/add      #db/id[:db.part/user -1000271]     :Ns/int                5)
-    4          List(
-      1          :db/add      #db/id[:db.part/user -1000274]     :Ns/int                6)
-    5          List(
-      1          :db/add      17592186045455                     :Ns/int                20))
-  ----------------------------------------------------------------------------------------------------------------
-  2          List(
-    1    1     added: true ,   t: 13194139534354,   e: 13194139534354,   a: 50,   v: Thu Dec 19 20:34:15 CET 2019
+          ## 1 ## TxReport
+          ================================================================================================================
+          1          ArrayBuffer(
+            1          List(
+              1          :db.fn/retractEntity     17592186045454)
+            2          List(
+              1          :db/add      #db/id[:db.part/user -1000267]     :Ns/int                4)
+            3          List(
+              1          :db/add      #db/id[:db.part/user -1000271]     :Ns/int                5)
+            4          List(
+              1          :db/add      #db/id[:db.part/user -1000274]     :Ns/int                6)
+            5          List(
+              1          :db/add      17592186045455                     :Ns/int                20))
+          ----------------------------------------------------------------------------------------------------------------
+          2          List(
+            1    1     added: true ,   t: 13194139534354,   e: 13194139534354,   a: 50,   v: Thu Dec 19 20:34:15 CET 2019
 
-    2    2     added: false,  -t: 13194139534354,  -e: 17592186045454,  -a: 64,  -v: 1
+            2    2     added: false,  -t: 13194139534354,  -e: 17592186045454,  -a: 64,  -v: 1
 
-    3    3     added: true ,   t: 13194139534354,   e: 17592186045459,   a: 64,   v: 4
+            3    3     added: true ,   t: 13194139534354,   e: 17592186045459,   a: 64,   v: 4
 
-    4    4     added: true ,   t: 13194139534354,   e: 17592186045460,   a: 64,   v: 5
+            4    4     added: true ,   t: 13194139534354,   e: 17592186045460,   a: 64,   v: 5
 
-    5    5     added: true ,   t: 13194139534354,   e: 17592186045461,   a: 64,   v: 6
+            5    5     added: true ,   t: 13194139534354,   e: 17592186045461,   a: 64,   v: 6
 
-    6    6     added: true ,   t: 13194139534354,   e: 17592186045455,   a: 64,   v: 20
-         7     added: false,  -t: 13194139534354,  -e: 17592186045455,  -a: 64,  -v: 2)
-  ================================================================================================================
-      */
+            6    6     added: true ,   t: 13194139534354,   e: 17592186045455,   a: 64,   v: 20
+                 7     added: false,  -t: 13194139534354,  -e: 17592186045455,  -a: 64,  -v: 2)
+          ================================================================================================================
+        */
 
         // Live data unchanged
-        _ <- Ns.int.get === List(1, 2, 3)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // If a real group transaction is invoked, the resulting tx report can also be inspected
         tx <- transactBundle(

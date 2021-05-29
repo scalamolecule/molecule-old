@@ -23,10 +23,10 @@ import scala.concurrent.Future
   *   val ageOfPersons = m(Person.name_(?).age)
   *
   *   // Resolve input molecule with name input in various ways
-  *   ageOfPersons("Joe").get === List(42)
-  *   ageOfPersons("Joe", "Liz").get === List(42, 34)
-  *   ageOfPersons("Joe" or "Liz").get === List(42, 34)
-  *   ageOfPersons(Seq("Joe", "Liz")).get === List(42, 34)
+  *   ageOfPersons("Joe").get.map(_ ==> List(42))
+  *   ageOfPersons("Joe", "Liz").get.map(_ ==> List(42, 34))
+  *   ageOfPersons("Joe" or "Liz").get.map(_ ==> List(42, 34))
+  *   ageOfPersons(Seq("Joe", "Liz")).get.map(_ ==> List(42, 34))
   * }}}
   *
   * @tparam I1 Type of input matching attribute with `?` marker

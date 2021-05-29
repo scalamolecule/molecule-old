@@ -1,10 +1,9 @@
 package moleculeTests.tests.core.crud.updateMap
 
 import molecule.datomic.api.out1._
-import moleculeTests.tests.core.base.dsl.CoreTest._
-import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -42,19 +41,17 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Can't add pairs with duplicate keys
 
-                // vararg
-                _ = compileError(
-                  """Ns(eid).strMap.assert("str1" -> "a", "str1" -> "b").update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\nstr1 -> a" +
-                    "\nstr1 -> b")
+          // vararg
+          _ = compileError(            """Ns(eid).strMap.assert("str1" -> "a", "str1" -> "b").update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\nstr1 -> a" +
+              "\nstr1 -> b")
 
-                // Seq
-                _ = compileError(
-                  """Ns(eid).strMap.assert(Seq("str1" -> "a", "str1" -> "b")).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\nstr1 -> a" +
-                    "\nstr1 -> b")
+          // Seq
+          _ = compileError(            """Ns(eid).strMap.assert(Seq("str1" -> "a", "str1" -> "b")).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\nstr1 -> a" +
+              "\nstr1 -> b")
         } yield ()
       }
 
@@ -90,17 +87,15 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-                _ = compileError(
-                  """Ns(eid).strMap.replace("str1" -> "a", "str1" -> "b").update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\nstr1 -> a" +
-                    "\nstr1 -> b")
+          _ = compileError(            """Ns(eid).strMap.replace("str1" -> "a", "str1" -> "b").update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\nstr1 -> a" +
+              "\nstr1 -> b")
 
-                _ = compileError(
-                  """Ns(eid).strMap.replace(Seq("str1" -> "a", "str1" -> "b")).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\nstr1 -> a" +
-                    "\nstr1 -> b")
+          _ = compileError(            """Ns(eid).strMap.replace(Seq("str1" -> "a", "str1" -> "b")).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\nstr1 -> a" +
+              "\nstr1 -> b")
         } yield ()
       }
 
@@ -154,31 +149,33 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Apply empty Map of values (retracting all values!)
           _ <- Ns(eid).strMap(Seq[(String, String)]()).update
-          _ <- Ns.strMap.get === List()
+          _ <- Ns.strMap.get.map(_ ==> List())
 
 
           _ <- Ns(eid).strMap(Seq("str1" -> "a", "str2" -> "b")).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).strMap().update
-          _ <- Ns.strMap.get === List()
+          _ <- Ns.strMap.get.map(_ ==> List())
 
 
           // Can't apply pairs with duplicate keys
 
-          //      // vararg
-          //      (Ns(eid).strMap("str1" -> "a", "str1" -> "b").update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-          //        "\nstr1 -> a" +
-          //        "\nstr1 -> b"
-          //
-          //      // Seq
-          //      (Ns(eid).strMap(Seq("str1" -> "a", "str1" -> "b")).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-          //        "\nstr1 -> a" +
-          //        "\nstr1 -> b"
+          // vararg
+          _ <- Ns(eid).strMap("str1" -> "a", "str1" -> "b").update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+                "\nstr1 -> a" +
+                "\nstr1 -> b"
+          }
+
+          // Seq
+          _ <- Ns(eid).strMap(Seq("str1" -> "a", "str1" -> "b")).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+                "\nstr1 -> a" +
+                "\nstr1 -> b"
+          }
         } yield ()
       }
     }
@@ -214,36 +211,36 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Can't add pairs with duplicate keys
 
-                // vararg
-                _ = compileError(
-                  """Ns(eid).strMap.assert(str1 -> str1, str1 -> str2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\n__ident__str1 -> __ident__str1" +
-                    "\n__ident__str1 -> __ident__str2")
+          // vararg
+          _ = compileError(            """Ns(eid).strMap.assert(str1 -> str1, str1 -> str2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\n__ident__str1 -> __ident__str1" +
+              "\n__ident__str1 -> __ident__str2")
 
-                // Seq
-                _ = compileError(
-                  """Ns(eid).strMap.assert(Seq(str1 -> str1, str1 -> str2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\n__ident__str1 -> __ident__str1" +
-                    "\n__ident__str1 -> __ident__str2")
+          // Seq
+          _ = compileError(            """Ns(eid).strMap.assert(Seq(str1 -> str1, str1 -> str2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\n__ident__str1 -> __ident__str1" +
+              "\n__ident__str1 -> __ident__str2")
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           str1x = str1
 
-          //      // vararg
-          //      (Ns(eid).strMap.assert(str1 -> str1, str1x -> str2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-          //        "\na -> a" +
-          //        "\na -> b"
-          //
-          //      // Seq
-          //      (Ns(eid).strMap.assert(Seq(str1 -> str1, str1x -> str2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-          //        "\na -> a" +
-          //        "\na -> b"
+          // vararg
+          _ <- Ns(eid).strMap.assert(str1 -> str1, str1x -> str2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+                "\na -> a" +
+                "\na -> b"
+          }
+
+          // Seq
+          _ <- Ns(eid).strMap.assert(Seq(str1 -> str1, str1x -> str2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+                "\na -> a" +
+                "\na -> b"
+          }
         } yield ()
       }
 
@@ -279,17 +276,15 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-                _ = compileError(
-                  """Ns(eid).strMap.replace(str1 -> str1, str1 -> str2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\n__ident__str1 -> __ident__str1" +
-                    "\n__ident__str1 -> __ident__str2")
+          _ = compileError(            """Ns(eid).strMap.replace(str1 -> str1, str1 -> str2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\n__ident__str1 -> __ident__str1" +
+              "\n__ident__str1 -> __ident__str2")
 
-                _ = compileError(
-                  """Ns(eid).strMap.replace(Seq(str1 -> str1, str1 -> str2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-                    "\n__ident__str1 -> __ident__str1" +
-                    "\n__ident__str1 -> __ident__str2")
+          _ = compileError(            """Ns(eid).strMap.replace(Seq(str1 -> str1, str1 -> str2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+              "\n__ident__str1 -> __ident__str1" +
+              "\n__ident__str1 -> __ident__str2")
         } yield ()
       }
 
@@ -343,31 +338,33 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Apply empty Map of values (retracting all values!)
           _ <- Ns(eid).strMap(Seq[(String, String)]()).update
-          _ <- Ns.strMap.get === List()
+          _ <- Ns.strMap.get.map(_ ==> List())
 
 
           _ <- Ns(eid).strMap(Seq(str1 -> str1, str2 -> str2)).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).strMap().update
-          _ <- Ns.strMap.get === List()
+          _ <- Ns.strMap.get.map(_ ==> List())
 
 
           // Can't apply pairs with duplicate keys
 
-          //      // vararg
-          //      (Ns(eid).strMap(str1 -> str1, str1 -> str2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-          //        "\na -> a" +
-          //        "\na -> b"
-          //
-          //      // Seq
-          //      (Ns(eid).strMap(Seq(str1 -> str1, str1 -> str2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
-          //        "\na -> a" +
-          //        "\na -> b"
+          // vararg
+          _ <- Ns(eid).strMap(str1 -> str1, str1 -> str2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+                "\na -> a" +
+                "\na -> b"
+          }
+
+          // Seq
+          _ <- Ns(eid).strMap(Seq(str1 -> str1, str1 -> str2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
+                "\na -> a" +
+                "\na -> b"
+          }
         } yield ()
       }
     }

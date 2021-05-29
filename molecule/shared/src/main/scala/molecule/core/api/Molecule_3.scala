@@ -26,33 +26,33 @@ import scala.concurrent.Future
   *   // A. Triples of input .................................
   *
   *   // One triple as params
-  *   profAgeScore.apply("doctor", 37, 1.0).get === List("Ann")
+  *   profAgeScore.apply("doctor", 37, 1.0).get.map(_ ==> List("Ann"))
   *
   *   // One or more triples
-  *   profAgeScore.apply(("doctor", 37, 1.0)).get === List("Ann")
-  *   profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.sorted === List("Ann", "Ben")
+  *   profAgeScore.apply(("doctor", 37, 1.0)).get.map(_ ==> List("Ann"))
+  *   profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
   *
   *   // One or more logical triples
   *   // [triple-expression] or [triple-expression] or ...
-  *   profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get.sorted === List("Ann", "Joe")
+  *   profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get.map(_.sorted ==> List("Ann", "Joe"))
   *
   *   // List of triples
-  *   profAgeScore.apply(Seq(("doctor", 37, 1.0))).get === List("Ann")
-  *   profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.sorted === List("Ann", "Ben")
+  *   profAgeScore.apply(Seq(("doctor", 37, 1.0))).get.map(_ ==> List("Ann"))
+  *   profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
   *
   *
   *   // B. 3 groups of input, one for each input attribute .................................
   *
   *   // Three expressions
   *   // [profession-expression] and [age-expression] and [score-expression]
-  *   profAgeScore.apply("doctor" and 37 and 1.0).get === List("Ann")
-  *   profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get.sorted === List("Ann", "Ben")
-  *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get.sorted === List("Ann", "Ben", "Joe")
-  *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get.sorted === List("Ann", "Ben", "Joe")
+  *   profAgeScore.apply("doctor" and 37 and 1.0).get.map(_ ==> List("Ann"))
+  *   profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get.map(_.sorted ==> List("Ann", "Ben"))
+  *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+  *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
   *
   *   // Three lists
-  *   profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get === List("Ann")
-  *   profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.sorted === List("Ann", "Ben")
+  *   profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get.map(_ ==> List("Ann"))
+  *   profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
   * }}}
   *
   * @tparam I1 Type of input matching first attribute with `?` marker (profession: String)
@@ -306,7 +306,7 @@ trait Molecule_3[Obj, I1, I2, I3] extends InputMolecule {
     *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
     *
     *   // Apply 3 input values (1 triple)
-    *   profAgeScore.apply("doctor", 37, 1.0).get === List("Ann")
+    *   profAgeScore.apply("doctor", 37, 1.0).get.map(_ ==> List("Ann"))
     * }}}
     *
     * @param i1   Input value matching first input attribute (profession: String)
@@ -333,8 +333,8 @@ trait Molecule_3[Obj, I1, I2, I3] extends InputMolecule {
     *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
     *
     *   // Apply one or more value triples, each matching all 3 input attributes
-    *   profAgeScore.apply(("doctor", 37, 1.0)).get === List("Ann")
-    *   profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.sorted === List("Ann", "Ben")
+    *   profAgeScore.apply(("doctor", 37, 1.0)).get.map(_ ==> List("Ann"))
+    *   profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
     * }}}
     *
     * @param tpl  First triple of values matching the 3 input attributes
@@ -361,7 +361,7 @@ trait Molecule_3[Obj, I1, I2, I3] extends InputMolecule {
     *
     *   // Apply two or more triple expressions, each matching all 3 input attributes
     *   // [profession/age/score-expression] or [profession/age/score-expression] or ...
-    *   profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get.sorted === List("Ann", "Joe")
+    *   profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get.map(_.sorted ==> List("Ann", "Joe"))
     * }}}
     *
     * @param or   Two or more tuple3 expressions separated by `or`
@@ -385,8 +385,8 @@ trait Molecule_3[Obj, I1, I2, I3] extends InputMolecule {
     *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
     *
     *   // Apply Seq of one or more value triples, each matching all 3 input attributes
-    *   profAgeScore.apply(Seq(("doctor", 37, 1.0))).get === List("Ann")
-    *   profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.sorted === List("Ann", "Ben")
+    *   profAgeScore.apply(Seq(("doctor", 37, 1.0))).get.map(_ ==> List("Ann"))
+    *   profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
     * }}}
     *
     * @param ins  Seq of value triples, each matching the 3 input attributes
@@ -412,10 +412,10 @@ trait Molecule_3[Obj, I1, I2, I3] extends InputMolecule {
     *
     *   // Apply 3 expressions, one for each input attribute
     *   // [profession-expression] and [age-expression] and [score-expression]
-    *   profAgeScore.apply("doctor" and 37 and 1.0).get === List("Ann")
-    *   profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get.sorted === List("Ann", "Ben")
-    *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get.sorted === List("Ann", "Ben", "Joe")
-    *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get.sorted === List("Ann", "Ben", "Joe")
+    *   profAgeScore.apply("doctor" and 37 and 1.0).get.map(_ ==> List("Ann"))
+    *   profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get.map(_.sorted ==> List("Ann", "Ben"))
+    *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+    *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
     * }}}
     *
     * @param and  First input expr `and` second input expr `and` third input expr
@@ -440,12 +440,12 @@ trait Molecule_3[Obj, I1, I2, I3] extends InputMolecule {
     *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
     *
     *   // Apply 3 Seq of values, each matching one of the input attributes
-    *   proOfAge(Seq("doctor"), Seq(37)).get === List("Ann")
-    *   proOfAge(Seq("doctor", "teacher"), Seq(37, 32)).get.sorted === List("Ann", "Ben", "Joe")
+    *   proOfAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
+    *   proOfAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
     *
     *   // Number of arguments in each Seq don't have to match but can be asymmetric
-    *   profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get === List("Ann")
-    *   profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.sorted === List("Ann", "Ben")
+    *   profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get.map(_ ==> List("Ann"))
+    *   profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
     * }}}
     *
     * @param in1  Seq of values matching first input attribute (professions: Seq[String])

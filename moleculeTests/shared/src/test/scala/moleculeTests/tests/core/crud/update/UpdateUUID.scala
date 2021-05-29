@@ -1,12 +1,11 @@
 package moleculeTests.tests.core.crud.update
 
 import java.util.UUID
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -31,14 +30,14 @@ object UpdateUUID extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).uuid().update
-          _ <- Ns.uuid.get === List()
+          _ <- Ns.uuid.get.map(_ ==> List())
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).uuid(uuid2, uuid3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... uuid($uuid2, $uuid3)"
+          _ <- Ns(eid).uuid(uuid2, uuid3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... uuid($uuid2, $uuid3)"
+          }
         } yield ()
       }
     }
@@ -126,13 +125,11 @@ object UpdateUUID extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(
-            """Ns(eid).uuids.replace(uuid7 -> uuid8, uuid8 -> uuid8).update""").check(
+          _ = compileError(            """Ns(eid).uuids.replace(uuid7 -> uuid8, uuid8 -> uuid8).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/uuids`:" +
               "\n__ident__uuid8")
 
-          _ = compileError(
-            """Ns(eid).uuids.replace(Seq(uuid7 -> uuid8, uuid8 -> uuid8)).update""").check(
+          _ = compileError(            """Ns(eid).uuids.replace(Seq(uuid7 -> uuid8, uuid8 -> uuid8)).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/uuids`:" +
               "\n__ident__uuid8")
 
@@ -140,16 +137,18 @@ object UpdateUUID extends AsyncTestSuite {
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = uuid8
 
-          //      (Ns(eid).uuids.replace(uuid7 -> uuid8, uuid8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/uuids`:" +
-          //        "\n" + uuid8
-          //
-          //      // Conflicting new values
-          //      (Ns(eid).uuids.replace(Seq(uuid7 -> uuid8, uuid8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/uuids`:" +
-          //        "\n" + uuid8
+          _ <- Ns(eid).uuids.replace(uuid7 -> uuid8, uuid8 -> other8).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/uuids`:" +
+                "\n" + uuid8
+          }
+
+          // Conflicting new values
+          _ <- Ns(eid).uuids.replace(Seq(uuid7 -> uuid8, uuid8 -> other8)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/uuids`:" +
+                "\n" + uuid8
+          }
         } yield ()
       }
 
@@ -181,7 +180,7 @@ object UpdateUUID extends AsyncTestSuite {
           // Retract Seq of values as variable
           values = Seq(uuid1)
           _ <- Ns(eid).uuids.retract(values).update
-          _ <- Ns.uuids.get === List()
+          _ <- Ns.uuids.get.map(_ ==> List())
 
           // Retracting empty Seq of values has no effect
           _ <- Ns(eid).uuids(uuid1).update
@@ -209,7 +208,7 @@ object UpdateUUID extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).uuids(Set[UUID]()).update
-          _ <- Ns.uuids.get === List()
+          _ <- Ns.uuids.get.map(_ ==> List())
 
           // Apply Seq of values as variable
           values = Set(uuid1, uuid2)
@@ -218,7 +217,7 @@ object UpdateUUID extends AsyncTestSuite {
 
           // Delete all (apply no values)
           _ <- Ns(eid).uuids().update
-          _ <- Ns.uuids.get === List()
+          _ <- Ns.uuids.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded

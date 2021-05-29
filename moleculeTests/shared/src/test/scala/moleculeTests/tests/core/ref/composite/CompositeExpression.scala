@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.ref.composite
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -52,7 +52,6 @@ object CompositeExpression extends AsyncTestSuite {
 
     "Null values" - core { implicit conn =>
       for {
-
         // Composite data
         _ <- Ref2.int2.str2 + Ns.str.int insert List(
           ((1, "a"), ("aa", 11)),

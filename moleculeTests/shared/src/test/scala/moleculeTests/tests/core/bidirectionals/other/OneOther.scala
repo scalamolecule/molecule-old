@@ -1,10 +1,10 @@
 package moleculeTests.tests.core.bidirectionals.other
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.in1_out3._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -18,7 +18,6 @@ object OneOther extends AsyncTestSuite {
 
     "Save new" - bidirectional { implicit conn =>
       for {
-
         // Save Ben, Rex and bidirectional references between them
         tx <- Person.name("Ben").Pet.name("Rex").save
         List(ben, rex) = tx.eids
@@ -37,7 +36,6 @@ object OneOther extends AsyncTestSuite {
 
     "Save new in reverse" - bidirectional { implicit conn =>
       for {
-
         // Building from the other end gives the same result
 
         // Save Ben, Rex and bidirectional references between them
@@ -58,7 +56,6 @@ object OneOther extends AsyncTestSuite {
 
     "Save id" - bidirectional { implicit conn =>
       for {
-
         tx1 <- Animal.name.insert("Rex")
         rex = tx1.eid
 
@@ -66,25 +63,24 @@ object OneOther extends AsyncTestSuite {
         tx2 <- Person.name("Ben").pet(rex).save
         ben = tx2.eid
 
-        _ <- animalMaster.get === List(
+        _ <- animalMaster.get.map(_ ==> List(
           ("Rex", "Ben")
-        )
-        _ <- personPet.get === List(
+        ))
+        _ <- personPet.get.map(_ ==> List(
           ("Ben", "Rex")
-        )
+        ))
 
-        //    // Saving reference to generic `e` not allowed.
-        //    // (instead apply ref to ref attribute as shown above)
-        //    (Person.name("Ben").Pet.e(rex).save must throwA[VerifyModelException])
-        //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
-        //      s"not allowed in save molecules. Found `e($rex)`"
+        // Saving reference to generic `e` not allowed.
+        // (instead apply ref to ref attribute as shown above)
+        _ <- Person.name("Ben").Pet.e(rex).save.recover { case VerifyModelException(err) =>
+          err ==> s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
+            s"not allowed in save molecules. Found `e($rex)`"
+        }
       } yield ()
     }
 
     "Insert new" - bidirectional { implicit conn =>
       for {
-
         // Insert 2 pairs of bidirectionally referenced entities
         _ <- Person.name.Pet.name insert List(
           ("Ben", "Rex"),
@@ -105,7 +101,6 @@ object OneOther extends AsyncTestSuite {
 
     "Insert id" - bidirectional { implicit conn =>
       for {
-
         tx <- Animal.name insert List("Rex", "Zip")
         List(rex, zip) = tx.eids
 
@@ -161,7 +156,6 @@ object OneOther extends AsyncTestSuite {
 
       "replacing ref to new" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name("Ben").Pet.name("Rex").save
           List(ben, rex) = tx.eids
 
@@ -207,16 +201,15 @@ object OneOther extends AsyncTestSuite {
             ("Rex", "Ben")
           ))
 
-          //      // Referencing the same id is not allowed
-          //      (Person(ben).pet(ben).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:biSelfRef]  Current entity and referenced entity ids can't be the same."
+          // Referencing the same id is not allowed
+          _ <- Person(ben).pet(ben).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:biSelfRef]  Current entity and referenced entity ids can't be the same."
+          }
         } yield ()
       }
 
       "replacing ref to other existing" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name("Ben").Pet.name("Rex").save
           List(ben, rex) = tx1.eids
 
@@ -247,7 +240,6 @@ object OneOther extends AsyncTestSuite {
 
     "Update removing reference" - bidirectional { implicit conn =>
       for {
-
         tx <- Person.name("Ben").Pet.name("Rex").save
         List(ben, rex) = tx.eids
 
@@ -269,7 +261,6 @@ object OneOther extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-
         tx1 <- Person.name.insert("Ben")
         ben = tx1.eid
 
@@ -288,11 +279,11 @@ object OneOther extends AsyncTestSuite {
         _ <- rex.map(_.retract)
 
         // Rex remains and both references retracted
-        _ <- Person.name.get === List("Ben")
-        _ <- Animal.name.get === List()
+        _ <- Person.name.get.map(_ ==> List("Ben"))
+        _ <- Animal.name.get.map(_ ==> List())
 
-        _ <- Person(ben).Pet.name.get === List()
-        _ <- Animal(rex).Master.name.get === List()
+        _ <- Person(ben).Pet.name.get.map(_ ==> List())
+        _ <- Animal(rex).Master.name.get.map(_ ==> List())
 
         _ <- personPet.get.map(_.sorted ==> List())
         _ <- animalMaster.get.map(_.sorted ==> List())

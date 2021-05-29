@@ -2,14 +2,10 @@ package moleculeTests.tests.core.crud
 
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out9._
-import molecule.datomic.base.facade.TxReport
-import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import moleculeTests.tests.core.base.dsl.CoreTest._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 
 object Save extends AsyncTestSuite {
@@ -42,10 +38,10 @@ object Save extends AsyncTestSuite {
 
         // Applying multiple values to card-one attr not allowed when saving
 
-        //    (Ns.str("a", "b").save must throwA[VerifyModelException])
-        //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
-        //      s"\n  Ns ... str(a, b)"
+        _ <- Ns.str("a", "b").save.recover { case VerifyModelException(err) =>
+          err ==> "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
+            s"\n  Ns ... str(a, b)"
+        }
       } yield ()
     }
 
@@ -140,14 +136,14 @@ object Save extends AsyncTestSuite {
           // Applying empty arg asserts nothing
           _ <- Ns.ints().save
           // Nothing asserted
-          _ <- Ns.ints.get === List()
+          _ <- Ns.ints.get.map(_ ==> List())
 
           // Entity 1
           _ <- Ns.ints(1).save
 
           // Saving an applied empty arg doesn't affect other entities
           _ <- Ns.ints().save
-          _ <- Ns.ints.get === List(Set(1))
+          _ <- Ns.ints.get.map(_ ==> List(Set(1)))
 
           // Entity 2
           _ <- Ns.ints(2, 3).save
@@ -201,7 +197,7 @@ object Save extends AsyncTestSuite {
           // Empty Set - no facts asserted
           _ <- Ns.int(0).ints(set0).save
           // `int` was asserted!
-          _ <- Ns.int(0).ints$.get === List((0, None))
+          _ <- Ns.int(0).ints$.get.map(_ ==> List((0, None)))
 
           // 1 Set
           _ <- Ns.int(1).ints(set12).save
@@ -247,7 +243,7 @@ object Save extends AsyncTestSuite {
         for {
           // Equal empty results
           _ <- Ns.str("a").save
-          _ <- Ns.str.int_(Nil).get === List("a")
+          _ <- Ns.str.int_(Nil).get.map(_ ==> List("a"))
           _ <- Ns.str.int$(None).get.map(_.head ==> ("a", None))
 
           // Equal mandatory results
@@ -319,9 +315,9 @@ object Save extends AsyncTestSuite {
         for {
           _ <- Ns.int(0).Ref1.int1(1).Ref2.str2("b")._Ref1.Refs2.int2(2).save
 
-          _ <- Ns.int.Ref1.int1.Ref2.str2._Ref1.Refs2.int2.get === List(
+          _ <- Ns.int.Ref1.int1.Ref2.str2._Ref1.Refs2.int2.get.map(_ ==> List(
             (0, 1, "b", 2)
-          )
+          ))
         } yield ()
       }
     }
@@ -333,7 +329,7 @@ object Save extends AsyncTestSuite {
         for {
           // Equal empty results
           _ <- Ns.str("a").save
-          _ <- Ns.str.ints_(Nil).get === List("a")
+          _ <- Ns.str.ints_(Nil).get.map(_ ==> List("a"))
           _ <- Ns.str.ints$(None).get.map(_.head ==> ("a", None))
 
           // Equal mandatory results
@@ -400,7 +396,7 @@ object Save extends AsyncTestSuite {
         for {
           // Equal empty results
           _ <- Ns.str("a").save
-          _ <- Ns.str.intMap_(Nil).get === List("a")
+          _ <- Ns.str.intMap_(Nil).get.map(_ ==> List("a"))
           _ <- Ns.str.intMap$(None).get.map(_.head ==> ("a", None))
 
           // Equal mandatory results
@@ -442,13 +438,13 @@ object Save extends AsyncTestSuite {
           _ <- Ns.int.intMap$(Some(Map(a -> 51, "b" -> i52))).get.map(_.head ==> (5, Some(Map("a" -> 51, "b" -> 52))))
 
           _ <- Ns.int(6).intMap$(None).save
-          _ <- Ns.int(6).intMap.get === Nil
+          _ <- Ns.int(6).intMap.get.map(_ ==> Nil)
           _ <- Ns.int(6).intMap$.get.map(_.head ==> (6, None))
           _ <- Ns.int.intMap$(None).get.map(_.head ==> (6, None))
 
           none = None
           _ <- Ns.int(7).intMap$(none).save
-          _ <- Ns.int(7).intMap.get === Nil
+          _ <- Ns.int(7).intMap.get.map(_ ==> Nil)
           _ <- Ns.int(7).intMap$.get.map(_.head ==> (7, None))
           _ <- Ns.int.intMap$(none).get.map(_.sortBy(_._1) ==> List((6, None), (7, None)))
         } yield ()
@@ -456,11 +452,9 @@ object Save extends AsyncTestSuite {
     }
 
     "Nested data not allowed in save" - core { implicit conn =>
-      //      for {
-      //    (Ns.int(0).Refs1.*(Ref1.int1(1)).save must throwA[VerifyModelException])
-      //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-      //      "[noNested]  Nested data structures not allowed in save molecules"
-      //  } yield ()
+      Ns.int(0).Refs1.*(Ref1.int1(1)).save.recover { case VerifyModelException(err) =>
+        err ==> "[noNested]  Nested data structures not allowed in save molecules"
+      }
     }
   }
 }

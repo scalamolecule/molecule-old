@@ -21,7 +21,7 @@ trait TxBundles extends Helpers {
     *     Ns(e2).int(20).getUpdateTx
     *   ) map { bundleTx =>
     *     Ns.int.getAsync map { queryResult =>
-    *       queryResult === List(3, 4, 5, 6, 20)
+    *       queryResult ==> List(3, 4, 5, 6, 20)
     *     }
     *   }
     * }}}

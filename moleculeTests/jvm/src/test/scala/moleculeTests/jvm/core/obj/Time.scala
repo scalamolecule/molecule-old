@@ -15,7 +15,6 @@ object Time extends AsyncTestSuite with Helpers {
   lazy val tests = Tests {
 
     "With" - core { implicit conn =>
-
       // Tx data from edn file
       // contains: "[{:Ns/int 2} {:Ns/int 3}]"
       val data      = new FileReader("moleculeTests/jvm/resources/tests/core/time/save2-3.dtm")

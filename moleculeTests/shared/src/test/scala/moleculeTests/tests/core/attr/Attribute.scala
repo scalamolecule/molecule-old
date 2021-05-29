@@ -25,15 +25,15 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.enum insert enum1
 
         // Get one value (RuntimeException if no value)
-        _ <- Ns.str.get === List(str1)
-        _ <- Ns.int.get === List(int1)
-        _ <- Ns.long.get === List(long1)
-        _ <- Ns.double.get === List(double1)
-        _ <- Ns.bool.get === List(bool1)
-        _ <- Ns.date.get === List(date1)
-        _ <- Ns.uuid.get === List(uuid1)
-        _ <- Ns.uri.get === List(uri1)
-        _ <- Ns.enum.get === List(enum1)
+        _ <- Ns.str.get.map(_ ==> List(str1))
+        _ <- Ns.int.get.map(_ ==> List(int1))
+        _ <- Ns.long.get.map(_ ==> List(long1))
+        _ <- Ns.double.get.map(_ ==> List(double1))
+        _ <- Ns.bool.get.map(_ ==> List(bool1))
+        _ <- Ns.date.get.map(_ ==> List(date1))
+        _ <- Ns.uuid.get.map(_ ==> List(uuid1))
+        _ <- Ns.uri.get.map(_ ==> List(uri1))
+        _ <- Ns.enum.get.map(_ ==> List(enum1))
       } yield ()
     }
 
@@ -52,10 +52,10 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.enums insert enums1
 
         // Get one value (RuntimeException if no value)
-        _ <- Ns.strs.get === List(strs1)
-        _ <- Ns.ints.get === List(ints1)
-        _ <- Ns.longs.get === List(longs1)
-        _ <- Ns.doubles.get === List(doubles1)
+        _ <- Ns.strs.get.map(_ ==> List(strs1))
+        _ <- Ns.ints.get.map(_ ==> List(ints1))
+        _ <- Ns.longs.get.map(_ ==> List(longs1))
+        _ <- Ns.doubles.get.map(_ ==> List(doubles1))
         // No Set of boolean values
         _ <- Ns.dates.get.map(_.head ==> dates1)
         _ <- Ns.uuids.get.map(_.head ==> uuids1)
@@ -79,15 +79,15 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.enum insert List(enum1, enum2)
 
         // Get attribute values as tuples (order not guaranteed)
-        _ <- Ns.str.get === List(str1, str2)
-        _ <- Ns.int.get === List(int1, int2)
-        _ <- Ns.long.get === List(long1, long2)
-        _ <- Ns.double.get === List(double1, double2)
-        _ <- Ns.bool.get === List(bool2, bool1)
+        _ <- Ns.str.get.map(_ ==> List(str1, str2))
+        _ <- Ns.int.get.map(_ ==> List(int1, int2))
+        _ <- Ns.long.get.map(_ ==> List(long1, long2))
+        _ <- Ns.double.get.map(_ ==> List(double1, double2))
+        _ <- Ns.bool.get.map(_ ==> List(bool2, bool1))
         _ <- Ns.date.get.map(_.sorted ==> List(date1, date2))
         _ <- Ns.uuid.get.map(_.sortBy(_.toString) ==> List(uuid1, uuid2))
-        _ <- Ns.uri.get === List(uri1, uri2)
-        _ <- Ns.enum.get === List(enum2, enum1)
+        _ <- Ns.uri.get.map(_ ==> List(uri1, uri2))
+        _ <- Ns.enum.get.map(_ ==> List(enum2, enum1))
       } yield ()
     }
 
@@ -106,15 +106,15 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.enums insert List(enums1, enums2)
 
         // Retrieving Sets only will retrieve one Set of distinct values for each attribute
-        _ <- Ns.strs.get === List(strs2) // List(Set("str1", "str2"))
-        _ <- Ns.ints.get === List(ints2)
-        _ <- Ns.longs.get === List(longs2)
-        _ <- Ns.doubles.get === List(doubles2)
+        _ <- Ns.strs.get.map(_ ==> List(strs2)) // List(Set("str1", "str2"))
+        _ <- Ns.ints.get.map(_ ==> List(ints2))
+        _ <- Ns.longs.get.map(_ ==> List(longs2))
+        _ <- Ns.doubles.get.map(_ ==> List(doubles2))
         // No Set of boolean values
-        _ <- Ns.dates.get === List(dates2)
-        _ <- Ns.uuids.get === List(uuids2)
-        _ <- Ns.uris.get === List(uris2)
-        _ <- Ns.enums.get === List(enums2)
+        _ <- Ns.dates.get.map(_ ==> List(dates2))
+        _ <- Ns.uuids.get.map(_ ==> List(uuids2))
+        _ <- Ns.uris.get.map(_ ==> List(uris2))
+        _ <- Ns.enums.get.map(_ ==> List(enums2))
       } yield ()
     }
 
@@ -126,9 +126,9 @@ object Attribute extends AsyncTestSuite {
           str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1)
 
         // Get single molecule as tuple of values
-        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.get === List(
+        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.get.map(_ ==> List(
           (str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1)
-        )
+        ))
       } yield ()
     }
 
@@ -140,9 +140,9 @@ object Attribute extends AsyncTestSuite {
           strs1, ints1, longs1, doubles1, dates1, uuids1, uris1, enums1)
 
         // Get single molecule as tuple of Sets of values
-        _ <- Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.get === List(
+        _ <- Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.get.map(_ ==> List(
           (strs1, ints1, longs1, doubles1, dates1, uuids1, uris1, enums1)
-        )
+        ))
       } yield ()
     }
 
@@ -173,9 +173,9 @@ object Attribute extends AsyncTestSuite {
         )
 
         // Retrieving Sets only will retrieve one Set of distinct values for each attribute
-        _ <- Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.get === List(
+        _ <- Ns.strs.ints.longs.doubles.dates.uuids.uris.enums.get.map(_ ==> List(
           (strs2, ints2, longs2, doubles2, dates2, uuids2, uris2, enums2)
-        )
+        ))
       } yield ()
     }
 
@@ -183,7 +183,7 @@ object Attribute extends AsyncTestSuite {
     "Mixed cardinality attributes - one entity" - core { implicit conn =>
       for {
         _ <- Ns.str.ints.bool.insert("foo", Set(1, 2, 3), true)
-        _ <- Ns.str.ints.bool.get === List(("foo", Set(1, 2, 3), true))
+        _ <- Ns.str.ints.bool.get.map(_ ==> List(("foo", Set(1, 2, 3), true)))
       } yield ()
     }
 
@@ -196,10 +196,10 @@ object Attribute extends AsyncTestSuite {
         )
 
         // (order not guaranteed)
-        _ <- Ns.str.ints.bool.get === List(
+        _ <- Ns.str.ints.bool.get.map(_ ==> List(
           ("bar", Set(2, 3, 4), false),
           ("foo", Set(1, 2), true)
-        )
+        ))
       } yield ()
     }
   }

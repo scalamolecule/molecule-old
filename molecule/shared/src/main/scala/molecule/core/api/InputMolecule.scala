@@ -37,10 +37,10 @@ import molecule.datomic.base.ast.query._
   *
   *   // Calling action on resolved molecule.
   *   // (Only age is returned since name was marked as tacit with the underscore notation)
-  *   ageOfPersonsNamedJoe.get === List(42)
+  *   ageOfPersonsNamedJoe.get.map(_ ==> List(42))
   *
   *   // Or we can re-use the input molecule straight away
-  *   ageOfPersons("Liz").get === List(34)
+  *   ageOfPersons("Liz").get.map(_ ==> List(34))
   * }}}
   */
 trait InputMolecule extends Molecule {

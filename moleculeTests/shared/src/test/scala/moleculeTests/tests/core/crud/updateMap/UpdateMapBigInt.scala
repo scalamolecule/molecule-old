@@ -1,10 +1,9 @@
 package moleculeTests.tests.core.crud.updateMap
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -42,37 +41,37 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
           // Can't add pairs with duplicate keys
 
-                // vararg
-                _ = compileError(
-                  """Ns(eid).bigIntMap.assert(str1 -> bigInt1, str1 -> bigInt2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                    "\n__ident__str1 -> __ident__bigInt1" +
-                    "\n__ident__str1 -> __ident__bigInt2")
+          // vararg
+          _ = compileError(            """Ns(eid).bigIntMap.assert(str1 -> bigInt1, str1 -> bigInt2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\n__ident__str1 -> __ident__bigInt1" +
+              "\n__ident__str1 -> __ident__bigInt2")
 
-                // Seq
-                _ = compileError(
-                  """Ns(eid).bigIntMap.assert(Seq(str1 -> bigInt1, str1 -> bigInt2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                    "\n__ident__str1 -> __ident__bigInt1" +
-                    "\n__ident__str1 -> __ident__bigInt2")
+          // Seq
+          _ = compileError(            """Ns(eid).bigIntMap.assert(Seq(str1 -> bigInt1, str1 -> bigInt2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\n__ident__str1 -> __ident__bigInt1" +
+              "\n__ident__str1 -> __ident__bigInt2")
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           str1x = str1
 
-          //      // vararg
-          //      (Ns(eid).bigIntMap.assert(str1 -> bigInt1, str1x -> bigInt2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-          //        "\na -> " + bigInt1 +
-          //        "\na -> " + bigInt2
-          //
-          //
-          //      // Seq
-          //      (Ns(eid).bigIntMap.assert(Seq(str1 -> bigInt1, str1x -> bigInt2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-          //        "\na -> " + bigInt1 +
-          //        "\na -> " + bigInt2
+          // vararg
+          _ <- Ns(eid).bigIntMap.assert(str1 -> bigInt1, str1x -> bigInt2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+                "\na -> " + bigInt1 +
+                "\na -> " + bigInt2
+          }
+
+
+          // Seq
+          _ <- Ns(eid).bigIntMap.assert(Seq(str1 -> bigInt1, str1x -> bigInt2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+                "\na -> " + bigInt1 +
+                "\na -> " + bigInt2
+          }
         } yield ()
       }
 
@@ -108,17 +107,15 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-                _ = compileError(
-                  """Ns(eid).bigIntMap.replace(str1 -> bigInt1, str1 -> bigInt2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                    "\n__ident__str1 -> __ident__bigInt1" +
-                    "\n__ident__str1 -> __ident__bigInt2")
+          _ = compileError(            """Ns(eid).bigIntMap.replace(str1 -> bigInt1, str1 -> bigInt2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\n__ident__str1 -> __ident__bigInt1" +
+              "\n__ident__str1 -> __ident__bigInt2")
 
-                _ = compileError(
-                  """Ns(eid).bigIntMap.replace(Seq(str1 -> bigInt1, str1 -> bigInt2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                    "\n__ident__str1 -> __ident__bigInt1" +
-                    "\n__ident__str1 -> __ident__bigInt2")
+          _ = compileError(            """Ns(eid).bigIntMap.replace(Seq(str1 -> bigInt1, str1 -> bigInt2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\n__ident__str1 -> __ident__bigInt1" +
+              "\n__ident__str1 -> __ident__bigInt2")
         } yield ()
       }
 
@@ -172,29 +169,31 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
           // Apply empty Map of values (retracting all values!)
           _ <- Ns(eid).bigIntMap(Seq[(String, BigInt)]()).update
-          _ <- Ns.bigIntMap.get === List()
+          _ <- Ns.bigIntMap.get.map(_ ==> List())
 
 
           _ <- Ns(eid).bigIntMap(Seq(str1 -> bigInt1, str2 -> bigInt2)).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).bigIntMap().update
-          _ <- Ns.bigIntMap.get === List()
+          _ <- Ns.bigIntMap.get.map(_ ==> List())
 
 
           // Can't apply pairs with duplicate keys
 
-          //      (Ns(eid).bigIntMap(str1 -> bigInt1, str1 -> bigInt2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-          //        "\na -> " + bigInt1 +
-          //        "\na -> " + bigInt2
-          //
-          //      (Ns(eid).bigIntMap(Seq(str1 -> bigInt1, str1 -> bigInt2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-          //        "\na -> " + bigInt1 +
-          //        "\na -> " + bigInt2
+          _ <- Ns(eid).bigIntMap(str1 -> bigInt1, str1 -> bigInt2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+                "\na -> " + bigInt1 +
+                "\na -> " + bigInt2
+          }
+
+          _ <- Ns(eid).bigIntMap(Seq(str1 -> bigInt1, str1 -> bigInt2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+                "\na -> " + bigInt1 +
+                "\na -> " + bigInt2
+          }
         } yield ()
       }
     }

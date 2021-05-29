@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.runtime
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -252,13 +252,13 @@ object EntityAPI extends AsyncTestSuite {
 
         // Level 1
         _ = strTyped ==> Some("Ben")
-        _ <- eid.flatMap(_[Int](":Ns/int") === Some(42))
+        _ <- eid.flatMap(_[Int](":Ns/int")).map(_ ==> Some(42))
 
         // Level 2
-        _ <- refId.flatMap(_[String](":Ref1/str1") === Some("Hollywood Rd"))
+        _ <- refId.flatMap(_[String](":Ref1/str1")).map(_ ==> Some("Hollywood Rd"))
 
         // Non-existing attribute returns None
-        _ <- eid.flatMap(_[Any](":Ns/non-existing-attribute") === None)
+        _ <- eid.flatMap(_[Any](":Ns/non-existing-attribute")).map(_ ==> None)
       } yield ()
     }
 
@@ -267,7 +267,7 @@ object EntityAPI extends AsyncTestSuite {
         tx <- Ns.str.int.Ref1.str1.insert("Ben", 42, "Hollywood Rd")
         List(eid, refId) = tx.eids
 
-        _ <- eid.flatMap(_ (":Ns/str", ":Ns/int", ":Ns/ref1")) === List(
+        _ <- eid.flatMap(_ (":Ns/str", ":Ns/int", ":Ns/ref1")).map(_ ==> List(
           Some("Ben"),
           Some(42),
           Some(
@@ -276,7 +276,7 @@ object EntityAPI extends AsyncTestSuite {
               ":Ref1/str1" -> "Hollywood Rd"
             )
           )
-        )
+        ))
 
         // Type ascription is still unchecked since it is eliminated by erasure
         // so we suppress compile warnings emitted

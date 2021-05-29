@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.self
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import molecule.datomic.api.in1_out3._
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.api.in1_out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -30,38 +30,37 @@ object ManySelf extends AsyncTestSuite {
 
           // We can now use a uniform query from both ends:
           // Ann and Ben are friends with each other
-          _ <- friendsOf("Ann").get === List("Ben")
-          _ <- friendsOf("Ben").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "n new" - bidirectional { implicit conn =>
         for {
-          //
-          //      // Can't save multiple values to cardinality-one attribute
-          //      // It could become unwieldy if different referenced attributes had different number of
-          //      // values (arities) - how many related entities should be created then?
-          //      (Person.name("Ann").Friends.name("Ben", "Joe").save must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
-          //        "\n  Person ... name(Ben, Joe)"
+          // Can't save multiple values to cardinality-one attribute
+          // It could become unwieldy if different referenced attributes had different number of
+          // values (arities) - how many related entities should be created then?
+          _ <- Person.name("Ann").Friends.name("Ben", "Joe").save.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
+              "\n  Person ... name(Ben, Joe)"
+          }
 
           // We can save a single value though...
           _ <- Person.name("Ann").Friends.name("Joe").save
 
-          _ <- Person.name.Friends.name.get === List(
+          _ <- Person.name.Friends.name.get.map(_ ==> List(
             ("Ann", "Joe"),
             ("Joe", "Ann")
-          )
+          ))
 
           // Ann and Ben are friends with each other
-          _ <- friendsOf("Ann").get === List("Joe")
-          _ <- friendsOf("Joe").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Joe"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
 
-          //      // Can't `save` nested data structures - use nested `insert` instead for that (see tests further down)
-          //      (Person.name("Ann").Friends.*(Person.name("Ben")).save must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[noNested]  Nested data structures not allowed in save molecules"
+          // Can't `save` nested data structures - use nested `insert` instead for that (see tests further down)
+          _ <- Person.name("Ann").Friends.*(Person.name("Ben")).save.recover { case VerifyModelException(err) =>
+            err ==> s"[noNested]  Nested data structures not allowed in save molecules"
+          }
 
           // So, we can't create multiple referenced entities in one go with the `save` command.
           // Use `insert` for this or save existing entity ids (see below).
@@ -82,15 +81,15 @@ object ManySelf extends AsyncTestSuite {
           ))
 
           // Ann and Ben are friends with each other
-          _ <- friendsOf("Ann").get === List("Ben")
-          _ <- friendsOf("Ben").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
 
-          //      // Saveing reference to generic `e` not allowed.
-          //      // (instead apply ref to ref attribute as shown above)
-          //      (Person.name("Ann").Friends.e(ben).save must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
-          //        s"not allowed in save molecules. Found `e($ben)`"
+          // Saveing reference to generic `e` not allowed.
+          // (instead apply ref to ref attribute as shown above)
+          _ <- Person.name("Ann").Friends.e(ben).save.recover { case VerifyModelException(err) =>
+            err ==> s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
+              s"not allowed in save molecules. Found `e($ben)`"
+          }
         } yield ()
       }
 
@@ -102,9 +101,9 @@ object ManySelf extends AsyncTestSuite {
           // Save Ann with bidirectional ref to existing Ben and Joe
           _ <- Person.name("Ann").friends(benJoe).save
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
         } yield ()
       }
     }
@@ -117,14 +116,13 @@ object ManySelf extends AsyncTestSuite {
           _ <- Person.name.Friends.name.insert("Ann", "Ben")
 
           // Bidirectional references have been inserted
-          _ <- friendsOf("Ann").get === List("Ben")
-          _ <- friendsOf("Ben").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "1 existing" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name("Ben").save
           ben = tx.eid
 
@@ -132,14 +130,13 @@ object ManySelf extends AsyncTestSuite {
           _ <- Person.name.friends.insert("Ann", Set(ben))
 
           // Bidirectional references have been inserted
-          _ <- friendsOf("Ann").get === List("Ben")
-          _ <- friendsOf("Ben").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "multiple new" - bidirectional { implicit conn =>
         for {
-
           // Insert 2 pairs of entities with bidirectional references between them
           _ <- Person.name.Friends.name insert List(
             ("Ann", "Joe"),
@@ -147,16 +144,15 @@ object ManySelf extends AsyncTestSuite {
           )
 
           // Bidirectional references have been inserted
-          _ <- friendsOf("Ann").get === List("Joe")
-          _ <- friendsOf("Ben").get === List("Tim")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Tim").get === List("Ben")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Tim"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tim").get.map(_ ==> List("Ben"))
         } yield ()
       }
 
       "multiple existing" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name.insert("Joe", "Tim")
           List(joe, tim) = tx.eids
 
@@ -167,16 +163,15 @@ object ManySelf extends AsyncTestSuite {
           )
 
           // Bidirectional references have been inserted
-          _ <- friendsOf("Ann").get === List("Joe")
-          _ <- friendsOf("Ben").get === List("Tim")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Tim").get === List("Ben")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Tim"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tim").get.map(_ ==> List("Ben"))
         } yield ()
       }
 
       "nested new" - bidirectional { implicit conn =>
         for {
-
           // Insert molecules allow nested data structures. So we can conveniently
           // insert 2 entities each connected to 2 target entites
           _ <- Person.name.Friends.*(Person.name) insert List(
@@ -198,7 +193,6 @@ object ManySelf extends AsyncTestSuite {
 
       "nested existing" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name insert List("Ben", "Joe", "Tim")
           List(ben, joe, tim) = tx.eids
 
@@ -240,16 +234,15 @@ object ManySelf extends AsyncTestSuite {
 
           // Friendships have been added in both directions
           _ <- friendsOf("Ann").get.map(_.sorted ==> List("Ben", "Joe", "Liz", "Tom"))
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Liz").get === List("Ann")
-          _ <- friendsOf("Tom").get === List("Ann")
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Liz").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tom").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "retract" - bidirectional { implicit conn =>
         for {
-
           // Insert Ann and friends
           tx <- Person.name.Friends.*(Person.name) insert List(
             ("Ann", List("Ben", "Joe", "Liz", "Tom", "Ulf"))
@@ -258,11 +251,11 @@ object ManySelf extends AsyncTestSuite {
 
           // Friendships have been inserted in both directions
           _ <- friendsOf("Ann").get.map(_.sorted ==> List("Ben", "Joe", "Liz", "Tom", "Ulf"))
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Liz").get === List("Ann")
-          _ <- friendsOf("Tom").get === List("Ann")
-          _ <- friendsOf("Ulf").get === List("Ann")
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Liz").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tom").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Ulf").get.map(_ ==> List("Ann"))
 
           // Remove some friendships in various ways
 
@@ -276,81 +269,78 @@ object ManySelf extends AsyncTestSuite {
           _ <- Person(ann).friends.retract(Seq(tom)).update
 
           // Correct friendships have been removed in both directions
-          _ <- friendsOf("Ann").get === List("Ulf")
-          _ <- friendsOf("Ben").get === List()
-          _ <- friendsOf("Joe").get === List()
-          _ <- friendsOf("Liz").get === List()
-          _ <- friendsOf("Tom").get === List()
-          _ <- friendsOf("Ulf").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ulf"))
+          _ <- friendsOf("Ben").get.map(_ ==> List())
+          _ <- friendsOf("Joe").get.map(_ ==> List())
+          _ <- friendsOf("Liz").get.map(_ ==> List())
+          _ <- friendsOf("Tom").get.map(_ ==> List())
+          _ <- friendsOf("Ulf").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "replace 1" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Friends.*(Person.name).insert("Ann", List("Ben", "Joe"))
           List(ann, ben, joe) = tx1.eids
 
           tx2 <- Person.name("Tim").save
           tim = tx2.eid
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Tim").get === List()
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tim").get.map(_ ==> List())
 
           // Ann replaces Ben with Tim
           _ <- Person(ann).friends.replace(ben -> tim).update
 
           // Ann now friends with Tim instead of Ben
-          _ <- friendsOf("Ann").get === List("Tim", "Joe")
-          _ <- friendsOf("Ben").get === List()
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Tim").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Tim", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List())
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tim").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "replace multiple" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Friends.*(Person.name).insert("Ann", List("Ben", "Joe"))
           List(ann, ben, joe) = tx1.eids
 
           tx2 <- Person.name.insert("Tim", "Tom")
           List(tim, tom) = tx2.eids
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Tim").get === List()
-          _ <- friendsOf("Tom").get === List()
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tim").get.map(_ ==> List())
+          _ <- friendsOf("Tom").get.map(_ ==> List())
 
           // Ann replaces Ben and Joe with Tim and Tom
           _ <- Person(ann).friends.replace(ben -> tim, joe -> tom).update
 
           // Ann is now friends with Tim and Tom instead of Ben and Joe
           // Ben and Joe are no longer friends with Ann either
-          _ <- friendsOf("Ann").get === List("Tom", "Tim")
-          _ <- friendsOf("Ben").get === List()
-          _ <- friendsOf("Joe").get === List()
-          _ <- friendsOf("Tim").get === List("Ann")
-          _ <- friendsOf("Tom").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Tom", "Tim"))
+          _ <- friendsOf("Ben").get.map(_ ==> List())
+          _ <- friendsOf("Joe").get.map(_ ==> List())
+          _ <- friendsOf("Tim").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Tom").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "replace all with 1" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
           List(ann, ben, joe) = tx1.eids
 
           tx2 <- Person.name.insert("Liz")
           liz = tx2.eid
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Liz").get === List()
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Liz").get.map(_ ==> List())
 
           // Applying value(s) replaces all existing values!
 
@@ -358,103 +348,99 @@ object ManySelf extends AsyncTestSuite {
           _ <- Person(ann).friends(liz).update
 
           // Joe and Ann no longer friends
-          _ <- friendsOf("Ann").get === List("Liz")
-          _ <- friendsOf("Ben").get === List()
-          _ <- friendsOf("Joe").get === List()
-          _ <- friendsOf("Liz").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Liz"))
+          _ <- friendsOf("Ben").get.map(_ ==> List())
+          _ <- friendsOf("Joe").get.map(_ ==> List())
+          _ <- friendsOf("Liz").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "replace all with multiple (apply varargs)" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
           List(ann, ben, joe) = tx1.eids
 
           tx2 <- Person.name.insert("Liz")
           liz = tx2.eid
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Liz").get === List()
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Liz").get.map(_ ==> List())
 
           // Ann now has Ben and Liz as friends
           _ <- Person(ann).friends(ben, liz).update
 
           // Ann and Liz new friends
           // Ann and Joe no longer friends
-          _ <- friendsOf("Ann").get === List("Ben", "Liz")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List()
-          _ <- friendsOf("Liz").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Liz"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List())
+          _ <- friendsOf("Liz").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "replace all with multiple (apply Set)" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
           List(ann, ben, joe) = tx1.eids
 
           tx2 <- Person.name.insert("Liz")
           liz = tx2.eid
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
-          _ <- friendsOf("Liz").get === List()
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Liz").get.map(_ ==> List())
 
           // Ann now has Ben and Liz as friends
           _ <- Person(ann).friends(Seq(ben, liz)).update
 
           // Ann and Liz new friends
           // Ann and Joe no longer friends
-          _ <- friendsOf("Ann").get === List("Ben", "Liz")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List()
-          _ <- friendsOf("Liz").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Liz"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List())
+          _ <- friendsOf("Liz").get.map(_ ==> List("Ann"))
         } yield ()
       }
 
       "remove all (apply no values)" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
           List(ann, ben, joe) = tx1.eids
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
 
           // Ann has no friends any longer
           _ <- Person(ann).friends().update
 
           // Ann's friendships replaced with no friendships (in both directions)
-          _ <- friendsOf("Ann").get === List()
-          _ <- friendsOf("Ben").get === List()
-          _ <- friendsOf("Joe").get === List()
+          _ <- friendsOf("Ann").get.map(_ ==> List())
+          _ <- friendsOf("Ben").get.map(_ ==> List())
+          _ <- friendsOf("Joe").get.map(_ ==> List())
         } yield ()
       }
 
       "remove all (apply empty Set)" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
           List(ann, ben, joe) = tx1.eids
 
-          _ <- friendsOf("Ann").get === List("Ben", "Joe")
-          _ <- friendsOf("Ben").get === List("Ann")
-          _ <- friendsOf("Joe").get === List("Ann")
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+          _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+          _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
 
           // Ann has no friends any longer
           noFriends = Seq.empty[Long]
           _ <- Person(ann).friends(noFriends).update
 
           // Ann's friendships replaced with no friendships (in both directions)
-          _ <- friendsOf("Ann").get === List()
-          _ <- friendsOf("Ben").get === List()
-          _ <- friendsOf("Joe").get === List()
+          _ <- friendsOf("Ann").get.map(_ ==> List())
+          _ <- friendsOf("Ben").get.map(_ ==> List())
+          _ <- friendsOf("Joe").get.map(_ ==> List())
         } yield ()
       }
     }
@@ -462,24 +448,23 @@ object ManySelf extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-
         tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
         List(ann, ben, joe) = tx1.eids
 
-        _ <- friendsOf("Ann").get === List("Ben", "Joe")
-        _ <- friendsOf("Ben").get === List("Ann")
-        _ <- friendsOf("Joe").get === List("Ann")
+        _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
+        _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
+        _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
 
         // Retract Ann and all her friendships
         _ <- ann.map(_.retract)
 
         // Ann doesn't exist anymore
-        _ <- Person.name("Ann").get === List()
-        _ <- friendsOf("Ann").get === List()
+        _ <- Person.name("Ann").get.map(_ ==> List())
+        _ <- friendsOf("Ann").get.map(_ ==> List())
 
         // Ben and Joe are no longer friends with Ann
-        _ <- friendsOf("Ben").get === List()
-        _ <- friendsOf("Joe").get === List()
+        _ <- friendsOf("Ben").get.map(_ ==> List())
+        _ <- friendsOf("Joe").get.map(_ ==> List())
       } yield ()
     }
   }

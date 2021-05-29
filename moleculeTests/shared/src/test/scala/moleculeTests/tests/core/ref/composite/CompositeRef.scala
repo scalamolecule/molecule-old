@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.ref.composite
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -121,7 +121,6 @@ object CompositeRef extends AsyncTestSuite {
 
     "Card-many ref - one value 2" - core { implicit conn =>
       for {
-
         tx <- Ref2.int2.str2 + Ns.Refs1.int1 insert List(
           ((1, "a"), 11),
           ((2, "b"), 22)
@@ -166,10 +165,10 @@ object CompositeRef extends AsyncTestSuite {
           ((1, "a"), 11),
           ((2, "b"), 22)
         ))
-        _ <- m(Ref2.int2.str2 + Ns.refs1).get === List(
+        _ <- m(Ref2.int2.str2 + Ns.refs1).get.map(_ ==> List(
           ((1, "a"), Set(r1)),
           ((2, "b"), Set(r2))
-        )
+        ))
       } yield ()
     }
   }

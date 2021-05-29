@@ -40,7 +40,7 @@
 //          try {
 //            i += 1
 //            //          im.apply(in1, in2, in3).inspectGet
-//            im.apply(in1, in2, in3).get === out1.intersect(out2).intersect(out3)
+//            im.apply(in1, in2, in3).get.map(_ ==> out1.intersect(out2).intersect(out3))
 //          } catch {
 //            case e: Throwable =>
 //              val expected =

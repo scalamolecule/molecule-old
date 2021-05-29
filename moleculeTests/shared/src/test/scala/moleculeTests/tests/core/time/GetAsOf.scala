@@ -3,9 +3,9 @@ package moleculeTests.tests.core.time
 import molecule.core.util.JavaUtil
 import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import moleculeTests.tests.core.base.dsl.CoreTest._
 
 
 object GetAsOf extends AsyncTestSuite with JavaUtil {
@@ -31,21 +31,21 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         ))
 
         // Data after insertion
-        _ <- Ns.str.int.getAsOf(tx1.t) === List(
+        _ <- Ns.str.int.getAsOf(tx1.t).map(_ ==> List(
           ("Liz", 37),
           ("Ben", 42)
-        )
+        ))
 
         // Data after update
-        _ <- Ns.str.int.getAsOf(tx2.t) === List(
+        _ <- Ns.str.int.getAsOf(tx2.t).map(_ ==> List(
           ("Liz", 37),
           ("Ben", 43) // Ben now 43
-        )
+        ))
 
         // Data after retraction
-        _ <- Ns.str.int.getAsOf(tx3.t) === List(
+        _ <- Ns.str.int.getAsOf(tx3.t).map(_ ==> List(
           ("Liz", 37) // Ben gone
-        )
+        ))
       } yield ()
     }
 
@@ -63,13 +63,13 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         t2 = tx2.t
 
         // Value as of tx1
-        _ <- Ns(eid).int.getAsOf(t1) === List(1)
+        _ <- Ns(eid).int.getAsOf(t1).map(_ ==> List(1))
 
         // Current value
-        _ <- Ns(eid).int.get === List(2)
+        _ <- Ns(eid).int.get.map(_ ==> List(2))
 
         // Value as of tx2 (current value)
-        _ <- Ns(eid).int.getAsOf(t2) === List(2)
+        _ <- Ns(eid).int.getAsOf(t2).map(_ ==> List(2))
       } yield ()
     }
 
@@ -88,13 +88,13 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         tx2 <- Ns.int_.tx.get.map(_.head)
 
         // Value as of tx1
-        _ <- Ns(eid).int.getAsOf(tx1) === List(1)
+        _ <- Ns(eid).int.getAsOf(tx1).map(_ ==> List(1))
 
         // Current value
-        _ <- Ns(eid).int.get === List(2)
+        _ <- Ns(eid).int.get.map(_ ==> List(2))
 
         // Value as of tx2 (current value)
-        _ <- Ns(eid).int.getAsOf(tx2) === List(2)
+        _ <- Ns(eid).int.getAsOf(tx2).map(_ ==> List(2))
       } yield ()
     }
 
@@ -114,19 +114,19 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         // Retract (tx report 3)
         tx3 <- ben.flatMap(_.retract)
 
-        _ <- Ns.str.int.getAsOf(tx1) === List(
+        _ <- Ns.str.int.getAsOf(tx1).map(_ ==> List(
           ("Liz", 37),
           ("Ben", 42)
-        )
+        ))
 
-        _ <- Ns.str.int.getAsOf(tx2) === List(
+        _ <- Ns.str.int.getAsOf(tx2).map(_ ==> List(
           ("Liz", 37),
           ("Ben", 43) // Ben now 43
-        )
+        ))
 
-        _ <- Ns.str.int.getAsOf(tx3) === List(
+        _ <- Ns.str.int.getAsOf(tx3).map(_ ==> List(
           ("Liz", 37) // Ben gone
-        )
+        ))
       } yield ()
     }
 
@@ -150,21 +150,21 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         //    Thread.sleep(10)
 
         // No data yet before insert
-        _ <- Ns.str.int.getAsOf(beforeInsert) === Nil
+        _ <- Ns.str.int.getAsOf(beforeInsert).map(_ ==> Nil)
 
-        _ <- Ns.str.int.getAsOf(afterInsert) === List(
+        _ <- Ns.str.int.getAsOf(afterInsert).map(_ ==> List(
           ("Liz", 37),
           ("Ben", 42)
-        )
+        ))
 
-        _ <- Ns.str.int.getAsOf(afterUpdate) === List(
+        _ <- Ns.str.int.getAsOf(afterUpdate).map(_ ==> List(
           ("Liz", 37),
           ("Ben", 43) // Ben now 43
-        )
+        ))
 
-        _ <- Ns.str.int.getAsOf(afterRetract) === List(
+        _ <- Ns.str.int.getAsOf(afterRetract).map(_ ==> List(
           ("Liz", 37) // Ben gone
-        )
+        ))
       } yield ()
     }
 

@@ -1,11 +1,10 @@
 package moleculeTests.tests.core.crud.update
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -30,15 +29,15 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).bigDec().update
-          _ <- Ns.bigDec.get === List()
+          _ <- Ns.bigDec.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).bigDec(bigDec2, bigDec3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... bigDec($bigDec2, $bigDec3)"
+          _ <- Ns(eid).bigDec(bigDec2, bigDec3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... bigDec($bigDec2, $bigDec3)"
+          }
         } yield ()
       }
     }
@@ -96,13 +95,11 @@ object UpdateBigDecimal extends AsyncTestSuite {
       "replace" - core { implicit conn =>
         // Can't replace duplicate values
 
-        compileError(
-          """Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> bigDec8).update""").check(
+        compileError(          """Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> bigDec8).update""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
             "\n__ident__bigDec8")
 
-        compileError(
-          """Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> bigDec8)).update""").check(
+        compileError(          """Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> bigDec8)).update""").check("",
           "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
             "\n__ident__bigDec8")
       }
@@ -145,22 +142,21 @@ object UpdateBigDecimal extends AsyncTestSuite {
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = bigDec8
 
-          //      (Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigDecs`:" +
-          //        "\n8.0"
+          _ <- Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> other8).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigDecs`:" +
+              "\n8.0"
+          }
 
-          //      // Conflicting new values
-          //      (Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigDecs`:" +
-          //        "\n8.0"
+          // Conflicting new values
+          _ <- Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> other8)).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigDecs`:" +
+              "\n8.0"
+          }
         } yield ()
       }
 
       "retract" - core { implicit conn =>
         for {
-
           tx1 <- Ns.bigDecs(bigDec1, bigDec2, bigDec3, bigDec4, bigDec5, bigDec6).save
           eid = tx1.eid
 
@@ -187,7 +183,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
           // Retract Seq of values as variable
           values = Seq(bigDec1)
           _ <- Ns(eid).bigDecs.retract(values).update
-          _ <- Ns.bigDecs.get === List()
+          _ <- Ns.bigDecs.get.map(_ ==> List())
 
           // Retracting empty Seq of values has no effect
           _ <- Ns(eid).bigDecs(bigDec1).update
@@ -215,7 +211,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).bigDecs(Set[BigDecimal]()).update
-          _ <- Ns.bigDecs.get === List()
+          _ <- Ns.bigDecs.get.map(_ ==> List())
 
           // Apply Seq of values as variable
           values = Set(bigDec1, bigDec2)
@@ -224,7 +220,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
           // Delete all (apply no values)
           _ <- Ns(eid).bigDecs().update
-          _ <- Ns.bigDecs.get === List()
+          _ <- Ns.bigDecs.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded

@@ -62,12 +62,12 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         untyped: Option[Any] <- communityId.flatMap(_ (":community/name"))
         typed: Option[String] <- communityId.flatMap(_[String](":community/name"))
 
-        _ <- communityId.flatMap(_[String](":Community/name")) === Some("Greenlake Community Wiki")
-        _ <- communityId.flatMap(_[String](":Community/url")) === Some("http://greenlake.wetpaint.com/")
+        _ <- communityId.flatMap(_[String](":Community/name")).map(_ ==> Some("Greenlake Community Wiki"))
+        _ <- communityId.flatMap(_[String](":Community/url")).map(_ ==> Some("http://greenlake.wetpaint.com/"))
         _ <- communityId.flatMap(_[List[String]](":Community/category")).map(
           _.get.map(_.sorted ==> List("events", "for sale", "services"))
         )
-        _ <- communityId.flatMap(_ (":Community/emptyOrBogusAttribute")) === None
+        _ <- communityId.flatMap(_ (":Community/emptyOrBogusAttribute")).map(_ ==> None)
 
         // We can also use the entity id to query for an attribute value
         _ <- Community(communityId).name.get.map(_.head ==> "Greenlake Community Wiki")
@@ -81,18 +81,18 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         // When querying directly we can omit the implicit `m` method to create the molecule:
 
         // Single attribute
-        _ <- Community.name.get(3) === List(
+        _ <- Community.name.get(3).map(_ ==> List(
           "KOMO Communities - Ballard",
           "Ballard Blog",
-          "Ballard Historical Society")
+          "Ballard Historical Society"))
 
         // Multiple attributes
 
         // Output as tuples
-        _ <- Community.name.url.get(3) === List(
+        _ <- Community.name.url.get(3).map(_ ==> List(
           ("Broadview Community Council", "http://groups.google.com/group/broadview-community-council"),
           ("KOMO Communities - Wallingford", "http://wallingford.komonews.com"),
-          ("Aurora Seattle", "http://www.auroraseattle.com/"))
+          ("Aurora Seattle", "http://www.auroraseattle.com/")))
       } yield ()
     }
 
@@ -108,13 +108,13 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
 
         // Append underscore to omit applied value from output (the same anyway)
         // (different results now since order is not guaranteed)
-        _ <- Community.name.tpe_("twitter").get(3) === List(
-          "Magnolia Voice", "Columbia Citizens", "Discover SLU")
+        _ <- Community.name.tpe_("twitter").get(3).map(_ ==> List(
+          "Magnolia Voice", "Columbia Citizens", "Discover SLU"))
 
         // Applying values with variables is also possible (form inputs etc)
         tw = "twitter"
-        _ <- Community.name.tpe_(tw).get(3) === List(
-          "Magnolia Voice", "Columbia Citizens", "Discover SLU")
+        _ <- Community.name.tpe_(tw).get(3).map(_ ==> List(
+          "Magnolia Voice", "Columbia Citizens", "Discover SLU"))
 
 
         // Many-cardinality attributes
@@ -123,22 +123,22 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- Community.name_("belltown").category.get.map(_.head ==> Set("events", "news"))
 
         // Communities with some possible categories
-        _ <- Community.name.category("news" or "arts").get(3) === List(
+        _ <- Community.name.category("news" or "arts").get(3).map(_ ==> List(
           ("Alki News/Alki Community Council", Set("news", "council meetings")),
           ("ArtsWest", Set("arts")),
-          ("At Large in Ballard", Set("news", "human interest")))
+          ("At Large in Ballard", Set("news", "human interest"))))
 
         // We can omit the category values
-        _ <- Community.name.category_("news" or "arts").get(3) === List(
+        _ <- Community.name.category_("news" or "arts").get(3).map(_ ==> List(
           "Beach Drive Blog",
           "KOMO Communities - Ballard",
-          "Ballard Blog")
+          "Ballard Blog"))
 
         // We can also apply arguments as a list (OR-semantics as using `or`)
-        _ <- Community.name.category_("news", "arts").get(3) === List(
+        _ <- Community.name.category_("news", "arts").get(3).map(_ ==> List(
           "Beach Drive Blog",
           "KOMO Communities - Ballard",
-          "Ballard Blog")
+          "Ballard Blog"))
       } yield ()
     }
 
@@ -147,16 +147,16 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- loadData
 
         // Communities in north eastern region
-        _ <- Community.name.Neighborhood.District.region_("ne").get(3) === List(
+        _ <- Community.name.Neighborhood.District.region_("ne").get(3).map(_ ==> List(
           "Maple Leaf Community Council",
           "Hawthorne Hills Community Website",
-          "KOMO Communities - View Ridge")
+          "KOMO Communities - View Ridge"))
 
         // Communities and their region
-        _ <- Community.name.Neighborhood.District.region.get(3) === List(
+        _ <- Community.name.Neighborhood.District.region.get(3).map(_ ==> List(
           ("Morgan Junction Community Association", "sw"),
           ("KOMO Communities - North Seattle", "n"),
-          ("Friends of Seward Park", "se"))
+          ("Friends of Seward Park", "se")))
       } yield ()
     }
 
@@ -177,15 +177,15 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         facebookCommunities = communitiesOfType("facebook_page")
 
         // Only the `name` attribute is returned since tpe is the same for all results
-        _ <- twitterCommunities.get(3) === List("Magnolia Voice", "Columbia Citizens", "Discover SLU")
-        _ <- facebookCommunities.get(3) === List("Magnolia Voice", "Columbia Citizens", "Discover SLU")
+        _ <- twitterCommunities.get(3).map(_ ==> List("Magnolia Voice", "Columbia Citizens", "Discover SLU"))
+        _ <- facebookCommunities.get(3).map(_ ==> List("Magnolia Voice", "Columbia Citizens", "Discover SLU"))
 
         // If we omit the underscore we can get the type too
         communitiesWithType = m(Community.name.tpe(?))
-        _ <- communitiesWithType("twitter").get(3) === List(
+        _ <- communitiesWithType("twitter").get(3).map(_ ==> List(
           ("Discover SLU", "twitter"),
           ("Fremont Universe", "twitter"),
-          ("Columbia Citizens", "twitter"))
+          ("Columbia Citizens", "twitter")))
 
 
         // Multiple input values for an attribute - logical OR ------------------------
@@ -255,15 +255,15 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
 
         // Logic AND pairs separated by OR
         _ <- typeAndOrgtype2(("email_list" and "community") or ("website" and "commercial"))
-          .get(5) === emailListORcommercialWebsites
+          .get(5).map(_ ==> emailListORcommercialWebsites)
 
         // Multiple tuples of AND pairs:
         _ <- typeAndOrgtype2(("email_list", "community"), ("website", "commercial"))
-          .get(5) === emailListORcommercialWebsites
+          .get(5).map(_ ==> emailListORcommercialWebsites)
 
         // ..or we can supply the tuples in a list
         _ <- typeAndOrgtype2(Seq(("email_list", "community"), ("website", "commercial")))
-          .get(5) === emailListORcommercialWebsites
+          .get(5).map(_ ==> emailListORcommercialWebsites)
       } yield ()
     }
 
@@ -289,7 +289,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           _ <- loadData
 
           communitiesWith = m(Community.name.contains(?))
-          _ <- communitiesWith("Wallingford").get === List("KOMO Communities - Wallingford")
+          _ <- communitiesWith("Wallingford").get.map(_ ==> List("KOMO Communities - Wallingford"))
 
           // Fulltext search on many-attribute (`category`)
 
@@ -300,12 +300,12 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           foodShoppingWebsites = List(
             ("InBallard", Set("nightlife", "food", "shopping", "services")))
 
-          _ <- m(Community.name.tpe_("website").category.contains("food")).get === foodWebsites
-          _ <- m(Community.name.tpe_("website").category.contains("food", "shopping")).get === foodShoppingWebsites
+          _ <- m(Community.name.tpe_("website").category.contains("food")).get.map(_ ==> foodWebsites)
+          _ <- m(Community.name.tpe_("website").category.contains("food", "shopping")).get.map(_ ==> foodShoppingWebsites)
 
           typeAndCategory = m(Community.name.tpe_(?).category contains ?)
-          _ <- typeAndCategory("website", Set("food")).get === foodWebsites
-          res <- typeAndCategory("website", Set("food", "shopping")).get === foodShoppingWebsites
+          _ <- typeAndCategory("website", Set("food")).get.map(_ ==> foodWebsites)
+          res <- typeAndCategory("website", Set("food", "shopping")).get.map(_ ==> foodShoppingWebsites)
         } yield ()
       }
     }
@@ -315,12 +315,12 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- loadData
 
         // Social media
-        _ <- Community.name.tpe_("twitter" or "facebook_page").get(3) === List(
-          "Magnolia Voice", "Columbia Citizens", "Discover SLU")
+        _ <- Community.name.tpe_("twitter" or "facebook_page").get(3).map(_ ==> List(
+          "Magnolia Voice", "Columbia Citizens", "Discover SLU"))
 
         // NE and SW regions
-        _ <- Community.name.Neighborhood.District.region_("ne" or "sw").get(3) === List(
-          "Beach Drive Blog", "KOMO Communities - Green Lake", "Delridge Produce Cooperative")
+        _ <- Community.name.Neighborhood.District.region_("ne" or "sw").get(3).map(_ ==> List(
+          "Beach Drive Blog", "KOMO Communities - Green Lake", "Delridge Produce Cooperative"))
 
         southernSocialMedia = List(
           "Blogging Georgetown",
@@ -349,7 +349,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- loadData
 
         // What communities are both about restaurants AND shopping?
-        _ <- Community.name.category_("restaurants" and "shopping").get === List("Ballard Gossip Girl")
+        _ <- Community.name.category_("restaurants" and "shopping").get.map(_ ==> List("Ballard Gossip Girl"))
 
         // It's a self-join that unifies on community name - what the following two queries have in common:
 
@@ -454,8 +454,8 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           .District.name("myDistrict").region("nw").save
 
         // Confirm all data is inserted
-        _ <- Community.name("AAA").url.tpe.orgtype.category.Neighborhood.name.District.name.region.get(1) === List(
-          ("AAA", "myUrl", "twitter", "personal", Set("my", "favorites"), "myNeighborhood", "myDistrict", "nw"))
+        _ <- Community.name("AAA").url.tpe.orgtype.category.Neighborhood.name.District.name.region.get(1).map(_ ==> List(
+          ("AAA", "myUrl", "twitter", "personal", Set("my", "favorites"), "myNeighborhood", "myDistrict", "nw")))
 
         // Now we have one more community
         _ <- Community.e.name_.get.map(_.size ==> 151)
@@ -475,8 +475,8 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- Community.name.url.insert(Seq(("Com A", "A.com"), ("Com B", "B.com")))
 
         // Confirm that new entities have been inserted
-        _ <- Community.name("Com A").get === List("Com A")
-        _ <- Community.name("Com B").get === List("Com B")
+        _ <- Community.name("Com A").get.map(_ ==> List("Com A"))
+        _ <- Community.name("Com B").get.map(_ ==> List("Com B"))
         _ <- Community.e.name_.get.map(_.size ==> 154)
 
 
@@ -499,7 +499,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
 
         // Data has been added
         _ <- if (system == SystemPeer) // Only Peer has fulltext search
-          Community.name.contains("DDD").url.tpe.orgtype.category.Neighborhood.name.District.name.region.get === newCommunitiesData
+          Community.name.contains("DDD").url.tpe.orgtype.category.Neighborhood.name.District.name.region.get.map(_ ==> newCommunitiesData)
         else Future.unit
 
         _ <- Community.e.name_.get.map(_.size ==> 157)
@@ -525,7 +525,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
 
 
         // Find belltown by its updated name and confirm that the url is also updated
-        _ <- Community.name_("belltown 2").url.get === List("url 2")
+        _ <- Community.name_("belltown 2").url.get.map(_ ==> List("url 2"))
 
 
         // Many-cardinality attributes..........................
@@ -555,18 +555,18 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         // Mixing updates and deletes..........................
 
         // Values before
-        _ <- Community.name("belltown 2").tpe.url.category.get === List(
+        _ <- Community.name("belltown 2").tpe.url.category.get.map(_ ==> List(
           ("belltown 2", "blog", "url 2", Set("Super cool news", "extra category"))
-        )
+        ))
 
         // Applying nothing (empty parenthesises) finds and retract all values of an attribute
         _ <- Community(belltown).name("belltown 3").url().category().update
 
         // Belltown has no longer a url or any categories
-        _ <- Community.name("belltown 3").tpe.url.category.get === List()
+        _ <- Community.name("belltown 3").tpe.url.category.get.map(_ ==> List())
 
         // ..but we still have a belltown with a name and type
-        _ <- Community.name("belltown 3").tpe.get === List(("belltown 3", "blog"))
+        _ <- Community.name("belltown 3").tpe.get.map(_ ==> List(("belltown 3", "blog")))
 
 
         // Retract entities ...................................

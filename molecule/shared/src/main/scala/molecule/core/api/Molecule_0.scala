@@ -187,7 +187,7 @@ trait Molecule_0[Obj, Tpl]
     *     result <- Person.name.age.getAsync
     *   } yield {
     *     // Data was saved
-    *     result.head === ("Ben", 42)
+    *     result.head ==> ("Ben", 42)
     *   }
     * }}}
     * The save operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
@@ -197,8 +197,8 @@ trait Molecule_0[Obj, Tpl]
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
     */
   def save(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
+    VerifyModel(_model, "save")
     conn.flatMap { conn =>
-      VerifyModel(_model, "save")
       if (conn.isJsPlatform) {
         for {
           saveStmts <- conn.modelTransformer(_model).saveStmts
@@ -222,8 +222,8 @@ trait Molecule_0[Obj, Tpl]
     * @return Transaction statements
     */
   def getSaveStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
+    VerifyModel(_model, "save")
     conn.flatMap { conn =>
-      VerifyModel(_model, "save")
       conn.modelTransformer(_model).saveStmts
     }
   } catch {
@@ -302,8 +302,8 @@ trait Molecule_0[Obj, Tpl]
 
   protected def _insert(conn: Future[Conn], dataRows: Iterable[Seq[Any]])
                        (implicit ec: ExecutionContext): Future[TxReport] = try {
+    VerifyModel(_model, "insert")
     conn.flatMap { conn =>
-      VerifyModel(_model, "insert")
       if (conn.isJsPlatform) {
         for {
           insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
@@ -324,8 +324,8 @@ trait Molecule_0[Obj, Tpl]
     conn: Future[Conn],
     dataRows: Iterable[Seq[Any]]
   )(implicit ec: ExecutionContext): Future[Seq[Statement]] = try {
+    VerifyModel(_model, "insert")
     conn.flatMap { conn =>
-      VerifyModel(_model, "insert")
       conn.modelTransformer(_model).insertStmts(untupled(dataRows))
     }
   } catch {
@@ -356,8 +356,8 @@ trait Molecule_0[Obj, Tpl]
     * @return [[molecule.datomic.base.facade.TxReport TxReport]]
     */
   def update(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
+    VerifyModel(_model, "update")
     conn.flatMap { conn =>
-      VerifyModel(_model, "update")
       if (conn.isJsPlatform) {
         for {
           updateStmts <- conn.modelTransformer(_model).updateStmts
@@ -382,8 +382,8 @@ trait Molecule_0[Obj, Tpl]
     * @return
     */
   def getUpdateStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
+    VerifyModel(_model, "update")
     conn.flatMap { conn =>
-      VerifyModel(_model, "update")
       conn.modelTransformer(_model).updateStmts
     }
   } catch {

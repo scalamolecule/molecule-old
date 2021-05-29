@@ -96,7 +96,7 @@
 ////
 ////      Ns.uri(uri1).inspectSave
 ////      Ns.uri(uri1).save
-////      Ns.uri.get === List(uri1)
+////      Ns.uri.get.map(_ ==> List(uri1))
 ////
 ////
 ////
@@ -207,7 +207,7 @@
 //  //    println(tx2)
 //  //
 //  //
-//  //    lit_Book.title.get.head === "yeah"
+//  //    lit_Book.title.get.map(_.head ==> "yeah")
 //  //
 //  //    ok
 //  //  }
@@ -239,7 +239,7 @@
 //  //    val communities = m(Community. e.name_)
 //  //
 //  //    // We have 150 communities
-//  //    communities.get.size === 150
+//  //    communities.get.map(_.size ==> 150)
 //  //  }
 //  //
 //  //  "adhoc" in new BidirectionalSetup {

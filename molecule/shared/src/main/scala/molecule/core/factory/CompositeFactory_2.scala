@@ -54,7 +54,7 @@ trait CompositeFactory_2_2 {
     *   val personsAgeScore = m(Person.name.age_(?) + Tag.score_(?))
     *
     *   // At runtime, `age` and `score` values are applied to get the Person's name
-    *   personsAgeScore(42, 7).get.head === "Ben"
+    *   personsAgeScore(42, 7).get.map(_.head ==> "Ben")
     * }}}
     * Composite input molecules of arity 1 has only one sub-molecule with output attribute(s).
     * If the sub-molecule has multiple output attributes, a tuple is returned, otherwise
@@ -75,7 +75,7 @@ trait CompositeFactory_2_2 {
     * }}}
     * So, given 2 output attributes, a tuple is returned:
     * {{{
-    *   m(Person.name.age(?) + Tag.score_(?))(42, 7).get.head === ("Ben", 42)
+    *   m(Person.name.age(?) + Tag.score_(?))(42, 7).get.map(_.head ==> ("Ben", 42))
     *   //  A   . a1 . a2(?) +  B .   b1_(?)                   => (  a1 , a2)
     * }}}
     *
@@ -107,7 +107,7 @@ trait CompositeFactory_2_2 {
     *   val personsAgeScore = m(Person.name.age_(?) + Tag.score(?))
     *
     *   // At runtime, `age` and `score` values are applied to get the Person's name
-    *   personsAgeScore(42, 7).get.head === ("Ben", 7)
+    *   personsAgeScore(42, 7).get.map(_.head ==> ("Ben", 7))
     * }}}
     * Composite input molecules of arity 2 has two sub-molecules with output attribute(s). If a sub-molecule
     * has multiple output attributes, a tuple is returned, otherwise just the single value. The two
@@ -125,14 +125,14 @@ trait CompositeFactory_2_2 {
     * }}}
     * Translating into the example:
     * {{{
-    *   m(Person.name(?)     + Tag.score(?)      )("Ben", 7).get.head === ("Ben", 7)
-    *   m(Person.name(?)     + Tag.score(?).flags)("Ben", 7).get.head === ("Ben", (7, 3))
-    *   m(Person.name.age(?) + Tag.score(?)      )(42, 7)   .get.head === (("Ben", 42), 7)
-    *   m(Person.name.age(?) + Tag.score(?).flags)(42, 7)   .get.head === (("Ben", 42), (7, 3))
+    *   m(Person.name(?)     + Tag.score(?)      )("Ben", 7).get.map(_.head ==> ("Ben", 7))
+    *   m(Person.name(?)     + Tag.score(?).flags)("Ben", 7).get.map(_.head ==> ("Ben", (7, 3)))
+    *   m(Person.name.age(?) + Tag.score(?)      )(42, 7)   .get.map(_.head ==> (("Ben", 42), 7))
+    *   m(Person.name.age(?) + Tag.score(?).flags)(42, 7)   .get.map(_.head ==> (("Ben", 42), (7, 3)))
     *
     *   m(Person.name.age +
     *     Tag.score(?).flags +
-    *     Cat.name_(?))(7, "pitcher").get.head === (("Ben", 42), (7, 3))
+    *     Cat.name_(?))(7, "pitcher").get.map(_.head ==> (("Ben", 42), (7, 3)))
     * }}}
     *
     * @group composite2

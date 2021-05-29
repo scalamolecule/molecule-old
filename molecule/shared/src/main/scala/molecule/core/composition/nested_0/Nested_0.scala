@@ -4,7 +4,7 @@ package molecule.core.composition.nested_0
   * <br><br>
   * Related data of cardinality-many referenced entities can be queried in a "flat" way:
   * {{{
-  *   m(Order.no.LineItem.product.price.quantity).get === List(
+  *   m(Order.no.LineItem.product.price.quantity).get.map(_ ==> List(
   *     (23, "Chocolate", 48.00, 1),
   *     (23, "Whisky", 38.00, 2)
   *   )
@@ -12,7 +12,7 @@ package molecule.core.composition.nested_0
   * For convenience, Molecule offers to automatically nest the same data so that
   * redundancy is avoided and we can work straight on the hierarchical data:
   * {{{
-  *   m(Order.no * LineItem.product.price.quantity).get === List(
+  *   m(Order.no * LineItem.product.price.quantity).get.map(_ ==> List(
   *     (23, List(("Chocolate", 48.00, 1), ("Whisky", 38.00, 2)))
   *   )
   * }}}

@@ -13,15 +13,15 @@ import molecule.core.generic.AEVT._
   * or more arguments and then add generic attributes:
   * {{{
   *   // Create AEVT Index molecule with 1 entity id argument
-  *   AEVT(":Person/name").e.v.t.get === List(
+  *   AEVT(":Person/name").e.v.t.get.map(_ ==> List(
   *     (e1, "Ben", t2),
   *     (e2, "Liz", t5)
-  *   )
+  *   ))
   *
   *   // Narrow search with multiple arguments
-  *   AEVT(":Person/name", e1).e.v.get === List( (e1, "Ben") )
-  *   AEVT(":Person/name", e1, "Ben").e.v.get === List( (e1, "Ben") )
-  *   AEVT(":Person/name", e1, "Ben", t2).e.v.get === List( (e1, "Ben") )
+  *   AEVT(":Person/name", e1).e.v.get.map(_ ==> List( (e1, "Ben") ))
+  *   AEVT(":Person/name", e1, "Ben").e.v.get.map(_ ==> List( (e1, "Ben") ))
+  *   AEVT(":Person/name", e1, "Ben", t2).e.v.get.map(_ ==> List( (e1, "Ben") ))
   * }}}
   *
   * Index attributes available:

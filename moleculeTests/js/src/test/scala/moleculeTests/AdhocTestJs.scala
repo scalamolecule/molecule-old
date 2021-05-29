@@ -13,7 +13,6 @@ object AdhocTestJs extends AsyncTestSuite {
   lazy val tests = Tests {
 
     "hej" - core { implicit conn =>
-
 //      m(Ns.int)
 //      m(Ns.int(count))
 

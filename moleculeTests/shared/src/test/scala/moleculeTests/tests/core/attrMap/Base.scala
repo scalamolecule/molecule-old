@@ -2,13 +2,11 @@ package moleculeTests.tests.core.attrMap
 
 import java.net.URI
 import java.util.{Date, UUID}
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
-import utest._
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import moleculeTests.tests.core.base.dsl.CoreTest._
+import scala.concurrent.{ExecutionContext, Future}
 
 trait Base extends AsyncTestSuite {
 

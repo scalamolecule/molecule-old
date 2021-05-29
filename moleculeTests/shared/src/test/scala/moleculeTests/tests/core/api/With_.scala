@@ -1,7 +1,5 @@
 package moleculeTests.tests.core.api
 
-import java.io.FileReader
-import java.util.{List => jList}
 import molecule.core.util.JavaUtil
 import molecule.datomic.api.out1._
 import moleculeTests.setup.AsyncTestSuite
@@ -23,15 +21,15 @@ object With_ extends AsyncTestSuite with JavaUtil {
 
         // For transaction of raw data, please se test in jvm: tests.api.jvm.With_
 
-        _ <- Ns.int.getWith(saveTx2) === List(1, 2)
-        _ <- Ns.int.getWith(saveTx2, saveTx3) === List(1, 2, 3)
+        _ <- Ns.int.getWith(saveTx2).map(_ ==> List(1, 2))
+        _ <- Ns.int.getWith(saveTx2, saveTx3).map(_ ==> List(1, 2, 3))
         // Note how the parameter for number of rows returned is first (since we
         // need the vararg for tx molecules last)
-        _ <- Ns.int.getWith(2, saveTx2, saveTx3) === List(1, 2)
+        _ <- Ns.int.getWith(2, saveTx2, saveTx3).map(_ ==> List(1, 2))
 
-        _ <- Ns.int.getArrayWith(saveTx2) === Array(1, 2)
-        _ <- Ns.int.getArrayWith(saveTx2, saveTx3) === Array(1, 2, 3)
-        _ <- Ns.int.getArrayWith(2, saveTx2, saveTx3) === Array(1, 2)
+        _ <- Ns.int.getArrayWith(saveTx2).map(_ ==> Array(1, 2))
+        _ <- Ns.int.getArrayWith(saveTx2, saveTx3).map(_ ==> Array(1, 2, 3))
+        _ <- Ns.int.getArrayWith(2, saveTx2, saveTx3).map(_ ==> Array(1, 2))
 
         _ <- Ns.int.getIterableWith(saveTx2).map(_.iterator.toList ==> Iterator(1, 2).toList)
         _ <- Ns.int.getIterableWith(saveTx2, saveTx3).map(_.iterator.toList ==> Iterator(1, 2, 3).toList)

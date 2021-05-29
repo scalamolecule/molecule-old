@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.edgeOther
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import molecule.datomic.api.in1_out4._
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.api.in1_out4._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -22,8 +22,8 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
 
           // Bidirectional property edge has been inserted
           // Note how we query differently from each end
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
-          _ <- favoritePersonOf("Rex").get === List((7, "Ann"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
+          _ <- favoritePersonOf("Rex").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
 
@@ -36,8 +36,8 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
           _ <- Animal.name.Favorite.weight.person.insert("Rex", 7, ann)
 
           // Bidirectional property edge has been inserted
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
-          _ <- favoritePersonOf("Rex").get === List((7, "Ann"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
+          _ <- favoritePersonOf("Rex").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
     }
@@ -56,8 +56,8 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
           _ <- Person.name.favorite.insert("Ann", favoriteRex)
 
           // Ann loves Rex and Rex loves Ann - that is 70% love
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
-          _ <- favoritePersonOf("Rex").get === List((7, "Ann"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
+          _ <- favoritePersonOf("Rex").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
 
@@ -74,8 +74,8 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
           _ <- Person.name.favorite.insert("Ann", rexFavorite)
 
           // Ann loves Rex and Rex loves Ann - that is 70% love
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
-          _ <- favoritePersonOf("Rex").get === List((7, "Ann"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
+          _ <- favoritePersonOf("Rex").get.map(_ ==> List((7, "Ann")))
 
         } yield ()
       }
@@ -83,21 +83,17 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
 
 
     "base/edge - <missing target>" - bidirectional { implicit conn =>
-      //      for {
-      //    // Can't allow edge without ref to target entity
-      //    (Person.name.Favorite.weight.insert must throwA[VerifyModelException])
-      //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-      //      s"[edgeComplete]  Missing target namespace after edge namespace `Favorite`."
-      //    } yield ()
+      // Can't allow edge without ref to target entity
+      Person.name.Favorite.weight.insert("Don", 5).recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Favorite`."
+      }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
-      //      for {
-      //    // Edge always have to have a ref to a target entity
-      //    (Favorite.weight.insert must throwA[VerifyModelException])
-      //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-      //      s"[edgeComplete]  Missing target namespace somewhere after edge property `Favorite/weight`."
-      //  } yield ()
+      // Edge always have to have a ref to a target entity
+      Favorite.weight.insert(5).recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Favorite/weight`."
+      }
     }
   }
 }

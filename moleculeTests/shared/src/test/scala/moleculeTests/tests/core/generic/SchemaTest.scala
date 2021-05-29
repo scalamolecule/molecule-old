@@ -1,6 +1,5 @@
 package moleculeTests.tests.core.generic
 
-import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out3._
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
@@ -24,20 +23,20 @@ object SchemaTest extends AsyncTestSuite {
 
       "part" - partition { implicit conn =>
         for {
-          _ <- Schema.part.get === List("lit", "gen")
+          _ <- Schema.part.get.map(_ ==> List("lit", "gen"))
 
-          _ <- Schema.part("gen").get === List("gen")
-          _ <- Schema.part("gen", "lit").get === List("lit", "gen")
+          _ <- Schema.part("gen").get.map(_ ==> List("gen"))
+          _ <- Schema.part("gen", "lit").get.map(_ ==> List("lit", "gen"))
 
-          _ <- Schema.part.not("gen").get === List("lit")
-          _ <- Schema.part.not("gen", "lit").get === Nil
+          _ <- Schema.part.not("gen").get.map(_ ==> List("lit"))
+          _ <- Schema.part.not("gen", "lit").get.map(_ ==> Nil)
 
           // All Schema attributes can be compared. But maybe not that useful,
           // so this is only tested here:
-          _ <- Schema.part.>("gen").get === List("lit")
-          _ <- Schema.part.>=("gen").get === List("lit", "gen")
-          _ <- Schema.part.<=("gen").get === List("gen")
-          _ <- Schema.part.<("gen").get === Nil
+          _ <- Schema.part.>("gen").get.map(_ ==> List("lit"))
+          _ <- Schema.part.>=("gen").get.map(_ ==> List("lit", "gen"))
+          _ <- Schema.part.<=("gen").get.map(_ ==> List("gen"))
+          _ <- Schema.part.<("gen").get.map(_ ==> Nil)
 
           _ <- Schema.part.get.map(_.length ==> 2)
 
@@ -59,7 +58,7 @@ object SchemaTest extends AsyncTestSuite {
 
           // Negate tacit partition
           _ <- Schema.part_.not("lit").ns.get.map(_.sorted ==> List("Person", "Profession"))
-          _ <- Schema.part_.not("gen", "lit").ns.get === Nil
+          _ <- Schema.part_.not("gen", "lit").ns.get.map(_ ==> Nil)
         } yield ()
       }
 
@@ -71,11 +70,11 @@ object SchemaTest extends AsyncTestSuite {
           // Namespaces without partition prefix
           _ <- Schema.ns.get.map(_.sorted ==> List("Book", "Person", "Profession"))
 
-          _ <- Schema.nsFull("gen_Profession").get === List("gen_Profession")
+          _ <- Schema.nsFull("gen_Profession").get.map(_ ==> List("gen_Profession"))
           _ <- Schema.nsFull("gen_Profession", "lit_Book").get.map(_.sorted ==> List("gen_Profession", "lit_Book"))
 
           _ <- Schema.nsFull.not("gen_Profession").get.map(_.sorted ==> List("gen_Person", "lit_Book"))
-          _ <- Schema.nsFull.not("gen_Profession", "lit_Book").get === List("gen_Person")
+          _ <- Schema.nsFull.not("gen_Profession", "lit_Book").get.map(_ ==> List("gen_Person"))
 
           _ <- Schema.nsFull.get.map(_.length ==> 3)
 
@@ -102,7 +101,7 @@ object SchemaTest extends AsyncTestSuite {
           ))
 
           // Enum
-          _ <- Schema.part_("gen").ns_("Person").attr_("gender").enum.get === List("female", "male")
+          _ <- Schema.part_("gen").ns_("Person").attr_("gender").enum.get.map(_ ==> List("female", "male"))
 
           // All enums grouped by attribute
           _ <- Schema.a.enum.get.map(_.groupBy(_._1).map(g => g._1 -> g._2.map(_._2).sorted) ==> Map(
@@ -120,10 +119,10 @@ object SchemaTest extends AsyncTestSuite {
         for {
           _ <- Schema.id.get.map(_.size ==> attrCount)
 
-          _ <- Schema.id.get(5) === List(97, 98, 99, 100, 101)
+          _ <- Schema.id.get(5).map(_ ==> List(97, 98, 99, 100, 101))
 
-          _ <- Schema.id(97).get(5) === List(97)
-          _ <- Schema.id(97, 98).get(5) === List(97, 98)
+          _ <- Schema.id(97).get(5).map(_ ==> List(97))
+          _ <- Schema.id(97, 98).get(5).map(_ ==> List(97, 98))
 
           _ <- Schema.id.not(97).get.map(_.size ==> attrCount - 1)
           _ <- Schema.id.not(97, 98).get.map(_.size ==> attrCount - 2)
@@ -132,11 +131,11 @@ object SchemaTest extends AsyncTestSuite {
 
           // Since all attributes have an id, a tacit `id_` makes no difference
           _ <- Schema.id_.attr.get.map(_.size ==> attrCount)
-          _ <- Schema.id_.attr.get(3) === List("double", "str1", "uri")
+          _ <- Schema.id_.attr.get(3).map(_ ==> List("double", "str1", "uri"))
 
           // We can though filter by one or more tacit attribute ids
-          _ <- Schema.id_(a1).attr.get === List("uuidMap")
-          _ <- Schema.id_(a2, a3).attr.get === List("bigIntMap", "bigDecMap")
+          _ <- Schema.id_(a1).attr.get.map(_ ==> List("uuidMap"))
+          _ <- Schema.id_(a2, a3).attr.get.map(_ ==> List("bigIntMap", "bigDecMap"))
 
           _ <- Schema.id_.not(a1).attr.get.map(_.size ==> attrCount - 1)
           _ <- Schema.id_.not(a2, a3).attr.get.map(_.size ==> attrCount - 2)
@@ -147,10 +146,10 @@ object SchemaTest extends AsyncTestSuite {
       "a" - core { implicit conn =>
         for {
           _ <- Schema.a.get.map(_.size ==> attrCount)
-          _ <- Schema.a.get(3) === List(":Ns/double", ":Ns/doubleMap", ":Ref2/ints2")
+          _ <- Schema.a.get(3).map(_ ==> List(":Ns/double", ":Ns/doubleMap", ":Ref2/ints2"))
 
-          _ <- Schema.a(":Ns/str").get === List(":Ns/str")
-          _ <- Schema.a(":Ns/str", ":Ns/int").get === List(":Ns/int", ":Ns/str")
+          _ <- Schema.a(":Ns/str").get.map(_ ==> List(":Ns/str"))
+          _ <- Schema.a(":Ns/str", ":Ns/int").get.map(_ ==> List(":Ns/int", ":Ns/str"))
 
           _ <- Schema.a.not(":Ns/str").get.map(_.size ==> attrCount - 1)
           _ <- Schema.a.not(":Ns/str", ":Ns/int").get.map(_.size ==> attrCount - 2)
@@ -183,13 +182,10 @@ object SchemaTest extends AsyncTestSuite {
 
 
       "part when not defined" - core { implicit conn =>
-        for {
+        // Default `db.part/user` partition name returned when no custom partitions are defined
+        Schema.part.get.map(_ ==> List("db.part/user"))
 
-          // Default `db.part/user` partition name returned when no custom partitions are defined
-          _ <- Schema.part.get === List("db.part/user")
-
-          // Note that when no custom partitions are defined, namespaces are not prefixed with any partition name
-        } yield ()
+        // Note that when no custom partitions are defined, namespaces are not prefixed with any partition name
       }
 
 
@@ -199,10 +195,10 @@ object SchemaTest extends AsyncTestSuite {
           // - when partitions are defined: concatenates `part` + `ns`
           // - when partitions are not defined: `ns` starting with lower case letter
 
-          _ <- Schema.nsFull.get === List("Ns", "Ref4", "Ref2", "Ref3", "Ref1")
+          _ <- Schema.nsFull.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
 
-          _ <- Schema.nsFull("Ref1").get === List("Ref1")
-          _ <- Schema.nsFull("Ref1", "Ref2").get === List("Ref2", "Ref1")
+          _ <- Schema.nsFull("Ref1").get.map(_ ==> List("Ref1"))
+          _ <- Schema.nsFull("Ref1", "Ref2").get.map(_ ==> List("Ref2", "Ref1"))
 
           _ <- Schema.nsFull.not("Ref1").get.map(_.sorted ==> List("Ns", "Ref2", "Ref3", "Ref4"))
           _ <- Schema.nsFull.not("Ref1", "Ref2").get.map(_.sorted ==> List("Ns", "Ref3", "Ref4"))
@@ -251,12 +247,12 @@ object SchemaTest extends AsyncTestSuite {
 
       "ns" - core { implicit conn =>
         for {
-          _ <- Schema.ns.get === List("Ns", "Ref4", "Ref2", "Ref3", "Ref1")
+          _ <- Schema.ns.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
 
-          _ <- Schema.nsFull.get === List("Ns", "Ref4", "Ref2", "Ref3", "Ref1")
+          _ <- Schema.nsFull.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
 
-          _ <- Schema.ns("Ref1").get === List("Ref1")
-          _ <- Schema.ns("Ref1", "Ref2").get === List("Ref2", "Ref1")
+          _ <- Schema.ns("Ref1").get.map(_ ==> List("Ref1"))
+          _ <- Schema.ns("Ref1", "Ref2").get.map(_ ==> List("Ref2", "Ref1"))
 
           _ <- Schema.ns.not("Ref1").get.map(_.sorted ==> List("Ns", "Ref2", "Ref3", "Ref4"))
           _ <- Schema.ns.not("Ref1", "Ref2").get.map(_.sorted ==> List("Ns", "Ref3", "Ref4"))
@@ -309,12 +305,12 @@ object SchemaTest extends AsyncTestSuite {
         for {
           _ <- Schema.attr.get.map(_.size ==> attrCount)
           _ <- if (system == SystemPeer)
-            Schema.attr.get(5) === List("double", "str1", "uri", "dates", "enum")
+            Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates", "enum"))
           else
-            Schema.attr.get(5) === List("double", "str1", "uri", "dates")
+            Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates"))
 
-          _ <- Schema.attr("str").get === List("str")
-          _ <- Schema.attr("str", "int").get === List("str", "int")
+          _ <- Schema.attr("str").get.map(_ ==> List("str"))
+          _ <- Schema.attr("str", "int").get.map(_ ==> List("str", "int"))
 
           _ <- Schema.attr.not("str").get.map(_.size ==> attrCount - 1)
           _ <- Schema.attr.not("str", "int").get.map(_.size ==> attrCount - 2)
@@ -351,7 +347,6 @@ object SchemaTest extends AsyncTestSuite {
 
       "tpe" - core { implicit conn =>
         for {
-
           // Datomic types of schema attributes
           // Note that attributes defined being of Scala type
           // - `Integer` are internally saved as type `long` in Datomic
@@ -384,8 +379,8 @@ object SchemaTest extends AsyncTestSuite {
               "uuid",
             ))
 
-          _ <- Schema.tpe("string").get === List("string")
-          _ <- Schema.tpe("string", "long").get === List("string", "long")
+          _ <- Schema.tpe("string").get.map(_ ==> List("string"))
+          _ <- Schema.tpe("string", "long").get.map(_ ==> List("string", "long"))
 
           _ <- if (system == SystemPeer) {
             for {
@@ -465,13 +460,13 @@ object SchemaTest extends AsyncTestSuite {
 
       "card" - core { implicit conn =>
         for {
-          _ <- Schema.card.get === List("one", "many")
+          _ <- Schema.card.get.map(_ ==> List("one", "many"))
 
-          _ <- Schema.card("one").get === List("one")
-          _ <- Schema.card("one", "many").get === List("one", "many")
+          _ <- Schema.card("one").get.map(_ ==> List("one"))
+          _ <- Schema.card("one", "many").get.map(_ ==> List("one", "many"))
 
-          _ <- Schema.card.not("one").get === List("many")
-          _ <- Schema.card.not("one", "many").get === Nil
+          _ <- Schema.card.not("one").get.map(_ ==> List("many"))
+          _ <- Schema.card.not("one", "many").get.map(_ ==> Nil)
 
 
           // Since all attributes have a cardinality, a tacit `card_` makes no difference
@@ -499,40 +494,38 @@ object SchemaTest extends AsyncTestSuite {
       "doc" - core { implicit conn =>
         for {
           // 2 core attributes are documented
-          _ <- Schema.doc.get === List(
+          _ <- Schema.doc.get.map(_ ==> List(
             "Card one String attribute",
             "Card one Int attribute"
-          )
+          ))
           // See what attributes is
-          _ <- Schema.a.doc.get === List(
+          _ <- Schema.a.doc.get.map(_ ==> List(
             (":Ns/str", "Card one String attribute"),
             (":Ns/int", "Card one Int attribute")
-          )
+          ))
 
           // Filtering by a complete `doc_` is probably not that useful
-          _ <- Schema.doc("Card one Int attribute").get === List(
-            "Card one Int attribute")
+          _ <- Schema.doc("Card one Int attribute").get.map(_ ==> List(
+            "Card one Int attribute"))
           // .. likely the same for negation
-          _ <- Schema.doc.not("Card one String attribute").get === List(
-            "Card one Int attribute")
+          _ <- Schema.doc.not("Card one String attribute").get.map(_ ==> List(
+            "Card one Int attribute"))
 
           // Docs only searchable with Peer (requires fulltext search)
           _ <- if (system == SystemPeer) {
             for {
-
               // Instead, use fulltext search for a whole word in doc texts
-              _ <- Schema.doc.contains("Int").get === List(
+              _ <- Schema.doc.contains("Int").get.map(_ ==> List(
                 "Card one Int attribute"
-              )
-              res <- Schema.doc.contains("attribute").get === List(
+              ))
+              res <- Schema.doc.contains("attribute").get.map(_ ==> List(
                 "Card one String attribute",
                 "Card one Int attribute"
-              )
-                      // Fulltext search for multiple words not allowed
-                      _ = compileError(
-                        """m(Schema.doc.contains("Int", "String"))""").check(
-                        "molecule.datomic.base.transform.exception.Model2QueryException: " +
-                          "Fulltext search can only be performed with 1 search phrase.")
+              ))
+              // Fulltext search for multiple words not allowed
+              _ = compileError("""m(Schema.doc.contains("Int", "String"))""").check("",
+                "molecule.datomic.base.transform.exception.Model2QueryException: " +
+                  "Fulltext search can only be performed with 1 search phrase.")
             } yield res
           } else Future.unit
 
@@ -543,35 +536,35 @@ object SchemaTest extends AsyncTestSuite {
           _ <- Schema.doc_.a.get.map(_.size ==> 2)
 
           // Filtering by a complete tacit `doc_` text is probably not that useful
-          _ <- Schema.doc_("Card one Int attribute").a.get === List(":Ns/int")
+          _ <- Schema.doc_("Card one Int attribute").a.get.map(_ ==> List(":Ns/int"))
           // .. likely the same for negation
-          _ <- Schema.doc_.not("Card one Int attribute").a.get === List(":Ns/str")
+          _ <- Schema.doc_.not("Card one Int attribute").a.get.map(_ ==> List(":Ns/str"))
 
 
           // Docs only searchable with Peer (requires fulltext search)
           _ <- if (system == SystemPeer) {
             for {
               // Tacit fulltext search in doc texts
-              _ <- Schema.doc_.contains("Int").a.get === List(":Ns/int")
-              res <- Schema.doc_.contains("one").a.get === List(":Ns/int", ":Ns/str")
+              _ <- Schema.doc_.contains("Int").a.get.map(_ ==> List(":Ns/int"))
+              res <- Schema.doc_.contains("one").a.get.map(_ ==> List(":Ns/int", ":Ns/str"))
             } yield res
           } else Future.unit
 
           // Get optional attribute doc text with `doc$`
-          _ <- Schema.attr_("bool", "str").a.doc$.get === List(
+          _ <- Schema.attr_("bool", "str").a.doc$.get.map(_ ==> List(
             (":Ns/str", Some("Card one String attribute")),
             (":Ns/bool", None),
-          )
+          ))
 
           // Filter by applying optional attribute doc text string
           someDocText1 = Some("Card one String attribute")
           someDocText2 = None
-          _ <- Schema.attr_("bool", "str").a.doc$(someDocText1).get === List(
+          _ <- Schema.attr_("bool", "str").a.doc$(someDocText1).get.map(_ ==> List(
             (":Ns/str", Some("Card one String attribute"))
-          )
-          _ <- Schema.attr_("bool", "str").a.doc$(someDocText2).get === List(
+          ))
+          _ <- Schema.attr_("bool", "str").a.doc$(someDocText2).get.map(_ ==> List(
             (":Ns/bool", None),
-          )
+          ))
         } yield ()
       }
 
@@ -582,7 +575,7 @@ object SchemaTest extends AsyncTestSuite {
             // Index option only available in Peer
 
             // All attributes are indexed
-            _ <- Schema.index.get === List(true) // no false
+            _ <- Schema.index.get.map(_ ==> List(true)) // no false
             _ <- Schema.a.index.get.map(_.size ==> attrCount)
 
             _ <- Schema.a.index(true).get.map(_.size ==> attrCount)
@@ -604,25 +597,25 @@ object SchemaTest extends AsyncTestSuite {
 
 
             // Get optional attribute indexing status with `index$`
-            _ <- Schema.attr_("bool", "str").a.index$.get === List(
+            _ <- Schema.attr_("bool", "str").a.index$.get.map(_ ==> List(
               (":Ns/str", Some(true)),
               (":Ns/bool", Some(true)),
-            )
+            ))
 
             // Filter by applying optional attribute indexing status
             some = Some(true)
-            _ <- Schema.attr_("bool", "str").a.index$(some).get === List(
+            _ <- Schema.attr_("bool", "str").a.index$(some).get.map(_ ==> List(
               (":Ns/bool", Some(true)),
               (":Ns/str", Some(true)),
-            )
-            _ <- Schema.attr_("bool", "str").a.index$(Some(true)).get === List(
+            ))
+            _ <- Schema.attr_("bool", "str").a.index$(Some(true)).get.map(_ ==> List(
               (":Ns/bool", Some(true)),
               (":Ns/str", Some(true)),
-            )
+            ))
 
             none = None
-            _ <- Schema.attr_("bool", "str").a.index$(none).get === Nil
-            _ <- Schema.attr_("bool", "str").a.index$(None).get === Nil
+            _ <- Schema.attr_("bool", "str").a.index$(none).get.map(_ ==> Nil)
+            _ <- Schema.attr_("bool", "str").a.index$(None).get.map(_ ==> Nil)
           } yield ()
         }
       }
@@ -631,25 +624,25 @@ object SchemaTest extends AsyncTestSuite {
       "unique" - core { implicit conn =>
         for {
           // Unique options
-          _ <- Schema.unique.get === List("identity", "value")
+          _ <- Schema.unique.get.map(_ ==> List("identity", "value"))
 
           // Unique options
-          _ <- Schema.a.unique.get === List(
+          _ <- Schema.a.unique.get.map(_ ==> List(
             (":Ref2/str2", "identity"),
             (":Ref2/int2", "value"),
-          )
+          ))
 
-          _ <- Schema.a.unique("identity").get === List((":Ref2/str2", "identity"))
-          _ <- Schema.a.unique("value").get === List((":Ref2/int2", "value"))
+          _ <- Schema.a.unique("identity").get.map(_ ==> List((":Ref2/str2", "identity")))
+          _ <- Schema.a.unique("value").get.map(_ ==> List((":Ref2/int2", "value")))
 
-          _ <- Schema.a.unique.not("identity").get === List((":Ref2/int2", "value"))
-          _ <- Schema.a.unique.not("value").get === List((":Ref2/str2", "identity"))
+          _ <- Schema.a.unique.not("identity").get.map(_ ==> List((":Ref2/int2", "value")))
+          _ <- Schema.a.unique.not("value").get.map(_ ==> List((":Ref2/str2", "identity")))
 
           // Filter attributes by tacit `unique_` option
-          _ <- Schema.unique_.a.get === List(":Ref2/int2", ":Ref2/str2")
+          _ <- Schema.unique_.a.get.map(_ ==> List(":Ref2/int2", ":Ref2/str2"))
 
-          _ <- Schema.unique_("identity").a.get === List(":Ref2/str2")
-          _ <- Schema.unique_.not("value").a.get === List(":Ref2/str2")
+          _ <- Schema.unique_("identity").a.get.map(_ ==> List(":Ref2/str2"))
+          _ <- Schema.unique_.not("value").a.get.map(_ ==> List(":Ref2/str2"))
 
           // Get optional attribute indexing status with `index$`
           _ <- Schema.attr_("str", "str2", "int2").a.unique$.get.map(_.sorted ==> List(
@@ -661,19 +654,19 @@ object SchemaTest extends AsyncTestSuite {
           // Filter by applying optional attribute uniqueness status
 
           some1 = Some("identity")
-          _ <- Schema.attr_("str", "str2", "int2").a.unique$(some1).get === List(
+          _ <- Schema.attr_("str", "str2", "int2").a.unique$(some1).get.map(_ ==> List(
             (":Ref2/str2", Some("identity"))
-          )
+          ))
 
           some2 = Some("value")
-          _ <- Schema.attr_("str", "str2", "int2").a.unique$(some2).get === List(
+          _ <- Schema.attr_("str", "str2", "int2").a.unique$(some2).get.map(_ ==> List(
             (":Ref2/int2", Some("value"))
-          )
+          ))
 
           none = None
-          _ <- Schema.attr_("str", "str2", "int2").a.unique$(none).get === List(
+          _ <- Schema.attr_("str", "str2", "int2").a.unique$(none).get.map(_ ==> List(
             (":Ns/str", None)
-          )
+          ))
 
           // Number of non-unique attributes
           _ <- Schema.a.unique$(None).get.map(_.size ==> attrCount - 2)
@@ -686,7 +679,7 @@ object SchemaTest extends AsyncTestSuite {
         if (system == SystemPeer) {
           for {
             // Fulltext options
-            _ <- Schema.fulltext.get === List(true) // no false
+            _ <- Schema.fulltext.get.map(_ ==> List(true)) // no false
 
             // Count attribute fulltext statuses (only true)
             _ <- Schema.fulltext.get.map(_.length ==> 1)
@@ -732,23 +725,23 @@ object SchemaTest extends AsyncTestSuite {
             ))
 
             // Get optional attribute fulltext status with `fulltext$`
-            _ <- Schema.attr_("bool", "str").a.fulltext$.get === List(
+            _ <- Schema.attr_("bool", "str").a.fulltext$.get.map(_ ==> List(
               (":Ns/str", Some(true)),
               (":Ns/bool", None),
-            )
+            ))
 
             // Filter by applying optional attribute fulltext search status
             some = Some(true)
-            _ <- Schema.attr_("bool", "str").a.fulltext$(some).get === List(
-              (":Ns/str", Some(true)))
-            _ <- Schema.attr_("bool", "str").a.fulltext$(Some(true)).get === List(
-              (":Ns/str", Some(true)))
+            _ <- Schema.attr_("bool", "str").a.fulltext$(some).get.map(_ ==> List(
+              (":Ns/str", Some(true))))
+            _ <- Schema.attr_("bool", "str").a.fulltext$(Some(true)).get.map(_ ==> List(
+              (":Ns/str", Some(true))))
 
             none = None
-            _ <- Schema.attr_("bool", "str").a.fulltext$(none).get === List(
-              (":Ns/bool", None))
-            _ <- Schema.attr_("bool", "str").a.fulltext$(None).get === List(
-              (":Ns/bool", None))
+            _ <- Schema.attr_("bool", "str").a.fulltext$(none).get.map(_ ==> List(
+              (":Ns/bool", None)))
+            _ <- Schema.attr_("bool", "str").a.fulltext$(None).get.map(_ ==> List(
+              (":Ns/bool", None)))
 
             // Number of attributes without fulltext search
             _ <- Schema.a.fulltext$(None).get.map(_.size ==> attrCount - 5)
@@ -760,16 +753,16 @@ object SchemaTest extends AsyncTestSuite {
       "isComponent" - core { implicit conn =>
         for {
           // Component status options - either true or non-asserted
-          _ <- Schema.isComponent.get === List(true) // no false
+          _ <- Schema.isComponent.get.map(_ ==> List(true)) // no false
           _ <- Schema.isComponent.get.map(_.length ==> 1)
 
           // Component attributes
-          _ <- Schema.a.isComponent.get === List(
+          _ <- Schema.a.isComponent.get.map(_ ==> List(
             (":Ns/refSub1", true),
             (":Ns/refsSub1", true),
             (":Ref1/refsSub2", true),
             (":Ref1/refSub2", true),
-          )
+          ))
 
           _ <- Schema.a.isComponent(true).get.map(_.size ==> 4)
           // Option is either true or non-asserted (nil/None), never false
@@ -779,24 +772,24 @@ object SchemaTest extends AsyncTestSuite {
           _ <- Schema.a.isComponent.not(false).get.map(_.size ==> 4)
 
           // Filter attributes with tacit `isComponent_` option
-          _ <- Schema.isComponent_.a.get === List(
+          _ <- Schema.isComponent_.a.get.map(_ ==> List(
             ":Ns/refsSub1",
             ":Ref1/refSub2",
             ":Ref1/refsSub2",
             ":Ns/refSub1",
-          )
-          _ <- Schema.isComponent_(true).a.get === List(
+          ))
+          _ <- Schema.isComponent_(true).a.get.map(_ ==> List(
             ":Ns/refsSub1",
             ":Ref1/refSub2",
             ":Ref1/refsSub2",
             ":Ns/refSub1",
-          )
-          _ <- Schema.isComponent_.not(false).a.get === List(
+          ))
+          _ <- Schema.isComponent_.not(false).a.get.map(_ ==> List(
             ":Ns/refsSub1",
             ":Ref1/refSub2",
             ":Ref1/refsSub2",
             ":Ns/refSub1",
-          )
+          ))
 
           // Get optional attribute component status with `isComponent$`
           _ <- Schema.attr_("bool", "refSub1").a.isComponent$.get.map(_.sorted ==> List(
@@ -806,18 +799,18 @@ object SchemaTest extends AsyncTestSuite {
 
           // Filter by applying optional attribute component status
           some = Some(true)
-          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(some).get === List(
-            (":Ns/refSub1", Some(true)))
+          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(some).get.map(_ ==> List(
+            (":Ns/refSub1", Some(true))))
 
-          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(Some(true)).get === List(
-            (":Ns/refSub1", Some(true)))
+          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(Some(true)).get.map(_ ==> List(
+            (":Ns/refSub1", Some(true))))
 
           none = None
-          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(none).get === List(
-            (":Ns/bool", None))
+          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(none).get.map(_ ==> List(
+            (":Ns/bool", None)))
 
-          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(None).get === List(
-            (":Ns/bool", None))
+          _ <- Schema.attr_("bool", "refSub1").a.isComponent$(None).get.map(_ ==> List(
+            (":Ns/bool", None)))
 
           // Number of non-component attributes
           _ <- Schema.a.isComponent$(None).get.map(_.size ==> attrCount - 4)
@@ -828,12 +821,12 @@ object SchemaTest extends AsyncTestSuite {
       "noHistory" - core { implicit conn =>
         for {
           // No-history status options - either true or non-asserted
-          _ <- Schema.noHistory.get === List(true) // no false
+          _ <- Schema.noHistory.get.map(_ ==> List(true)) // no false
           _ <- Schema.noHistory.get.map(_.length ==> 1)
 
           // No-history attributes
-          _ <- Schema.a.noHistory.get === List(
-            (":Ref2/ints2", true)
+          _ <- Schema.a.noHistory.get.map(_ ==> List(
+            (":Ref2/ints2", true))
           )
 
           _ <- Schema.a.noHistory(true).get.map(_.size ==> 1)
@@ -845,9 +838,9 @@ object SchemaTest extends AsyncTestSuite {
 
 
           // Filter attributes with tacit `noHistory_` option
-          _ <- Schema.noHistory_.a.get === List(":Ref2/ints2")
-          _ <- Schema.noHistory_(true).a.get === List(":Ref2/ints2")
-          _ <- Schema.noHistory_.not(false).a.get === List(":Ref2/ints2")
+          _ <- Schema.noHistory_.a.get.map(_ ==> List(":Ref2/ints2"))
+          _ <- Schema.noHistory_(true).a.get.map(_ ==> List(":Ref2/ints2"))
+          _ <- Schema.noHistory_.not(false).a.get.map(_ ==> List(":Ref2/ints2"))
 
 
           // Get optional attribute no-history status with `noHistory$`
@@ -858,18 +851,18 @@ object SchemaTest extends AsyncTestSuite {
 
           // Filter by applying optional attribute no-history status
           some = Some(true)
-          _ <- Schema.attr_("bool", "ints2").a.noHistory$(some).get === List(
-            (":Ref2/ints2", Some(true)))
+          _ <- Schema.attr_("bool", "ints2").a.noHistory$(some).get.map(_ ==> List(
+            (":Ref2/ints2", Some(true))))
 
-          _ <- Schema.attr_("bool", "ints2").a.noHistory$(Some(true)).get === List(
-            (":Ref2/ints2", Some(true)))
+          _ <- Schema.attr_("bool", "ints2").a.noHistory$(Some(true)).get.map(_ ==> List(
+            (":Ref2/ints2", Some(true))))
 
           none = None
-          _ <- Schema.attr_("bool", "ints2").a.noHistory$(none).get === List(
-            (":Ns/bool", None))
+          _ <- Schema.attr_("bool", "ints2").a.noHistory$(none).get.map(_ ==> List(
+            (":Ns/bool", None)))
 
-          _ <- Schema.attr_("bool", "ints2").a.noHistory$(None).get === List(
-            (":Ns/bool", None))
+          _ <- Schema.attr_("bool", "ints2").a.noHistory$(None).get.map(_ ==> List(
+            (":Ns/bool", None)))
 
           // Number of non-component attributes
           _ <- Schema.a.noHistory$(None).get.map(_.size ==> attrCount - 1)
@@ -879,7 +872,6 @@ object SchemaTest extends AsyncTestSuite {
 
     "enum" - core { implicit conn =>
       for {
-
         // Attribute/enum values in namespace `ref2`
         _ <- Schema.ns_("Ref2").attr.enum.get.map(_.sorted ==> List(
           ("enum2", "enum20"),
@@ -907,10 +899,10 @@ object SchemaTest extends AsyncTestSuite {
           "enum5", "enum6", "enum7", "enum8", "enum9"
         ))
 
-        _ <- Schema.a.enum("enum0").get === List(
+        _ <- Schema.a.enum("enum0").get.map(_ ==> List(
           (":Ns/enums", "enum0"),
           (":Ns/enum", "enum0")
-        )
+        ))
 
         _ <- Schema.a.enum("enum0", "enum1").get.map(_.sortBy(r => (r._1, r._2)) ==> List(
           (":Ns/enum", "enum0"),
@@ -982,13 +974,13 @@ object SchemaTest extends AsyncTestSuite {
           txInstant <- conn2.db.txInstant
 
           // Schema transaction time t
-          _ <- Schema.t.get === List(t)
+          _ <- Schema.t.get.map(_ ==> List(t))
 
           // Schema transaction entity id
-          _ <- Schema.tx.get === List(tx)
+          _ <- Schema.tx.get.map(_ ==> List(tx))
 
           // Schema transaction wall clock time
-          _ <- Schema.txInstant.get === List(txInstant)
+          _ <- Schema.txInstant.get.map(_ ==> List(txInstant))
         } yield ()
       }
     }

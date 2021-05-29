@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.edgeSelf
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import molecule.datomic.api.in1_out3._
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.api.in1_out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -20,14 +20,13 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           _ <- Person.name.Loves.weight.Person.name.insert("Ann", 7, "Ben")
 
           // Bidirectional property edge has been inserted
-          _ <- loveOf("Ann").get === List((7, "Ben"))
-          _ <- loveOf("Ben").get === List((7, "Ann"))
+          _ <- loveOf("Ann").get.map(_ ==> List((7, "Ben")))
+          _ <- loveOf("Ben").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name.insert("Ben")
           ben = tx.eid
 
@@ -35,8 +34,8 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           _ <- Person.name.Loves.weight.person.insert("Ann", 7, ben)
 
           // Bidirectional property edge has been inserted
-          _ <- loveOf("Ann").get === List((7, "Ben"))
-          _ <- loveOf("Ben").get === List((7, "Ann"))
+          _ <- loveOf("Ann").get.map(_ ==> List((7, "Ben")))
+          _ <- loveOf("Ben").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
     }
@@ -50,13 +49,12 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           List(lovesBen, benLoves, ben) = tx.eids
 
           /*
-          Ben and bidirectional edges created
+            Ben and bidirectional edges created
 
-                (-->)  lovesBen  -->
-          (Ann)                       Ben
-                (<--)  benLoves  <--
-
-      */
+                  (-->)  lovesBen  -->
+            (Ann)                       Ben
+                  (<--)  benLoves  <--
+          */
 
           // lovesBen edge points to Ben
           _ <- lovesBen.map(_.touchMax(1) ==> Map(
@@ -81,8 +79,8 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           ))
 
           // Two edges pointing to and from Ben
-          _ <- Loves.e.weight_(7).Person.name_("Ben").get === List(lovesBen)
-          _ <- Person.name_("Ben").Loves.weight_(7).e.get === List(benLoves)
+          _ <- Loves.e.weight_(7).Person.name_("Ben").get.map(_ ==> List(lovesBen))
+          _ <- Person.name_("Ben").Loves.weight_(7).e.get.map(_ ==> List(benLoves))
 
           // Base entity Ann points to one of the edges (doesn't matter which of them - Molecule connects Ann to both)
           _ <- Person.name.loves.insert("Ann", lovesBen)
@@ -97,7 +95,6 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.insert("Ben")
           ben = tx1.eid
 
@@ -117,22 +114,18 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
       }
     }
 
-    //"base/edge - <missing target>" - bidirectional {   implicit conn =>
-    //      for {
-    //    // Can't allow edge without ref to target entity
-    //    (Person.name.Loves.weight.insert must throwA[VerifyModelException])
-    //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-    //      s"[edgeComplete]  Missing target namespace after edge namespace `Loves`."
-    //    } yield ()
-    //    }
-    //
-    //"<missing base> - edge - <missing target>" - bidirectional {   implicit conn =>
-    //      for {
-    //    // Edge always have to have a ref to a target entity
-    //    (Loves.weight.insert must throwA[VerifyModelException])
-    //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-    //      s"[edgeComplete]  Missing target namespace somewhere after edge property `Loves/weight`."
-    //  }
-    //  }
+    "base/edge - <missing target>" - bidirectional { implicit conn =>
+      // Can't allow edge without ref to target entity
+      Person.name.Loves.weight.insert("Don", 5).recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Loves`."
+      }
+    }
+
+    "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
+      // Edge always have to have a ref to a target entity
+      Loves.weight.insert(5).recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Loves/weight`."
+      }
+    }
   }
 }

@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.crud.insert
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out6._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -97,7 +97,6 @@ object InsertRelated extends AsyncTestSuite {
 
     "Multiple values across namespaces" - core { implicit conn =>
       for {
-
         _ <- Ns.str.int.Ref1.str1.int1.Ref2.str2.int2.insert("a0", 0, "b1", 1, "c2", 2)
         _ <- Ns.str.int.Ref1.str1.int1.Ref2.str2.int2.get.map(_.head ==> ("a0", 0, "b1", 1, "c2", 2))
 
@@ -124,7 +123,6 @@ object InsertRelated extends AsyncTestSuite {
 
     "Optional values" - core { implicit conn =>
       for {
-
         _ <- Ns.str.Ref1.str1$.Ref2.int2 insert List(
           ("a", Some("aa"), 1),
           ("b", None, 2)
@@ -134,15 +132,14 @@ object InsertRelated extends AsyncTestSuite {
           ("a", Some("aa"), 1),
           ("b", None, 2),
         ))
-        _ <- Ns.str.Ref1.str1.Ref2.int2.get === List(
+        _ <- Ns.str.Ref1.str1.Ref2.int2.get.map(_ ==> List(
           ("a", "aa", 1)
-        )
+        ))
       } yield ()
     }
 
     "Card many references" - core { implicit conn =>
       for {
-
         tx1 <- Ns.int.Refs1.str1.insert(42, "r")
         List(base, ref) = tx1.eids
         _ <- base.map(_.touch ==> Map(

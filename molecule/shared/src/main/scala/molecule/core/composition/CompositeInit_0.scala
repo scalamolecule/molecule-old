@@ -19,27 +19,27 @@ import scala.language.higherKinds
   * of the second sub-molecule. If any of the sub-molecules are of arity-1, then no tuple is created:
   * {{{
   *   // Arity 1 + 1
-  *   m(Article.name + Tag.category).get === List(
+  *   m(Article.name + Tag.category).get.map(_ ==> List(
   *     ("Battle of Waterloo", "History")
   *   )
   *
   *   // Arity 1 + 2
-  *   m(Article.name + Tag.category.weight).get === List(
+  *   m(Article.name + Tag.category.weight).get.map(_ ==> List(
   *     ("Battle of Waterloo", ("History", 5))
   *   )
   *
   *   // Arity 2 + 1
-  *   m(Article.name.author + Tag.category).get === List(
+  *   m(Article.name.author + Tag.category).get.map(_ ==> List(
   *     (("Battle of Waterloo", "Ben Bridge"), "History")
   *   )
   *
   *   // Arity 2 + 2
-  *   m(Article.name.author + Tag.category.weight).get === List(
+  *   m(Article.name.author + Tag.category.weight).get.map(_ ==> List(
   *     (("Battle of Waterloo", "Ben Bridge"), ("History", 5))
   *   )
   *
   *   // Arity 3 + 2 etc...
-  *   m(Article.name.author.editor + Tag.category.weight).get === List(
+  *   m(Article.name.author.editor + Tag.category.weight).get.map(_ ==> List(
   *     (("Battle of Waterloo", "Ben Bridge", "Joe Moe"), ("History", 5))
   *   )
   * }}}

@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.edgeOther
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import molecule.datomic.api.in1_out3._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,17 +32,17 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
         _ <- Person(ann).Favorite.weight(5).Animal.name("Rex").update
 
         // Ann and Rex favorite each other
-        _ <- favoriteAnimalOf("Ann").get === List((5, "Rex"))
-        _ <- favoritePersonOf("Rex").get === List((5, "Ann"))
-        _ <- favoritePersonOf("Zup").get === List() // Zup doesn't exist yet
+        _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
+        _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))
+        _ <- favoritePersonOf("Zup").get.map(_ ==> List()) // Zup doesn't exist yet
 
         // Ann now favorite Zup
         _ <- Person(ann).Favorite.weight(8).Animal.name("Zup").update
 
         // Both bidirectional edges have been added from/to Ann
-        _ <- favoriteAnimalOf("Ann").get === List((8, "Zup"))
-        _ <- favoritePersonOf("Rex").get === List()
-        _ <- favoritePersonOf("Zup").get === List((8, "Ann"))
+        _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((8, "Zup")))
+        _ <- favoritePersonOf("Rex").get.map(_ ==> List())
+        _ <- favoritePersonOf("Zup").get.map(_ ==> List((8, "Ann")))
 
         // Even though Ann now favorite Zup, Rex still exists
         _ <- Person.name.get.map(_.sorted ==> List("Ann"))
@@ -59,16 +59,16 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
 
         _ <- Person(ann).Favorite.weight(5).animal(rex).update
 
-        _ <- favoriteAnimalOf("Ann").get === List((5, "Rex"))
-        _ <- favoritePersonOf("Rex").get === List((5, "Ann"))
-        _ <- favoritePersonOf("Zup").get === List()
+        _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
+        _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))
+        _ <- favoritePersonOf("Zup").get.map(_ ==> List())
 
         // Ann now favorite Zup
         _ <- Person(ann).Favorite.weight(8).animal(zup).update
 
-        _ <- favoriteAnimalOf("Ann").get === List((8, "Zup"))
-        _ <- favoritePersonOf("Rex").get === List()
-        _ <- favoritePersonOf("Zup").get === List((8, "Ann"))
+        _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((8, "Zup")))
+        _ <- favoritePersonOf("Rex").get.map(_ ==> List())
+        _ <- favoritePersonOf("Zup").get.map(_ ==> List((8, "Ann")))
       } yield ()
     }
 
@@ -79,8 +79,8 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
         tx <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save
         List(_, annRex, _, _) = tx.eids
 
-        _ <- favoriteAnimalOf("Ann").get === List((5, "Rex"))
-        _ <- favoritePersonOf("Rex").get === List((5, "Ann"))
+        _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
+        _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))
 
         // Retract edge
         _ <- annRex.map(_.retract)
@@ -98,18 +98,18 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
         tx <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save
         List(_, _, _, rex) = tx.eids
 
-        _ <- favoriteAnimalOf("Ann").get === List((5, "Rex"))
-        _ <- favoritePersonOf("Rex").get === List((5, "Ann"))
+        _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
+        _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))
 
         // Retract base entity with single edge
         _ <- rex.map(_.retract)
 
         // Ann becomes widow
-        _ <- Person.name("Ann").get === List("Ann")
-        _ <- Animal.name("Rex").get === List()
+        _ <- Person.name("Ann").get.map(_ ==> List("Ann"))
+        _ <- Animal.name("Rex").get.map(_ ==> List())
 
-        _ <- favoriteAnimalOf("Ann").get === List()
-        _ <- favoritePersonOf("Rex").get === List()
+        _ <- favoriteAnimalOf("Ann").get.map(_ ==> List())
+        _ <- favoritePersonOf("Rex").get.map(_ ==> List())
       } yield ()
     }
   }

@@ -35,8 +35,8 @@ trait TxFunctions {
     * {{{
     * Await.result(
     *   transactAsync(transfer(fromAccount, toAccount, 20)) map { txReport =>
-    *     Account(fromAccount).balance.get.head === 80 // (could be asynchronous too)
-    *     Account(toAccount).balance.get.head === 720
+    *     Account(fromAccount).balance.get.map(_.head ==> 80) // (could be asynchronous too)
+    *     Account(toAccount).balance.get.map(_.head ==> 720)
     *   },
     *   2.seconds
     * )
@@ -51,7 +51,7 @@ trait TxFunctions {
     *       Account(fromAccount).balance
     *       .Tx(Person.name_("John"))
     *       .Tx(UseCase.name_("Scheduled transfer"))
-    *       .get.head === 80 // (could be asynchronous too)
+    *       .get.map(_.head ==> 80) // (could be asynchronous too)
     *   },
     *   2.seconds
     * )

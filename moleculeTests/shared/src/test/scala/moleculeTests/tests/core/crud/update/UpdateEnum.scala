@@ -1,10 +1,15 @@
 package moleculeTests.tests.core.crud.update
 
+import datomicClient.anomaly.Incorrect
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
+import molecule.datomic.base.transform.exception.Model2TransactionException
+import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionException
 
 object UpdateEnum extends AsyncTestSuite {
 
@@ -27,15 +32,15 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).enum().update
-          _ <- Ns.enum.get === List()
+          _ <- Ns.enum.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).enum("enum2", "enum3").update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... enum(enum2, enum3)"
+          _ <- Ns(eid).enum("enum2", "enum3").update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... enum(enum2, enum3)"
+          }
         } yield ()
       }
     }
@@ -58,15 +63,15 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).enum().update
-          _ <- Ns.enum.get === List()
+          _ <- Ns.enum.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).enum(enum2, enum3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... enum($enum2, $enum3)"
+          _ <- Ns(eid).enum(enum2, enum3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... enum($enum2, $enum3)"
+          }
         } yield ()
       }
     }
@@ -126,19 +131,19 @@ object UpdateEnum extends AsyncTestSuite {
           _ <- Ns(eid).enums.replace("enum3" -> "enum6", "enum4" -> "enum7").update
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
 
-          //      // Different exceptions for each system
-          //      if (system == SystemPeer) {
-          //        // Trying to use a non-existing enum not possible
-          //        (Ns(eid).enums.replace("x" -> "enum9").update must throwA[ExecutionException])
-          //          .message === "Got the exception java.util.concurrent.ExecutionException: " +
-          //          "java.lang.IllegalArgumentException: :db.error/not-an-entity " +
-          //          s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
-          //      } else {
-          //        // Trying to use a non-existing enum not possible
-          //        (Ns(eid).enums.replace("x" -> "enum9").update must throwA[Incorrect])
-          //          .message === "Got the exception datomicClient.anomaly.Incorrect: " +
-          //          s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
-          //      }
+          // Different exceptions for each system
+          _ <- if (system == SystemPeer) {
+            // Trying to use a non-existing enum not possible
+            Ns(eid).enums.replace("x" -> "enum9").update.recover { case exc: ExecutionException =>
+              exc.getMessage ==> "java.lang.IllegalArgumentException: :db.error/not-an-entity " +
+                s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
+            }
+          } else {
+            // Trying to use a non-existing enum not possible
+            Ns(eid).enums.replace("x" -> "enum9").update.recover { case exc =>
+              exc.getMessage ==> s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
+            }
+          }
 
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
 
@@ -153,15 +158,13 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).enums.replace("enum7" -> "enum8", "enum8" -> "enum8").update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
-                    "\nenum8")
+          _ = compileError(            """Ns(eid).enums.replace("enum7" -> "enum8", "enum8" -> "enum8").update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
+              "\nenum8")
 
-                _ = compileError(
-                  """Ns(eid).enums.replace(Seq("enum7" -> "enum8", "enum8" -> "enum8")).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
-                    "\nenum8")
+          _ = compileError(            """Ns(eid).enums.replace(Seq("enum7" -> "enum8", "enum8" -> "enum8")).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
+              "\nenum8")
         } yield ()
       }
 
@@ -215,14 +218,14 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).enums(Set[String]()).update
-          _ <- Ns.enums.get === List()
+          _ <- Ns.enums.get.map(_ ==> List())
 
 
           _ <- Ns(eid).enums(Set("enum1", "enum2")).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).enums().update
-          _ <- Ns.enums.get === List()
+          _ <- Ns.enums.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded (at compile time)
@@ -314,30 +317,30 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).enums.replace(enum7 -> enum8, enum8 -> enum8).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
-                    "\n__ident__enum8")
+          _ = compileError(            """Ns(eid).enums.replace(enum7 -> enum8, enum8 -> enum8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
+              "\n__ident__enum8")
 
-                _ = compileError(
-                  """Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> enum8)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
-                    "\n__ident__enum8")
+          _ = compileError(            """Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> enum8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
+              "\n__ident__enum8")
 
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = enum8
 
-          //      (Ns(eid).enums.replace(enum7 -> enum8, enum8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
-          //        "\nenum8"
-          //
-          //      // Conflicting new values
-          //      (Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
-          //        "\nenum8"
+          _ <- Ns(eid).enums.replace(enum7 -> enum8, enum8 -> other8).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
+                "\nenum8"
+          }
+
+          // Conflicting new values
+          _ <- Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> other8)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
+                "\nenum8"
+          }
         } yield ()
       }
 
@@ -369,7 +372,7 @@ object UpdateEnum extends AsyncTestSuite {
           // Retract Seq of values as variable
           values = Seq(enum1)
           _ <- Ns(eid).enums.retract(values).update
-          _ <- Ns.enums.get === List()
+          _ <- Ns.enums.get.map(_ ==> List())
 
           // Retracting empty Seq of values has no effect
           _ <- Ns(eid).enums(enum1).update
@@ -397,7 +400,7 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).enums(Set[String]()).update
-          _ <- Ns.enums.get === List()
+          _ <- Ns.enums.get.map(_ ==> List())
 
           // Apply Seq of values as variable
           values = Set(enum1, enum2)
@@ -406,7 +409,7 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Delete all (apply no values)
           _ <- Ns(eid).enums().update
-          _ <- Ns.enums.get === List()
+          _ <- Ns.enums.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded

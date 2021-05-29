@@ -3,8 +3,8 @@ package moleculeTests.tests.core.input1.expression
 import molecule.datomic.api.in1_out2._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -40,14 +40,14 @@ object Input1Boolean extends AsyncTestSuite {
           val inputMolecule = m(Ns.bool(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get === Nil
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
 
-            _ <- inputMolecule(List(true)).get === List(true)
-            _ <- inputMolecule(List(true, true)).get === List(true)
-            _ <- inputMolecule(List(true, false)).get === List(false, true)
+            _ <- inputMolecule(List(true)).get.map(_ ==> List(true))
+            _ <- inputMolecule(List(true, true)).get.map(_ ==> List(true))
+            _ <- inputMolecule(List(true, false)).get.map(_ ==> List(false, true))
 
             // Varargs
-            _ <- inputMolecule(true).get === List(true)
+            _ <- inputMolecule(true).get.map(_ ==> List(true))
             _ <- inputMolecule(true, false).get.map(_.sorted ==> List(false, true))
 
             // `or`
@@ -74,9 +74,9 @@ object Input1Boolean extends AsyncTestSuite {
           val inputMolecule = m(Ns.int.bool_(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get === List(5)
-            _ <- inputMolecule(List(true)).get === List(1, 3)
-            _ <- inputMolecule(List(true, true)).get === List(1, 3)
+            _ <- inputMolecule(Nil).get.map(_ ==> List(5))
+            _ <- inputMolecule(List(true)).get.map(_ ==> List(1, 3))
+            _ <- inputMolecule(List(true, true)).get.map(_ ==> List(1, 3))
             _ <- inputMolecule(List(true, false)).get.map(_.sorted ==> List(1, 2, 3, 4))
           } yield ()
         }
@@ -103,12 +103,12 @@ object Input1Boolean extends AsyncTestSuite {
           val inputMolecule = m(Ns.int.bools(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === Nil
-            _ <- inputMolecule(List(Set[Boolean]())).get === Nil
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
+            _ <- inputMolecule(List(Set[Boolean]())).get.map(_ ==> Nil)
 
-            _ <- inputMolecule(List(Set(true))).get === List((1, Set(true)), (3, Set(true, false)))
-            _ <- inputMolecule(List(Set(false))).get === List((2, Set(false)), (3, Set(true, false)))
-            _ <- inputMolecule(List(Set(true, false))).get === List((3, Set(true, false)))
+            _ <- inputMolecule(List(Set(true))).get.map(_ ==> List((1, Set(true)), (3, Set(true, false))))
+            _ <- inputMolecule(List(Set(false))).get.map(_ ==> List((2, Set(false)), (3, Set(true, false))))
+            _ <- inputMolecule(List(Set(true, false))).get.map(_ ==> List((3, Set(true, false))))
           } yield ()
         }
 
@@ -116,12 +116,12 @@ object Input1Boolean extends AsyncTestSuite {
           val inputMolecule = m(Ns.int.bools.not(?)) // or m(Ns.int.bools.!=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List((1, Set(true)), (2, Set(false)), (3, Set(true, false)))
-            _ <- inputMolecule(List(Set[Boolean]())).get === List((1, Set(true)), (2, Set(false)), (3, Set(true, false)))
+            _ <- inputMolecule(Nil).get.map(_ ==> List((1, Set(true)), (2, Set(false)), (3, Set(true, false))))
+            _ <- inputMolecule(List(Set[Boolean]())).get.map(_ ==> List((1, Set(true)), (2, Set(false)), (3, Set(true, false))))
 
-            _ <- inputMolecule(List(Set(true))).get === List((2, Set(false)))
-            _ <- inputMolecule(List(Set(false))).get === List((1, Set(true)))
-            _ <- inputMolecule(List(Set(true, false))).get === List((1, Set(true)), (2, Set(false)))
+            _ <- inputMolecule(List(Set(true))).get.map(_ ==> List((2, Set(false))))
+            _ <- inputMolecule(List(Set(false))).get.map(_ ==> List((1, Set(true))))
+            _ <- inputMolecule(List(Set(true, false))).get.map(_ ==> List((1, Set(true)), (2, Set(false))))
           } yield ()
         }
       }
@@ -133,12 +133,12 @@ object Input1Boolean extends AsyncTestSuite {
           val inputMolecule = m(Ns.bools(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === Nil
-            _ <- inputMolecule(List(Set[Boolean]())).get === Nil
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
+            _ <- inputMolecule(List(Set[Boolean]())).get.map(_ ==> Nil)
 
-            _ <- inputMolecule(List(Set(true))).get === List(Set(true, false)) // (true) + (true, false)
-            _ <- inputMolecule(List(Set(false))).get === List(Set(true, false)) // (false) + (true, false)
-            _ <- inputMolecule(List(Set(true, false))).get === List(Set(true, false)) // (true, false)
+            _ <- inputMolecule(List(Set(true))).get.map(_ ==> List(Set(true, false))) // (true) + (true, false)
+            _ <- inputMolecule(List(Set(false))).get.map(_ ==> List(Set(true, false))) // (false) + (true, false)
+            _ <- inputMolecule(List(Set(true, false))).get.map(_ ==> List(Set(true, false))) // (true, false)
 
           } yield ()
         }
@@ -147,12 +147,12 @@ object Input1Boolean extends AsyncTestSuite {
           val inputMolecule = m(Ns.bools.not(?)) // or m(Ns.bools.!=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List(Set(true, false))
-            _ <- inputMolecule(List(Set[Boolean]())).get === List(Set(true, false))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(Set(true, false)))
+            _ <- inputMolecule(List(Set[Boolean]())).get.map(_ ==> List(Set(true, false)))
 
-            _ <- inputMolecule(List(Set(true))).get === List(Set(false))
-            _ <- inputMolecule(List(Set(false))).get === List(Set(true))
-            _ <- inputMolecule(List(Set(true, false))).get === List(Set(true, false))
+            _ <- inputMolecule(List(Set(true))).get.map(_ ==> List(Set(false)))
+            _ <- inputMolecule(List(Set(false))).get.map(_ ==> List(Set(true)))
+            _ <- inputMolecule(List(Set(true, false))).get.map(_ ==> List(Set(true, false)))
           } yield ()
         }
       }
@@ -164,10 +164,10 @@ object Input1Boolean extends AsyncTestSuite {
           val inputMolecule = m(Ns.int.bools_(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get === List(4)
-            _ <- inputMolecule(List(Set[Boolean]())).get === List(4)
+            _ <- inputMolecule(Nil).get.map(_ ==> List(4))
+            _ <- inputMolecule(List(Set[Boolean]())).get.map(_ ==> List(4))
 
-            _ <- inputMolecule(List(Set(true))).get === List(1, 3)
+            _ <- inputMolecule(List(Set(true))).get.map(_ ==> List(1, 3))
             _ <- inputMolecule(List(Set(false))).get.map(_.sorted ==> List(2, 3))
             _ <- inputMolecule(List(Set(true, false))).get.map(_.sorted ==> List(3))
           } yield ()

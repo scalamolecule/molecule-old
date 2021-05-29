@@ -54,16 +54,16 @@ object MetaSave extends AsyncTestSuite {
         ))
 
         // Transactions without tx meta data
-        _ <- Ns.int.Tx(Ns.str_(Nil)).get === List(6)
+        _ <- Ns.int.Tx(Ns.str_(Nil)).get.map(_ ==> List(6))
 
         // Transaction meta data expressions
-        _ <- Ns.int.<(3).Tx(Ns.str("str mandatory")).get === List(
+        _ <- Ns.int.<(3).Tx(Ns.str("str mandatory")).get.map(_ ==> List(
           (2, "str mandatory")
-        )
-        _ <- Ns.int.<(3).Tx(Ns.str.not("attr mandatory")).get === List(
+        ))
+        _ <- Ns.int.<(3).Tx(Ns.str.not("attr mandatory")).get.map(_ ==> List(
           (1, "str tacit"),
           (2, "str mandatory")
-        )
+        ))
 
         // Fulltext search only available for Peer
         _ <- if (system == SystemPeer) {
@@ -72,9 +72,9 @@ object MetaSave extends AsyncTestSuite {
               (2, "str mandatory"),
               (3, "attr mandatory")
             ))
-            res <- Ns.int.<(3).Tx(Ns.str.contains("mandatory")).get === List(
+            res <- Ns.int.<(3).Tx(Ns.str.contains("mandatory")).get.map(_ ==> List(
               (2, "str mandatory")
-            )
+            ))
           } yield res
         } else Future.unit
 
@@ -108,30 +108,29 @@ object MetaSave extends AsyncTestSuite {
 
     "Tx refs" - core { implicit conn =>
       for {
-
         // Saving tx meta data (Ns.str) that references another namespace attribute (Ref1.int1)
         _ <- Ns.int(1).Tx(Ns.str("a").Ref1.int1(10)).save
 
         // Tx meta data with ref attr
-        _ <- Ns.int.Tx(Ns.str.Ref1.int1).get === List(
+        _ <- Ns.int.Tx(Ns.str.Ref1.int1).get.map(_ ==> List(
           (1, "a", 10)
-        )
+        ))
 
         // Tx meta data
-        _ <- Ns.int.Tx(Ns.str).get === List(
+        _ <- Ns.int.Tx(Ns.str).get.map(_ ==> List(
           (1, "a")
-        )
+        ))
 
         // OBS: Ref1.int1 is not asserted with tx entity, but with ref from tx entity!
-        _ <- Ns.int.Tx(Ref1.int1).get === Nil
+        _ <- Ns.int.Tx(Ref1.int1).get.map(_ ==> Nil)
 
         // Saving multiple tx refs
         _ <- Ns.int(2).Tx(Ns.str("b").Ref1.int1(20).Ref2.int2(200)).save
 
         // Getting multiple tx refs
-        _ <- Ns.int.Tx(Ns.str.Ref1.int1.Ref2.int2).get === List(
+        _ <- Ns.int.Tx(Ns.str.Ref1.int1.Ref2.int2).get.map(_ ==> List(
           (2, "b", 20, 200)
-        )
+        ))
         _ <- Ns.int.Tx(Ns.str.Ref1.int1).get.map(_.sorted ==> List(
           (1, "a", 10), // First insert matches too
           (2, "b", 20)
@@ -180,9 +179,9 @@ object MetaSave extends AsyncTestSuite {
       for {
         _ <- Ns.int(1).Tx(Ns.str("a").Ref1.str1("b").int1(2)).save
 
-        _ <- Ns.int.Tx(Ns.str.Ref1.str1.int1).get === List(
+        _ <- Ns.int.Tx(Ns.str.Ref1.str1.int1).get.map(_ ==> List(
           (1, "a", "b", 2)
-        )
+        ))
       } yield ()
     }
 
@@ -191,9 +190,9 @@ object MetaSave extends AsyncTestSuite {
       for {
         _ <- Ns.int(1).Tx(Ns.str("a").Ref1.str1("b").int1(2).Ref2.str2("c").int2(3)).save
 
-        _ <- Ns.int.Tx(Ns.str.Ref1.str1.int1.Ref2.str2.int2).get === List(
+        _ <- Ns.int.Tx(Ns.str.Ref1.str1.int1.Ref2.str2.int2).get.map(_ ==> List(
           (1, "a", "b", 2, "c", 3)
-        )
+        ))
       } yield ()
     }
   }

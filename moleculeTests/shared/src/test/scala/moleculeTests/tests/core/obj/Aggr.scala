@@ -1,12 +1,12 @@
 package moleculeTests.tests.core.obj
 
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
-import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.in1_out3._
-import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -53,10 +53,9 @@ object Aggr extends AsyncTestSuite with Helpers {
         _ <- Ns.int(sum).getObj.map(_.int ==> 6)
         _ <- Ns.double(sum).getObj.map(_.double ==> 6.0)
 
-            _ = compileError(
-              """m(Ns.str(sum))""").check(
-              "molecule.core.transform.exception.Dsl2ModelException: " +
-                "Can't apply `sum` aggregate to non-number attribute `str` of type `String`.")
+        _ = compileError("""m(Ns.str(sum))""").check("",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Can't apply `sum` aggregate to non-number attribute `str` of type `String`.")
       } yield ()
     }
 
@@ -67,10 +66,10 @@ object Aggr extends AsyncTestSuite with Helpers {
         _ <- Ns.int(count).getObj.map(_.int ==> 3)
         _ <- Ns.int(countDistinct).getObj.map(_.int ==> 3)
 
-        //    (Ns.double(count).getObj.double must throwA[molecule.core.exceptions.MoleculeException])
-        //      .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        //      "Object property `double` not available since the aggregate changes its type to `Int`. " +
-        //      "Please use tuple output instead to access aggregate value."
+        _ <- Ns.double(count).getObj.map(_.double).recover { case MoleculeException(err, _) =>
+          err ==> "Object property `double` not available since the aggregate changes its type to `Int`. " +
+            "Please use tuple output instead to access aggregate value."
+        }
 
         // Tuple output allowed
         _ <- Ns.double(count).get.map(_.head ==> 3)
@@ -88,10 +87,10 @@ object Aggr extends AsyncTestSuite with Helpers {
         _ <- Ns.double(variance).getObj.map(_.double ==> 0.6666666666666666)
         _ <- Ns.double(stddev).getObj.map(_.double ==> 0.816496580927726)
 
-        //    (Ns.int(avg).getObj.int must throwA[molecule.core.exceptions.MoleculeException])
-        //      .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        //      "Object property `int` not available since the aggregate changes its type to `Double`. " +
-        //      "Please use tuple output instead to access aggregate value."
+        _ <- Ns.int(avg).getObj.map(_.int).recover { case MoleculeException(err, _) =>
+          err ==> "Object property `int` not available since the aggregate changes its type to `Double`. " +
+            "Please use tuple output instead to access aggregate value."
+        }
 
         // Tuple output allowed
         _ <- Ns.int(avg).get.map(_.head ==> 2.0)
@@ -104,10 +103,10 @@ object Aggr extends AsyncTestSuite with Helpers {
       for {
         // Can be accessed as tuple data only
 
-        //    (Ns.int(min(2)).getObj.int must throwA[molecule.core.exceptions.MoleculeException])
-        //      .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        //      "Object property `int` not available since the aggregate changes its type to `List[Int]`. " +
-        //      "Please use tuple output instead to access aggregate value."
+        _ <- Ns.int(min(2)).getObj.map(_.int).recover { case MoleculeException(err, _) =>
+          err ==> "Object property `int` not available since the aggregate changes its type to `List[Int]`. " +
+            "Please use tuple output instead to access aggregate value."
+        }
 
         // Tuple output allowed
         _ <- Ns.int(min(2)).get.map(_.head.sorted ==> List(1, 2))

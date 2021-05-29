@@ -1,13 +1,13 @@
 package moleculeTests.tests.core.obj
 
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import molecule.datomic.api.in1_out12._
-import molecule.datomic.api.in3_out10.m
 import moleculeTests.setup.AsyncTestSuite
-import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import moleculeTests.tests.core.ref.dsl.SelfJoin._
+import utest._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 object Ref extends AsyncTestSuite with Helpers {
@@ -162,11 +162,12 @@ object Ref extends AsyncTestSuite with Helpers {
       for {
         _ <- (Ns.int + Ns.double.str + Ref1.int1.str1).insert(1, (2.2, "a"), (3, "b"))
 
-        //    // Multiple same-name namespace composites need ++ to allow access to object interface
-        //    // Can't access object properties from same-name namespace composites
-        //    (m(Ns.int + Ns.double.str + Ref1.int1.str1).getObj must throwA[molecule.core.exceptions.MoleculeException])
-        //      .message ==> "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        //      s"Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
+        // Multiple same-name namespace composites need ++ to allow access to object interface
+        // Can't access object properties from same-name namespace composites
+        _ <- m(Ns.int + Ns.double.str + Ref1.int1.str1).getObj.recover { case MoleculeException(err, _) =>
+          err ==> "Got the exception molecule.core.exceptions.package$MoleculeException: " +
+            s"Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
+        }
 
         _ <- m(Ns.int ++ Ns.double.str + Ref1.int1.str1).getObj.map { o =>
           o.Ns.int ==> 1

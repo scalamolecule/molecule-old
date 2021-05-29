@@ -6,7 +6,7 @@ import scala.language.higherKinds
 /** Add nested molecule to input molecule awaiting 3 inputs.
   * {{{
   *   m(Order.no(?).total.>(?).att(?) * LineItem.product.price.quantity)
-  *     .apply(23, 120, "Ben Smith").get === List(
+  *     .apply(23, 120, "Ben Smith").get.map(_ ==> List(
   *       (23, 124, "Ben Smith", List(("Chocolate", 48.00, 1), ("Whisky", 38.00, 2)))
   *     )
   * }}}

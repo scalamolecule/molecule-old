@@ -1,11 +1,10 @@
 package moleculeTests.tests.core.crud.update
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -17,7 +16,6 @@ object UpdateBigInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-
           tx1 <- Ns.bigInt(bigInt2).save
           eid = tx1.eid
 
@@ -31,15 +29,15 @@ object UpdateBigInt extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).bigInt().update
-          _ <- Ns.bigInt.get === List()
+          _ <- Ns.bigInt.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).bigInt(bigInt2, bigInt3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... bigInt($bigInt2, $bigInt3)"
+          _ <- Ns(eid).bigInt(bigInt2, bigInt3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... bigInt($bigInt2, $bigInt3)"
+          }
         } yield ()
       }
     }
@@ -131,30 +129,28 @@ object UpdateBigInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).bigInts.replace(bigInt7 -> bigInt8, bigInt8 -> bigInt8).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigInts`:" +
-                    "\n__ident__bigInt8")
+          _ = compileError(            """Ns(eid).bigInts.replace(bigInt7 -> bigInt8, bigInt8 -> bigInt8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigInts`:" +
+              "\n__ident__bigInt8")
 
-          _ = compileError(
-                  """Ns(eid).bigInts.replace(Seq(bigInt7 -> bigInt8, bigInt8 -> bigInt8)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigInts`:" +
-                    "\n__ident__bigInt8")
+          _ = compileError(            """Ns(eid).bigInts.replace(Seq(bigInt7 -> bigInt8, bigInt8 -> bigInt8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigInts`:" +
+              "\n__ident__bigInt8")
 
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = bigInt8
 
-          //      (Ns(eid).bigInts.replace(bigInt7 -> bigInt8, bigInt8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigInts`:" +
-          //        "\n8"
-          //
-          //      // Conflicting new values
-          //      (Ns(eid).bigInts.replace(Seq(bigInt7 -> bigInt8, bigInt8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigInts`:" +
-          //        "\n8"
+          _ <- Ns(eid).bigInts.replace(bigInt7 -> bigInt8, bigInt8 -> other8).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigInts`:" +
+              "\n8"
+          }
+
+          // Conflicting new values
+          _ <- Ns(eid).bigInts.replace(Seq(bigInt7 -> bigInt8, bigInt8 -> other8)).update.recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/bigInts`:" +
+              "\n8"
+          }
         } yield ()
       }
 
@@ -186,7 +182,7 @@ object UpdateBigInt extends AsyncTestSuite {
           // Retract Seq of values as variable
           values = Seq(bigInt1)
           _ <- Ns(eid).bigInts.retract(values).update
-          _ <- Ns.bigInts.get === List()
+          _ <- Ns.bigInts.get.map(_ ==> List())
 
           // Retracting empty Seq of values has no effect
           _ <- Ns(eid).bigInts(bigInt1).update
@@ -214,7 +210,7 @@ object UpdateBigInt extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).bigInts(Set[BigInt]()).update
-          _ <- Ns.bigInts.get === List()
+          _ <- Ns.bigInts.get.map(_ ==> List())
 
           // Apply Seq of values as variable
           values = Set(bigInt1, bigInt2)
@@ -223,7 +219,7 @@ object UpdateBigInt extends AsyncTestSuite {
 
           // Delete all (apply no values)
           _ <- Ns(eid).bigInts().update
-          _ <- Ns.bigInts.get === List()
+          _ <- Ns.bigInts.get.map(_ ==> List())
 
 
           _ <- Ns(eid).bigInts(bigInt1, bigInt2, bigInt2).update

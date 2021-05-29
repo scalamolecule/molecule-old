@@ -93,14 +93,14 @@ trait Conn extends ColOps {
     *   )
     *
     *   // Query using temporary database including Liz
-    *   Person.name.get === List("Ben", "Liz")
+    *   Person.name.get.map(_ ==> List("Ben", "Liz"))
     *
     *   // Multiple transactions can be applied
     *   conn.testDbWith(
     *     Person.name("Joe").getSaveTx,
     *     benId.getRetractTx
     *   )
-    *   Person.name.get === List("Liz", "Joe")
+    *   Person.name.get.map(_ ==> List("Liz", "Joe"))
     * }}}
     *
     * @param txData List of List of transaction [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s
@@ -200,10 +200,10 @@ trait Conn extends ColOps {
   /** Query Datomic directly with optional Scala inputs.
     * {{{
     *   // Sample data
-    *   Ns.str.int.get === List(
+    *   Ns.str.int.get.map(_ ==> List(
     *     ("Liz", 37),
     *     ("Ben", 42),
-    *   )
+    *   ))
     *
     *   // Start out easily with a Datomic query from inspect output
     *   Ns.str.int.inspectGet // shows datomic query...
@@ -236,10 +236,10 @@ trait Conn extends ColOps {
   /** Query Datomic directly with db value and optional Scala inputs.
     * {{{
     *   // Sample data
-    *   Ns.str.int.get === List(
+    *   Ns.str.int.get.map(_ ==> List(
     *     ("Liz", 37),
     *     ("Ben", 42),
-    *   )
+    *   ))
     *
     *   // Start out easily with a Datomic query from inspect output
     *   Ns.str.int.inspectGet // shows datomic query...
@@ -278,10 +278,10 @@ trait Conn extends ColOps {
   /** Query Datomic directly with optional Scala inputs and get raw Java result.
     * {{{
     *   // Sample data
-    *   Ns.str.int.get === List(
+    *   Ns.str.int.get.map(_ ==> List(
     *     ("Liz", 37),
     *     ("Ben", 42),
-    *   )
+    *   ))
     *
     *   // Start out easily with a Datomic query from inspect output
     *   Ns.str.int.inspectGet // shows datomic query...
@@ -310,10 +310,10 @@ trait Conn extends ColOps {
   /** Query Datomic directly with db value and optional Scala inputs and get raw Java result.
     * {{{
     *   // Sample data
-    *   Ns.str.int.get === List(
+    *   Ns.str.int.get.map(_ ==> List(
     *     ("Liz", 37),
     *     ("Ben", 42),
-    *   )
+    *   ))
     *
     *   // Get some Datomic query from inspect output
     *   Ns.str.int.inspectGet // shows datomic query...

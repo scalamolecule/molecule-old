@@ -1,8 +1,7 @@
 package moleculeTests.tests.core.attrMap
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
-import moleculeTests.tests.core.attrMap.KeysValues.testData
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -31,35 +30,35 @@ object Pairs extends Base {
         _ <- testData
 
         // Find a specific key/value pair
-        _ <- Ns.int.strMap("en" -> "Hi there").get === en_hi_there
-        _ <- Ns.int.strMap(("en", "Hi there")).get === en_hi_there
+        _ <- Ns.int.strMap("en" -> "Hi there").get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(("en", "Hi there")).get.map(_ ==> en_hi_there)
 
 
         // Variables sanity checks
 
-        _ <- Ns.int.strMap("en" -> hiThere).get === en_hi_there
-        _ <- Ns.int.strMap(en -> "Hi there").get === en_hi_there
-        _ <- Ns.int.strMap(en -> hiThere).get === en_hi_there
+        _ <- Ns.int.strMap("en" -> hiThere).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(en -> "Hi there").get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(en -> hiThere).get.map(_ ==> en_hi_there)
 
         // Alternative tuple notation
-        _ <- Ns.int.strMap(("en", hiThere)).get === en_hi_there
-        _ <- Ns.int.strMap((en, "Hi there")).get === en_hi_there
-        _ <- Ns.int.strMap((en, hiThere)).get === en_hi_there
+        _ <- Ns.int.strMap(("en", hiThere)).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap((en, "Hi there")).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap((en, hiThere)).get.map(_ ==> en_hi_there)
 
-        _ <- Ns.int.strMap(pair1).get === en_hi_there
-        _ <- Ns.int.strMap(pair2).get === en_hi_there
-        _ <- Ns.int.strMap(pair3).get === en_hi_there
-        _ <- Ns.int.strMap(pair4).get === en_hi_there
-        _ <- Ns.int.strMap(pair5).get === en_hi_there
-        _ <- Ns.int.strMap(pair6).get === en_hi_there
-        _ <- Ns.int.strMap(pair7).get === en_hi_there
-        _ <- Ns.int.strMap(pair8).get === en_hi_there
+        _ <- Ns.int.strMap(pair1).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(pair2).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(pair3).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(pair4).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(pair5).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(pair6).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(pair7).get.map(_ ==> en_hi_there)
+        _ <- Ns.int.strMap(pair8).get.map(_ ==> en_hi_there)
 
 
-        _ <- Ns.int.intMap("en" -> 10).get === List(
+        _ <- Ns.int.intMap("en" -> 10).get.map(_ ==> List(
           (1, Map("en" -> 10)),
           (2, Map("en" -> 10))
-        )
+        ))
       } yield ()
     }
 
@@ -69,15 +68,15 @@ object Pairs extends Base {
         _ <- testData
 
         // We can widen the values search with a regex
-        _ <- Ns.int.strMap("en" -> ".*Hi.*").get === List(
+        _ <- Ns.int.strMap("en" -> ".*Hi.*").get.map(_ ==> List(
           (1, Map("en" -> "Hi there")),
           (2, Map("en" -> "Oh, Hi"))
-        )
+        ))
         // Even for the key
-        _ <- Ns.int.strMap("en|da" -> ".*Hi.*").get === List(
+        _ <- Ns.int.strMap("en|da" -> ".*Hi.*").get.map(_ ==> List(
           (1, Map("en" -> "Hi there")),
           (2, Map("en" -> "Oh, Hi", "da" -> "Hilser"))
-        )
+        ))
       } yield ()
     }
 
@@ -94,15 +93,15 @@ object Pairs extends Base {
         _ <- testData
 
         // Multiple pairs
-        _ <- Ns.int.strMap("en" -> "Hi there" or "fr" -> "Bonjour").get === List(
+        _ <- Ns.int.strMap("en" -> "Hi there" or "fr" -> "Bonjour").get.map(_ ==> List(
           (1, Map("en" -> "Hi there")),
           (2, Map("fr" -> "Bonjour"))
-        )
+        ))
         // Same as
-        _ <- Ns.int.strMap("en" -> "Hi there", "fr" -> "Bonjour").get === List(
+        _ <- Ns.int.strMap("en" -> "Hi there", "fr" -> "Bonjour").get.map(_ ==> List(
           (1, Map("en" -> "Hi there")),
           (2, Map("fr" -> "Bonjour"))
-        )
+        ))
 
         // To have full control of matching keys and values we
         // can use multiple pairs
@@ -110,32 +109,32 @@ object Pairs extends Base {
         // OR semantics
 
         // Comma-separated pairs have OR-semantics (can't use 'or'-notation for pairs)
-        _ <- Ns.int.strMap("en" -> "Hi there", "da" -> "Hej").get === List(
+        _ <- Ns.int.strMap("en" -> "Hi there", "da" -> "Hej").get.map(_ ==> List(
           (1, Map("en" -> "Hi there")),
           (3, Map("da" -> "Hej")),
           (4, Map("da" -> "Hej"))
-        )
+        ))
 
-        _ <- Ns.int.intMap("en" -> 10, "fr" -> 20).get === List(
+        _ <- Ns.int.intMap("en" -> 10, "fr" -> 20).get.map(_ ==> List(
           (1, Map("en" -> 10)),
           (2, Map("fr" -> 20, "en" -> 10))
-        )
+        ))
 
         // Variables sanity checks
-        _ <- Ns.int.strMap("en" -> hiThere, fr -> "Bonjour").get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap("en" -> hiThere, pair9).get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(pair2, fr -> "Bonjour").get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(pair2, pair9).get === en_hi_fr_bonjour
+        _ <- Ns.int.strMap("en" -> hiThere, fr -> "Bonjour").get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap("en" -> hiThere, pair9).get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(pair2, fr -> "Bonjour").get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(pair2, pair9).get.map(_ ==> en_hi_fr_bonjour)
 
-        _ <- Ns.int.strMap(Seq("en" -> hiThere, fr -> "Bonjour")).get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(Seq("en" -> hiThere, pair9)).get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(Seq(pair2, fr -> "Bonjour")).get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(Seq(pair2, pair9)).get === en_hi_fr_bonjour
+        _ <- Ns.int.strMap(Seq("en" -> hiThere, fr -> "Bonjour")).get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(Seq("en" -> hiThere, pair9)).get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(Seq(pair2, fr -> "Bonjour")).get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(Seq(pair2, pair9)).get.map(_ ==> en_hi_fr_bonjour)
 
-        _ <- Ns.int.strMap(pairs1).get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(pairs2).get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(pairs3).get === en_hi_fr_bonjour
-        _ <- Ns.int.strMap(pairs4).get === en_hi_fr_bonjour
+        _ <- Ns.int.strMap(pairs1).get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(pairs2).get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(pairs3).get.map(_ ==> en_hi_fr_bonjour)
+        _ <- Ns.int.strMap(pairs4).get.map(_ ==> en_hi_fr_bonjour)
       } yield ()
     }
   }

@@ -1,13 +1,12 @@
 package moleculeTests.tests.core.generic
 
 import molecule.core.exceptions.MoleculeException
-import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out5._
-import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer}
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -113,13 +112,13 @@ object LogTest extends AsyncTestSuite {
         // Apply attribute name and `from` + `until` value range arguments
 
         // Datoms with attribute :Ns/int having a value between 2 until 6 (not included)
-        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
-        _ <- Log(Some(tx1), Some(tx3)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx1), Some(tx3)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true),
@@ -127,10 +126,10 @@ object LogTest extends AsyncTestSuite {
           (t2, tx2, ":db/txInstant", d2, true),
           (t2, e1, ":Ns/str", "b", true),
           (t2, e1, ":Ns/str", "a", false)
-        )
+        ))
 
 
-        _ <- Log(Some(tx1), Some(tx4)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx1), Some(tx4)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true),
@@ -142,9 +141,9 @@ object LogTest extends AsyncTestSuite {
           (t3, tx3, ":db/txInstant", d3, true),
           (t3, e1, ":Ns/int", 2, true),
           (t3, e1, ":Ns/int", 1, false)
-        )
+        ))
 
-        _ <- Log(Some(tx2), Some(tx4)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx2), Some(tx4)).t.e.a.v.op.get.map(_ ==> List(
           (t2, tx2, ":db/txInstant", d2, true),
           (t2, e1, ":Ns/str", "b", true),
           (t2, e1, ":Ns/str", "a", false),
@@ -152,7 +151,7 @@ object LogTest extends AsyncTestSuite {
           (t3, tx3, ":db/txInstant", d3, true),
           (t3, e1, ":Ns/int", 2, true),
           (t3, e1, ":Ns/int", 1, false)
-        )
+        ))
       } yield ()
     }
 
@@ -188,86 +187,85 @@ object LogTest extends AsyncTestSuite {
         ((tx1, e1, t1, d1, tx2, t2, d2, tx3, t3, d3), _, _, _) <- testData
 
         // t - t
-        _ <- Log(Some(t1), Some(t2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(t1), Some(t2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
         // t - tx
-        _ <- Log(Some(t1), Some(tx2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(t1), Some(tx2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
         // t - txInstant
-        _ <- Log(Some(t1), Some(d2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(t1), Some(d2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
 
         // tx - t
-        _ <- Log(Some(tx1), Some(t2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx1), Some(t2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
         // tx - tx
-        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
         // tx - txInstant
-        _ <- Log(Some(tx1), Some(d2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx1), Some(d2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
 
         // txInstant - t
-        _ <- Log(Some(d1), Some(t2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(d1), Some(t2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
         // txInstant - tx
-        _ <- Log(Some(d1), Some(tx2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(d1), Some(tx2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
         // txInstant - tx
-        _ <- Log(Some(d1), Some(d2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(d1), Some(d2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
-            // Applying values to Schema attributes not allowed
-            _ = compileError(
-              "m(Log.e(e1).a.v.t)").check(
-              "molecule.core.transform.exception.Dsl2ModelException: Log attributes not allowed to have values applied.\n" +
-                "Log only accepts range arguments: `Log(from, until)`.")
+        // Applying values to Schema attributes not allowed
+        _ = compileError("m(Log.e(e1).a.v.t)").check("",
+          "molecule.core.transform.exception.Dsl2ModelException: Log attributes not allowed to have values applied.\n" +
+            "Log only accepts range arguments: `Log(from, until)`.")
 
-        //
-        //    (Log(Some(tx1), Some("unexpected string")).tx.get must throwA[MoleculeException])
-        //      .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        //      "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
-        //      s"Found: List($tx1, unexpected string)"
-        //
-        //    (Log(Some(t1), Some("unexpected string")).t.get must throwA[MoleculeException])
-        //      .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        //      "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
-        //      s"Found: List($t1, unexpected string)"
+
+        _ <- Log(Some(tx1), Some("unexpected string")).tx.get.recover { case MoleculeException(err, _) =>
+          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
+            s"Found: List($tx1, unexpected string)"
+        }
+
+        _ <- Log(Some(t1), Some("unexpected string")).t.get.recover { case MoleculeException(err, _) =>
+          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
+            s"Found: List($t1, unexpected string)"
+        }
       } yield ()
     }
 
@@ -279,22 +277,21 @@ object LogTest extends AsyncTestSuite {
         (t8, e4, t9, t10, t11, tx12, t12, d12, tx13, t13, d13)) <- testData
 
         // tx12 (inclusive) - end
-        _ <- Log(Some(t12), None).t.e.a.v.op.get === List(
+        _ <- Log(Some(t12), None).t.e.a.v.op.get.map(_ ==> List(
           (t12, tx12, ":db/txInstant", d12, true),
           (t12, e2, ":Ns/ref1", e4, true),
           (t12, e2, ":Ns/ref1", e3, false),
 
           (t13, tx13, ":db/txInstant", d13, true),
           (t13, e2, ":Ns/refs1", e4, true)
-        )
+        ))
 
         // Single parameter is `from`
         from <- Log(Some(tx12), None).t.get
-        _ <- Log(Some(tx12)).t.get === from
+        _ <- Log(Some(tx12)).t.get.map(_ ==> from)
 
         _ <- if (system == SystemPeer) {
           for {
-
             // Start - t3 (exclusive)
             // Includes all Datomic database bootstrapping and schema transactions
             _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 396)
@@ -306,7 +303,6 @@ object LogTest extends AsyncTestSuite {
           } yield res
         } else if (system == SystemDevLocal) {
           for {
-
             // Start - t3 (exclusive)
             // Includes all Datomic database bootstrapping and schema transactions
             _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 552)
@@ -353,7 +349,7 @@ object LogTest extends AsyncTestSuite {
 
 
         // Assertions and retractions in transactions tx1-tx2
-        _ <- Log(Some(tx1), Some(tx3)).op.get === List(true, true, true, true, true, false)
+        _ <- Log(Some(tx1), Some(tx3)).op.get.map(_ ==> List(true, true, true, true, true, false))
 
         // Number of assertions and retractions in transactions tx1-tx2
         _ <- Log(Some(tx1), Some(tx3)).op.get.map(_.groupBy {
@@ -384,23 +380,23 @@ object LogTest extends AsyncTestSuite {
         // Since we get the Log from the Connection and not the Database,
         // any time filter getter will make no difference
 
-        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.get === List(
+        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.get.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
-        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.getHistory === List(
+        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.getHistory.map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
 
-        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.getAsOf(t7) === List(
+        _ <- Log(Some(tx1), Some(tx2)).t.e.a.v.op.getAsOf(t7).map(_ ==> List(
           (t1, tx1, ":db/txInstant", d1, true),
           (t1, e1, ":Ns/str", "a", true),
           (t1, e1, ":Ns/int", 1, true)
-        )
+        ))
       } yield ()
     }
   }

@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.ref.composite
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -47,7 +47,6 @@ object CompositeArities extends AsyncTestSuite {
 
     "1 + 2" - core { implicit conn =>
       for {
-
         // Composite of Molecule1 + Molecule2
         tx <- Ref2.int2 + Ns.int.str insert Seq(
           // Two rows of data
@@ -90,7 +89,6 @@ object CompositeArities extends AsyncTestSuite {
 
     "2 + 1" - core { implicit conn =>
       for {
-
         // Composite of Molecule2 + Molecule1
         tx <- Ref2.int2.str2 + Ns.int insert Seq(
           // Two rows of data
@@ -133,7 +131,6 @@ object CompositeArities extends AsyncTestSuite {
 
     "2 + 2" - core { implicit conn =>
       for {
-
         // Composite of Molecule2 + Molecule2
         tx <- Ref2.int2.str2 + Ns.str.int insert Seq(
           ((1, "a"), ("aa", 11)),
@@ -177,7 +174,6 @@ object CompositeArities extends AsyncTestSuite {
 
     "2 + 3 (2+1tx)" - core { implicit conn =>
       for {
-
         // Composite of Molecule2 + Molecule1 + Tx meta data
         // Note that tx meta attributes have underscore/are tacit in order not to affect the type of input
         tx <- (Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str_("Tx meta data"))) insert Seq(
@@ -232,8 +228,8 @@ object CompositeArities extends AsyncTestSuite {
         ))
 
         // Transaction meta data alone can be accessed through tacit attributes of namespaces
-        _ <- Ref2.int2_.Tx(Ns.str).get === List("Tx meta data")
-        _ <- Ref1.int1_.Tx(Ns.str).get === List("Tx meta data")
+        _ <- Ref2.int2_.Tx(Ns.str).get.map(_ ==> List("Tx meta data"))
+        _ <- Ref1.int1_.Tx(Ns.str).get.map(_ ==> List("Tx meta data"))
 
 
         // Composite query

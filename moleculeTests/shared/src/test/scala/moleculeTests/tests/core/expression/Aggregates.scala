@@ -1,11 +1,9 @@
 package moleculeTests.tests.core.expression
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out3._
 import molecule.datomic.base.facade.Conn
-import molecule.datomic.base.util.SystemPeerServer
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -203,43 +201,43 @@ object Aggregates extends AsyncTestSuite {
 
         // combinations
 
-        _ <- Ns.int(min).ints.get === List(
+        _ <- Ns.int(min).ints.get.map(_ ==> List(
           (1, Set(1, 4, 3, 2))
-        )
+        ))
 
-        _ <- Ns.int(min(2)).ints.get === List(
+        _ <- Ns.int(min(2)).ints.get.map(_ ==> List(
           (List(1, 1), Set(1, 4, 3, 2))
-        )
+        ))
 
 
-        _ <- Ns.int.ints(min).get === List(
+        _ <- Ns.int.ints(min).get.map(_ ==> List(
           (1, Set(1)),
           (2, Set(2)),
           (3, Set(2))
-        )
+        ))
 
-        _ <- Ns.int.ints(min(2)).get === List(
+        _ <- Ns.int.ints(min(2)).get.map(_ ==> List(
           (1, List(Set(1, 2))),
           (2, List(Set(2, 3))),
           (3, List(Set(2, 4)))
-        )
+        ))
 
 
-        _ <- Ns.int(min).ints(min).get === List(
+        _ <- Ns.int(min).ints(min).get.map(_ ==> List(
           (1, Set(1))
-        )
+        ))
 
-        _ <- Ns.int(min(2)).ints(min).get === List(
+        _ <- Ns.int(min(2)).ints(min).get.map(_ ==> List(
           (List(1, 1), Set(1))
-        )
+        ))
 
-        _ <- Ns.int(min).ints(min(2)).get === List(
+        _ <- Ns.int(min).ints(min(2)).get.map(_ ==> List(
           (1, List(Set(1, 2)))
-        )
+        ))
 
-        _ <- Ns.int(min(2)).ints(min(2)).get === List(
+        _ <- Ns.int(min(2)).ints(min(2)).get.map(_ ==> List(
           (List(1, 1), List(Set(1, 2)))
-        )
+        ))
       } yield ()
     }
 
@@ -303,43 +301,43 @@ object Aggregates extends AsyncTestSuite {
 
         // combinations
 
-        _ <- Ns.int(max).ints.get === List(
+        _ <- Ns.int(max).ints.get.map(_ ==> List(
           (3, Set(1, 4, 3, 2))
-        )
+        ))
 
-        _ <- Ns.int(max(2)).ints.get === List(
+        _ <- Ns.int(max(2)).ints.get.map(_ ==> List(
           (List(3, 3), Set(1, 4, 3, 2))
-        )
+        ))
 
 
-        _ <- Ns.int.ints(max).get === List(
+        _ <- Ns.int.ints(max).get.map(_ ==> List(
           (1, Set(2)),
           (2, Set(3)),
           (3, Set(4))
-        )
+        ))
 
-        _ <- Ns.int.ints(max(2)).get === List(
+        _ <- Ns.int.ints(max(2)).get.map(_ ==> List(
           (1, List(Set(1, 2))),
           (2, List(Set(2, 3))),
           (3, List(Set(2, 4)))
-        )
+        ))
 
 
-        _ <- Ns.int(max).ints(max).get === List(
+        _ <- Ns.int(max).ints(max).get.map(_ ==> List(
           (3, Set(4))
-        )
+        ))
 
-        _ <- Ns.int(max(2)).ints(max).get === List(
+        _ <- Ns.int(max(2)).ints(max).get.map(_ ==> List(
           (List(3, 3), Set(4))
-        )
+        ))
 
-        _ <- Ns.int(max).ints(max(2)).get === List(
+        _ <- Ns.int(max).ints(max(2)).get.map(_ ==> List(
           (3, List(Set(4, 3)))
-        )
+        ))
 
-        _ <- Ns.int(max(2)).ints(max(2)).get === List(
+        _ <- Ns.int(max(2)).ints(max(2)).get.map(_ ==> List(
           (List(3, 3), List(Set(4, 3)))
-        )
+        ))
       } yield ()
     }
     val strs    = Seq("str1", "str2", "str3", "str4")
@@ -450,9 +448,9 @@ object Aggregates extends AsyncTestSuite {
           (3, List("b"))
         ))
 
-        _ <- Ns.str(distinct).int(distinct).get === List(
+        _ <- Ns.str(distinct).int(distinct).get.map(_ ==> List(
           (List("a", "b"), List(1, 3, 2)),
-        )
+        ))
       } yield ()
     }
 
@@ -486,25 +484,24 @@ object Aggregates extends AsyncTestSuite {
           (3, 1)
         ))
 
-        _ <- Ns.str(count).str(countDistinct).get === List(
+        _ <- Ns.str(count).str(countDistinct).get.map(_ ==> List(
           (4, 2),
-        )
+        ))
 
         // extra int without a str value was saved
-        _ <- Ns.int(count).int(countDistinct).get === List(
+        _ <- Ns.int(count).int(countDistinct).get.map(_ ==> List(
           (5, 4),
-        )
+        ))
 
-        _ <- Ns.int(count).get === List(5)
-        _ <- Ns.int(countDistinct).get === List(4)
+        _ <- Ns.int(count).get.map(_ ==> List(5))
+        _ <- Ns.int(countDistinct).get.map(_ ==> List(4))
 
-        _ <- Ns.str_(Nil).int.get === List(4)
+        _ <- Ns.str_(Nil).int.get.map(_ ==> List(4))
       } yield ()
     }
 
     "count, countDistinct with entity id" - core { implicit conn =>
       for {
-
         // card-one
 
         tx1 <- Ns.int(1).save
@@ -535,15 +532,13 @@ object Aggregates extends AsyncTestSuite {
     }
 
     "Map attributes can't use aggregates" - core { implicit conn =>
-                compileError(
-                "m(Ns.intMap(min))").check(
-                "molecule.core.ops.exception.VerifyRawModelException: Only expression keywords `not` and `unify` can be applied to Map attributes."
-                )
+      compileError("m(Ns.intMap(min))").check("",
+        "molecule.core.ops.exception.VerifyRawModelException: Only expression keywords `not` and `unify` can be applied to Map attributes."
+      )
 
-                  compileError (
-                  """m(Ns.intMapK("a")(min))""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Only expression keywords `not` and `unify` can be applied to Map attributes."
-                  )
+      compileError("""m(Ns.intMapK("a")(min))""").check("",
+        "molecule.core.ops.exception.VerifyRawModelException: Only expression keywords `not` and `unify` can be applied to Map attributes."
+      )
     }
 
     "Multiple aggregates of same attr" - core { implicit conn =>

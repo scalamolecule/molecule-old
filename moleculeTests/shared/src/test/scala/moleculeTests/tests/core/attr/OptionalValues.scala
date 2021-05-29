@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.attr
 
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out5._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
@@ -7,7 +8,6 @@ import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
 
 
 object OptionalValues extends AsyncTestSuite {
@@ -25,7 +25,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.str$.get.map(_.sortBy(_._1) ==> List((1, Some("a")), (2, None)))
 
           // Int and String mandatory
-          _ <- Ns.int.str.get === List((1, "a"))
+          _ <- Ns.int.str.get.map(_ ==> List((1, "a")))
         } yield ()
       }
 
@@ -34,7 +34,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.str$ insert List((1, Some("a")), (2, None))
 
           _ <- Ns.int.str$.get.map(_.sortBy(_._1) ==> List((1, Some("a")), (2, None)))
-          _ <- Ns.int.str.get === List((1, "a"))
+          _ <- Ns.int.str.get.map(_ ==> List((1, "a")))
         } yield ()
       }
 
@@ -43,7 +43,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.str.int$ insert List(("a", Some(1)), ("b", None))
 
           _ <- Ns.str.int$.get.map(_.sortBy(_._1) ==> List(("a", Some(1)), ("b", None)))
-          _ <- Ns.str.int.get === List(("a", 1))
+          _ <- Ns.str.int.get.map(_ ==> List(("a", 1)))
         } yield ()
       }
 
@@ -52,7 +52,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.long$ insert List((1, Some(3L)), (2, None))
 
           _ <- Ns.int.long$.get.map(_.sortBy(_._1) ==> List((1, Some(3L)), (2, None)))
-          _ <- Ns.int.long.get === List((1, 3L))
+          _ <- Ns.int.long.get.map(_ ==> List((1, 3L)))
         } yield ()
       }
 
@@ -61,7 +61,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.bool$ insert List((1, Some(true)), (2, None))
 
           _ <- Ns.int.bool$.get.map(_.sortBy(_._1) ==> List((1, Some(true)), (2, None)))
-          _ <- Ns.int.bool.get === List((1, true))
+          _ <- Ns.int.bool.get.map(_ ==> List((1, true)))
         } yield ()
       }
 
@@ -70,7 +70,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.date$ insert List((1, Some(date1)), (2, None))
 
           _ <- Ns.int.date$.get.map(_.sortBy(_._1) ==> List((1, Some(date1)), (2, None)))
-          _ <- Ns.int.date.get === List((1, date1))
+          _ <- Ns.int.date.get.map(_ ==> List((1, date1)))
         } yield ()
       }
 
@@ -79,7 +79,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.uuid$ insert List((1, Some(uuid1)), (2, None))
 
           _ <- Ns.int.uuid$.get.map(_.sortBy(_._1) ==> List((1, Some(uuid1)), (2, None)))
-          _ <- Ns.int.uuid.get === List((1, uuid1))
+          _ <- Ns.int.uuid.get.map(_ ==> List((1, uuid1)))
         } yield ()
       }
 
@@ -88,7 +88,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.uri$ insert List((1, Some(uri1)), (2, None))
 
           _ <- Ns.int.uri$.get.map(_.sortBy(_._1) ==> List((1, Some(uri1)), (2, None)))
-          _ <- Ns.int.uri.get === List((1, uri1))
+          _ <- Ns.int.uri.get.map(_ ==> List((1, uri1)))
         } yield ()
       }
 
@@ -97,7 +97,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.enum$ insert List((1, Some("enum1")), (2, None))
 
           _ <- Ns.int.enum$.get.map(_.sortBy(_._1) ==> List((1, Some("enum1")), (2, None)))
-          _ <- Ns.int.enum.get === List((1, "enum1"))
+          _ <- Ns.int.enum.get.map(_ ==> List((1, "enum1")))
         } yield ()
       }
 
@@ -108,7 +108,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.ref1$ insert List((1, Some(r3)), (2, None))
 
           _ <- Ns.int.ref1$.get.map(_.sortBy(_._1) ==> List((1, Some(r3)), (2, None)))
-          _ <- Ns.int.ref1.get === List((1, r3))
+          _ <- Ns.int.ref1.get.map(_ ==> List((1, r3)))
         } yield ()
       }
     }
@@ -122,7 +122,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.insert(2)
 
           _ <- Ns.int.strs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("a", "b"))), (2, None)))
-          _ <- Ns.int.strs.get === List((1, Set("a", "b")))
+          _ <- Ns.int.strs.get.map(_ ==> List((1, Set("a", "b"))))
         } yield ()
       }
 
@@ -133,7 +133,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.strs.insert(2, Set[String]())
 
           _ <- Ns.int.strs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("a", "b"))), (2, None)))
-          _ <- Ns.int.strs.get === List((1, Set("a", "b")))
+          _ <- Ns.int.strs.get.map(_ ==> List((1, Set("a", "b"))))
         } yield ()
       }
 
@@ -142,7 +142,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.strs$ insert Seq((1, Some(Set("a", "b"))), (2, None))
 
           _ <- Ns.int.strs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("a", "b"))), (2, None)))
-          _ <- Ns.int.strs.get === List((1, Set("a", "b")))
+          _ <- Ns.int.strs.get.map(_ ==> List((1, Set("a", "b"))))
         } yield ()
       }
 
@@ -151,7 +151,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.str.ints$ insert List(("a", Some(Set(1, 2))), ("b", None))
 
           _ <- Ns.str.ints$.get.map(_.sortBy(_._1) ==> List(("a", Some(Set(1, 2))), ("b", None)))
-          _ <- Ns.str.ints.get === List(("a", Set(1, 2)))
+          _ <- Ns.str.ints.get.map(_ ==> List(("a", Set(1, 2))))
         } yield ()
       }
 
@@ -160,7 +160,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.longs$ insert Seq((1, Some(Set(3L, 4L))), (2, None))
 
           _ <- Ns.int.longs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(3L, 4L))), (2, None)))
-          _ <- Ns.int.longs.get === List((1, Set(3L, 4L)))
+          _ <- Ns.int.longs.get.map(_ ==> List((1, Set(3L, 4L))))
         } yield ()
       }
 
@@ -171,7 +171,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.dates$ insert Seq((1, Some(Set(date1, date2))), (2, None))
 
           _ <- Ns.int.dates$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(date1, date2))), (2, None)))
-          _ <- Ns.int.dates.get === List((1, Set(date1, date2)))
+          _ <- Ns.int.dates.get.map(_ ==> List((1, Set(date1, date2))))
         } yield ()
       }
 
@@ -180,7 +180,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.uuids$ insert Seq((1, Some(Set(uuid1, uuid2))), (2, None))
 
           _ <- Ns.int.uuids$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(uuid1, uuid2))), (2, None)))
-          _ <- Ns.int.uuids.get === List((1, Set(uuid1, uuid2)))
+          _ <- Ns.int.uuids.get.map(_ ==> List((1, Set(uuid1, uuid2))))
         } yield ()
       }
 
@@ -189,7 +189,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.uris$ insert Seq((1, Some(Set(uri1, uri2))), (2, None))
 
           _ <- Ns.int.uris$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(uri1, uri2))), (2, None)))
-          _ <- Ns.int.uris.get === List((1, Set(uri1, uri2)))
+          _ <- Ns.int.uris.get.map(_ ==> List((1, Set(uri1, uri2))))
         } yield ()
       }
 
@@ -198,7 +198,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.enums$ insert Seq((1, Some(Set("enum1", "enum2"))), (2, None))
 
           _ <- Ns.int.enums$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("enum1", "enum2"))), (2, None)))
-          _ <- Ns.int.enums.get === List((1, Set("enum1", "enum2")))
+          _ <- Ns.int.enums.get.map(_ ==> List((1, Set("enum1", "enum2"))))
         } yield ()
       }
 
@@ -209,7 +209,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.refs1$ insert Seq((1, Some(Set(r3, r4))), (2, None))
 
           _ <- Ns.int.refs1$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(r3, r4))), (2, None)))
-          _ <- Ns.int.refs1.get === List((1, Set(r3, r4)))
+          _ <- Ns.int.refs1.get.map(_ ==> List((1, Set(r3, r4))))
         } yield ()
       }
 
@@ -220,7 +220,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.refsSub1$ insert Seq((1, Some(Set(r3, r4))), (2, None))
 
           _ <- Ns.int.refsSub1$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(r3, r4))), (2, None)))
-          _ <- Ns.int.refsSub1.get === List((1, Set(r3, r4)))
+          _ <- Ns.int.refsSub1.get.map(_ ==> List((1, Set(r3, r4))))
         } yield ()
       }
     }
@@ -369,24 +369,17 @@ object OptionalValues extends AsyncTestSuite {
             ("a", Some(1)),
             ("b", None))
 
-          _ <- m(Ns.str_.int$).get === List(
+          _ <- m(Ns.str_.int$).get.map(_ ==> List(
             Some(1),
-            None)
+            None))
         } yield ()
       }
 
-      "No tacit attributes in insert molecule" - core {   implicit conn =>
-            for {
-              _ <- m(Ns.str_.int$).insert(Some(1))
-//              match {
-//                case Failure(exc) =>
-//              }
-//
-//
-//            _ <- (m(Ns.str_.int$).insert must throwA[VerifyModelException]).message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-//              "[noTacitAttrs]  Tacit attributes like `str_` not allowed in insert molecules."
-          } yield ()
-          }
+      "No tacit attributes in insert molecule" - core { implicit conn =>
+        m(Ns.str_.int$).insert(Some(1)).recover { case VerifyModelException(err) =>
+          err ==> "[noTacitAttrs]  Tacit attributes like `str_` not allowed in insert molecules."
+        }
+      }
     }
 
     "Ns without attribute" - core { implicit conn =>
@@ -395,44 +388,47 @@ object OptionalValues extends AsyncTestSuite {
           ("a", 1),
           ("b", 2))
 
-        _ <- Ref1.int1.get === List(1, 2)
+        _ <- Ref1.int1.get.map(_ ==> List(1, 2))
 
         // Adding unnecessary Ns gives same result
-        _ <- Ns.Ref1.int1.get === List(1, 2)
+        _ <- Ns.Ref1.int1.get.map(_ ==> List(1, 2))
 
-        //    // First namespace without any attributes not allowed
-        //    (m(Ns.Ref1.int1).insert must throwA[VerifyModelException]).message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[missingAttrInStartEnd]  Missing mandatory attributes of first namespace."
-        //
-        //    // First namespace without any mandatory attributes not allowed
-        //    (Ns.str$.Ref1.int1.insert must throwA[VerifyModelException]).message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[missingAttrInStartEnd]  Missing mandatory attributes of first namespace."
+        // First namespace without any attributes not allowed
+        _ <- m(Ns.Ref1.int1).insert(1).recover { case VerifyModelException(err) =>
+          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of first namespace."
+        }
+
+        // First namespace without any mandatory attributes not allowed
+        _ <- Ns.str$.Ref1.int1.insert(Some("a"), 1).recover { case VerifyModelException(err) =>
+          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of first namespace."
+        }
 
         // If at least 1 mandatory attribute is present we can have optional attributes too
         _ <- Ns.str$.int.insert(Some("a"), 1)
-        _ <- Ns.str$.int.get === List((Some("a"), 1))
+        _ <- Ns.str$.int.get.map(_ ==> List((Some("a"), 1)))
 
         _ <- Ns.int.str$.insert(2, None)
         _ <- Ns.int.str$.get.map(_.sortBy(_._1) ==> List((1, Some("a")), (2, None)))
 
-        //    // First namespace without any mandatory attributes not allowed
-        //    (Ns.str_.Ref1.int1.insert must throwA[VerifyModelException]).message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[noTacitAttrs]  Tacit attributes like `str_` not allowed in insert molecules."
-        //
-        //    // Last namespace without any mandatory attributes not allowed
-        //    (Ns.str.Ref1.int1$.insert must throwA[VerifyModelException]).message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //      "[missingAttrInStartEnd]  Missing mandatory attributes of last namespace."
+        // First namespace without any mandatory attributes not allowed
+        _ <- Ns.str_.Ref1.int1.insert(1).recover { case VerifyModelException(err) =>
+          err ==> "[noTacitAttrs]  Tacit attributes like `str_` not allowed in insert molecules."
+        }
+
+        // Last namespace without any mandatory attributes not allowed
+        _ <- Ns.str.Ref1.int1$.insert("a", Some(1)).recover { case VerifyModelException(err) =>
+          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of last namespace."
+        }
       } yield ()
     }
 
 
     "Only optional attributes" - core { implicit conn =>
-
-      compileError("m(Ns.str$)").check(
+      compileError("m(Ns.str$)").check("",
         "molecule.core.ops.exception.VerifyRawModelException: " +
           "Molecule has only optional attributes. Please add one or more mandatory/tacit attributes.")
 
-      compileError("m(Ns.str$.int$)").check(
+      compileError("m(Ns.str$.int$)").check("",
         "molecule.core.ops.exception.VerifyRawModelException: " +
           "Molecule has only optional attributes. Please add one or more mandatory/tacit attributes.")
     }
@@ -441,22 +437,22 @@ object OptionalValues extends AsyncTestSuite {
     "Apply optional value" - core { implicit conn =>
       for {
         _ <- Ns.str.int$ insert List(("Ann", Some(37)), ("Ben", None))
-        _ <- m(Ns.str.int$(Some(37))).get === List(("Ann", Some(37)))
-        _ <- m(Ns.str.int$(None)).get === List(("Ben", None))
+        _ <- m(Ns.str.int$(Some(37))).get.map(_ ==> List(("Ann", Some(37))))
+        _ <- m(Ns.str.int$(None)).get.map(_ ==> List(("Ben", None)))
 
 
         _ <- Ns.int.enum$ insert List((1, Some("enum1")), (2, None))
-        _ <- m(Ns.int(1).enum$(Some("enum1"))).get === List((1, Some("enum1")))
-        _ <- m(Ns.int(2).enum$(None)).get === List((2, None))
+        _ <- m(Ns.int(1).enum$(Some("enum1"))).get.map(_ ==> List((1, Some("enum1"))))
+        _ <- m(Ns.int(2).enum$(None)).get.map(_ ==> List((2, None)))
         noEnum = Option.empty[String]
-        _ <- m(Ns.int(2).enum$(noEnum)).get === List((2, None))
+        _ <- m(Ns.int(2).enum$(noEnum)).get.map(_ ==> List((2, None)))
 
         _ <- Ns.int.enums$ insert List((3, Some(Set("enum1"))), (4, None))
-        _ <- m(Ns.int(3).enums$(Some(Set("enum1")))).get === List((3, Some(Set("enum1"))))
-        _ <- m(Ns.int(4).enums$(None)).get === List((4, None))
+        _ <- m(Ns.int(3).enums$(Some(Set("enum1")))).get.map(_ ==> List((3, Some(Set("enum1")))))
+        _ <- m(Ns.int(4).enums$(None)).get.map(_ ==> List((4, None)))
 
         noEnums = Option.empty[Set[String]]
-        _ <- m(Ns.int(4).enums$(noEnums)).get === List((4, None))
+        _ <- m(Ns.int(4).enums$(noEnums)).get.map(_ ==> List((4, None)))
       } yield ()
     }
 
@@ -474,21 +470,20 @@ object OptionalValues extends AsyncTestSuite {
           ("a", Some(1), Some(1)),
           ("b", None, None)
         ))
-        _ <- Ns.str.int$.int.get === List(
+        _ <- Ns.str.int$.int.get.map(_ ==> List(
           ("a", Some(1), 1)
-        )
-        _ <- Ns.str.int.int$.get === List(
+        ))
+        _ <- Ns.str.int.int$.get.map(_ ==> List(
           ("a", 1, Some(1))
-        )
-        _ <- Ns.str.int.int.get === List(
+        ))
+        _ <- Ns.str.int.int.get.map(_ ==> List(
           ("a", 1, 1)
-        )
+        ))
       } yield ()
     }
 
 
     "All optional card-many values returned" - core { implicit conn =>
-
       // Datomic by default returns max 1000 values from a pull expression.
       // Molecule returns all values:
 
@@ -514,19 +509,19 @@ object OptionalValues extends AsyncTestSuite {
         )
 
         // Equality matching full search string
-        _ <- Ns.int.str("hi there").get === List(
+        _ <- Ns.int.str("hi there").get.map(_ ==> List(
           (1, "hi there"),
-        )
-        _ <- Ns.int.str$(Some("hi there")).get === List(
+        ))
+        _ <- Ns.int.str$(Some("hi there")).get.map(_ ==> List(
           (1, Some("hi there")),
-        )
-        _ <- Ns.int.str$(Some("hi")).get === List()
+        ))
+        _ <- Ns.int.str$(Some("hi")).get.map(_ ==> List())
 
         _ <- if (system == SystemPeer) {
           // Fulltext matching a single full word
-          Ns.int.str$.contains("hi").get === List(
+          Ns.int.str$.contains("hi").get.map(_ ==> List(
             (1, Some("hi there")),
-          )
+          ))
         } else Future.unit
       } yield ()
     }
@@ -541,20 +536,20 @@ object OptionalValues extends AsyncTestSuite {
         )
 
         // Equality matching full search string
-        _ <- Ns.int.strs(Set("hi there")).get === List(
+        _ <- Ns.int.strs(Set("hi there")).get.map(_ ==> List(
           (1, Set("hi there", "hi five")),
-        )
-        _ <- Ns.int.strs$(Some(Set("hi there"))).get === List(
+        ))
+        _ <- Ns.int.strs$(Some(Set("hi there"))).get.map(_ ==> List(
           (1, Some(Set("hi there", "hi five"))),
-        )
-        _ <- Ns.int.strs(Set("hi")).get === List()
-        _ <- Ns.int.strs$(Some(Set("hi"))).get === List()
+        ))
+        _ <- Ns.int.strs(Set("hi")).get.map(_ ==> List())
+        _ <- Ns.int.strs$(Some(Set("hi"))).get.map(_ ==> List())
 
         _ <- if (system == SystemPeer) {
           // Fulltext matching a single full word
-          Ns.int.strs$.contains("hi").get === List(
+          Ns.int.strs$.contains("hi").get.map(_ ==> List(
             (1, Some(Set("hi there", "hi five"))),
-          )
+          ))
         } else Future.unit
       } yield ()
     }

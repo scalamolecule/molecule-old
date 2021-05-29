@@ -138,7 +138,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   ben.retract
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
@@ -191,7 +191,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   Person(ben).age(43).update
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
@@ -340,7 +340,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *
     *
     *   // No data yet before insert
-    *   Person.name.age.getObjListAsOf(beforeInsert) === List()
+    *   Person.name.age.getObjListAsOf(beforeInsert).map(_ ==> List())
     *
     *   // Get List of all rows as of afterInsert
     *   val List(a1, a2) = Person.name.age.getObjListAsOf(afterInsert)
@@ -444,7 +444,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   c1.name === "Cay"
     *
     *   // Nothing added since transaction time t3
-    *   Person.name.getObjListSince(t3) === List()
+    *   Person.name.getObjListSince(t3).map(_ ==> List())
     * }}}
     *
     * @group getSince
@@ -526,7 +526,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   c1.name === "Cay"
     *
     *   // Nothing added since transaction time tx3
-    *   Person.name.getObjListSince(tx3) === List()
+    *   Person.name.getObjListSince(tx3).map(_ ==> List())
     * }}}
     *
     * @group getSince
@@ -605,7 +605,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   c1.name === "Cay"
     *
     *   // Nothing added since transaction time date3
-    *   Person.name.getObjListSince(date3) === List()
+    *   Person.name.getObjListSince(date3).map(_ ==> List())
     * }}}
     *
     * @group getSince
@@ -760,14 +760,14 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).getObjList(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).size === 250
+    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
     * }}}
     *
     * @group getWith
@@ -784,17 +784,17 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).getObjList(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).size === 250
+    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
     *
     *   // Imagine future db - Let's just take 10
-    *   Person.name.getWith(newDataTx, 10).size === 10
+    *   Person.name.getWith(newDataTx, 10).map(_.size ==> 10)
     * }}}
     *
     * @group getWith

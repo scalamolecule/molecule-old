@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.ref
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

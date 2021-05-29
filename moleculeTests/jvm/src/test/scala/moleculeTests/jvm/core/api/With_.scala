@@ -23,11 +23,11 @@ object With_ extends AsyncTestSuite with JavaUtil {
         data = new FileReader("moleculeTests/shared/resources/tests/core/time/save2-3.dtm")
         txData2_3 = _root_.datomic.Util.readAll(data).get(0).asInstanceOf[jList[jList[_]]]
 
-        _ <- Ns.int.getWith(txData2_3) === List(1, 2, 3)
-        _ <- Ns.int.getWith(txData2_3, 2) === List(1, 2)
+        _ <- Ns.int.getWith(txData2_3).map(_ ==> List(1, 2, 3))
+        _ <- Ns.int.getWith(txData2_3, 2).map(_ ==> List(1, 2))
 
-        _ <- Ns.int.getArrayWith(txData2_3) === Array(1, 2, 3)
-        _ <- Ns.int.getArrayWith(txData2_3, 2) === Array(1, 2)
+        _ <- Ns.int.getArrayWith(txData2_3).map(_ ==> Array(1, 2, 3))
+        _ <- Ns.int.getArrayWith(txData2_3, 2).map(_ ==> Array(1, 2))
 
         _ <- Ns.int.getIterableWith(txData2_3).map(_.iterator.toList ==> Iterator(1, 2, 3).toList)
 

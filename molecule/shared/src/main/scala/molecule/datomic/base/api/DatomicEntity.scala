@@ -27,16 +27,16 @@ trait DatomicEntity {
     *   val List(benId, benAddressId) = Person.name.age.Address.street.insert("Ben", 42, "Hollywood Rd").eids
     *
     *   // Level 1
-    *   benId[String](":Person/name") === Some("Ben")
-    *   benId[Int](":Person/age") === Some(42)
+    *   benId[String](":Person/name").map(_ ==> Some("Ben"))
+    *   benId[Int](":Person/age").map(_ ==> Some(42))
     *
     *   // Level 2
     *   val refMap = benId[Map[String, Any]](":Person/address").getOrElse(Map.empty[String, Any])
-    *   benAddressId[String](":Address/street") === Some("Hollywood Rd")
+    *   benAddressId[String](":Address/street").map(_ ==> Some("Hollywood Rd"))
     *
     *   // Non-asserted or non-existing attribute returns None
-    *   benId[Int](":Person/non-existing-attribute") === None
-    *   benId[Int](":Person/existing-but-non-asserted-attribute") === None
+    *   benId[Int](":Person/non-existing-attribute").map(_ ==> None)
+    *   benId[Int](":Person/existing-but-non-asserted-attribute").map(_ ==> None)
     * }}}
     *
     * @group entityApi
@@ -142,7 +142,7 @@ trait DatomicEntity {
     *   val benId = Person.e.name_("Ben").get.head
     *
     *   // Retraction transaction data
-    *   benId.getRetractTx === List(List(RetractEntity(17592186045445)))
+    *   benId.getRetractTx.map(_ ==> List(List(RetractEntity(17592186045445))))
     * }}}
     *
     * @group retract
@@ -180,7 +180,7 @@ trait DatomicEntity {
     *   benId.Tx(MyMetaData.action("moved away")).retract
     *
     *   // Query for Ben's history and why he was retracted
-    *   Person(benId).name.t.op.Tx(MyMetaData.action).getHistory === List(
+    *   Person(benId).name.t.op.Tx(MyMetaData.action).getHistory.map(_ ==> List(
     *     ("Ben", 1028, true, "add member"), // Ben added as member
     *     ("Ben", 1030, false, "moved away") // Ben retracted since he moved away
     *   )
@@ -227,7 +227,7 @@ trait DatomicEntity {
     *   val benId = Person.name.age.Address.street.insert("Ben", 42, "Hollywood Rd").eid
     *
     *   // 2 levels returned
-    *   benId.touchMax(2) === Map(
+    *   benId.touchMax(2).map(_ ==> Map(
     *     ":db/id" -> 17592186045445L,
     *     ":Person/age" -> 42,
     *     ":Person/address" -> Map(
@@ -237,7 +237,7 @@ trait DatomicEntity {
     *   )
     *
     *   // 1 level returned
-    *   benId.touchMax(1) === Map(
+    *   benId.touchMax(1).map(_ ==> Map(
     *     ":db/id" -> 17592186045445L,
     *     ":Person/age" -> 42,
     *     ":Person/address" -> 17592186045446L // Only reference returned
@@ -355,7 +355,7 @@ trait DatomicEntity {
     *   val benId = Person.name.age.Address.street.insert("Ben", 42, "Hollywood Rd").eid
     *
     *   // 2 levels returned
-    *   benId.touchListMax(2) === List(
+    *   benId.touchListMax(2).map(_ ==> List(
     *     ":db/id" -> 17592186045445L,
     *     ":Person/age" -> 42,
     *     ":Person/address" -> List(
@@ -365,7 +365,7 @@ trait DatomicEntity {
     *   )
     *
     *   // 1 level returned
-    *   benId.touchListMax(1) === List(
+    *   benId.touchListMax(1).map(_ ==> List(
     *     ":db/id" -> 17592186045445L,
     *     ":Person/age" -> 42,
     *     ":Person/address" -> 17592186045446L // Only reference returned

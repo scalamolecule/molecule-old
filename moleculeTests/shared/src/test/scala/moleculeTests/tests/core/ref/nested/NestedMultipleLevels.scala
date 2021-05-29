@@ -1,9 +1,8 @@
 package moleculeTests.tests.core.ref.nested
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -13,16 +12,13 @@ object NestedMultipleLevels extends AsyncTestSuite {
   lazy val tests = Tests {
 
     "Optional/mandatory" - core { implicit conn =>
-
       // Can't mix mandatory/optional nested structures
 
-      compileError(
-        """m(Ns.str.Refs1.*?(Ref1.int1.Refs2.*(Ref2.int2)))""").check(
+      compileError("""m(Ns.str.Refs1.*?(Ref1.int1.Refs2.*(Ref2.int2)))""").check("",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Optional nested structure can't be mixed with mandatory nested structure.")
 
-      compileError(
-        """m(Ns.str.Refs1.*(Ref1.int1.Refs2.*?(Ref2.int2)))""").check(
+      compileError("""m(Ns.str.Refs1.*(Ref1.int1.Refs2.*?(Ref2.int2)))""").check("",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Optional nested structure can't be mixed with mandatory nested structure.")
     }
@@ -38,11 +34,11 @@ object NestedMultipleLevels extends AsyncTestSuite {
           ("b", List())
         )
 
-        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).get.map(_ ==> List(
           ("a", List(
             (1, List(11, 12)),
           ))
-        )
+        ))
 
         _ <- Ns.str.Refs1.*?(Ref1.int1.Refs2.*?(Ref2.int2)).get.map(_.sortBy(_._1) ==> List(
           ("a", List(
@@ -84,7 +80,7 @@ object NestedMultipleLevels extends AsyncTestSuite {
         )
 
         // optional - optional
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).get.map(_ ==> List(
           ("A", List(
             (1, Some("a1"), List(
               (11, Some("a11")),
@@ -95,7 +91,7 @@ object NestedMultipleLevels extends AsyncTestSuite {
               (22, None),
             )),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1$.Refs2.*?(Ref2.int2.str2$)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, Some("a1"), List(
@@ -113,7 +109,7 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // optional - mandatory
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2)).get.map(_ ==> List(
           ("A", List(
             (1, Some("a1"), List(
               (11, "a11"),
@@ -122,7 +118,7 @@ object NestedMultipleLevels extends AsyncTestSuite {
               (21, "a21"),
             )),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1$.Refs2.*?(Ref2.int2.str2)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, Some("a1"), List(
@@ -138,12 +134,12 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // optional - tacit
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2_)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2_)).get.map(_ ==> List(
           ("A", List(
             (1, Some("a1"), List(11)),
             (2, None, List(21)),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1$.Refs2.*?(Ref2.int2.str2_)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, Some("a1"), List(11)),
@@ -155,14 +151,14 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // mandatory - optional
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2.str2$)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2.str2$)).get.map(_ ==> List(
           ("A", List(
             (1, "a1", List(
               (11, Some("a11")),
               (12, None),
             )),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1.Refs2.*?(Ref2.int2.str2$)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, "a1", List(
@@ -175,13 +171,13 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // mandatory - mandatory
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2.str2)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2.str2)).get.map(_ ==> List(
           ("A", List(
             (1, "a1", List(
               (11, "a11"),
             )),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1.Refs2.*?(Ref2.int2.str2)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, "a1", List(
@@ -193,11 +189,11 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // mandatory - tacit
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2.str2_)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2.str2_)).get.map(_ ==> List(
           ("A", List(
             (1, "a1", List(11)),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1.Refs2.*?(Ref2.int2.str2_)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, "a1", List(11)),
@@ -207,14 +203,14 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // tacit - optional
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1_.Refs2.*(Ref2.int2.str2$)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1_.Refs2.*(Ref2.int2.str2$)).get.map(_ ==> List(
           ("A", List(
             (1, List(
               (11, Some("a11")),
               (12, None),
             )),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1_.Refs2.*?(Ref2.int2.str2$)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, List(
@@ -227,13 +223,13 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // tacit - mandatory
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1_.Refs2.*(Ref2.int2.str2)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1_.Refs2.*(Ref2.int2.str2)).get.map(_ ==> List(
           ("A", List(
             (1, List(
               (11, "a11"),
             )),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1_.Refs2.*?(Ref2.int2.str2)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, List(
@@ -245,11 +241,11 @@ object NestedMultipleLevels extends AsyncTestSuite {
         ))
 
         // tacit - tacit
-        _ <- Ns.str.Refs1.*(Ref1.int1.str1_.Refs2.*(Ref2.int2.str2_)).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1_.Refs2.*(Ref2.int2.str2_)).get.map(_ ==> List(
           ("A", List(
             (1, List(11)),
           )),
-        )
+        ))
         _ <- Ns.str.Refs1.*?(Ref1.int1.str1_.Refs2.*?(Ref2.int2.str2_)).get.map(_.sortBy(_._1) ==> List(
           ("A", List(
             (1, List(11)),
@@ -274,13 +270,13 @@ object NestedMultipleLevels extends AsyncTestSuite {
           ("b", List())
         )
 
-        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2.Refs3.*(Ref3.int3))).get === List(
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2.Refs3.*(Ref3.int3))).get.map(_ ==> List(
           ("a", List(
             (1, List(
               (11, List(111, 112)),
             ))
           ))
-        )
+        ))
 
         _ <- Ns.str.Refs1.*?(Ref1.int1.Refs2.*?(Ref2.int2.Refs3.*?(Ref3.int3))).get.map(_.sortBy(_._1) ==> List(
           ("a", List(

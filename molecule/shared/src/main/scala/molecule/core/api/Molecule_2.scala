@@ -26,34 +26,34 @@ import scala.concurrent.Future
   *   // A. Pairs of input .................................
   *
   *   // One pair as params
-  *   profAge("doctor", 37).get === List("Ann")
+  *   profAge("doctor", 37).get.map(_ ==> List("Ann"))
   *
   *   // One or more pairs
-  *   profAge(("doctor", 37)).get === List("Ann")
-  *   profAge(("doctor", 37), ("teacher", 37)).get.sorted === List("Ann", "Ben")
+  *   profAge(("doctor", 37)).get.map(_ ==> List("Ann"))
+  *   profAge(("doctor", 37), ("teacher", 37)).get.map(_.sorted ==> List("Ann", "Ben"))
   *
   *   // One or more logical pairs
   *   // [pair-expression] or [pair-expression] or ...
-  *   profAge(("doctor" and 37) or ("teacher" and 32)).get.sorted === List("Ann", "Joe")
-  *   profAge(Seq(("doctor", 37), ("teacher", 37))).get.sorted === List("Ann", "Ben")
+  *   profAge(("doctor" and 37) or ("teacher" and 32)).get.map(_.sorted ==> List("Ann", "Joe"))
+  *   profAge(Seq(("doctor", 37), ("teacher", 37))).get.map(_.sorted ==> List("Ann", "Ben"))
   *
   *   // List of pairs
-  *   profAge(Seq(("doctor", 37))).get === List("Ann")
+  *   profAge(Seq(("doctor", 37))).get.map(_ ==> List("Ann"))
   *
   *
   *   // B. 2 groups of input, one for each input attribute .................................
   *
   *   // Two expressions
   *   // [profession-expression] and [age-expression]
-  *   profAge("doctor" and 37).get === List("Ann")
-  *   profAge(("doctor" or "teacher") and 37).get.sorted === List("Ann", "Ben")
-  *   profAge(("doctor" or "teacher") and (32 or 28)).get.sorted === List("Joe", "Liz")
+  *   profAge("doctor" and 37).get.map(_ ==> List("Ann"))
+  *   profAge(("doctor" or "teacher") and 37).get.map(_.sorted ==> List("Ann", "Ben"))
+  *   profAge(("doctor" or "teacher") and (32 or 28)).get.map(_.sorted ==> List("Joe", "Liz"))
   *
   *   // Two Lists
-  *   profAge(Seq("doctor"), Seq(37)).get === List("Ann")
-  *   profAge(Seq("doctor", "teacher"), Seq(37)).get.sorted === List("Ann", "Ben")
-  *   profAge(Seq("teacher"), Seq(37, 32)).get.sorted === List("Ben", "Joe")
-  *   profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.sorted === List("Ann", "Ben", "Joe")
+  *   profAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
+  *   profAge(Seq("doctor", "teacher"), Seq(37)).get.map(_.sorted ==> List("Ann", "Ben"))
+  *   profAge(Seq("teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ben", "Joe"))
+  *   profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
   * }}}
   *
   * @tparam I1 Type of input matching first attribute with `?` marker (profession: String)
@@ -210,7 +210,7 @@ trait Molecule_2[Obj, I1, I2] extends InputMolecule {
     *   val profAge = m(Person.name.profession_(?).age_(?))
     *
     *   // Apply 2 input values
-    *   profAge("doctor", 37).get === List("Ann")
+    *   profAge("doctor", 37).get.map(_ ==> List("Ann"))
     * }}}
     *
     * @param i1   Input value matching first input attribute (profession: String)
@@ -237,8 +237,8 @@ trait Molecule_2[Obj, I1, I2] extends InputMolecule {
     *
     *   // Apply two or more pair expressions, each matching both input attributes
     *   // [profession/age-expression] or [profession/age-expression] or ...
-    *   profAge("doctor" and 37).get.sorted === List("Ann")
-    *   profAge(("doctor" and 37) or ("teacher" and 32)).get.sorted === List("Ann", "Joe")
+    *   profAge("doctor" and 37).get.map(_.sorted ==> List("Ann"))
+    *   profAge(("doctor" and 37) or ("teacher" and 32)).get.map(_.sorted ==> List("Ann", "Joe"))
     * }}}
     *
     * @param or   Two or more pair-wise expressions separated by `or`
@@ -263,8 +263,8 @@ trait Molecule_2[Obj, I1, I2] extends InputMolecule {
     *   val profAge = m(Person.name.profession_(?).age_(?))
     *
     *   // Apply one or more value pairs, each matching both input attributes
-    *   profAge(("doctor", 37)).get === List("Ann")
-    *   profAge(("doctor", 37), ("teacher", 37)).get.sorted === List("Ann", "Ben")
+    *   profAge(("doctor", 37)).get.map(_ ==> List("Ann"))
+    *   profAge(("doctor", 37), ("teacher", 37)).get.map(_.sorted ==> List("Ann", "Ben"))
     * }}}
     *
     * @param tpl  First pair of values matching both input attributes
@@ -289,8 +289,8 @@ trait Molecule_2[Obj, I1, I2] extends InputMolecule {
     *   val profAge = m(Person.name.profession_(?).age_(?))
     *
     *   // Apply Seq of one or more value pairs, each matching both input attributes
-    *   profAge(Seq(("doctor", 37))).get === List("Ann")
-    *   profAge(Seq(("doctor", 37), ("teacher", 37))).get.sorted === List("Ann", "Ben")
+    *   profAge(Seq(("doctor", 37))).get.map(_ ==> List("Ann"))
+    *   profAge(Seq(("doctor", 37), ("teacher", 37))).get.map(_.sorted ==> List("Ann", "Ben"))
     * }}}
     *
     * @param ins  Seq of value pairs, each matching both input attributes
@@ -318,9 +318,9 @@ trait Molecule_2[Obj, I1, I2] extends InputMolecule {
     *
     *   // Apply 2 expressions, one for each input attribute
     *   // [profession-expression] and [age-expression]
-    *   profAge("doctor" and 37).get === List("Ann")
-    *   profAge(("doctor" or "teacher") and 37).get.sorted === List("Ann", "Ben")
-    *   profAge(("doctor" or "teacher") and (32 or 28)).get.sorted === List("Joe", "Liz")
+    *   profAge("doctor" and 37).get.map(_ ==> List("Ann"))
+    *   profAge(("doctor" or "teacher") and 37).get.map(_.sorted ==> List("Ann", "Ben"))
+    *   profAge(("doctor" or "teacher") and (32 or 28)).get.map(_.sorted ==> List("Joe", "Liz"))
     * }}}
     *
     * @param and  First input expr `and` second input expr
@@ -345,12 +345,12 @@ trait Molecule_2[Obj, I1, I2] extends InputMolecule {
     *   val profAge = m(Person.name.profession_(?).age_(?))
     *
     *   // Apply 2 Seq of values, each matching one of the input attributes
-    *   profAge(Seq("doctor"), Seq(37)).get === List("Ann")
-    *   profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.sorted === List("Ann", "Ben", "Joe")
+    *   profAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
+    *   profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
     *
     *   // Number of arguments in each Seq don't have to match but can be asymmetric
-    *   profAge(Seq("doctor", "teacher"), Seq(37)).get.sorted === List("Ann", "Ben")
-    *   profAge(Seq("teacher"), Seq(37, 32)).get.sorted === List("Ben", "Joe")
+    *   profAge(Seq("doctor", "teacher"), Seq(37)).get.map(_.sorted ==> List("Ann", "Ben"))
+    *   profAge(Seq("teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ben", "Joe"))
     * }}}
     *
     * @param in1  Seq of values matching first input attribute (professions: Seq[String])

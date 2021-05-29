@@ -19,7 +19,7 @@
 //  val tests = Tests {
 //
 //    test("String-Int") {
-//      Artist.name.endYear.getAsync(2) === List(
+//      Artist.name.endYear.getAsync(2).map(_ ==> List(
 //        ("Dunn and McCashen", 1968),
 //        ("Brüder Grimm", 1863)
 //      )
@@ -34,7 +34,7 @@
 //          //          (1980, "Bill Evans")
 //        )
 //      }
-//      Artist.endYear.name.getAsync(2) === List(
+//      Artist.endYear.name.getAsync(2).map(_ ==> List(
 //        (1976, "The Peddlers"),
 //        (1978, "Ralfi Pagán")
 //        //          (1980, "Bill Evans")
@@ -42,7 +42,7 @@
 //    }
 //
 //    test("String-String") {
-//      Artist.name.sortName.getAsync(2) === List(
+//      Artist.name.sortName.getAsync(2).map(_ ==> List(
 //        ("Rolf Lundqvist & Arbete & fritid", "Lundqvist, Rolf & Arbete & fritid"),
 //        ("Rusty York", "York, Rusty")
 //      )
@@ -50,7 +50,7 @@
 //
 //    //        test("String-String") {
 //    //          implicit val conn = ConnProxy(DatomicPeerProxy("mem", schema = Some(CoreTestSchema)))
-//    //          Artist.name.sortName.getAsync2(2) === List(
+//    //          Artist.name.sortName.getAsync2(2).map(_ ==> List(
 //    //            ("Rolf Lundqvist & Arbete & fritid", "Lundqvist, Rolf & Arbete & fritid"),
 //    //            ("Rusty York", "York, Rusty")
 //    //          )

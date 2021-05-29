@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.input1.resolution
 
+import molecule.core.exceptions.MoleculeException
 import molecule.datomic.api.in1_out2._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
@@ -28,26 +29,26 @@ object EnumCard2coalesce extends AsyncTestSuite {
       val inputMolecule = m(Ns.enums(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get === Nil
-        _ <- inputMolecule(List(Set[String]())).get === Nil
+        _ <- inputMolecule(Nil).get.map(_ ==> Nil)
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> Nil)
 
-        _ <- inputMolecule(List(Set(enum1))).get === List(Set(enum1, enum2))
-        _ <- inputMolecule(List(Set(enum2))).get === List(Set(enum1, enum2, enum3)) // (enum1, enum2) + (enum2, enum3)
-        _ <- inputMolecule(List(Set(enum3))).get === List(Set(enum2, enum3, enum4)) // (enum2, enum3) + (enum3, enum4)
+        _ <- inputMolecule(List(Set(enum1))).get.map(_ ==> List(Set(enum1, enum2)))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(Set(enum1, enum2, enum3))) // (enum1, enum2) + (enum2, enum3
+        _ <- inputMolecule(List(Set(enum3))).get.map(_ ==> List(Set(enum2, enum3, enum4))) // (enum2, enum3) + (enum3, enum4
 
-        _ <- inputMolecule(List(Set(enum1, enum2))).get === List(Set(enum1, enum2))
-        _ <- inputMolecule(List(Set(enum1, enum3))).get === Nil
-        _ <- inputMolecule(List(Set(enum2, enum3))).get === List(Set(enum2, enum3))
-        _ <- inputMolecule(List(Set(enum4, enum5))).get === List(Set(enum4, enum5, enum6)) // (enum4, enum5) + (enum4, enum5, enum6)
+        _ <- inputMolecule(List(Set(enum1, enum2))).get.map(_ ==> List(Set(enum1, enum2)))
+        _ <- inputMolecule(List(Set(enum1, enum3))).get.map(_ ==> Nil)
+        _ <- inputMolecule(List(Set(enum2, enum3))).get.map(_ ==> List(Set(enum2, enum3)))
+        _ <- inputMolecule(List(Set(enum4, enum5))).get.map(_ ==> List(Set(enum4, enum5, enum6))) // (enum4, enum5) + (enum4, enum5, enum6
 
-        _ <- inputMolecule(List(Set(enum1), Set(enum1))).get === List(Set(enum1, enum2))
-        _ <- inputMolecule(List(Set(enum1), Set(enum2))).get === List(Set(enum1, enum2, enum3)) // (enum1, enum2) + (enum2, enum3)
-        _ <- inputMolecule(List(Set(enum1), Set(enum3))).get === List(Set(enum1, enum4, enum3, enum2)) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
-        _ <- inputMolecule(List(Set(enum2), Set(enum3))).get === List(Set(enum1, enum2, enum3, enum4)) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
+        _ <- inputMolecule(List(Set(enum1), Set(enum1))).get.map(_ ==> List(Set(enum1, enum2)))
+        _ <- inputMolecule(List(Set(enum1), Set(enum2))).get.map(_ ==> List(Set(enum1, enum2, enum3))) // (enum1, enum2) + (enum2, enum3)
+        _ <- inputMolecule(List(Set(enum1), Set(enum3))).get.map(_ ==> List(Set(enum1, enum4, enum3, enum2))) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
+        _ <- inputMolecule(List(Set(enum2), Set(enum3))).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4))) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
 
-        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3))).get === List(Set(enum1, enum2, enum3, enum4)) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
-        _ <- inputMolecule(List(Set(enum1), Set(enum2, enum3))).get === List(Set(enum1, enum3, enum2)) // (enum1, enum2) + (enum2, enum3)
-        _ <- inputMolecule(List(Set(enum1), Set(enum2), Set(enum3))).get === List(Set(enum1, enum2, enum3, enum4)) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
+        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3))).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4))) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
+        _ <- inputMolecule(List(Set(enum1), Set(enum2, enum3))).get.map(_ ==> List(Set(enum1, enum3, enum2))) // (enum1, enum2) + (enum2, enum3)
+        _ <- inputMolecule(List(Set(enum1), Set(enum2), Set(enum3))).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4))) // (enum1, enum2) + (enum2, enum3) + (enum3, enum4)
       } yield ()
     }
 
@@ -61,27 +62,27 @@ object EnumCard2coalesce extends AsyncTestSuite {
           (enum3, Set(enum3, enum4, enum5))
         )
 
-        _ <- inputMolecule(Nil).get === List(Set(enum1, enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set[String]())).get === List(Set(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5)))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5)))
 
-        _ <- inputMolecule(List(Set(enum1))).get === List(Set(enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set(enum2))).get === List(Set(enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set(enum3))).get === Nil
+        _ <- inputMolecule(List(Set(enum1))).get.map(_ ==> List(Set(enum2, enum3, enum4, enum5)))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(Set(enum3, enum4, enum5)))
+        _ <- inputMolecule(List(Set(enum3))).get.map(_ ==> Nil)
 
-        _ <- inputMolecule(List(Set(enum1, enum2))).get === List(Set(enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set(enum1, enum2))).get.map(_ ==> List(Set(enum2, enum3, enum4, enum5)))
         // nothing omitted
-        _ <- inputMolecule(List(Set(enum1, enum3))).get === List(Set(enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set(enum1, enum3))).get.map(_ ==> List(Set(enum2, enum3, enum4, enum5)))
 
-        _ <- inputMolecule(List(Set(enum1), Set(enum1))).get === List(Set(enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set(enum1), Set(enum2))).get === List(Set(enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set(enum1), Set(enum3))).get === Nil
-        _ <- inputMolecule(List(Set(enum1), Set(enum4))).get === Nil
+        _ <- inputMolecule(List(Set(enum1), Set(enum1))).get.map(_ ==> List(Set(enum2, enum3, enum4, enum5)))
+        _ <- inputMolecule(List(Set(enum1), Set(enum2))).get.map(_ ==> List(Set(enum3, enum4, enum5)))
+        _ <- inputMolecule(List(Set(enum1), Set(enum3))).get.map(_ ==> Nil)
+        _ <- inputMolecule(List(Set(enum1), Set(enum4))).get.map(_ ==> Nil)
 
-        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum1))).get === List(Set(enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum2))).get === List(Set(enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3))).get === Nil
+        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum1))).get.map(_ ==> List(Set(enum2, enum3, enum4, enum5)))
+        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum2))).get.map(_ ==> List(Set(enum3, enum4, enum5)))
+        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3))).get.map(_ ==> Nil)
 
-        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum2, enum3))).get === List(Set(enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum2, enum3))).get.map(_ ==> List(Set(enum3, enum4, enum5)))
       } yield ()
     }
 
@@ -89,18 +90,18 @@ object EnumCard2coalesce extends AsyncTestSuite {
       val inputMolecule = m(Ns.enums.>(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
-        _ <- inputMolecule(List(Set[String]())).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
 
-        _ <- inputMolecule(List(Set(enum2))).get === List(Set(enum3, enum4, enum5, enum6))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(Set(enum3, enum4, enum5, enum6)))
 
-        //(_ <- inputMolecule(List(Set(enum2, enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2, enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
 
-        //(_ <- inputMolecule(List(Set(enum2), Set(enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2), Set(enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
       } yield ()
     }
 
@@ -108,18 +109,18 @@ object EnumCard2coalesce extends AsyncTestSuite {
       val inputMolecule = m(Ns.enums.>=(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
-        _ <- inputMolecule(List(Set[String]())).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
 
-        _ <- inputMolecule(List(Set(enum2))).get === List(Set(enum2, enum3, enum4, enum5, enum6))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(Set(enum2, enum3, enum4, enum5, enum6)))
 
-        //(_ <- inputMolecule(List(Set(enum2, enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2, enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
 
-        //(_ <- inputMolecule(List(Set(enum2), Set(enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2), Set(enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
       } yield ()
     }
 
@@ -127,18 +128,18 @@ object EnumCard2coalesce extends AsyncTestSuite {
       val inputMolecule = m(Ns.enums.<(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
-        _ <- inputMolecule(List(Set[String]())).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
 
-        _ <- inputMolecule(List(Set(enum2))).get === List(Set(enum1))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(Set(enum1)))
 
-        //(_ <- inputMolecule(List(Set(enum2, enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2, enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
 
-        //(_ <- inputMolecule(List(Set(enum2), Set(enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2), Set(enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
       } yield ()
     }
 
@@ -146,18 +147,18 @@ object EnumCard2coalesce extends AsyncTestSuite {
       val inputMolecule = m(Ns.enums.<=(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
-        _ <- inputMolecule(List(Set[String]())).get === List(Set(enum1, enum2, enum3, enum4, enum5, enum6))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(Set(enum1, enum2, enum3, enum4, enum5, enum6)))
 
-        _ <- inputMolecule(List(Set(enum2))).get === List(Set(enum1, enum2))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(Set(enum1, enum2)))
 
-        //(_ <- inputMolecule(List(Set(enum2, enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2, enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
 
-        //(_ <- inputMolecule(List(Set(enum2), Set(enum3))).get must throwA[MoleculeException])
-        // .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-        // "Can't apply multiple values to comparison function."
+        _ <- inputMolecule(List(Set(enum2), Set(enum3))).get.recover { case MoleculeException(err, _) =>
+          err ==> "Can't apply multiple values to comparison function."
+        }
       } yield ()
     }
   }

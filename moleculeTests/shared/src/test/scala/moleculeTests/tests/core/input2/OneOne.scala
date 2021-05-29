@@ -28,10 +28,10 @@ object OneOne extends AsyncTestSuite {
           _ <- Ns.int.str$.long$ insert data
 
           // 4 syntaxes for applying a pair of values
-          _ <- im("b", 2L).get === List(3) // when only 1 pair
-          _ <- im(("a", 3L), ("b", 1L)).get === Nil
-          _ <- im(("a" and 3L) or ("b" and 1L)).get === Nil
-          _ <- im(List(("a", 3L), ("b", 1L))).get === Nil
+          _ <- im("b", 2L).get.map(_ ==> List(3)) // when only 1 pair
+          _ <- im(("a", 3L), ("b", 1L)).get.map(_ ==> Nil)
+          _ <- im(("a" and 3L) or ("b" and 1L)).get.map(_ ==> Nil)
+          _ <- im(List(("a", 3L), ("b", 1L))).get.map(_ ==> Nil)
         } yield ()
       }
 
@@ -40,7 +40,7 @@ object OneOne extends AsyncTestSuite {
           _ <- Ns.int.str$.long$ insert data
 
           // No input pairs match pairs of non-asserted attributes
-          _ <- im(Nil).get === List(4)
+          _ <- im(Nil).get.map(_ ==> List(4))
         } yield ()
       }
 
@@ -48,11 +48,11 @@ object OneOne extends AsyncTestSuite {
         for {
           _ <- Ns.int.str$.long$ insert data
 
-          _ <- im("a", 1L).get === List(1)
-          _ <- im("a", 2L).get === List(2)
+          _ <- im("a", 1L).get.map(_ ==> List(1))
+          _ <- im("a", 2L).get.map(_ ==> List(2))
 
-          _ <- im("b", 1L).get === Nil
-          _ <- im("b", 2L).get === List(3)
+          _ <- im("b", 1L).get.map(_ ==> Nil)
+          _ <- im("b", 2L).get.map(_ ==> List(3))
         } yield ()
       }
 
@@ -68,26 +68,26 @@ object OneOne extends AsyncTestSuite {
           _ <- Ns.int.str$.long$ insert data
 
           // Redundant pairs are truncated
-          _ <- im(p1, p1).get === List(1)
+          _ <- im(p1, p1).get.map(_ ==> List(1))
           // Becomes ame as
-          _ <- im(p1).get === List(1)
+          _ <- im(p1).get.map(_ ==> List(1))
 
 
-          _ <- im(p1, p2).get === List(1, 2)
-          _ <- im(p1, p0).get === List(1)
-          _ <- im(p1, p3).get === List(1, 3)
+          _ <- im(p1, p2).get.map(_ ==> List(1, 2))
+          _ <- im(p1, p0).get.map(_ ==> List(1))
+          _ <- im(p1, p3).get.map(_ ==> List(1, 3))
 
-          _ <- im(p2, p1).get === List(1, 2)
-          _ <- im(p2, p0).get === List(2)
-          _ <- im(p2, p3).get === List(2, 3)
+          _ <- im(p2, p1).get.map(_ ==> List(1, 2))
+          _ <- im(p2, p0).get.map(_ ==> List(2))
+          _ <- im(p2, p3).get.map(_ ==> List(2, 3))
 
-          _ <- im(p0, p1).get === List(1)
-          _ <- im(p0, p2).get === List(2)
-          _ <- im(p0, p3).get === List(3)
+          _ <- im(p0, p1).get.map(_ ==> List(1))
+          _ <- im(p0, p2).get.map(_ ==> List(2))
+          _ <- im(p0, p3).get.map(_ ==> List(3))
 
-          _ <- im(p3, p1).get === List(1, 3)
-          _ <- im(p3, p2).get === List(2, 3)
-          _ <- im(p3, p0).get === List(3)
+          _ <- im(p3, p1).get.map(_ ==> List(1, 3))
+          _ <- im(p3, p2).get.map(_ ==> List(2, 3))
+          _ <- im(p3, p0).get.map(_ ==> List(3))
         } yield ()
       }
     }
@@ -116,15 +116,15 @@ object OneOne extends AsyncTestSuite {
           _ <- Ns.int.str$.long$ insert data
 
           // Empty group matches non-asserted attribute
-          _ <- im(Nil, Nil).get === List(0)
+          _ <- im(Nil, Nil).get.map(_ ==> List(0))
 
-          _ <- im(List("a"), Nil).get === List(4)
-          _ <- im(List("b"), Nil).get === List(5, 6)
-          _ <- im(List("a", "b"), Nil).get === List(4, 5, 6)
+          _ <- im(List("a"), Nil).get.map(_ ==> List(4))
+          _ <- im(List("b"), Nil).get.map(_ ==> List(5, 6))
+          _ <- im(List("a", "b"), Nil).get.map(_ ==> List(4, 5, 6))
 
-          _ <- im(Nil, List(1L)).get === List(7)
-          _ <- im(Nil, List(2L)).get === List(8, 9)
-          _ <- im(Nil, List(1L, 2L)).get === List(7, 8, 9)
+          _ <- im(Nil, List(1L)).get.map(_ ==> List(7))
+          _ <- im(Nil, List(2L)).get.map(_ ==> List(8, 9))
+          _ <- im(Nil, List(1L, 2L)).get.map(_ ==> List(7, 8, 9))
         } yield ()
       }
 
@@ -133,28 +133,28 @@ object OneOne extends AsyncTestSuite {
           _ <- Ns.int.str$.long$ insert data
 
           // AND semantics between groups
-          _ <- im(List("a"), List(1L)).get === List(1)
-          _ <- im(List("a"), List(2L)).get === List(2)
-          _ <- im(List("a"), List(1L, 2L)).get === List(1, 2)
+          _ <- im(List("a"), List(1L)).get.map(_ ==> List(1))
+          _ <- im(List("a"), List(2L)).get.map(_ ==> List(2))
+          _ <- im(List("a"), List(1L, 2L)).get.map(_ ==> List(1, 2))
 
-          _ <- im(List("b"), List(1L)).get === Nil
-          _ <- im(List("b"), List(2L)).get === List(3)
-          _ <- im(List("b"), List(1L, 2L)).get === List(3)
+          _ <- im(List("b"), List(1L)).get.map(_ ==> Nil)
+          _ <- im(List("b"), List(2L)).get.map(_ ==> List(3))
+          _ <- im(List("b"), List(1L, 2L)).get.map(_ ==> List(3))
 
-          _ <- im(List("a", "b"), List(1L)).get === List(1)
-          _ <- im(List("a", "b"), List(2L)).get === List(2, 3)
-          _ <- im(List("a", "b"), List(1L, 2L)).get === List(1, 2, 3)
+          _ <- im(List("a", "b"), List(1L)).get.map(_ ==> List(1))
+          _ <- im(List("a", "b"), List(2L)).get.map(_ ==> List(2, 3))
+          _ <- im(List("a", "b"), List(1L, 2L)).get.map(_ ==> List(1, 2, 3))
 
           // Same, with Logic syntax
-          _ <- im("a" and 1L).get === List(1)
-          _ <- im("a" and 2L).get === List(2)
-          _ <- im("a" and (1L or 2L)).get === List(1, 2)
-          _ <- im("b" and 1L).get === Nil
-          _ <- im("b" and 2L).get === List(3)
-          _ <- im("b" and (1L or 2L)).get === List(3)
-          _ <- im(("a" or "b") and 1L).get === List(1)
-          _ <- im(("a" or "b") and 2L).get === List(2, 3)
-          _ <- im(("a" or "b") and (1L or 2L)).get === List(1, 2, 3)
+          _ <- im("a" and 1L).get.map(_ ==> List(1))
+          _ <- im("a" and 2L).get.map(_ ==> List(2))
+          _ <- im("a" and (1L or 2L)).get.map(_ ==> List(1, 2))
+          _ <- im("b" and 1L).get.map(_ ==> Nil)
+          _ <- im("b" and 2L).get.map(_ ==> List(3))
+          _ <- im("b" and (1L or 2L)).get.map(_ ==> List(3))
+          _ <- im(("a" or "b") and 1L).get.map(_ ==> List(1))
+          _ <- im(("a" or "b") and 2L).get.map(_ ==> List(2, 3))
+          _ <- im(("a" or "b") and (1L or 2L)).get.map(_ ==> List(1, 2, 3))
         } yield ()
       }
     }

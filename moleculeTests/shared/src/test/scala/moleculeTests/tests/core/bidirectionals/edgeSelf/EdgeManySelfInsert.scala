@@ -1,13 +1,11 @@
 package moleculeTests.tests.core.bidirectionals.edgeSelf
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import molecule.datomic.api.in1_out3._
 import molecule.core.ops.exception.VerifyModelException
-import molecule.datomic.base.facade.Conn
+import molecule.datomic.api.in1_out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
 
 object EdgeManySelfInsert extends AsyncTestSuite {
 
@@ -31,7 +29,6 @@ object EdgeManySelfInsert extends AsyncTestSuite {
 
       "existing targets" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name.insert("Ben", "Joe")
           Seq(ben, joe) = tx.eids
 
@@ -46,20 +43,13 @@ object EdgeManySelfInsert extends AsyncTestSuite {
       }
 
       "nested edge only not allowed" - bidirectional { implicit conn =>
-        //      for {
-        //
-        //        // Can't save nested edges without including target entity
-        //        (Person.name.Knows.*(Knows.weight).name insert List(
-        //        ("Ben", List(7, 8), "Joe")
-        //        ) must throwA[VerifyModelException]).message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //          s"[noNestedEdgesWithoutTarget]  Nested edge ns `Knows` should link to " +
-        //          s"target ns within the nested group of attributes."
-        //      (Person.name.Knows.*(Knows.weight).Person.name insert List(
-        //        ("Ben", List(7, 8), "Joe")
-        //      ) must throwA[VerifyModelException]).message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //        s"[noNestedEdgesWithoutTarget]  Nested edge ns `Knows` should link to " +
-        //        s"target ns within the nested group of attributes."
-        //      } yield ()
+        // Can't save nested edges without including target entity
+        (Person.name.Knows.*(Knows.weight).name insert List(("Ben", List(7, 8), "Joe"))).recover {
+          case VerifyModelException(err) =>
+            err ==> "Got the exception molecule.core.ops.exception.VerifyModelException: " +
+              s"[noNestedEdgesWithoutTarget]  Nested edge ns `Knows` should link to " +
+              s"target ns within the nested group of attributes."
+        }
       }
     }
 
@@ -83,7 +73,6 @@ object EdgeManySelfInsert extends AsyncTestSuite {
 
       "existing targets" - bidirectional { implicit conn =>
         for {
-
           tx1 <- Person.name.insert("Ben", "Joe")
           Seq(ben, joe) = tx1.eids
 
@@ -105,22 +94,17 @@ object EdgeManySelfInsert extends AsyncTestSuite {
     // Edge consistency checks
 
     "base/edge - <missing target>" - bidirectional { implicit conn =>
-      //for{
-      //    // Can't allow edge without ref to target entity
-      //    (Person.name.Knows.weight.insert must throwA[VerifyModelException])
-      //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-      //      s"[edgeComplete]  Missing target namespace after edge namespace `Knows`."
-      //    } yield ()
+      // Can't allow edge without ref to target entity
+      Person.name.Knows.weight.insert("Don", 5).recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Knows`."
+      }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
-      //      for {
-      //
-      //    // Edge always have to have a ref to a target entity
-      //    (Knows.weight.insert must throwA[VerifyModelException])
-      //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-      //      s"[edgeComplete]  Missing target namespace somewhere after edge property `Knows/weight`."
-      //  } yield ()
+      // Edge always have to have a ref to a target entity
+      Knows.weight.insert(5).recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Knows/weight`."
+      }
     }
   }
 }

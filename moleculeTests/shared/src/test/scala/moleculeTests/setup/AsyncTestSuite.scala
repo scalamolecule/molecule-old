@@ -28,8 +28,4 @@ trait AsyncTestSuite extends TestSuite with CoreData
   def products[T](func: Future[Conn] => T): T = productsImpl(func)
   def seattle[T](func: Future[Conn] => T): T = seattleImpl(func)
   def mbrainz[T](func: Future[Conn] => T): T = mbrainzImpl(func)
-
-  implicit class testMappedFuture[T](fut: Future[T]) {
-    def ===(expectedValue: T): Future[Unit] = fut.map(_ ==> expectedValue)
-  }
 }

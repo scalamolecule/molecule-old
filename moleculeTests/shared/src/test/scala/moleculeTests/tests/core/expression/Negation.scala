@@ -1,9 +1,8 @@
 package moleculeTests.tests.core.expression
 
 import java.net.URI
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
-import moleculeTests.tests.core.expression.Comparison.oneData
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -96,10 +95,10 @@ object Negation extends Base {
         _ <- Ns.double.not(doubles).get.map(_.sorted ==> List(-2.0, -1.0, 0.0))
 
 
-        _ <- Ns.bool.not(true).get === List(false)
-        _ <- Ns.bool.not(false).get === List(true)
+        _ <- Ns.bool.not(true).get.map(_ ==> List(false))
+        _ <- Ns.bool.not(false).get.map(_ ==> List(true))
         // Multiple boolean values not so useful...
-        _ <- Ns.bool.not(false, true).get === List()
+        _ <- Ns.bool.not(false, true).get.map(_ ==> List())
 
 
         _ <- Ns.date.not(date3).get.map(_.sorted ==> List(date0, date1, date2))
@@ -157,13 +156,13 @@ object Negation extends Base {
       for {
         _ <- Ns.int(1).str("""Hi "Ann"""").save
 
-        _ <- Ns.str.not("""Hi "Ben"""").get === List("""Hi "Ann"""")
+        _ <- Ns.str.not("""Hi "Ben"""").get.map(_ ==> List("""Hi "Ann""""))
 
         str2: String = """Hi "Ben""""
-        _ <- Ns.str.not(str2).get === List("""Hi "Ann"""")
+        _ <- Ns.str.not(str2).get.map(_ ==> List("""Hi "Ann""""))
 
-        _ <- Ns.int.str_.not("""Hi "Ben"""").get === List(1)
-        _ <- Ns.int.str_.not(str2).get === List(1)
+        _ <- Ns.int.str_.not("""Hi "Ben"""").get.map(_ ==> List(1))
+        _ <- Ns.int.str_.not(str2).get.map(_ ==> List(1))
       } yield ()
     }
 
@@ -173,13 +172,13 @@ object Negation extends Base {
 
         // Negation of a single cardinality-many attribute value is rather useless since it
         // will just return the coalesced set of values minus the excluded value
-        _ <- Ns.strs.not("b").get === List(Set("d", "a", "ba", "c"))
+        _ <- Ns.strs.not("b").get.map(_ ==> List(Set("d", "a", "ba", "c")))
 
         // We could group by another attribute but that still leave us with filtered sets
-        _ <- Ns.str.strs.not("a").get === List(("str1", Set("b")), ("str2", Set("b", "c")), ("str3", Set("d", "ba")))
-        _ <- Ns.str.strs.not("b").get === List(("str1", Set("a")), ("str2", Set("c")), ("str3", Set("d", "ba")))
-        _ <- Ns.str.strs.not("c").get === List(("str1", Set("a", "b")), ("str2", Set("b")), ("str3", Set("d", "ba")))
-        _ <- Ns.str.strs.not("d").get === List(("str1", Set("a", "b")), ("str2", Set("b", "c")), ("str3", Set("ba")))
+        _ <- Ns.str.strs.not("a").get.map(_ ==> List(("str1", Set("b")), ("str2", Set("b", "c")), ("str3", Set("d", "ba"))))
+        _ <- Ns.str.strs.not("b").get.map(_ ==> List(("str1", Set("a")), ("str2", Set("c")), ("str3", Set("d", "ba"))))
+        _ <- Ns.str.strs.not("c").get.map(_ ==> List(("str1", Set("a", "b")), ("str2", Set("b")), ("str3", Set("d", "ba"))))
+        _ <- Ns.str.strs.not("d").get.map(_ ==> List(("str1", Set("a", "b")), ("str2", Set("b", "c")), ("str3", Set("ba"))))
 
         // What we probably want to do is to filter out full sets having the negation value:
         _ <- Ns.str.strs.get.map(_.filterNot(_._2.contains("a")) ==> List(("str2", Set("b", "c")), ("str3", Set("d", "ba"))))
@@ -199,139 +198,139 @@ object Negation extends Base {
       for {
         _ <- Ns.int.ints insert all
 
-        _ <- Ns.int.ints.not(Nil).get === all
-        _ <- Ns.int.ints.not(Set[Int]()).get === all
+        _ <- Ns.int.ints.not(Nil).get.map(_ ==> all)
+        _ <- Ns.int.ints.not(Set[Int]()).get.map(_ ==> all)
 
-        _ <- Ns.int.ints.not(1).get === List(
+        _ <- Ns.int.ints.not(1).get.map(_ ==> List(
           (1, Set(2, 3)),
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
         // Same as
-        _ <- Ns.int.ints.not(List(1)).get === List(
+        _ <- Ns.int.ints.not(List(1)).get.map(_ ==> List(
           (1, Set(2, 3)),
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
 
         // Set semantics omit the whole set with one or more matching values
-        _ <- Ns.int.ints.not(Set(1)).get === List(
+        _ <- Ns.int.ints.not(Set(1)).get.map(_ ==> List(
           // (1, Set(1, 2, 3)),  // 1 match
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
         // Same as
-        _ <- Ns.int.ints.not(List(Set(1))).get === List(
+        _ <- Ns.int.ints.not(List(Set(1))).get.map(_ ==> List(
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
 
-        _ <- Ns.int.ints.not(2).get === List(
+        _ <- Ns.int.ints.not(2).get.map(_ ==> List(
           (1, Set(1, 3)),
           (2, Set(3, 4)),
           (3, Set(3, 4, 5))
-        )
-        _ <- Ns.int.ints.not(Set(2)).get === List(
+        ))
+        _ <- Ns.int.ints.not(Set(2)).get.map(_ ==> List(
           // (1, Set(1, 2, 3)),  // 2 match
           // (2, Set(2, 3, 4)),  // 2 match
           (3, Set(3, 4, 5))
-        )
+        ))
 
-        _ <- Ns.int.ints.not(3).get === List(
+        _ <- Ns.int.ints.not(3).get.map(_ ==> List(
           (1, Set(1, 2)),
           (2, Set(4, 2)),
           (3, Set(4, 5))
-        )
-        _ <- Ns.int.ints.not(Set(3)).get === Nil // 3 match all
+        ))
+        _ <- Ns.int.ints.not(Set(3)).get.map(_ ==> Nil) // 3 match all
 
 
-        _ <- Ns.int.ints.not(1, 2).get === List(
+        _ <- Ns.int.ints.not(1, 2).get.map(_ ==> List(
           (1, Set(3)),
           (2, Set(3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
         // Same as
-        _ <- Ns.int.ints.not(List(1, 2)).get === List(
+        _ <- Ns.int.ints.not(List(1, 2)).get.map(_ ==> List(
           (1, Set(3)),
           (2, Set(3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
 
-        _ <- Ns.int.ints.not(Set(1), Set(2)).get === List(
+        _ <- Ns.int.ints.not(Set(1), Set(2)).get.map(_ ==> List(
           // (1, Set(1, 2, 3)),  // 1 match, 2 match
           // (2, Set(2, 3, 4)),  // 2 match
           (3, Set(3, 4, 5))
-        )
+        ))
         // Multiple values in a Set matches matches set-wise
-        _ <- Ns.int.ints.not(Set(1, 2)).get === List(
+        _ <- Ns.int.ints.not(Set(1, 2)).get.map(_ ==> List(
           // (1, Set(1, 2, 3)),  // 1 AND 2 match
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
 
 
-        _ <- Ns.int.ints.not(1, 3).get === List(
+        _ <- Ns.int.ints.not(1, 3).get.map(_ ==> List(
           (1, Set(2)),
           (2, Set(2, 4)),
           (3, Set(4, 5))
-        )
-        _ <- Ns.int.ints.not(Set(1), Set(3)).get === Nil // 3 match all
-        _ <- Ns.int.ints.not(Set(1, 3)).get === List(
+        ))
+        _ <- Ns.int.ints.not(Set(1), Set(3)).get.map(_ ==> Nil) // 3 match all
+        _ <- Ns.int.ints.not(Set(1, 3)).get.map(_ ==> List(
           // (1, Set(1, 2, 3)),  // 1 AND 3 match
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
 
 
-        _ <- Ns.int.ints.not(1, 2, 3).get === List(
+        _ <- Ns.int.ints.not(1, 2, 3).get.map(_ ==> List(
           // (1, Set(1, 2, 3)),  // 1 match, 2 match, 3 match
           (2, Set(4)),
           (3, Set(4, 5))
-        )
-        _ <- Ns.int.ints.not(Set(1), Set(2), Set(3)).get === Nil // 3 match all
-        _ <- Ns.int.ints.not(Set(1, 2, 3)).get === List(
+        ))
+        _ <- Ns.int.ints.not(Set(1), Set(2), Set(3)).get.map(_ ==> Nil) // 3 match all
+        _ <- Ns.int.ints.not(Set(1, 2, 3)).get.map(_ ==> List(
           // (1, Set(1, 2, 3)),  // 1 AND 2 AND 3 match
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
+        ))
 
 
-        _ <- Ns.int.ints.not(Set(1, 2), Set(1)).get === List(
+        _ <- Ns.int.ints.not(Set(1, 2), Set(1)).get.map(_ ==> List(
           (2, Set(2, 3, 4)),
           (3, Set(3, 4, 5))
-        )
-        _ <- Ns.int.ints.not(Set(1, 2), Set(2)).get === List(
+        ))
+        _ <- Ns.int.ints.not(Set(1, 2), Set(2)).get.map(_ ==> List(
           (3, Set(3, 4, 5))
-        )
-        _ <- Ns.int.ints.not(Set(1, 2), Set(3)).get === Nil
-        _ <- Ns.int.ints.not(Set(1, 2), Set(4)).get === Nil
-        _ <- Ns.int.ints.not(Set(1, 2), Set(5)).get === List(
+        ))
+        _ <- Ns.int.ints.not(Set(1, 2), Set(3)).get.map(_ ==> Nil)
+        _ <- Ns.int.ints.not(Set(1, 2), Set(4)).get.map(_ ==> Nil)
+        _ <- Ns.int.ints.not(Set(1, 2), Set(5)).get.map(_ ==> List(
           (2, Set(2, 3, 4)),
-        )
+        ))
 
-        _ <- Ns.int.ints.not(Set(1, 2), Set(2, 3)).get === List(
+        _ <- Ns.int.ints.not(Set(1, 2), Set(2, 3)).get.map(_ ==> List(
           (3, Set(3, 4, 5))
-        )
-        _ <- Ns.int.ints.not(Set(1, 2), Set(4, 5)).get === List(
+        ))
+        _ <- Ns.int.ints.not(Set(1, 2), Set(4, 5)).get.map(_ ==> List(
           (2, Set(2, 3, 4))
-        )
+        ))
 
 
         // Variables/values can be mixed
 
         l2 = List((2, Set(2, 3, 4)))
 
-        _ <- Ns.int.ints.not(Set(1, 2), Set(4, 5)).get === l2
-        _ <- Ns.int.ints.not(Set(1, int2), Set(int4, 5)).get === l2
+        _ <- Ns.int.ints.not(Set(1, 2), Set(4, 5)).get.map(_ ==> l2)
+        _ <- Ns.int.ints.not(Set(1, int2), Set(int4, 5)).get.map(_ ==> l2)
 
         set45 = Set(4, 5)
-        _ <- Ns.int.ints.not(Set(1, int2), set45).get === l2
+        _ <- Ns.int.ints.not(Set(1, int2), set45).get.map(_ ==> l2)
 
         // Seq of Sets
-        _ <- Ns.int.ints.not(List(Set(1, int2), set45)).get === l2
+        _ <- Ns.int.ints.not(List(Set(1, int2), set45)).get.map(_ ==> l2)
 
         sets = List(Set(1, int2), set45)
-        _ <- Ns.int.ints.not(sets).get === l2
+        _ <- Ns.int.ints.not(sets).get.map(_ ==> l2)
       } yield ()
     }
 
@@ -345,139 +344,139 @@ object Negation extends Base {
       for {
         _ <- Ns.int.enums insert all
 
-        _ <- Ns.int.enums.not(Nil).get === all
-        _ <- Ns.int.enums.not(Set[String]()).get === all
+        _ <- Ns.int.enums.not(Nil).get.map(_ ==> all)
+        _ <- Ns.int.enums.not(Set[String]()).get.map(_ ==> all)
 
-        _ <- Ns.int.enums.not("enum1").get === List(
+        _ <- Ns.int.enums.not("enum1").get.map(_ ==> List(
           (1, Set("enum2", "enum3")),
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
         // Same as
-        _ <- Ns.int.enums.not(List("enum1")).get === List(
+        _ <- Ns.int.enums.not(List("enum1")).get.map(_ ==> List(
           (1, Set("enum2", "enum3")),
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
 
         // Set semantics omit the whole set with one or more matching values
-        _ <- Ns.int.enums.not(Set("enum1")).get === List(
+        _ <- Ns.int.enums.not(Set("enum1")).get.map(_ ==> List(
           // (1, Set("enum1", "enum2", "enum3")),  // "enum1" match
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
         // Same as
-        _ <- Ns.int.enums.not(List(Set("enum1"))).get === List(
+        _ <- Ns.int.enums.not(List(Set("enum1"))).get.map(_ ==> List(
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
 
-        _ <- Ns.int.enums.not("enum2").get === List(
+        _ <- Ns.int.enums.not("enum2").get.map(_ ==> List(
           (1, Set("enum1", "enum3")),
           (2, Set("enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
-        _ <- Ns.int.enums.not(Set("enum2")).get === List(
+        ))
+        _ <- Ns.int.enums.not(Set("enum2")).get.map(_ ==> List(
           // (1, Set("enum1", "enum2", "enum3")),  // "enum2" match
           // (2, Set("enum2", "enum3", "enum4")),  // "enum2" match
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
 
-        _ <- Ns.int.enums.not("enum3").get === List(
+        _ <- Ns.int.enums.not("enum3").get.map(_ ==> List(
           (1, Set("enum1", "enum2")),
           (2, Set("enum4", "enum2")),
           (3, Set("enum4", "enum5"))
-        )
-        _ <- Ns.int.enums.not(Set("enum3")).get === Nil // "enum3" match all
+        ))
+        _ <- Ns.int.enums.not(Set("enum3")).get.map(_ ==> Nil) // "enum3" match all
 
 
-        _ <- Ns.int.enums.not("enum1", "enum2").get === List(
+        _ <- Ns.int.enums.not("enum1", "enum2").get.map(_ ==> List(
           (1, Set("enum3")),
           (2, Set("enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
         // Same as
-        _ <- Ns.int.enums.not(List("enum1", "enum2")).get === List(
+        _ <- Ns.int.enums.not(List("enum1", "enum2")).get.map(_ ==> List(
           (1, Set("enum3")),
           (2, Set("enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
 
-        _ <- Ns.int.enums.not(Set("enum1"), Set("enum2")).get === List(
+        _ <- Ns.int.enums.not(Set("enum1"), Set("enum2")).get.map(_ ==> List(
           // (1, Set("enum1", "enum2", "enum3")),  // "enum1" match, "enum2" match
           // (2, Set("enum2", "enum3", "enum4")),  // "enum2" match
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
         // Multiple values in a Set matches matches set-wise
-        _ <- Ns.int.enums.not(Set("enum1", "enum2")).get === List(
+        _ <- Ns.int.enums.not(Set("enum1", "enum2")).get.map(_ ==> List(
           // (1, Set("enum1", "enum2", "enum3")),  // "enum1" AND "enum2" match
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
 
 
-        _ <- Ns.int.enums.not("enum1", "enum3").get === List(
+        _ <- Ns.int.enums.not("enum1", "enum3").get.map(_ ==> List(
           (1, Set("enum2")),
           (2, Set("enum2", "enum4")),
           (3, Set("enum4", "enum5"))
-        )
-        _ <- Ns.int.enums.not(Set("enum1"), Set("enum3")).get === Nil // "enum3" match all
-        _ <- Ns.int.enums.not(Set("enum1", "enum3")).get === List(
+        ))
+        _ <- Ns.int.enums.not(Set("enum1"), Set("enum3")).get.map(_ ==> Nil) // "enum3" match all
+        _ <- Ns.int.enums.not(Set("enum1", "enum3")).get.map(_ ==> List(
           // (1, Set("enum1", "enum2", "enum3")),  // "enum1" AND "enum3" match
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
 
 
-        _ <- Ns.int.enums.not("enum1", "enum2", "enum3").get === List(
+        _ <- Ns.int.enums.not("enum1", "enum2", "enum3").get.map(_ ==> List(
           // (1, Set("enum1", "enum2", "enum3")),  // "enum1" match, "enum2" match, "enum3" match
           (2, Set("enum4")),
           (3, Set("enum4", "enum5"))
-        )
-        _ <- Ns.int.enums.not(Set("enum1"), Set("enum2"), Set("enum3")).get === Nil // "enum3" match all
-        _ <- Ns.int.enums.not(Set("enum1", "enum2", "enum3")).get === List(
+        ))
+        _ <- Ns.int.enums.not(Set("enum1"), Set("enum2"), Set("enum3")).get.map(_ ==> Nil) // "enum3" match all
+        _ <- Ns.int.enums.not(Set("enum1", "enum2", "enum3")).get.map(_ ==> List(
           // (1, Set("enum1", "enum2", "enum3")),  // "enum1" AND "enum2" AND "enum3" match
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
+        ))
 
 
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum1")).get === List(
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum1")).get.map(_ ==> List(
           (2, Set("enum2", "enum3", "enum4")),
           (3, Set("enum3", "enum4", "enum5"))
-        )
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum2")).get === List(
+        ))
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum2")).get.map(_ ==> List(
           (3, Set("enum3", "enum4", "enum5"))
-        )
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum3")).get === Nil
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum4")).get === Nil
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum5")).get === List(
+        ))
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum3")).get.map(_ ==> Nil)
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum4")).get.map(_ ==> Nil)
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum5")).get.map(_ ==> List(
           (2, Set("enum2", "enum3", "enum4")),
-        )
+        ))
 
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum2", "enum3")).get === List(
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum2", "enum3")).get.map(_ ==> List(
           (3, Set("enum3", "enum4", "enum5"))
-        )
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum4", "enum5")).get === List(
+        ))
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum4", "enum5")).get.map(_ ==> List(
           (2, Set("enum2", "enum3", "enum4"))
-        )
+        ))
 
 
         // Variables/values can be mixed
 
         l2 = List((2, Set("enum2", "enum3", "enum4")))
 
-        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum4", "enum5")).get === l2
-        _ <- Ns.int.enums.not(Set("enum1", enum2), Set(enum4, "enum5")).get === l2
+        _ <- Ns.int.enums.not(Set("enum1", "enum2"), Set("enum4", "enum5")).get.map(_ ==> l2)
+        _ <- Ns.int.enums.not(Set("enum1", enum2), Set(enum4, "enum5")).get.map(_ ==> l2)
 
         set45 = Set("enum4", "enum5")
-        _ <- Ns.int.enums.not(Set("enum1", enum2), set45).get === l2
+        _ <- Ns.int.enums.not(Set("enum1", enum2), set45).get.map(_ ==> l2)
 
         // Seq of Sets
-        _ <- Ns.int.enums.not(List(Set("enum1", enum2), set45)).get === l2
+        _ <- Ns.int.enums.not(List(Set("enum1", enum2), set45)).get.map(_ ==> l2)
 
         sets = List(Set("enum1", enum2), set45)
-        _ <- Ns.int.enums.not(sets).get === l2
+        _ <- Ns.int.enums.not(sets).get.map(_ ==> l2)
       } yield ()
     }
 
@@ -491,122 +490,122 @@ object Negation extends Base {
       for {
         _ <- Ns.int.uris insert all
 
-        _ <- Ns.int.uris.not(Nil).get === all
-        _ <- Ns.int.uris.not(Set[URI]()).get === all
+        _ <- Ns.int.uris.not(Nil).get.map(_ ==> all)
+        _ <- Ns.int.uris.not(Set[URI]()).get.map(_ ==> all)
 
-        _ <- Ns.int.uris.not(uri1).get === List(
+        _ <- Ns.int.uris.not(uri1).get.map(_ ==> List(
           (1, Set(uri2, uri3)),
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
         // Same as
-        _ <- Ns.int.uris.not(List(uri1)).get === List(
+        _ <- Ns.int.uris.not(List(uri1)).get.map(_ ==> List(
           (1, Set(uri2, uri3)),
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
 
         // Set semantics omit the whole set with one or more matching values
-        _ <- Ns.int.uris.not(Set(uri1)).get === List(
+        _ <- Ns.int.uris.not(Set(uri1)).get.map(_ ==> List(
           // (1, Set(uri1, uri2, uri3)),  // uri1 match
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
         // Same as
-        _ <- Ns.int.uris.not(List(Set(uri1))).get === List(
+        _ <- Ns.int.uris.not(List(Set(uri1))).get.map(_ ==> List(
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
 
-        _ <- Ns.int.uris.not(uri2).get === List(
+        _ <- Ns.int.uris.not(uri2).get.map(_ ==> List(
           (1, Set(uri1, uri3)),
           (2, Set(uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
-        _ <- Ns.int.uris.not(Set(uri2)).get === List(
+        ))
+        _ <- Ns.int.uris.not(Set(uri2)).get.map(_ ==> List(
           // (1, Set(uri1, uri2, uri3)),  // uri2 match
           // (2, Set(uri2, uri3, uri4)),  // uri2 match
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
 
-        _ <- Ns.int.uris.not(uri3).get === List(
+        _ <- Ns.int.uris.not(uri3).get.map(_ ==> List(
           (1, Set(uri1, uri2)),
           (2, Set(uri4, uri2)),
           (3, Set(uri4, uri5))
-        )
-        _ <- Ns.int.uris.not(Set(uri3)).get === Nil // uri3 match all
+        ))
+        _ <- Ns.int.uris.not(Set(uri3)).get.map(_ ==> Nil) // uri3 match all
 
 
-        _ <- Ns.int.uris.not(uri1, uri2).get === List(
+        _ <- Ns.int.uris.not(uri1, uri2).get.map(_ ==> List(
           (1, Set(uri3)),
           (2, Set(uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
         // Same as
-        _ <- Ns.int.uris.not(List(uri1, uri2)).get === List(
+        _ <- Ns.int.uris.not(List(uri1, uri2)).get.map(_ ==> List(
           (1, Set(uri3)),
           (2, Set(uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
 
-        _ <- Ns.int.uris.not(Set(uri1), Set(uri2)).get === List(
+        _ <- Ns.int.uris.not(Set(uri1), Set(uri2)).get.map(_ ==> List(
           // (1, Set(uri1, uri2, uri3)),  // uri1 match, uri2 match
           // (2, Set(uri2, uri3, uri4)),  // uri2 match
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
         // Multiple values in a Set matches matches set-wise
-        _ <- Ns.int.uris.not(Set(uri1, uri2)).get === List(
+        _ <- Ns.int.uris.not(Set(uri1, uri2)).get.map(_ ==> List(
           // (1, Set(uri1, uri2, uri3)),  // uri1 AND uri2 match
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
 
 
-        _ <- Ns.int.uris.not(uri1, uri3).get === List(
+        _ <- Ns.int.uris.not(uri1, uri3).get.map(_ ==> List(
           (1, Set(uri2)),
           (2, Set(uri2, uri4)),
           (3, Set(uri4, uri5))
-        )
-        _ <- Ns.int.uris.not(Set(uri1), Set(uri3)).get === Nil // uri3 match all
-        _ <- Ns.int.uris.not(Set(uri1, uri3)).get === List(
+        ))
+        _ <- Ns.int.uris.not(Set(uri1), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
+        _ <- Ns.int.uris.not(Set(uri1, uri3)).get.map(_ ==> List(
           // (1, Set(uri1, uri2, uri3)),  // uri1 AND uri3 match
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
 
 
-        _ <- Ns.int.uris.not(uri1, uri2, uri3).get === List(
+        _ <- Ns.int.uris.not(uri1, uri2, uri3).get.map(_ ==> List(
           // (1, Set(uri1, uri2, uri3)),  // uri1 match, uri2 match, uri3 match
           (2, Set(uri4)),
           (3, Set(uri4, uri5))
-        )
-        _ <- Ns.int.uris.not(Set(uri1), Set(uri2), Set(uri3)).get === Nil // uri3 match all
-        _ <- Ns.int.uris.not(Set(uri1, uri2, uri3)).get === List(
+        ))
+        _ <- Ns.int.uris.not(Set(uri1), Set(uri2), Set(uri3)).get.map(_ ==> Nil) // uri3 match all
+        _ <- Ns.int.uris.not(Set(uri1, uri2, uri3)).get.map(_ ==> List(
           // (1, Set(uri1, uri2, uri3)),  // uri1 AND uri2 AND uri3 match
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
+        ))
 
 
-        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri1)).get === List(
+        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri1)).get.map(_ ==> List(
           (2, Set(uri2, uri3, uri4)),
           (3, Set(uri3, uri4, uri5))
-        )
-        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri2)).get === List(
+        ))
+        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri2)).get.map(_ ==> List(
           (3, Set(uri3, uri4, uri5))
-        )
-        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri3)).get === Nil
-        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri4)).get === Nil
-        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri5)).get === List(
+        ))
+        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri3)).get.map(_ ==> Nil)
+        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri4)).get.map(_ ==> Nil)
+        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri5)).get.map(_ ==> List(
           (2, Set(uri2, uri3, uri4)),
-        )
+        ))
 
-        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri2, uri3)).get === List(
+        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri2, uri3)).get.map(_ ==> List(
           (3, Set(uri3, uri4, uri5))
-        )
-        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri4, uri5)).get === List(
+        ))
+        _ <- Ns.int.uris.not(Set(uri1, uri2), Set(uri4, uri5)).get.map(_ ==> List(
           (2, Set(uri2, uri3, uri4))
-        )
+        ))
       } yield ()
     }
   }

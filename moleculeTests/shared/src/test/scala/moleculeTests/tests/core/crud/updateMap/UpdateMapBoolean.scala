@@ -1,10 +1,9 @@
 package moleculeTests.tests.core.crud.updateMap
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -42,37 +41,37 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
           // Can't add pairs with duplicate keys
 
-                // vararg
-                _ = compileError(
-                  """Ns(eid).boolMap.assert(str1 -> bool1, str1 -> bool2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-                    "\n__ident__str1 -> __ident__bool1" +
-                    "\n__ident__str1 -> __ident__bool2")
+          // vararg
+          _ = compileError(            """Ns(eid).boolMap.assert(str1 -> bool1, str1 -> bool2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+              "\n__ident__str1 -> __ident__bool1" +
+              "\n__ident__str1 -> __ident__bool2")
 
-                // Seq
-                _ = compileError(
-                  """Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1 -> bool2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-                    "\n__ident__str1 -> __ident__bool1" +
-                    "\n__ident__str1 -> __ident__bool2")
+          // Seq
+          _ = compileError(            """Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1 -> bool2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+              "\n__ident__str1 -> __ident__bool1" +
+              "\n__ident__str1 -> __ident__bool2")
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           str1x = str1
 
-          //      // vararg
-          //      (Ns(eid).boolMap.assert(str1 -> bool1, str1x -> bool2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-          //        "\na -> true" +
-          //        "\na -> false"
-          //
-          //
-          //      // Seq
-          //      (Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1x -> bool2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-          //        "\na -> true" +
-          //        "\na -> false"
+          // vararg
+          _ <- Ns(eid).boolMap.assert(str1 -> bool1, str1x -> bool2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+                "\na -> true" +
+                "\na -> false"
+          }
+
+
+          // Seq
+          _ <- Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1x -> bool2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+                "\na -> true" +
+                "\na -> false"
+          }
         } yield ()
       }
 
@@ -108,17 +107,15 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-                _ = compileError(
-                  """Ns(eid).boolMap.replace(str1 -> bool1, str1 -> bool2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-                    "\n__ident__str1 -> __ident__bool1" +
-                    "\n__ident__str1 -> __ident__bool2")
+          _ = compileError(            """Ns(eid).boolMap.replace(str1 -> bool1, str1 -> bool2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+              "\n__ident__str1 -> __ident__bool1" +
+              "\n__ident__str1 -> __ident__bool2")
 
-                _ = compileError(
-                  """Ns(eid).boolMap.replace(Seq(str1 -> bool1, str1 -> bool2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-                    "\n__ident__str1 -> __ident__bool1" +
-                    "\n__ident__str1 -> __ident__bool2")
+          _ = compileError(            """Ns(eid).boolMap.replace(Seq(str1 -> bool1, str1 -> bool2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+              "\n__ident__str1 -> __ident__bool1" +
+              "\n__ident__str1 -> __ident__bool2")
         } yield ()
       }
 
@@ -172,27 +169,29 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
           // Apply empty Map of values (retracting all values!)
           _ <- Ns(eid).boolMap(Seq[(String, Boolean)]()).update
-          _ <- Ns.boolMap.get === List()
+          _ <- Ns.boolMap.get.map(_ ==> List())
 
 
           _ <- Ns(eid).boolMap(Seq(str1 -> bool1, str2 -> bool2)).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).boolMap().update
-          _ <- Ns.boolMap.get === List()
+          _ <- Ns.boolMap.get.map(_ ==> List())
 
-          //      // Can't apply pairs with duplicate keys
-          //      (Ns(eid).longMap(str1 -> long1, str1 -> long2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
-          //        "\na -> 1" +
-          //        "\na -> 2"
-          //
-          //      (Ns(eid).longMap(Seq(str1 -> long1, str1 -> long2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
-          //        "\na -> 1" +
-          //        "\na -> 2"
+          // Can't apply pairs with duplicate keys
+          _ <- Ns(eid).longMap(str1 -> long1, str1 -> long2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
+                "\na -> 1" +
+                "\na -> 2"
+          }
+
+          _ <- Ns(eid).longMap(Seq(str1 -> long1, str1 -> long2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
+                "\na -> 1" +
+                "\na -> 2"
+          }
         } yield ()
       }
     }

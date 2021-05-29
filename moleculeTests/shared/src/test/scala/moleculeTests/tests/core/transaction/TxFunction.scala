@@ -320,7 +320,7 @@
 //      // Successful User construction with all validation rules satisfied
 //      // Construction is atomic - only a fully valid User can be saved.
 //      transactFn(addUser("Ann", 28))
-//      _ <- Ns.str("Ann").int(28).get.size === 1
+//      _ <- Ns.str("Ann").int(28).get.map(_.size ==> 1)
 //      } yield ()
 //    }
 //
@@ -344,11 +344,11 @@
 //      transactFn(addUserPartiallyChecked("Liz", 17))
 //
 //      // Under-age Liz is wrongly saved
-//      _ <- Ns.str("Liz").int(17).get.size === 1
+//      _ <- Ns.str("Liz").int(17).get.map(_.size ==> 1)
 //
 //      // If age is validated in application code, we can of course construct a valid User
 //      transactFn(addUserPartiallyChecked("Ann", 28))
-//      _ <- Ns.str("Ann").int(28).get.size === 1
+//      _ <- Ns.str("Ann").int(28).get.map(_.size ==> 1)
 //
 //      // If validation not dependent on db lookup is taken care of in application code, it can
 //      // save workload on the transactor to move it outside tx functions.

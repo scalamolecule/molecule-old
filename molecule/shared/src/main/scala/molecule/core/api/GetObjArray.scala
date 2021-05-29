@@ -86,7 +86,7 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   /** Get `Future` with `Array` of n rows as objects matching molecule.
     * {{{
-    *   Person.name.age.getObjArray(1).map(p => s"${p.name} is ${p.age} years old")) === List(
+    *   Person.name.age.getObjArray(1).map(p => s"${p.name} is ${p.age} years old")).map(_ ==> List(
     *     "Ben is 42 years old"
     *   )
     * }}}
@@ -159,7 +159,7 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   ben.retract
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
@@ -217,7 +217,7 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   Person(ben).age(43).update
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
@@ -383,7 +383,7 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   val afterRetract = new java.util.Date
     *
     *   // No data yet before insert
-    *   Person.name.age.getObjArrayAsOf(beforeInsert) === Array()
+    *   Person.name.age.getObjArrayAsOf(beforeInsert).map(_ ==> Array())
     *
     *   // Get Array of all rows as of afterInsert
     *   val persons = Person.name.age.getObjArrayAsOf(afterInsert)
@@ -497,7 +497,7 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   persons(0).name === "Cay"
     *
     *   // Nothing added since transaction time t3
-    *   Person.name.getObjArraySince(t3) === Array()
+    *   Person.name.getObjArraySince(t3).map(_ ==> Array())
     * }}}
     * Getting a pre-allocated Array populated with typed data is the fastest way to query
     * Datomic with Molecule. Looping the Array in a while loop with a mutable index pointer will
@@ -589,7 +589,7 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   persons(0).name === "Cay"
     *
     *   // Nothing added since transaction time tx3
-    *   Person.name.getObjArraySince(tx3) === Array()
+    *   Person.name.getObjArraySince(tx3).map(_ ==> Array())
     * }}}
     * Getting a pre-allocated Array populated with typed data is the fastest way to query
     * Datomic with Molecule. Looping the Array in a while loop with a mutable index pointer will
@@ -678,7 +678,7 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   persons(0).name === "Cay"
     *
     *   // Nothing added since transaction time date3
-    *   Person.name.getObjArraySince(date3) === Array()
+    *   Person.name.getObjArraySince(date3).map(_ ==> Array())
     * }}}
     * Getting a pre-allocated Array populated with typed data is the fastest way to query
     * Datomic with Molecule. Looping the Array in a while loop with a mutable index pointer will
@@ -857,14 +857,14 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getObjArrayWith(newDataTx).size === 250
+    *   Person.name.getObjArrayWith(newDataTx).map(_.size ==> 250)
     * }}}
     * Getting a pre-allocated Array populated with typed data is the fastest way to query
     * Datomic with Molecule. Looping the Array in a while loop with a mutable index pointer will
@@ -886,17 +886,17 @@ trait GetObjArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getObjArrayWith(newDataTx).size === 250
+    *   Person.name.getObjArrayWith(newDataTx).map(_.size ==> 250)
     *
     *   // Imagine future db - Let's just take 10
-    *   Person.name.getObjArrayWith(newDataTx, 10).size === 10
+    *   Person.name.getObjArrayWith(newDataTx, 10).map(_.size ==> 10)
     * }}}
     * Getting a pre-allocated Array populated with typed data is the fastest way to query
     * Datomic with Molecule. Looping the Array in a while loop with a mutable index pointer will

@@ -1,9 +1,9 @@
 package moleculeTests.tests.examples.datomic.mbrainz
 
 import molecule.datomic.api.in1_out4._
-import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -61,9 +61,9 @@ object MBrainz extends AsyncTestSuite {
         } else Future.unit
 
         // Gender distribution
-        _ <- Artist.gender_("male").e(count).get === List(1325)
-        _ <- Artist.gender_("female").e(count).get === List(309)
-        _ <- Artist.gender_("other").e(count).get === List(1)
+        _ <- Artist.gender_("male").e(count).get.map(_ ==> List(1325))
+        _ <- Artist.gender_("female").e(count).get.map(_ ==> List(309))
+        _ <- Artist.gender_("other").e(count).get.map(_ ==> List(1))
       } yield ()
     }
 
@@ -74,7 +74,7 @@ object MBrainz extends AsyncTestSuite {
     //    // Who collaborated with one of the Beatles?
     //    // Repeated attributes was translated to transitive lookups - model graph instead... todo
     //
-    //    Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.get === List(
+    //    Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.get.map(_ ==> List(
     //      ("John Lennon", "The Plastic Ono Band"),
     //      ("George Harrison", "Bob Dylan"),
     //      ("John Lennon", "Yoko Ono"),
@@ -82,9 +82,9 @@ object MBrainz extends AsyncTestSuite {
     //      ("Paul McCartney", "Linda McCartney"))
     //
     //    // Who directly collaborated with George Harrison,
-    //    Track.Artists.name_("George Harrison").name.get === List("Bob Dylan", "Ravi Shankar")
+    //    Track.Artists.name_("George Harrison").name.get.map(_ ==> List("Bob Dylan", "Ravi Shankar"))
     //    // .. or collaborated with one of his collaborators?
-    //    Track.Artists.name_("George Harrison").name_.name.get === List("Ali Akbar Khan")
+    //    Track.Artists.name_("George Harrison").name_.name.get.map(_ ==> List("Ali Akbar Khan"))
     //
     //    // Parameterized input molecule for direct collaborators
     //    val collaborators = m(Track.Artists.name_(?).name)
@@ -94,7 +94,7 @@ object MBrainz extends AsyncTestSuite {
     //    collabs1 === List("Bob Dylan", "Ravi Shankar")
     //
     //    // George Harrison's collaborators collaborators (includes George...)
-    //    collaborators(collabs1).get === List("George Harrison", "Ali Akbar Khan")
+    //    collaborators(collabs1).get.map(_ ==> List("George Harrison", "Ali Akbar Khan"))
     //    } yield ()
     //    }
 
@@ -108,13 +108,13 @@ object MBrainz extends AsyncTestSuite {
         // Then get songs with same titles by other artists (using output from first query)
         // Note that we use the long list of whoSongs as input instead of applying
         // it directly to the track name attribute which would explode the query.
-        _ <- m(Track.name(?).Artists.name.not("The Who"))(whoSongs).get(5) === List(
+        _ <- m(Track.name(?).Artists.name.not("The Who"))(whoSongs).get(5).map(_ ==> List(
           ("The Last Time", "The Rolling Stones"),
           ("Overture", "Lionel Bart"),
           ("Sensation", "London Symphony Orchestra"),
           ("Miracle Cure", "London Symphony Orchestra"),
           ("Sensation", "Neon Rose")
-        )
+        ))
       } yield ()
     }
   }

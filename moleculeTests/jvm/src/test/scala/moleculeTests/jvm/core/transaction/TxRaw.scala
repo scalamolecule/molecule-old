@@ -20,18 +20,17 @@ object TxRaw extends AsyncTestSuite {
       for {
         // Initial data
         _ <- Ns.int(1).save
-        _ <- Ns.int.get === List(1)
+        _ <- Ns.int.get.map(_ ==> List(1))
 
         _ <- if (system == SystemPeer) {
           val data = new FileReader("moleculeTests/jvm/resources/tests/core/time/save2-3.dtm")
-          for {
-
+          for{
             // Add raw data from external file with edn transactional data
             // contains: "[{:Ns/int 2} {:Ns/int 3}]"
             _ <- conn.map(_.transactRaw(Util.readAll(data).get(0).asInstanceOf[jList[jList[_]]]))
 
             // Raw data has been added
-            _ <- Ns.int.get === List(1, 2, 3)
+            _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
           } yield ()
         } else Future.unit
       } yield ()
@@ -42,7 +41,7 @@ object TxRaw extends AsyncTestSuite {
       for {
         // Initial data
         _ <- Ns.int(1).save
-        _ <- Ns.int.get === List(1)
+        _ <- Ns.int.get.map(_ ==> List(1))
 
         // Add raw transactional data
         // (Scala integers are internally stored as Longs)
@@ -52,7 +51,7 @@ object TxRaw extends AsyncTestSuite {
         ).asInstanceOf[java.util.List[AnyRef]]))
 
         // Raw data has been added
-        _ <- Ns.int.get === List(1, 2, 3)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
   }

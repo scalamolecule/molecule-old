@@ -43,27 +43,27 @@ object TestDbSince extends AsyncTestSuite {
         txR5 <- Ns.int(5).save
 
         // Live state
-        _ <- Ns.int.get === List(1, 2, 3, 4, 5)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
 
         // since tx report
         _ <- conn.map(_.testDbSince(txR1))
-        _ <- Ns.int.get === List(2, 3, 4, 5)
+        _ <- Ns.int.get.map(_ ==> List(2, 3, 4, 5))
 
         // since t
         _ <- conn.map(_.testDbSince(txR2.t))
-        _ <- Ns.int.get === List(3, 4, 5)
+        _ <- Ns.int.get.map(_ ==> List(3, 4, 5))
 
         // since tx
         _ <- conn.map(_.testDbSince(txR3.tx))
-        _ <- Ns.int.get === List(4, 5)
+        _ <- Ns.int.get.map(_ ==> List(4, 5))
 
         // since date
         _ <- conn.map(_.testDbSince(txR4.inst))
-        _ <- Ns.int.get === List(5)
+        _ <- Ns.int.get.map(_ ==> List(5))
 
         // Live state unaffected
         _ <- conn.map(_.useLiveDb)
-        _ <- Ns.int.get === List(1, 2, 3, 4, 5)
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
       } yield ()
     }
 
@@ -114,32 +114,32 @@ object TestDbSince extends AsyncTestSuite {
         // Some domain object
 
         // Live state
-        _ <- crud.read === List(1, 2, 3)
+        _ <- crud.read.map(_ ==> List(1, 2, 3))
 
         // Use state accumulated since tx1 (exclusive) as a test db "branch"
         _ <- conn.map(_.testDbSince(txR1))
 
         // Test state since tx1 (exclusive)
-        _ <- crud.read === List(2, 3)
+        _ <- crud.read.map(_ ==> List(2, 3))
 
         // Update test db through domain process
         _ <- crud.create(4, 5)
 
         // Test db now has 4 values
-        _ <- crud.read === List(2, 3, 4, 5)
+        _ <- crud.read.map(_ ==> List(2, 3, 4, 5))
 
         // Mutate test db through domain object
         _ <- crud.delete(1) // not from test db
         _ <- crud.delete(3, 4) // from test db
 
         // Updated test state
-        _ <- crud.read === List(2, 5)
+        _ <- crud.read.map(_ ==> List(2, 5))
 
         // Discard test db and go back to live db
         _ <- conn.map(_.useLiveDb)
 
         // Live state unchanged
-        _ <- crud.read === List(1, 2, 3)
+        _ <- crud.read.map(_ ==> List(1, 2, 3))
       } yield ()
     }
   }

@@ -1,13 +1,12 @@
 package moleculeTests.tests.core.generic
 
 import molecule.core.exceptions.MoleculeException
-import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out5._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -175,21 +174,21 @@ object Index extends AsyncTestSuite {
           _ <- EAVT(e1).a.get.map(_.sorted ==> List(":Ns/int", ":Ns/str"))
 
           // Values of e1
-          _ <- EAVT(e1).v.get === List("b", 2)
+          _ <- EAVT(e1).v.get.map(_ ==> List("b", 2))
 
           // Transaction Ts of e1
-          _ <- EAVT(e1).t.get === List(t2, t3)
+          _ <- EAVT(e1).t.get.map(_ ==> List(t2, t3))
 
           // Transaction entities of e1
-          _ <- EAVT(e1).tx.get === List(tx2, tx3)
+          _ <- EAVT(e1).tx.get.map(_ ==> List(tx2, tx3))
 
           // Transaction times of e1
-          _ <- EAVT(e1).txInstant.get === List(d2, d3)
+          _ <- EAVT(e1).txInstant.get.map(_ ==> List(d2, d3))
 
           // Operations of e1
           // Since the current database as of now will only have asserted values
           // this questions will always yield true and therefore not be interesting to query
-          _ <- EAVT(e1).op.get === List(true, true)
+          _ <- EAVT(e1).op.get.map(_ ==> List(true, true))
         } yield ()
       }
 
@@ -236,9 +235,9 @@ object Index extends AsyncTestSuite {
             // or
             // "Was entity e1's attribute :Ns/int value 1 in transaction t1 asserted or retracted?"
             // - 1 was asserted in transaction t1
-            _ <- EAVT(e1, ":Ns/int", 1, t1).e.a.v.t.op.getHistory === List(
+            _ <- EAVT(e1, ":Ns/int", 1, t1).e.a.v.t.op.getHistory.map(_ ==> List(
               (e1, ":Ns/int", 1, t1, true)
-            )
+            ))
           } yield ()
         }
       }
@@ -248,13 +247,13 @@ object Index extends AsyncTestSuite {
           (_, _, _, (t8, e4, t9, t10, t11, t12, t13)) <- testData
 
           // Each value is asserted/retracted on its own
-          _ <- EAVT(e4).a.v.t.get === List(
+          _ <- EAVT(e4).a.v.t.get.map(_ ==> List(
             (":Ns/ints", 60, t11),
             (":Ns/ints", 70, t9),
             (":Ns/ints", 80, t9)
-          )
+          ))
 
-          _ <- EAVT(e4).a.v.t.op.getHistory === List(
+          _ <- EAVT(e4).a.v.t.op.getHistory.map(_ ==> List(
             (":Ns/ints", 6, t10, false),
             (":Ns/ints", 6, t8, true),
 
@@ -267,21 +266,17 @@ object Index extends AsyncTestSuite {
             (":Ns/ints", 60, t11, true),
             (":Ns/ints", 70, t9, true),
             (":Ns/ints", 80, t9, true),
-          )
+          ))
         } yield ()
       }
 
-      "Datom args" - core {   implicit conn =>
-
-            // Applying values to Index attributes not allowed
-            compileError(
-              "m(EAVT(42L).e.a.v(500).t)").check(
-              "molecule.core.transform.exception.Dsl2ModelException: " +
-                "EAVT index attributes not allowed to have values applied.\n" +
-                "EAVT index only accepts datom arguments: `EAVT(<e/a/v/t>)`.")
-//            for {
-//          }
-        }
+      "Datom args" - core { implicit conn =>
+        // Applying values to Index attributes not allowed
+        compileError("m(EAVT(42L).e.a.v(500).t)").check("",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "EAVT index attributes not allowed to have values applied.\n" +
+            "EAVT index only accepts datom arguments: `EAVT(<e/a/v/t>)`.")
+      }
     }
 
     "AEVT" - {
@@ -311,23 +306,23 @@ object Index extends AsyncTestSuite {
 
 
           // Attribute :Ns/int of entity e1's value and transaction
-          _ <- AEVT(":Ns/int", e1).e.v.t.get === List(
+          _ <- AEVT(":Ns/int", e1).e.v.t.get.map(_ ==> List(
             (e1, 2, t3)
-          )
+          ))
 
           // Attribute :Ns/int of entity e1 with value 2's transaction
-          _ <- AEVT(":Ns/int", e1, 2).e.v.t.get === List(
+          _ <- AEVT(":Ns/int", e1, 2).e.v.t.get.map(_ ==> List(
             (e1, 2, t3)
-          )
+          ))
 
           // Attribute :Ns/int of entity e1 with value 2 in transaction t3
-          _ <- AEVT(":Ns/int", e1, 2, t3).e.v.t.get === List(
+          _ <- AEVT(":Ns/int", e1, 2, t3).e.v.t.get.map(_ ==> List(
             (e1, 2, t3)
-          )
+          ))
 
           // Attribute :Ns/int's historic entities, values and transactions
-          if (system != SystemPeerServer)
-          _ <- AEVT(":Ns/int").e.v.t.op.getHistory.map(_.sortBy(p => (p._3, p._4)) ==> List(
+          _ <- if (system != SystemPeerServer)
+          AEVT(":Ns/int").e.v.t.op.getHistory.map(_.sortBy(p => (p._3, p._4)) ==> List(
             (e1, 1, t1, true),
             (e1, 1, t3, false),
             (e1, 2, t3, true),
@@ -335,20 +330,17 @@ object Index extends AsyncTestSuite {
             (e2, 4, t5, false),
             (e2, 5, t5, true),
           ))
+          else Future.unit
         } yield ()
       }
 
-      "Only mandatory datom args" - core {   implicit conn =>
-
-            // Applying values to Index attributes not allowed
-            compileError(
-              """m(AEVT(":Ns/int").a.e.v(42).t)""").check(
-              "molecule.core.transform.exception.Dsl2ModelException: " +
-                "AEVT index attributes not allowed to have values applied.\n" +
-                "AEVT index only accepts datom arguments: `AEVT(<a/e/v/t>)`.")
-//            for {
-//          }
-        }
+      "Only mandatory datom args" - core { implicit conn =>
+        // Applying values to Index attributes not allowed
+        compileError("""m(AEVT(":Ns/int").a.e.v(42).t)""").check("",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "AEVT index attributes not allowed to have values applied.\n" +
+            "AEVT index only accepts datom arguments: `AEVT(<a/e/v/t>)`.")
+      }
     }
 
 
@@ -362,21 +354,21 @@ object Index extends AsyncTestSuite {
           // The AVET index provides efficient access to particular combinations of attribute and value.
 
           // Which entities in what transactions have attribute :Ns/int asserted with value 2?
-          _ <- AVET(":Ns/int", 2).e.t.get === List(
+          _ <- AVET(":Ns/int", 2).e.t.get.map(_ ==> List(
             (e1, t3)
-          )
+          ))
 
-          _ <- AVET(":Ns/int", 2, e1).t.get === List(t3)
+          _ <- AVET(":Ns/int", 2, e1).t.get.map(_ ==> List(t3))
 
-          _ <- AVET(":Ns/int", 2, e1, t3).op.get === List(true)
+          _ <- AVET(":Ns/int", 2, e1, t3).op.get.map(_ ==> List(true))
 
           // History of entities with attribute :Ns/int having value 4
           _ <- if (system != SystemPeerServer) {
             for {
-              _ <- AVET(":Ns/int", 4).e.t.op.getHistory === List(
+              _ <- AVET(":Ns/int", 4).e.t.op.getHistory.map(_ ==> List(
                 (e2, t5, false),
                 (e2, t4, true)
-              )
+              ))
 
               r <- AEVT(":Ns/int").v.e.t.op.getHistory.map(_.sortBy(p => (p._3, p._4)) ==> List(
                 (1, e1, t1, true),
@@ -391,17 +383,13 @@ object Index extends AsyncTestSuite {
         } yield ()
       }
 
-      "Only mandatory datom args" - core {   implicit conn =>
-
-            // Applying values to Index attributes not allowed
-            compileError(
-              """m(AVET(":Ns/int").a.v.e(77L).t)""").check(
-              "molecule.core.transform.exception.Dsl2ModelException: " +
-                "AVET index attributes not allowed to have values applied.\n" +
-                "AVET index only accepts datom arguments: `AVET(<a/v/e/t>)` or range arguments: `AVET.range(a, from, until)`.")
-//            for {
-//          }
-        }
+      "Only mandatory datom args" - core { implicit conn =>
+        // Applying values to Index attributes not allowed
+        compileError("""m(AVET(":Ns/int").a.v.e(77L).t)""").check("",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "AVET index attributes not allowed to have values applied.\n" +
+            "AVET index only accepts datom arguments: `AVET(<a/v/e/t>)` or range arguments: `AVET.range(a, from, until)`.")
+      }
     }
 
 
@@ -415,10 +403,10 @@ object Index extends AsyncTestSuite {
           // Apply attribute name and `from` + `until` value range arguments
 
           // Datoms with attribute :Ns/int having a value between 2 until 6 (not included)
-          _ <- AVET.range(":Ns/int", Some(2), Some(6)).v.e.t.get === List(
+          _ <- AVET.range(":Ns/int", Some(2), Some(6)).v.e.t.get.map(_ ==> List(
             (2, e1, t3),
             (5, e2, t5)
-          )
+          ))
         } yield ()
       }
 
@@ -428,38 +416,38 @@ object Index extends AsyncTestSuite {
           (tx4, e2, t4, d4, tx5, t5, d5), _, _) <- testData
 
           // `until` arg 5 is not included
-          _ <- AVET.range(":Ns/int", Some(2), Some(5)).e.get === List(e1)
+          _ <- AVET.range(":Ns/int", Some(2), Some(5)).e.get.map(_ ==> List(e1))
 
           // Both 2 and 5 matched
-          _ <- AVET.range(":Ns/int", Some(2), Some(6)).e.get === List(e1, e2)
+          _ <- AVET.range(":Ns/int", Some(2), Some(6)).e.get.map(_ ==> List(e1, e2))
 
           // Only 5 matched
-          _ <- AVET.range(":Ns/int", Some(3), Some(6)).e.get === List(e2)
+          _ <- AVET.range(":Ns/int", Some(3), Some(6)).e.get.map(_ ==> List(e2))
 
 
           // 2 to end (2 included)
-          _ <- AVET.range(":Ns/int", Some(2), None).e.get === List(e1, e2)
+          _ <- AVET.range(":Ns/int", Some(2), None).e.get.map(_ ==> List(e1, e2))
 
           // 3 to end (2 not included)
-          _ <- AVET.range(":Ns/int", Some(3), None).e.get === List(e2)
+          _ <- AVET.range(":Ns/int", Some(3), None).e.get.map(_ ==> List(e2))
 
           // 6 to end (2 and 5 not included)
-          _ <- AVET.range(":Ns/int", Some(6), None).e.get === Nil
+          _ <- AVET.range(":Ns/int", Some(6), None).e.get.map(_ ==> Nil)
 
 
           // Start until 5 (5 not included)
-          _ <- AVET.range(":Ns/int", None, Some(5)).e.get === List(e1)
+          _ <- AVET.range(":Ns/int", None, Some(5)).e.get.map(_ ==> List(e1))
 
           // Start until 6 (5 included)
-          _ <- AVET.range(":Ns/int", None, Some(6)).e.get === List(e1, e2)
+          _ <- AVET.range(":Ns/int", None, Some(6)).e.get.map(_ ==> List(e1, e2))
 
           // Start until 2 (2 and 5 not included)
-          _ <- AVET.range(":Ns/int", None, Some(2)).e.get === Nil
+          _ <- AVET.range(":Ns/int", None, Some(2)).e.get.map(_ ==> Nil)
 
 
           // Start - end
           // Molecule disallow returning from beginning to end (the whole database!)
-          _ <- AVET.range(":Ns/int", None, None).e.get === List(e1, e2)
+          _ <- AVET.range(":Ns/int", None, None).e.get.map(_ ==> List(e1, e2))
         } yield ()
       }
 
@@ -467,18 +455,17 @@ object Index extends AsyncTestSuite {
         for {
           _ <- testData
 
-          //      // Different range types throw an exception
-          //      (AVET.range(":Ns/int", Some(1), Some("y")).e.get must throwA[MoleculeException])
-          //        .message === "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-          //        "Please supply range arguments of same type as attribute."
+          // Different range types throw an exception
+          _ <- AVET.range(":Ns/int", Some(1), Some("y")).e.get.recover { case MoleculeException(err, _) =>
+            err ==> "Please supply range arguments of same type as attribute."
+          }
 
           // Two wrong types simply returns no result
-          _ <- AVET.range(":Ns/int", Some("x"), Some("y")).e.get === Nil
+          _ <- AVET.range(":Ns/int", Some("x"), Some("y")).e.get.map(_ ==> Nil)
         } yield ()
       }
 
       "Arg variables" - core { implicit conn =>
-
         // Args can be supplied as variables
 
         val attr = ":Ns/int"
@@ -490,17 +477,17 @@ object Index extends AsyncTestSuite {
           (tx4, e2, t4, d4, tx5, t5, d5), _, _) <- testData
 
           // All variables
-          _ <- AVET.range(attr, Some(one), Some(six)).e.get === List(e1, e2)
+          _ <- AVET.range(attr, Some(one), Some(six)).e.get.map(_ ==> List(e1, e2))
 
           // Mixing static values and variables ok
-          _ <- AVET.range(":Ns/int", Some(one), Some(6)).e.get === List(e1, e2)
+          _ <- AVET.range(":Ns/int", Some(one), Some(6)).e.get.map(_ ==> List(e1, e2))
 
           // Optionals can be supplied as variables too
           from1 = Some(1)
           until6 = Some(6)
           end = None
-          _ <- AVET.range(":Ns/int", from1, end).e.get === List(e1, e2)
-          _ <- AVET.range(":Ns/int", from1, until6).e.get === List(e1, e2)
+          _ <- AVET.range(":Ns/int", from1, end).e.get.map(_ ==> List(e1, e2))
+          _ <- AVET.range(":Ns/int", from1, until6).e.get.map(_ ==> List(e1, e2))
         } yield ()
       }
 
@@ -511,46 +498,46 @@ object Index extends AsyncTestSuite {
             (tx4, e2, t4, d4, tx5, t5, d5), _, _) <- testData
 
             // Attribute :Ns/int values from 1 to end
-            _ <- AVET.range(":Ns/int", Some(1), None).v.e.t.op.getHistory === List(
+            _ <- AVET.range(":Ns/int", Some(1), None).v.e.t.op.getHistory.map(_ ==> List(
               (1, e1, t3, false),
               (1, e1, t1, true),
               (2, e1, t3, true),
               (4, e2, t5, false),
               (4, e2, t4, true),
               (5, e2, t5, true)
-            )
+            ))
 
             // Attribute :Ns/int values from 1 until 6
-            _ <- AVET.range(":Ns/int", Some(1), Some(6)).v.e.t.op.getHistory === List(
+            _ <- AVET.range(":Ns/int", Some(1), Some(6)).v.e.t.op.getHistory.map(_ ==> List(
               (1, e1, t3, false),
               (1, e1, t1, true),
               (2, e1, t3, true),
               (4, e2, t5, false),
               (4, e2, t4, true),
               (5, e2, t5, true)
-            )
+            ))
 
             // Attribute :Ns/int values from 1 until 5 (5 not included)
-            _ <- AVET.range(":Ns/int", Some(1), Some(5)).v.e.t.op.getHistory === List(
+            _ <- AVET.range(":Ns/int", Some(1), Some(5)).v.e.t.op.getHistory.map(_ ==> List(
               (1, e1, t3, false),
               (1, e1, t1, true),
               (2, e1, t3, true),
               (4, e2, t5, false),
               (4, e2, t4, true)
-            )
+            ))
 
             // Attribute :Ns/int values from 2 until 5 (1 and 5 not included)
-            _ <- AVET.range(":Ns/int", Some(2), Some(5)).v.e.t.op.getHistory === List(
+            _ <- AVET.range(":Ns/int", Some(2), Some(5)).v.e.t.op.getHistory.map(_ ==> List(
               (2, e1, t3, true),
               (4, e2, t5, false),
               (4, e2, t4, true)
-            )
+            ))
 
             // Attribute :Ns/int values from 3 until 5 (1, 2 and 5 not included)
-            _ <- AVET.range(":Ns/int", Some(3), Some(5)).v.e.t.op.getHistory === List(
+            _ <- AVET.range(":Ns/int", Some(3), Some(5)).v.e.t.op.getHistory.map(_ ==> List(
               (4, e2, t5, false),
               (4, e2, t4, true)
-            )
+            ))
           } yield ()
         }
       }
@@ -566,39 +553,35 @@ object Index extends AsyncTestSuite {
           (t8, e4, t9, t10, t11, t12, t13)) <- testData
 
           // e2 no longer points to e3
-          _ <- VAET(e3).a.e.t.get === Nil
+          _ <- VAET(e3).a.e.t.get.map(_ ==> Nil)
 
           // e1 and e2 points to e4
-          _ <- VAET(e4).a.e.t.get === List(
+          _ <- VAET(e4).a.e.t.get.map(_ ==> List(
             (":Ns/ref1", e2, t12),
             (":Ns/refs1", e2, t13)
-          )
+          ))
 
           // e2 pointed to e3
-          _ <- VAET(e3).a.e.t.op.getHistory === List(
+          _ <- VAET(e3).a.e.t.op.getHistory.map(_ ==> List(
             (":Ns/ref1", e2, t12, false),
             (":Ns/ref1", e2, t7, true)
-          )
+          ))
 
           // e1 and e2 now points to e4
-          _ <- VAET(e4).a.e.t.op.getHistory === List(
+          _ <- VAET(e4).a.e.t.op.getHistory.map(_ ==> List(
             (":Ns/ref1", e2, t12, true),
             (":Ns/refs1", e2, t13, true)
-          )
+          ))
         } yield ()
       }
 
-      "Only mandatory datom args" - core {   implicit conn =>
-
-            // Applying values to Index attributes not allowed
-            compileError(
-              "m(VAET(42L).v.a.e(77L).t)").check(
-              "molecule.core.transform.exception.Dsl2ModelException: " +
-                "VAET index attributes not allowed to have values applied.\n" +
-                "VAET index only accepts datom arguments: `VAET(<v/a/e/t>)`.")
-//            for {
-//          }
-        }
+      "Only mandatory datom args" - core { implicit conn =>
+        // Applying values to Index attributes not allowed
+        compileError("m(VAET(42L).v.a.e(77L).t)").check("",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "VAET index attributes not allowed to have values applied.\n" +
+            "VAET index only accepts datom arguments: `VAET(<v/a/e/t>)`.")
+      }
     }
   }
 }

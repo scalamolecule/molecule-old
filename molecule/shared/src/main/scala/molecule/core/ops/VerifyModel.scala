@@ -6,7 +6,8 @@ import molecule.core.ops.exception.VerifyModelException
 
 case class VerifyModel(model: Model, op: String) {
 
-  val datomGenerics = Seq("e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
+  val datomGenerics = Seq(
+    "e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
 
   // Perform verifications upon instantiation
   op match {
@@ -77,8 +78,11 @@ case class VerifyModel(model: Model, op: String) {
       case Generic(_, "e" | "e_", _, Eq(eids)) => true
       case _                                   => false
     }
-    case Atom(nsFull, _, _, _, _, _, _, _)        => err("missingAppliedId", s"Update molecule should start with an applied id: `${Ns(nsFull)}(<eid>)...`")
-    case other                                    => err("missingAppliedId", "unexpected element: " + other)
+    case Atom(nsFull, _, _, _, _, _, _, _)        =>
+      err("missingAppliedId",
+        s"Update molecule should start with an applied id: `${Ns(nsFull)}(<eid>)...`")
+    case other                                    =>
+      err("missingAppliedId", "unexpected element: " + other)
   }
 
   private def onlyAtomsWithValue = model.elements.foreach {
@@ -103,13 +107,15 @@ case class VerifyModel(model: Model, op: String) {
       case Atom(nsFull, attr, _, _, _, _, _, _) if !attr.endsWith("_") =>
         val attrClean = if (attr.endsWith("$")) attr.init else attr
         err("onlyTacitTxAttrs",
-          s"For inserts, tx meta data can only be applied to tacit attributes, like: `${nsFull.capitalize}.${attrClean}_(<metadata>)`")
+          s"For inserts, tx meta data can only be applied to tacit attributes, " +
+            s"like: `${nsFull.capitalize}.${attrClean}_(<metadata>)`")
     }
   }
 
   private def noTacitAttrs: Unit = {
     def detectTacitAttrs(elements: Seq[Element]): Seq[Element] = elements flatMap {
-      case a: Atom if a.attr.last == '_' => err("noTacitAttrs", s"Tacit attributes like `${a.attr}` not allowed in $op molecules.")
+      case a: Atom if a.attr.last == '_' =>
+        err("noTacitAttrs", s"Tacit attributes like `${a.attr}` not allowed in $op molecules.")
       case Nested(ref, es)               => detectTacitAttrs(es)
       case Composite(es)                 => detectTacitAttrs(es)
       case e: Element                    => Seq(e)
@@ -122,7 +128,8 @@ case class VerifyModel(model: Model, op: String) {
       case (attrs, e) => e match {
         case a: Atom if a.attr.last != '$'         => attrs :+ a
         case g@Generic(_, "e" | "e_", _, EntValue) => attrs :+ g
-        case b: Bond if attrs.isEmpty              => err("missingAttrInStartEnd", "Missing mandatory attributes of first namespace.")
+        case b: Bond if attrs.isEmpty              =>
+          err("missingAttrInStartEnd", "Missing mandatory attributes of first namespace.")
         case _                                     => attrs
       }
     }
@@ -130,7 +137,8 @@ case class VerifyModel(model: Model, op: String) {
       case (e, attrs) => e match {
         case a: Atom if a.attr.last != '$' => attrs :+ a
         case Nested(ref, es)               => missingAttrInEnd(es)
-        case b: Bond if attrs.isEmpty      => err("missingAttrInStartEnd", "Missing mandatory attributes of last namespace.")
+        case b: Bond if attrs.isEmpty      =>
+          err("missingAttrInStartEnd", "Missing mandatory attributes of last namespace.")
         case _                             => attrs
       }
     }
@@ -156,9 +164,17 @@ case class VerifyModel(model: Model, op: String) {
     case Bond(_, _, _, _, Seq(BiTargetRef(_, _))) => true
 
     // Otherwise disallow refs in updates
-    case Bond(_, _, refNs, _, _)            => err("update_onlyOneNs", op.capitalize + s" molecules can't span multiple namespaces like `${Ns(refNs)}`.")
-    case Nested(Bond(_, _, refNs, _, _), _) => err("update_onlyOneNs", op.capitalize + s" molecules can't have nested data structures like `${Ns(refNs)}`.")
-    case c: Composite                       => err("update_onlyOneNs", op.capitalize + " molecules can't be composites.")
+    case Bond(_, _, refNs, _, _)            =>
+      err("update_onlyOneNs",
+        op.capitalize + s" molecules can't span multiple namespaces like `${Ns(refNs)}`.")
+
+    case Nested(Bond(_, _, refNs, _, _), _) =>
+      err("update_onlyOneNs",
+        op.capitalize + s" molecules can't have nested data structures like `${Ns(refNs)}`.")
+
+    case c: Composite                       =>
+      err("update_onlyOneNs",
+        op.capitalize + " molecules can't be composites.")
   }
 
   private def noNested: Unit = {
@@ -173,7 +189,8 @@ case class VerifyModel(model: Model, op: String) {
   private def noEdgePropRefs: Option[Unit] = model.elements.collectFirst {
     case Bond(_, refAttr, _, _, Seq(BiEdgePropRef(_))) => err("noEdgePropRefs",
       s"Building on to another namespace from a property edge of a $op molecule not allowed. " +
-        s"Please create the referenced entity sepearately and apply the created ids to a ref attr instead, like `.$refAttr(<refIds>)`")
+        s"Please create the referenced entity sepearately and apply the created ids to a ref attr instead, " +
+        s"like `.$refAttr(<refIds>)`")
   }
 
 
@@ -227,7 +244,8 @@ case class VerifyModel(model: Model, op: String) {
         // Edge.prop ..?
         case Atom(edgeNs, prop, _, _, _, _, Seq(BiEdgePropAttr(_)), _) =>
           hasTarget(elements, edgeNs) getOrElse
-            err("edgeComplete", s"Missing target namespace somewhere after edge property `${Ns(edgeNs)}/$prop`.")
+            err("edgeComplete",
+              s"Missing target namespace somewhere after edge property `${Ns(edgeNs)}/$prop`.")
       }
     }
 
@@ -252,7 +270,9 @@ case class VerifyModel(model: Model, op: String) {
       elements.collectFirst {
         // Base.attr.Edge ..?
         case Bond(baseNs, _, edgeNs, _, Seq(BiEdgeRef(_, _))) => hasTarget(elements, edgeNs) getOrElse
-          err("update_edgeComplete", s"Can't update edge `${Ns(edgeNs)}` of base entity `${Ns(baseNs)}` without knowing which target entity the edge is pointing too. " +
+          err("update_edgeComplete",
+            s"Can't update edge `${Ns(edgeNs)}` of base entity `${Ns(baseNs)}` without knowing which target " +
+              s"entity the edge is pointing too. " +
             s"Please update the edge itself, like `${Ns(edgeNs)}(<edgeId>).edgeProperty(<new value>).update`.")
       }
     }

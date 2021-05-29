@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.time
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
-import molecule.datomic.api.out1._
 import molecule.core.util.JavaUtil
+import molecule.datomic.api.out1._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -20,12 +20,12 @@ object GetSince extends AsyncTestSuite with JavaUtil {
           tx3 <- Ns.int(3).save
 
           // Current values
-          _ <- Ns.int.get === List(1, 2, 3)
+          _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
           // Exclussive tx1 value
-          _ <- Ns.int.getSince(tx1) === List(2, 3)
-          _ <- Ns.int.getSince(tx2) === List(3)
-          _ <- Ns.int.getSince(tx3) === List()
+          _ <- Ns.int.getSince(tx1).map(_ ==> List(2, 3))
+          _ <- Ns.int.getSince(tx2).map(_ ==> List(3))
+          _ <- Ns.int.getSince(tx3).map(_ ==> List())
         } yield ()
       }
 
@@ -40,12 +40,12 @@ object GetSince extends AsyncTestSuite with JavaUtil {
           tx4 <- Ns(e2).int(4).update
 
           // Current values
-          _ <- Ns.int.get === List(1, 3, 4)
+          _ <- Ns.int.get.map(_ ==> List(1, 3, 4))
 
-          _ <- Ns.int.getSince(tx1) === List(3, 4)
-          _ <- Ns.int.getSince(tx2) === List(3, 4)
-          _ <- Ns.int.getSince(tx3) === List(4)
-          _ <- Ns.int.getSince(tx4) === List()
+          _ <- Ns.int.getSince(tx1).map(_ ==> List(3, 4))
+          _ <- Ns.int.getSince(tx2).map(_ ==> List(3, 4))
+          _ <- Ns.int.getSince(tx3).map(_ ==> List(4))
+          _ <- Ns.int.getSince(tx4).map(_ ==> List())
         } yield ()
       }
 
@@ -59,12 +59,12 @@ object GetSince extends AsyncTestSuite with JavaUtil {
           tx5 <- tx2.eid.map(_.retract)
 
           // Current values
-          _ <- Ns.int.get === List(1, 3, 4)
+          _ <- Ns.int.get.map(_ ==> List(1, 3, 4))
 
-          _ <- Ns.int.getSince(tx1) === List(3, 4)
-          _ <- Ns.int.getSince(tx2) === List(3, 4)
-          _ <- Ns.int.getSince(tx3) === List(4)
-          _ <- Ns.int.getSince(tx4) === List()
+          _ <- Ns.int.getSince(tx1).map(_ ==> List(3, 4))
+          _ <- Ns.int.getSince(tx2).map(_ ==> List(3, 4))
+          _ <- Ns.int.getSince(tx3).map(_ ==> List(4))
+          _ <- Ns.int.getSince(tx4).map(_ ==> List())
         } yield ()
       }
     }
@@ -159,7 +159,7 @@ object GetSince extends AsyncTestSuite with JavaUtil {
           t3 = tx3.t
 
           // Current values as Iterable
-          _ <- Ns.str.get === List("Ann", "Ben", "Cay")
+          _ <- Ns.str.get.map(_ ==> List("Ann", "Ben", "Cay"))
 
           // Ben and Cay added since transaction time t1
           _ <- Ns.str.getRawSince(t1).map { raw =>
@@ -187,7 +187,7 @@ object GetSince extends AsyncTestSuite with JavaUtil {
           t3 = tx3.t
 
           // Current values
-          _ <- Ns.str.get === List("Ann", "Ben", "Cay")
+          _ <- Ns.str.get.map(_ ==> List("Ann", "Ben", "Cay"))
 
           // Ben and Cay added since tx1
           _ <- Ns.str.getRawSince(tx1).map { raw =>

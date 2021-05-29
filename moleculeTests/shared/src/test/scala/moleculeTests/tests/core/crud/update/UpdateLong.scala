@@ -1,11 +1,10 @@
 package moleculeTests.tests.core.crud.update
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -30,15 +29,15 @@ object UpdateLong extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).long().update
-          _ <- Ns.long.get === List()
+          _ <- Ns.long.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).long(2L, 3L).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... long(2, 3)"
+          _ <- Ns(eid).long(2L, 3L).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... long(2, 3)"
+          }
         } yield ()
       }
     }
@@ -61,15 +60,15 @@ object UpdateLong extends AsyncTestSuite {
 
           // Delete value (apply no value)
           _ <- Ns(eid).long().update
-          _ <- Ns.long.get === List()
+          _ <- Ns.long.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).long(long2, long3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... long($long2, $long3)"
+          _ <- Ns(eid).long(long2, long3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... long($long2, $long3)"
+          }
         } yield ()
       }
     }
@@ -144,15 +143,13 @@ object UpdateLong extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).longs.replace(7L -> 8L, 8L -> 8L).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
-                    "\n8")
+          _ = compileError(            """Ns(eid).longs.replace(7L -> 8L, 8L -> 8L).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
+              "\n8")
 
-                _ = compileError(
-                  """Ns(eid).longs.replace(Seq(7L -> 8L, 8L -> 8L)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
-                    "\n8")
+          _ = compileError(            """Ns(eid).longs.replace(Seq(7L -> 8L, 8L -> 8L)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
+              "\n8")
         } yield ()
       }
 
@@ -206,13 +203,13 @@ object UpdateLong extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).longs(Set[Long]()).update
-          _ <- Ns.longs.get === List()
+          _ <- Ns.longs.get.map(_ ==> List())
 
           _ <- Ns(eid).longs(Set(1L, 2L)).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).longs().update
-          _ <- Ns.longs.get === List()
+          _ <- Ns.longs.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded (at compile time)
@@ -308,30 +305,30 @@ object UpdateLong extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).longs.replace(long7 -> long8, long8 -> long8).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
-                    "\n__ident__long8")
+          _ = compileError(            """Ns(eid).longs.replace(long7 -> long8, long8 -> long8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
+              "\n__ident__long8")
 
-                _ = compileError(
-                  """Ns(eid).longs.replace(Seq(long7 -> long8, long8 -> long8)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
-                    "\n__ident__long8")
+          _ = compileError(            """Ns(eid).longs.replace(Seq(long7 -> long8, long8 -> long8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
+              "\n__ident__long8")
 
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = 8L
 
-          //      (Ns(eid).longs.replace(long7 -> long8, long8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/longs`:" +
-          //        "\n8"
-          //
-          //      // Conflicting new values
-          //      (Ns(eid).longs.replace(Seq(long7 -> long8, long8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/longs`:" +
-          //        "\n8"
+          _ <- Ns(eid).longs.replace(long7 -> long8, long8 -> other8).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/longs`:" +
+                "\n8"
+          }
+
+          // Conflicting new values
+          _ <- Ns(eid).longs.replace(Seq(long7 -> long8, long8 -> other8)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/longs`:" +
+                "\n8"
+          }
         } yield ()
       }
 
@@ -363,7 +360,7 @@ object UpdateLong extends AsyncTestSuite {
           // Retract Seq of values as variable
           values = Seq(long1)
           _ <- Ns(eid).longs.retract(values).update
-          _ <- Ns.longs.get === List()
+          _ <- Ns.longs.get.map(_ ==> List())
 
           // Retracting empty Seq of values has no effect
           _ <- Ns(eid).longs(long1).update
@@ -391,7 +388,7 @@ object UpdateLong extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).longs(Set[Long]()).update
-          _ <- Ns.longs.get === List()
+          _ <- Ns.longs.get.map(_ ==> List())
 
           // Apply Seq of values as variable
           values = Set(long1, long2)
@@ -403,7 +400,7 @@ object UpdateLong extends AsyncTestSuite {
 
           // Delete all (apply no values)
           _ <- Ns(eid).longs().update
-          _ <- Ns.longs.get === List()
+          _ <- Ns.longs.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded

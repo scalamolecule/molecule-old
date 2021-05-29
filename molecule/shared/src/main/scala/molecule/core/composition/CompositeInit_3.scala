@@ -16,7 +16,7 @@ import scala.language.higherKinds
   * of the second sub-molecule. If any of the sub-molecules are of arity-1, then no tuple is created:
   * {{{
   *   m(Article.name(?).author(?).editor(?) + Tag.category.weight)
-  *     .apply("Battle of Waterloo", "Ben Bridge", "Joe Moe").get === List(
+  *     .apply("Battle of Waterloo", "Ben Bridge", "Joe Moe").get.map(_ ==> List(
   *       (("Battle of Waterloo", "Ben Bridge", "Joe Moe"), ("History", 5))
   *     )
   * }}}

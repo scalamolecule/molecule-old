@@ -1,11 +1,9 @@
 package moleculeTests.tests.core.crud
 
 import molecule.datomic.api.out4._
-import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
-import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -23,8 +21,8 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
           // Both int and str asserted
           _ <- Ns(eid).int(2).str("b").update
 
-          _ <- Ns.int.get === List(2)
-          _ <- Ns.str.get === List("b")
+          _ <- Ns.int.get.map(_ ==> List(2))
+          _ <- Ns.str.get.map(_ ==> List("b"))
           _ <- Ns.e.int.str.get.map(_.head ==> (eid, 2, "b"))
         } yield ()
       }
@@ -37,8 +35,8 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
           // Only int asserted
           _ <- Ns(eid).int(2).str("a").update
 
-          _ <- Ns.int.get === List(2)
-          _ <- Ns.str.get === List("a")
+          _ <- Ns.int.get.map(_ ==> List(2))
+          _ <- Ns.str.get.map(_ ==> List("a"))
           _ <- Ns.e.int.str.get.map(_.head ==> (eid, 2, "a"))
         } yield ()
       }
@@ -51,8 +49,8 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
           // Only str asserted
           _ <- Ns(eid).int(1).str("b").update
 
-          _ <- Ns.int.get === List(1)
-          _ <- Ns.str.get === List("b")
+          _ <- Ns.int.get.map(_ ==> List(1))
+          _ <- Ns.str.get.map(_ ==> List("b"))
           _ <- Ns.e.int.str.get.map(_.head ==> (eid, 1, "b"))
         } yield ()
       }
@@ -65,8 +63,8 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
           // No facts asserted!
           _ <- Ns(eid).int(1).str("a").update
 
-          _ <- Ns.int.get === List(1)
-          _ <- Ns.str.get === List("a")
+          _ <- Ns.int.get.map(_ ==> List(1))
+          _ <- Ns.str.get.map(_ ==> List("a"))
           _ <- Ns.e.int.str.get.map(_.head ==> (eid, 1, "a"))
         } yield ()
       }
@@ -78,9 +76,9 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
           _ <- Ns(eid).int(2).str("b").bool(true).update
 
-          _ <- Ns.int.get === List(2)
-          _ <- Ns.str.get === List("b")
-          _ <- Ns.bool.get === List(true)
+          _ <- Ns.int.get.map(_ ==> List(2))
+          _ <- Ns.str.get.map(_ ==> List("b"))
+          _ <- Ns.bool.get.map(_ ==> List(true))
           _ <- Ns.e.int.str.bool.get.map(_.head ==> (eid, 2, "b", true))
         } yield ()
       }
@@ -92,9 +90,9 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
           _ <- Ns(eid).int(1).str("a").bool(false).update
 
-          _ <- Ns.int.get === List(1)
-          _ <- Ns.str.get === List("a")
-          _ <- Ns.bool.get === List(false)
+          _ <- Ns.int.get.map(_ ==> List(1))
+          _ <- Ns.str.get.map(_ ==> List("a"))
+          _ <- Ns.bool.get.map(_ ==> List(false))
           _ <- Ns.e.int.str.bool.get.map(_.head ==> (eid, 1, "a", false))
         } yield ()
       }

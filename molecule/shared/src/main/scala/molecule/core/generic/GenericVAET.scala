@@ -13,23 +13,23 @@ import molecule.core.generic.VAET._
   * or more arguments and then add generic attributes:
   * {{{
   *   // Say we have 3 entities pointing to one entity:
-  *   Release.e.name.Artists.e.name.get === List(
+  *   Release.e.name.Artists.e.name.get.map(_ ==> List(
   *     (r1, "Abbey Road", a1, "The Beatles"),
   *     (r2, "Magical Mystery Tour", a1, "The Beatles"),
   *     (r3, "Let it be", a1, "The Beatles"),
-  *   )
+  *   ))
   *
   *   // .. then we can get the reverse relationships with the VAET Index:
-  *   VAET(a1).v.a.e.get === List(
+  *   VAET(a1).v.a.e.get.map(_ ==> List(
   *     (a1, ":Release/artists", r1),
   *     (a1, ":Release/artists", r2),
   *     (a1, ":Release/artists", r3),
-  *   )
+  *   ))
   *
   *   // Narrow search with multiple arguments
-  *   VAET(a1, ":Release/artist").e.get === List(r1, r2, r3)
-  *   VAET(a1, ":Release/artist", r2).e.get === List(r2)
-  *   VAET(a1, ":Release/artist", r2, t7).e.get === List(r2)
+  *   VAET(a1, ":Release/artist").e.get.map(_ ==> List(r1, r2, r3))
+  *   VAET(a1, ":Release/artist", r2).e.get.map(_ ==> List(r2))
+  *   VAET(a1, ":Release/artist", r2, t7).e.get.map(_ ==> List(r2))
   * }}}
   *
   * Index attributes available:

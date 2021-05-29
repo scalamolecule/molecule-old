@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.attrMap
 
 import molecule.core.api.OptionalMapOps._
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -21,13 +21,13 @@ object Optional extends Base {
         )
 
         // All (5th entity has no strMap)
-        _ <- Ns.int.strMap$.get === List(
+        _ <- Ns.int.strMap$.get.map(_ ==> List(
           (1, Some(Map("en" -> "Hi there"))),
           (2, Some(Map("fr" -> "Bonjour", "en" -> "Oh, Hi"))),
           (3, Some(Map("en" -> "Hello"))),
           (4, Some(Map("da" -> "Hej"))),
           (5, None)
-        )
+        ))
 
         // Values with "en" key
         // We can't apply values to optional map values (like `Ns.int.strMap$("en")`)
@@ -71,13 +71,13 @@ object Optional extends Base {
         )
 
         // All (5th entity has no strMap)
-        _ <- Ns.int.intMap$.get === List(
+        _ <- Ns.int.intMap$.get.map(_ ==> List(
           (1, Some(Map("en" -> 10))),
           (2, Some(Map("fr" -> 20, "en" -> 10))),
           (3, Some(Map("en" -> 30))),
           (4, Some(Map("da" -> 30))),
           (5, None)
-        )
+        ))
 
         // Values with "en" key
         // We can't apply values to optional values (like `Ns.int.strMap$("en")`)

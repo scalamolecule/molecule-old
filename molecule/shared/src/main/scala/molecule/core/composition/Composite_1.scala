@@ -15,7 +15,7 @@ import scala.language.higherKinds
   * {{{
   *   //             | input composite               | add sub-molecule
   *   m(Article.name(?).author + Tag.category.weight + Publisher.name)
-  *     .apply("Battle of Waterloo").get === List(
+  *     .apply("Battle of Waterloo").get.map(_ ==> List(
   *       (("Battle of Waterloo", "Ben Bridge"), ("History", 5), "Bestseller Publications Inc.")
   *     )
   * }}}

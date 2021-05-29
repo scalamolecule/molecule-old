@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.time.domain
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

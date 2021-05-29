@@ -11,7 +11,7 @@ import scala.language.higherKinds
   *   Person.name("Ben").Tx(MyMetaData.action("add member")).save.eid
   *
   *   // Query for data with transaction meta data - "which persons became members"
-  *   Person.name.Tx(MyMetaData.action_("add member")).get === List("Ben")
+  *   Person.name.Tx(MyMetaData.action_("add member")).get.map(_ ==> List("Ben"))
   * }}}
   */
 trait Tx

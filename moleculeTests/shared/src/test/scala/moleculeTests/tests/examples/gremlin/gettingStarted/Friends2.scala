@@ -3,8 +3,8 @@ package moleculeTests.tests.examples.gremlin.gettingStarted
 import molecule.datomic.api.out10._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.examples.gremlin.gettingStarted.dsl.ModernGraph2._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 /*
@@ -100,17 +100,17 @@ object Friends2 extends AsyncTestSuite {
         // Marko knows (by name)
         // g.V(1).outE('knows').inV().values('name')
         // g.V(1).out('knows').values('name')
-        _ <- Person(marko).Knows.Person.name.get === List("vadas", "josh")
+        _ <- Person(marko).Knows.Person.name.get.map(_ ==> List("vadas", "josh"))
         _ <- Person(marko).Knows.person.get.map(_.sorted ==> List(josh, vadas).sorted)
 
         // We can uniformly query in the other direction too
         // vadas and josh also know marko
         _ <- Person(vadas).Knows.person.get.map(_.sorted ==> List(peter, marko).sorted)
-        _ <- Person(josh).Knows.person.get === List(marko)
+        _ <- Person(josh).Knows.person.get.map(_ ==> List(marko))
 
         // "Markos knows older than 30"
         // g.V(1).out('knows').has('age', gt(30)).values('name')
-        _ <- Person(marko).Knows.Person.name.age_.>(30).get === List("josh")
+        _ <- Person(marko).Knows.Person.name.age_.>(30).get.map(_ ==> List("josh"))
       } yield ()
     }
 
@@ -120,7 +120,7 @@ object Friends2 extends AsyncTestSuite {
 
         // Find Marko id
         // g.V().has('name','marko')
-        _ <- Person.e.name_("marko").get === List(marko)
+        _ <- Person.e.name_("marko").get.map(_ ==> List(marko))
 
         // Marko created (refs to Created)
         // g.V().has('name','marko').out('created')
@@ -128,12 +128,12 @@ object Friends2 extends AsyncTestSuite {
 
         // Marko created software named...
         // g.V().has('name','marko').out('created').values('name')
-        _ <- Person.name_("marko").Created.Software.name.get === List("lop")
+        _ <- Person.name_("marko").Created.Software.name.get.map(_ ==> List("lop"))
 
 
         // Ages of marko and vadas
         // g.V().has('name',within('vadas','marko')).values('age')
-        _ <- Person.name_("marko", "vadas").age.get === List(27, 29)
+        _ <- Person.name_("marko", "vadas").age.get.map(_ ==> List(27, 29))
 
         // Mean/average age of marko and vadas
         // g.V().has('name',within('vadas','marko')).values('age').mean()
@@ -150,17 +150,17 @@ object Friends2 extends AsyncTestSuite {
         markoSoftware <- Person.name_("marko").Created.software.get
 
         // Then find names of persons that have participated in those projects
-        _ <- Person.name.Created.software_(markoSoftware).get === List("peter", "josh", "marko")
+        _ <- Person.name.Created.software_(markoSoftware).get.map(_ ==> List("peter", "josh", "marko"))
 
         // Excluding marko from the result (re-using the first sub-query)
         // g.V().has('name','marko').as('exclude').out('created').in('created').where(neq('exclude')).values('name')
-        _ <- Person.name.not("marko").Created.software_(markoSoftware).get === List("peter", "josh")
+        _ <- Person.name.not("marko").Created.software_(markoSoftware).get.map(_ ==> List("peter", "josh"))
 
         // Untyped generic queries are not directly handled by Molecule.
         // With a namespace prefix we though can similar and type safe results
         // g.V().group().by(label).by('name')
-        _ <- Person.name.get === List("peter", "vadas", "josh", "marko")
-        _ <- Software.name.get === List("ripple", "lop")
+        _ <- Person.name.get.map(_ ==> List("peter", "vadas", "josh", "marko"))
+        _ <- Software.name.get.map(_ ==> List("ripple", "lop"))
       } yield ()
     }
 
@@ -185,38 +185,38 @@ object Friends2 extends AsyncTestSuite {
         ))
 
         // Markos friends older than 30
-        _ <- Person(marko).Knows.Person.name.age.>(30).get === List(("josh", 32))
+        _ <- Person(marko).Knows.Person.name.age.>(30).get.map(_ ==> List(("josh", 32)))
 
         // Josh's friends older than 30 (none)
-        _ <- Person(josh).Knows.Person.name.age.>(30).get === List()
+        _ <- Person(josh).Knows.Person.name.age.>(30).get.map(_ ==> List())
 
         // Who knows young people?
         // Since we save bidirectional references we get friendships in both directions:
-        _ <- Person.name.Knows.Person.name.age.<(30).get === List(
+        _ <- Person.name.Knows.Person.name.age.<(30).get.map(_ ==> List(
           ("vadas", "marko", 29), // vadas knows marko who is 29
           ("josh", "marko", 29), // josh knows marko who is 29
           ("marko", "vadas", 27), // marko knows vadas who is 27
           ("peter", "vadas", 27) // peter knows vadas who is 27
-        )
+        ))
 
         // Which older people have young friends
-        _ <- Person.name.age.>=(30).Knows.Person.name.age.<(30).get === List(
+        _ <- Person.name.age.>=(30).Knows.Person.name.age.<(30).get.map(_ ==> List(
           ("peter", 35, "vadas", 27), // peter (35) knows vadas (27)
           ("josh", 32, "marko", 29) // josh (32) knows marko (29)
-        )
+        ))
 
         // How many young friends does the older people have?
-        _ <- Person.name.age.>=(30).Knows.Person.e(count).age_.<(30).get === List(
+        _ <- Person.name.age.>=(30).Knows.Person.e(count).age_.<(30).get.map(_ ==> List(
           ("josh", 32, 1), // josh (32) knows 1
           ("peter", 35, 1) // peter (35) knows 1
-        )
+        ))
 
         // Marko's friends and their friends
-        _ <- Person.name("marko").Knows.Person.name.Knows.Person.name.get === List(
+        _ <- Person.name("marko").Knows.Person.name.Knows.Person.name.get.map(_ ==> List(
           ("marko", "vadas", "peter"),
           ("marko", "josh", "marko"),
           ("marko", "vadas", "marko")
-        )
+        ))
 
         // Same, nested
         _ <- Person.name("marko").Knows.*(
@@ -234,21 +234,21 @@ object Friends2 extends AsyncTestSuite {
             ))
 
         // Marko's friends and their friends (excluding marko)
-        _ <- Person.name("marko").Knows.Person.name.Knows.Person.name.not("marko").get === List(
+        _ <- Person.name("marko").Knows.Person.name.Knows.Person.name.not("marko").get.map(_ ==> List(
           ("marko", "vadas", "peter")
-        )
+        ))
 
         // Marko's friends' friends
-        _ <- Person.name_("marko").Knows.Person.Knows.Person.name.not("marko").get === List(
+        _ <- Person.name_("marko").Knows.Person.Knows.Person.name.not("marko").get.map(_ ==> List(
           "peter"
-        )
+        ))
 
         // Marko's friends' friends that are not already marko's friends (or marko)
         res <- Person(marko).Knows.Person.name.get
         ownCircle = res :+ "marko"
-        _ <- Person(marko).Knows.Person.Knows.Person.name.not(ownCircle).get === List(
+        _ <- Person(marko).Knows.Person.Knows.Person.name.not(ownCircle).get.map(_ ==> List(
           "peter"
-        )
+        ))
       } yield ()
     }
 
@@ -258,15 +258,15 @@ object Friends2 extends AsyncTestSuite {
         (marko, markoLop, vadas, josh, joshLop, joshRipple, peter, peterLop) <- testData
 
         // Well-known friends
-        _ <- Person(marko).Knows.weight_.>(0.8).Person.name.get === List("josh")
+        _ <- Person(marko).Knows.weight_.>(0.8).Person.name.get.map(_ ==> List("josh"))
 
         // Well-known friends heavily involved in projects
-        _ <- Person(marko).Knows.weight_.>(0.8).Person.name.Created.weight_.>(0.8).Software.name.get ===
-          List(("josh", "ripple"))
+        _ <- Person(marko).Knows.weight_.>(0.8).Person.name.Created.weight_.>(0.8).Software.name.get.map(_ ==>
+          List(("josh", "ripple")))
 
         // Friends of friends' side projects
-        _ <- Person(marko).Knows.Person.Knows.Person.name.not("marko").Created.weight.<(0.5).Software.name.get ===
-          List(("peter", 0.2, "lop"))
+        _ <- Person(marko).Knows.Person.Knows.Person.name.not("marko").Created.weight.<(0.5).Software.name.get.map(_ ==>
+          List(("peter", 0.2, "lop")))
 
         // .. or elaborated:
         _ <- Person(marko) // marko entity
@@ -274,11 +274,11 @@ object Friends2 extends AsyncTestSuite {
           .Knows.Person.name.not("marko") // friends of friends of marko that are not marko
           .Created.weight.<(0.5) // Created (software) with a low weight property
           .Software.name // name of software created
-          .get === List((
+          .get.map(_ ==> List((
           "peter", // peter is a friend of vadas who is a friend of marko
           0.2, // peter participated with a weight of 0.2 in creating
           "lop" // the software "lop"
-        ))
+        )))
       } yield ()
     }
   }

@@ -2,9 +2,10 @@ package moleculeTests.tests.examples.datomic.dayOfDatomic
 
 import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
+import scala.concurrent.Future
 import scala.language.postfixOps
 
 // http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
@@ -57,7 +58,6 @@ object QueryTour extends AsyncTestSuite {
 
     "Schema-aware joins" - selfJoin { implicit conn =>
       for {
-
         // 8. A Schema Query
 
         // Attributes of all entities having comments
@@ -72,11 +72,11 @@ object QueryTour extends AsyncTestSuite {
 
         // Attributes of stories having comments
         storiesWithComments <- m(Story.e.title_ + Parent.comment_).get
-        _ <- Story(storiesWithComments).a.get === List(
+        _ <- Story(storiesWithComments).a.get.map(_ ==> List(
           ":Story/url",
           ":Story/title",
           ":Parent/comment",
-        )
+        ))
 
         // Attributes of comments having a sub-comment
         commentsWithSubComments <- m(Comment.e.text_ + Parent.comment_).get
@@ -98,28 +98,28 @@ object QueryTour extends AsyncTestSuite {
         editor = editors.head
 
 
-        //    // 12. Requesting an Attribute value
-        //    _ <- editor(":User/firstName") === Some("Ed")
-        //    _ <- editor(":unrecognizedKey") === None
+        // 12. Requesting an Attribute value
+        _ <- editor.map(_ (":User/firstName") ==> Some("Ed"))
+        _ <- editor.map(_ (":unrecognizedKey") ==> None)
 
         // Or as query
         _ <- User(editor).firstName.get.map(_.head ==> "Ed")
 
 
-        //    // 13. Touching an entity
-        //    // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-        //    editor.touch === Map(
-        //      ":db/id" -> ed,
-        //      ":User/email" -> "editor@example.com",
-        //      ":User/firstName" -> "Ed",
-        //      ":User/lastName" -> "Itor"
-        //    )
+        // 13. Touching an entity
+        // Get all attributes/values of this entity. Sub-component values are recursively retrieved
+        _ <- editor.map(_.touch ==> Map(
+          ":db/id" -> ed,
+          ":User/email" -> "editor@example.com",
+          ":User/firstName" -> "Ed",
+          ":User/lastName" -> "Itor"
+        ))
 
 
         // 14. Navigating backwards
 
-        //    // The editors comments (Comments pointing to the Editor entity)
-        //    editor(":Comment/_author") === Some(List(c2, c4, c5, c7, c11))
+        // The editors comments (Comments pointing to the Editor entity)
+        _ <- editor.map(_ (":Comment/_author") ==> Some(List(c2, c4, c5, c7, c11)))
 
         // .. almost same as: (here, only matching data is returned)
         // Comments of editor
@@ -127,6 +127,15 @@ object QueryTour extends AsyncTestSuite {
 
 
         // 15. Navigating Deeper with entity api
+
+        // Comments to the editors comments (with entity api)
+        _ <- for {
+          a <- editor.flatMap(_.apply[List[Long]](":Comment/_author").map(_.get))
+          b <- Future.sequence(a.map(_.flatMap(_.apply[Map[String, Long]](":Parent/comment").map(_.get))))
+          c = b.map(_.apply(":db/id"))
+        } yield {
+          c ==> List(c3, c6, c8, c12)
+        }
 
         //    // Comments to the editors comments (with entity api)
         //    (for{

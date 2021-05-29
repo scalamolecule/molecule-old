@@ -46,7 +46,7 @@ trait EntityOps {
     * }}}
     * We can then later see what comments Ben Goodman retracted (`op_(false)`):
     * {{{
-    *   Comment.e.text.op_(false).Tx(MetaData.user_("Ben Goodman")).getHistory === List(
+    *   Comment.e.text.op_(false).Tx(MetaData.user_("Ben Goodman")).getHistory.map(_ ==> List(
     *     (commentEid1, "I like this"),
     *     (commentEid2, "I hate this")
     *   )

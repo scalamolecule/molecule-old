@@ -227,11 +227,11 @@ object elements {
   /** Expression AST for building OR/AND expressions.
     * {{{
     *   // `or` method allows OR-logic to be applied to `name` attribute
-    *   Person.name_("Ben" or "Liz").age.get === List(42, 37)
+    *   Person.name_("Ben" or "Liz").age.get.map(_ ==> List(42, 37))
     *
     *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
     *   val persons = m(Person.name_(?).age(?))
-    *   persons(("Ben" and 42) or ("Liz" and 37)).get === List(42, 37)
+    *   persons(("Ben" and 42) or ("Liz" and 37)).get.map(_ ==> List(42, 37))
     * }}}
     */
   sealed trait Expression

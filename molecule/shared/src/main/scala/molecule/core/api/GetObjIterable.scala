@@ -89,7 +89,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   ben.retract
     *
     *   // History of Ben
-    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)) === List(
+    *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
     *     (42, 1028, true),  // Insert:  42 asserted
     *     (42, 1031, false), // Update:  42 retracted
     *     (43, 1031, true),  //          43 asserted
@@ -264,16 +264,16 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   val t3 = Person.name("Cay").save.t
     *
     *   // Current values as Iterable
-    *   Person.name.getObjIterable.iterator.toList === List("Ann", "Ben", "Cay")
+    *   Person.name.getObjIterable.iterator.map(_.toList ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since transaction time t1
-    *   Person.name.getObjIterableSince(t1).iterator.toList === List("Ben", "Cay")
+    *   Person.name.getObjIterableSince(t1).iterator.map(_.toList ==> List("Ben", "Cay"))
     *
     *   // Cay added since transaction time t2
-    *   Person.name.getObjIterableSince(t2).iterator.toList === List("Cay")
+    *   Person.name.getObjIterableSince(t2).iterator.map(_.toList ==> List("Cay"))
     *
     *   // Nothing added since transaction time t3
-    *   Person.name.getObjIterableSince(t3).iterator.toList === Nil
+    *   Person.name.getObjIterableSince(t3).map(_.iterator.toList ==> Nil)
     * }}}
     *
     * @group getIterableSince
@@ -300,16 +300,16 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   val tx3 = Person.name("Cay").save
     *
     *   // Current values
-    *   Person.name.getObjIterable.iterator.toList === List("Ann", "Ben", "Cay")
+    *   Person.name.getObjIterable.map(_.iterator.toList ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since tx1
-    *   Person.name.getObjIterableSince(tx1).iterator.toList === List("Ben", "Cay")
+    *   Person.name.getObjIterableSince(tx1).map(_.iterator.toList ==> List("Ben", "Cay"))
     *
     *   // Cay added since tx2
-    *   Person.name.getObjIterableSince(tx2).iterator.toList === List("Cay")
+    *   Person.name.getObjIterableSince(tx2).map(_.iterator.toList ==> List("Cay"))
     *
     *   // Nothing added since tx3
-    *   Person.name.getObjIterableSince(tx3).iterator.toList === Nil
+    *   Person.name.getObjIterableSince(tx3).map(_.iterator.toList ==> Nil)
     * }}}
     *
     * @group getIterableSince
@@ -331,16 +331,16 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   val date3 = Person.name("Cay").save.inst
     *
     *   // Current values
-    *   Person.name.getObjIterable.iterator.toList === List("Ann", "Ben", "Cay")
+    *   Person.name.getObjIterable.map(_.iterator.toList ==> List("Ann", "Ben", "Cay"))
     *
     *   // Ben and Cay added since date1
-    *   Person.name.getObjIterableSince(date1).iterator.toList === List("Ben", "Cay")
+    *   Person.name.getObjIterableSince(date1).map(_.iterator.toList ==> List("Ben", "Cay"))
     *
     *   // Cay added since date2
-    *   Person.name.getObjIterableSince(date2).iterator.toList === List("Cay")
+    *   Person.name.getObjIterableSince(date2).map(_.iterator.toList ==> List("Cay"))
     *
     *   // Nothing added since date3
-    *   Person.name.getObjIterableSince(date3).iterator.toList === Nil
+    *   Person.name.getObjIterableSince(date3).map(_.iterator.toList ==> Nil)
     * }}}
     *
     * @group getIterableSince
@@ -371,7 +371,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *   )
     *
     *   // Current state is still the same
-    *   Person.name.likes.get === List(
+    *   Person.name.likes.get.map(_ ==> List(
     *     ("Ben", "pasta")
     *   )
     * }}}
@@ -395,14 +395,14 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
     * {{{
     *   // Live size of Person db
-    *   Person.name.get.size === 150
+    *   Person.name.get.map(_.size ==> 150)
     *
     *   // Read some transaction data from file
     *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
     *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
     *
     *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getObjIterableWith(newDataTx).size === 250
+    *   Person.name.getObjIterableWith(newDataTx).map(_.size ==> 250)
     * }}}
     *
     * @group getIterableWith

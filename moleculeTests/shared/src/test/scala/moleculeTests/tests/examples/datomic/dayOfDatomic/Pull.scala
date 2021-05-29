@@ -178,8 +178,8 @@ object Pull extends AsyncTestSuite {
 
         // Wildcard + map specification
         // Using optional attributes
-        _ <- Track(ghostRiders).name.position$.duration$.artistCredit$.Artists.*(Artist.name).get === (
-          if (system == SystemDevLocal) {
+        _ <- Track(ghostRiders).name.position$.duration$.artistCredit$.Artists.*(Artist.name).get.map(_ ==>
+          (if (system == SystemDevLocal) {
             // dev-local sample db set has no artistCredit data
             List(("Ghost Riders in the Sky", Some(11), Some(218506), None,
               List("Bob Dylan", "George Harrison")))
@@ -187,6 +187,7 @@ object Pull extends AsyncTestSuite {
             List(("Ghost Riders in the Sky", Some(11), Some(218506), Some("Bob Dylan & George Harrison"),
               List("George Harrison", "Bob Dylan")))
           })
+        )
 
         // Default option (applying to None)
         _ <- Artist(mccartney).name.endYear$.get
@@ -204,13 +205,13 @@ object Pull extends AsyncTestSuite {
 
         // Explicit limit (applied on result)
         _ <- if (system == SystemDevLocal)
-          Track.e.Artists.e_(ledZeppelin).get(10) === List(
+          Track.e.Artists.e_(ledZeppelin).get(10).map(_ ==> List(
             27505382880529729L, 71402285107811038L, 27505382880529730L, 71402285107811037L, 27505382880529731L,
-            71402285107811040L, 27505382880529732L, 71402285107811039L, 27505382880529733L, 27505382880529734L)
+            71402285107811040L, 27505382880529732L, 71402285107811039L, 27505382880529733L, 27505382880529734L))
         else
-          Track.e.Artists.e_(ledZeppelin).get(10) === List(
+          Track.e.Artists.e_(ledZeppelin).get(10).map(_ ==> List(
             1029142883684579L, 1029142883684580L, 1029142883684577L, 1029142883684578L, 1029142883688203L,
-            1029142883688204L, 1029142883688202L, 1029142883688207L, 1029142883688208L, 1029142883688205L)
+            1029142883688204L, 1029142883688202L, 1029142883688207L, 1029142883688208L, 1029142883688205L))
 
 
         // Limit + subspec

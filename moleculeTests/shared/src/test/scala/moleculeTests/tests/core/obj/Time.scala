@@ -1,13 +1,11 @@
 package moleculeTests.tests.core.obj
 
-import java.io.FileReader
-import java.util.{Date, List => jList}
 import molecule.core.util.Helpers
 import molecule.datomic.api.out3._
-import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 

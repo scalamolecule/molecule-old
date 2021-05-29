@@ -1,9 +1,8 @@
 package moleculeTests.tests.core.ref.nested
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -21,22 +20,22 @@ object NestedRef extends AsyncTestSuite {
           ("d", List())
         )
 
-        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2$.str2).get === List(
+        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2$.str2).get.map(_ ==> List(
           ("a", List((Some(11), Some(12), "aa"))),
           ("b", List((Some(13), None, "bb"))),
           ("c", List((None, Some(14), "cc"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2.str2).get.map(_ ==> List(
           ("a", List((Some(11), 12, "aa"))),
           ("c", List((None, 14, "cc"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2$.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2$.str2).get.map(_ ==> List(
           ("a", List((11, Some(12), "aa"))),
           ("b", List((13, None, "bb"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2.str2).get.map(_ ==> List(
           ("a", List((11, 12, "aa"))),
-        )
+        ))
 
         _ <- m(Ns.str.Refs1 *? Ref1.int1$.Ref2.int2$.str2).get.map(_.sortBy(_._1) ==> List(
           ("a", List((Some(11), Some(12), "aa"))),
@@ -75,23 +74,23 @@ object NestedRef extends AsyncTestSuite {
           ("d", List())
         )
 
-        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2_.str2).get === List(
+        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2_.str2).get.map(_ ==> List(
           ("a", List((Some(11), "aa"))),
           ("c", List((None, "cc"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2_.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2_.str2).get.map(_ ==> List(
           ("a", List((11, "aa"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2$.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2$.str2).get.map(_ ==> List(
           ("a", List((Some(12), "aa"))),
           ("b", List((None, "bb"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2.str2).get.map(_ ==> List(
           ("a", List((12, "aa"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2_.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2_.str2).get.map(_ ==> List(
           ("a", List("aa")),
-        )
+        ))
 
         _ <- m(Ns.str.Refs1 *? Ref1.int1$.Ref2.int2_.str2).get.map(_.sortBy(_._1) ==> List(
           ("a", List((Some(11), "aa"))),
@@ -134,15 +133,15 @@ object NestedRef extends AsyncTestSuite {
           ("b", List())
         )
 
-        _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2$).get === List(
+        _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2$).get.map(_ ==> List(
           ("a", List((10, Some("a")), (20, None))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2).get.map(_ ==> List(
           ("a", List((10, "a"))),
-        )
-        _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2_).get === List(
+        ))
+        _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2_).get.map(_ ==> List(
           ("a", List(10)),
-        )
+        ))
 
         _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2$).get.map(_.sortBy(_._1) ==> List(
           ("a", List((10, Some("a")), (20, None))),
@@ -178,31 +177,30 @@ object NestedRef extends AsyncTestSuite {
           ))
         ))
 
-            // Flat card many refs not allowed in optional nested structure
-            _ = compileError(
-              "m(Ns.str.Refs1.*?(Ref1.int1.Refs2.int2))").check(
-              "molecule.core.transform.exception.Dsl2ModelException: " +
-                "Flat card many ref not allowed with optional nesting. " +
-                """Found: Bond("Ref1", "refs2", "Ref2", 2, Seq())""")
+        // Flat card many refs not allowed in optional nested structure
+        _ = compileError("m(Ns.str.Refs1.*?(Ref1.int1.Refs2.int2))").check("",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Flat card many ref not allowed with optional nesting. " +
+            """Found: Bond("Ref1", "refs2", "Ref2", 2, Seq())""")
 
 
         // Flat card many refs before nested structure
-        _ <- Ns.str.Refs1.int1.Refs2.*(Ref2.int2).get === List(
+        _ <- Ns.str.Refs1.int1.Refs2.*(Ref2.int2).get.map(_ ==> List(
           ("a", 1, List(11, 12))
-        )
-        _ <- Ns.str.Refs1.int1.Refs2.*?(Ref2.int2).get === List(
+        ))
+        _ <- Ns.str.Refs1.int1.Refs2.*?(Ref2.int2).get.map(_ ==> List(
           ("a", 1, List(11, 12)),
           ("a", 2, List()),
-        )
+        ))
 
         // Implicit ref
         _ <- Ns.str.Refs1.Refs2.*?(Ref2.int2).get.map(_.sortBy(_._2.size) ==> List(
           ("a", List()),
           ("a", List(11, 12))
         ))
-        _ <- Ns.str.Refs1.Refs2.*(Ref2.int2).get === List(
+        _ <- Ns.str.Refs1.Refs2.*(Ref2.int2).get.map(_ ==> List(
           ("a", List(11, 12))
-        )
+        ))
       } yield ()
     }
 
@@ -213,8 +211,8 @@ object NestedRef extends AsyncTestSuite {
         for {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1) insert List(("book", "John", List("Marc")))
 
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).get === List(("book", "John", List("Marc")))
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1).get === List(("book", "John", "Marc"))
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).get.map(_ ==> List(("book", "John", List("Marc"))))
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1).get.map(_ ==> List(("book", "John", "Marc")))
         } yield ()
       }
 
@@ -222,8 +220,8 @@ object NestedRef extends AsyncTestSuite {
         for {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2) insert List(("book", "John", List(("Marc", "Musician"))))
 
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2).get === List(("book", "John", List(("Marc", "Musician"))))
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).get === List(("book", "John", "Marc", "Musician"))
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2).get.map(_ ==> List(("book", "John", List(("Marc", "Musician")))))
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).get.map(_ ==> List(("book", "John", "Marc", "Musician")))
         } yield ()
       }
 
@@ -231,9 +229,9 @@ object NestedRef extends AsyncTestSuite {
         for {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)) insert List(("book", "John", List(("Marc", List("Musician")))))
 
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)).get === List(("book", "John", List(("Marc", List("Musician")))))
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).get === List(("book", "John", "Marc", "Musician"))
-        }yield()
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)).get.map(_ ==> List(("book", "John", List(("Marc", List("Musician"))))))
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).get.map(_ ==> List(("book", "John", "Marc", "Musician")))
+        } yield ()
       }
     }
 
@@ -246,20 +244,20 @@ object NestedRef extends AsyncTestSuite {
           ("d", None, List()),
         )
 
-        _ <- m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2).get === List(
+        _ <- m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2).get.map(_ ==> List(
           ("a", Some(1), List(1)),
           ("b", None, List(2)),
-        )
-        _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).get.map(_ ==> List(
           ("a", 1, List(1)),
-        )
-        _ <- m(Ns.str.Refs1.int1_.Refs2 * Ref2.int2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1.int1_.Refs2 * Ref2.int2).get.map(_ ==> List(
           ("a", List(1)),
-        )
-        _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).get === List(
+        ))
+        _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).get.map(_ ==> List(
           ("a", List(1)),
           ("b", List(2)),
-        )
+        ))
 
         _ <- m(Ns.str.Refs1.int1$.Refs2 *? Ref2.int2).get.map(_.sortBy(_._1) ==> List(
           ("a", Some(1), List(1)),
@@ -302,18 +300,18 @@ object NestedRef extends AsyncTestSuite {
         )
 
         // Without Ns
-        _ <- Ref1.str1.Refs2.*(Ref2.str2).get === List(
+        _ <- Ref1.str1.Refs2.*(Ref2.str2).get.map(_ ==> List(
           ("r1a", List("r2a", "r2b")),
           ("r1b", List("r2c", "r2d"))
-        )
+        ))
 
         // With Ns
         // "Implicit" reference from Ns to Ref1 (without any attributes) implies that
         // some Ns entity is referencing some Ref1 entity.
         // This excludes "r1b" since no Ns entities reference it.
-        _ <- Ns.Refs1.str1.Refs2.*(Ref2.str2).get === List(
+        _ <- Ns.Refs1.str1.Refs2.*(Ref2.str2).get.map(_ ==> List(
           ("r1a", List("r2a", "r2b"))
-        )
+        ))
       } yield ()
     }
   }

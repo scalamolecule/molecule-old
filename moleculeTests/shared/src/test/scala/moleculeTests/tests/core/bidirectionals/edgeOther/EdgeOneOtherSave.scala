@@ -1,8 +1,8 @@
 package moleculeTests.tests.core.bidirectionals.edgeOther
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import molecule.datomic.api.in1_out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -20,14 +20,13 @@ object EdgeOneOtherSave extends AsyncTestSuite {
           _ <- Person.name("Ann").Favorite.weight(7).Animal.name("Rex").save
 
           // Bidirectional property edges have been saved
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
-          _ <- favoritePersonOf("Rex").get === List((7, "Ann"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
+          _ <- favoritePersonOf("Rex").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx <- Animal.name.insert("Rex")
           rex = tx.eid
 
@@ -35,7 +34,7 @@ object EdgeOneOtherSave extends AsyncTestSuite {
           _ <- Person.name("Ann").Favorite.weight(7).animal(rex).save
 
           // Ann and Rex each others favorite with a weight of 7
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
         } yield ()
       }
     }
@@ -50,14 +49,13 @@ object EdgeOneOtherSave extends AsyncTestSuite {
 
           _ <- Person.name("Ann").favorite(favoriteRex).save
 
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
-          _ <- favoritePersonOf("Rex").get === List((7, "Ann"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
+          _ <- favoritePersonOf("Rex").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx <- Animal.name.insert("Rex")
           rex = tx.eid
 
@@ -66,8 +64,8 @@ object EdgeOneOtherSave extends AsyncTestSuite {
 
           _ <- Person.name("Ann").favorite(favoriteRex).save
 
-          _ <- favoriteAnimalOf("Ann").get === List((7, "Rex"))
-          _ <- favoritePersonOf("Rex").get === List((7, "Ann"))
+          _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((7, "Rex")))
+          _ <- favoritePersonOf("Rex").get.map(_ ==> List((7, "Ann")))
         } yield ()
       }
     }

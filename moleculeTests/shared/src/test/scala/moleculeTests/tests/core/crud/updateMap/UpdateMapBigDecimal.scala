@@ -1,10 +1,9 @@
 package moleculeTests.tests.core.crud.updateMap
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -42,37 +41,37 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
           // Can't add pairs with duplicate keys
 
-                // vararg
-                _ = compileError(
-                  """Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1 -> bigDec2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                    "\n__ident__str1 -> __ident__bigDec1" +
-                    "\n__ident__str1 -> __ident__bigDec2")
+          // vararg
+          _ = compileError(            """Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1 -> bigDec2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\n__ident__str1 -> __ident__bigDec1" +
+              "\n__ident__str1 -> __ident__bigDec2")
 
-                // Seq
-                _ = compileError(
-                  """Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                    "\n__ident__str1 -> __ident__bigDec1" +
-                    "\n__ident__str1 -> __ident__bigDec2")
+          // Seq
+          _ = compileError(            """Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\n__ident__str1 -> __ident__bigDec1" +
+              "\n__ident__str1 -> __ident__bigDec2")
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           str1x = str1
 
-          //      // vararg
-          //      (Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1x -> bigDec2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-          //        "\na -> " + bigDec1 +
-          //        "\na -> " + bigDec2
-          //
-          //
-          //      // Seq
-          //      (Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1x -> bigDec2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-          //        "\na -> " + bigDec1 +
-          //        "\na -> " + bigDec2
+          // vararg
+          _ <- Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1x -> bigDec2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+                "\na -> " + bigDec1 +
+                "\na -> " + bigDec2
+          }
+
+
+          // Seq
+          _ <- Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1x -> bigDec2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+                "\na -> " + bigDec1 +
+                "\na -> " + bigDec2
+          }
         } yield ()
       }
 
@@ -108,17 +107,15 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-                _ = compileError(
-                  """Ns(eid).bigDecMap.replace(str1 -> bigDec1, str1 -> bigDec2).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                    "\n__ident__str1 -> __ident__bigDec1" +
-                    "\n__ident__str1 -> __ident__bigDec2")
+          _ = compileError(            """Ns(eid).bigDecMap.replace(str1 -> bigDec1, str1 -> bigDec2).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\n__ident__str1 -> __ident__bigDec1" +
+              "\n__ident__str1 -> __ident__bigDec2")
 
-                _ = compileError(
-                  """Ns(eid).bigDecMap.replace(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                    "\n__ident__str1 -> __ident__bigDec1" +
-                    "\n__ident__str1 -> __ident__bigDec2")
+          _ = compileError(            """Ns(eid).bigDecMap.replace(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\n__ident__str1 -> __ident__bigDec1" +
+              "\n__ident__str1 -> __ident__bigDec2")
         } yield ()
       }
 
@@ -172,29 +169,31 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
           // Apply empty Map of values (retracting all values!)
           _ <- Ns(eid).bigDecMap(Seq[(String, BigDecimal)]()).update
-          _ <- Ns.bigDecMap.get === List()
+          _ <- Ns.bigDecMap.get.map(_ ==> List())
 
 
           _ <- Ns(eid).bigDecMap(Seq(str1 -> bigDec1, str2 -> bigDec2)).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).bigDecMap().update
-          _ <- Ns.bigDecMap.get === List()
+          _ <- Ns.bigDecMap.get.map(_ ==> List())
 
 
           // Can't apply pairs with duplicate keys
 
-          //      (Ns(eid).bigDecMap(str1 -> bigDec1, str1 -> bigDec2).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-          //        "\na -> " + bigDec1 +
-          //        "\na -> " + bigDec2
-          //
-          //      (Ns(eid).bigDecMap(Seq(str1 -> bigDec1, str1 -> bigDec2)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-          //        "\na -> " + bigDec1 +
-          //        "\na -> " + bigDec2
+          _ <- Ns(eid).bigDecMap(str1 -> bigDec1, str1 -> bigDec2).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+                "\na -> " + bigDec1 +
+                "\na -> " + bigDec2
+          }
+
+          _ <- Ns(eid).bigDecMap(Seq(str1 -> bigDec1, str1 -> bigDec2)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+                "\na -> " + bigDec1 +
+                "\na -> " + bigDec2
+          }
         } yield ()
       }
     }

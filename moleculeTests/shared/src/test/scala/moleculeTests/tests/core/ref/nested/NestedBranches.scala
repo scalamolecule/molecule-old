@@ -29,7 +29,7 @@
 //      for {
 //    data.foreach { d =>
 //      conn.testDbWith(nested.getInsertStmts(d))
-//      nested.get === d
+//      nested.get.map(_ ==> d)
 //    }
 //    } yield ()
 //    }
@@ -66,7 +66,7 @@
 //    data.foreach { d =>
 //      println(d)
 //      conn.testDbWith(nested.getInsertStmts(d))
-//      nested.get === d
+//      nested.get.map(_ ==> d)
 //    }
 //    ok
 //    } yield ()
@@ -188,7 +188,7 @@
 //    data.foreach { d =>
 //      println(d)
 //      conn.testDbWith(nested.getInsertStmts(d))
-//      nested.get === d
+//      nested.get.map(_ ==> d)
 //    }
 //    ok
 //    } yield ()
@@ -401,7 +401,7 @@
 //    data.foreach { d =>
 //      println(d)
 //      conn.testDbWith(nested.getInsertStmts(d))
-//      nested.get === d
+//      nested.get.map(_ ==> d)
 //    }
 //    ok
 //    } yield ()
@@ -738,7 +738,7 @@
 //    data.foreach { d =>
 //      println(d)
 //      conn.testDbWith(nested.getInsertStmts(d))
-//      nested.get === d
+//      nested.get.map(_ ==> d)
 //    }
 //    ok
 //    } yield ()
@@ -1238,7 +1238,7 @@
 //    data.foreach { d =>
 //      println(d)
 //      conn.testDbWith(nested.getInsertStmts(d))
-//      nested.get === d
+//      nested.get.map(_ ==> d)
 //    }
 //    ok
 //    } yield ()
@@ -1822,7 +1822,7 @@
 //    data.foreach { d =>
 //      println(d)
 //      conn.testDbWith(nested.getInsertStmts(d))
-//      nested.get === d
+//      nested.get.map(_ ==> d)
 //    }
 //    ok
 //  }

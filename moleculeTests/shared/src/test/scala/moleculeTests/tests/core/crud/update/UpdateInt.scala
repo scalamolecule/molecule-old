@@ -1,14 +1,11 @@
 package moleculeTests.tests.core.crud.update
 
-import molecule.core.util.testing.expectCompileError
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import molecule.core.ops.exception.VerifyModelException
-import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -33,19 +30,19 @@ object UpdateInt extends AsyncTestSuite {
 
           // Apply empty value (retract `int` datom)
           _ <- Ns(eid).int().update
-          _ <- Ns.int.get === List()
+          _ <- Ns.int.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).int.update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[onlyAtomsWithValue]  Update molecule can only have attributes with some value(s) applied/added/replaced etc."
-          //
-          //      (Ns(eid).int(2, 3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... int(2, 3)"
+          _ <- Ns(eid).int.update.recover { case VerifyModelException(err) =>
+            err ==> "[onlyAtomsWithValue]  Update molecule can only have attributes with some value(s) applied/added/replaced etc."
+          }
+
+          _ <- Ns(eid).int(2, 3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... int(2, 3)"
+          }
         } yield ()
       }
     }
@@ -67,15 +64,15 @@ object UpdateInt extends AsyncTestSuite {
 
           // Delete value (apply empty value)
           _ <- Ns(eid).int().update
-          _ <- Ns.int.get === List()
+          _ <- Ns.int.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          //      (Ns(eid).int(int2, int3).update must throwA[VerifyModelException])
-          //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-          //        "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-          //        s"\n  Ns ... int($int2, $int3)"
+          _ <- Ns(eid).int(int2, int3).update.recover { case VerifyModelException(err) =>
+            err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+              s"\n  Ns ... int($int2, $int3)"
+          }
         } yield ()
       }
     }
@@ -158,15 +155,13 @@ object UpdateInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).ints.replace(7 -> 8, 8 -> 8).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
-                    "\n8")
+          _ = compileError(            """Ns(eid).ints.replace(7 -> 8, 8 -> 8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
+              "\n8")
 
-                _ = compileError(
-                  """Ns(eid).ints.replace(Seq(7 -> 8, 8 -> 8)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
-                    "\n8")
+          _ = compileError(            """Ns(eid).ints.replace(Seq(7 -> 8, 8 -> 8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
+              "\n8")
         } yield ()
       }
 
@@ -220,14 +215,14 @@ object UpdateInt extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).ints(Seq[Int]()).update
-          _ <- Ns.ints.get === List()
+          _ <- Ns.ints.get.map(_ ==> List())
 
 
           _ <- Ns(eid).ints(Set(1, 2)).update
 
           // Delete all (apply no values)
           _ <- Ns(eid).ints().update
-          _ <- Ns.ints.get === List()
+          _ <- Ns.ints.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded (at compile time)
@@ -324,30 +319,30 @@ object UpdateInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-                _ = compileError(
-                  """Ns(eid).ints.replace(int7 -> int8, int8 -> int8).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
-                    "\n__ident__int8")
+          _ = compileError(            """Ns(eid).ints.replace(int7 -> int8, int8 -> int8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
+              "\n__ident__int8")
 
-                _ = compileError(
-                  """Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> int8)).update""").check(
-                  "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
-                    "\n__ident__int8")
+          _ = compileError(            """Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> int8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
+              "\n__ident__int8")
 
 
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = 8
 
-          //      (Ns(eid).ints.replace(int7 -> int8, int8 -> other8).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
-          //        "\n8"
-          //
-          //      // Conflicting new values
-          //      (Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> other8)).update must throwA[Model2TransactionException])
-          //        .message === "Got the exception molecule.datomic.base.transform.exception.Model2TransactionException: " +
-          //        "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
-          //        "\n8"
+          _ <- Ns(eid).ints.replace(int7 -> int8, int8 -> other8).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
+                "\n8"
+          }
+
+          // Conflicting new values
+          _ <- Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> other8)).update.recover {
+            case Model2TransactionException(err) =>
+              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
+                "\n8"
+          }
         } yield ()
       }
 
@@ -379,7 +374,7 @@ object UpdateInt extends AsyncTestSuite {
           // Retract Seq of values as variable
           values = Seq(int1)
           _ <- Ns(eid).ints.retract(values).update
-          _ <- Ns.ints.get === List()
+          _ <- Ns.ints.get.map(_ ==> List())
 
           // Retracting empty Seq of values has no effect
           _ <- Ns(eid).ints(int1).update
@@ -390,7 +385,6 @@ object UpdateInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-
           tx1 <- Ns.ints(int2, int3).save
           eid = tx1.eid
 
@@ -408,7 +402,7 @@ object UpdateInt extends AsyncTestSuite {
 
           // Apply empty Seq of values (retracting all values!)
           _ <- Ns(eid).ints(Set[Int]()).update
-          _ <- Ns.ints.get === List()
+          _ <- Ns.ints.get.map(_ ==> List())
 
           // Apply Seq of values as variable
           values = Set(int1, int2)
@@ -417,7 +411,7 @@ object UpdateInt extends AsyncTestSuite {
 
           // Delete all (apply no values)
           _ <- Ns(eid).ints().update
-          _ <- Ns.ints.get === List()
+          _ <- Ns.ints.get.map(_ ==> List())
 
 
           // Redundant duplicate values are discarded

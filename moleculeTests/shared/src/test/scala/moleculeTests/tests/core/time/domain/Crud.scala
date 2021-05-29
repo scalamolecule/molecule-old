@@ -1,10 +1,10 @@
 package moleculeTests.tests.core.time.domain
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
 import molecule.datomic.api.out2._
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.concurrent.Future
+import moleculeTests.tests.core.base.dsl.CoreTest._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
 // Example domain class doing CRUD operations on the database

@@ -2,9 +2,9 @@ package moleculeTests.tests.examples.datomic.dayOfDatomic
 
 import molecule.datomic.api.out5._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Aggregates._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Aggregates._
 import scala.language.postfixOps
 
 object Aggregates extends AsyncTestSuite {
@@ -89,11 +89,11 @@ object Aggregates extends AsyncTestSuite {
         ))
 
         // How many (Datomic) types does this schema use?
-        _ <- Schema.tpe.get === List(
+        _ <- Schema.tpe.get.map(_ ==> List(
           "string", // String
           "double", // Double
           "long", // Int
-        )
+        ))
       } yield ()
     }
 

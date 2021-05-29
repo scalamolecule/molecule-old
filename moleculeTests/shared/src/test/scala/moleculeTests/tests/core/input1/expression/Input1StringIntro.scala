@@ -1,11 +1,11 @@
 package moleculeTests.tests.core.input1.expression
 
 import molecule.datomic.api.in1_out2._
-import molecule.datomic.base.util.SystemPeer
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
-import utest._
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -47,30 +47,30 @@ object Input1StringIntro extends AsyncTestSuite {
         _ <- Ns.str.int insert List(("John", 37), ("Lisa", 28), ("Ben", 28), ("Ann", 14))
 
         // Equality
-        _ <- personOfAge(37).get === List("John")
-        _ <- personOfAge(28).get === List("Ben", "Lisa")
-        _ <- personOfAge(10).get === List()
+        _ <- personOfAge(37).get.map(_ ==> List("John"))
+        _ <- personOfAge(28).get.map(_ ==> List("Ben", "Lisa"))
+        _ <- personOfAge(10).get.map(_ ==> Nil)
 
         // Apply expression value
-        _ <- personsYoungerThan.apply(30).get === List("Ann", "Ben", "Lisa")
+        _ <- personsYoungerThan.apply(30).get.map(_ ==> List("Ann", "Ben", "Lisa"))
         // or just
-        _ <- personsYoungerThan(30).get === List("Ann", "Ben", "Lisa")
+        _ <- personsYoungerThan(30).get.map(_ ==> List("Ann", "Ben", "Lisa"))
 
         // We don't have to assign an input-molecule to a variable
-        _ <- m(Ns.str.int_.<(?))(30).get === List("Ann", "Ben", "Lisa")
+        _ <- m(Ns.str.int_.<(?))(30).get.map(_ ==> List("Ann", "Ben", "Lisa"))
         // ...or saving a bit of typing with method `m` being implicit
-        _ <- m(Ns.str.int_.<(?))(30).get === List("Ann", "Ben", "Lisa")
+        _ <- m(Ns.str.int_.<(?))(30).get.map(_ ==> List("Ann", "Ben", "Lisa"))
 
         // Although then it would be easier to just say
-        _ <- Ns.str.int_.<(30).get === List("Ann", "Ben", "Lisa")
+        _ <- Ns.str.int_.<(30).get.map(_ ==> List("Ann", "Ben", "Lisa"))
 
         // For brevity we test some more expressions in the short form
-        _ <- m(Ns.str.int_.>(?))(30).get === List("John")
-        _ <- m(Ns.str.int_.<=(?))(28).get === List("Ann", "Ben", "Lisa")
-        _ <- m(Ns.str.int_.>=(?))(28).get === List("John", "Ben", "Lisa")
-        _ <- m(Ns.str.int_.!=(?))(30).get === List("Ann", "John", "Ben", "Lisa")
-        _ <- m(Ns.str.int_.!=(?))(28).get === List("Ann", "John")
-        _ <- m(Ns.str.int_.not(?))(28).get === List("Ann", "John")
+        _ <- m(Ns.str.int_.>(?))(30).get.map(_ ==> List("John"))
+        _ <- m(Ns.str.int_.<=(?))(28).get.map(_ ==> List("Ann", "Ben", "Lisa"))
+        _ <- m(Ns.str.int_.>=(?))(28).get.map(_ ==> List("John", "Ben", "Lisa"))
+        _ <- m(Ns.str.int_.!=(?))(30).get.map(_ ==> List("Ann", "John", "Ben", "Lisa"))
+        _ <- m(Ns.str.int_.!=(?))(28).get.map(_ ==> List("Ann", "John"))
+        _ <- m(Ns.str.int_.not(?))(28).get.map(_ ==> List("Ann", "John"))
       } yield ()
     }
 
@@ -79,21 +79,21 @@ object Input1StringIntro extends AsyncTestSuite {
 
       "Expressions" - core { implicit conn =>
         for {
-          _ <- m(Ns.int_.str(?)).apply("b").get === List("b")
-          _ <- m(Ns.int_.str.<(?))("b").get === List("a")
-          _ <- m(Ns.int_.str.>(?))("b").get === List("c")
-          _ <- m(Ns.int_.str.<=(?))("b").get === List("a", "b")
-          _ <- m(Ns.int_.str.>=(?))("b").get === List("b", "c")
-          _ <- m(Ns.int_.str.!=(?))("b").get === List("a", "c")
-          _ <- m(Ns.int_.str.not(?))("b").get === List("a", "c")
+          _ <- m(Ns.int_.str(?)).apply("b").get.map(_ ==> List("b"))
+          _ <- m(Ns.int_.str.<(?))("b").get.map(_ ==> List("a"))
+          _ <- m(Ns.int_.str.>(?))("b").get.map(_ ==> List("c"))
+          _ <- m(Ns.int_.str.<=(?))("b").get.map(_ ==> List("a", "b"))
+          _ <- m(Ns.int_.str.>=(?))("b").get.map(_ ==> List("b", "c"))
+          _ <- m(Ns.int_.str.!=(?))("b").get.map(_ ==> List("a", "c"))
+          _ <- m(Ns.int_.str.not(?))("b").get.map(_ ==> List("a", "c"))
         } yield ()
       }
 
       "Tacit expressions" - core { implicit conn =>
         for {
-          _ <- m(Ns.int.str_(?))("b").get === List(2)
-          _ <- m(Ns.int.str_.<(?))("b").get === List(1)
-          _ <- m(Ns.int.str_.>(?))("b").get === List(3)
+          _ <- m(Ns.int.str_(?))("b").get.map(_ ==> List(2))
+          _ <- m(Ns.int.str_.<(?))("b").get.map(_ ==> List(1))
+          _ <- m(Ns.int.str_.>(?))("b").get.map(_ ==> List(3))
           _ <- m(Ns.int.str_.<=(?))("b").get.map(_.sorted ==> List(1, 2))
           _ <- m(Ns.int.str_.>=(?))("b").get.map(_.sorted ==> List(2, 3))
           _ <- m(Ns.int.str_.!=(?))("b").get.map(_.sorted ==> List(1, 3))
@@ -149,14 +149,14 @@ object Input1StringIntro extends AsyncTestSuite {
           for {
             _ <- Ns.str insert List("The quick fox jumps", "Ten slow monkeys")
 
-            _ <- inputMolecule(Nil).get === Nil
-            _ <- inputMolecule("jumps").get === List("The quick fox jumps")
-            _ <- inputMolecule("jumps", "fox").get === List("The quick fox jumps")
-            _ <- inputMolecule("jumps" or "fox").get === List("The quick fox jumps")
-            _ <- inputMolecule(Seq("jumps", "fox")).get === List("The quick fox jumps")
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
+            _ <- inputMolecule("jumps").get.map(_ ==> List("The quick fox jumps"))
+            _ <- inputMolecule("jumps", "fox").get.map(_ ==> List("The quick fox jumps"))
+            _ <- inputMolecule("jumps" or "fox").get.map(_ ==> List("The quick fox jumps"))
+            _ <- inputMolecule(Seq("jumps", "fox")).get.map(_ ==> List("The quick fox jumps"))
 
             // Obs: only whole words are matched
-            _ <- inputMolecule("jump").get === Nil
+            _ <- inputMolecule("jump").get.map(_ ==> Nil)
           } yield ()
         }
       }
@@ -199,36 +199,36 @@ object Input1StringIntro extends AsyncTestSuite {
               (2, Set("lorem ipsum", "Going slow"))
             )
 
-            _ <- inputMolecule(Nil).get === Nil
+            _ <- inputMolecule(Nil).get.map(_ ==> Nil)
 
-            _ <- inputMolecule(Set("slow")).get === List(
+            _ <- inputMolecule(Set("slow")).get.map(_ ==> List(
               (1, Set("The quick fox jumps", "Ten slow monkeys")),
               (2, Set("lorem ipsum", "Going slow"))
-            )
+            ))
 
-            _ <- inputMolecule(Set("ipsum")).get === List(
+            _ <- inputMolecule(Set("ipsum")).get.map(_ ==> List(
               (2, Set("lorem ipsum", "Going slow"))
-            )
+            ))
 
             // Only 1 entity has a `strs` attribute with both values
-            _ <- inputMolecule(Set("fox", "slow")).get === List(
+            _ <- inputMolecule(Set("fox", "slow")).get.map(_ ==> List(
               (1, Set("The quick fox jumps", "Ten slow monkeys"))
-            )
+            ))
 
-            _ <- inputMolecule(Set("fox"), Set("slow")).get === List(
+            _ <- inputMolecule(Set("fox"), Set("slow")).get.map(_ ==> List(
               (1, Set("The quick fox jumps", "Ten slow monkeys")),
               (2, Set("lorem ipsum", "Going slow"))
-            )
+            ))
 
-            _ <- inputMolecule(Set("fox") or Set("slow")).get === List(
+            _ <- inputMolecule(Set("fox") or Set("slow")).get.map(_ ==> List(
               (1, Set("The quick fox jumps", "Ten slow monkeys")),
               (2, Set("lorem ipsum", "Going slow"))
-            )
+            ))
 
-            _ <- inputMolecule(List(Set("fox"), Set("slow"))).get === List(
+            _ <- inputMolecule(List(Set("fox"), Set("slow"))).get.map(_ ==> List(
               (1, Set("The quick fox jumps", "Ten slow monkeys")),
               (2, Set("lorem ipsum", "Going slow"))
-            )
+            ))
           } yield ()
         }
       }

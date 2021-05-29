@@ -1,9 +1,9 @@
 package moleculeTests.tests.core.bidirectionals.edgeSelf
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import molecule.datomic.api.in1_out3._
 import molecule.core.ops.exception.VerifyModelException
+import molecule.datomic.api.in1_out3._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,19 +16,21 @@ object EdgeManySelfSave extends AsyncTestSuite {
     "base/edge/target" - {
 
       "no nesting in save molecules" - bidirectional { implicit conn =>
-        //for{
-        //      (Person.name("Ann").Knows.*(Knows.weight(7)).name("Ben").save must throwA[VerifyModelException])
-        //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //        s"[noNested]  Nested data structures not allowed in save molecules"
-        //
-        //      // Insert entities, each having one or more connected entities with relationship properties
-        //      val ben = Person.name.insert("Ben").eid
-        //      (Person.name("Ben").Knows.*(Knows.weight(7).person(ben)).save must throwA[VerifyModelException])
-        //        .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-        //        s"[noNested]  Nested data structures not allowed in save molecules"
-        //} yield ()
-      }
+        for {
+          _ <- Person.name("Ann").Knows.*(Knows.weight(7)).name("Ben").save.recover {
+            case VerifyModelException(err) =>
+              err ==> s"[noNested]  Nested data structures not allowed in save molecules"
+          }
 
+          // Insert entities, each having one or more connected entities with relationship properties
+          tx <- Person.name.insert("Ben")
+          ben = tx.eid
+          _ <- Person.name("Ben").Knows.*(Knows.weight(7).person(ben)).save.recover {
+            case VerifyModelException(err) =>
+              err ==> s"[noNested]  Nested data structures not allowed in save molecules"
+          }
+        } yield ()
+      }
 
       // Since we can't nest in save-molecules, saves will be the same for cardinality one/many,
       // and the following two test will be the same as for tests in EdgeOneSelfSave
@@ -47,7 +49,6 @@ object EdgeManySelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name.insert("Ben")
           ben = tx.eid
 
@@ -90,7 +91,6 @@ object EdgeManySelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-
           tx <- Person.name.insert("Ben", "Joe")
           List(ben, joe) = tx.eids
 
@@ -114,23 +114,20 @@ object EdgeManySelfSave extends AsyncTestSuite {
       }
     }
 
-    //  // Edge consistency checks.
-    //  // Any edge should always be connected to both a base and a target entity.
-    //  "base/edge - <missing target>" - bidirectional { implicit conn =>
-    //    // Can't save edge missing the target namespace (`Person`)
-    //    // The edge needs to be complete at all times to preserve consistency.
-    //    (Person.name("Ann").Knows.weight(5).save must throwA[VerifyModelException])
-    //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-    //      s"[edgeComplete]  Missing target namespace after edge namespace `Knows`."
-    //    } yield ()
-    //    }
-    //
-    //"<missing base> - edge - <missing target>" - bidirectional {   implicit conn =>
-    //      for {
-    //    (Knows.weight(7).save must throwA[VerifyModelException])
-    //      .message === "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-    //      s"[edgeComplete]  Missing target namespace somewhere after edge property `Knows/weight`."
-    //  } yield ()
-    //  }
+    // Edge consistency checks.
+    // Any edge should always be connected to both a base and a target entity.
+    "base/edge - <missing target>" - bidirectional { implicit conn =>
+      // Can't save edge missing the target namespace (`Person`)
+      // The edge needs to be complete at all times to preserve consistency.
+      Person.name("Ann").Knows.weight(5).save.recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Knows`."
+      }
+    }
+
+    "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
+      Knows.weight(7).save.recover { case VerifyModelException(err) =>
+        err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Knows/weight`."
+      }
+    }
   }
 }

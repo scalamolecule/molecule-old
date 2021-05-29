@@ -35,10 +35,10 @@ trait Molecule_Factory2 {
     * we can call various actions on it, like `get` that retrieves matching data from the database.
     * {{{
     *   // Explicitly calling `m` to create Person molecule with 1 output attribute
-    *   m(Person.name).get === List("Ben")
+    *   m(Person.name).get.map(_ ==> List("Ben"))
     *
     *   // Molecule implicitly created so we can call `get`
-    *   Person.name.get.head === "Ben"
+    *   Person.name.get.map(_.head ==> "Ben")
     * }}}
     * For arity-many molecules, data structures are returned as tuples. But for arity-1
     * molecules (like the example having only 1 output attribute, `name`) there's no need for
@@ -64,10 +64,10 @@ trait Molecule_Factory2 {
     * Data structures are returned as tuples of values type-safely matching the molecule attribute types
     * {{{
     *   // Explicitly calling `m` to create Person molecule with 2 attributes
-    *   m(Person.name.age).get.head === ("Ben", 42)
+    *   m(Person.name.age).get.map(_.head ==> ("Ben", 42))
     *
     *   // Molecule implicitly created so we can call `get`
-    *   Person.name.age.get.head === ("Ben", 42)
+    *   Person.name.age.get.map(_.head ==> ("Ben", 42))
     * }}}
     *
     * @group molecule

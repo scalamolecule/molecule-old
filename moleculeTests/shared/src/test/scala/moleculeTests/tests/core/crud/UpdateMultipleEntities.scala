@@ -1,11 +1,9 @@
 package moleculeTests.tests.core.crud
 
 import molecule.datomic.api.out3._
-import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
-import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -17,7 +15,6 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-
           tx <- Ns.str.int insert List(
             ("a", 1),
             ("b", 2),

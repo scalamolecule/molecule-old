@@ -5,15 +5,14 @@ import molecule.datomic.base.util.SystemPeerServer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
 import utest._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.reflectiveCalls
 
 
 object Provenance extends AsyncTestSuite {
 
-
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
 
     "Transaction meta data" - socialNews { implicit conn =>
       val ecURL = "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"
@@ -38,40 +37,40 @@ object Provenance extends AsyncTestSuite {
           ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html", stuTxId),
         ))
 
-            // We can also traverse the generated entity ids to see what is saved
-          _ <-  elasticacheStory.map(_.touch ==> Map(
-              ":db/id" -> elasticacheStory,
-              ":Story/title" -> "ElastiCache in 6 minutes",
-              ":Story/url" -> "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"))
+        // We can also traverse the generated entity ids to see what is saved
+        _ <- elasticacheStory.map(_.touch ==> Map(
+          ":db/id" -> elasticacheStory,
+          ":Story/title" -> "ElastiCache in 6 minutes",
+          ":Story/url" -> "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"))
 
-        _ <-  chocolateStory.map(_.touch ==> Map(
-              ":db/id" -> chocolateStory,
-              ":Story/title" -> "Keep Chocolate Love Atomic",
-              ":Story/url" -> "http://blog.datomic.com/2012/08/atomic-chocolate.html"))
+        _ <- chocolateStory.map(_.touch ==> Map(
+          ":db/id" -> chocolateStory,
+          ":Story/title" -> "Keep Chocolate Love Atomic",
+          ":Story/url" -> "http://blog.datomic.com/2012/08/atomic-chocolate.html"))
 
-            // Time of transaction
-            stuTxInstant <- stuTxId.flatMap(_[java.util.Date](":db/txInstant")).map(_.get)
+        // Time of transaction
+        stuTxInstant <- stuTxId.flatMap(_[java.util.Date](":db/txInstant")).map(_.get)
 
-            // Limit entity traversal 1 level deep
-        _ <-    stuTxId.map(_.touchMax(1) ==> Map(
-              ":db/id" -> stuTxId,
-              ":db/txInstant" -> stuTxInstant,
-              ":MetaData/usecase" -> "AddStories",
-              ":MetaData/user" -> stu
-            ))
+        // Limit entity traversal 1 level deep
+        _ <- stuTxId.map(_.touchMax(1) ==> Map(
+          ":db/id" -> stuTxId,
+          ":db/txInstant" -> stuTxInstant,
+          ":MetaData/usecase" -> "AddStories",
+          ":MetaData/user" -> stu
+        ))
 
-            // Or full traversal to Stu's data
-        _ <-    stuTxId.map(_.touch ==> Map(
-              ":db/id" -> stuTxId,
-              ":db/txInstant" -> stuTxInstant,
-              ":MetaData/usecase" -> "AddStories",
-              ":MetaData/user" -> Map(
-                ":db/id" -> stu,
-                ":User/email" -> "stuarthalloway@datomic.com",
-                ":User/firstName" -> "Stu",
-                ":User/lastName" -> "Halloway"
-              )
-            ))
+        // Or full traversal to Stu's data
+        _ <- stuTxId.map(_.touch ==> Map(
+          ":db/id" -> stuTxId,
+          ":db/txInstant" -> stuTxInstant,
+          ":MetaData/usecase" -> "AddStories",
+          ":MetaData/user" -> Map(
+            ":db/id" -> stu,
+            ":User/email" -> "stuarthalloway@datomic.com",
+            ":User/firstName" -> "Stu",
+            ":User/lastName" -> "Halloway"
+          )
+        ))
 
         // Find data via transaction meta data
 
@@ -121,9 +120,9 @@ object Provenance extends AsyncTestSuite {
         _ <- Story.title(count).Tx(MetaData.User.email_("stuarthalloway@datomic.com")).get.map(_.head ==> 2)
 
         // Emails of users who added stories
-        _ <- Story.title_.Tx(MetaData.usecase_("AddStories").User.email).get === List(
+        _ <- Story.title_.Tx(MetaData.usecase_("AddStories").User.email).get.map(_ ==> List(
           "stuarthalloway@datomic.com"
-        )
+        ))
 
 
         // Updating data with additional transaction meta data...
