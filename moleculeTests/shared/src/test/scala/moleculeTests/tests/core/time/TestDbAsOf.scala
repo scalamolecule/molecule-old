@@ -55,7 +55,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 3, 4, 5, 6))
 
         // Retract
-        _ <- e3.map(_.retract)
+        _ <- e3.retract
         _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 4, 5, 6))
 
         // Live state unchanged
@@ -78,19 +78,19 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
 
         // as of tx report
-        _ <- conn.map(_.testDbAsOf(txR1))
+        _ <- conn.flatMap(_.testDbAsOf(txR1))
         _ <- Ns.int.get.map(_ ==> List(1))
 
         // as of t
-        _ <- conn.map(_.testDbAsOf(txR2.t))
+        _ <- conn.flatMap(_.testDbAsOf(txR2.t))
         _ <- Ns.int.get.map(_ ==> List(1, 2))
 
         // as of tx
-        _ <- conn.map(_.testDbAsOf(txR3.tx))
+        _ <- conn.flatMap(_.testDbAsOf(txR3.tx))
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // as of date
-        _ <- conn.map(_.testDbAsOf(txR4.inst))
+        _ <- conn.flatMap(_.testDbAsOf(txR4.inst))
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
 
         // Original state unaffected
@@ -108,7 +108,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use state as of tx 2 as a test db "branch"
-        _ <- conn.map(_.testDbAsOf(txR2))
+        _ <- conn.flatMap(_.testDbAsOf(txR2))
 
         // Test state
         _ <- Ns.int.get.map(_ ==> List(1, 2))
@@ -128,7 +128,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 4, 5, 6))
 
         // Retract
-        _ <- e1.map(_.retract)
+        _ <- e1.retract
         _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6))
 
         // Live state unchanged
@@ -181,7 +181,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use state as of tx 2 as a test db "branch"
-        _ <- conn.map(_.testDbAsOf(txR2))
+        _ <- conn.flatMap(_.testDbAsOf(txR2))
         _ <- Ns.int.get.map(_ ==> List(1, 2))
 
         // Test state is now as of tx1!

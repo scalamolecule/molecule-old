@@ -31,9 +31,76 @@ trait EntityOps {
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return
     */
-  implicit final def long2Entity(
+//  implicit final def long2Entity(
+//    id: Long
+//  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[DatomicEntity] = conn.map(_.entity(id))
+
+
+  /** Convenience conversion from entity id to DatomicEntity api
+    *
+    * @param id
+    * @param conn
+    * @param ec
+    */
+  implicit class long2DatomicEntity(
     id: Long
-  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[DatomicEntity] = conn.map(_.entity(id))
+  )(implicit conn: Future[Conn], ec: ExecutionContext) extends DatomicEntity {
+    lazy private val de: Future[DatomicEntity] = conn.map(_.entity(id))
+
+    def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] =
+      de.flatMap(_[T](key))
+
+    def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] =
+      de.flatMap(_(kw1, kw2, kws: _*))
+
+    def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = de.flatMap(_.mapOneLevel)
+
+    def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = de.flatMap(_.entityMap)
+
+    def keySet(implicit ec: ExecutionContext): Future[Set[String]] = de.flatMap(_.keySet)
+    def keys(implicit ec: ExecutionContext): Future[List[String]] = de.flatMap(_.keys)
+
+    def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = de.flatMap(_.rawValue(key))
+
+
+//    def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): Future[RetractMolecule] =
+//      de.flatMap(_.Tx(txMeta))
+
+    def retract(implicit ec: ExecutionContext): Future[TxReport] = de.flatMap(_.retract)
+
+    def retract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[TxReport] =
+      de.flatMap(_.retract(txMeta))
+
+    def inspectRetract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[Unit] =
+      de.flatMap(_.inspectRetract(txMeta))
+
+    def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = de.flatMap(_.getRetractStmts)
+    def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = de.flatMap(_.inspectRetract)
+
+    def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] = de.flatMap(_.touch)
+    def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+      de.flatMap(_.touchMax(maxDepth))
+
+    def touchQuoted(implicit ec: ExecutionContext): Future[String] = de.flatMap(_.touchQuoted)
+    def touchQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
+      de.flatMap(_.touchQuotedMax(maxDepth))
+
+    def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] = de.flatMap(_.touchList)
+    def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
+      de.flatMap(_.touchListMax(maxDepth))
+
+    def touchListQuoted(implicit ec: ExecutionContext): Future[String] = de.flatMap(_.touchListQuoted)
+    def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
+      de.flatMap(_.touchListQuotedMax(maxDepth))
+
+    def asMap(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+      de.flatMap(_.asMap(depth, maxDepth))
+
+    def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
+      de.flatMap(_.asList(depth, maxDepth))
+
+    def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = de.flatMap(_.sortList(l))
+  }
 
 
   /** Asynchronously retract multiple entities with optional transaction meta data.

@@ -267,7 +267,6 @@ object Input1String extends AsyncTestSuite {
             (str3, Set(str3, str4, str5))
           )
           for {
-            _ <- manyData
             _ <- Ns.str.strs insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> all)
@@ -465,7 +464,6 @@ object Input1String extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.strs.not(?)) // or m(Ns.str.strs.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.str.strs insert List(
               (str1, Set(str1, str2, str3)),
               (str2, Set(str2, str3, str4)),
@@ -626,7 +624,6 @@ object Input1String extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.str.strs_.not(?)) // or m(Ns.str.strs.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.str.strs insert List(
               (str1, Set(str1, str2, str3)),
               (str2, Set(str2, str3, str4)),

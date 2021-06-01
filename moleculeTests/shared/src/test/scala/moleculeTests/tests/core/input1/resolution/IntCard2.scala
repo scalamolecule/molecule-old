@@ -64,7 +64,6 @@ object IntCard2 extends AsyncTestSuite {
         (3, Set(int3, int4, int5))
       )
       for {
-        _ <- manyData
         _ <- Ns.int.ints insert all
 
         _ <- inputMolecule(Nil).get.map(_ ==> all)

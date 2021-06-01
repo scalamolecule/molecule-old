@@ -26,7 +26,7 @@ object TxBundle extends AsyncTestSuite {
         // Transact multiple molecule statements in one bundled transaction
         _ <- transactBundle(
           // retract
-          e1.flatMap(_.getRetractStmts),
+          e1.getRetractStmts,
           // save
           Ns.int(4).getSaveStmts,
           // insert
@@ -50,11 +50,11 @@ object TxBundle extends AsyncTestSuite {
           transactBundle(
             Ns(e3).int(31).getUpdateStmts,
             Ns(e3).int(32).getUpdateStmts
-          ).recover { case exc: ExecutionException =>
-            exc.getMessage ==> ":db.error/datoms-conflict Two datoms in the same transaction conflict\n" +
+          ).recover(_.getMessage ==>
+            ":db.error/datoms-conflict Two datoms in the same transaction conflict\n" +
               "{:d1 [17592186045455 :Ns/int 31 13194139534356 true],\n" +
               " :d2 [17592186045455 :Ns/int 32 13194139534356 true]}\n"
-          }
+          )
         } else Future.unit
       } yield ()
     }
@@ -69,7 +69,7 @@ object TxBundle extends AsyncTestSuite {
         // Print inspect info for group transaction without affecting live db
         _ <- inspectTransactBundle(
           // retract
-          e1.flatMap(_.getRetractStmts),
+          e1.getRetractStmts,
           // save
           Ns.int(4).getSaveStmts,
           // insert
@@ -86,31 +86,26 @@ object TxBundle extends AsyncTestSuite {
         /*
           ## 1 ## TxReport
           ================================================================================================================
-          1          ArrayBuffer(
-            1          List(
-              1          :db.fn/retractEntity     17592186045454)
-            2          List(
-              1          :db/add      #db/id[:db.part/user -1000267]     :Ns/int                4)
-            3          List(
-              1          :db/add      #db/id[:db.part/user -1000271]     :Ns/int                5)
-            4          List(
-              1          :db/add      #db/id[:db.part/user -1000274]     :Ns/int                6)
-            5          List(
-              1          :db/add      17592186045455                     :Ns/int                20))
+          list(
+            :db/retractEntity        17592186045453,
+            Add(TempId(":db.part/user", -1000001),:Ns/int,4,Card(1)),
+            Add(TempId(":db.part/user", -1000002),:Ns/int,5,Card(1)),
+            Add(TempId(":db.part/user", -1000003),:Ns/int,6,Card(1)),
+            Add(17592186045454,:Ns/int,20,Card(1)))
           ----------------------------------------------------------------------------------------------------------------
-          2          List(
-            1    1     added: true ,   t: 13194139534354,   e: 13194139534354,   a: 50,   v: Thu Dec 19 20:34:15 CET 2019
+          List(
+            1    1     added: true ,   t: 13194139534352,   e: 13194139534352,   a: 50,   v: Mon May 31 17:47:47 CEST 2021,
 
-            2    2     added: false,  -t: 13194139534354,  -e: 17592186045454,  -a: 64,  -v: 1
+            2    2     added: false,  -t: 13194139534352,  -e: 17592186045453,  -a: 73,  -v: 1,
 
-            3    3     added: true ,   t: 13194139534354,   e: 17592186045459,   a: 64,   v: 4
+            3    3     added: true ,   t: 13194139534352,   e: 17592186045457,   a: 73,   v: 4,
 
-            4    4     added: true ,   t: 13194139534354,   e: 17592186045460,   a: 64,   v: 5
+            4    4     added: true ,   t: 13194139534352,   e: 17592186045458,   a: 73,   v: 5,
 
-            5    5     added: true ,   t: 13194139534354,   e: 17592186045461,   a: 64,   v: 6
+            5    5     added: true ,   t: 13194139534352,   e: 17592186045459,   a: 73,   v: 6,
 
-            6    6     added: true ,   t: 13194139534354,   e: 17592186045455,   a: 64,   v: 20
-                 7     added: false,  -t: 13194139534354,  -e: 17592186045455,  -a: 64,  -v: 2)
+            6    6     added: true ,   t: 13194139534352,   e: 17592186045454,   a: 73,   v: 20,
+                 7     added: false,  -t: 13194139534352,  -e: 17592186045454,  -a: 73,  -v: 2)
           ================================================================================================================
         */
 
@@ -120,7 +115,7 @@ object TxBundle extends AsyncTestSuite {
         // If a real group transaction is invoked, the resulting tx report can also be inspected
         tx <- transactBundle(
           // retract
-          e1.flatMap(_.getRetractStmts),
+          e1.getRetractStmts,
           // save
           Ns.int(4).getSaveStmts,
           // insert

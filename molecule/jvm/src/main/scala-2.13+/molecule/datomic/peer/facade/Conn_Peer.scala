@@ -1,6 +1,6 @@
 package molecule.datomic.peer.facade
 
-import java.util.{Date, Collection => jCollection, List => jList}
+import java.util.{Collections, Date, Collection => jCollection, List => jList}
 import java.{lang, util}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
@@ -15,6 +15,8 @@ import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
 import molecule.datomic.base.transform.Query2String
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
@@ -85,30 +87,6 @@ class Conn_Peer(
         }
       }
     }
-    //    Future {
-    //      _testDb = Some(peerConn.db)
-    //      val array                  = peerConn.log.txRange(nextTimePoint, null).iterator().asScala.toArray
-    //      val txInstId               = db.pull("[:db/id]", ":db/txInstant").get(read(":db/id"))
-    //      //      def op(datom: Datom) = if (datom.added) ":db/retract" else ":db/add"
-    //      var stmts: jList[jList[_]] = new util.ArrayList[jList[_]]()
-    //      val size                   = array.length
-    //      var i                      = size - 1
-    //      // Reverse datoms backwards from last to timePoint right after as-of t
-    //      while (i >= 0) {
-    //        val datoms = array(i).get(datomic.Log.DATA).asInstanceOf[jList[Datom]]
-    //        stmts = new util.ArrayList[jList[_]](datoms.size())
-    //        datoms.forEach { datom =>
-    //          // Don't reverse timestamps
-    //          if (datom.a != txInstId) {
-    //            stmts.add(list(op(datom), datom.e, datom.a, datom.v))
-    //          }
-    //        }
-    //        // Update in-memory with-db
-    //        val txReport = TxReport_Peer(_testDb.get.`with`(stmts))
-    //        _testDb = Some(txReport.dbAfter.asOf(txReport.t))
-    //        i -= 1
-    //      }
-    //    }
   }
 
   def testDbAsOfNow: Unit = {
@@ -128,7 +106,7 @@ class Conn_Peer(
   }
 
   def testDbWith(txMolecules: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.sequence(txMolecules).map { stmtss =>
+    Future.sequence(txMolecules).flatMap { stmtss =>
       testDbWith(stmts2java(stmtss.flatten))
     }
   }
@@ -174,10 +152,8 @@ class Conn_Peer(
     }
   }
 
-  //  def entity(id: Any)(implicit ec: ExecutionContext): Future[DatomicEntity] =
-  def entity(id: Any): DatomicEntity =
-    db.entity(this, id)
 
+  def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
   def transactRaw(javaStmts: jList[_], futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement]))
@@ -213,13 +189,13 @@ class Conn_Peer(
               case e: Throwable =>
                 e match {
                   case e: java.util.concurrent.ExecutionException =>
-                    println("---- Conn_Peer.transactAsyncRaw ExecutionException: -------------\n" + listenableFuture)
-                    //                    println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+                    println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
+                    println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
                     p.failure(e.getCause)
 
                   case NonFatal(e) =>
-                    println("---- Conn_Peer.transactAsyncRaw NonFatal exc: -------------\n" + listenableFuture)
-                    //                    println("---- javaStmts:\n" + javaStmts)
+                    println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
+                    println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
                     p.failure(e)
                 }
             }
@@ -243,14 +219,16 @@ class Conn_Peer(
     db: DatomicDb,
     query: String,
     inputs0: Seq[Any]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
     val inputs = inputs0.map {
       case it: Iterable[_] => it.asJava
       case v               => v
     }
-    blocking(
+    Future(
       Peer.q(query, db.getDatomicDb +: inputs.asInstanceOf[Seq[AnyRef]]: _*)
     )
+  } catch {
+    case NonFatal(e) => Future.failed(e)
   }
 
   def query(model: Model, query: Query)
@@ -279,7 +257,7 @@ class Conn_Peer(
       }
     } catch {
       case NonFatal(exc) =>
-        Future.failed(new QueryException(exc, model, query))
+        Future.failed(QueryException(exc, model, query))
     }
   }
 
@@ -510,14 +488,15 @@ class Conn_Peer(
     }
 
     // Convert Datoms to standard list of rows so that we can use the same Molecule query API
-    val jColl: jCollection[jList[AnyRef]] = new util.ArrayList[jList[AnyRef]]()
+    val rows = new ListBuffer[Future[jList[AnyRef]]]()
     api match {
       case "datoms" =>
         val datom2row_ = datom2row(None)
-        val raw        = adhocDb.asInstanceOf[DatomicDb_Peer].datoms(index, args: _*)
-        raw.map { datoms =>
-          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
-          jColl
+        adhocDb.asInstanceOf[DatomicDb_Peer].datoms(index, args: _*).flatMap { datoms =>
+          datoms.forEach(datom =>
+            rows.addOne(datom2row_(datom))
+          )
+          Future.sequence(rows).map(_.asJavaCollection)
         }
 
       case "indexRange" =>
@@ -525,25 +504,23 @@ class Conn_Peer(
         val attrId     = args.head.toString
         val startValue = args(1)
         val endValue   = args(2)
-        val raw        = adhocDb.asInstanceOf[DatomicDb_Peer].indexRange(attrId, startValue, endValue)
-        raw.map { datoms =>
-          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
-          jColl
+        adhocDb.asInstanceOf[DatomicDb_Peer].indexRange(attrId, startValue, endValue).flatMap { datoms =>
+          datoms.forEach(datom =>
+            rows.addOne(datom2row_(datom))
+          )
+          Future.sequence(rows).map(_.asJavaCollection)
         }
 
       case "txRange" =>
-        val raw = Future(peerConn.log.txRange(args.head, args(1)))
-        raw.map { datoms =>
-          datoms.forEach { txMap =>
-            // Flatten transaction datoms to unified tuples return type
-            txMap.get(datomic.Log.DATA).asInstanceOf[jList[Datom]].forEach { datom =>
-              val datom2row_ = datom2row(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
-              //            jColl.add(datom2row_(datom))
-              datom2row_(datom).map(row => jColl.add(row))
-            }
-          }
-          jColl
+        // Loop transactions
+        peerConn.log.txRange(args.head, args(1)).forEach { txMap =>
+          // Flatten transaction datoms to uniform tuples return type
+          val datom2row_ = datom2row(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
+          txMap.get(datomic.Log.DATA).asInstanceOf[jList[Datom]].forEach(datom =>
+            rows.addOne(datom2row_(datom))
+          )
         }
+        Future.sequence(rows).map(_.asJavaCollection)
     }
   }
 

@@ -16,8 +16,7 @@ object UpdateMapURI extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.uriMap(str1 -> uri1).save
-          eid = tx.eid
+          eid <- Ns.uriMap(str1 -> uri1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).uriMap.assert(str2 -> uri3).update
@@ -78,8 +77,7 @@ object UpdateMapURI extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.uriMap(str1 -> uri1, str2 -> uri2, str3 -> uri3, str4 -> uri4, str5 -> uri5, str6 -> uri6).save
-          eid = tx.eid
+          eid <- Ns.uriMap(str1 -> uri1, str2 -> uri2, str3 -> uri3, str4 -> uri4, str5 -> uri5, str6 -> uri6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).uriMap.replace(str6 -> uri8).update
@@ -122,8 +120,7 @@ object UpdateMapURI extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.uriMap(str1 -> uri1, str2 -> uri2, str3 -> uri3, str4 -> uri4, str5 -> uri5, str6 -> uri6).save
-          eid = tx.eid
+          eid <- Ns.uriMap(str1 -> uri1, str2 -> uri2, str3 -> uri3, str4 -> uri4, str5 -> uri5, str6 -> uri6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).uriMap.retract(str6).update
@@ -153,8 +150,7 @@ object UpdateMapURI extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.uriMap(str1 -> uri1, str2 -> uri2).save
-          eid = tx.eid
+          eid <- Ns.uriMap(str1 -> uri1, str2 -> uri2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).uriMap(str1 -> uri1).update

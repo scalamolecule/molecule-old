@@ -14,7 +14,7 @@ object QueryTour extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "Queries and joins" - selfJoin { implicit conn =>
+    "Queries and joins" - socialNews { implicit conn =>
       for {
         (txR2, tx1, s1, s2, s3, stu, ed, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) <- SocialNews.data
 
@@ -56,8 +56,9 @@ object QueryTour extends AsyncTestSuite {
       } yield ()
     }
 
-    "Schema-aware joins" - selfJoin { implicit conn =>
+    "Schema-aware joins" - socialNews { implicit conn =>
       for {
+        (txR2, tx1, s1, s2, s3, stu, ed, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) <- SocialNews.data
         // 8. A Schema Query
 
         // Attributes of all entities having comments
@@ -88,7 +89,7 @@ object QueryTour extends AsyncTestSuite {
       } yield ()
     }
 
-    "Entities" - selfJoin { implicit conn =>
+    "Entities" - socialNews { implicit conn =>
       for {
         (txR2, tx1, s1, s2, s3, stu, ed, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) <- SocialNews.data
 
@@ -99,8 +100,8 @@ object QueryTour extends AsyncTestSuite {
 
 
         // 12. Requesting an Attribute value
-        _ <- editor.map(_ (":User/firstName") ==> Some("Ed"))
-        _ <- editor.map(_ (":unrecognizedKey") ==> None)
+        _ <- editor(":User/firstName").map(_ ==> Some("Ed"))
+        _ <- editor(":unrecognizedKey").map(_ ==> None)
 
         // Or as query
         _ <- User(editor).firstName.get.map(_.head ==> "Ed")
@@ -108,7 +109,7 @@ object QueryTour extends AsyncTestSuite {
 
         // 13. Touching an entity
         // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-        _ <- editor.map(_.touch ==> Map(
+        _ <- editor.touch.map(_ ==> Map(
           ":db/id" -> ed,
           ":User/email" -> "editor@example.com",
           ":User/firstName" -> "Ed",
@@ -119,7 +120,7 @@ object QueryTour extends AsyncTestSuite {
         // 14. Navigating backwards
 
         // The editors comments (Comments pointing to the Editor entity)
-        _ <- editor.map(_ (":Comment/_author") ==> Some(List(c2, c4, c5, c7, c11)))
+        _ <- editor.apply[List[Long]](":Comment/_author").map(_ ==> Some(List(c2, c4, c5, c7, c11)))
 
         // .. almost same as: (here, only matching data is returned)
         // Comments of editor
@@ -130,19 +131,15 @@ object QueryTour extends AsyncTestSuite {
 
         // Comments to the editors comments (with entity api)
         _ <- for {
-          a <- editor.flatMap(_.apply[List[Long]](":Comment/_author").map(_.get))
-          b <- Future.sequence(a.map(_.flatMap(_.apply[Map[String, Long]](":Parent/comment").map(_.get))))
-          c = b.map(_.apply(":db/id"))
+          authorIds <- editor.apply[List[Long]](":Comment/_author").map(_.get)
+          commentEntityMaps <- Future.sequence(authorIds.map(x => x.apply[Map[String, Long]](":Parent/comment")))
+          commentIds = commentEntityMaps.flatMap {
+            case Some(entityMap) => entityMap.get(":db/id")
+            case None            => None
+          }
         } yield {
-          c ==> List(c3, c6, c8, c12)
+          commentIds ==> List(c3, c6, c8, c12)
         }
-
-        //    // Comments to the editors comments (with entity api)
-        //    (for{
-        //      a <- editor.apply[List[Long]](":Comment/_author").get
-        //      b <- a.apply[Map[String, Long]](":Parent/comment")
-        //      c <- b.get(":db/id")
-        //    } yield c) === List(c3, c6, c8, c12)
 
         // Comments to the editors comments (with query)
         _ <- m(Comment.author_(editor) + Parent.comment).get.map(_.sorted ==> List(c3, c6, c8, c12))
@@ -160,7 +157,7 @@ object QueryTour extends AsyncTestSuite {
       } yield ()
     }
 
-    "Time travel" - selfJoin { implicit conn =>
+    "Time travel" - socialNews { implicit conn =>
       for {
         (txR2, tx1, s1, s2, s3, stu, ed, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) <- SocialNews.data
 

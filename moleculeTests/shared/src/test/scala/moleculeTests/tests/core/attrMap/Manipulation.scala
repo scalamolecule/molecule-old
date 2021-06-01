@@ -12,8 +12,7 @@ object Manipulation extends Base {
     "Manipulate" - core { implicit conn =>
       for {
         // Insert
-        tx <- Ns.strMap.insert(Map("en" -> "Hi"))
-        eid = tx.eid
+        eid <- Ns.strMap.insert(Map("en" -> "Hi")).map(_.eid)
         _ <- Ns.strMap.get.map(_.head ==> Map("en" -> "Hi"))
 
         // Update + Add
@@ -21,20 +20,20 @@ object Manipulation extends Base {
         // When a previous populated key is encountered the old fact is
         // retracted and the new one asserted (like an update).
         _ <- Ns(eid).strMap.assert("en" -> "Hi there", "fr" -> "Bonjour").update
-        _ <- Ns.strMap.get.map(_.map(_.head ==> Map("en" -> "Hi there", "fr" -> "Bonjour")))
+        _ <- Ns.strMap.get.map(_.head ==> Map("en" -> "Hi there", "fr" -> "Bonjour"))
 
 
         // Remove pair (by key)
 
         _ <- Ns(eid).strMap.retract("en").update
-        _ <- Ns.strMap.get.map(_.map(_.head ==> Map("fr" -> "Bonjour")))
+        _ <- Ns.strMap.get.map(_.head ==> Map("fr" -> "Bonjour"))
 
 
         // Applying nothing (empty parenthesises)
         // finds and retract all values of an attribute
 
         _ <- Ns(eid).strMap().update
-        _ <- Ns.strMap.get.map(_ ==> List())
+        _ <- Ns.strMap.get.map(_ ==> Nil)
       } yield ()
     }
   }

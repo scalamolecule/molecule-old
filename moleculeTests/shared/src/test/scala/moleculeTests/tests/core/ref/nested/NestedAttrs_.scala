@@ -263,8 +263,7 @@ object NestedAttrs_ extends AsyncTestSuite {
 
     "Applied eid" - core { implicit conn =>
       for {
-        tx <- Ns.str.Refs1.*(Ref1.int1).insert("a", List(1, 2))
-        eid = tx.eid
+        eid <- Ns.str.Refs1.*(Ref1.int1).insert("a", List(1, 2)).map(_.eid)
         _ <- Ns(eid).str.get.map(_.head ==> "a")
         _ <- Ns(eid).Refs1.*(Ref1.int1).get.map(_.head ==> List(1, 2))
       } yield ()

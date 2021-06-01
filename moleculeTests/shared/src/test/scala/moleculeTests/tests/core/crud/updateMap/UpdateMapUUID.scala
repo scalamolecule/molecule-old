@@ -16,8 +16,7 @@ object UpdateMapUUID extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.uuidMap(str1 -> uuid1).save
-          eid = tx.eid
+          eid <- Ns.uuidMap(str1 -> uuid1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).uuidMap.assert(str2 -> uuid3).update
@@ -77,8 +76,7 @@ object UpdateMapUUID extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.uuidMap(str1 -> uuid1, str2 -> uuid2, str3 -> uuid3, str4 -> uuid4, str5 -> uuid5, str6 -> uuid6).save
-          eid = tx.eid
+          eid <- Ns.uuidMap(str1 -> uuid1, str2 -> uuid2, str3 -> uuid3, str4 -> uuid4, str5 -> uuid5, str6 -> uuid6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).uuidMap.replace(str6 -> uuid8).update
@@ -121,8 +119,7 @@ object UpdateMapUUID extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.uuidMap(str1 -> uuid1, str2 -> uuid2, str3 -> uuid3, str4 -> uuid4, str5 -> uuid5, str6 -> uuid6).save
-          eid = tx.eid
+          eid <- Ns.uuidMap(str1 -> uuid1, str2 -> uuid2, str3 -> uuid3, str4 -> uuid4, str5 -> uuid5, str6 -> uuid6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).uuidMap.retract(str6).update
@@ -152,8 +149,7 @@ object UpdateMapUUID extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.uuidMap(str1 -> uuid1, str2 -> uuid2).save
-          eid = tx.eid
+          eid <- Ns.uuidMap(str1 -> uuid1, str2 -> uuid2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).uuidMap(str1 -> uuid1).update

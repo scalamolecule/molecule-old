@@ -29,5 +29,34 @@ trait AsyncTestSuiteImpl {
   def modernGraph2Impl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(ModernGraph2Schema))
   def productsImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(ProductsOrderSchema))
   def seattleImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(SeattleSchema))
-  def mbrainzImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(MBrainzSchema))
+
+  def mbrainzImpl[T](func: Future[Conn] => T): T = {
+    func(Conn_Js.inMem(MBrainzSchema))
+  }
+
+//  def mbrainzImpl[T](func: Future[Conn] => T): T = {
+//    //    val dbName = if (system == SystemDevLocal)
+//    //      "mbrainz-subset" // dev-local
+//    //    else
+//    //      "mbrainz-1968-1973" // peer and peer-server
+//    //    implicit val conn = getConn(MBrainzSchema,
+//    //      dbName,
+//    //      false, // don't recreate db
+//    //      "localhost:4334/mbrainz-1968-1973", // peer uri to transactor
+//    //      //      "free" // if running free transactor
+//    //      "dev" // if running pro transactor
+//    //    )
+//    //
+//    //    import molecule.datomic.api.out1._
+//    //
+//    //    if (Schema.a(":Artist/name").get.isEmpty) {
+//    //      // Add uppercase-namespaced attribute names so that we can access the externally
+//    //      // transacted lowercase names with uppercase names of the molecule code.
+//    //      println("Converting nss from lower to upper..")
+//    //      conn.transact(MBrainzSchemaLowerToUpper.edn)
+//    //    }
+//    func(
+//      Datomic_Peer.connect("dev", "localhost:4334/mbrainz-1968-1973")
+//    )
+//  }
 }

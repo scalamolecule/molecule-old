@@ -375,7 +375,7 @@ trait Conn extends ColOps {
 
   def modelTransformer(model: Model): ModelTransformer = ModelTransformer(this, model)
 
-  private[molecule] def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
+  def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 
   def inspect(
     clazz: String,

@@ -16,8 +16,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.double(2.0).save
-          eid = tx1.eid
+          eid <- Ns.double(2.0).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).double(1.0).update
@@ -47,8 +46,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.double(double2).save
-          eid = tx1.eid
+          eid <- Ns.double(double2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).double(double1).update
@@ -78,8 +76,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(1.0).save
-          eid = tx1.eid
+          eid <- Ns.doubles(1.0).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).doubles.assert(2.0).update
@@ -113,8 +110,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(1.0, 2.0, 3.0, 4.0, 5.0, 6.0).save
-          eid = tx1.eid
+          eid <- Ns.doubles(1.0, 2.0, 3.0, 4.0, 5.0, 6.0).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).doubles.replace(6.0 -> 8.0).update
@@ -155,8 +151,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(1.0, 2.0, 3.0, 4.0, 5.0, 6.0).save
-          eid = tx1.eid
+          eid <- Ns.doubles(1.0, 2.0, 3.0, 4.0, 5.0, 6.0).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).doubles.retract(6.0).update
@@ -186,8 +181,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(2.0, 3.0).save
-          eid = tx1.eid
+          eid <- Ns.doubles(2.0, 3.0).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).doubles(1.0).update
@@ -225,8 +219,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(double1).save
-          eid = tx1.eid
+          eid <- Ns.doubles(double1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).doubles.assert(double2).update
@@ -272,8 +265,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(double1, double2, double3, double4, double5, double6).save
-          eid = tx1.eid
+          eid <- Ns.doubles(double1, double2, double3, double4, double5, double6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).doubles.replace(double6 -> double8).update
@@ -336,8 +328,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(double1, double2, double3, double4, double5, double6).save
-          eid = tx1.eid
+          eid <- Ns.doubles(double1, double2, double3, double4, double5, double6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).doubles.retract(double6).update
@@ -373,8 +364,7 @@ object UpdateDouble extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.doubles(double2, double3).save
-          eid = tx1.eid
+          eid <- Ns.doubles(double2, double3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).doubles(double1).update

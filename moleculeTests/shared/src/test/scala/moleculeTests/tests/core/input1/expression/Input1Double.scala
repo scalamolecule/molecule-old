@@ -266,7 +266,6 @@ object Input1Double extends AsyncTestSuite {
             (double3, Set(double3, double4, double5))
           )
           for {
-            _ <- manyData
             _ <- Ns.double.doubles insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> all)
@@ -464,7 +463,6 @@ object Input1Double extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.doubles.not(?)) // or m(Ns.double.doubles.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.double.doubles insert List(
               (double1, Set(double1, double2, double3)),
               (double2, Set(double2, double3, double4)),
@@ -625,7 +623,6 @@ object Input1Double extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.double.doubles_.not(?)) // or m(Ns.double.doubles.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.double.doubles insert List(
               (double1, Set(double1, double2, double3)),
               (double2, Set(double2, double3, double4)),

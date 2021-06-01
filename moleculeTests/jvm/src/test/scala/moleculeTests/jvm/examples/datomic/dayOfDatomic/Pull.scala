@@ -5,7 +5,6 @@ import datomic.Util
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.language.postfixOps
 
 /*
   https://github.com/Datomic/day-of-datomic/blob/master/tutorial/pull.clj
@@ -18,13 +17,14 @@ object Pull extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "raw pull" - core { implicit conn =>
+    "raw pull" - mbrainz { implicit conn =>
       for {
         // Pull raw java.util.Map's with clojure.lang.Keyword -> <data> pairs
-        _ <- conn.map(_.db.pull(
-          "[:Artist/name :Artist/gid]",
-          Util.list(Util.read(":Artist/gid"), ledZeppelinUUID)
-        ) ==> Util.map(
+        _ <- conn.flatMap( conn =>
+          conn.db.pull(
+            "[:Artist/name :Artist/gid]", Util.list(Util.read(":Artist/gid"), ledZeppelinUUID)
+          )
+        ).map(_ ==> Util.map(
           Util.read(":Artist/name"), "Led Zeppelin",
           Util.read(":Artist/gid"), ledZeppelinUUID
         ))

@@ -36,19 +36,19 @@ object EdgeOneSelfSave extends AsyncTestSuite {
             ("Ben", 7, "Ann")
           ))
 
-          _ <- ann.map(_.touchMax(1) ==> Map(
+          _ <- ann.touchMax(1).map(_ ==> Map(
             ":db/id" -> ann,
             ":Person/loves" -> annLovesBen,
             ":Person/name" -> "Ann"
           ))
 
-          _ <- ben.map(_.touchMax(1) ==> Map(
+          _ <- ben.touchMax(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLovesAnn,
             ":Person/name" -> "Ben"
           ))
 
-          _ <- ann.map(_.touchMax(2) ==> Map(
+          _ <- ann.touchMax(2).map(_ ==> Map(
             ":db/id" -> ann,
             ":Person/loves" -> Map(
               ":db/id" -> annLovesBen,
@@ -94,13 +94,13 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           List(lovesBen, benLoves, ben) = tx.eids
 
           // lovesBen edge points to Ben
-          _ <- ben.map(_.touchMax(1) ==> Map(
+          _ <- ben.touchMax(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
 
-          _ <- lovesBen.map(_.touchMax(1) ==> Map(
+          _ <- lovesBen.touchMax(1).map(_ ==> Map(
             ":db/id" -> lovesBen,
             ":Loves/person" -> ben,
             ":Loves/weight" -> 7,
@@ -108,14 +108,14 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           ))
 
           // Ben points to edge benLoves
-          _ <- ben.map(_.touchMax(1) ==> Map(
+          _ <- ben.touchMax(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
 
           // benLoves edge is ready to point back to a base entity (Ann)
-          _ <- benLoves.map(_.touchMax(1) ==> Map(
+          _ <- benLoves.touchMax(1).map(_ ==> Map(
             ":db/id" -> benLoves,
             ":Loves/weight" -> 7,
             ":molecule_Meta/otherEdge" -> lovesBen // To be able to find the other edge later
@@ -129,7 +129,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           tx <- Person.name("Ann").loves(lovesBen).save
           ann = tx.eid
 
-          _ <- ben.map(_.touchMax(1) ==> Map(
+          _ <- ben.touchMax(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"

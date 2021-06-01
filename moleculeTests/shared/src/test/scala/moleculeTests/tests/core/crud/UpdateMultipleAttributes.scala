@@ -15,8 +15,7 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
       "both new" - core { implicit conn =>
         for {
-          tx <- Ns.int(1).str("a").save
-          eid = tx.eid
+          eid <- Ns.int(1).str("a").save.map(_.eid)
 
           // Both int and str asserted
           _ <- Ns(eid).int(2).str("b").update
@@ -29,8 +28,7 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
       "first new, last same" - core { implicit conn =>
         for {
-          tx <- Ns.int(1).str("a").save
-          eid = tx.eid
+          eid <- Ns.int(1).str("a").save.map(_.eid)
 
           // Only int asserted
           _ <- Ns(eid).int(2).str("a").update
@@ -43,8 +41,7 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
       "first same, last new" - core { implicit conn =>
         for {
-          tx <- Ns.int(1).str("a").save
-          eid = tx.eid
+          eid <- Ns.int(1).str("a").save.map(_.eid)
 
           // Only str asserted
           _ <- Ns(eid).int(1).str("b").update
@@ -57,8 +54,7 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
       "both same" - core { implicit conn =>
         for {
-          tx <- Ns.int(1).str("a").save
-          eid = tx.eid
+          eid <- Ns.int(1).str("a").save.map(_.eid)
 
           // No facts asserted!
           _ <- Ns(eid).int(1).str("a").update
@@ -71,8 +67,7 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
       "2 new, 1 same" - core { implicit conn =>
         for {
-          tx <- Ns.int(1).str("a").bool(true).save
-          eid = tx.eid
+          eid <- Ns.int(1).str("a").bool(true).save.map(_.eid)
 
           _ <- Ns(eid).int(2).str("b").bool(true).update
 
@@ -85,8 +80,7 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
       "2 same, 1 new" - core { implicit conn =>
         for {
-          tx <- Ns.int(1).str("a").bool(true).save
-          eid = tx.eid
+          eid <- Ns.int(1).str("a").bool(true).save.map(_.eid)
 
           _ <- Ns(eid).int(1).str("a").bool(false).update
 
@@ -100,8 +94,7 @@ object UpdateMultipleAttributes extends AsyncTestSuite {
 
     "Optional values - update or retract" - core { implicit conn =>
       for {
-        tx <- Ns.int(1).str("a").save
-        eid = tx.eid
+        eid <- Ns.int(1).str("a").save.map(_.eid)
 
         // Both values updated
         _ <- Ns(eid).int(2).str$(Some("b")).update

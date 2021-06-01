@@ -15,8 +15,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.strMap("str1" -> "a").save
-          eid = tx.eid
+          eid <- Ns.strMap("str1" -> "a").save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).strMap.assert("str2" -> "c").update
@@ -57,8 +56,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.strMap("str1" -> "a", "str2" -> "b", "str3" -> "c", "str4" -> "d", "str5" -> "e", "str6" -> "f").save
-          eid = tx.eid
+          eid <- Ns.strMap("str1" -> "a", "str2" -> "b", "str3" -> "c", "str4" -> "d", "str5" -> "e", "str6" -> "f").save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).strMap.replace("str6" -> "h").update
@@ -101,8 +99,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.strMap("str1" -> "a", "str2" -> "b", "str3" -> "c", "str4" -> "d", "str5" -> "e", "str6" -> "f").save
-          eid = tx.eid
+          eid <- Ns.strMap("str1" -> "a", "str2" -> "b", "str3" -> "c", "str4" -> "d", "str5" -> "e", "str6" -> "f").save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).strMap.retract("str6").update
@@ -132,8 +129,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.strMap("str1" -> "a", "str2" -> "b").save
-          eid = tx.eid
+          eid <- Ns.strMap("str1" -> "a", "str2" -> "b").save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).strMap("str1" -> "a").update
@@ -185,8 +181,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.strMap(str1 -> str1).save
-          eid = tx.eid
+          eid <- Ns.strMap(str1 -> str1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).strMap.assert(str2 -> str3).update
@@ -246,8 +241,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.strMap(str1 -> str1, str2 -> str2, str3 -> str3, str4 -> str4, str5 -> str5, str6 -> str6).save
-          eid = tx.eid
+          eid <- Ns.strMap(str1 -> str1, str2 -> str2, str3 -> str3, str4 -> str4, str5 -> str5, str6 -> str6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).strMap.replace(str6 -> str8).update
@@ -290,8 +284,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.strMap(str1 -> str1, str2 -> str2, str3 -> str3, str4 -> str4, str5 -> str5, str6 -> str6).save
-          eid = tx.eid
+          eid <- Ns.strMap(str1 -> str1, str2 -> str2, str3 -> str3, str4 -> str4, str5 -> str5, str6 -> str6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).strMap.retract(str6).update
@@ -321,8 +314,7 @@ object UpdateMapString extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.strMap(str1 -> str1, str2 -> str2).save
-          eid = tx.eid
+          eid <- Ns.strMap(str1 -> str1, str2 -> str2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).strMap(str1 -> str1).update

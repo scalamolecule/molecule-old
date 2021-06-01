@@ -96,10 +96,12 @@ object Time extends AsyncTestSuite with Helpers {
         _ <- Ns.int.getObjListSince(tx1).map(_.map(_.int) ==> List(2, 3))
         _ <- Ns.int.getObjListSince(tx1, 1).map(_.map(_.int) ==> List(2))
 
-        _ <- Ns.int.getObjListSince(d3).map(_.map(_.int) ==> List())
-        _ <- Ns.int.getObjListSince(d2).map(_.map(_.int) ==> List(3))
-        _ <- Ns.int.getObjListSince(d1).map(_.map(_.int) ==> List(2, 3))
-        _ <- Ns.int.getObjListSince(d1, 1).map(_.map(_.int) ==> List(2))
+        // transactions can happen within a millisecond which is the
+        // minimum time unit of a Date. So the following tests can be overlapping
+        //        _ <- Ns.int.getObjListSince(d3).map(_.map(_.int) ==> List())
+        //        _ <- Ns.int.getObjListSince(d2).map(_.map(_.int) ==> List(3))
+        //        _ <- Ns.int.getObjListSince(d1).map(_.map(_.int) ==> List(2, 3))
+        //        _ <- Ns.int.getObjListSince(d1, 1).map(_.map(_.int) ==> List(2))
 
 
         _ <- Ns.int.getObjArraySince(t3).map(_.map(_.int) ==> Array())
@@ -112,10 +114,11 @@ object Time extends AsyncTestSuite with Helpers {
         _ <- Ns.int.getObjArraySince(tx1).map(_.map(_.int) ==> Array(2, 3))
         _ <- Ns.int.getObjArraySince(tx1, 1).map(_.map(_.int) ==> Array(2))
 
-        _ <- Ns.int.getObjArraySince(d3).map(_.map(_.int) ==> Array())
-        _ <- Ns.int.getObjArraySince(d2).map(_.map(_.int) ==> Array(3))
-        _ <- Ns.int.getObjArraySince(d1).map(_.map(_.int) ==> Array(2, 3))
-        _ <- Ns.int.getObjArraySince(d1, 1).map(_.map(_.int) ==> Array(2))
+        // Same about Date precision as above
+        //        _ <- Ns.int.getObjArraySince(d3).map(_.map(_.int) ==> Array())
+        //        _ <- Ns.int.getObjArraySince(d2).map(_.map(_.int) ==> Array(3))
+        //        _ <- Ns.int.getObjArraySince(d1).map(_.map(_.int) ==> Array(2, 3))
+        //        _ <- Ns.int.getObjArraySince(d1, 1).map(_.map(_.int) ==> Array(2))
 
 
         _ <- Ns.int.getObjIterableSince(t3).map(_.iterator.toList.map(_.int) ==> Iterator().toList)
@@ -124,9 +127,12 @@ object Time extends AsyncTestSuite with Helpers {
         _ <- Ns.int.getObjIterableSince(tx3).map(_.iterator.toList.map(_.int) ==> Iterator().toList)
         _ <- Ns.int.getObjIterableSince(tx2).map(_.iterator.toList.map(_.int) ==> Iterator(3).toList)
         _ <- Ns.int.getObjIterableSince(tx1).map(_.iterator.toList.map(_.int) ==> Iterator(2, 3).toList)
-        _ <- Ns.int.getObjIterableSince(d3).map(_.iterator.toList.map(_.int) ==> Iterator().toList)
-        _ <- Ns.int.getObjIterableSince(d2).map(_.iterator.toList.map(_.int) ==> Iterator(3).toList)
-        _ <- Ns.int.getObjIterableSince(d1).map(_.iterator.toList.map(_.int) ==> Iterator(2, 3).toList)
+
+
+        // Same about Date precision as above
+        //        _ <- Ns.int.getObjIterableSince(d3).map(_.iterator.toList.map(_.int) ==> Iterator().toList)
+        //        _ <- Ns.int.getObjIterableSince(d2).map(_.iterator.toList.map(_.int) ==> Iterator(3).toList)
+        //        _ <- Ns.int.getObjIterableSince(d1).map(_.iterator.toList.map(_.int) ==> Iterator(2, 3).toList)
       } yield ()
     }
 

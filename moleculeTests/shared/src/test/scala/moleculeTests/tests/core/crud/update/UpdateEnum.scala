@@ -18,8 +18,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.enum("enum2").save
-          eid = tx1.eid
+          eid <- Ns.enum("enum2").save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).enum("enum1").update
@@ -49,8 +48,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.enum(enum2).save
-          eid = tx1.eid
+          eid <- Ns.enum(enum2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).enum(enum1).update
@@ -80,8 +78,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums("enum1").save
-          eid = tx1.eid
+          eid <- Ns.enums("enum1").save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).enums.assert("enum2").update
@@ -115,8 +112,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums("enum1", "enum2", "enum3", "enum4", "enum5", "enum6").save
-          eid = tx1.eid
+          eid <- Ns.enums("enum1", "enum2", "enum3", "enum4", "enum5", "enum6").save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).enums.replace("enum6" -> "enum8").update
@@ -130,18 +126,10 @@ object UpdateEnum extends AsyncTestSuite {
           _ <- Ns(eid).enums.replace("enum3" -> "enum6", "enum4" -> "enum7").update
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
 
-          // Different exceptions for each system
-          _ <- if (system == SystemPeer) {
-            // Trying to use a non-existing enum not possible
-            Ns(eid).enums.replace("x" -> "enum9").update.recover { case exc: ExecutionException =>
-              exc.getMessage ==> "java.lang.IllegalArgumentException: :db.error/not-an-entity " +
-                s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
-            }
-          } else {
-            // Trying to use a non-existing enum not possible
-            Ns(eid).enums.replace("x" -> "enum9").update.recover { case exc =>
-              exc.getMessage ==> s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
-            }
+          // Trying to use a non-existing enum not possible
+          _ <- Ns(eid).enums.replace("x" -> "enum9").update.recover { case exc =>
+            exc.getMessage ==> ":db.error/not-an-entity " +
+              s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]"""
           }
 
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
@@ -157,11 +145,11 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).enums.replace("enum7" -> "enum8", "enum8" -> "enum8").update""").check("",
+          _ = compileError("""Ns(eid).enums.replace("enum7" -> "enum8", "enum8" -> "enum8").update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\nenum8")
 
-          _ = compileError(            """Ns(eid).enums.replace(Seq("enum7" -> "enum8", "enum8" -> "enum8")).update""").check("",
+          _ = compileError("""Ns(eid).enums.replace(Seq("enum7" -> "enum8", "enum8" -> "enum8")).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\nenum8")
         } yield ()
@@ -169,8 +157,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums("enum1", "enum2", "enum3", "enum4", "enum5", "enum6").save
-          eid = tx1.eid
+          eid <- Ns.enums("enum1", "enum2", "enum3", "enum4", "enum5", "enum6").save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).enums.retract("enum6").update
@@ -200,8 +187,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums("enum2", "enum3").save
-          eid = tx1.eid
+          eid <- Ns.enums("enum2", "enum3").save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).enums("enum1").update
@@ -238,8 +224,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums(enum1).save
-          eid = tx1.eid
+          eid <- Ns.enums(enum1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).enums.assert(enum2).update
@@ -285,8 +270,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums(enum1, enum2, enum3, enum4, enum5, enum6).save
-          eid = tx1.eid
+          eid <- Ns.enums(enum1, enum2, enum3, enum4, enum5, enum6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).enums.replace(enum6 -> enum8).update
@@ -316,11 +300,11 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).enums.replace(enum7 -> enum8, enum8 -> enum8).update""").check("",
+          _ = compileError("""Ns(eid).enums.replace(enum7 -> enum8, enum8 -> enum8).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\n__ident__enum8")
 
-          _ = compileError(            """Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> enum8)).update""").check("",
+          _ = compileError("""Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> enum8)).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\n__ident__enum8")
 
@@ -345,8 +329,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums(enum1, enum2, enum3, enum4, enum5, enum6).save
-          eid = tx1.eid
+          eid <- Ns.enums(enum1, enum2, enum3, enum4, enum5, enum6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).enums.retract(enum6).update
@@ -382,8 +365,7 @@ object UpdateEnum extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.enums(enum2, enum3).save
-          eid = tx1.eid
+          eid <- Ns.enums(enum2, enum3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).enums(enum1).update

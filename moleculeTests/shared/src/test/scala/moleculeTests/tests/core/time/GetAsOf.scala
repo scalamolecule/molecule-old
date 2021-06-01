@@ -20,7 +20,7 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         )
         List(ben, liz) = tx1.eids
         tx2 <- Ns(ben).int(43).update
-        tx3 <- ben.flatMap(_.retract)
+        tx3 <- ben.retract
 
         // See history of Ben
         _ <- Ns(ben).int.tx.op.getHistory.map(_.sortBy(r => (r._2, r._3)) ==> List(
@@ -76,8 +76,7 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
 
     "tx entity" - core { implicit conn =>
       for {
-        tx <- Ns.int(1).save
-        eid = tx.eid
+        eid <- Ns.int(1).save.map(_.eid)
 
         // Get tx entity of last transaction involving Ns.int
         tx1 <- Ns.int_.tx.get.map(_.head)
@@ -112,7 +111,7 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         tx2 <- Ns(ben).int(43).update
 
         // Retract (tx report 3)
-        tx3 <- ben.flatMap(_.retract)
+        tx3 <- ben.retract
 
         _ <- Ns.str.int.getAsOf(tx1).map(_ ==> List(
           ("Liz", 37),
@@ -133,17 +132,22 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
 
     "Date" - core { implicit conn =>
       val beforeInsert = new java.util.Date
+      // create delays between transactions to allow dates to be separate by at leas 1 ms
+      delay
       for {
         // Insert
         tx1 <- Ns.str.int insert List(("Ben", 42), ("Liz", 37))
         ben = tx1.eid
         afterInsert = tx1.inst
 
+        _ = delay
+
         // Update
         afterUpdate <- Ns(ben).int(43).update.map(_.inst)
+        _ = delay
 
         // Retract
-        afterRetract <- ben.flatMap(_.retract.map(_.inst))
+        afterRetract <- ben.retract.map(_.inst)
 
         // Let retraction register before querying
         // (Peer is fast, and dates are only precise by the ms)
@@ -185,7 +189,7 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         tx2 <- Ns(ben).int(43).update
 
         // Retract (tx report 3)
-        tx3 <- ben.flatMap(_.retract)
+        tx3 <- ben.retract
 
         _ <- Ns.str.int.getIterableAsOf(tx1).map { iterable =>
           val it = iterable.iterator
@@ -225,7 +229,7 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         tx2 <- Ns(ben).int(43).update
 
         // Retract (tx report 3)
-        tx3 <- ben.flatMap(_.retract)
+        tx3 <- ben.retract
 
         _ <- Ns.str.int.getRawAsOf(tx1).map(_.strInts ==> List(("Liz", 37), ("Ben", 42)))
         _ <- Ns.str.int.getRawAsOf(tx2).map(_.strInts ==> List(("Liz", 37), ("Ben", 43))) // Ben now 43

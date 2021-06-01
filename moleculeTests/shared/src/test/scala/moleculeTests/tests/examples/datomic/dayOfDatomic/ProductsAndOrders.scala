@@ -29,7 +29,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         List(order, l1, l2) = tx2.eids
 
         //    println(order.touchQuoted)
-        _ <- order.map(_.touch ==> Map(
+        _ <- order.touch.map(_ ==> Map(
           ":db/id" -> order,
           ":Order/lineItems" -> List(Map(
             ":db/id" -> l1,
@@ -86,7 +86,7 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // Get all attributes/values of this entity. Sub-component values are
         // recursively retrieved
-        _ <- orderId.map(_.touch ==> Map(
+        _ <- orderId.touch.map(_ ==> Map(
           ":db/id" -> orderId,
           ":Order/lineItems" -> List(
             Map(":db/id" -> l1, ":LineItem/price" -> 48.0, ":LineItem/product" ->
@@ -103,7 +103,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Retract nested data ............................
 
         // Retract entity - all subcomponents/lineItems are retracted
-        _ <- orderId.map(_.retract)
+        _ <- orderId.retract
 
         // The products are still there
         _ <- Product.e.description_("Expensive Chocolate" or "Cheap Whisky").get.map(_ ==>
@@ -147,7 +147,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Touch ................................
 
         // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-        _ <- order23.map(_.touch ==> Map(
+        _ <- order23.touch.map(_ ==> Map(
           ":db/id" -> order23,
           ":Order/lineItems" -> List(
             Map(":db/id" -> l1, ":LineItem/price" -> 48.0, ":LineItem/product" ->
@@ -159,7 +159,7 @@ object ProductsAndOrders extends AsyncTestSuite {
               Map(":db/id" -> licoriceId, ":Product/description" -> "Licorice"), ":LineItem/quantity" -> 2)),
           ":Order/orderid" -> 23))
 
-        _ <- order24.map(_.touch ==> Map(
+        _ <- order24.touch.map(_ ==> Map(
           ":db/id" -> order24,
           ":Order/lineItems" -> List(
             Map(":db/id" -> ll1, ":LineItem/price" -> 38.0, ":LineItem/product" ->
@@ -210,7 +210,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Retract ............................
 
         // Retract entity - all subcomponents/lineItems are retracted
-        _ <- order23.map(_.retract)
+        _ <- order23.retract
 
         // The products are still there
         _ <- Product.e.description_("Expensive Chocolate" or "Cheap Whisky")
@@ -247,7 +247,7 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // Get all attributes/values of this entity. Sub-component values are
         // recursively retrieved
-        _ <- order23.map(_.touch ==> Map(
+        _ <- order23.touch.map(_ ==> Map(
           ":db/id" -> order23,
           ":Order/lineItems" -> List(
             Map(":db/id" -> l1, ":LineItem/price" -> 48.0, ":LineItem/product" ->
@@ -258,7 +258,7 @@ object ProductsAndOrders extends AsyncTestSuite {
               Map(":db/id" -> p3, ":Product/description" -> "Licorice"), ":LineItem/quantity" -> 2)),
           ":Order/orderid" -> 23))
 
-        _ <- order24.map(_.touch ==> Map(
+        _ <- order24.touch.map(_ ==> Map(
           ":db/id" -> order24,
           ":Order/lineItems" -> List(
             Map(":db/id" -> ll1, ":LineItem/price" -> 38.0, ":LineItem/product" ->
@@ -304,7 +304,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         _ <- LineItem.product_(chocolateId).Comments.text.get.map(_ ==> List("first", "product"))
 
         // 2 levels of nested data entered
-        _ <- o1.map(_.touch ==> Map(
+        _ <- o1.touch.map(_ ==> Map(
           ":db/id" -> o1,
           ":Order/lineItems" -> List(
             Map(":LineItem/comments" -> List(
@@ -357,7 +357,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         List(o1, l1, c1, c2, l2, c3, c4, c5) = tx2.eids
 
         // 2 levels of nested data entered
-        _ <- o1.map(_.touch ==> Map(
+        _ <- o1.touch.map(_ ==> Map(
           ":db/id" -> o1,
           ":Order/lineItems" -> List(
             Map(":LineItem/comments" -> List(
@@ -419,7 +419,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         List(o1, l1, c1, a1, c2, a2, l2, c3, a3, a4, c4, a5, c5, a6) = tx2.eids
 
         /* 3 levels of nested data entered*/
-        _ <- o1.map(_.touch ==> Map(
+        _ <- o1.touch.map(_ ==> Map(
           ":db/id" -> o1,
           ":Order/lineItems" -> List(
             Map(
@@ -497,7 +497,7 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // 3 levels of nested data entered, some with missing values that are
         // then not asserted
-        _ <- o1.map(_.touch ==> Map(
+        _ <- o1.touch.map(_ ==> Map(
           ":db/id" -> o1,
           ":Order/lineItems" -> List(
             Map(":LineItem/comments" -> List(
@@ -547,7 +547,7 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // 3 levels of nested data entered, some with missing values that are
         // then not asserted
-        _ <- o1.map(_.touch ==> Map(
+        _ <- o1.touch.map(_ ==> Map(
           ":db/id" -> o1,
           ":Order/lineItems" -> List(
             Map(":LineItem/comments" -> List(

@@ -28,16 +28,19 @@ object Datom extends AsyncTestSuite {
       e1 = txR1.eid
       t1 = txR1.t
       d1 = txR1.inst
+      _ = delay
 
       txR2 <- Ns(e1).str("b").update
       tx2 = txR2.tx
       t2 = txR2.t
       d2 = txR2.inst
+      _ = delay
 
       txR3 <- Ns(e1).int(3).update
       tx3 = txR3.tx
       t3 = txR3.t
       d3 = txR3.inst
+      _ = delay
 
       // Second entity
       txR4 <- Ns.str("x").int(4).save
@@ -45,11 +48,13 @@ object Datom extends AsyncTestSuite {
       e2 = txR4.eid
       t4 = txR4.t
       d4 = txR4.inst
+      _ = delay
 
       txR5 <- Ns(e2).int(5).update
       tx5 = txR5.tx
       t5 = txR5.t
       d5 = txR5.inst
+      _ = delay
 
       // Third entity, a ref
       txR6 <- Ref1.str1("hello").save
@@ -57,6 +62,7 @@ object Datom extends AsyncTestSuite {
       tx6 = txR6.tx
       t6 = txR6.t
       d6 = txR6.inst
+      _ = delay
 
       txR7 <- Ns(e2).ref1(r1).update
       tx7 = txR7.tx
@@ -85,7 +91,7 @@ object Datom extends AsyncTestSuite {
           // matches the Datom values of the entity
 
           // Entity `e1` has 2 asserted datoms (and the entity id)
-          _ <- e1.map(_.touch ==> Map(
+          _ <- e1.touch.map(_ ==> Map(
             ":db/id" -> e1,
             ":Ns/int" -> 3,
             ":Ns/str" -> "b"))

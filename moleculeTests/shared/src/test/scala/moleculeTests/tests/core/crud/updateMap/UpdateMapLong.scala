@@ -15,8 +15,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.longMap("str1" -> 1L).save
-          eid = tx.eid
+          eid <- Ns.longMap("str1" -> 1L).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).longMap.assert("str2" -> 3L).update
@@ -57,8 +56,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.longMap("str1" -> 1L, "str2" -> 2L, "str3" -> 3L, "str4" -> 4L, "str5" -> 5L, "str6" -> 6L).save
-          eid = tx.eid
+          eid <- Ns.longMap("str1" -> 1L, "str2" -> 2L, "str3" -> 3L, "str4" -> 4L, "str5" -> 5L, "str6" -> 6L).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).longMap.replace("str6" -> 8L).update
@@ -101,8 +99,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.longMap("str1" -> 1L, "str2" -> 2L, "str3" -> 3L, "str4" -> 4L, "str5" -> 5L, "str6" -> 6L).save
-          eid = tx.eid
+          eid <- Ns.longMap("str1" -> 1L, "str2" -> 2L, "str3" -> 3L, "str4" -> 4L, "str5" -> 5L, "str6" -> 6L).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).longMap.retract("str6").update
@@ -132,8 +129,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.longMap("str1" -> 1L, "str2" -> 2L).save
-          eid = tx.eid
+          eid <- Ns.longMap("str1" -> 1L, "str2" -> 2L).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).longMap("str1" -> 1L).update
@@ -183,8 +179,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.longMap(str1 -> long1).save
-          eid = tx.eid
+          eid <- Ns.longMap(str1 -> long1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).longMap.assert(str2 -> long3).update
@@ -244,8 +239,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.longMap(str1 -> long1, str2 -> long2, str3 -> long3, str4 -> long4, str5 -> long5, str6 -> long6).save
-          eid = tx.eid
+          eid <- Ns.longMap(str1 -> long1, str2 -> long2, str3 -> long3, str4 -> long4, str5 -> long5, str6 -> long6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).longMap.replace(str6 -> long8).update
@@ -288,8 +282,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.longMap(str1 -> long1, str2 -> long2, str3 -> long3, str4 -> long4, str5 -> long5, str6 -> long6).save
-          eid = tx.eid
+          eid <- Ns.longMap(str1 -> long1, str2 -> long2, str3 -> long3, str4 -> long4, str5 -> long5, str6 -> long6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).longMap.retract(str6).update
@@ -319,8 +312,7 @@ object UpdateMapLong extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.longMap(str1 -> long1, str2 -> long2).save
-          eid = tx.eid
+          eid <- Ns.longMap(str1 -> long1, str2 -> long2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).longMap(str1 -> long1).update

@@ -265,7 +265,6 @@ object Input1Enum extends AsyncTestSuite {
             (enum3, Set(enum3, enum4, enum5))
           )
           for {
-            _ <- manyData
             _ <- Ns.enum.enums insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> all)
@@ -463,7 +462,6 @@ object Input1Enum extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.enums.not(?)) // or m(Ns.enum.enums.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.enum.enums insert List(
               (enum1, Set(enum1, enum2, enum3)),
               (enum2, Set(enum2, enum3, enum4)),
@@ -624,7 +622,6 @@ object Input1Enum extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.enum.enums_.not(?)) // or m(Ns.enum.enums.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.enum.enums insert List(
               (enum1, Set(enum1, enum2, enum3)),
               (enum2, Set(enum2, enum3, enum4)),

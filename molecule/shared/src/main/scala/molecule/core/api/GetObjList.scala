@@ -114,7 +114,12 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return List[Obj] where Obj is an object with properties matching the attributes of the molecule
     */
-  def getObj(implicit conn: Future[Conn], ec: ExecutionContext): Future[Obj] = getObjList(conn, ec).map(_.head)
+  def getObj(implicit conn: Future[Conn], ec: ExecutionContext): Future[Obj] =
+    getObjList(conn, ec).flatMap(
+      _.headOption.fold[Future[Obj]](
+        Future.failed(new RuntimeException("Empty result set."))
+      )(Future(_))
+    )
 
   // get as of ================================================================================================
 

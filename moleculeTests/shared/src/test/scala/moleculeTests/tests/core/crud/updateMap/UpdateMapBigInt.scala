@@ -15,8 +15,7 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.bigIntMap(str1 -> bigInt1).save
-          eid = tx.eid
+          eid <- Ns.bigIntMap(str1 -> bigInt1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).bigIntMap.assert(str2 -> bigInt3).update
@@ -77,8 +76,7 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.bigIntMap(str1 -> bigInt1, str2 -> bigInt2, str3 -> bigInt3, str4 -> bigInt4, str5 -> bigInt5, str6 -> bigInt6).save
-          eid = tx.eid
+          eid <- Ns.bigIntMap(str1 -> bigInt1, str2 -> bigInt2, str3 -> bigInt3, str4 -> bigInt4, str5 -> bigInt5, str6 -> bigInt6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).bigIntMap.replace(str6 -> bigInt8).update
@@ -121,8 +119,7 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.bigIntMap(str1 -> bigInt1, str2 -> bigInt2, str3 -> bigInt3, str4 -> bigInt4, str5 -> bigInt5, str6 -> bigInt6).save
-          eid = tx.eid
+          eid <- Ns.bigIntMap(str1 -> bigInt1, str2 -> bigInt2, str3 -> bigInt3, str4 -> bigInt4, str5 -> bigInt5, str6 -> bigInt6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).bigIntMap.retract(str6).update
@@ -152,8 +149,7 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.bigIntMap(str1 -> bigInt1, str2 -> bigInt2).save
-          eid = tx.eid
+          eid <- Ns.bigIntMap(str1 -> bigInt1, str2 -> bigInt2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).bigIntMap(str1 -> bigInt1).update

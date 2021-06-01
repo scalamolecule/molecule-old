@@ -230,7 +230,7 @@ object OneSelf extends AsyncTestSuite {
         ))
 
         // Retract Adam and all references to/from Adam
-        _ <- adam.map(_.retract)
+        _ <- adam.retract
 
         // Lisa remains and both references retracted
         _ <- Person.name.get.map(_ ==> List("Lisa"))

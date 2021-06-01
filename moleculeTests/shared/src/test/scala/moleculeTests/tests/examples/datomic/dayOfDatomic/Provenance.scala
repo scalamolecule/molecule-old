@@ -38,21 +38,21 @@ object Provenance extends AsyncTestSuite {
         ))
 
         // We can also traverse the generated entity ids to see what is saved
-        _ <- elasticacheStory.map(_.touch ==> Map(
+        _ <- elasticacheStory.touch.map(_ ==> Map(
           ":db/id" -> elasticacheStory,
           ":Story/title" -> "ElastiCache in 6 minutes",
           ":Story/url" -> "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"))
 
-        _ <- chocolateStory.map(_.touch ==> Map(
+        _ <- chocolateStory.touch.map(_ ==> Map(
           ":db/id" -> chocolateStory,
           ":Story/title" -> "Keep Chocolate Love Atomic",
           ":Story/url" -> "http://blog.datomic.com/2012/08/atomic-chocolate.html"))
 
         // Time of transaction
-        stuTxInstant <- stuTxId.flatMap(_[java.util.Date](":db/txInstant")).map(_.get)
+        stuTxInstant <- stuTxId[java.util.Date](":db/txInstant").map(_.get)
 
         // Limit entity traversal 1 level deep
-        _ <- stuTxId.map(_.touchMax(1) ==> Map(
+        _ <- stuTxId.touchMax(1).map(_ ==> Map(
           ":db/id" -> stuTxId,
           ":db/txInstant" -> stuTxInstant,
           ":MetaData/usecase" -> "AddStories",
@@ -60,7 +60,7 @@ object Provenance extends AsyncTestSuite {
         ))
 
         // Or full traversal to Stu's data
-        _ <- stuTxId.map(_.touch ==> Map(
+        _ <- stuTxId.touch.map(_ ==> Map(
           ":db/id" -> stuTxId,
           ":db/txInstant" -> stuTxInstant,
           ":MetaData/usecase" -> "AddStories",
@@ -128,8 +128,7 @@ object Provenance extends AsyncTestSuite {
         // Updating data with additional transaction meta data...
 
         // Ed fixes the spelling error
-        edTx <- Story(elasticacheStory).title("ElastiCache in 5 minutes").Tx(MetaData.user(ed).usecase_("UpdateStory")).update
-        edTxId = edTx.tx
+        edTxId <- Story(elasticacheStory).title("ElastiCache in 5 minutes").Tx(MetaData.user(ed).usecase_("UpdateStory")).update.map(_.tx)
 
         // Title now
         _ <- Story.url_(ecURL).title.get.map(_.head ==> "ElastiCache in 5 minutes")

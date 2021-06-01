@@ -66,7 +66,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
           }
         }
       }
-    )(Future.failed) // Pass on exceptions from input failure
+    )(Future.failed) // Pass on exception from input failure
   }
 
   /** Get `Future` with `List` of n rows as tuples matching molecule.
@@ -114,7 +114,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
           }
         }
       }
-    )(Future.failed) // Pass on exceptions from input failure
+    )(Future.failed) // Pass on exception from input failure
   }
 
 

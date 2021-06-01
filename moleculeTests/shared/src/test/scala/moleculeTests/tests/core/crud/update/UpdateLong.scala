@@ -16,8 +16,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.long(2L).save
-          eid = tx.eid
+          eid <- Ns.long(2L).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).long(1L).update
@@ -47,8 +46,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.long(long2).save
-          eid = tx1.eid
+          eid <- Ns.long(long2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).long(long1).update
@@ -78,8 +76,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.longs(1L).save
-          eid = tx.eid
+          eid <- Ns.longs(1L).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).longs.assert(2L).update
@@ -113,8 +110,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.longs(1L, 2L, 3L, 4L, 5L, 6L).save
-          eid = tx.eid
+          eid <- Ns.longs(1L, 2L, 3L, 4L, 5L, 6L).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).longs.replace(6L -> 8L).update
@@ -155,8 +151,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.longs(1L, 2L, 3L, 4L, 5L, 6L).save
-          eid = tx.eid
+          eid <- Ns.longs(1L, 2L, 3L, 4L, 5L, 6L).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).longs.retract(6L).update
@@ -186,8 +181,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.longs(2L, 3L).save
-          eid = tx.eid
+          eid <- Ns.longs(2L, 3L).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).longs(1L).update
@@ -224,8 +218,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.longs(long1).save
-          eid = tx.eid
+          eid <- Ns.longs(long1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).longs.assert(long2).update
@@ -270,8 +263,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.longs(long1, long2, long3, long4, long5, long6).save
-          eid = tx.eid
+          eid <- Ns.longs(long1, long2, long3, long4, long5, long6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).longs.replace(long6 -> long8).update
@@ -334,8 +326,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.longs(long1, long2, long3, long4, long5, long6).save
-          eid = tx.eid
+          eid <- Ns.longs(long1, long2, long3, long4, long5, long6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).longs.retract(long6).update
@@ -371,8 +362,7 @@ object UpdateLong extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.longs(long2, long3).save
-          eid = tx.eid
+          eid <- Ns.longs(long2, long3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).longs(long1).update

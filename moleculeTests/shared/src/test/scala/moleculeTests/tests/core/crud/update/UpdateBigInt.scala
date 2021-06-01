@@ -16,8 +16,7 @@ object UpdateBigInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigInt(bigInt2).save
-          eid = tx1.eid
+          eid <- Ns.bigInt(bigInt2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).bigInt(bigInt1).update
@@ -46,8 +45,7 @@ object UpdateBigInt extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.bigInts(bigInt1).save
-          eid = tx.eid
+          eid <- Ns.bigInts(bigInt1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).bigInts.assert(bigInt2).update
@@ -93,8 +91,7 @@ object UpdateBigInt extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigInts(bigInt1, bigInt2, bigInt3, bigInt4, bigInt5, bigInt6).save
-          eid = tx1.eid
+          eid <- Ns.bigInts(bigInt1, bigInt2, bigInt3, bigInt4, bigInt5, bigInt6).save.map(_.eid)
 
           // Replace value
           - <- Ns(eid).bigInts.replace(bigInt6 -> bigInt8).update
@@ -156,8 +153,7 @@ object UpdateBigInt extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigInts(bigInt1, bigInt2, bigInt3, bigInt4, bigInt5, bigInt6).save
-          eid = tx1.eid
+          eid <- Ns.bigInts(bigInt1, bigInt2, bigInt3, bigInt4, bigInt5, bigInt6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).bigInts.retract(bigInt6).update
@@ -193,8 +189,7 @@ object UpdateBigInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigInts(bigInt2, bigInt3).save
-          eid = tx1.eid
+          eid <- Ns.bigInts(bigInt2, bigInt3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).bigInts(bigInt1).update

@@ -15,8 +15,7 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.boolMap(str1 -> bool1).save
-          eid = tx.eid
+          eid <- Ns.boolMap(str1 -> bool1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).boolMap.assert(str2 -> bool3).update
@@ -77,8 +76,7 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.boolMap(str1 -> bool1, str2 -> bool2, str3 -> bool3, str4 -> bool4, str5 -> bool5, str6 -> bool6).save
-          eid = tx.eid
+          eid <- Ns.boolMap(str1 -> bool1, str2 -> bool2, str3 -> bool3, str4 -> bool4, str5 -> bool5, str6 -> bool6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).boolMap.replace(str6 -> bool8).update
@@ -121,8 +119,7 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.boolMap(str1 -> bool1, str2 -> bool2, str3 -> bool3, str4 -> bool4, str5 -> bool5, str6 -> bool6).save
-          eid = tx.eid
+          eid <- Ns.boolMap(str1 -> bool1, str2 -> bool2, str3 -> bool3, str4 -> bool4, str5 -> bool5, str6 -> bool6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).boolMap.retract(str6).update
@@ -152,8 +149,7 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.boolMap(str1 -> bool1, str2 -> bool2).save
-          eid = tx.eid
+          eid <- Ns.boolMap(str1 -> bool1, str2 -> bool2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).boolMap(str1 -> bool1).update

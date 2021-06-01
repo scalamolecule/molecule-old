@@ -20,7 +20,7 @@ object With_ extends AsyncTestSuite with JavaUtil {
 
         // Tx data from edn file
         // contains: "[{:Ns/int 2} {:Ns/int 3}]"
-        data = new FileReader("moleculeTests/shared/resources/tests/core/time/save2-3.dtm")
+        data = new FileReader("moleculeTests/jvm/resources/tests/core/time/save2-3.dtm")
         txData2_3 = _root_.datomic.Util.readAll(data).get(0).asInstanceOf[jList[jList[_]]]
 
         _ <- Ns.int.getWith(txData2_3).map(_ ==> List(1, 2, 3))

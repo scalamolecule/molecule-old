@@ -124,6 +124,7 @@ object Input1BigDecimal extends AsyncTestSuite {
         "Eq" - core { implicit conn =>
           val inputMolecule = m(Ns.str.bigDec_(?))
           for {
+            _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str4))
             _ <- inputMolecule(List(bigDec1)).get.map(_ ==> List(str1))
             _ <- inputMolecule(List(bigDec1, bigDec1)).get.map(_ ==> List(str1))
@@ -134,6 +135,7 @@ object Input1BigDecimal extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.str.bigDec_.not(?))
           for {
+            _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec1)).get.map(_.sorted ==> List(str2, str3))
             _ <- inputMolecule(List(bigDec1, bigDec1)).get.map(_.sorted ==> List(str2, str3))
@@ -144,6 +146,7 @@ object Input1BigDecimal extends AsyncTestSuite {
         ">" - core { implicit conn =>
           val inputMolecule = m(Ns.str.bigDec_.>(?))
           for {
+            _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(str3))
             _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
@@ -155,6 +158,7 @@ object Input1BigDecimal extends AsyncTestSuite {
         ">=" - core { implicit conn =>
           val inputMolecule = m(Ns.str.bigDec_.>=(?))
           for {
+            _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(str2, str3))
             _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
@@ -166,6 +170,7 @@ object Input1BigDecimal extends AsyncTestSuite {
         "<" - core { implicit conn =>
           val inputMolecule = m(Ns.str.bigDec_.<(?))
           for {
+            _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_ ==> List(str1))
             _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
@@ -177,6 +182,7 @@ object Input1BigDecimal extends AsyncTestSuite {
         "<=" - core { implicit conn =>
           val inputMolecule = m(Ns.str.bigDec_.<=(?))
           for {
+            _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(str1, str2))
             _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
@@ -261,7 +267,6 @@ object Input1BigDecimal extends AsyncTestSuite {
           )
 
           for {
-            _ <- manyData
             _ <- Ns.bigDec.bigDecs insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> all)
@@ -459,7 +464,6 @@ object Input1BigDecimal extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.bigDecs.not(?)) // or m(Ns.bigDec.bigDecs.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.bigDec.bigDecs insert List(
               (bigDec1, Set(bigDec1, bigDec2, bigDec3)),
               (bigDec2, Set(bigDec2, bigDec3, bigDec4)),
@@ -619,7 +623,6 @@ object Input1BigDecimal extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.bigDec.bigDecs_.not(?)) // or m(Ns.bigDec.bigDecs.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.bigDec.bigDecs insert List(
               (bigDec1, Set(bigDec1, bigDec2, bigDec3)),
               (bigDec2, Set(bigDec2, bigDec3, bigDec4)),

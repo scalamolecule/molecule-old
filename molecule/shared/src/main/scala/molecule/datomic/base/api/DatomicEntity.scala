@@ -1,9 +1,12 @@
 package molecule.datomic.base.api
 
 import molecule.core.api.Molecule
+import molecule.core.ast.elements.{Model, TxMetaData}
+import molecule.core.ops.VerifyModel
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.TxReport
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 trait DatomicEntity {
 
@@ -190,7 +193,12 @@ trait DatomicEntity {
     * @param metaMolecule Transaction meta data molecule
     * @return [[RetractMolecule RetractMolecule]] - a simple wrapper for adding retraction tx meta data
     */
-  def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): RetractMolecule
+//  def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): Future[RetractMolecule]
+
+  def retract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[TxReport]
+
+  def inspectRetract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[Unit]
+
 
   /** Get entity graph as Map.
     * <br><br>
@@ -439,9 +447,9 @@ trait DatomicEntity {
     */
   def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String]
 
-  protected def asMap(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]]
+  def asMap(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]]
 
-  protected def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]]
+  def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]]
 
-  def sortList(l: List[Any]): List[Any]
+  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]]
 }

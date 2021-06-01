@@ -54,8 +54,8 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
       for {
         ann <- getAnn
 
-        tx <- Animal.name.insert("Rex", "Zup")
-        List(rex, zup) = tx.eids
+        tx2 <- Animal.name.insert("Rex", "Zup")
+        List(rex, zup) = tx2.eids
 
         _ <- Person(ann).Favorite.weight(5).animal(rex).update
 
@@ -74,16 +74,14 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
 
     "retract edge" - bidirectional { implicit conn =>
       for {
-        ann <- getAnn
-
         tx <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save
-        List(_, annRex, _, _) = tx.eids
+        List(ann, annRex, rexAnn, rex) = tx.eids
 
         _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
         _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))
 
         // Retract edge
-        _ <- annRex.map(_.retract)
+        _ <- annRex.retract
 
         // Divorce complete
 
@@ -93,16 +91,14 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
 
     "retract base/target entity" - bidirectional { implicit conn =>
       for {
-        ann <- getAnn
-
         tx <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save
-        List(_, _, _, rex) = tx.eids
+        List(ann, annRex, rexAnn, rex) = tx.eids
 
         _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
         _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))
 
         // Retract base entity with single edge
-        _ <- rex.map(_.retract)
+        _ <- rex.retract
 
         // Ann becomes widow
         _ <- Person.name("Ann").get.map(_ ==> List("Ann"))

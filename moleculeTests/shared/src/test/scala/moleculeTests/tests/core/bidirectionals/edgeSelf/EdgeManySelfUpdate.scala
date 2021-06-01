@@ -191,7 +191,7 @@ object EdgeManySelfUpdate extends AsyncTestSuite {
         _ <- knownBy("Don").get.map(_ ==> List(List((3, "Ann"))))
 
         // Retract single edge
-        _ <- knowsBen.map(_.retract)
+        _ <- knowsBen.retract
 
         _ <- knownBy("Ann").get.map(_ ==> List(List((3, "Don"))))
         _ <- knownBy("Ben").get.map(_ ==> List())
@@ -212,7 +212,7 @@ object EdgeManySelfUpdate extends AsyncTestSuite {
         _ <- knownBy("Don").get.map(_ ==> List(List((3, "Ann"))))
 
         // Retract base entity
-        _ <- ann.map(_.retract)
+        _ <- ann.retract
 
         // All knowing to/from Ann retracted
         _ <- knownBy("Ann").get.map(_ ==> List())

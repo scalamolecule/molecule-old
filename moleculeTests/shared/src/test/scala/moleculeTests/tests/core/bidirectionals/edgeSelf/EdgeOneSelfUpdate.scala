@@ -82,7 +82,7 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
         _ <- loveOf("Ben").get.map(_ ==> List((5, "Ann")))
 
         // Retract edge
-        _ <- annBen.map(_.retract)
+        _ <- annBen.retract
 
         // Divorce complete
         _ <- loveOf("Ann").get.map(_ ==> List())
@@ -102,7 +102,7 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
         _ <- loveOf("Ben").get.map(_ ==> List((5, "Ann")))
 
         // Retract base entity with single edge
-        _ <- ben.map(_.retract)
+        _ <- ben.retract
 
         // Ann becomes widow
         _ <- Person.name("Ann").get.map(_ ==> List("Ann"))

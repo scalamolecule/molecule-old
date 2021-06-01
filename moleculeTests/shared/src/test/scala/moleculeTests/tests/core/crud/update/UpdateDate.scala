@@ -17,8 +17,7 @@ object UpdateDate extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.date(date2).save
-          eid = tx1.eid
+          eid <- Ns.date(date2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).date(date1).update
@@ -48,8 +47,7 @@ object UpdateDate extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.dates(date1).save
-          eid = tx1.eid
+          eid <- Ns.dates(date1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).dates.assert(date2).update
@@ -95,8 +93,7 @@ object UpdateDate extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.dates(date1, date2, date3, date4, date5, date6).save
-          eid = tx1.eid
+          eid <- Ns.dates(date1, date2, date3, date4, date5, date6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).dates.replace(date6 -> date8).update
@@ -155,8 +152,7 @@ object UpdateDate extends AsyncTestSuite {
 
     "retract" - core { implicit conn =>
       for {
-        tx1 <- Ns.dates(date1, date2, date3, date4, date5, date6).save
-        eid = tx1.eid
+        eid <- Ns.dates(date1, date2, date3, date4, date5, date6).save.map(_.eid)
 
         // Retract value
         _ <- Ns(eid).dates.retract(date6).update
@@ -193,8 +189,7 @@ object UpdateDate extends AsyncTestSuite {
 
     "apply" - core { implicit conn =>
       for {
-        tx1 <- Ns.dates(date2, date3).save
-        eid = tx1.eid
+        eid <- Ns.dates(date2, date3).save.map(_.eid)
 
         // Apply value (retracts all current values!)
         _ <- Ns(eid).dates(date1).update

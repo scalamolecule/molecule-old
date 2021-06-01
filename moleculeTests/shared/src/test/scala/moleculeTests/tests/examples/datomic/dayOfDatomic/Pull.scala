@@ -8,7 +8,6 @@ import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.postfixOps
 
 /*
   https://github.com/Datomic/day-of-datomic/blob/master/tutorial/pull.clj
@@ -51,7 +50,7 @@ object Pull extends AsyncTestSuite {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    "query" - core { implicit conn =>
+    "query" - mbrainz { implicit conn =>
       for {
         (ledZeppelinUUID,
         ledZeppelin,
@@ -263,13 +262,13 @@ object Pull extends AsyncTestSuite {
 
         _ <- if (system == SystemPeer) {
           // Using a dynamic query
-          conn.map(_.q(
+          conn.flatMap(_.q(
             """[:find [(pull ?e pattern) ...]
               |       :in $ ?artist pattern
               |       :where [?e :release/artists ?artist]]""".stripMargin,
             ledZeppelin,
             "[:Release/name]"
-          ) ==> List(
+          ).map(_ ==> List(
             List(":Release/name" -> "Led Zeppelin II"),
             List(":Release/name" -> "Led Zeppelin II"),
             List(":Release/name" -> "Led Zeppelin II"),
@@ -287,7 +286,7 @@ object Pull extends AsyncTestSuite {
             List(":Release/name" -> "Led Zeppelin"),
             List(":Release/name" -> "Led Zeppelin"),
             List(":Release/name" -> "Led Zeppelin"),
-          ))
+          )))
         } else Future.unit
       } yield ()
     }

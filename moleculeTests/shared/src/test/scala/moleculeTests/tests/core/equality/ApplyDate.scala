@@ -47,6 +47,12 @@ object ApplyDate extends AsyncTestSuite {
 
       "Tacit" - core { implicit conn =>
         for{
+          _ <- Ns.int.date$ insert List(
+            (1, Some(date1)),
+            (2, Some(date2)),
+            (3, Some(date3)),
+            (4, None)
+          )
           // Varargs
           _ <- Ns.int.date_.apply(date1).get.map(_ ==> List(1))
           _ <- Ns.int.date_.apply(date2).get.map(_ ==> List(2))

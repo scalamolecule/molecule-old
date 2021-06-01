@@ -43,7 +43,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         (communityId, n1, d1) = eids.head
 
         // Use the community id to touch all the entity's attribute values
-        _ <- communityId.map(_.touch ==> Map(
+        _ <- communityId.touch.map(_ ==> Map(
           ":Community/category" -> List("events", "for sale", "services"),
           ":Community/neighborhood" -> Map(
             ":db/id" -> 17592186045668L,
@@ -59,15 +59,15 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           ":Community/tpe" -> ":Community.tpe/wiki"))
 
         // We can also retrieve a single (optional) attribute value
-        untyped: Option[Any] <- communityId.flatMap(_ (":community/name"))
-        typed: Option[String] <- communityId.flatMap(_[String](":community/name"))
+        untyped: Option[Any] <- communityId(":community/name")
+        typed: Option[String] <- communityId[String](":community/name")
 
-        _ <- communityId.flatMap(_[String](":Community/name")).map(_ ==> Some("Greenlake Community Wiki"))
-        _ <- communityId.flatMap(_[String](":Community/url")).map(_ ==> Some("http://greenlake.wetpaint.com/"))
-        _ <- communityId.flatMap(_[List[String]](":Community/category")).map(
-          _.get.map(_.sorted ==> List("events", "for sale", "services"))
+        _ <- communityId.apply[String](":Community/name").map(_ ==> Some("Greenlake Community Wiki"))
+        _ <- communityId.apply[String](":Community/url").map(_ ==> Some("http://greenlake.wetpaint.com/"))
+        _ <- communityId.apply[List[String]](":Community/category").map(
+          _.get.sorted ==> List("events", "for sale", "services")
         )
-        _ <- communityId.flatMap(_ (":Community/emptyOrBogusAttribute")).map(_ ==> None)
+        _ <- communityId.apply(":Community/emptyOrBogusAttribute").map(_ ==> None)
 
         // We can also use the entity id to query for an attribute value
         _ <- Community(communityId).name.get.map(_.head ==> "Greenlake Community Wiki")
@@ -575,7 +575,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- Community.name("belltown 3").get.map(_.size ==> 1)
 
         // Simply use an entity id and retract it!
-        _ <- belltown.map(_.retract)
+        _ <- belltown.retract
 
         // Belltown is gone
         _ <- Community.name("belltown 3").get.map(_.size ==> 0)

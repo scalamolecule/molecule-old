@@ -15,8 +15,7 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.bigDecMap(str1 -> bigDec1).save
-          eid = tx.eid
+          eid <- Ns.bigDecMap(str1 -> bigDec1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).bigDecMap.assert(str2 -> bigDec3).update
@@ -77,8 +76,7 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.bigDecMap(str1 -> bigDec1, str2 -> bigDec2, str3 -> bigDec3, str4 -> bigDec4, str5 -> bigDec5, str6 -> bigDec6).save
-          eid = tx.eid
+          eid <- Ns.bigDecMap(str1 -> bigDec1, str2 -> bigDec2, str3 -> bigDec3, str4 -> bigDec4, str5 -> bigDec5, str6 -> bigDec6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).bigDecMap.replace(str6 -> bigDec8).update
@@ -121,8 +119,7 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.bigDecMap(str1 -> bigDec1, str2 -> bigDec2, str3 -> bigDec3, str4 -> bigDec4, str5 -> bigDec5, str6 -> bigDec6).save
-          eid = tx.eid
+          eid <- Ns.bigDecMap(str1 -> bigDec1, str2 -> bigDec2, str3 -> bigDec3, str4 -> bigDec4, str5 -> bigDec5, str6 -> bigDec6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).bigDecMap.retract(str6).update
@@ -152,8 +149,7 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.bigDecMap(str1 -> bigDec1, str2 -> bigDec2).save
-          eid = tx.eid
+          eid <- Ns.bigDecMap(str1 -> bigDec1, str2 -> bigDec2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).bigDecMap(str1 -> bigDec1).update

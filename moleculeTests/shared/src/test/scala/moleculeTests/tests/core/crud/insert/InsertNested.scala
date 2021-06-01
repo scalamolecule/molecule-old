@@ -23,7 +23,7 @@ object InsertNested extends AsyncTestSuite {
         tx <- Ns.Refs1.*(Ref1.str1).insert(List("r1", "r2"))
         List(e, r1, r2) = tx.eids
 
-        _ <- e.map(_.touch ==> Map(
+        _ <- e.touch.map(_ ==> Map(
           ":db/id" -> e,
           ":Ns/refs1" -> List(
             Map(":db/id" -> r1, ":Ref1/str1" -> "r1"),
@@ -36,7 +36,7 @@ object InsertNested extends AsyncTestSuite {
         tx2 <- m(Ns.str.Refs1 * Ref1.int1.str1).insert("order", List((4, "product1"), (7, "product2")))
         List(order, p1, p2) = tx2.eids
 
-        _ <- order.map(_.touch ==> Map(
+        _ <- order.touch.map(_ ==> Map(
           ":db/id" -> order,
           ":Ns/refs1" -> List(
             Map(":db/id" -> p1, ":Ref1/int1" -> 4, ":Ref1/str1" -> "product1"),

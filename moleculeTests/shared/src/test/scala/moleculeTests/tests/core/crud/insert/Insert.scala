@@ -303,8 +303,7 @@ object Insert extends AsyncTestSuite {
         // to continue (here shown with only 1 fact):
 
         // Insert maximum of 22 facts
-        tx <- Ns.str.insert("a")
-        eid = tx.eid
+        eid <- Ns.str.insert("a").map(_.eid)
 
         // Use entity id to continue adding more values
         _ <- Ns.e.int.insert(eid, 42)

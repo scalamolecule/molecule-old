@@ -16,8 +16,11 @@ object AsOf extends AsyncTestSuite with JavaUtil {
       for {
         tx1 <- Ns.int(1).save
         // Avoid date ms overlaps (use tx or t instead for precision)
-        //                                        Thread.sleep(100)
+        _ = delay
+
         tx2 <- Ns.int(2).save
+        _ = delay
+
         tx3 <- Ns.int(3).save
 
         t1 = tx1.t

@@ -23,16 +23,16 @@ object CompositeArities extends AsyncTestSuite {
         List(e1, e2) = tx.eids
 
         // Two entities created
-        _ <- e1.map(_.touchList.map(_ ==> List(
+        _ <- e1.touchList.map(_ ==> List(
           ":db/id" -> e1,
           ":Ns/int" -> 11,
           ":Ref2/int2" -> 1
-        )))
-        _ <- e2.map(_.touchList.map(_ ==> List(
+        ))
+        _ <- e2.touchList.map(_ ==> List(
           ":db/id" -> e2,
           ":Ns/int" -> 22,
           ":Ref2/int2" -> 2
-        )))
+        ))
 
         // Queries via each namespace
         _ <- m(Ref2.int2).get.map(_.sorted ==> Seq(1, 2))
@@ -57,18 +57,18 @@ object CompositeArities extends AsyncTestSuite {
         List(e1, e2) = tx.eids
 
         // Two entities created
-        _ <- e1.map(_.touchList.map(_ ==> List(
+        _ <- e1.touchList.map(_ ==> List(
           ":db/id" -> e1,
           ":Ns/int" -> 11,
           ":Ns/str" -> "aa",
           ":Ref2/int2" -> 1
-        )))
-        _ <- e2.map(_.touchList.map(_ ==> List(
+        ))
+        _ <- e2.touchList.map(_ ==> List(
           ":db/id" -> e2,
           ":Ns/int" -> 22,
           ":Ns/str" -> "bb",
           ":Ref2/int2" -> 2
-        )))
+        ))
 
         // Queries via each namespace
         _ <- m(Ref2.int2).get.map(_.sorted ==> Seq(
@@ -99,18 +99,18 @@ object CompositeArities extends AsyncTestSuite {
         List(e1, e2) = tx.eids
 
         // Two entities created
-        _ <- e1.map(_.touchList.map(_ ==> List(
+        _ <- e1.touchList.map(_ ==> List(
           ":db/id" -> e1,
           ":Ns/int" -> 11,
           ":Ref2/int2" -> 1,
           ":Ref2/str2" -> "a"
-        )))
-        _ <- e2.map(_.touchList.map(_ ==> List(
+        ))
+        _ <- e2.touchList.map(_ ==> List(
           ":db/id" -> e2,
           ":Ns/int" -> 22,
           ":Ref2/int2" -> 2,
           ":Ref2/str2" -> "b"
-        )))
+        ))
 
         // Queries via each namespace
         _ <- m(Ref2.int2.str2).get.map(_.sorted ==> Seq(
@@ -140,20 +140,20 @@ object CompositeArities extends AsyncTestSuite {
         List(e1, e2) = tx.eids
 
         // Two entities created
-        _ <- e1.map(_.touchList.map(_ ==> List(
+        _ <- e1.touchList.map(_ ==> List(
           ":db/id" -> e1,
           ":Ns/int" -> 11,
           ":Ns/str" -> "aa",
           ":Ref2/int2" -> 1,
           ":Ref2/str2" -> "a"
-        )))
-        _ <- e2.map(_.touchList.map(_ ==> List(
+        ))
+        _ <- e2.touchList.map(_ ==> List(
           ":db/id" -> e2,
           ":Ns/int" -> 22,
           ":Ns/str" -> "bb",
           ":Ref2/int2" -> 2,
           ":Ref2/str2" -> "b"
-        )))
+        ))
 
         // Queries via each namespace
         _ <- Ref2.int2.str2.get.map(_.sorted ==> List(
@@ -184,26 +184,44 @@ object CompositeArities extends AsyncTestSuite {
         List(e1, e2, txId) = tx.eids
 
         // Three (!) entities created
-        _ <- e1.map(_.touchList.map(_ ==> List(
+        _ <- e1.touchList.map(_ ==> List(
           ":db/id" -> e1,
           ":Ref1/int1" -> 11,
           ":Ref1/str1" -> "aa",
           ":Ref2/int2" -> 1,
           ":Ref2/str2" -> "a"
-        )))
-        _ <- e2.map(_.touchList.map(_ ==> List(
+        ))
+
+//      List(
+//      (:db/id,Future(Success(17592186045453))),
+//      (:Ref1/int1,Future(Success(11))),
+//      (:Ref1/str1,Future(<not completed>)),
+//      (:Ref2/int2,Future(<not completed>)),
+//      (:Ref2/str2,Future(<not completed>))) !=
+//
+//      List(
+//      (:db/id,17592186045453),
+//      (:Ref1/int1,11),
+//      (:Ref1/str1,aa),
+//      (:Ref2/int2,1),
+//      (:Ref2/str2,a))
+
+
+
+
+        _ <- e2.touchList.map(_ ==> List(
           ":db/id" -> e2,
           ":Ref1/int1" -> 22,
           ":Ref1/str1" -> "bb",
           ":Ref2/int2" -> 2,
           ":Ref2/str2" -> "b"
-        )))
-        txInstant <- txId.flatMap(_.apply[Date](":db/txInstant")).map(_.get)
-        _ <- txId.map(_.touchList.map(_ ==> List(
+        ))
+        txInstant <- txId[Date](":db/txInstant").map(_.get)
+        _ <- txId.touchList.map(_ ==> List(
           ":db/id" -> txId,
           ":db/txInstant" -> txInstant,
           ":Ns/str" -> "Tx meta data",
-        )))
+        ))
 
         // Queries via one namespace
         _ <- Ref2.int2.str2.get.map(_.sorted ==> List(

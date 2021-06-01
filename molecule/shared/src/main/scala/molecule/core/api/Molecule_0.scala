@@ -213,6 +213,7 @@ abstract class Molecule_0[Obj, Tpl](
       }
     }
   } catch {
+    // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
   }
 
@@ -228,6 +229,7 @@ abstract class Molecule_0[Obj, Tpl](
       conn.modelTransformer(_model).saveStmts
     }
   } catch {
+    // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
   }
 
@@ -318,6 +320,7 @@ abstract class Molecule_0[Obj, Tpl](
       }
     }
   } catch {
+    // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
   }
 
@@ -330,6 +333,7 @@ abstract class Molecule_0[Obj, Tpl](
       conn.modelTransformer(_model).insertStmts(untupled(dataRows))
     }
   } catch {
+    // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
   }
 
@@ -367,11 +371,16 @@ abstract class Molecule_0[Obj, Tpl](
         } yield result
       } else {
         conn.transact(
-          conn.modelTransformer(_model).updateStmts
+          try {
+            conn.modelTransformer(_model).updateStmts
+          } catch {
+            case NonFatal(exc) => Future.failed(exc)
+          }
         )
       }
     }
   } catch {
+    // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
   }
 
@@ -388,6 +397,7 @@ abstract class Molecule_0[Obj, Tpl](
       conn.modelTransformer(_model).updateStmts
     }
   } catch {
+    // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
   }
 }

@@ -24,7 +24,7 @@ object Retract extends AsyncTestSuite {
           (2, "b")
         ))
 
-        _ <- e1.map(_.retract)
+        x <- e1.retract
 
         _ <- Ns.int.str.get.map(_ ==> List(
           (2, "b")
@@ -75,7 +75,7 @@ object Retract extends AsyncTestSuite {
           ))
           _ <- Ref1.int1.get.map(_.sorted ==> List(10, 20))
 
-          _ <- e1.map(_.retract)
+          _ <- e1.retract
 
           _ <- Ns.int.RefSub1.int1.get.map(_ ==> List(
             (2, 20)
@@ -99,7 +99,7 @@ object Retract extends AsyncTestSuite {
           ))
           _ <- Ref1.int1.get.map(_.sorted ==> List(10, 11, 20, 21))
 
-          _ <- e1.map(_.retract)
+          _ <- e1.retract
 
           _ <- m(Ns.int.RefsSub1 * Ref1.int1).get.map(_ ==> List(
             (2, Seq(20, 21))
@@ -132,7 +132,7 @@ object Retract extends AsyncTestSuite {
           _ <- Ref1.int1.get.map(_.sorted ==> List(10, 11, 20, 21))
           _ <- Ref2.int2.get.map(_.sorted ==> List(100, 101, 110, 111, 200, 201, 210, 211))
 
-          _ <- e1.map(_.retract)
+          _ <- e1.retract
 
           _ <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).get.map(_ ==> List(
             (2, Seq(
@@ -150,14 +150,14 @@ object Retract extends AsyncTestSuite {
         // Create ref
         tx <- Ns.int(1).Ref1.int1(10).save
         List(e1, r1) = tx.eids
-        _ <- r1.map(_.retract)
+        _ <- r1.retract
         // Ref entity with attribute values is gone - no ref orphan exist
         _ <- Ns.int(1).ref1$.get.map(_.head ==> (1, None))
 
 
         // Create another ref
         tx2 <- Ns.int(2).Ref1.int1(20).save
-        List(e2, r2) = tx.eids
+        List(e2, r2) = tx2.eids
 
         // Retract attribute value from ref entity - ref entity still exist
         _ <- Ref1(r2).int1().update

@@ -31,7 +31,7 @@ object TestDbWith extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use current state with extra save tx as a test db "branch"
-        _ <- conn.map(_.testDbWith(Ns.int(4).getSaveStmts))
+        _ <- conn.flatMap(_.testDbWith(Ns.int(4).getSaveStmts))
 
         // Adjusted test state to work on
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
@@ -41,7 +41,7 @@ object TestDbWith extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 2, 3, 4))
 
         // Retract
-        _ <- e2.map(_.retract)
+        _ <- e2.retract
         _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4))
 
         // Save
@@ -66,7 +66,7 @@ object TestDbWith extends AsyncTestSuite {
 
         // Apply a set of transactions to get a
         // test db in a certain state
-        _ <- conn.map(_.testDbWith(
+        x <- conn.flatMap(_.testDbWith(
           // --> List(1, 2, 3, 4)
           Ns.int(4).getSaveStmts,
 
@@ -77,7 +77,7 @@ object TestDbWith extends AsyncTestSuite {
           Ns(e1).int(0).getUpdateStmts,
 
           // --> List(0, 3, 4, 5, 6)
-          e2.flatMap(_.getRetractStmts)
+          e2.getRetractStmts
         ))
 
         // Adjusted test state to work on
@@ -99,7 +99,7 @@ object TestDbWith extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 7, 8))
 
         // retract entity 3 (value 7)
-        _ <- e3.map(_.retract)
+        _ <- e3.retract
         _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 8))
 
         // Etc...
@@ -123,12 +123,12 @@ object TestDbWith extends AsyncTestSuite {
         save = Ns.int(4).getSaveStmts
         insert = Ns.int getInsertStmts List(5, 6)
         update = Ns(e1).int(0).getUpdateStmts
-        retract = e2.flatMap(_.getRetractStmts)
+        retract = e2.getRetractStmts
 
         // Apply a set of saved modularized transactions to get a
         // test db in a certain state.
         // Could be combined/ordered flexibly to bring the test db in various states.
-        _ <- conn.map(_.testDbWith(
+        _ <- conn.flatMap(_.testDbWith(
           save,
           insert,
           update,
@@ -151,7 +151,7 @@ object TestDbWith extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 7, 8))
 
         // retract entity 3 (value 7)
-        _ <- e3.map(_.retract)
+        _ <- e3.retract
         _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 8))
 
         // Etc...
@@ -177,7 +177,7 @@ object TestDbWith extends AsyncTestSuite {
           _ <- crud.read.map(_ ==> List(1, 2, 3))
 
           // Use state with extra save tx as a test db "branch"
-          _ = conn.map(_.testDbWith(Ns.int(4).getSaveStmts))
+          _ <- conn.flatMap(_.testDbWith(Ns.int(4).getSaveStmts))
 
           // Adjusted test state to work on
           _ <- crud.read.map(_ ==> List(1, 2, 3, 4))
@@ -189,7 +189,7 @@ object TestDbWith extends AsyncTestSuite {
           _ <- crud.read.map(_ ==> List(0, 2, 3, 4))
 
           // Discard test db and go back to live db
-          _ = conn.map(_.useLiveDb)
+          _ <- conn.map(_.useLiveDb)
 
           // Current live state is correctly unchanged
           _ <- crud.read.map(_ ==> List(1, 2, 3))
@@ -209,7 +209,7 @@ object TestDbWith extends AsyncTestSuite {
 
           // Apply a set of transactions to get a
           // test db in a certain state
-          _ <- conn.map(_.testDbWith(
+          _ <- conn.flatMap(_.testDbWith(
             // --> List(1, 2, 3, 4)
             Ns.int(4).getSaveStmts,
 
@@ -220,7 +220,7 @@ object TestDbWith extends AsyncTestSuite {
             Ns(e1).int(0).getUpdateStmts,
 
             // --> List(0, 3, 4, 5, 6)
-            e2.flatMap(_.getRetractStmts)
+            e2.getRetractStmts
           ))
 
           // Adjusted test state to work on
@@ -243,7 +243,7 @@ object TestDbWith extends AsyncTestSuite {
 
           // retract entity 3 (value 7)
           // We can mix domain updates with local changes here
-          _ <- e3.map(_.retract)
+          _ <- e3.retract
           _ <- crud.read.map(_ ==> List(4, 5, 6, 8))
 
           // Test updating non-existing value

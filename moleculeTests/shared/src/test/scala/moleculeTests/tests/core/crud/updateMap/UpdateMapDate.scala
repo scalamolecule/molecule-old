@@ -16,8 +16,7 @@ object UpdateMapDate extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.dateMap(str1 -> date1).save
-          eid = tx.eid
+          eid <- Ns.dateMap(str1 -> date1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).dateMap.assert(str2 -> date3).update
@@ -78,8 +77,7 @@ object UpdateMapDate extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.dateMap(str1 -> date1, str2 -> date2, str3 -> date3, str4 -> date4, str5 -> date5, str6 -> date6).save
-          eid = tx.eid
+          eid <- Ns.dateMap(str1 -> date1, str2 -> date2, str3 -> date3, str4 -> date4, str5 -> date5, str6 -> date6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).dateMap.replace(str6 -> date8).update
@@ -122,8 +120,7 @@ object UpdateMapDate extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.dateMap(str1 -> date1, str2 -> date2, str3 -> date3, str4 -> date4, str5 -> date5, str6 -> date6).save
-          eid = tx.eid
+          eid <- Ns.dateMap(str1 -> date1, str2 -> date2, str3 -> date3, str4 -> date4, str5 -> date5, str6 -> date6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).dateMap.retract(str6).update
@@ -153,8 +150,7 @@ object UpdateMapDate extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.dateMap(str1 -> date1, str2 -> date2).save
-          eid = tx.eid
+          eid <- Ns.dateMap(str1 -> date1, str2 -> date2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).dateMap(str1 -> date1).update

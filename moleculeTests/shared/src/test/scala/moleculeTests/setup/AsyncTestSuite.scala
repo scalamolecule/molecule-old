@@ -28,4 +28,9 @@ trait AsyncTestSuite extends TestSuite with CoreData
   def products[T](func: Future[Conn] => T): T = productsImpl(func)
   def seattle[T](func: Future[Conn] => T): T = seattleImpl(func)
   def mbrainz[T](func: Future[Conn] => T): T = mbrainzImpl(func)
+
+
+  // create delays between transactions to allow dates to be separate by at least 1 ms
+  def delay = (1 to 10000).sum
+
 }

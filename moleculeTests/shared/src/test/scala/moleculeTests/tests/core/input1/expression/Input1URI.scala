@@ -265,7 +265,6 @@ object Input1URI extends AsyncTestSuite {
             (uri3, Set(uri3, uri4, uri5))
           )
           for {
-            _ <- manyData
             _ <- Ns.uri.uris insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> all)
@@ -463,7 +462,6 @@ object Input1URI extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.uris.not(?)) // or m(Ns.uri.uris.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.uri.uris insert List(
               (uri1, Set(uri1, uri2, uri3)),
               (uri2, Set(uri2, uri3, uri4)),
@@ -623,7 +621,6 @@ object Input1URI extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.uri.uris_.not(?)) // or m(Ns.uri.uris.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.uri.uris insert List(
               (uri1, Set(uri1, uri2, uri3)),
               (uri2, Set(uri2, uri3, uri4)),

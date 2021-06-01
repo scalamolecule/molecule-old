@@ -73,14 +73,14 @@ trait Conn_Datomic extends Conn {
     qRaw(db, query, inputs)
 
 
-  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = {
+  private[molecule] def buildTxFnInstall(txFnDatomic: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)
     Util.list(Util.map(
-      read(":db/ident"), read(s":$txFn"),
+      read(":db/ident"), read(s":$txFnDatomic"),
       read(":db/fn"), function(Util.map(
         read(":lang"), "java",
         read(":params"), list(read("txDb") +: read("txMetaData") +: params.map(read): _*),
-        read(":code"), s"return $txFn(txDb, txMetaData, ${params.mkString(", ")});"
+        read(":code"), s"return $txFnDatomic(txDb, txMetaData, ${params.mkString(", ")});"
       ))
     ))
   }

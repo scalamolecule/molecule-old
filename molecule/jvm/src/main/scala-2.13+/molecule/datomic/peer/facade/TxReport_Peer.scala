@@ -45,25 +45,29 @@ case class TxReport_Peer(
       //      println("--------")
       //      allIds foreach println
       //      println("--------")
-      //      stmtss foreach println
+      //      stmts foreach println
       //      println("--------")
       //      assertStmts foreach println
 
-      if (allIds.size != assertStmts.size)
+      if (allIds.size != assertStmts.size) {
         throw new DatomicFacadeException(
           s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
         )
+      }
       val resolvedIds = assertStmts.zip(allIds).collect {
         case (Add(_: TempId, _, _, _), eid)    => eid
         case (Add("datomic.tx", _, _, _), eid) => eid
       }.distinct.toList
+
+      //      println("--------")
+      //      resolvedIds foreach println
+
       resolvedIds
     }
   }
 
   private lazy val txDataRaw: List[Datum] =
-    rawTxReport.get(Connection.TX_DATA)
-      .asInstanceOf[jList[_]].asScala.toList.asInstanceOf[List[Datum]]
+    rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].asScala.toList.asInstanceOf[List[Datum]]
 
   private def datom2string(d: datomic.db.Datum) =
     s"[${d.e}   ${d.a}   ${d.v}       ${d.tx}  ${d.added()}]"
@@ -80,6 +84,13 @@ case class TxReport_Peer(
        |  tempids   : ${rawTxReport.get(TEMPIDS).asInstanceOf[AnyRef]}
        |  eids      : $eids
        |}""".stripMargin
+
+  def printEidStats(): String = {
+    s"""
+       |
+       |  txData    : ${txDataRaw.map(datom2string).mkString("\n              ")}
+       |  tempids   : ${rawTxReport.get(TEMPIDS)}""".stripMargin
+  }
 
   /** Get database value before transaction. */
   lazy val dbBefore: Database = rawTxReport.get(Connection.DB_BEFORE).asInstanceOf[Database]

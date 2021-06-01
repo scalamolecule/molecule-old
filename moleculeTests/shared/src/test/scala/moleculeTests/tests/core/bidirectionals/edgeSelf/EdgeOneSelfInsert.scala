@@ -57,7 +57,7 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           */
 
           // lovesBen edge points to Ben
-          _ <- lovesBen.map(_.touchMax(1) ==> Map(
+          _ <- lovesBen.touchMax(1).map(_ ==> Map(
             ":db/id" -> lovesBen,
             ":Loves/person" -> ben,
             ":Loves/weight" -> 7,
@@ -65,14 +65,14 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           ))
 
           // Ben points to edge benLoves
-          _ <- ben.map(_.touchMax(1) ==> Map(
+          _ <- ben.touchMax(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
 
           // benLoves edge is ready to point back to a base entity (Ann)
-          _ <- benLoves.map(_.touchMax(1) ==> Map(
+          _ <- benLoves.touchMax(1).map(_ ==> Map(
             ":db/id" -> benLoves,
             ":Loves/weight" -> 7,
             ":molecule_Meta/otherEdge" -> lovesBen // To be able to find the other edge later

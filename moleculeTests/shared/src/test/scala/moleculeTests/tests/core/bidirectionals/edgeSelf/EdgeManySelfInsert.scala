@@ -46,8 +46,7 @@ object EdgeManySelfInsert extends AsyncTestSuite {
         // Can't save nested edges without including target entity
         (Person.name.Knows.*(Knows.weight).name insert List(("Ben", List(7, 8), "Joe"))).recover {
           case VerifyModelException(err) =>
-            err ==> "Got the exception molecule.core.ops.exception.VerifyModelException: " +
-              s"[noNestedEdgesWithoutTarget]  Nested edge ns `Knows` should link to " +
+            err ==> s"[noNestedEdgesWithoutTarget]  Nested edge ns `Knows` should link to " +
               s"target ns within the nested group of attributes."
         }
       }

@@ -17,8 +17,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.int(2).save
-          eid = tx1.eid
+          eid <- Ns.int(2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).int(1).update
@@ -51,8 +50,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.int(int2).save
-          eid = tx1.eid
+          eid <- Ns.int(int2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).int(int1).update
@@ -82,8 +80,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(1).save
-          eid = tx1.eid
+          eid <- Ns.ints(1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).ints.assert(2).update
@@ -125,8 +122,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(1, 2, 3, 4, 5, 6).save
-          eid = tx1.eid
+          eid <- Ns.ints(1, 2, 3, 4, 5, 6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).ints.replace(6 -> 8).update
@@ -155,11 +151,11 @@ object UpdateInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).ints.replace(7 -> 8, 8 -> 8).update""").check("",
+          _ = compileError("""Ns(eid).ints.replace(7 -> 8, 8 -> 8).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n8")
 
-          _ = compileError(            """Ns(eid).ints.replace(Seq(7 -> 8, 8 -> 8)).update""").check("",
+          _ = compileError("""Ns(eid).ints.replace(Seq(7 -> 8, 8 -> 8)).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n8")
         } yield ()
@@ -167,8 +163,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(1, 2, 3, 4, 5, 6).save
-          eid = tx1.eid
+          eid <- Ns.ints(1, 2, 3, 4, 5, 6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).ints.retract(6).update
@@ -198,8 +193,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(2, 3).save
-          eid = tx1.eid
+          eid <- Ns.ints(2, 3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).ints(1).update
@@ -237,8 +231,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(int1).save
-          eid = tx1.eid
+          eid <- Ns.ints(int1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).ints.assert(int2).update
@@ -284,8 +277,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(int1, int2, int3, int4, int5, int6).save
-          eid = tx1.eid
+          eid <- Ns.ints(int1, int2, int3, int4, int5, int6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).ints.replace(int6 -> int8).update
@@ -319,11 +311,11 @@ object UpdateInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).ints.replace(int7 -> int8, int8 -> int8).update""").check("",
+          _ = compileError("""Ns(eid).ints.replace(int7 -> int8, int8 -> int8).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n__ident__int8")
 
-          _ = compileError(            """Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> int8)).update""").check("",
+          _ = compileError("""Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> int8)).update""").check("",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n__ident__int8")
 
@@ -348,8 +340,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(int1, int2, int3, int4, int5, int6).save
-          eid = tx1.eid
+          eid <- Ns.ints(int1, int2, int3, int4, int5, int6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).ints.retract(int6).update
@@ -385,8 +376,7 @@ object UpdateInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.ints(int2, int3).save
-          eid = tx1.eid
+          eid <- Ns.ints(int2, int3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).ints(int1).update

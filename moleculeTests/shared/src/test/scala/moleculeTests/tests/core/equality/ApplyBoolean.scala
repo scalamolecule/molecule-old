@@ -115,6 +115,12 @@ object ApplyBoolean extends AsyncTestSuite {
 
       "Mandatory, single attr coalesce" - core { implicit conn =>
         for {
+          _ <- Ns.int.bools$ insert List(
+            (1, Some(Set(true))),
+            (2, Some(Set(false))),
+            (3, Some(Set(false, true))),
+            (4, None)
+          )
           // OR semantics
 
           // Varargs

@@ -5,7 +5,7 @@ import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import utest._
+import utest.{compileError, _}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object UpdateBigDecimal extends AsyncTestSuite {
@@ -16,8 +16,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigDec(bigDec2).save
-          eid = tx1.eid
+          eid <- Ns.bigDec(bigDec2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).bigDec(bigDec1).update
@@ -46,8 +45,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigDecs(bigDec1).save
-          eid = tx1.eid
+          eid <- Ns.bigDecs(bigDec1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).bigDecs.assert(bigDec2).update
@@ -91,23 +89,9 @@ object UpdateBigDecimal extends AsyncTestSuite {
         } yield ()
       }
 
-
-      "replace" - core { implicit conn =>
-        // Can't replace duplicate values
-
-        compileError(          """Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> bigDec8).update""").check("",
-          "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
-            "\n__ident__bigDec8")
-
-        compileError(          """Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> bigDec8)).update""").check("",
-          "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
-            "\n__ident__bigDec8")
-      }
-
       "replace" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigDecs(bigDec1, bigDec2, bigDec3, bigDec4, bigDec5, bigDec6).save
-          eid = tx1.eid
+          eid <- Ns.bigDecs(bigDec1, bigDec2, bigDec3, bigDec4, bigDec5, bigDec6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).bigDecs.replace(bigDec6 -> bigDec8).update
@@ -139,6 +123,17 @@ object UpdateBigDecimal extends AsyncTestSuite {
           _ <- Ns(eid).bigDecs.replace(Seq[(BigDecimal, BigDecimal)]()).update
           _ <- Ns.bigDecs.get.map(_.head.toList.sorted ==> List(bigDec4, bigDec5, bigDec6, bigDec7, bigDec8, bigDec9))
 
+
+          // Can't replace duplicate values
+
+          _ = compileError("""Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> bigDec8).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
+              "\n__ident__bigDec8")
+
+          _ = compileError("""Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> bigDec8)).update""").check("",
+            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
+              "\n__ident__bigDec8")
+
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = bigDec8
 
@@ -157,8 +152,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigDecs(bigDec1, bigDec2, bigDec3, bigDec4, bigDec5, bigDec6).save
-          eid = tx1.eid
+          eid <- Ns.bigDecs(bigDec1, bigDec2, bigDec3, bigDec4, bigDec5, bigDec6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).bigDecs.retract(bigDec6).update
@@ -194,8 +188,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.bigDecs(bigDec2, bigDec3).save
-          eid = tx1.eid
+          eid <- Ns.bigDecs(bigDec2, bigDec3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).bigDecs(bigDec1).update

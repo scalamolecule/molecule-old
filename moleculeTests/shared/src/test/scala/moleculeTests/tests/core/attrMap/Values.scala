@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.attrMap
 
 import molecule.datomic.api.out2._
+import moleculeTests.tests.core.attrMap.Pairs.testData
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -11,6 +12,7 @@ object Values extends Base {
 
     "Type checks" - core { implicit conn =>
       for {
+        _ <- testData
         // All mapped values
         _ <- Ns.int.strMap.get.map(_ ==> List(
           (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
@@ -70,6 +72,7 @@ object Values extends Base {
 
     "Equality" - core { implicit conn =>
       for {
+        _ <- testData
         // As with normal attributes we can search for values by applying an argument.
         // All asserted keyed values are searched to find a match and matched
         // key/value pairs are returned
@@ -130,6 +133,7 @@ object Values extends Base {
 
     "Regex/partial search" - core { implicit conn =>
       for {
+        _ <- testData
         // We can search text strings with regular expressions
         // Note that searches are case-sensitive ("there" not included)
         _ <- Ns.int.strMap(".*He.*").get.map(_ ==> List(
@@ -163,6 +167,7 @@ object Values extends Base {
 
     "Negation" - core { implicit conn =>
       for {
+        _ <- testData
         // String
 
         // Intellij wrongly indicates an error when using `!=`
@@ -281,6 +286,7 @@ object Values extends Base {
 
     "Comparison" - core { implicit conn =>
       for {
+        _ <- testData
         // String
 
         // Values lexically after 'Hej'
@@ -480,6 +486,7 @@ object Values extends Base {
 
     "Multiple values (OR semantics)" - core { implicit conn =>
       for {
+        _ <- testData
         // String
 
         // We can look for multiple strings in various ways

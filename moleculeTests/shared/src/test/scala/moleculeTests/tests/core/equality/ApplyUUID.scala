@@ -47,6 +47,12 @@ object ApplyUUID extends AsyncTestSuite {
 
       "Tacit" - core { implicit conn =>
         for {
+          _ <- Ns.int.uuid$ insert List(
+            (1, Some(uuid1)),
+            (2, Some(uuid2)),
+            (3, Some(uuid3)),
+            (4, None)
+          )
           // Varargs
           _ <- Ns.int.uuid_.apply(uuid1).get.map(_ ==> List(1))
           _ <- Ns.int.uuid_.apply(uuid2).get.map(_ ==> List(2))

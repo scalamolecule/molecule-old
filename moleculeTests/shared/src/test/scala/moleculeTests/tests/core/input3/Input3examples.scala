@@ -117,6 +117,16 @@ object Input3examples extends AsyncTestSuite {
     "2 inputs" - core { implicit conn =>
       val inputMolecule = m(Ns.int.longs_(?).enums_(?).uris_(?))
       for {
+        _ <-  Ns.int.longs$.enums$.uris$ insert List(
+          (1, Some(Set(long1, long2, long3)), Some(Set(enum1, enum2, enum3)), Some(Set(uri1, uri2, uri3))),
+          (2, Some(Set(long2, long3, long4)), Some(Set(enum2, enum3, enum4)), Some(Set(uri2, uri3, uri4))),
+          (3, Some(Set(long3, long4, long5)), Some(Set(enum3, enum4, enum5)), Some(Set(uri3, uri4, uri5))),
+
+          (4, Some(Set(long1, long2, long3)), None, None),
+          (5, None, Some(Set(enum1, enum2, enum3)), None),
+          (6, None, None, Some(Set(uri1, uri2, uri3))),
+          (7, None, None, None)
+        )
         _ <- inputMolecule(
           List(Set(1L, 2L), Set(5L)), // 1, 3, 4
           List(Set("enum1")), // 1

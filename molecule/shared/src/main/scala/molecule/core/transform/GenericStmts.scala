@@ -1,6 +1,7 @@
 package molecule.core.transform
 
 import java.util.Date
+import java.util.concurrent.atomic.AtomicInteger
 import molecule.core.ast.elements._
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
@@ -162,11 +163,12 @@ abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
     case null => err("__tempId", "Attribute name unexpectedly null.")
     case "tx" => datomicTx
     case _    =>
+      val nextId = conn.tempId.next
       if (attr.contains('_')) {
         // extract "partition" from ":partition_Namespace/attr"
-        TempId(":" + attr.substring(1).split("(?=_)").head, conn.tempId.next)
+        TempId(":" + attr.substring(1).split("(?=_)").head, nextId)
       } else {
-        TempId(":db.part/user", conn.tempId.next)
+        TempId(":db.part/user", nextId)
       }
   }
 

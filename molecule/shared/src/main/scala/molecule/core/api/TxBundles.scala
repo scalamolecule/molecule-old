@@ -100,7 +100,9 @@ trait TxBundles extends Helpers {
       _ <- conn.testDbWith()
 
       // Print tx report to console
-      _ <- conn.transact(Future.sequence(stmtss).map(_.flatten)).map(_.inspect)
+      _ <- conn.transact(
+        Future.sequence(stmtss).map(_.flatten)
+      ).map(_.inspect)
     } yield conn.useLiveDb
   }
 }

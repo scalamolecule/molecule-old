@@ -224,7 +224,7 @@ object Save extends AsyncTestSuite {
       for {
         tx <- Ns.str("273 Broadway").Ref1.int1(10700).str1("New York").Ref2.str2("USA").save
         List(addressE, streetE, countyE) = tx.eids
-        _ <- addressE.map(_.touch ==> Map(
+        _ <- addressE.touch.map(_ ==> Map(
           ":db/id" -> addressE,
           ":Ns/ref1" -> Map(
             ":db/id" -> streetE,

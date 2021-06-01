@@ -276,7 +276,7 @@ object OneOther extends AsyncTestSuite {
         ))
 
         // Retract Rex and all references to/from Ben
-        _ <- rex.map(_.retract)
+        _ <- rex.retract
 
         // Rex remains and both references retracted
         _ <- Person.name.get.map(_ ==> List("Ben"))

@@ -1,13 +1,11 @@
 package molecule.datomic.peer.facade
 
 import java.util.{Date, UUID, Collection => jCollection}
-import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
 import molecule.datomic.base.api.DatomicEntityImpl
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.language.existentials
-//import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Datomic Entity facade for peer api.
@@ -57,15 +55,16 @@ case class DatomicEntity_Peer(
 
       case e: datomic.Entity =>
         if (depth < maxDepth) {
-          Future(e.get(":db/id")).map { eid =>
+          Future(e.get(":db/id")).flatMap { eid =>
             val ent = DatomicEntity_Peer(e, conn, eid)
             tpe match {
               case "Map"  => ent.asMap(depth + 1, maxDepth)
               case "List" => ent.asList(depth + 1, maxDepth)
             }
           }
+
         } else {
-          Future(e.get(":db/id")).map(_.asInstanceOf[Long])
+          Future(e.get(":db/id").asInstanceOf[Long])
         }
 
       case set: clojure.lang.PersistentHashSet =>
@@ -73,7 +72,7 @@ case class DatomicEntity_Peer(
           set.asScala.toList.map(v1 =>
             toScala(key, Some(v1), depth, maxDepth, tpe)
           )
-        ).map(sortList)
+        ).flatMap(sortList)
 
       case col: jCollection[_] =>
         Future(
@@ -96,7 +95,7 @@ case class DatomicEntity_Peer(
         "Unexpected Datalog type to convert: " + unexpected.getClass.toString)
     }
     vOpt match {
-      case Some(v) => Future(v)
+      case Some(v) => retrieve(v)
       case _       => rawValue(key).flatMap(retrieve)
     }
   }

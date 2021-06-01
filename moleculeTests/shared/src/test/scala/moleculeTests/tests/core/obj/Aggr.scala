@@ -24,6 +24,7 @@ object Aggr extends AsyncTestSuite with Helpers {
     import scala.concurrent.ExecutionContext.Implicits.global
     "min, max, rand, sample, median" - core { implicit conn =>
       for {
+        _ <- data
         // For any property
 
         _ <- Ns.int(min).getObj.map(_.int ==> 1)
@@ -48,6 +49,7 @@ object Aggr extends AsyncTestSuite with Helpers {
 
     "sum" - core { implicit conn =>
       for {
+        _ <- data
         // For number properties
 
         _ <- Ns.int(sum).getObj.map(_.int ==> 6)
@@ -61,6 +63,7 @@ object Aggr extends AsyncTestSuite with Helpers {
 
     "count, countDistinct" - core { implicit conn =>
       for {
+        _ <- data
         // For Int properties
 
         _ <- Ns.int(count).getObj.map(_.int ==> 3)
@@ -81,6 +84,7 @@ object Aggr extends AsyncTestSuite with Helpers {
 
     "avg, variance, stddev" - core { implicit conn =>
       for {
+        _ <- data
         // For Double properties
 
         _ <- Ns.double(avg).getObj.map(_.double ==> 2.0)
@@ -101,6 +105,7 @@ object Aggr extends AsyncTestSuite with Helpers {
 
     "Aggregates returning multiple values" - core { implicit conn =>
       for {
+        _ <- data
         // Can be accessed as tuple data only
 
         _ <- Ns.int(min(2)).getObj.map(_.int).recover { case MoleculeException(err, _) =>

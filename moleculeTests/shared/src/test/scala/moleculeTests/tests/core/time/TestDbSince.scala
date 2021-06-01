@@ -23,14 +23,6 @@ object TestDbSince extends AsyncTestSuite {
     }
   }
 
-  //  // Seems like a bug that we can't apply filter to with-db with peer-server
-  //  // respect base setting
-  //  tests match {
-  //    case 1 =>
-  //    case 3 =>
-  //    case _ => tests = 13
-  //    }
-
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -46,7 +38,7 @@ object TestDbSince extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
 
         // since tx report
-        _ <- conn.map(_.testDbSince(txR1))
+        _ <- conn.flatMap(_.testDbSince(txR1))
         _ <- Ns.int.get.map(_ ==> List(2, 3, 4, 5))
 
         // since t
@@ -76,7 +68,7 @@ object TestDbSince extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
 
         // Use state accumulated since tx1 (exclusive) as a test db "branch"
-        _ <- conn.map(_.testDbSince(txR1))
+        _ <- conn.flatMap(_.testDbSince(txR1))
 
         // Test state since tx1 (exclusive)
         _ <- Ns.int.get.map(_.sorted ==> List(2, 3))
@@ -96,7 +88,7 @@ object TestDbSince extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5, 6))
 
         // Retract
-        _ <- e3.map(_.retract)
+        _ <- e3.retract
         _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6))
 
         // Live state unaffected
@@ -107,33 +99,38 @@ object TestDbSince extends AsyncTestSuite {
 
 
     "since: testing domain" - core { implicit conn =>
+      // Some domain object
       val crud = Crud
       for {
         (txR1, txR2, txR3, e2, e3) <- data
-
-        // Some domain object
 
         // Live state
         _ <- crud.read.map(_ ==> List(1, 2, 3))
 
         // Use state accumulated since tx1 (exclusive) as a test db "branch"
-        _ <- conn.map(_.testDbSince(txR1))
+        _ <- conn.flatMap(_.testDbSince(txR1))
 
         // Test state since tx1 (exclusive)
         _ <- crud.read.map(_ ==> List(2, 3))
 
-        // Update test db through domain process
+        // Add data through domain
         _ <- crud.create(4, 5)
 
         // Test db now has 4 values
         _ <- crud.read.map(_ ==> List(2, 3, 4, 5))
 
-        // Mutate test db through domain object
+        // Update data through domain
+        _ <- crud.update(5 -> 6)
+
+        // Test values have updated
+        _ <- crud.read.map(_ ==> List(2, 3, 4, 6))
+
+        // Retract data through domain
         _ <- crud.delete(1) // not from test db
         _ <- crud.delete(3, 4) // from test db
 
         // Updated test state
-        _ <- crud.read.map(_ ==> List(2, 5))
+        _ <- crud.read.map(_ ==> List(2, 6))
 
         // Discard test db and go back to live db
         _ <- conn.map(_.useLiveDb)

@@ -16,8 +16,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.intMap("str1" -> 1).save
-          eid = tx.eid
+          eid <- Ns.intMap("str1" -> 1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).intMap.assert("str2" -> 3).update
@@ -58,8 +57,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.intMap("str1" -> 1, "str2" -> 2, "str3" -> 3, "str4" -> 4, "str5" -> 5, "str6" -> 6).save
-          eid = tx.eid
+          eid <- Ns.intMap("str1" -> 1, "str2" -> 2, "str3" -> 3, "str4" -> 4, "str5" -> 5, "str6" -> 6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).intMap.replace("str6" -> 8).update
@@ -110,8 +108,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.intMap("str1" -> 1, "str2" -> 2, "str3" -> 3, "str4" -> 4, "str5" -> 5, "str6" -> 6).save
-          eid = tx.eid
+          eid <- Ns.intMap("str1" -> 1, "str2" -> 2, "str3" -> 3, "str4" -> 4, "str5" -> 5, "str6" -> 6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).intMap.retract("str6").update
@@ -141,8 +138,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.intMap("str1" -> 1, "str2" -> 2).save
-          eid = tx.eid
+          eid <- Ns.intMap("str1" -> 1, "str2" -> 2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).intMap("str1" -> 1).update
@@ -193,8 +189,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.intMap(str1 -> int1).save
-          eid = tx.eid
+          eid <- Ns.intMap(str1 -> int1).save.map(_.eid)
 
           // Add pair
           _ <- Ns(eid).intMap.assert(str2 -> int3).update
@@ -255,8 +250,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.intMap(str1 -> int1, str2 -> int2, str3 -> int3, str4 -> int4, str5 -> int5, str6 -> int6).save
-          eid = tx.eid
+          eid <- Ns.intMap(str1 -> int1, str2 -> int2, str3 -> int3, str4 -> int4, str5 -> int5, str6 -> int6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).intMap.replace(str6 -> int8).update
@@ -299,8 +293,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.intMap(str1 -> int1, str2 -> int2, str3 -> int3, str4 -> int4, str5 -> int5, str6 -> int6).save
-          eid = tx.eid
+          eid <- Ns.intMap(str1 -> int1, str2 -> int2, str3 -> int3, str4 -> int4, str5 -> int5, str6 -> int6).save.map(_.eid)
 
           // Remove pair by key
           _ <- Ns(eid).intMap.retract(str6).update
@@ -330,8 +323,7 @@ object UpdateMapInt extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.intMap(str1 -> int1, str2 -> int2).save
-          eid = tx.eid
+          eid <- Ns.intMap(str1 -> int1, str2 -> int2).save.map(_.eid)
 
           // Apply value (replaces all current values!)
           _ <- Ns(eid).intMap(str1 -> int1).update

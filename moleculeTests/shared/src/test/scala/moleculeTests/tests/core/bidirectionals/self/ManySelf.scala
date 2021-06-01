@@ -456,7 +456,7 @@ object ManySelf extends AsyncTestSuite {
         _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
 
         // Retract Ann and all her friendships
-        _ <- ann.map(_.retract)
+        _ <- ann.retract
 
         // Ann doesn't exist anymore
         _ <- Person.name("Ann").get.map(_ ==> List())

@@ -62,9 +62,9 @@ trait TxFunctions {
     * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
     */
   def transactFn(
-    txFnCall: Seq[Statement],
+    txFnCall: Future[Seq[Statement]],
     txMolecules: Molecule*
-  ): Future[TxReport] = macro TxFunctionCall.txFnCall
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = macro TxFunctionCall.txFnCall
 
 
   /** Inspect tx function invocation
@@ -102,9 +102,11 @@ trait TxFunctions {
     * @param txMolecules Optional tx meta data molecules
     */
   def inspectTransactFn(
-    txFnCall: Seq[Statement],
+    txFnCall: Future[Seq[Statement]],
     txMolecules: Molecule*
-  ): Unit = macro TxFunctionCall.inspectTxFnCall
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = macro TxFunctionCall.inspectTxFnCall
+
+
 }
 
 
@@ -141,26 +143,26 @@ object TxFunctions extends Helpers with JavaUtil {
 
   def txFnException(e: Throwable): String = "Unexpected error when invoking transaction function:\n" + e.getCause
 
-  val redundant = "molecule.core.macros.exception.TxFnException: ".size
+  val redundant = "molecule.core.macros.exception.TxFnException: ".length
 
 
   /** Invoke transaction function call synchronously (blocks)
     *
     * See also non-blocking asynchronous implementation
     * */
-  private[molecule] def txFnCall(
-    txFn: String,
+  def txFnCall(
+    txFnDatomic: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
+  )(implicit futConn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
     for {
-      conn <- conn
+      conn <- futConn
 
       // Install transaction function if not installed yet
-      txFns <- conn.db.pull("[*]", s":$txFn")
-      _ <- if (txFns.size() == 1) conn.transactRaw(conn.buildTxFnInstall(txFn, args)) else Future.unit
+      txFns <- conn.db.pull("[*]", s":$txFnDatomic")
+      _ <- if (txFns.size() == 1) conn.transactRaw(conn.buildTxFnInstall(txFnDatomic, args)) else Future.unit
 
-      txStmts <- if (txMolecules.nonEmpty) {
+      txMetaStmts <- if (txMolecules.nonEmpty) {
         val txElements = txMolecules.flatMap { mol =>
           mol._model.elements.flatMap {
             case Composite(elements) => elements
@@ -172,9 +174,9 @@ object TxFunctions extends Helpers with JavaUtil {
       } else Future(Nil)
 
       res <- {
-        // Build transaction function call clause
+        // Build raw function call for Datomic using untyped function
         val txFnInvocationClauses = list(
-          list(s":$txFn" +: txStmts +: args.map(_.asInstanceOf[AnyRef]): _*)
+          list(s":$txFnDatomic" +: txMetaStmts +: args.map(_.asInstanceOf[AnyRef]): _*)
         )
 
         // Invoke transaction function and retrieve result
@@ -184,36 +186,36 @@ object TxFunctions extends Helpers with JavaUtil {
   } catch {
     case e: ExecutionExc => e.getMessage match {
       case msg if msg.startsWith("java.lang.NoClassDefFoundError: scala") =>
-        Future.failed(new TxFnException(excMissingScalaJar(e)))
+        Future.failed(TxFnException(excMissingScalaJar(e)))
 
       case msg if msg.startsWith("java.lang.NoClassDefFoundError: molecule") =>
-        Future.failed(new TxFnException(excMissingMoleculeClass(e)))
+        Future.failed(TxFnException(excMissingMoleculeClass(e)))
 
       case msg if msg.startsWith("java.lang.NoSuchMethodError: molecule") =>
-        Future.failed(new TxFnException(excMissingMoleculeMethod(e)))
+        Future.failed(TxFnException(excMissingMoleculeMethod(e)))
 
       case _ =>
-        Future.failed(new TxFnException(e.getMessage.drop(redundant)))
+        Future.failed(TxFnException(e.getMessage.drop(redundant)))
     }
 
     case NonFatal(e) =>
-      Future.failed(new TxFnException(e.getMessage.drop(redundant)))
+      Future.failed(TxFnException(e.getMessage.drop(redundant)))
   }
 
 
-  private[molecule] def inspectTxFnCall(
+  def inspectTxFnCall(
     txFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
   )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = {
-    conn.map { conn2 =>
+    for{
       // Use temporary branch of db to not changing any live data
-      conn2.testDbWith()
+      _ <- conn.map(_.testDbWith())
       // Print tx report to console
-//      txFnCall(txFn, txMolecules, args: _*)(conn, ec).foreach(_.inspect)
-      txFnCall(txFn, txMolecules, args: _*).foreach(_.inspect)
-      conn2.useLiveDb
-    }
+      _ <- txFnCall(txFn, txMolecules, args: _*).map(_.inspect)
+      // Go back to live db
+      _ <- conn.map(_.useLiveDb)
+    } yield ()
   }
 }
 

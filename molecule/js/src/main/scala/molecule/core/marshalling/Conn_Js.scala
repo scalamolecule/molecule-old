@@ -109,7 +109,7 @@ trait Conn_Js extends Conn with ColOps with Helpers {
   override def _index(model: Model)
                      (implicit ec: ExecutionContext): Future[ util.Collection[util.List[AnyRef]] ]= ???
 
-  private[molecule] override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
+  override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
 
   override def inspect(
     clazz: String,

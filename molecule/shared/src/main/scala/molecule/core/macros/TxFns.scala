@@ -16,24 +16,28 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
   import c.universe._
 
-  //  val x = InspectMacro("TxFns", 1, 3, mkError = true)
-  //  val x = InspectMacro("TxFns", 1, 3)
-  //  val x = InspectMacro("TxFns", 1, 0)
+  //  val tfm = InspectMacro("TxFns", 1, 3, mkError = true)
+  val tfm = InspectMacro("TxFns", 1, 3)
+  //  val tfm = InspectMacro("TxFns", 1, 0)
 
   def prepareForDatalog(annottees: Tree*): Tree = annottees match {
     case List(obj: ModuleDef) => obj match {
       case q"object $txFnContainer { ..$typedTxFns }" =>
         // Add untyped tx functions with extra initial db arg
-        q"""
-         object $txFnContainer {
-           import molecule.datomic.base.ast.transactionModel.Statement
-           ..$typedTxFns
-           ..${typedTxFns.map(untypedTxFn(_))}
-         }
-        """
+        val t =
+          q"""
+              object $txFnContainer {
+                // Typed tx functions as-is
+                ..$typedTxFns
 
-      case _ =>
-        c.abort(c.enclosingPosition, s"No self-type allowed in @TxFns-annotated container.")
+                // Untyped tx functions to be saved in Datomic and called with `transactFn(<txFn>(<args..>))`
+                ..${typedTxFns.map(untypedTxFn(_))}
+              }
+          """
+        //       tfm(1, t)
+        t
+
+      case _ => c.abort(c.enclosingPosition, s"No self-type allowed in @TxFns-annotated container.")
     }
 
     case _ => c.abort(
@@ -43,30 +47,48 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
   def untypedTxFn(element: Tree): Tree = element match {
 
-    case q"def $txFn(..$args)(implicit $conn: Conn): Seq[Statement] = {..$txFnBody}" =>
-      val txFnName = TermName(txFn.toString + "__txfn")
+    case q"def $txFn(..$args)(implicit $conn: Future[Conn], $ec: ExecutionContext): Future[Seq[Statement]] = {..$txFnBody}" =>
+      val txFnName = TermName(txFn.toString + "__txFnDatomic")
 
       /** Transaction function is invoked by Datomic with the current
         * database `txDb` invoked as first argument:
         * */
       q"""
-        def $txFnName(
-          txDb: AnyRef,
-          txMetaData: AnyRef,
-          ..${args.map(untypedParam(_))}
-        ): AnyRef = {
-          implicit val conn: Conn = molecule.datomic.peer.facade.Conn_Peer(txDb)
-          ..${args.map(typedParam(_))}
-          ..${txFnBody.init}
-          val _txFnStmts = ${txFnBody.last}
-          val _txMetaDataStmts = txMetaData.asInstanceOf[Seq[Statement]]
-          conn.stmts2java(_txFnStmts ++ _txMetaDataStmts)
-        }
+          def $txFnName(
+            txDb: AnyRef,
+            txMetaStmtsRaw: AnyRef,
+            ..${args.map(untypedParam(_))}
+          ): AnyRef = {
+            import molecule.datomic.peer.facade.Conn_Peer
+            import molecule.datomic.base.ast.transactionModel.Statement
+            import scala.concurrent.duration.DurationInt
+            import scala.concurrent.ExecutionContext.Implicits.global
+            import scala.concurrent.{Await, Future}
+
+            // Make connection with current db available to tx function code
+            val conn: Conn = Conn_Peer(txDb)
+            implicit val futConn: Future[Conn] = Future(conn)
+
+            // Typed arguments
+            ..${args.map(typedParam(_))}
+
+            // Execute body of tx function
+            val futTxFnStmts: Future[Seq[Statement]] = {
+              ..$txFnBody
+            }
+            val txFnStmts = Await.result(futTxFnStmts, 1.minute)
+
+            // Optional tx meta data attached to the transaction
+            val txMetaStmts = txMetaStmtsRaw.asInstanceOf[Seq[Statement]]
+
+            // Convert Molecule statements to java statements for Datomic
+            conn.stmts2java(txFnStmts ++ txMetaStmts)
+         }
       """
 
     case other => c.abort(c.enclosingPosition,
       s"""@txFns-annotated container only allows tx functions with the following signature constraints:
-         |def <txFnName>(<args..>)(implicit conn: Future[Conn]): Seq[Statement] = { <body> }
+         |def <txFnName>(<args..>)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = { <body> }
          |Found:
          |$other
       """.stripMargin)
@@ -78,7 +100,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
   }
 
   def typedParam(arg: Tree): Tree = arg match {
-    case ValDef(_, TermName(param), tpe, _) => q"val ${TermName(param)}: $tpe = ${TermName(param + "0")}.asInstanceOf[$tpe]"
-    case other                              => c.abort(c.enclosingPosition, s"Unrecognized parameter of tx fn: " + other)
+    case vd@ValDef(_, TermName(param), tpe, _) => q"val ${TermName(param)}: $tpe = ${TermName(param + "0")}.asInstanceOf[$tpe]"
+    case other                                 => c.abort(c.enclosingPosition, s"Unrecognized parameter of tx fn: " + other)
   }
 }

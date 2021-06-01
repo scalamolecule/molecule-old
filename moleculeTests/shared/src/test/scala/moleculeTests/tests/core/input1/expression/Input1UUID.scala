@@ -268,7 +268,6 @@ object Input1UUID extends AsyncTestSuite {
             (uuid3, Set(uuid3, uuid4, uuid5))
           )
           for {
-            _ <- manyData
             _ <- Ns.uuid.uuids insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> all)
@@ -472,7 +471,6 @@ object Input1UUID extends AsyncTestSuite {
             (uuid3, Set(uuid3, uuid4, uuid5))
           )
           for {
-            _ <- manyData
             _ <- Ns.uuid.uuids insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> List(Set(uuid1, uuid2, uuid3, uuid4, uuid5)))
@@ -629,7 +627,6 @@ object Input1UUID extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.uuid.uuids_.not(?)) // or m(Ns.uuid.uuids.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.uuid.uuids insert List(
               (uuid1, Set(uuid1, uuid2, uuid3)),
               (uuid2, Set(uuid2, uuid3, uuid4)),

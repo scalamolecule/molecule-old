@@ -101,6 +101,33 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     conn.transact(getRetractStmts)
   }
 
+  def retract(txMeta: Molecule)
+             (implicit ec: ExecutionContext): Future[TxReport] = try {
+    val retractStmts = Seq(RetractEntity(eid))
+    val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
+    VerifyModel(model, "save") // can throw exception
+    conn.transact(
+      conn.modelTransformer(model).saveStmts.map(txMetaStmts => retractStmts ++ txMetaStmts)
+    )
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+  def inspectRetract(txMeta: Molecule)
+                    (implicit ec: ExecutionContext): Future[Unit] = try {
+    val retractStmts = Seq(RetractEntity(eid))
+    val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
+    VerifyModel(model, "save") // can throw exception
+    conn.modelTransformer(model).saveStmts.map(txMetaStmts =>
+      conn.inspect(
+        "Inspect `retract` on entity with tx meta data", 1)(
+        1, retractStmts ++ txMetaStmts
+      )
+    )
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
   def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = {
     Future(List(RetractEntity(eid)))
   }
@@ -111,58 +138,32 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     }
   }
 
-  def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): RetractMolecule =
-    RetractMoleculeImpl(txMeta)
-
-  case class RetractMoleculeImpl(txMeta: Molecule)
-                                (implicit ec: ExecutionContext) extends RetractMolecule {
-    private val stmts: Future[Seq[Statement]] = try {
-      val retractStmts = Seq(RetractEntity(eid))
-      val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
-      VerifyModel(model, "save") // can throw exception
-      conn.modelTransformer(model).saveStmts.map(txMetaStmts => retractStmts ++ txMetaStmts)
-    } catch {
-      case NonFatal(exc) => Future.failed(exc)
-    }
-
-    // todo: check that failed future propagates correctly
-    def retract(implicit ec: ExecutionContext): Future[TxReport] = {
-      conn.transact(stmts)
-    }
-
-    def inspectRetract: Unit = {
-      conn.inspect("Inspect `retract` on entity with tx meta data", 1)(1, stmts)
-    }
-  }
 
   // Touch - traverse entity attributes ========================================
 
-  def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] = asMap(1, 5)
+  def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+    asMap(1, 5)
 
-  def touchMax(maxDepth: Int)
-              (implicit ec: ExecutionContext): Future[Map[String, Any]] = asMap(1, maxDepth)
+  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+    asMap(1, maxDepth)
 
   def touchQuoted(implicit ec: ExecutionContext): Future[String] =
-    Future(quote(asMap(1, 5)))
+    asMap(1, 5).map(quote(_))
 
-  def touchQuotedMax(maxDepth: Int)
-                    (implicit ec: ExecutionContext): Future[String] =
-    Future(quote(asMap(1, maxDepth)))
-
+  def touchQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
+    asMap(1, maxDepth).map(quote(_))
 
   def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
     asList(1, 5)
 
-  def touchListMax(maxDepth: Int)
-                  (implicit ec: ExecutionContext): Future[List[(String, Any)]] =
+  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
     asList(1, maxDepth)
 
   def touchListQuoted(implicit ec: ExecutionContext): Future[String] =
-    Future(quote(asList(1, 5)))
+    asList(1, 5).map(quote(_))
 
-  def touchListQuotedMax(maxDepth: Int)
-                        (implicit ec: ExecutionContext): Future[String] =
-    Future(quote(asList(1, maxDepth)))
+  def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
+    asList(1, maxDepth).map(quote(_))
 
 
   private[molecule] def toScala(
@@ -174,102 +175,100 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
   )(implicit ec: ExecutionContext): Future[Any]
 
 
-  protected def asMap(depth: Int, maxDepth: Int)
-                     (implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    keys.map { keys =>
-      val builder    = Map.newBuilder[String, Any]
-      val keysSorted = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
-      if (keysSorted.head != ":db/id")
-        builder += ":db/id" -> rawValue(":db/id")
-      keysSorted.foreach { key =>
-        val scalaValue  = toScala(key, None, depth, maxDepth)
-        val sortedValue = scalaValue match {
-          case l: Seq[_] => l.head match {
-            case m1: Map[_, _]
-              if m1.asInstanceOf[Map[String, Any]].isDefinedAt(":db/id") =>
-              val indexedRefMaps: Seq[(Long, Map[String, Any])] = l.map {
-                case m2: Map[_, _] =>
-                  m2.asInstanceOf[Map[String, Any]]
-                    .apply(":db/id").asInstanceOf[Long] ->
+  def asMap(depth: Int, maxDepth: Int)
+           (implicit ec: ExecutionContext): Future[Map[String, Any]] = {
+    keys.flatMap { keys =>
+      val keysSorted   = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
+      val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
+      val valueFutures = keysSorted.map { key =>
+        toScala(key, None, depth, maxDepth).map { scalaValue =>
+          val sortedValue = scalaValue match {
+            case l: Seq[_] => l.head match {
+              case m1: Map[_, _]
+                if m1.asInstanceOf[Map[String, Any]].isDefinedAt(":db/id") =>
+                val indexedRefMaps: Seq[(Long, Map[String, Any])] = l.map {
+                  case m2: Map[_, _] =>
                     m2.asInstanceOf[Map[String, Any]]
-              }
-              indexedRefMaps.sortBy(_._1).map(_._2)
-
-            case _ => l
-          }
-          case other     => other
-        }
-        builder += (key -> sortedValue)
-      }
-      builder.result()
-    }
-  }
-
-
-  protected def asList(depth: Int, maxDepth: Int)
-                      (implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
-    keys.map { keys2 =>
-      val builder    = List.newBuilder[(String, Any)]
-      val keysSorted = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
-      if (keysSorted.head != ":db/id")
-        builder += ":db/id" -> rawValue(":db/id")
-      keysSorted.foreach { key =>
-        val scalaValue  = toScala(key, None, depth, maxDepth, "List")
-        val sortedValue = scalaValue match {
-          case l: Seq[_] => l.head match {
-            case l0: Seq[_] => l0.head match {
-              case pair: (_, _) => // Now we now we have a Seq of Seq with pairs
-                // Make typed Seq
-                val typedSeq: Seq[Seq[(String, Any)]] = l.collect {
-                  case l1: Seq[_] => l1.collect {
-                    case (k: String, v) => (k, v)
-                  }
+                      .apply(":db/id").asInstanceOf[Long] ->
+                      m2.asInstanceOf[Map[String, Any]]
                 }
-                if (typedSeq.head.map(_._1).contains(":db/id")) {
-                  // We now know we have :db/id's to sort on
-                  val indexedRefLists: Seq[(Long, Seq[(String, Any)])] = typedSeq.map {
-                    subSeq => subSeq.toMap.apply(":db/id").asInstanceOf[Long] -> subSeq
-                  }
-                  // Sort sub Seq's by :db/id
-                  indexedRefLists.sortBy(_._1).map(_._2)
-                } else {
-                  typedSeq
-                }
+                indexedRefMaps.sortBy(_._1).map(_._2)
+
+              case _ => l
             }
-            case _          => l
+            case other     => other
           }
-          case other     => other
+          key -> sortedValue
         }
-        builder += (key -> sortedValue)
       }
-      builder.result()
+      Future.sequence(futId ++ valueFutures).map(_.toMap)
     }
   }
 
+  def asList(depth: Int, maxDepth: Int)
+            (implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
+    keys.flatMap { keys2 =>
+      val keysSorted   = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
+      val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
+      val valueFutures = keysSorted.map { key =>
+        toScala(key, None, depth, maxDepth, "List").map { scalaValue =>
+          val sortedValue = scalaValue match {
+            case l: Seq[_] => l.head match {
+              case l0: Seq[_] => l0.head match {
+                case pair: (_, _) => // Now we now we have a Seq of Seq with pairs
+                  // Make typed Seq
+                  val typedSeq: Seq[Seq[(String, Any)]] = l.collect {
+                    case l1: Seq[_] => l1.collect {
+                      case (k: String, v) => (k, v)
+                    }
+                  }
+                  if (typedSeq.head.map(_._1).contains(":db/id")) {
+                    // We now know we have :db/id's to sort on
+                    val indexedRefLists: Seq[(Long, Seq[(String, Any)])] = typedSeq.map {
+                      subSeq => subSeq.toMap.apply(":db/id").asInstanceOf[Long] -> subSeq
+                    }
+                    // Sort sub Seq's by :db/id
+                    indexedRefLists.sortBy(_._1).map(_._2)
+                  } else {
+                    typedSeq
+                  }
+              }
+              case _          => l
+            }
+            case other     => other
+          }
+          key -> sortedValue
+        }
+      }
+      Future.sequence(futId ++ valueFutures)
+    }
+  }
 
   lazy protected val ident = Keyword.intern("db", "ident")
 
-  def sortList(l: List[Any]): List[Any] = l.head match {
-    case _: String               => l.asInstanceOf[List[String]].sorted
-    case _: Long                 => l.asInstanceOf[List[Long]].sorted
-    case _: Double               => l.asInstanceOf[List[Double]].sorted
-    case _: Boolean              => l.asInstanceOf[List[Boolean]].sorted
-    case _: Date                 => l.asInstanceOf[List[Date]].sorted
-    case _: UUID                 => l.asInstanceOf[List[UUID]].sorted
-    case _: URI                  => l.asInstanceOf[List[URI]].sorted
-    case _: java.math.BigInteger => l.asInstanceOf[List[java.math.BigInteger]].map(BigInt(_)).sorted
-    case _: java.math.BigDecimal => l.asInstanceOf[List[java.math.BigDecimal]].map(BigDecimal(_)).sorted
-    case _: BigInt               => l.asInstanceOf[List[BigInt]].sorted
-    case _: BigDecimal           => l.asInstanceOf[List[BigDecimal]].sorted
+  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
+    l.head match {
+      case _: String               => l.asInstanceOf[List[String]].sorted
+      case _: Long                 => l.asInstanceOf[List[Long]].sorted
+      case _: Double               => l.asInstanceOf[List[Double]].sorted
+      case _: Boolean              => l.asInstanceOf[List[Boolean]].sorted
+      case _: Date                 => l.asInstanceOf[List[Date]].sorted
+      case _: UUID                 => l.asInstanceOf[List[UUID]].sorted
+      case _: URI                  => l.asInstanceOf[List[URI]].sorted
+      case _: java.math.BigInteger => l.asInstanceOf[List[java.math.BigInteger]].map(BigInt(_)).sorted
+      case _: java.math.BigDecimal => l.asInstanceOf[List[java.math.BigDecimal]].map(BigDecimal(_)).sorted
+      case _: BigInt               => l.asInstanceOf[List[BigInt]].sorted
+      case _: BigDecimal           => l.asInstanceOf[List[BigDecimal]].sorted
 
-    // Float not used
-    //    case _: Float                => l.asInstanceOf[List[Float]].sorted
+      // Float not allowed (because of imprecision on JS platform)
+      //    case _: Float                => l.asInstanceOf[List[Float]].sorted
 
-    case m: PersistentArrayMap if m.containsKey(ident) =>
-      l.asInstanceOf[List[PersistentArrayMap]].map(pam =>
-        pam.get(ident).toString
-      ).sorted
+      case m: PersistentArrayMap if m.containsKey(ident) =>
+        l.asInstanceOf[List[PersistentArrayMap]].map(pam =>
+          pam.get(ident).toString
+        ).sorted
 
-    case _ => l
+      case _ => l
+    }
   }
 }

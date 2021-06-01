@@ -79,6 +79,7 @@ object Input1StringIntro extends AsyncTestSuite {
 
       "Expressions" - core { implicit conn =>
         for {
+          _ <- oneData
           _ <- m(Ns.int_.str(?)).apply("b").get.map(_ ==> List("b"))
           _ <- m(Ns.int_.str.<(?))("b").get.map(_ ==> List("a"))
           _ <- m(Ns.int_.str.>(?))("b").get.map(_ ==> List("c"))
@@ -91,6 +92,7 @@ object Input1StringIntro extends AsyncTestSuite {
 
       "Tacit expressions" - core { implicit conn =>
         for {
+          _ <- oneData
           _ <- m(Ns.int.str_(?))("b").get.map(_ ==> List(2))
           _ <- m(Ns.int.str_.<(?))("b").get.map(_ ==> List(1))
           _ <- m(Ns.int.str_.>(?))("b").get.map(_ ==> List(3))
@@ -106,6 +108,7 @@ object Input1StringIntro extends AsyncTestSuite {
 
       "OR-logic" - core { implicit conn =>
         for {
+          _ <- oneData
           // `or`-separated values
           _ <- m(Ns.int.str_(?)).apply("a" or "b").get.map(_.sorted ==> List(1, 2))
           _ <- m(Ns.int.str_(?)).apply("a" or "b" or "c").get.map(_.sorted ==> List(1, 2, 3))
@@ -169,6 +172,7 @@ object Input1StringIntro extends AsyncTestSuite {
 
       "Comparison" - core { implicit conn =>
         for {
+          _ <- manyData
           // If we want the full sets containing the matching value we can't use an
           // input-molecule anymore but will have to map a full result set
           _ <- Ns.int.strs.get.map(_.filter(_._2.contains("b")) ==> List((1, Set("a", "b")), (2, Set("b", "c"))))

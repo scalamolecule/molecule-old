@@ -56,8 +56,7 @@ object ApplyEnum extends AsyncTestSuite {
               |  enum6
               |  enum7
               |  enum8
-              |  enum9
-        """)
+              |  enum9""".stripMargin)
         } yield ()
       }
 

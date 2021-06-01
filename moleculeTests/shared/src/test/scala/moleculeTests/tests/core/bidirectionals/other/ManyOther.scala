@@ -474,7 +474,7 @@ object ManyOther extends AsyncTestSuite {
         _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 
         // Retract Leo and his relationship to Ann
-        _ <- leo.map(_.retract)
+        _ <- leo.retract
 
         // Leo is gone
         _ <- Person.name.get.map(_ ==> List("Ann"))

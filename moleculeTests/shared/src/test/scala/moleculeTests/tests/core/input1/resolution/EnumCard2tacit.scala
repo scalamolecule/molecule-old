@@ -75,7 +75,6 @@ object EnumCard2tacit extends AsyncTestSuite {
     "!=" - core { implicit conn =>
       val inputMolecule = m(Ns.enum.enums_.not(?)) // or m(Ns.enum.enums_.!=(?))
       for {
-        _ <- manyData
         _ <- Ns.enum.enums insert List(
           (enum1, Set(enum1, enum2, enum3)),
           (enum2, Set(enum2, enum3, enum4)),

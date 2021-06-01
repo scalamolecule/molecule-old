@@ -55,7 +55,6 @@ object EnumCard2coalesce extends AsyncTestSuite {
     "!=" - core { implicit conn =>
       val inputMolecule = m(Ns.enums.not(?)) // or m(Ns.enums.!=(?))
       for {
-        _ <- manyData
         _ <- Ns.enum.enums insert List(
           (enum1, Set(enum1, enum2, enum3)),
           (enum2, Set(enum2, enum3, enum4)),

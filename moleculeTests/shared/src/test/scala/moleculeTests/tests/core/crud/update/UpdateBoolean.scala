@@ -15,8 +15,7 @@ object UpdateBoolean extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.bool(true).save
-          eid = tx1.eid
+          eid <- Ns.bool(true).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).bool(false).update
@@ -41,8 +40,7 @@ object UpdateBoolean extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx1 <- Ns.bool(bool2).save
-          eid = tx1.eid
+          eid <- Ns.bool(bool2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).bool(bool1).update

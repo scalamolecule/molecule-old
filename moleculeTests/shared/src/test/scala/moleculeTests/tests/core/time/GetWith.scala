@@ -105,8 +105,7 @@ object GetWith extends AsyncTestSuite {
         ))
 
         // Test retracting an entity id
-        retractStmts <- eid2.map(_.getRetractStmts)
-        _ <- Ns.str.int.getWith(retractStmts).map(_ ==> List(
+        _ <- Ns.str.int.getWith(eid2.getRetractStmts).map(_ ==> List(
           ("a", 1)
         ))
 
@@ -124,7 +123,7 @@ object GetWith extends AsyncTestSuite {
         _ <- data
 
         // Clean initial state
-        _ <- Ns.e.str_.get.map(retract(_))
+        _ <- Ns.e.str_.get.flatMap(retract(_))
         tx <- Ns.str("Fred").int(42).save
         fred = tx.eid
 

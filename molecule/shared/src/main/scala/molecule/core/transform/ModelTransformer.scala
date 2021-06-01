@@ -7,6 +7,7 @@ import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 
 /** Model to Statements transformer.
@@ -100,7 +101,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
         if (conn.isJsPlatform) {
           getAttrValues(query, attr)
         } else {
-          conn.q(query).map(_.head) // could be empty
+          conn.q(query).map(rows => rows.map(_.head))
         }
       }
     }
@@ -128,7 +129,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
       if (conn.isJsPlatform) {
         conn.jsEntityAttrKeys(eid.toString.toLong)
       } else {
-        conn.q(s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]").map(_.map(_.head.toString))
+        conn.q(s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]").map(rows => rows.map(_.head.toString))
       }
     }
 
@@ -138,7 +139,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
       val futResult = if (conn.isJsPlatform) {
         getAttrValues(query, ":molecule_Meta/otherEdge")
       } else {
-        conn.q(query).map(_.head)
+        conn.q(query).map(rows => rows.map(_.head))
       }
       futResult.map {
         case List(edgeB) => edgeB

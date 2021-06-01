@@ -165,8 +165,7 @@ object Ref extends AsyncTestSuite with Helpers {
         // Multiple same-name namespace composites need ++ to allow access to object interface
         // Can't access object properties from same-name namespace composites
         _ <- m(Ns.int + Ns.double.str + Ref1.int1.str1).getObj.recover { case MoleculeException(err, _) =>
-          err ==> "Got the exception molecule.core.exceptions.package$MoleculeException: " +
-            s"Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
+          err ==> s"Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
         }
 
         _ <- m(Ns.int ++ Ns.double.str + Ref1.int1.str1).getObj.map { o =>

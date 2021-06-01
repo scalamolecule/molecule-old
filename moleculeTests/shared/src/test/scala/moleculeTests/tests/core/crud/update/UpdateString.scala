@@ -16,8 +16,7 @@ object UpdateString extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.str("b").save
-          eid = tx.eid
+          eid <- Ns.str("b").save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).str("a").update
@@ -47,8 +46,7 @@ object UpdateString extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.str(str2).save
-          eid = tx.eid
+          eid <- Ns.str(str2).save.map(_.eid)
 
           // Apply value (retracts current value)
           _ <- Ns(eid).str(str1).update
@@ -78,8 +76,7 @@ object UpdateString extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.strs("a").save
-          eid = tx.eid
+          eid <- Ns.strs("a").save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).strs.assert("b").update
@@ -113,8 +110,7 @@ object UpdateString extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.strs("a", "b", "c", "d", "e", "f").save
-          eid = tx.eid
+          eid <- Ns.strs("a", "b", "c", "d", "e", "f").save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).strs.replace("f" -> "h").update
@@ -155,8 +151,7 @@ object UpdateString extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.strs("a", "b", "c", "d", "e", "f").save
-          eid = tx.eid
+          eid <- Ns.strs("a", "b", "c", "d", "e", "f").save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).strs.retract("f").update
@@ -186,8 +181,7 @@ object UpdateString extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.strs("b", "c").save
-          eid = tx.eid
+          eid <- Ns.strs("b", "c").save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).strs("a").update
@@ -224,8 +218,7 @@ object UpdateString extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.strs(str1).save
-          eid = tx.eid
+          eid <- Ns.strs(str1).save.map(_.eid)
 
           // Assert value
           _ <- Ns(eid).strs.assert(str2).update
@@ -270,8 +263,7 @@ object UpdateString extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.strs(str1, str2, str3, str4, str5, str6).save
-          eid = tx.eid
+          eid <- Ns.strs(str1, str2, str3, str4, str5, str6).save.map(_.eid)
 
           // Replace value
           _ <- Ns(eid).strs.replace(str6 -> str8).update
@@ -334,8 +326,7 @@ object UpdateString extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.strs(str1, str2, str3, str4, str5, str6).save
-          eid = tx.eid
+          eid <- Ns.strs(str1, str2, str3, str4, str5, str6).save.map(_.eid)
 
           // Retract value
           _ <- Ns(eid).strs.retract(str6).update
@@ -371,8 +362,7 @@ object UpdateString extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.strs(str2, str3).save
-          eid = tx.eid
+          eid <- Ns.strs(str2, str3).save.map(_.eid)
 
           // Apply value (retracts all current values!)
           _ <- Ns(eid).strs(str1).update

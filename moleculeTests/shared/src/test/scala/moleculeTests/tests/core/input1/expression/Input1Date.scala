@@ -267,7 +267,6 @@ object Input1Date extends AsyncTestSuite {
             (date3, Set(date3, date4, date5))
           )
           for {
-            _ <- manyData
             _ <- Ns.date.dates insert all
 
             _ <- inputMolecule(Nil).get.map(_ ==> all)
@@ -465,7 +464,6 @@ object Input1Date extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.dates.not(?)) // or m(Ns.date.dates.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.date.dates insert List(
               (date1, Set(date1, date2, date3)),
               (date2, Set(date2, date3, date4)),
@@ -626,7 +624,6 @@ object Input1Date extends AsyncTestSuite {
         "!=" - core { implicit conn =>
           val inputMolecule = m(Ns.date.dates_.not(?)) // or m(Ns.date.dates.!=(?))
           for {
-            _ <- manyData
             _ <- Ns.date.dates insert List(
               (date1, Set(date1, date2, date3)),
               (date2, Set(date2, date3, date4)),

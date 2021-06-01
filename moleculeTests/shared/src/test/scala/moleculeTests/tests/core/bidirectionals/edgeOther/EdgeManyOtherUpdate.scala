@@ -195,7 +195,7 @@ object EdgeManyOtherUpdate extends AsyncTestSuite {
         _ <- personsCloseTo("Dot").get.map(_ ==> List(List((3, "Ann"))))
 
         // Retract single edge
-        _ <- closeToBob.map(_.retract)
+        _ <- closeToBob.retract
 
         _ <- animalsCloseTo("Ann").get.map(_ ==> List(List((3, "Dot"))))
         _ <- personsCloseTo("Bob").get.map(_ ==> List())
@@ -216,7 +216,7 @@ object EdgeManyOtherUpdate extends AsyncTestSuite {
         _ <- personsCloseTo("Dot").get.map(_ ==> List(List((3, "Ann"))))
 
         // Retract base entity
-        _ <- ann.map(_.retract)
+        _ <- ann.retract
 
         // All knowing to/from Ann retracted
         _ <- animalsCloseTo("Ann").get.map(_ ==> List())

@@ -56,7 +56,7 @@ object GetSince extends AsyncTestSuite with JavaUtil {
           tx2 <- Ns.int(2).save
           tx3 <- Ns.int(3).save
           tx4 <- Ns.int(4).save
-          tx5 <- tx2.eid.map(_.retract)
+          tx5 <- tx2.eid.retract
 
           // Current values
           _ <- Ns.int.get.map(_ ==> List(1, 3, 4))

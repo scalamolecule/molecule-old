@@ -36,8 +36,8 @@ object Aggregates extends AsyncTestSuite {
 
         // 5 random values
         _ <- Obj.meanRadius(rand(5)).get.map { rr =>
-          rr.size ==> 5
-          rr.map(radiuses.contains(_)).reduce(_ && _) ==> true
+          rr.head.size ==> 5
+          rr.head.map(radiuses.contains(_)).reduce(_ && _) ==> true
         }
 
         // Sample values - no duplicates
@@ -47,9 +47,9 @@ object Aggregates extends AsyncTestSuite {
 
         // 5 sample values
         _ <- Obj.meanRadius(sample(5)).get.map { samples =>
-          samples.size ==> 5
-          samples.distinct.size ==> 5
-          samples.map(radiuses.contains(_)).reduce(_ && _) ==> true
+          samples.head.size ==> 5
+          samples.head.distinct.size ==> 5
+          samples.head.map(radiuses.contains(_)).reduce(_ && _) ==> true
         }
       } yield ()
     }
@@ -57,6 +57,7 @@ object Aggregates extends AsyncTestSuite {
 
     "Aggregate Calculations" - aggregate { implicit conn =>
       for {
+        _ <- Obj.name.meanRadius.Tx(Data.source_(url)) insert (planets zip radiuses)
         _ <- Obj.name(count).get.map(_.head ==> 17)
         _ <- Obj.name(countDistinct).get.map(_.head ==> 17)
         _ <- Obj.meanRadius(sum).get.map(_.head ==> 907633.0)

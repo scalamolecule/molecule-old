@@ -6,6 +6,7 @@ import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.tests.core.generic.Datom.delay
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -24,16 +25,20 @@ object Index extends AsyncTestSuite {
       e1 = txR1.eid
       t1 = txR1.t
       d1 = txR1.inst
+      _ = delay
+
 
       txR2 <- Ns(e1).str("b").update
       tx2 = txR2.tx
       t2 = txR2.t
       d2 = txR2.inst
+      _ = delay
 
       txR3 <- Ns(e1).int(2).update
       tx3 = txR3.tx
       t3 = txR3.t
       d3 = txR3.inst
+      _ = delay
 
 
       // Second entity
@@ -43,11 +48,13 @@ object Index extends AsyncTestSuite {
       e2 = txR4.eid
       t4 = txR4.t
       d4 = txR4.inst
+      _ = delay
 
       txR5 <- Ns(e2).int(5).update
       tx5 = txR5.tx
       t5 = txR5.t
       d5 = txR5.inst
+      _ = delay
 
 
       // Relationship
@@ -57,12 +64,14 @@ object Index extends AsyncTestSuite {
       t6 = txR6.t
       d6 = txR6.inst
       e3 = txR6.eid
+      _ = delay
 
       // e2 points to e3
       txR7 <- Ns(e2).ref1(e3).update
       tx7 = txR7.tx
       t7 = txR7.t
       d7 = txR7.inst
+      _ = delay
 
 
       // Cardinality-many attributes
@@ -71,22 +80,27 @@ object Index extends AsyncTestSuite {
       txR8 <- Ns.ints(6, 7, 8).save
       t8 = txR8.t
       e4 = txR8.eid
+      _ = delay
 
       // 6, 70, 80
       txR9 <- Ns(e4).ints.replace(7 -> 70, 8 -> 80).update
       t9 = txR9.t
+      _ = delay
 
       // 70, 80
       txR10 <- Ns(e4).ints.retract(6).update
       t10 = txR10.t
+      _ = delay
 
       // 70, 80, 90
       txR11 <- Ns(e4).ints.assert(60).update
       t11 = txR11.t
+      _ = delay
 
       // e2 now points to e4
       txR12 <- Ns(e2).ref1(e4).update
       t12 = txR12.t
+      _ = delay
 
       // e1 also points to e4
       txR13 <- Ns(e2).refs1(e4).update

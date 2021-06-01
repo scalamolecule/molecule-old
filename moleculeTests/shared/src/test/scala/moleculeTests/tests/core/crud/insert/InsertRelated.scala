@@ -18,13 +18,13 @@ object InsertRelated extends AsyncTestSuite {
 
         tx1 <- Ns.str.insert("a0")
         a0 = tx1.eid
-        _ <- a0.map(_.touch ==> Map(
+        _ <- a0.touch.map(_ ==> Map(
           ":db/id" -> a0,
           ":Ns/str" -> "a0"))
 
         tx2 <- Ref1.str1.insert("b0")
         b0 = tx2.eid
-        _ <- b0.map(_.touch ==> Map(
+        _ <- b0.touch.map(_ ==> Map(
           ":db/id" -> b0,
           ":Ref1/str1" -> "b0"))
 
@@ -34,7 +34,7 @@ object InsertRelated extends AsyncTestSuite {
 
         tx3 <- Ns.str.Ref1.str1.insert("a0", "b1")
         List(a0ref, b1ref) = tx3.eids
-        _ <- a0ref.map(_.touch ==> Map(
+        _ <- a0ref.touch.map(_ ==> Map(
           ":db/id" -> a0ref,
           ":Ns/str" -> "a0",
           ":Ns/ref1" -> Map(
@@ -46,7 +46,7 @@ object InsertRelated extends AsyncTestSuite {
         // We can expand our graph one level deeper
         tx4 <- Ns.str.Ref1.str1.Ref2.str2.insert("a0", "b1", "c2")
         List(a0refs, b1ref1, c2ref2) = tx4.eids
-        _ <- a0refs.map(_.touch ==> Map(
+        _ <- a0refs.touch.map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> Map(
             ":db/id" -> b1ref1,
@@ -60,7 +60,7 @@ object InsertRelated extends AsyncTestSuite {
 
         // We can limit the depth of the retrieved graph
 
-        _ <- a0refs.map(_.touchMax(3) ==> Map(
+        _ <- a0refs.touchMax(3).map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> Map(
             ":db/id" -> b1ref1,
@@ -71,7 +71,7 @@ object InsertRelated extends AsyncTestSuite {
           ":Ns/str" -> "a0"
         ))
 
-        _ <- a0refs.map(_.touchMax(2) ==> Map(
+        _ <- a0refs.touchMax(2).map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> Map(
             ":db/id" -> b1ref1,
@@ -80,14 +80,14 @@ object InsertRelated extends AsyncTestSuite {
           ":Ns/str" -> "a0"
         ))
 
-        _ <- a0refs.map(_.touchMax(1) ==> Map(
+        _ <- a0refs.touchMax(1).map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> b1ref1,
           ":Ns/str" -> "a0"
         ))
 
         // Use `touchQ` to generate a quoted graph that you can paste into your tests
-        _ <- a0refs.map(_.touchQuotedMax(1) ==>
+        _ <- a0refs.touchQuotedMax(1).map(_ ==>
           s"""Map(
              |  ":db/id" -> ${a0refs}L,
              |  ":Ns/ref1" -> ${b1ref1}L,
@@ -106,7 +106,7 @@ object InsertRelated extends AsyncTestSuite {
         // Address example
         tx1 <- Ns.str.Ref1.int1.str1.Ref2.str2.insert("273 Broadway", 10700, "New York", "USA")
         List(addressE, streetE, countryE) = tx1.eids
-        _ <- addressE.map(_.touch ==> Map(
+        _ <- addressE.touch.map(_ ==> Map(
           ":db/id" -> addressE,
           ":Ns/ref1" -> Map(
             ":db/id" -> streetE,
@@ -142,7 +142,7 @@ object InsertRelated extends AsyncTestSuite {
       for {
         tx1 <- Ns.int.Refs1.str1.insert(42, "r")
         List(base, ref) = tx1.eids
-        _ <- base.map(_.touch ==> Map(
+        _ <- base.touch.map(_ ==> Map(
           ":db/id" -> base,
           ":Ns/refs1" -> List( // <-- notice we have a list of references now (with one ref here)
             Map(":db/id" -> ref, ":Ref1/str1" -> "r")),
@@ -155,13 +155,13 @@ object InsertRelated extends AsyncTestSuite {
 
         tx2 <- Ns.int.Refs1.str1.insert.apply(Seq((1, "r"), (2, "s")))
         List(id1, ref1, id2, ref2) = tx2.eids
-        _ <- id1.map(_.touch ==> Map(
+        _ <- id1.touch.map(_ ==> Map(
           ":db/id" -> id1,
           ":Ns/refs1" -> List(
             Map(":db/id" -> ref1, ":Ref1/str1" -> "r")),
           ":Ns/int" -> 1
         ))
-        _ <- id2.map(_.touch ==> Map(
+        _ <- id2.touch.map(_ ==> Map(
           ":db/id" -> id2,
           ":Ns/refs1" -> List(
             Map(":db/id" -> ref2, ":Ref1/str1" -> "s")),

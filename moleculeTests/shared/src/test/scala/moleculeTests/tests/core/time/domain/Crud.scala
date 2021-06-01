@@ -20,24 +20,20 @@ object Crud {
     Ns.int.get.map(_.sorted)
   }
 
-  def update(pair: (Int, Int))(implicit conn: Future[Conn]): Future[Unit] = {
+  def update(pair: (Int, Int))(implicit conn: Future[Conn]): Future[TxReport] = {
     val (oldNumber, newNumber) = pair
     for {
-      e <- Ns.e.int_(oldNumber).get.map(_.headOption.getOrElse {
+      eid <- Ns.e.int_(oldNumber).get.map(_.headOption.getOrElse {
         throw new IllegalArgumentException(s"Old number ($oldNumber) doesn't exist in db.")
       })
-      _ <- Ns(e).int(newNumber).update
-    } yield ()
+      res <- Ns(eid).int(newNumber).update
+    } yield res
   }
 
-  def delete(numbers: Int*)(implicit conn: Future[Conn]): Future[Unit] = Future {
-    numbers.foreach(i =>
-      // Find entity
-      Ns.e.int_(i).get.map(_.foreach(e =>
-        // Retract attribute value
-        Ns(e).int().update
-      )
-      )
-    )
+  def delete(numbers: Int*)(implicit futConn: Future[Conn]): Future[TxReport] = {
+    for {
+      ids <- Ns.e.int_(numbers).get
+      res <- Ns(ids).int().update
+    } yield res
   }
 }
