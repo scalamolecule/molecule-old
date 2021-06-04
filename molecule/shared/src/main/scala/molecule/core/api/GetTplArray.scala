@@ -2,9 +2,9 @@ package molecule.core.api
 
 import java.util.{Date, List => jList}
 import molecule.core.marshalling.Marshalling
-import molecule.datomic.base.ast.tempDb.{Since, TxDate, With}
+import molecule.datomic.base.ast.dbView.{Since, TxDate, With}
 import scala.concurrent.ExecutionContext
-import molecule.datomic.base.ast.tempDb.{AsOf, TxLong}
+import molecule.datomic.base.ast.dbView.{AsOf, TxLong}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.Future
@@ -191,7 +191,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArrayAsOf(t: Long)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(conn.map(_.usingTempDb(AsOf(TxLong(t)))), ec, objType, tplType)
+    getArray(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of n rows as tuples matching molecule as of transaction time `t`.
@@ -243,7 +243,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArrayAsOf(t: Long, n: Int)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(n)(conn.map(_.usingTempDb(AsOf(TxLong(t)))), ec, objType, tplType)
+    getArray(n)(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of all rows as tuples matching molecule as of tx.
@@ -298,7 +298,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * */
   def getArrayAsOf(tx: TxReport)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))), ec, objType, tplType)
+    getArray(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of n rows as tuples matching molecule as of tx.
@@ -347,7 +347,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * */
   def getArrayAsOf(tx: TxReport, n: Int)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(n)(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))), ec, objType, tplType)
+    getArray(n)(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of all rows as tuples matching molecule as of date.
@@ -404,7 +404,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArrayAsOf(date: Date)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(conn.map(_.usingTempDb(AsOf(TxDate(date)))), ec, objType, tplType)
+    getArray(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of n rows as tuples matching molecule as of date.
@@ -451,7 +451,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArrayAsOf(date: Date, n: Int)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(n)(conn.map(_.usingTempDb(AsOf(TxDate(date)))), ec, objType, tplType)
+    getArray(n)(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec, objType, tplType)
 
 
   // get since ================================================================================================
@@ -492,7 +492,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArraySince(t: Long)
                    (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(conn.map(_.usingTempDb(Since(TxLong(t)))), ec, objType, tplType)
+    getArray(conn.map(_.usingDbView(Since(TxLong(t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of n rows as tuples matching molecule since transaction time `t`.
@@ -531,7 +531,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArraySince(t: Long, n: Int)
                    (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(n)(conn.map(_.usingTempDb(Since(TxLong(t)))), ec, objType, tplType)
+    getArray(n)(conn.map(_.usingDbView(Since(TxLong(t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of all rows as tuples matching molecule since tx.
@@ -572,7 +572,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArraySince(tx: TxReport)
                    (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(conn.map(_.usingTempDb(Since(TxLong(tx.t)))), ec, objType, tplType)
+    getArray(conn.map(_.usingDbView(Since(TxLong(tx.t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of n rows as tuples matching molecule since tx.
@@ -613,7 +613,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * */
   def getArraySince(tx: TxReport, n: Int)
                    (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(n)(conn.map(_.usingTempDb(Since(TxLong(tx.t)))), ec, objType, tplType)
+    getArray(n)(conn.map(_.usingDbView(Since(TxLong(tx.t)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of all rows as tuples matching molecule since date.
@@ -649,7 +649,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArraySince(date: Date)
                    (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(conn.map(_.usingTempDb(Since(TxDate(date)))), ec, objType, tplType)
+    getArray(conn.map(_.usingDbView(Since(TxDate(date)))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of n rows as tuples matching molecule since date.
@@ -685,7 +685,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArraySince(date: Date, n: Int)
                    (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(n)(conn.map(_.usingTempDb(Since(TxDate(date)))), ec, objType, tplType)
+    getArray(n)(conn.map(_.usingDbView(Since(TxDate(date)))), ec, objType, tplType)
 
 
 
@@ -727,7 +727,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getArrayWith(txMolecules: Future[Seq[Statement]]*)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getArray(conn.map(conn2 => conn2.usingTempDb(With(conn2.stmts2java(stmtss.flatten)))), ec, objType, tplType)
+      getArray(conn.map(conn2 => conn2.usingDbView(With(conn2.stmts2java(stmtss.flatten)))), ec, objType, tplType)
     }
   }
 
@@ -778,7 +778,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getArrayWith(n: Int, txMolecules: Future[Seq[Statement]]*)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getArray(n)(conn.map(conn2 => conn2.usingTempDb(With(conn2.stmts2java(stmtss.flatten)))), ec, objType, tplType)
+      getArray(n)(conn.map(conn2 => conn2.usingDbView(With(conn2.stmts2java(stmtss.flatten)))), ec, objType, tplType)
     }
   }
 
@@ -809,7 +809,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArrayWith(txData: jList[_])
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(conn.map(_.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]]))), ec, objType, tplType)
+    getArray(conn.map(_.usingDbView(With(txData.asInstanceOf[jList[jList[_]]]))), ec, objType, tplType)
 
 
   /** Get `Future` with `Array` of n rows as tuples matching molecule with applied raw transaction data.
@@ -844,7 +844,7 @@ trait GetTplArray[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getArrayWith(txData: jList[_], n: Int)
                   (implicit conn: Future[Conn], ec: ExecutionContext, objType: ClassTag[Obj], tplType: ClassTag[Tpl]): Future[Array[Tpl]] =
-    getArray(n)(conn.map(_.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]]))), ec, objType, tplType)
+    getArray(n)(conn.map(_.usingDbView(With(txData.asInstanceOf[jList[jList[_]]]))), ec, objType, tplType)
 
 
   // get history ================================================================================================

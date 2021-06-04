@@ -2,7 +2,7 @@ package molecule.core.api
 
 import java.util.{Date, List => jList}
 import molecule.core.marshalling.Marshalling
-import molecule.datomic.base.ast.tempDb._
+import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.collection.mutable.ListBuffer
@@ -176,7 +176,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(AsOf(TxLong(t)))), ec)
+    getObjList(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule as of transaction time `t`.
@@ -222,7 +222,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingTempDb(AsOf(TxLong(t)))), ec)
+    getObjList(n)(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule as of tx.
@@ -274,7 +274,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     * */
   def getObjListAsOf(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))), ec)
+    getObjList(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule as of tx.
@@ -318,7 +318,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     * */
   def getObjListAsOf(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))), ec)
+    getObjList(n)(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule as of date.
@@ -373,7 +373,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(AsOf(TxDate(date)))), ec)
+    getObjList(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule as of date.
@@ -415,7 +415,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingTempDb(AsOf(TxDate(date)))), ec)
+    getObjList(n)(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
 
 
   // get since ================================================================================================
@@ -458,7 +458,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(Since(TxLong(t)))), ec)
+    getObjList(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule since transaction time `t`.
@@ -497,7 +497,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingTempDb(Since(TxLong(t)))), ec)
+    getObjList(n)(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule since tx.
@@ -540,7 +540,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(Since(TxLong(tx.t)))), ec)
+    getObjList(conn.map(_.usingDbView(Since(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule since tx.
@@ -581,7 +581,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingTempDb(Since(TxLong(tx.t)))), ec)
+    getObjList(n)(conn.map(_.usingDbView(Since(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule since date.
@@ -619,7 +619,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(Since(TxDate(date)))), ec)
+    getObjList(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule since date.
@@ -655,7 +655,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingTempDb(Since(TxDate(date)))), ec)
+    getObjList(n)(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -695,7 +695,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjListWith(txMolecules: Future[Seq[Statement]]*)
                     (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getObjList(conn.map(conn2 => conn2.usingTempDb(With(conn2.stmts2java(stmtss.flatten)))), ec)
+      getObjList(conn.map(conn2 => conn2.usingDbView(With(conn2.stmts2java(stmtss.flatten)))), ec)
     }
   }
 
@@ -755,7 +755,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjListWith(n: Int, txMolecules: Future[Seq[Statement]]*)
                     (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getObjList(n)(conn.map(conn2 => conn2.usingTempDb(With(conn2.stmts2java(stmtss.flatten)))), ec)
+      getObjList(n)(conn.map(conn2 => conn2.usingDbView(With(conn2.stmts2java(stmtss.flatten)))), ec)
     }
   }
 
@@ -782,7 +782,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getObjListWith(txData: jList[_])
                     (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
+    getObjList(conn.map(_.usingDbView(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
 
   /** Get `Future` with `List` of n rows as objects matching molecule with applied raw transaction data.
     * <br><br>
@@ -810,7 +810,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getObjListWith(txData: jList[_], n: Int)
                     (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
+    getObjList(n)(conn.map(_.usingDbView(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
 
 
   // get history ================================================================================================
@@ -858,7 +858,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingTempDb(History)), ec)
+    getObjList(conn.map(_.usingDbView(History)), ec)
 
 
   // `getHistory(n: Int)` is not implemented since the whole data set normally needs to be sorted

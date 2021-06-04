@@ -1,7 +1,8 @@
 //package moleculeTests.js.core.crud
 //
-//import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
+//import molecule.core.marshalling.Conn_Js
 //import molecule.datomic.api.in1_out14._
+//import moleculeTests.setup.AsyncTestSuite
 //import moleculeTests.setup.core.CoreData
 //import moleculeTests.tests.core.base.dsl.CoreTest._
 //import moleculeTests.tests.core.base.schema.CoreTestSchema
@@ -9,12 +10,11 @@
 //import scala.concurrent.ExecutionContext.Implicits.global
 //
 //
-//object Save extends TestSuite with CoreData {
+//object Save extends AsyncTestSuite with CoreData {
 //
 //  lazy val tests = Tests {
-//    implicit val conn = Conn_Js.inMem(CoreTestSchema)
 //
-//    test("Card one") {
+//    "Card one" - core { implicit conn =>
 //      for {
 //        tx <- Ns
 //          .str("a")
@@ -28,16 +28,14 @@
 //          .bigInt(bigInt1)
 //          .bigDec(bigDec1)
 //          .enum("enum1")
-//          .saveAsync
-//        res <- Ns.e.str.int.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.getAsync
-//      } yield {
-//        res ==> List(
+//          .save
+//        _ <- Ns.e.str.int.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.get.map(_ ==> List(
 //          (tx.eid, "a", 1, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, "enum1")
-//        )
-//      }
+//        ))
+//      } yield ()
 //    }
 //
-//    test("Card many") {
+//    "Card many" - core { implicit conn =>
 //      for {
 //        tx <- Ns
 //          .strs("a", "b")
@@ -51,10 +49,8 @@
 //          .bigInts(bigInt1, bigInt2)
 //          .bigDecs(bigDec1, bigDec2)
 //          .enums("enum1", "enum2")
-//          .saveAsync
-//        res <- Ns.e.strs.ints.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.getAsync
-//      } yield {
-//        res ==> List((
+//          .save
+//        _ <- Ns.e.strs.ints.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.get.map(_ ==> List((
 //          tx.eid,
 //          Set("a", "b"),
 //          Set(1, 2),
@@ -67,11 +63,11 @@
 //          Set(bigInt1, bigInt2),
 //          Set(bigDec1, bigDec2),
 //          Set("enum1", "enum2")
-//        ))
-//      }
+//        )))
+//      } yield ()
 //    }
 //
-//    test("Card map") {
+//    "Card map" - core { implicit conn =>
 //      for {
 //        tx <- Ns
 //          .strMap(Map("a" -> "a"))
@@ -84,10 +80,8 @@
 //          .uriMap(Map("a" -> uri1))
 //          .bigIntMap(Map("a" -> bigInt1))
 //          .bigDecMap(Map("a" -> bigDec1))
-//          .saveAsync
-//        res <- Ns.e.strMap.intMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
-//      } yield {
-//        res ==> List((
+//          .save
+//        _ <- Ns.e.strMap.intMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.get.map(_ ==> List((
 //          tx.eid,
 //          Map("a" -> "a"),
 //          Map("a" -> 1),
@@ -99,17 +93,15 @@
 //          Map("a" -> uri1),
 //          Map("a" -> bigInt1),
 //          Map("a" -> bigDec1)
-//        ))
-//      }
+//        )))
+//      } yield ()
 //    }
 //
-//    test("Ref") {
+//    "Ref" - core { implicit conn =>
 //      for {
-//        _ <- Ns.int(1).Ref1.int1(2).saveAsync
-//        res <- Ns.int.Ref1.int1.getAsync
-//      } yield {
-//        res ==> List((1, 2))
-//      }
+//        _ <- Ns.int(1).Ref1.int1(2).save
+//        _ <- Ns.int.Ref1.int1.get.map(_ ==> List((1, 2)))
+//      } yield ()
 //    }
 //  }
 //}

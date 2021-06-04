@@ -3,12 +3,12 @@ package molecule.datomic.base.facade
 import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
-import molecule.core.marshalling.{DbProxy, MoleculeRpc, QueryResult}
+import molecule.core.marshalling.{DatomicInMemProxy, DbProxy, MoleculeRpc, QueryResult}
 import molecule.core.ops.ColOps
 import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.tempDb.TempDb
+import molecule.datomic.base.ast.dbView.{AsOf, DbView, TxLong}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.TempIdFactory
@@ -23,14 +23,29 @@ trait Conn extends ColOps {
   /** Flag to indicate if we are on the JS or JVM platform */
   val isJsPlatform: Boolean
 
+  // Temporary db for ad-hoc queries against time variation dbs
+  // (takes precedence over test db)
+  private[molecule] var _adhocDbView: Option[DbView] = None
+//  protected var _adhocDbView: Option[DbView] = None
+
   val tempId = TempIdFactory
 
-  lazy val dbProxy: DbProxy = ???
+  private[molecule] var dbProxy: DbProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
 
   /** */
   lazy val moleculeRpc: MoleculeRpc = ???
 
-  def usingTempDb(tempDb: TempDb): Conn
+  def usingDbView(dbView: DbView): Conn = {
+
+//    dbProxy = dbProxy.copy()
+
+//    dbProxy.adhocDbView = Some(dbView)
+
+    println("dbProxy.adhocDbView1 " + dbProxy.adhocDbView)
+
+    _adhocDbView = Some(dbView)
+    this
+  }
 
   /** Flag to indicate if live database is used */
   def liveDbUsed: Boolean
@@ -103,13 +118,13 @@ trait Conn extends ColOps {
     *   Person.name.get.map(_ ==> List("Liz", "Joe"))
     * }}}
     *
-    * @param txData List of List of transaction [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s
+    * @param txMolecules List of List of transaction [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s
     */
-  def testDbWith(txData: Future[Seq[Statement]]*)
+  def testDbWith(txMolecules: Future[Seq[Statement]]*)
                 (implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database with temporary raw Java transaction data. */
-  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit]
+//  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit]
 
   /* testDbHistory not implemented.
    * Instead, use `testDbAsOfNow`, make changes and get historic data with getHistory calls.
@@ -124,35 +139,6 @@ trait Conn extends ColOps {
   /** Convenience method to retrieve entity. */
   def entity(id: Any): DatomicEntity
 
-
-  /** Transact edn files or other raw transaction data.
-    * {{{
-    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
-    *   val rawTxStmts = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
-    *
-    *   // transact
-    *   val result: TxReport = conn.transact(rawTxStmts)
-    * }}}
-    *
-    * @param javaStmts Raw transaction data, typically from edn file.
-    * @return [[molecule.datomic.base.facade.TxReport TxReport]]
-    *         // */
-  //  def transactRaw(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil): TxReport
-  //
-  //  def transact(stmtsReader: Reader, scalaStmts: Seq[Statement]): TxReport
-  //
-  //  def transact(edn: String, scalaStmts: Seq[Statement]): TxReport
-  //
-  //  def transact(stmtsReader: Reader): TxReport
-  //
-  //  def transact(edn: String): TxReport
-  //
-  //  /** Transact Seq of Seqs of [[molecule.datomic.base.ast.transactionModel.Statement Statement]]s
-  //    *
-  //    * @param scalaStmts
-  //    * @return [[molecule.datomic.base.facade.TxReport TxReport]]
-  //    */
-  //  def transact(scalaStmts: Seq[Statement]): TxReport
 
   /** Asynchronously transact edn files or other raw transaction data.
     * {{{
@@ -400,8 +386,16 @@ trait Conn extends ColOps {
     val p            = q2s.p
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
+
+
+    println("dbProxy.adhocDbView2 " + dbProxy.adhocDbView)
+
+    val x = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)], Some(AsOf(TxLong(42L))))
+//    x.adhocDbView = Some(AsOf(TxLong(42L)))
+
     // Fetch QueryResult with Ajax call via typed Sloth wire
-    moleculeRpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
+//    moleculeRpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
+    moleculeRpc.query(x, datalogQuery, rules, l, ll, lll, n, indexes)
       .map {
         qr =>
           val maxRows    = if (n == -1) qr.maxRows else n

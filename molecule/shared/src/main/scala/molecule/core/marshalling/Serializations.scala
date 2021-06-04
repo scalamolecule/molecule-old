@@ -4,6 +4,7 @@ import java.net.URI
 import java.nio.ByteBuffer
 import boopickle.Default._
 import chameleon._
+import molecule.datomic.base.ast.dbView._
 import scala.util.{Failure, Success, Try}
 
 
@@ -27,6 +28,23 @@ trait Serializations {
 
   implicit val trowa = exceptionPickler
     .addException[DbException](m => DbException(m))
+
+  implicit val pointInTimePickler = compositePickler[PointInTime].
+    addConcreteType[TxDate].
+    addConcreteType[TxLong]
+
+  implicit val dbViewPickler = compositePickler[DbView].
+    addConcreteType[AsOf].
+    addConcreteType[Since].
+    addConcreteType[With].
+//    addConcreteType[WithEdn].
+    addConcreteType[History.type]
+
+  implicit val dbProxyPickler = compositePickler[DbProxy].
+    addConcreteType[DatomicInMemProxy].
+    addConcreteType[DatomicPeerProxy].
+    addConcreteType[DatomicDevLocalProxy].
+    addConcreteType[DatomicPeerServerProxy]
 
 
 }

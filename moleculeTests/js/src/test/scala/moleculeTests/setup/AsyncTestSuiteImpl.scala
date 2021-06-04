@@ -1,6 +1,7 @@
 package moleculeTests.setup
 
-import molecule.core.marshalling.Conn_Js
+import molecule.core.data.SchemaTransaction
+import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
 import molecule.datomic.base.facade.Conn
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import moleculeTests.tests.core.bidirectionals.schema.BidirectionalSchema
@@ -11,27 +12,34 @@ import moleculeTests.tests.examples.datomic.mbrainz.schema.MBrainzSchema
 import moleculeTests.tests.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.tests.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait AsyncTestSuiteImpl {
 
-  def coreImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(CoreTestSchema))
-  def bidirectionalImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(BidirectionalSchema))
-  def partitionImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(PartitionTestSchema))
-  def nestedImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(NestedSchema))
-  def selfJoinImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(SelfJoinSchema))
-  def aggregateImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(AggregatesSchema))
-  def socialNewsImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(SocialNewsSchema))
-  def graphImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(GraphSchema))
-  def graph2Impl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(Graph2Schema))
-  def modernGraph1Impl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(ModernGraph1Schema))
-  def modernGraph2Impl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(ModernGraph2Schema))
-  def productsImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(ProductsOrderSchema))
-  def seattleImpl[T](func: Future[Conn] => T): T = func(Conn_Js.inMem(SeattleSchema))
+  def inMem(schemaTransaction: SchemaTransaction): Future[Conn_Js] = Future(Conn_Js(
+    DatomicInMemProxy(
+      schemaTransaction.datomicPeer,
+      schemaTransaction.attrMap
+    )
+  ))
+
+  def coreImpl[T](func: Future[Conn] => T): T = func(inMem(CoreTestSchema))
+  def bidirectionalImpl[T](func: Future[Conn] => T): T = func(inMem(BidirectionalSchema))
+  def partitionImpl[T](func: Future[Conn] => T): T = func(inMem(PartitionTestSchema))
+  def nestedImpl[T](func: Future[Conn] => T): T = func(inMem(NestedSchema))
+  def selfJoinImpl[T](func: Future[Conn] => T): T = func(inMem(SelfJoinSchema))
+  def aggregateImpl[T](func: Future[Conn] => T): T = func(inMem(AggregatesSchema))
+  def socialNewsImpl[T](func: Future[Conn] => T): T = func(inMem(SocialNewsSchema))
+  def graphImpl[T](func: Future[Conn] => T): T = func(inMem(GraphSchema))
+  def graph2Impl[T](func: Future[Conn] => T): T = func(inMem(Graph2Schema))
+  def modernGraph1Impl[T](func: Future[Conn] => T): T = func(inMem(ModernGraph1Schema))
+  def modernGraph2Impl[T](func: Future[Conn] => T): T = func(inMem(ModernGraph2Schema))
+  def productsImpl[T](func: Future[Conn] => T): T = func(inMem(ProductsOrderSchema))
+  def seattleImpl[T](func: Future[Conn] => T): T = func(inMem(SeattleSchema))
 
   def mbrainzImpl[T](func: Future[Conn] => T): T = {
-    func(Conn_Js.inMem(MBrainzSchema))
+    func(inMem(MBrainzSchema))
   }
 
 //  def mbrainzImpl[T](func: Future[Conn] => T): T = {

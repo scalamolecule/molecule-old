@@ -5,7 +5,7 @@ import java.util.{Collections, Date, Collection => jCollection, List => jList}
 import datomic.Peer.function
 import datomic.Util.{list, read, readAll}
 import datomic.{Peer, Util}
-import molecule.datomic.base.ast.tempDb.{TempDb, With}
+import molecule.datomic.base.ast.dbView.{DbView, With}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,9 +14,6 @@ trait Conn_Datomic extends Conn {
 
   val isJsPlatform: Boolean = false
 
-  // Temporary db for ad-hoc queries against time variation dbs
-  // (takes precedence over test db)
-  protected var _adhocDb: Option[TempDb] = None
 
   // Reset datoms of in-mem with-db from next timePoint after as-of t until end
   protected def cleanFrom(nextTimePoint: Any)(implicit ec: ExecutionContext): Future[Unit]

@@ -44,11 +44,11 @@ case class Conn_Client(
   protected var withDbInUse = false
 
   def usingTempDb(tempDb: TempDb): Conn = {
-    _adhocDb = Some(tempDb)
+    _adhocDbView = Some(tempDb)
     this
   }
 
-  def liveDbUsed: Boolean = _adhocDb.isEmpty && _testDb.isEmpty
+  def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
   def testDb(db: DatomicDb): Unit = {
     _testDb = Some(db.asInstanceOf[DatomicDb_Client].clientDb)
@@ -150,7 +150,7 @@ case class Conn_Client(
 
   private def getAdhocDb: Db = {
     val baseDb : Db = _testDb.getOrElse(clientConn.db)
-    val adhocDb: Db = _adhocDb.get match {
+    val adhocDb: Db = _adhocDbView.get match {
       case AsOf(TxLong(t))  => baseDb.asOf(t)
       case AsOf(TxDate(d))  => baseDb.asOf(d)
       case Since(TxLong(t)) => baseDb.since(t)
@@ -158,12 +158,12 @@ case class Conn_Client(
       case With(tx)         => baseDb.`with`(clientConn.withDb, tx).dbAfter
       case History          => baseDb.history
     }
-    _adhocDb = None
+    _adhocDbView = None
     adhocDb
   }
 
   def db: DatomicDb = {
-    if (_adhocDb.isDefined) {
+    if (_adhocDbView.isDefined) {
       // Adhoc db
       DatomicDb_Client(getAdhocDb)
 
@@ -192,7 +192,7 @@ case class Conn_Client(
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
     futScalaStmts.map { scalaStmts =>
-      if (_adhocDb.isDefined) {
+      if (_adhocDbView.isDefined) {
         TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
       } else if (_testDb.isDefined) {

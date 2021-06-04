@@ -20,10 +20,10 @@ object Adhoc extends AsyncTestSuite {
 //    "adhoc" - bidirectional { implicit conn =>
     "adhoc" - core { implicit conn =>
 
-//      for {
-
-//
-//      } yield ()
+      for {
+        _ <- Ns.int(1).save
+        _ <- Ns.int.get.map(_ ==> List(1))
+      } yield ()
     }
   }
 }

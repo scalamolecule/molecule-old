@@ -1,7 +1,7 @@
 package molecule.core.api
 
 import molecule.core.util.Helpers
-import molecule.datomic.base.ast.tempDb.With
+import molecule.datomic.base.ast.dbView.With
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}

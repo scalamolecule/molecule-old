@@ -19,7 +19,7 @@
 //      test("types") {
 //        implicit val conn = getConn
 //        for {
-//          tx <- Ns
+//          eid <- Ns
 //            .str("a")
 //            .int(1)
 //            .long(1L)
@@ -31,9 +31,8 @@
 //            .bigInt(bigInt1)
 //            .bigDec(bigDec1)
 //            .enum("enum1")
-//            .saveAsync
-//          eid = tx.eid
-//          update <- Ns(eid)
+//            .save.map(_.eid)
+//          _ <- Ns(eid)
 //            .str("b")
 //            .int(2)
 //            .long(2L)
@@ -45,44 +44,36 @@
 //            .bigInt(bigInt2)
 //            .bigDec(bigDec2)
 //            .enum("enum2")
-//            .updateAsync
-//          res <- Ns.e.str.int.long.double.bool.date
-//            .uuid.uri.bigInt.bigDec.enum.getAsync
-//        } yield {
-//          res ==> List(
+//            .update
+//          res <- Ns.e.str.int.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.get.map(_ ==> List(
 //            (eid, "b", 2, 2L, 2.2, false, date2
 //              , uuid2, uri2, bigInt2, bigDec2, "enum2")
-//          )
-//        }
+//          ))
+//        } yield ()
 //      }
 //
 //      test("apply") {
 //        implicit val conn = getConn
 //        for {
 //          // Initial value
-//          tx <- Ns.int(1).saveAsync
-//          r1 <- Ns.int.getAsync
-//          eid = tx.eid
+//          eid <- Ns.int(1).save.map(_.eid)
+//          _ <- Ns.int.get.map(_ ==> List(1))
 //
 //          // Apply new value
-//          _ <- Ns(eid).int(2).updateAsync
-//          r2 <- Ns.int.getAsync
+//          _ <- Ns(eid).int(2).update
+//          _ <- Ns.int.get.map(_ ==> List(2))
 //
 //          // Apply empty value (retract)
-//          _ <- Ns(eid).int().updateAsync
-//          r3 <- Ns.int.getAsync
-//        } yield {
-//          r1 ==> List(1)
-//          r2 ==> List(2)
-//          r3 ==> List()
-//        }
+//          _ <- Ns(eid).int().update
+//          _ <- Ns.int.get.map(_ ==> Nil)
+//        } yield ()
 //      }
 //    }
 //
 //    test("Card many") {
 //      implicit val conn = getConn
 //      for {
-//        tx <- Ns
+//        eid <- Ns
 //          .strs("a", "b")
 //          .ints(1, 2)
 //          .longs(10L, 20L)
@@ -94,31 +85,31 @@
 //          .bigInts(bigInt1, bigInt2)
 //          .bigDecs(bigDec1, bigDec2)
 //          .enums("enum1", "enum2")
-//          .saveAsync
-//        res <- Ns.e.strs.ints.longs.doubles.bools.dates
-//          .uuids.uris.bigInts.bigDecs.enums.getAsync
-//      } yield {
-//        res ==> List((
-//          tx.eid,
-//          Set("a", "b"),
-//          Set(1, 2),
-//          Set(10L, 20L),
-//          Set(10.1, 20.2),
-//          Set(true, false),
-//          Set(date1, date2),
-//          Set(uuid1, uuid2),
-//          Set(uri1, uri2),
-//          Set(bigInt1, bigInt2),
-//          Set(bigDec1, bigDec2),
-//          Set("enum1", "enum2")
-//        ))
-//      }
+//          .save.map(_.eid)
+//        _ <- Ns.e.strs.ints.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.get.map {
+//          _ ==> List((
+//            eid,
+//            Set("a", "b"),
+//            Set(1, 2),
+//            Set(10L, 20L),
+//            Set(10.1, 20.2),
+//            Set(true, false),
+//            Set(date1, date2),
+//            Set(uuid1, uuid2),
+//            Set(uri1, uri2),
+//            Set(bigInt1, bigInt2),
+//            Set(bigDec1, bigDec2),
+//            Set("enum1", "enum2")
+//          ))
+//        }
+//
+//      } yield ()
 //    }
 //
 //    test("Card map") {
 //      implicit val conn = getConn
 //      for {
-//        tx <- Ns
+//        eid <- Ns
 //          .strMap(Map("a" -> "a"))
 //          .intMap(Map("a" -> 1))
 //          .longMap(Map("a" -> 10L))
@@ -129,34 +120,32 @@
 //          .uriMap(Map("a" -> uri1))
 //          .bigIntMap(Map("a" -> bigInt1))
 //          .bigDecMap(Map("a" -> bigDec1))
-//          .saveAsync
-//        res <- Ns.e.strMap.intMap.longMap.doubleMap.boolMap.dateMap
-//          .uuidMap.uriMap.bigIntMap.bigDecMap.getAsync
-//      } yield {
-//        res ==> List((
-//          tx.eid,
-//          Map("a" -> "a"),
-//          Map("a" -> 1),
-//          Map("a" -> 10L),
-//          Map("a" -> 10.1),
-//          Map("a" -> true),
-//          Map("a" -> date1),
-//          Map("a" -> uuid1),
-//          Map("a" -> uri1),
-//          Map("a" -> bigInt1),
-//          Map("a" -> bigDec1)
-//        ))
-//      }
+//          .save.map(_.eid)
+//        _ <- Ns.e.strMap.intMap.longMap.doubleMap.boolMap.dateMap.uuidMap.uriMap.bigIntMap.bigDecMap.get.map {
+//          _ ==> List((
+//            eid,
+//            Map("a" -> "a"),
+//            Map("a" -> 1),
+//            Map("a" -> 10L),
+//            Map("a" -> 10.1),
+//            Map("a" -> true),
+//            Map("a" -> date1),
+//            Map("a" -> uuid1),
+//            Map("a" -> uri1),
+//            Map("a" -> bigInt1),
+//            Map("a" -> bigDec1)
+//          ))
+//        }
+//
+//      } yield ()
 //    }
 //
 //    test("Ref") {
 //      implicit val conn = getConn
 //      for {
-//        _ <- Ns.int(1).Ref1.int1(2).saveAsync
-//        res <- Ns.int.Ref1.int1.getAsync
-//      } yield {
-//        res ==> List((1, 2))
-//      }
+//        _ <- Ns.int(1).Ref1.int1(2).save
+//        _ <- Ns.int.Ref1.int1.get.map(_ ==> List((1, 2)))
+//      } yield ()
 //    }
 //  }
 //}

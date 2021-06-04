@@ -3,7 +3,8 @@ package molecule.core.api
 import molecule.core.ast.elements._
 import molecule.core.macros.MakeMoleculeDynamic
 import molecule.core.macros.cast.CastHelpersTypes
-import molecule.core.marshalling.{Marshalling, Stmts2Edn}
+import molecule.core.marshalling.Marshalling
+import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers
@@ -156,16 +157,16 @@ abstract class Molecule_0[Obj, Tpl](
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
 ) extends Marshalling[Obj, Tpl](model, queryData)
   with CastHelpersTypes
-  with GetTplArray[Obj, Tpl]
-  with GetTplIterable[Obj, Tpl]
   with GetTplList[Obj, Tpl]
-  with GetObjArray[Obj, Tpl]
-  with GetObjIterable[Obj, Tpl]
   with GetObjList[Obj, Tpl]
-  with GetRaw
   with ShowInspect[Obj, Tpl]
   with Helpers {
 
+//  with GetTplArray[Obj, Tpl]
+//  with GetTplIterable[Obj, Tpl]
+//  with GetObjArray[Obj, Tpl]
+//  with GetObjIterable[Obj, Tpl]
+//  with GetRaw
 
   // Dynamic molecule ==========================================================
 

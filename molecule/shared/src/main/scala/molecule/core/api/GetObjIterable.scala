@@ -2,7 +2,7 @@ package molecule.core.api
 
 import java.util.{Date, Collection => jCollection, Iterator => jIterator, List => jList}
 import molecule.core.marshalling.Marshalling
-import molecule.datomic.base.ast.tempDb._
+import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
@@ -127,7 +127,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[Iterable[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjIterableAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] =
-    getObjIterable(conn.map(_.usingTempDb(AsOf(TxLong(t)))), ec)
+    getObjIterable(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as objects matching molecule as of tx.
@@ -182,7 +182,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[Iterable[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjIterableAsOf(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] =
-    getObjIterable(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))), ec)
+    getObjIterable(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as objects matching molecule as of date.
@@ -243,7 +243,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[Iterable[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjIterableAsOf(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] =
-    getObjIterable(conn.map(_.usingTempDb(AsOf(TxDate(date)))), ec)
+    getObjIterable(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
 
 
   // get since ================================================================================================
@@ -282,7 +282,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[Iterable[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjIterableSince(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] =
-    getObjIterable(conn.map(_.usingTempDb(Since(TxLong(t)))), ec)
+    getObjIterable(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as objects matching molecule since tx.
@@ -318,7 +318,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[Iterable[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjIterableSince(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] =
-    getObjIterable(conn.map(_.usingTempDb(Since(TxLong(tx.t)))), ec)
+    getObjIterable(conn.map(_.usingDbView(Since(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `Iterable` of all rows as objects matching molecule since date.
@@ -349,7 +349,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[Iterable[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjIterableSince(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] =
-    getObjIterable(conn.map(_.usingTempDb(Since(TxDate(date)))), ec)
+    getObjIterable(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -385,7 +385,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjIterableWith(txMolecules: Future[Seq[Statement]]*)
                         (implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getObjIterable(conn.map(conn2 => conn2.usingTempDb(With(conn2.stmts2java(stmtss.flatten)))), ec)
+      getObjIterable(conn.map(conn2 => conn2.usingDbView(With(conn2.stmts2java(stmtss.flatten)))), ec)
     }
   }
 
@@ -412,7 +412,7 @@ trait GetObjIterable[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     */
   def getObjIterableWith(txData: jList[_])
                         (implicit conn: Future[Conn], ec: ExecutionContext): Future[Iterable[Obj]] =
-    getObjIterable(conn.map(_.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
+    getObjIterable(conn.map(_.usingDbView(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
 
 
   // get history ================================================================================================

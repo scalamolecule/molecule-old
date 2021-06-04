@@ -7,7 +7,7 @@ import scala.util.control.NonFatal
 import molecule.core.api.Molecule_0
 import molecule.core.ast.elements._
 import molecule.datomic.base.ast.query.QueryExpr
-import molecule.datomic.base.ast.tempDb._
+import molecule.datomic.base.ast.dbView._
 import molecule.core.exceptions.{MoleculeException, QueryException}
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.ops.QueryOps._
@@ -378,7 +378,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
   def inspectGetAsOf(t: Long)(implicit conn: Future[Conn]): Future[Unit] =
-    inspectGet(conn.map(_.usingTempDb(AsOf(TxLong(t)))))
+    inspectGet(conn.map(_.usingDbView(AsOf(TxLong(t)))))
 
 
   /** Inspect call to `getAsOf(tx)` on a molecule (without affecting the db).
@@ -395,7 +395,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
   def inspectGetAsOf(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] =
-    inspectGet(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))))
+    inspectGet(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))))
 
 
   /** Inspect call to `getAsOf(date)` on a molecule (without affecting the db).
@@ -412,7 +412,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scsope
     */
   def inspectGetAsOf(date: Date)(implicit conn: Future[Conn]): Future[Unit] =
-    inspectGet(conn.map(_.usingTempDb(AsOf(TxDate(date)))))
+    inspectGet(conn.map(_.usingDbView(AsOf(TxDate(date)))))
 
 
   /** Inspect call to `getSince(t)` on a molecule (without affecting the db).
@@ -429,7 +429,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
   def inspectGetSince(t: Long)(implicit conn: Future[Conn]): Future[Unit] =
-    inspectGet(conn.map(_.usingTempDb(Since(TxLong(t)))))
+    inspectGet(conn.map(_.usingDbView(Since(TxLong(t)))))
 
 
   /** Inspect call to `getSince(tx)` on a molecule (without affecting the db).
@@ -446,7 +446,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
   def inspectGetSince(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] =
-    inspectGet(conn.map(_.usingTempDb(Since(TxLong(tx.t)))))
+    inspectGet(conn.map(_.usingDbView(Since(TxLong(tx.t)))))
 
 
   /** Inspect call to `getSince(date)` on a molecule (without affecting the db).
@@ -463,7 +463,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
   def inspectGetSince(date: Date)(implicit conn: Future[Conn]): Future[Unit] =
-    inspectGet(conn.map(_.usingTempDb(Since(TxDate(date)))))
+    inspectGet(conn.map(_.usingDbView(Since(TxDate(date)))))
 
 
   /** Inspect call to `getWith(txMolecules)` on a molecule (without affecting the db).
@@ -484,7 +484,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
   def inspectGetWith(txMolecules: Seq[Statement]*)(implicit conn: Future[Conn]): Future[Unit] = {
     inspectGet(
       conn.map { conn2 =>
-        conn2.usingTempDb(With(conn2.stmts2java(txMolecules.flatten)))
+        conn2.usingDbView(With(conn2.stmts2java(txMolecules.flatten)))
       }
     ).flatMap { _ =>
       conn.map { conn2 =>
@@ -513,7 +513,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
   def inspectGetWith(txData: jList[jList[_]])(implicit conn: Future[Conn]): Unit = {
-    inspectGet(conn.map(_.usingTempDb(With(txData)))).map { _ =>
+    inspectGet(conn.map(_.usingDbView(With(txData)))).map { _ =>
       println("Transaction data:\n========================================================================")
       txData.toArray foreach println
     }
@@ -532,7 +532,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @group inspectGet
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetHistory(implicit conn: Future[Conn]): Unit = inspectGet(conn.map(_.usingTempDb(History)))
+  def inspectGetHistory(implicit conn: Future[Conn]): Unit = inspectGet(conn.map(_.usingDbView(History)))
 
 
   /** Inspect call to `save` on a molecule (without affecting the db).

@@ -1,8 +1,8 @@
 package molecule.datomic.client.facade
 
 import java.util
-import java.util.{Date, stream, Collection => jCollection, List => jList}
-import datomic.{Peer}
+import java.util.{Date, Collection => jCollection, List => jList}
+import datomic.Peer
 import datomic.Util._
 import datomic.db.DbId
 import datomicClient.anomaly.CognitectAnomaly
@@ -11,18 +11,17 @@ import datomicScala.client.api.sync.{Client, Db, Datomic => clientDatomic}
 import datomicScala.client.api.{Datom, sync}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.util.{Helpers, QueryOpsClojure}
+import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.tempDb._
+import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
+import molecule.datomic.base.marshalling.DatomicRpc.javaStmts
 import molecule.datomic.base.transform.Query2String
-import molecule.datomic.peer.facade.TxReport_Peer
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
-//import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
@@ -46,12 +45,8 @@ case class Conn_Client(
   // Flag to indicate if special withDb is in use for testDb
   protected var withDbInUse = false
 
-  def usingTempDb(tempDb: TempDb): Conn = {
-    _adhocDb = Some(tempDb)
-    this
-  }
 
-  def liveDbUsed: Boolean = _adhocDb.isEmpty && _testDb.isEmpty
+  def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
   def testDb(db: DatomicDb): Unit = {
     _testDb = Some(db.asInstanceOf[DatomicDb_Client].clientDb)
@@ -146,20 +141,25 @@ case class Conn_Client(
 
   private def getAdhocDb: Db = {
     val baseDb : Db = _testDb.getOrElse(clientConn.db)
-    val adhocDb: Db = _adhocDb.get match {
+    val adhocDb: Db = _adhocDbView.get match {
       case AsOf(TxLong(t))  => baseDb.asOf(t)
       case AsOf(TxDate(d))  => baseDb.asOf(d)
       case Since(TxLong(t)) => baseDb.since(t)
       case Since(TxDate(d)) => baseDb.since(d)
-      case With(tx)         => baseDb.`with`(clientConn.withDb, tx).dbAfter
+      case With(stmtsEdn, uriAttrs)         =>
+        val txData = javaStmts(stmtsEdn, uriAttrs)
+        baseDb.`with`(clientConn.withDb, txData).dbAfter
       case History          => baseDb.history
+//      case _: WithEdn       => throw new IllegalArgumentException(
+//        "DbView WithEdn(stmtsEdn, uriAttrs) only expected to be used with JS RPC."
+//      )
     }
-    _adhocDb = None
+    _adhocDbView = None
     adhocDb
   }
 
   def db: DatomicDb = {
-    if (_adhocDb.isDefined) {
+    if (_adhocDbView.isDefined) {
       // Adhoc db
       DatomicDb_Client(getAdhocDb)
 
@@ -188,7 +188,7 @@ case class Conn_Client(
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
     futScalaStmts.map { scalaStmts =>
-      if (_adhocDb.isDefined) {
+      if (_adhocDbView.isDefined) {
         TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
       } else if (_testDb.isDefined) {
@@ -532,7 +532,7 @@ case class Conn_Client(
         val from  = args.head.asInstanceOf[Option[Any]]
         val until = args(1).asInstanceOf[Option[Any]]
         // Flatten transaction datoms to unified tuples return type
-        val raw = Future(clientConn.txRangeArray(from, until, limit = -1))
+        val raw   = Future(clientConn.txRangeArray(from, until, limit = -1))
         raw.map { datoms =>
           datoms.foreach {
             case (t, datoms) =>

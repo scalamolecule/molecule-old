@@ -67,9 +67,9 @@ object AjaxResponder extends App with Serializations {
             case Left(err) => {
               println(s"ServerFailure: " + err)
               err match {
-                case PathNotFound(path: List[String]) => Future.failed(new RuntimeException(s"PathNotFound($path)"))
-                case HandlerError(ex: Throwable)      => Future.failed(ex)
-                case DeserializerError(ex: Throwable) => Future.failed(ex)
+                case PathNotFound(path: List[String])  => Future.failed(new RuntimeException(s"PathNotFound($path)"))
+                case HandlerError(exc: Throwable)      => Future.failed(exc)
+                case DeserializerError(exc: Throwable) => Future.failed(exc)
               }
             }
           }

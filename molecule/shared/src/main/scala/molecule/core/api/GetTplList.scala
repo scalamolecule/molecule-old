@@ -2,8 +2,9 @@ package molecule.core.api
 
 import java.util.{Date, List => jList}
 import molecule.core.marshalling.Marshalling
+import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps
-import molecule.datomic.base.ast.tempDb._
+import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.collection.mutable.ListBuffer
@@ -54,7 +55,8 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       conn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.jsQuery(_nestedQuery.getOrElse(_query), -1, indexes, qr2tpl)
+          println("get ... " + conn._adhocDbView)
+          conn.jsQuery(_query, -1, indexes, qr2tpl)
         } else {
           conn.query(_model, _query).map { jColl =>
             val it  = jColl.iterator
@@ -90,7 +92,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       conn.flatMap { conn2 =>
         if (conn2.isJsPlatform) {
-          conn2.jsQuery(_nestedQuery.getOrElse(_query), n, indexes, qr2tpl)
+          conn2.jsQuery(_query, n, indexes, qr2tpl)
         } else {
           if (n == -1) {
             get(conn, ec)
@@ -173,8 +175,14 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingTempDb(AsOf(TxLong(t)))), ec)
+  def getAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+    //    get(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
+    println(s"1 calling getAsOf($t)")
+    get(conn.map { conn =>
+      println(s"2 calling getAsOf($t)")
+      conn.usingDbView(AsOf(TxLong(t)))
+    }, ec)
+  }
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule as of transaction time `t`.
@@ -222,7 +230,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsOf(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingTempDb(AsOf(TxLong(t)))), ec)
+    get(n)(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule as of tx.
@@ -271,8 +279,8 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     * */
-  def getAsOf(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))), ec)
+  def getAsOf(txR: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+    get(conn.map(_.usingDbView(AsOf(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule as of tx.
@@ -314,8 +322,8 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     * */
-  def getAsOf(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingTempDb(AsOf(TxLong(tx.t)))), ec)
+  def getAsOf(txR: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+    get(n)(conn.map(_.usingDbView(AsOf(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule as of date.
@@ -367,7 +375,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsOf(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingTempDb(AsOf(TxDate(date)))), ec)
+    get(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule as of date.
@@ -407,7 +415,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsOf(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingTempDb(AsOf(TxDate(date)))), ec)
+    get(n)(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
 
 
   // get since ================================================================================================
@@ -443,7 +451,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingTempDb(Since(TxLong(t)))), ec)
+    get(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule since transaction time `t`.
@@ -475,7 +483,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingTempDb(Since(TxLong(t)))), ec)
+    get(n)(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule since tx.
@@ -510,8 +518,8 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getSince(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingTempDb(Since(TxLong(tx.t)))), ec)
+  def getSince(txR: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+    get(conn.map(_.usingDbView(Since(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule since tx.
@@ -544,8 +552,8 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getSince(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingTempDb(Since(TxLong(tx.t)))), ec)
+  def getSince(txR: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+    get(n)(conn.map(_.usingDbView(Since(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule since date.
@@ -576,7 +584,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingTempDb(Since(TxDate(date)))), ec)
+    get(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule since date.
@@ -605,7 +613,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingTempDb(Since(TxDate(date)))), ec)
+    get(n)(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -636,10 +644,14 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getWith(txMolecules: Future[Seq[Statement]]*)
+  def getWith(txData: Future[Seq[Statement]]*)
              (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    Future.sequence(txMolecules).flatMap { stmtss =>
-      get(conn.map(conn2 => conn2.usingTempDb(With(conn2.stmts2java(stmtss.flatten)))), ec)
+    Future.sequence(txData).flatMap { stmtss =>
+      val connWith = conn.map { conn =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
+        conn.usingDbView(With(stmtsEdn, uriAttrs))
+      }
+      get(connWith, ec)
     }
   }
 
@@ -680,65 +692,86 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
     */
-  def getWith(n: Int, txMolecules: Future[Seq[Statement]]*)
+  def getWith(n: Int, txData: Future[Seq[Statement]]*)
              (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    Future.sequence(txMolecules).flatMap { stmtss =>
-      get(n)(conn.map(conn2 => conn2.usingTempDb(With(conn2.stmts2java(stmtss.flatten)))), ec)
+    Future.sequence(txData).flatMap { stmtss =>
+      val connWith = conn.map { conn =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
+        conn.usingDbView(With(stmtsEdn, uriAttrs))
+      }
+      get(n)(connWith, ec)
     }
   }
 
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule with applied raw transaction data.
-    * <br><br>
-    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
-    * {{{
-    *   // Live size of Person db
-    *   Person.name.get.map(_.size ==> 150)
-    *
-    *   // Read some transaction data from file
-    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
-    *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
-    *
-    *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).map(_.size ==> 250
-    * }}}
-    *
-    * @group getWith
-    * @param txData Raw transaction data as java.util.List[Object]
-    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
-    */
-  def getWith(txData: jList[_])(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(conn.map(_.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
-  }
-
-  /** Get `Future` with `List` of n rows as tuples matching molecule with applied raw transaction data.
-    * <br><br>
-    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
-    * {{{
-    *   // Live size of Person db
-    *   Person.name.get.map(_.size ==> 150)
-    *
-    *   // Read some transaction data from file
-    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
-    *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
-    *
-    *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
-    *
-    *   // Imagine future db - Let's just take 10
-    *   Person.name.getWith(newDataTx, 10).map(_.size ==> 10)
-    * }}}
-    *
-    * @group getWith
-    * @param txData Raw transaction data as java.util.List[Object]
-    * @param n      Int Number of rows returned
-    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
-    */
-  def getWith(txData: jList[_], n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingTempDb(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
-
+  //  /** Get `Future` with `List` of all rows as tuples matching molecule with applied raw transaction data.
+  //    * <br><br>
+  //    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
+  //    * {{{
+  //    *   // Live size of Person db
+  //    *   Person.name.get.map(_.size ==> 150)
+  //    *
+  //    *   // Read some transaction data from file
+  //    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
+  //    *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
+  //    *
+  //    *   // Imagine future db - 100 persons would be added, apparently
+  //    *   Person.name.getWith(newDataTx).map(_.size ==> 250
+  //    * }}}
+  //    *
+  //    * @group getWith
+  //    * @param txData Raw transaction data as java.util.List[Object]
+  //    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+  //    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
+  //    */
+  //  def getWith(txData: jList[_])(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  //    _getWith(txData, -1)
+  //  }
+  //
+  //  /** Get `Future` with `List` of n rows as tuples matching molecule with applied raw transaction data.
+  //    * <br><br>
+  //    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
+  //    * {{{
+  //    *   // Live size of Person db
+  //    *   Person.name.get.map(_.size ==> 150)
+  //    *
+  //    *   // Read some transaction data from file
+  //    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
+  //    *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
+  //    *
+  //    *   // Imagine future db - 100 persons would be added, apparently
+  //    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
+  //    *
+  //    *   // Imagine future db - Let's just take 10
+  //    *   Person.name.getWith(newDataTx, 10).map(_.size ==> 10)
+  //    * }}}
+  //    *
+  //    * @group getWith
+  //    * @param txData Raw transaction data as java.util.List[Object]
+  //    * @param n      Int Number of rows returned
+  //    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+  //    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
+  //    */
+  //  def getWith(txData: jList[_], n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  //    _getWith(txData, n)
+  //  }
+  //
+  //
+  //  private def _getWith(txData: jList[_], n: Int)
+  //                      (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  //    val connWith = conn.flatMap { conn =>
+  //      if (conn.isJsPlatform) {
+  //        Future.failed(new IllegalArgumentException("Please use tx data from molecule statements instead."))
+  //      } else {
+  ////        Future(conn.usingDbView(With(txData.asInstanceOf[jList[jList[_]]])))
+  //
+  //
+  //
+  //        Future(conn.usingDbView(With(txData.asInstanceOf[jList[jList[_]]])))
+  //      }
+  //    }
+  //    get(n)(connWith, ec)
+  //  }
 
   // get history ================================================================================================
 
@@ -782,10 +815,11 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return List[Tpl] where Tpl is tuple of data matching molecule
     */
-  def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingTempDb(History)), ec)
+  def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+    get(conn.map(_.usingDbView(History)), ec)
+  }
 
 
   // `getHistory(n: Int)` is not implemented since the whole data set normally needs to be sorted
-  // to give chronological meaningful information.
+  // to give chronologically meaningful information.
 }

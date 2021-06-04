@@ -1,7 +1,7 @@
 package molecule.datomic.peer.facade
 
-import java.util.{Collections, Date, Collection => jCollection, List => jList}
-import java.{lang, util}
+import java.util
+import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
@@ -11,16 +11,15 @@ import molecule.core.exceptions._
 import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.tempDb._
+import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
+import molecule.datomic.base.marshalling.DatomicRpc.javaStmts
 import molecule.datomic.base.transform.Query2String
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
-//import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Factory methods to create facade to Datomic Connection. */
@@ -39,22 +38,20 @@ object Conn_Peer {
 
 /** Facade to Datomic connection for peer api.
   * */
-class Conn_Peer(
-  val peerConn: datomic.Connection,
-  val system: String = ""
+case class Conn_Peer(
+  //  val peerConn: datomic.Connection,
+  //  val system: String = ""
+  peerConn: datomic.Connection,
+  system: String = ""
 ) extends Conn_Datomic213 {
+
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
-  private var _testDb: Option[Database] = None
+  private[molecule] var _testDb: Option[Database] = None
 
 
-  def usingTempDb(tempDb: TempDb): Conn = {
-    _adhocDb = Some(tempDb)
-    this
-  }
-
-  def liveDbUsed: Boolean = _adhocDb.isEmpty && _testDb.isEmpty
+  def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
   def testDb(db: DatomicDb): Unit = {
     _testDb = Some(db.asInstanceOf[DatomicDb_Peer].peerDb)
@@ -123,24 +120,30 @@ class Conn_Peer(
 
   private def getAdhocDb: Database = {
     val baseDb : Database = _testDb.getOrElse(peerConn.db)
-    val adhocDb: Database = _adhocDb.get match {
+    val adhocDb: Database = _adhocDbView.get match {
       case AsOf(TxLong(t))  => baseDb.asOf(t)
       case AsOf(TxDate(d))  => baseDb.asOf(d)
       case Since(TxLong(t)) => baseDb.since(t)
       case Since(TxDate(d)) => baseDb.since(d)
-      case With(tx)         => {
-        val txReport = TxReport_Peer(baseDb.`with`(tx))
-        val db       = txReport.dbAfter.asOf(txReport.t)
-        db
-      }
+      case With(stmtsEdn, uriAttrs)         =>
+        val txData = javaStmts(stmtsEdn, uriAttrs)
+        val txReport = TxReport_Peer(baseDb.`with`(txData))
+        txReport.dbAfter.asOf(txReport.t)
+
       case History          => baseDb.history()
+//      case _: WithEdn       => throw new IllegalArgumentException(
+//        "DbView WithEdn(stmtsEdn, uriAttrs) only expected to be used with JS RPC."
+//      )
     }
-    _adhocDb = None
+    _adhocDbView = None
     adhocDb
   }
 
   def db: DatomicDb = {
-    if (_adhocDb.isDefined) {
+
+    println("Conn_Peer.db " + _adhocDbView)
+
+    if (_adhocDbView.isDefined) {
       // Return singleton adhoc db
       DatomicDb_Peer(getAdhocDb)
     } else if (_testDb.isDefined) {
@@ -156,9 +159,11 @@ class Conn_Peer(
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transactRaw(javaStmts: jList[_], futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement]))
-                 (implicit ec: ExecutionContext): Future[TxReport] = try {
-    if (_adhocDb.isDefined) {
+  def transactRaw(
+    javaStmts: jList[_],
+    futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
+  )(implicit ec: ExecutionContext): Future[TxReport] = try {
+    if (_adhocDbView.isDefined) {
       futScalaStmts.map(scalaStmts =>
         TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
       )

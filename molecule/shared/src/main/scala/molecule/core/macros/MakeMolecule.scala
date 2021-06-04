@@ -45,7 +45,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           q"(..$lookups0)"
         }
         z(1, txMetaCompositesCount, castss, lookups)
-
         q"""
           final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
             ..$arrays
@@ -54,20 +53,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
           final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
         """
-        //        q"""
-        //          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-        //            ..$arrays
-        //            val x = "-----------"
-        //            val a10 = qr.oneInt(0);
-        //            val a11 = qr.oneInt(1);
-        //            val a12 = qr.oneString(0);
-        //            val a13 = qr.oneInt(3);
-        //            val z = (i: Int) => (..$lookups);
-        //            (i: Int) => scala.Tuple3(a0(i), scala.Tuple2(a1(i), a2(i)), a3(i))
-        //          }
-        //          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-        //          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
-        //        """
+
       } else {
         val casts = if (txMetaCompositesCount > 0) {
           // Treat tx meta data as composite

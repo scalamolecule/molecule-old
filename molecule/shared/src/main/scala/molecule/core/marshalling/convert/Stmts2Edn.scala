@@ -1,8 +1,6 @@
-package molecule.core.marshalling
+package molecule.core.marshalling.convert
 
-import java.net.URI
-import java.util.{Date, UUID}
-import molecule.core.ast.elements._
+import java.util.Date
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn

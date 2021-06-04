@@ -6,7 +6,7 @@ import sbtbuildinfo.BuildInfoPlugin.autoImport._
 
 object Settings extends SettingsDatomic with SettingsMolecule {
 
-  val base: Seq[Def.Setting[_]] = Seq(
+  val baseSettings: Seq[Def.Setting[_]] = Seq(
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
@@ -46,14 +46,18 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time" % "2.2.2",
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
     ),
-//    scalaJSLinkerConfig ~= { _.withSemantics(_.withStrictFloats(true)) },
-//    testFrameworks += new TestFramework("utest.runner.Framework"),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-//    scalaJSUseMainModuleInitializer := true,
-//    scalaJSUseTestModuleInitializer := true,
-//    mainClass := Some("MainApp"),
-//    scalaJSMainModuleInitializer := Some("MainApp"),
-    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
+
+    // Temporarily
+    unmanagedSources / excludeFilter := {
+      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+      val allowed = Seq(
+        sharedTests + "/core/api/AsOf.scala",
+        sharedTests + "/core/attr/Attribute.scala"
+      )
+      new SimpleFileFilter(f => f.getCanonicalPath.startsWith(sharedTests) && !allowed.contains(f.getCanonicalPath))
+    },
   )
 
   val server: Seq[Def.Setting[_]] = {
@@ -70,7 +74,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-http" % "10.2.4",
         "ch.megard" %% "akka-http-cors" % "1.1.1"
       ),
-//      testFrameworks += new TestFramework("utest.runner.Framework"),
+      //      testFrameworks += new TestFramework("utest.runner.Framework"),
       // Ensure clojure loads correctly for async tests run from sbt
       Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
     ) ++ (if (datomicProtocol == "free") {
@@ -86,7 +90,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   }
 
 
-  val shared: Seq[Def.Setting[_]] = base ++ Seq(
+  val shared: Seq[Def.Setting[_]] = baseSettings ++ Seq(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.lihaoyi" %%% "utest" % "0.7.9",
@@ -95,7 +99,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
       "org.specs2" %%% "specs2-core" % "4.10.6"
     ),
-      testFrameworks += new TestFramework("utest.runner.Framework"),
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+
+
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,
       "datomicProtocol" -> datomicProtocol,

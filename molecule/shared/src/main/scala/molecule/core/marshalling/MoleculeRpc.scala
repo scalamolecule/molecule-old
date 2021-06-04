@@ -5,7 +5,6 @@ import scala.concurrent.Future
 
 trait MoleculeRpc {
 
-
   def transact(
     dbProxy: DbProxy,
     stmtsEdn: String,
