@@ -2,6 +2,7 @@ package molecule.core.api
 
 import java.util.{Date, List => jList}
 import molecule.core.marshalling.Marshalling
+import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
@@ -695,7 +696,11 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjListWith(txMolecules: Future[Seq[Statement]]*)
                     (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getObjList(conn.map(conn2 => conn2.usingDbView(With(conn2.stmts2java(stmtss.flatten)))), ec)
+      val connWith = conn.map { conn =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
+        conn.usingDbView(With(stmtsEdn, uriAttrs))
+      }
+      getObjList(connWith, ec)
     }
   }
 
@@ -755,62 +760,14 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjListWith(n: Int, txMolecules: Future[Seq[Statement]]*)
                     (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
-      getObjList(n)(conn.map(conn2 => conn2.usingDbView(With(conn2.stmts2java(stmtss.flatten)))), ec)
+      val connWith = conn.map { conn =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
+        conn.usingDbView(With(stmtsEdn, uriAttrs))
+      }
+      getObjList(n)(connWith, ec)
+
     }
   }
-
-
-  /** Get `Future` with `List` of all rows as objects matching molecule with applied raw transaction data.
-    * <br><br>
-    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
-    * {{{
-    *   // Live size of Person db
-    *   Person.name.get.map(_.size ==> 150)
-    *
-    *   // Read some transaction data from file
-    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
-    *   val newDataTx = Util.readAll(data_rdr2).getObjList(0).asInstanceOf[java.util.List[Object]]
-    *
-    *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
-    * }}}
-    *
-    * @group getWith
-    * @param txData Raw transaction data as java.util.List[Object]
-    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
-    */
-  def getObjListWith(txData: jList[_])
-                    (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
-
-  /** Get `Future` with `List` of n rows as objects matching molecule with applied raw transaction data.
-    * <br><br>
-    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
-    * {{{
-    *   // Live size of Person db
-    *   Person.name.get.map(_.size ==> 150)
-    *
-    *   // Read some transaction data from file
-    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
-    *   val newDataTx = Util.readAll(data_rdr2).getObjList(0).asInstanceOf[java.util.List[Object]]
-    *
-    *   // Imagine future db - 100 persons would be added, apparently
-    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
-    *
-    *   // Imagine future db - Let's just take 10
-    *   Person.name.getWith(newDataTx, 10).map(_.size ==> 10)
-    * }}}
-    *
-    * @group getWith
-    * @param txData Raw transaction data as java.util.List[Object]
-    * @param n      Int Number of rows returned
-    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
-    */
-  def getObjListWith(txData: jList[_], n: Int)
-                    (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingDbView(With(txData.asInstanceOf[jList[jList[_]]]))), ec)
 
 
   // get history ================================================================================================

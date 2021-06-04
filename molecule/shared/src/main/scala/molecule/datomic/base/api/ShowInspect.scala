@@ -1,6 +1,7 @@
 package molecule.datomic.base.api
 
-import java.util.{Date, List => jList, Map => jMap, Set => jSet, Collection => jCollection}
+import java.util.{Date, Collection => jCollection, List => jList, Map => jMap, Set => jSet}
+import molecule.core.marshalling.convert.Stmts2Edn
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 //import clojure.lang.{PersistentHashSet, PersistentVector}
@@ -484,40 +485,26 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
   def inspectGetWith(txMolecules: Seq[Statement]*)(implicit conn: Future[Conn]): Future[Unit] = {
     inspectGet(
       conn.map { conn2 =>
-        conn2.usingDbView(With(conn2.stmts2java(txMolecules.flatten)))
-      }
-    ).flatMap { _ =>
-      conn.map { conn2 =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(txMolecules.flatten, conn2)
+        conn2.usingDbView(With(stmtsEdn, uriAttrs))
         println("Transaction data:\n========================================================================")
         txMolecules.zipWithIndex foreach { case (stmts, i) =>
           conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
         }
+        conn2
       }
-    }
+    )
+//      .flatMap { _ =>
+//      conn.map { conn2 =>
+//        println("Transaction data:\n========================================================================")
+//        txMolecules.zipWithIndex foreach { case (stmts, i) =>
+//          conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
+//        }
+//      }
+//    }
   }
 
 
-  /** Inspect call to `getWith(txData)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    * <br><br>
-    * 3. Transactions of applied transaction data.
-    *
-    * @group inspectGet
-    * @param txData Raw transaction data as java.util.List[Object]
-    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
-  def inspectGetWith(txData: jList[jList[_]])(implicit conn: Future[Conn]): Unit = {
-    inspectGet(conn.map(_.usingDbView(With(txData)))).map { _ =>
-      println("Transaction data:\n========================================================================")
-      txData.toArray foreach println
-    }
-  }
 
 
   /** Inspect call to `getHistory` on a molecule (without affecting the db).

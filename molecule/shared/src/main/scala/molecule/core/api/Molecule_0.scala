@@ -162,11 +162,6 @@ abstract class Molecule_0[Obj, Tpl](
   with ShowInspect[Obj, Tpl]
   with Helpers {
 
-//  with GetTplArray[Obj, Tpl]
-//  with GetTplIterable[Obj, Tpl]
-//  with GetObjArray[Obj, Tpl]
-//  with GetObjIterable[Obj, Tpl]
-//  with GetRaw
 
   // Dynamic molecule ==========================================================
 

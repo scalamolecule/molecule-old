@@ -48,36 +48,6 @@ object Time extends AsyncTestSuite with Helpers {
         _ <- Ns.int.getObjListAsOf(d2).map(_.map(_.int) ==> List(1, 2))
         _ <- Ns.int.getObjListAsOf(d3).map(_.map(_.int) ==> List(1, 2, 3))
         _ <- Ns.int.getObjListAsOf(d3, 2).map(_.map(_.int) ==> List(1, 2))
-
-
-        _ <- Ns.int.getObjArrayAsOf(t1).map(_.map(_.int) ==> Array(1))
-        _ <- Ns.int.getObjArrayAsOf(t2).map(_.map(_.int) ==> Array(1, 2))
-        _ <- Ns.int.getObjArrayAsOf(t3).map(_.map(_.int) ==> Array(1, 2, 3))
-        _ <- Ns.int.getObjArrayAsOf(t3, 2).map(_.map(_.int) ==> Array(1, 2))
-
-        _ <- Ns.int.getObjArrayAsOf(tx1).map(_.map(_.int) ==> Array(1))
-        _ <- Ns.int.getObjArrayAsOf(tx2).map(_.map(_.int) ==> Array(1, 2))
-        _ <- Ns.int.getObjArrayAsOf(tx3).map(_.map(_.int) ==> Array(1, 2, 3))
-        _ <- Ns.int.getObjArrayAsOf(tx3, 2).map(_.map(_.int) ==> Array(1, 2))
-
-        _ <- Ns.int.getObjArrayAsOf(d1).map(_.map(_.int) ==> Array(1))
-        _ <- Ns.int.getObjArrayAsOf(d2).map(_.map(_.int) ==> Array(1, 2))
-        _ <- Ns.int.getObjArrayAsOf(d3).map(_.map(_.int) ==> Array(1, 2, 3))
-        _ <- Ns.int.getObjArrayAsOf(d3, 2).map(_.map(_.int) ==> Array(1, 2))
-
-
-        _ <- Ns.int.getObjIterableAsOf(t1).map(_.iterator.next().int ==> 1)
-        _ <- Ns.int.getObjIterableAsOf(t1).map(_.iterator.toList.map(_.int) ==> Iterator(1).toList)
-        _ <- Ns.int.getObjIterableAsOf(t2).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2).toList)
-        _ <- Ns.int.getObjIterableAsOf(t3).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2, 3).toList)
-
-        _ <- Ns.int.getObjIterableAsOf(tx1).map(_.iterator.toList.map(_.int) ==> Iterator(1).toList)
-        _ <- Ns.int.getObjIterableAsOf(tx2).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2).toList)
-        _ <- Ns.int.getObjIterableAsOf(tx3).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2, 3).toList)
-
-        _ <- Ns.int.getObjIterableAsOf(d1).map(_.iterator.toList.map(_.int) ==> Iterator(1).toList)
-        _ <- Ns.int.getObjIterableAsOf(d2).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2).toList)
-        _ <- Ns.int.getObjIterableAsOf(d3).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2, 3).toList)
       } yield ()
     }
 
@@ -102,37 +72,6 @@ object Time extends AsyncTestSuite with Helpers {
         //        _ <- Ns.int.getObjListSince(d2).map(_.map(_.int) ==> List(3))
         //        _ <- Ns.int.getObjListSince(d1).map(_.map(_.int) ==> List(2, 3))
         //        _ <- Ns.int.getObjListSince(d1, 1).map(_.map(_.int) ==> List(2))
-
-
-        _ <- Ns.int.getObjArraySince(t3).map(_.map(_.int) ==> Array())
-        _ <- Ns.int.getObjArraySince(t2).map(_.map(_.int) ==> Array(3))
-        _ <- Ns.int.getObjArraySince(t1).map(_.map(_.int) ==> Array(2, 3))
-        _ <- Ns.int.getObjArraySince(t1, 1).map(_.map(_.int) ==> Array(2))
-
-        _ <- Ns.int.getObjArraySince(tx3).map(_.map(_.int) ==> Array())
-        _ <- Ns.int.getObjArraySince(tx2).map(_.map(_.int) ==> Array(3))
-        _ <- Ns.int.getObjArraySince(tx1).map(_.map(_.int) ==> Array(2, 3))
-        _ <- Ns.int.getObjArraySince(tx1, 1).map(_.map(_.int) ==> Array(2))
-
-        // Same about Date precision as above
-        //        _ <- Ns.int.getObjArraySince(d3).map(_.map(_.int) ==> Array())
-        //        _ <- Ns.int.getObjArraySince(d2).map(_.map(_.int) ==> Array(3))
-        //        _ <- Ns.int.getObjArraySince(d1).map(_.map(_.int) ==> Array(2, 3))
-        //        _ <- Ns.int.getObjArraySince(d1, 1).map(_.map(_.int) ==> Array(2))
-
-
-        _ <- Ns.int.getObjIterableSince(t3).map(_.iterator.toList.map(_.int) ==> Iterator().toList)
-        _ <- Ns.int.getObjIterableSince(t2).map(_.iterator.toList.map(_.int) ==> Iterator(3).toList)
-        _ <- Ns.int.getObjIterableSince(t1).map(_.iterator.toList.map(_.int) ==> Iterator(2, 3).toList)
-        _ <- Ns.int.getObjIterableSince(tx3).map(_.iterator.toList.map(_.int) ==> Iterator().toList)
-        _ <- Ns.int.getObjIterableSince(tx2).map(_.iterator.toList.map(_.int) ==> Iterator(3).toList)
-        _ <- Ns.int.getObjIterableSince(tx1).map(_.iterator.toList.map(_.int) ==> Iterator(2, 3).toList)
-
-
-        // Same about Date precision as above
-        //        _ <- Ns.int.getObjIterableSince(d3).map(_.iterator.toList.map(_.int) ==> Iterator().toList)
-        //        _ <- Ns.int.getObjIterableSince(d2).map(_.iterator.toList.map(_.int) ==> Iterator(3).toList)
-        //        _ <- Ns.int.getObjIterableSince(d1).map(_.iterator.toList.map(_.int) ==> Iterator(2, 3).toList)
       } yield ()
     }
 
@@ -151,13 +90,6 @@ object Time extends AsyncTestSuite with Helpers {
         // Note how the parameter for number of rows returned is first (since we
         // need the vararg for tx molecules last)
         _ <- Ns.int.getObjListWith(2, saveTx2, saveTx3).map(_.map(_.int) ==> List(1, 2))
-
-        _ <- Ns.int.getObjArrayWith(saveTx2).map(_.map(_.int) ==> Array(1, 2))
-        _ <- Ns.int.getObjArrayWith(saveTx2, saveTx3).map(_.map(_.int) ==> Array(1, 2, 3))
-        _ <- Ns.int.getObjArrayWith(2, saveTx2, saveTx3).map(_.map(_.int) ==> Array(1, 2))
-
-        _ <- Ns.int.getObjIterableWith(saveTx2).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2).toList)
-        _ <- Ns.int.getObjIterableWith(saveTx2, saveTx3).map(_.iterator.toList.map(_.int) ==> Iterator(1, 2, 3).toList)
       } yield ()
     }
 

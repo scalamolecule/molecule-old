@@ -10,9 +10,9 @@ private[molecule] object dbView {
   sealed trait DbView
   case class AsOf(tx: PointInTime) extends DbView
   case class Since(tx: PointInTime) extends DbView
-//  case class With(tx: jList[jList[_]]) extends DbView
-//  case class WithEdn(stmtsEdn: String, uriAttrs: Set[String]) extends DbView
-  case class With(stmtsEdn: String, uriAttrs: Set[String] = Set.empty[String]) extends DbView
-//  trait History extends DbView
+  case class With(
+    stmtsEdn: String,
+    uriAttrs: Set[String] = Set.empty[String]
+  ) extends DbView
   case object History extends DbView
 }

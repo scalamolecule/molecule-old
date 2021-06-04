@@ -10,13 +10,13 @@ sealed trait DbProxy {
 //  var testDbView: Option[DbView]  = Some(AsOf(TxLong(1022L)))
   var testDbView = Option.empty[DbView]
 //  var adhocDbView = Option.empty[DbView]
-  val adhocDbView = Option.empty[DbView]
+  var adhocDbView = Option.empty[DbView]
 }
 
 case class DatomicInMemProxy(
   edns: Seq[String],
   override val attrMap: Map[String, (Int, String)],
-  override val adhocDbView: Option[DbView] = None,
+//  override val adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy
 

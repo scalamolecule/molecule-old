@@ -30,7 +30,7 @@ trait Conn extends ColOps {
 
   val tempId = TempIdFactory
 
-  private[molecule] var dbProxy: DbProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+  private[molecule] val dbProxy: DbProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
 
   /** */
   lazy val moleculeRpc: MoleculeRpc = ???
@@ -39,7 +39,7 @@ trait Conn extends ColOps {
 
 //    dbProxy = dbProxy.copy()
 
-//    dbProxy.adhocDbView = Some(dbView)
+    dbProxy.adhocDbView = Some(dbView)
 
     println("dbProxy.adhocDbView1 " + dbProxy.adhocDbView)
 
@@ -390,12 +390,12 @@ trait Conn extends ColOps {
 
     println("dbProxy.adhocDbView2 " + dbProxy.adhocDbView)
 
-    val x = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)], Some(AsOf(TxLong(42L))))
+//    val x = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)], Some(AsOf(TxLong(42L))))
 //    x.adhocDbView = Some(AsOf(TxLong(42L)))
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
-//    moleculeRpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
-    moleculeRpc.query(x, datalogQuery, rules, l, ll, lll, n, indexes)
+    moleculeRpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
+//    moleculeRpc.query(x, datalogQuery, rules, l, ll, lll, n, indexes)
       .map {
         qr =>
           val maxRows    = if (n == -1) qr.maxRows else n

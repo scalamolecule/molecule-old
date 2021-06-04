@@ -26,9 +26,9 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param dbProxy0 Db coordinates to access db on server side
   */
-//case class Conn_Js(override val dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
-case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
-  dbProxy = dbProxy0
+case class Conn_Js(override val dbProxy: DbProxy) extends Conn with ColOps with Helpers {
+//case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
+//  dbProxy = dbProxy0
 
   val isJsPlatform: Boolean = true
 
@@ -77,12 +77,6 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
       dbProxy.testDbView = Some(With(stmtsEdn, uriAttrs))
     }
   }
-
-//  override def testDbWith(txDataJava: jList[jList[_]])
-//                         (implicit ec: ExecutionContext): Future[Unit] = Future {
-//    val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, this)
-//    dbProxy.testDbView = Some(With(stmtsEdn, uriAttrs))
-//  }
 
   override def useLiveDb: Unit = ???
 

@@ -16,7 +16,7 @@ trait Serializations {
     new Serializer[T, ByteBuffer] with Deserializer[T, ByteBuffer] {
       override def serialize(arg: T): ByteBuffer = Pickle.intoBytes(arg)
       override def deserialize(arg: ByteBuffer): Either[Throwable, T] =
-        Try(Unpickle[T].fromBytes(arg)) match {
+        Try(Unpickle.apply[T].fromBytes(arg)) match {
           case Success(arg) => Right(arg)
           case Failure(t)   => Left(t)
         }
@@ -26,25 +26,25 @@ trait Serializations {
   implicit val datePickler = transformPickler((t: Long) => new java.util.Date(t))(_.getTime)
   implicit val uriPickler  = transformPickler((t: String) => new URI(t))(_.toString)
 
-  implicit val trowa = exceptionPickler
-    .addException[DbException](m => DbException(m))
+//  implicit val trowa = exceptionPickler
+//    .addException[DbException](m => DbException(m))
 
-  implicit val pointInTimePickler = compositePickler[PointInTime].
-    addConcreteType[TxDate].
-    addConcreteType[TxLong]
 
-  implicit val dbViewPickler = compositePickler[DbView].
-    addConcreteType[AsOf].
-    addConcreteType[Since].
-    addConcreteType[With].
-//    addConcreteType[WithEdn].
-    addConcreteType[History.type]
-
-  implicit val dbProxyPickler = compositePickler[DbProxy].
-    addConcreteType[DatomicInMemProxy].
-    addConcreteType[DatomicPeerProxy].
-    addConcreteType[DatomicDevLocalProxy].
-    addConcreteType[DatomicPeerServerProxy]
+//  implicit val pointInTimePickler = compositePickler[PointInTime].
+//    addConcreteType[TxDate].
+//    addConcreteType[TxLong]
+//
+//  implicit val dbViewPickler = compositePickler[DbView].
+//    addConcreteType[AsOf].
+//    addConcreteType[Since].
+//    addConcreteType[With].
+//    addConcreteType[History.type]
+//
+//  implicit val dbProxyPickler = compositePickler[DbProxy].
+//    addConcreteType[DatomicInMemProxy].
+//    addConcreteType[DatomicPeerProxy].
+//    addConcreteType[DatomicDevLocalProxy].
+//    addConcreteType[DatomicPeerServerProxy]
 
 
 }

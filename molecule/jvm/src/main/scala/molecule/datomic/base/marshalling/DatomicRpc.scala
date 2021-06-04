@@ -56,13 +56,10 @@ object DatomicRpc extends MoleculeRpc
   ): Future[QueryResult] = {
 
 
-//    println("#### dbProxy " + dbProxy)
+    //    println("#### dbProxy " + dbProxy)
     println("#### dbProxy " + dbProxy.testDbView)
     println("#### dbProxy " + dbProxy.adhocDbView)
-//    println("#### dbProxy " + dbProxy.adhocDbView2)
-
-
-
+    //    println("#### dbProxy " + dbProxy.adhocDbView2)
 
 
     val log                 = new log
@@ -175,26 +172,22 @@ object DatomicRpc extends MoleculeRpc
         println(s"caching... ${dbProxy.adhocDbView}")
 
         val futConn: Future[Conn_Datomic213] = dbProxy match {
-//          case DatomicInMemProxy(edns, _, _) =>
-          case DatomicInMemProxy(edns, _, _, _) =>
+          //          case DatomicInMemProxy(edns, _, _) =>
+          case DatomicInMemProxy(edns, _, _) =>
             //          Datomic_Peer.connect("mem", dbIdentifier)
             Datomic_Peer.recreateDbFromEdn(edns).map { conn =>
               val baseDb: Database = conn.peerConn.db
               conn._testDb = dbProxy.testDbView.fold(Option.empty[Database]) {
-                case AsOf(TxLong(t))  => Some(baseDb.asOf(t))
-                case AsOf(TxDate(d))  => Some(baseDb.asOf(d))
-                case Since(TxLong(t)) => Some(baseDb.since(t))
-                case Since(TxDate(d)) => Some(baseDb.since(d))
-                case With(stmtsEdn, uriAttrs)         =>
-                  val txData = javaStmts(stmtsEdn, uriAttrs)
+                case AsOf(TxLong(t))          => Some(baseDb.asOf(t))
+                case AsOf(TxDate(d))          => Some(baseDb.asOf(d))
+                case Since(TxLong(t))         => Some(baseDb.since(t))
+                case Since(TxDate(d))         => Some(baseDb.since(d))
+                case History                  => Some(baseDb.history())
+                case With(stmtsEdn, uriAttrs) =>
+                  val txData   = javaStmts(stmtsEdn, uriAttrs)
                   val txReport = TxReport_Peer(baseDb.`with`(txData))
                   val db       = txReport.dbAfter.asOf(txReport.t)
                   Some(db)
-
-                case History          => Some(baseDb.history())
-//                case _: WithEdn       => throw new IllegalArgumentException(
-//                  "DbView WithEdn(stmtsEdn, uriAttrs) only expected to be used with JS RPC."
-//                )
               }
               conn._adhocDbView = dbProxy.adhocDbView
 
@@ -236,10 +229,10 @@ object DatomicRpc extends MoleculeRpc
       dbProxy.uuid,
       {
         val queryExecutor = getCachedConn(dbProxy).map { conn =>
-//          val db: DatomicDb = getDb(conn, dbProxy)
+          //          val db: DatomicDb = getDb(conn, dbProxy)
 
           //          println(db.)
-//          conn._adhocDbView = Some(AsOf(TxLong(1036)))
+          //          conn._adhocDbView = Some(AsOf(TxLong(1036)))
 
           (datalogQuery: String, inputs: Seq[AnyRef]) => {
             conn.qRaw(conn.db, datalogQuery, inputs)
@@ -252,50 +245,50 @@ object DatomicRpc extends MoleculeRpc
     )
   }
 
-  private def getDb(conn: Conn, dbProxy: DbProxy): DatomicDb = {
-    conn match {
-      case Conn_Peer(peerConn, _) =>
-        def dbProjection(db: Database, dbView: Option[DbView]): Database = dbView match {
-          case None                              => db
-          case Some(AsOf(TxLong(t)))             =>
-
-            println("asOf: " + t)
-            db.asOf(t)
-          case Some(AsOf(TxDate(d)))             => db.asOf(d)
-          case Some(Since(TxLong(t)))            => db.since(t)
-          case Some(Since(TxDate(d)))            => db.since(d)
-          case Some(With(stmtsEdn, uriAttrs)) => {
-            val txData = javaStmts(stmtsEdn, uriAttrs)
-
-            println("txData: " + txData)
-
-            val txReport = TxReport_Peer(db.`with`(txData))
-            val dbAsOf   = txReport.dbAfter.asOf(txReport.t)
-            dbAsOf
-          }
-          case Some(History)                     => db.history()
-//          case Some(With(_))                     => throw new IllegalArgumentException(
-//            "DbView With(tx) not expected to be used with JS RPC."
-//          )
-        }
-
-        // Use test db?
-        val baseDb: Database = dbProxy.testDbView.fold(peerConn.db)(dbView =>
-          dbProjection(peerConn.db, Some(dbView))
-        )
-
-        val db2 = dbProjection(baseDb, dbProxy.adhocDbView)
-
-        println("db " + db2.isFiltered)
-
-        // Adhoc db takes precedence over test db
-        //        DatomicDb_Peer(dbProjection(baseDb, dbProxy.adhocDbView))
-        DatomicDb_Peer(db2)
-
-      case Conn_Client(client, clientAsync, dbName, system) => ???
-      case other                                            => ???
-    }
-  }
+//  private def getDb(conn: Conn, dbProxy: DbProxy): DatomicDb = {
+//    conn match {
+//      case Conn_Peer(peerConn, _) =>
+//        def dbProjection(db: Database, dbView: Option[DbView]): Database = dbView match {
+//          case None                           => db
+//          case Some(AsOf(TxLong(t)))          =>
+//
+//            println("asOf: " + t)
+//            db.asOf(t)
+//          case Some(AsOf(TxDate(d)))          => db.asOf(d)
+//          case Some(Since(TxLong(t)))         => db.since(t)
+//          case Some(Since(TxDate(d)))         => db.since(d)
+//          case Some(With(stmtsEdn, uriAttrs)) => {
+//            val txData = javaStmts(stmtsEdn, uriAttrs)
+//
+//            println("txData: " + txData)
+//
+//            val txReport = TxReport_Peer(db.`with`(txData))
+//            val dbAsOf   = txReport.dbAfter.asOf(txReport.t)
+//            dbAsOf
+//          }
+//          case Some(History)                  => db.history()
+//          //          case Some(With(_))                     => throw new IllegalArgumentException(
+//          //            "DbView With(tx) not expected to be used with JS RPC."
+//          //          )
+//        }
+//
+//        // Use test db?
+//        val baseDb: Database = dbProxy.testDbView.fold(peerConn.db)(dbView =>
+//          dbProjection(peerConn.db, Some(dbView))
+//        )
+//
+//        val db2 = dbProjection(baseDb, dbProxy.adhocDbView)
+//
+//        println("db " + db2.isFiltered)
+//
+//        // Adhoc db takes precedence over test db
+//        //        DatomicDb_Peer(dbProjection(baseDb, dbProxy.adhocDbView))
+//        DatomicDb_Peer(db2)
+//
+//      case Conn_Client(client, clientAsync, dbName, system) => ???
+//      case other                                            => ???
+//    }
+//  }
 
 
   // Helpers -------------------------------------------------
