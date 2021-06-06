@@ -1,12 +1,11 @@
 package molecule.core.marshalling
 
-import java.util.{List => jList}
+import java.util.{UUID, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
+import molecule.core.exceptions.MoleculeException
+import molecule.core.util.DateHandling
 import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.transactionModel.Statement
-import molecule.datomic.base.facade.TxReport
-import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Marshalling methods for casting raw row (server) / QueryResult (client) data.
@@ -14,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 abstract class Marshalling[Obj, Tpl](
   model: Model,
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
-) extends Molecule(model, queryData) {
+) extends Molecule(model, queryData) with DateHandling {
 
   /** Indexes to resolve marshalling for each attribute value in a row:
     *
@@ -54,4 +53,21 @@ abstract class Marshalling[Obj, Tpl](
   /** Row to tuple cast interface to be materialized by macro */
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
 
+
+  // Generic `v` of type Any needs to be cast on JS side
+  protected def castV(s: String): Any = {
+    val v = s.drop(10)
+    s.take(10) match{
+      case "String    " => v
+      case "Integer   " => v.toInt
+      case "Long      " => v.toLong
+      case "Double    " => v.toDouble
+      case "Boolean   " => v.toBoolean
+      case "Date      " => str2date(v)
+      case "UUID      " => UUID.fromString(v)
+      case "URI       " => new java.net.URI(v)
+      case "BigInteger" => BigInt(v)
+      case "BigDecimal" => BigDecimal(v)
+    }
+  }
 }

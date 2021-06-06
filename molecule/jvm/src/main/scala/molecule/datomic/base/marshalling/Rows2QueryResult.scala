@@ -1,7 +1,8 @@
 package molecule.datomic.base.marshalling
 
 import java.util
-import molecule.core.marshalling.{Column, QueryResult}
+//import molecule.core.marshalling.{Column, QueryResult}
+import molecule.core.marshalling.QueryResult
 import molecule.datomic.base.marshalling.cast.CastLambdas
 
 case class Rows2QueryResult(

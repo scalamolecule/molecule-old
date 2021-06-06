@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //  val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  //  val z = InspectMacro("MakeMolecule", 1, 8)
-  val z = InspectMacro("MakeMolecule", 9, 7)
+//  val z = InspectMacro("MakeMolecule", 2, 8)
+    val z = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -32,6 +32,10 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     val t = if (castss.size == 1 || txMetaCompositesCount > 0) {
       val typers = if (isJsPlatform) {
         val (arrays, lookups0) = indexes.map {
+          // Generic `v` of type Any needs to be cast on JS side
+          case (colIndex, 11, arrayType, arrayIndex) =>
+            (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
+
           case (colIndex, castIndex, arrayType, arrayIndex) =>
             (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
         }.unzip

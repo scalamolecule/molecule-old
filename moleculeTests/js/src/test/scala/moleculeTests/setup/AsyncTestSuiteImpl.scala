@@ -1,7 +1,9 @@
 package moleculeTests.setup
 
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{Conn_Js, DatomicInMemProxy}
+import molecule.core.facade
+import molecule.core.facade.Conn_Js
+import molecule.core.marshalling.DatomicInMemProxy
 import molecule.datomic.base.facade.Conn
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import moleculeTests.tests.core.bidirectionals.schema.BidirectionalSchema
@@ -17,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait AsyncTestSuiteImpl {
 
-  def inMem(schemaTransaction: SchemaTransaction): Future[Conn_Js] = Future(Conn_Js(
+  def inMem(schemaTransaction: SchemaTransaction): Future[Conn_Js] = Future(facade.Conn_Js(
     DatomicInMemProxy(
       schemaTransaction.datomicPeer,
       schemaTransaction.attrMap

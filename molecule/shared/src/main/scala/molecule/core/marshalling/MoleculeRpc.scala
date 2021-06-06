@@ -1,5 +1,7 @@
 package molecule.core.marshalling
 
+import java.util.Date
+import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade.TxReportRPC
 import scala.concurrent.Future
 
@@ -10,6 +12,11 @@ trait MoleculeRpc {
     stmtsEdn: String,
     uriAttrs: Set[String]
   ): Future[TxReportRPC]
+
+  def transact(
+    dbProxy: DbProxy,
+    stmtsData: (String,Set[String])
+  ): Future[TxReportRPC] = transact(dbProxy, stmtsData._1, stmtsData._2)
 
 
   def query(
@@ -36,5 +43,15 @@ trait MoleculeRpc {
     dbProxy: DbProxy,
     eid: Long
   ): Future[List[String]]
+
+  def t(dbProxy: DbProxy): Future[Long] = ???
+  def tx(dbProxy: DbProxy): Future[Long] = ???
+  def txInstant(dbProxy: DbProxy): Future[Date] = ???
+
+//  def entity(dbProxy: DbProxy): Future[DatomicEntity] = ???
+
+//  def pull(pattern: String, eid: Any): Future[]
+
+  def retract(dbProxy: DbProxy, eid: Long) = ???
 
 }

@@ -354,7 +354,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
           )
         }
       } catch {
-        case NonFatal(exc) => Future.failed(new QueryException(exc, _model, _query))
+        case NonFatal(exc) => Future.failed(QueryException(exc, _model, _query))
       }
     }
 
@@ -487,21 +487,21 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       conn.map { conn2 =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(txMolecules.flatten, conn2)
         conn2.usingDbView(With(stmtsEdn, uriAttrs))
-        println("Transaction data:\n========================================================================")
-        txMolecules.zipWithIndex foreach { case (stmts, i) =>
-          conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
-        }
-        conn2
-      }
-    )
-//      .flatMap { _ =>
-//      conn.map { conn2 =>
 //        println("Transaction data:\n========================================================================")
 //        txMolecules.zipWithIndex foreach { case (stmts, i) =>
 //          conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
 //        }
-//      }
-//    }
+//        conn2
+      }
+    )
+      .flatMap { _ =>
+      conn.map { conn2 =>
+        println("Transaction data:\n========================================================================")
+        txMolecules.zipWithIndex foreach { case (stmts, i) =>
+          conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
+        }
+      }
+    }
   }
 
 
@@ -519,7 +519,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @group inspectGet
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGetHistory(implicit conn: Future[Conn]): Unit = inspectGet(conn.map(_.usingDbView(History)))
+  def inspectGetHistory(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingDbView(History)))
 
 
   /** Inspect call to `save` on a molecule (without affecting the db).

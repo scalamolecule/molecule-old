@@ -40,7 +40,7 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
         case "Long"       => (v: String) => v.toLong.asInstanceOf[AnyRef]
         case "Float"      => (v: String) => v.toDouble.asInstanceOf[AnyRef]
         case "Double"     => (v: String) => v.toDouble.asInstanceOf[AnyRef]
-        case "BigInt"     => (v: String) => BigInt.apply(v).asInstanceOf[AnyRef]
+        case "BigInt"     => (v: String) => BigInt(v).asInstanceOf[AnyRef]
         case "BigDecimal" => (v: String) => BigDecimal(v).asInstanceOf[AnyRef]
         case "Boolean"    => (v: String) => v.toBoolean.asInstanceOf[AnyRef]
         case "Date"       => (v: String) => str2date(v).asInstanceOf[AnyRef]

@@ -1,13 +1,9 @@
 package molecule.datomic.base.marshalling.cast
 
-import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
-import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
-import clojure.lang.{Keyword, LazySeq, PersistentHashSet, PersistentVector}
-import molecule.core.marshalling.Column
+import java.util.{Date, UUID}
 import molecule.core.util.{DateHandling, Helpers}
 import molecule.datomic.base.marshalling.DateStrLocal
-import scala.collection.mutable.ListBuffer
 
 trait DataArrays extends DateHandling with DateStrLocal with Helpers {
 

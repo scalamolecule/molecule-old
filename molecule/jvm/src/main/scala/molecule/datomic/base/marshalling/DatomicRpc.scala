@@ -2,12 +2,15 @@ package molecule.datomic.base.marshalling
 
 import java.io.StringReader
 import java.util
+import java.util.concurrent.atomic.AtomicReference
 import java.util.{Collections, Date, List => jList, Set => jSet}
 import boopickle.Default._
 import cats.implicits._
 import datomic.{Database, Util}
 import datomic.Util._
+import datomicScala.client.api.sync.Db
 import datomicClient.ClojureBridge
+import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
@@ -20,6 +23,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal with Helpers with ClojureBridge {
@@ -53,21 +57,16 @@ object DatomicRpc extends MoleculeRpc
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
     indexes: List[(Int, Int, Int, Int)]
-  ): Future[QueryResult] = {
-
-
-    //    println("#### dbProxy " + dbProxy)
-    println("#### dbProxy " + dbProxy.testDbView)
-    println("#### dbProxy " + dbProxy.adhocDbView)
-    //    println("#### dbProxy " + dbProxy.adhocDbView2)
-
-
-    val log                 = new log
-    val t                   = TimerPrint("DatomicRpc")
-    val inputs: Seq[Object] = rules +: unmarshallInputs(l ++ ll ++ lll)
+  ): Future[QueryResult] = try {
+    val log       = new log
+    val t         = TimerPrint("DatomicRpc")
+    val inputs    = unmarshallInputs(l ++ ll ++ lll)
+    val allInputs = if (rules.nonEmpty) rules +: inputs else inputs
     for {
-      queryEx <- getCachedQueryExecutor(dbProxy)
-      allRows <- queryEx(datalogQuery, inputs)
+      conn <- getCachedConn(dbProxy)
+      conn2 = updateConnDbView(conn, dbProxy)
+      //      _ = println("B  " + dbProxy.adhocDbView + "    " + conn2._adhocDbView + "    " + connCache.get().size)
+      allRows <- conn2.qRaw(conn2.db, datalogQuery, allInputs)
     } yield {
       val rowCountAll = allRows.size
       val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
@@ -87,16 +86,23 @@ object DatomicRpc extends MoleculeRpc
       //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
       //      log("rowCount    : " + rowCount)
 
+      //      val allRows2 = allRows
+      //      val it       = allRows2.iterator()
+      //      it.next()
+      //      val v = it.next().get(3)
+      //      println(s"v: $v  ${v.getClass}")
+
       val queryResult = Rows2QueryResult(
         allRows, rowCountAll, rowCount, queryTime, indexes
       ).get
-
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)
       //        log("Sending data to client... Total server time: " + t.msTotal)
       log.print
       queryResult
     }
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
   }
 
 
@@ -108,8 +114,8 @@ object DatomicRpc extends MoleculeRpc
   ): Future[List[String]] = {
     var vs = List.empty[String]
     for {
-      queryEx <- getCachedQueryExecutor(dbProxy)
-      rows0 <- queryEx(datalogQuery, Nil)
+      conn <- getCachedConn(dbProxy)
+      rows0 <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
       val rows = rows0.iterator
       if (rows.hasNext) {
@@ -139,11 +145,11 @@ object DatomicRpc extends MoleculeRpc
     dbProxy: DbProxy,
     eid: Long
   ): Future[List[String]] = {
-    val query = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
-    var list  = List.empty[String]
+    val datalogQuery = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
+    var list         = List.empty[String]
     for {
-      queryEx <- getCachedQueryExecutor(dbProxy)
-      rows <- queryEx(query, Nil)
+      conn <- getCachedConn(dbProxy)
+      rows <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
       rows.forEach { row =>
         list = row.get(0).toString :: list
@@ -152,51 +158,41 @@ object DatomicRpc extends MoleculeRpc
     }
   }
 
+  def retract(
+    dbProxy: DbProxy,
+    stmtsEdn: String,
+    uriAttrs: Set[String]
+  ): Future[TxReport] = {
+    println(stmtsEdn)
+    for {
+      conn <- getCachedConn(dbProxy)
+      txReport <- conn.transactRaw(javaStmts(stmtsEdn, uriAttrs))
+    } yield TxReportRPC(
+      txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
+    )
+  }
+
 
   // Cache Conn and QueryExecutors ---------------------------------------------
 
   // (datalogQuery, inputs) => raw data
-  type QueryExecutor = (String, Seq[AnyRef]) => Future[util.Collection[util.List[AnyRef]]]
+  private type QueryExecutor = (String, Seq[AnyRef]) => Future[util.Collection[util.List[AnyRef]]]
 
-  // todo: proper caching
-  val connCache          = mutable.Map.empty[String, Future[Conn]]
-  val queryExecutorCache = mutable.Map.empty[String, Future[QueryExecutor]]
-
+  private val connCache = new AtomicReference(Map.empty[String, Future[Conn]])
 
   private def getCachedConn(
     dbProxy: DbProxy
   ): Future[Conn] = {
-    connCache.getOrElse(
+    var msg     = s"Conn ---- " + connCache.get.size
+    val futConn = connCache.get.getOrElse(
       dbProxy.uuid,
       {
-        println(s"caching... ${dbProxy.adhocDbView}")
-
+        msg = s"Conn CACHING ============= " + connCache.get.size
         val futConn: Future[Conn_Datomic213] = dbProxy match {
-          //          case DatomicInMemProxy(edns, _, _) =>
-          case DatomicInMemProxy(edns, _, _) =>
-            //          Datomic_Peer.connect("mem", dbIdentifier)
-            Datomic_Peer.recreateDbFromEdn(edns).map { conn =>
-              val baseDb: Database = conn.peerConn.db
-              conn._testDb = dbProxy.testDbView.fold(Option.empty[Database]) {
-                case AsOf(TxLong(t))          => Some(baseDb.asOf(t))
-                case AsOf(TxDate(d))          => Some(baseDb.asOf(d))
-                case Since(TxLong(t))         => Some(baseDb.since(t))
-                case Since(TxDate(d))         => Some(baseDb.since(d))
-                case History                  => Some(baseDb.history())
-                case With(stmtsEdn, uriAttrs) =>
-                  val txData   = javaStmts(stmtsEdn, uriAttrs)
-                  val txReport = TxReport_Peer(baseDb.`with`(txData))
-                  val db       = txReport.dbAfter.asOf(txReport.t)
-                  Some(db)
-              }
-              conn._adhocDbView = dbProxy.adhocDbView
+          case DatomicInMemProxy(schemaPeer, _, _, _, _) =>
+            Datomic_Peer.recreateDbFromEdn(schemaPeer)
 
-              println("conn._testDb      " + conn._testDb)
-              println("conn._adhocDbView " + conn._adhocDbView)
-              conn
-            }
-
-          case DatomicPeerProxy(protocol, dbIdentifier, _, _) =>
+          case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _) =>
             if (datomicProtocol != protocol) {
               throw new RuntimeException(
                 s"\nProject is built with datomic `$datomicProtocol` protocol and " +
@@ -210,86 +206,34 @@ object DatomicRpc extends MoleculeRpc
                 "Please connect with `DatomicInMemProxy` to get an in-memory db.")
             }
 
-          case DatomicDevLocalProxy(system, storageDir, dbName, _, _) =>
+          case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _) =>
             Datomic_DevLocal(system, storageDir).connect(dbName)
 
-          case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _) =>
+          case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _) =>
             Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
         }
-        connCache(dbProxy.uuid) = futConn
+        connCache.set(connCache.get() + (dbProxy.uuid -> futConn))
         futConn
       }
     )
+    //    println(msg)
+    futConn
   }
 
-  private def getCachedQueryExecutor(
-    dbProxy: DbProxy
-  ): Future[QueryExecutor] = {
-    queryExecutorCache.getOrElse(
-      dbProxy.uuid,
-      {
-        val queryExecutor = getCachedConn(dbProxy).map { conn =>
-          //          val db: DatomicDb = getDb(conn, dbProxy)
+  private def updateConnDbView(conn0: Conn, dbProxy: DbProxy): Conn = {
+    // (no need to set dbProxy since it is not used by jvm conn implementations
+    conn0 match {
+      case conn: Conn_Peer =>
+        conn._adhocDbView = dbProxy.adhocDbView
+        conn
 
-          //          println(db.)
-          //          conn._adhocDbView = Some(AsOf(TxLong(1036)))
+      case conn: Conn_Client =>
+        conn._adhocDbView = dbProxy.adhocDbView
+        conn
 
-          (datalogQuery: String, inputs: Seq[AnyRef]) => {
-            conn.qRaw(conn.db, datalogQuery, inputs)
-            //            conn.qRaw(db, datalogQuery, inputs)
-          }
-        }
-        queryExecutorCache(dbProxy.uuid) = queryExecutor
-        queryExecutor
-      }
-    )
+      case otherConn => otherConn
+    }
   }
-
-//  private def getDb(conn: Conn, dbProxy: DbProxy): DatomicDb = {
-//    conn match {
-//      case Conn_Peer(peerConn, _) =>
-//        def dbProjection(db: Database, dbView: Option[DbView]): Database = dbView match {
-//          case None                           => db
-//          case Some(AsOf(TxLong(t)))          =>
-//
-//            println("asOf: " + t)
-//            db.asOf(t)
-//          case Some(AsOf(TxDate(d)))          => db.asOf(d)
-//          case Some(Since(TxLong(t)))         => db.since(t)
-//          case Some(Since(TxDate(d)))         => db.since(d)
-//          case Some(With(stmtsEdn, uriAttrs)) => {
-//            val txData = javaStmts(stmtsEdn, uriAttrs)
-//
-//            println("txData: " + txData)
-//
-//            val txReport = TxReport_Peer(db.`with`(txData))
-//            val dbAsOf   = txReport.dbAfter.asOf(txReport.t)
-//            dbAsOf
-//          }
-//          case Some(History)                  => db.history()
-//          //          case Some(With(_))                     => throw new IllegalArgumentException(
-//          //            "DbView With(tx) not expected to be used with JS RPC."
-//          //          )
-//        }
-//
-//        // Use test db?
-//        val baseDb: Database = dbProxy.testDbView.fold(peerConn.db)(dbView =>
-//          dbProjection(peerConn.db, Some(dbView))
-//        )
-//
-//        val db2 = dbProjection(baseDb, dbProxy.adhocDbView)
-//
-//        println("db " + db2.isFiltered)
-//
-//        // Adhoc db takes precedence over test db
-//        //        DatomicDb_Peer(dbProjection(baseDb, dbProxy.adhocDbView))
-//        DatomicDb_Peer(db2)
-//
-//      case Conn_Client(client, clientAsync, dbName, system) => ???
-//      case other                                            => ???
-//    }
-//  }
-
 
   // Helpers -------------------------------------------------
 
@@ -335,20 +279,18 @@ object DatomicRpc extends MoleculeRpc
         case pair@(_: String, _: String) =>
           cast(pair.asInstanceOf[(String, String)])
 
-        case _ => sys.error("Unexpected input values")
+        case _ => throw MoleculeException("Unexpected input values")
       }: _*)
 
       case pair@(_: String, _: String) =>
         cast(pair)
 
       case _ =>
-        sys.error("Unexpected input values")
+        throw MoleculeException("Unexpected input values")
     }
   }
 
 
-  // Todo: this works but seems like a hack that would be nice to avoid although
-  //  the impact of a few input variables is negible.
   // To avoid type combination explosions from multiple inputs of various types
   // to be transferred with autowire/boopickle, we cast all input variable values
   // as String on the client and then cast them back to their original type here
@@ -364,6 +306,7 @@ object DatomicRpc extends MoleculeRpc
     case ("Date", v)       => str2date(v).asInstanceOf[Object]
     case ("UUID", v)       => java.util.UUID.fromString(v).asInstanceOf[Object]
     case ("URI", v)        => new java.net.URI(v).asInstanceOf[Object]
-    case _                 => sys.error("Unexpected input pair to cast")
+    case _                 =>
+      throw MoleculeException("Unexpected input pair to cast: " + pair)
   }
 }

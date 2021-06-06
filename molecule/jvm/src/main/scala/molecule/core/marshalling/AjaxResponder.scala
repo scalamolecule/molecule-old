@@ -50,8 +50,8 @@ object AjaxResponder extends App with Serializations {
                 }
                 .recoverWith { exc =>
                   println("---- Error in AjaxResponder ---------------------\n" + exc)
-                  //                  println(exc.getStackTrace.mkString("\n"))
-                  // Disrupt ajax call
+                  println(exc.getStackTrace.mkString("\n"))
+                  // Disrupt ajax call Todo: how to send the failed future?
                   Future.failed(exc)
                 }
             //                .recover { exc =>

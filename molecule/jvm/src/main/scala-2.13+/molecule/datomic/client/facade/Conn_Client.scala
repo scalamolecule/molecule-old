@@ -142,17 +142,14 @@ case class Conn_Client(
   private def getAdhocDb: Db = {
     val baseDb : Db = _testDb.getOrElse(clientConn.db)
     val adhocDb: Db = _adhocDbView.get match {
-      case AsOf(TxLong(t))  => baseDb.asOf(t)
-      case AsOf(TxDate(d))  => baseDb.asOf(d)
-      case Since(TxLong(t)) => baseDb.since(t)
-      case Since(TxDate(d)) => baseDb.since(d)
-      case With(stmtsEdn, uriAttrs)         =>
+      case AsOf(TxLong(t))          => baseDb.asOf(t)
+      case AsOf(TxDate(d))          => baseDb.asOf(d)
+      case Since(TxLong(t))         => baseDb.since(t)
+      case Since(TxDate(d))         => baseDb.since(d)
+      case History                  => baseDb.history
+      case With(stmtsEdn, uriAttrs) =>
         val txData = javaStmts(stmtsEdn, uriAttrs)
         baseDb.`with`(clientConn.withDb, txData).dbAfter
-      case History          => baseDb.history
-//      case _: WithEdn       => throw new IllegalArgumentException(
-//        "DbView WithEdn(stmtsEdn, uriAttrs) only expected to be used with JS RPC."
-//      )
     }
     _adhocDbView = None
     adhocDb

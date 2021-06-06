@@ -1,29 +1,31 @@
 package molecule.core.marshalling
 
 import java.util.UUID
-import molecule.datomic.base.ast.dbView.{AsOf, DbView, TxLong}
+import molecule.datomic.base.ast.dbView.{AsOf, DbView, History, TxLong}
 
 
 sealed trait DbProxy {
-  val uuid: String
-  val attrMap     = Map.empty[String, (Int, String)]
-//  var testDbView: Option[DbView]  = Some(AsOf(TxLong(1022L)))
-  var testDbView = Option.empty[DbView]
-//  var adhocDbView = Option.empty[DbView]
-  var adhocDbView = Option.empty[DbView]
+  val uuid      : String
+  val schemaPeer: Seq[String]
+  val testDbView: Option[DbView]
+  val adhocDbView: Option[DbView]
+  val attrMap = Map.empty[String, (Int, String)]
 }
 
 case class DatomicInMemProxy(
-  edns: Seq[String],
+  schemaPeer: Seq[String],
   override val attrMap: Map[String, (Int, String)],
-//  override val adhocDbView: Option[DbView] = None,
+  testDbView: Option[DbView] = None,
+  adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy
 
 case class DatomicPeerProxy(
   protocol: String,
   dbIdentifier: String,
-  edns: Seq[String] = Nil,
+  schemaPeer: Seq[String] = Nil,
+  testDbView: Option[DbView] = None,
+  adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy
 
@@ -31,7 +33,9 @@ case class DatomicDevLocalProxy(
   system: String,
   storageDir: String,
   dbName: String,
-  edns: Seq[String] = Nil,
+  schemaPeer: Seq[String] = Nil,
+  testDbView: Option[DbView] = None,
+  adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy
 
@@ -40,5 +44,8 @@ case class DatomicPeerServerProxy(
   secret: String,
   endpoint: String,
   dbName: String,
+  schemaPeer: Seq[String] = Nil,
+  testDbView: Option[DbView] = None,
+  adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
 ) extends DbProxy

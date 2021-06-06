@@ -27,8 +27,6 @@ object Conn_Peer {
 
   def apply(uri: String): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), uri)
 
-  //  def apply(datomicConn: datomic.Connection): Conn_Peer = new Conn_Peer(datomicConn)
-
   // Constructor for transaction functions where db is supplied inside transaction by transactor
   def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null) {
     testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
@@ -39,8 +37,6 @@ object Conn_Peer {
 /** Facade to Datomic connection for peer api.
   * */
 case class Conn_Peer(
-  //  val peerConn: datomic.Connection,
-  //  val system: String = ""
   peerConn: datomic.Connection,
   system: String = ""
 ) extends Conn_Datomic213 {
@@ -87,7 +83,8 @@ case class Conn_Peer(
   }
 
   def testDbAsOfNow: Unit = {
-    _testDb = Some(peerConn.db)
+    //    _testDb = Some(peerConn.db)
+    _testDb = None
   }
 
   def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
@@ -121,35 +118,32 @@ case class Conn_Peer(
   private def getAdhocDb: Database = {
     val baseDb : Database = _testDb.getOrElse(peerConn.db)
     val adhocDb: Database = _adhocDbView.get match {
-      case AsOf(TxLong(t))  => baseDb.asOf(t)
-      case AsOf(TxDate(d))  => baseDb.asOf(d)
-      case Since(TxLong(t)) => baseDb.since(t)
-      case Since(TxDate(d)) => baseDb.since(d)
-      case With(stmtsEdn, uriAttrs)         =>
-        val txData = javaStmts(stmtsEdn, uriAttrs)
+      case AsOf(TxLong(t))          => baseDb.asOf(t)
+      case AsOf(TxDate(d))          => baseDb.asOf(d)
+      case Since(TxLong(t))         => baseDb.since(t)
+      case Since(TxDate(d))         => baseDb.since(d)
+      case History                  => baseDb.history()
+      case With(stmtsEdn, uriAttrs) =>
+        val txData   = javaStmts(stmtsEdn, uriAttrs)
         val txReport = TxReport_Peer(baseDb.`with`(txData))
         txReport.dbAfter.asOf(txReport.t)
-
-      case History          => baseDb.history()
-//      case _: WithEdn       => throw new IllegalArgumentException(
-//        "DbView WithEdn(stmtsEdn, uriAttrs) only expected to be used with JS RPC."
-//      )
     }
     _adhocDbView = None
+    dbProxy = emptyDbProxy
     adhocDb
   }
 
   def db: DatomicDb = {
-
-    println("Conn_Peer.db " + _adhocDbView)
-
     if (_adhocDbView.isDefined) {
+      //      println("C1  " + dbProxy.adhocDbView + "    " + _adhocDbView)
       // Return singleton adhoc db
       DatomicDb_Peer(getAdhocDb)
     } else if (_testDb.isDefined) {
+      //      println("C2  " + dbProxy.adhocDbView + "    " + _adhocDbView)
       // Test db
       DatomicDb_Peer(_testDb.get)
     } else {
+      //      println("C3  " + dbProxy.adhocDbView + "    " + _adhocDbView)
       // Live db
       DatomicDb_Peer(peerConn.db)
     }
@@ -191,18 +185,15 @@ case class Conn_Peer(
             try {
               p.success(listenableFuture.get())
             } catch {
-              case e: Throwable =>
-                e match {
-                  case e: java.util.concurrent.ExecutionException =>
-                    println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
-                    println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                    p.failure(e.getCause)
+              case e: java.util.concurrent.ExecutionException =>
+                println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
+                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+                p.failure(e.getCause)
 
-                  case NonFatal(e) =>
-                    println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
-                    println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                    p.failure(e)
-                }
+              case NonFatal(e) =>
+                println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
+                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+                p.failure(e)
             }
             ()
           }
@@ -224,16 +215,12 @@ case class Conn_Peer(
     db: DatomicDb,
     query: String,
     inputs0: Seq[Any]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     val inputs = inputs0.map {
       case it: Iterable[_] => it.asJava
       case v               => v
     }
-    Future(
-      Peer.q(query, db.getDatomicDb +: inputs.asInstanceOf[Seq[AnyRef]]: _*)
-    )
-  } catch {
-    case NonFatal(e) => Future.failed(e)
+    Peer.q(query, db.getDatomicDb +: inputs.asInstanceOf[Seq[AnyRef]]: _*)
   }
 
   def query(model: Model, query: Query)
@@ -250,20 +237,21 @@ case class Conn_Peer(
     query: Query,
     _db: Option[DatomicDb] = None
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
-    try {
-      Future {
+    Future {
+      // Allow exceptions to be wrapped in QueryException
+      try {
         val p               = Query2String(query).p
         val rules           = "[" + (query.i.rules map p mkString " ") + "]"
         val adhocDb         = _db.getOrElse(db).getDatomicDb
         val first           = if (query.i.rules.isEmpty) Seq(adhocDb) else Seq(adhocDb, rules)
         val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
         val allInputs       = first ++ inputsEvaluated
-        Peer.q(query.toMap, allInputs: _*)
+        val result          = Peer.q(query.toMap, allInputs: _*)
+        Future(result)
+      } catch {
+        case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
       }
-    } catch {
-      case NonFatal(exc) =>
-        Future.failed(QueryException(exc, model, query))
-    }
+    }.flatten
   }
 
   // Datoms API providing direct access to indexes

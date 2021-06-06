@@ -101,6 +101,7 @@ object GetHistory extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Multiple domain attrs" - core { implicit conn =>
       for {
         (tx1, e1, t1, tx2, t2, tx3, t3, tx4, e2, t4, tx5, t5) <- data
@@ -204,6 +205,7 @@ object GetHistory extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Multiple attrs" - core { implicit conn =>
       for {
         (tx1, e1, t1, tx2, t2, tx3, t3, tx4, e2, t4, tx5, t5) <- data
@@ -224,6 +226,7 @@ object GetHistory extends AsyncTestSuite {
         ))
       } yield ()
     }
+
 
     "Entity history" - core { implicit conn =>
       for {
@@ -285,8 +288,14 @@ object GetHistory extends AsyncTestSuite {
         _ <- Ns(e1).a.v("a").t(t2).op.getHistory.map(_ ==> List(
           (":Ns/str", "a", t2, false)
         ))
+
+        // All attribute assertions with value "a" of entity e1
+        _ <- Ns(e1).a.v(2).t.op.getHistory.map(_ ==> List(
+          (":Ns/int", 2, t3, true)
+        ))
       } yield ()
     }
+
 
     "Tacit generic attrs" - core { implicit conn =>
       for {

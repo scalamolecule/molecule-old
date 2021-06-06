@@ -4,6 +4,10 @@ import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
 import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
 import clojure.lang.Keyword
+import com.cognitect.transit.impl.URIImpl
+import molecule.core.exceptions.MoleculeException
+import molecule.datomic.client.facade.DatomicEntity_Client
+import scala.concurrent.Future
 
 class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
 
@@ -91,14 +95,28 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = BigDecimal(row.get(colIndex).toString)
   }
 
-  // Generic `v` attribute value converted to String}
+  // Generic `v` attribute value converted to String with appended type to be casted on JS side
   protected val castOneAny = (colIndex: Int) => {
     val array = new Array[String](maxRows)
     oneStringArrays = oneStringArrays :+ array
     (row: jList[AnyRef], i: Int) =>
       array(i) = row.get(colIndex) match {
-        case d: Date => date2strLocal(d)
-        case other   => other.toString
+        case s: java.lang.String      => "String    " + s
+        case i: java.lang.Integer     => "Integer   " + i.toString
+        case l: java.lang.Long        => "Long      " + l.toString
+        case d: java.lang.Double      => "Double    " + d.toString
+        case b: java.lang.Boolean     => "Boolean   " + b.toString
+        case d: Date                  => "Date      " + date2strLocal(d)
+        case u: UUID                  => "UUID      " + u.toString
+        case u: java.net.URI          => "URI       " + u.toString
+        case bi: java.math.BigInteger => "BigInteger" + bi.toString
+        case bi: clojure.lang.BigInt  => "BigInteger" + bi.toString
+        case bd: java.math.BigDecimal => "BigDecimal" + bd.toString
+        case other                    =>
+          throw MoleculeException(s"Unexpected generic `v` $other of type " + other.getClass)
+
+        // Float abandoned
+        //        case f: java.lang.Float       => "Float     " + f.toString
       }
   }
 

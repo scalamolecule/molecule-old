@@ -55,8 +55,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       conn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          println("get ... " + conn._adhocDbView)
-          conn.jsQuery(_query, -1, indexes, qr2tpl)
+          conn.queryJs(_query, -1, indexes, qr2tpl)
         } else {
           conn.query(_model, _query).map { jColl =>
             val it  = jColl.iterator
@@ -92,7 +91,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       conn.flatMap { conn2 =>
         if (conn2.isJsPlatform) {
-          conn2.jsQuery(_query, n, indexes, qr2tpl)
+          conn2.queryJs(_query, n, indexes, qr2tpl)
         } else {
           if (n == -1) {
             get(conn, ec)
@@ -175,14 +174,8 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def getAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    //    get(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
-    println(s"1 calling getAsOf($t)")
-    get(conn.map { conn =>
-      println(s"2 calling getAsOf($t)")
-      conn.usingDbView(AsOf(TxLong(t)))
-    }, ec)
-  }
+  def getAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+    get(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule as of transaction time `t`.

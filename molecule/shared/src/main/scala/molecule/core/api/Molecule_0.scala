@@ -200,7 +200,7 @@ abstract class Molecule_0[Obj, Tpl](
         for {
           saveStmts <- conn.modelTransformer(_model).saveStmts
           (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts, conn)
-          result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+          result <- conn.rpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
         } yield result
       } else {
         conn.transact(
@@ -307,7 +307,7 @@ abstract class Molecule_0[Obj, Tpl](
         for {
           insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
           (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
-          result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+          result <- conn.rpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
         } yield result
       } else {
         conn.transact(
@@ -363,7 +363,7 @@ abstract class Molecule_0[Obj, Tpl](
         for {
           updateStmts <- conn.modelTransformer(_model).updateStmts
           (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts, conn)
-          result <- conn.moleculeRpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+          result <- conn.rpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
         } yield result
       } else {
         conn.transact(

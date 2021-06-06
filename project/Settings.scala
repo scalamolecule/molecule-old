@@ -105,10 +105,13 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed = Seq(
-        sharedTests + "/core/time/GetAsOf.scala",
-        sharedTests + "/core/attr/Attribute.scala"
+        sharedTests + "/core/time",
+        sharedTests + "/core/attr/Attribute.scala",
+        sharedTests + "/core/Adhoc.scala"
       )
-      new SimpleFileFilter(f => f.getCanonicalPath.startsWith(sharedTests) && !allowed.contains(f.getCanonicalPath))
+      new SimpleFileFilter(f =>
+        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+      )
     },
 
     buildInfoKeys := Seq[BuildInfoKey](

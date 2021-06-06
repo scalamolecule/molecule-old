@@ -12,6 +12,6 @@ object MoleculeWebClient extends WebClient with Serializations {
   /** Wire handle
     *
     */
-  val moleculeRpc: MoleculeRpc = clientAjax("http://localhost:8080/ajax").wire[MoleculeRpc]
-  //  val moleculeRpc: MoleculeRpc = clientWs("ws://localhost:8080/ws").wire[MoleculeRpc]
+  val rpc: MoleculeRpc = clientAjax("http://localhost:8080/ajax").wire[MoleculeRpc]
+  //  val rpc: MoleculeRpc = clientWs("ws://localhost:8080/ws").wire[MoleculeRpc]
 }

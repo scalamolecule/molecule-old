@@ -3,7 +3,7 @@ package molecule.datomic.base.facade
 import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
-import molecule.core.marshalling.{DatomicInMemProxy, DbProxy, MoleculeRpc, QueryResult}
+import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy, DbProxy, MoleculeRpc, QueryResult}
 import molecule.core.ops.ColOps
 import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.api.DatomicEntity
@@ -26,26 +26,54 @@ trait Conn extends ColOps {
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over test db)
   private[molecule] var _adhocDbView: Option[DbView] = None
-//  protected var _adhocDbView: Option[DbView] = None
 
   val tempId = TempIdFactory
 
-  private[molecule] val dbProxy: DbProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+  protected val emptyDbProxy             = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+  private[molecule] var dbProxy: DbProxy = emptyDbProxy
 
   /** */
-  lazy val moleculeRpc: MoleculeRpc = ???
+  lazy val rpc: MoleculeRpc = ???
 
   def usingDbView(dbView: DbView): Conn = {
-
-//    dbProxy = dbProxy.copy()
-
-    dbProxy.adhocDbView = Some(dbView)
-
-    println("dbProxy.adhocDbView1 " + dbProxy.adhocDbView)
-
-    _adhocDbView = Some(dbView)
+    updateAdhocDbView(Some(dbView))
     this
   }
+
+  protected def updateAdhocDbView(adhocDbView: Option[DbView]): Unit = {
+    _adhocDbView = adhocDbView
+    dbProxy = dbProxy match {
+      case DatomicInMemProxy(edns, attrMap, testDbView, _, uuid) =>
+        DatomicInMemProxy(edns, attrMap, testDbView, adhocDbView, uuid)
+
+      case DatomicPeerProxy(protocol, dbIdentifier, edns, testDbView, _, uuid) =>
+        DatomicPeerProxy(protocol, dbIdentifier, edns, testDbView, adhocDbView, uuid)
+
+      case DatomicDevLocalProxy(system, storageDir, dbName, edns, testDbView, _, uuid) =>
+        DatomicDevLocalProxy(system, storageDir, dbName, edns, testDbView, adhocDbView, uuid)
+
+      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, testDbView, _, uuid) =>
+        DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, testDbView, adhocDbView, uuid)
+    }
+  }
+
+  protected def updateTestDbView(testDbView: Option[DbView]): Unit = {
+    // _testDb is updated in connection implementations
+    dbProxy = dbProxy match {
+      case DatomicInMemProxy(edns, attrMap, _, adhocDbView, uuid) =>
+        DatomicInMemProxy(edns, attrMap, testDbView, adhocDbView, uuid)
+
+      case DatomicPeerProxy(protocol, dbIdentifier, edns, _, adhocDbView, uuid) =>
+        DatomicPeerProxy(protocol, dbIdentifier, edns, testDbView, adhocDbView, uuid)
+
+      case DatomicDevLocalProxy(system, storageDir, dbName, edns, _, adhocDbView, uuid) =>
+        DatomicDevLocalProxy(system, storageDir, dbName, edns, testDbView, adhocDbView, uuid)
+
+      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, _, adhocDbView, uuid) =>
+        DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, testDbView, adhocDbView, uuid)
+    }
+  }
+
 
   /** Flag to indicate if live database is used */
   def liveDbUsed: Boolean
@@ -124,7 +152,7 @@ trait Conn extends ColOps {
                 (implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database with temporary raw Java transaction data. */
-//  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit]
+  //  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit]
 
   /* testDbHistory not implemented.
    * Instead, use `testDbAsOfNow`, make changes and get historic data with getHistory calls.
@@ -375,7 +403,7 @@ trait Conn extends ColOps {
 
   // JS query rpc api .........................................
 
-  private[molecule] def jsQuery[Tpl](
+  private[molecule] def queryJs[Tpl](
     query: Query,
     n: Int,
     indexes: List[(Int, Int, Int, Int)],
@@ -387,27 +415,25 @@ trait Conn extends ColOps {
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
 
-
-    println("dbProxy.adhocDbView2 " + dbProxy.adhocDbView)
-
-//    val x = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)], Some(AsOf(TxLong(42L))))
-//    x.adhocDbView = Some(AsOf(TxLong(42L)))
+    //    println("A  " + dbProxy.adhocDbView + "    " + _adhocDbView)
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
-    moleculeRpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes)
-//    moleculeRpc.query(x, datalogQuery, rules, l, ll, lll, n, indexes)
-      .map {
-        qr =>
-          val maxRows    = if (n == -1) qr.maxRows else n
-          val tplsBuffer = new ListBuffer[Tpl]
-          val columns    = qr2tpl(qr) // macro generated extractor
-          var rowIndex   = 0
-          while (rowIndex < maxRows) {
-            tplsBuffer += columns(rowIndex)
-            rowIndex += 1
-          }
-          tplsBuffer.toList
+    val futResult = rpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
+      val maxRows    = if (n == -1) qr.maxRows else n
+      val tplsBuffer = new ListBuffer[Tpl]
+      val columns    = qr2tpl(qr) // macro generated extractor
+      var rowIndex   = 0
+      while (rowIndex < maxRows) {
+        tplsBuffer += columns(rowIndex)
+        rowIndex += 1
       }
+      tplsBuffer.toList
+    }
+    if (dbProxy.adhocDbView.isDefined) {
+      // Reset adhoc db view
+      updateAdhocDbView(None)
+    }
+    futResult
   }.flatten
 
   private[molecule] def jsGetAttrValues(
@@ -415,10 +441,10 @@ trait Conn extends ColOps {
     card: Int,
     tpe: String
   )(implicit ec: ExecutionContext): Future[List[String]] =
-    moleculeRpc.getAttrValues(dbProxy, datalogQuery, card, tpe)
+    rpc.getAttrValues(dbProxy, datalogQuery, card, tpe)
 
   private[molecule] def jsEntityAttrKeys(
     eid: Long
   )(implicit ec: ExecutionContext): Future[List[String]] =
-    moleculeRpc.entityAttrKeys(dbProxy, eid)
+    rpc.entityAttrKeys(dbProxy, eid)
 }
