@@ -177,8 +177,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         """
       }
 
-
-
       if (hasVariables) {
         q"""
           ..$imports

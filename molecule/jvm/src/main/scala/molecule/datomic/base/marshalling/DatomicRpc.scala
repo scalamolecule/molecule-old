@@ -77,6 +77,7 @@ object DatomicRpc extends MoleculeRpc
       val time      = qTime(queryTime)
       val timeRight = " " * (8 - time.length) + time
       log(datalogQuery + space + timeRight)
+      log.print
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
       //      log(qTime(queryTime) + "  " + datalogQuery)
@@ -86,11 +87,11 @@ object DatomicRpc extends MoleculeRpc
       //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
       //      log("rowCount    : " + rowCount)
 
-      //      val allRows2 = allRows
-      //      val it       = allRows2.iterator()
-      //      it.next()
-      //      val v = it.next().get(3)
-      //      println(s"v: $v  ${v.getClass}")
+//      val allRows2 = allRows
+//      val it       = allRows2.iterator()
+//      //            it.next()
+//      val v        = it.next().get(0)
+//      println(s"v1: $v  ${v.getClass}")
 
       val queryResult = Rows2QueryResult(
         allRows, rowCountAll, rowCount, queryTime, indexes
@@ -98,7 +99,6 @@ object DatomicRpc extends MoleculeRpc
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)
       //        log("Sending data to client... Total server time: " + t.msTotal)
-      log.print
       queryResult
     }
   } catch {

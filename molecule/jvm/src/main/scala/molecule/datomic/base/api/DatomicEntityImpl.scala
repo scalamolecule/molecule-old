@@ -113,6 +113,10 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     case NonFatal(exc) => Future.failed(exc)
   }
 
+  def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = {
+    Future(List(RetractEntity(eid)))
+  }
+
   def inspectRetract(txMeta: Molecule)
                     (implicit ec: ExecutionContext): Future[Unit] = try {
     val retractStmts = Seq(RetractEntity(eid))
@@ -126,10 +130,6 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     )
   } catch {
     case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = {
-    Future(List(RetractEntity(eid)))
   }
 
   def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = {

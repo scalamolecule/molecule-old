@@ -137,6 +137,8 @@ trait DatomicEntity {
     */
   def retract(implicit ec: ExecutionContext): Future[TxReport]
 
+  def retract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[TxReport]
+
   /** Get entity retraction transaction data without affecting the database.
     * <br><br>
     * Call `getRetractTx` to retrieve the generated transaction data of the method `retract` on an entity
@@ -195,7 +197,6 @@ trait DatomicEntity {
     */
 //  def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): Future[RetractMolecule]
 
-  def retract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[TxReport]
 
   def inspectRetract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[Unit]
 

@@ -144,8 +144,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
     (row: jList[AnyRef], i: Int) =>
       array(i) = row.get(colIndex) match {
         case null => Option.empty[String]
-        case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next
-          .asInstanceOf[jMap[String, Keyword]].values.iterator.next.getName)
+        case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next.toString)
       }
   }
 

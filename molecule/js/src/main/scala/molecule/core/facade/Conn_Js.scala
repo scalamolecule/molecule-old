@@ -105,7 +105,12 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
                        (implicit ec: ExecutionContext): Future[TxReport] = ???
 
   override def transact(scalaStmts: Future[Seq[Statement]])
-                       (implicit ec: ExecutionContext): Future[TxReport] = ???
+                       (implicit ec: ExecutionContext): Future[TxReport] = {
+    for {
+      stmts <- scalaStmts
+      result <- rpc.transact(dbProxy, Stmts2Edn(stmts, this))
+    } yield result
+  }
 
   private[molecule] override def buildTxFnInstall(
     txFn: String,

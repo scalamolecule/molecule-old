@@ -1,14 +1,17 @@
 package molecule.core.facade
 
 import molecule.core.api.Molecule
+import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.marshalling.{DbProxy, MoleculeRpc}
+import molecule.core.ops.VerifyModel
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.transactionModel
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 case class DatomicEntity_Js(conn: Conn, dbProxy: DbProxy, eid: Any) extends DatomicEntity {
   val rpc = conn.rpc
@@ -38,13 +41,49 @@ case class DatomicEntity_Js(conn: Conn, dbProxy: DbProxy, eid: Any) extends Dato
     }
   }
 
-  def getRetractStmts(implicit ec: ExecutionContext): Future[List[transactionModel.RetractEntity]] = ???
+  def retract(txMeta: Molecule)
+             (implicit ec: ExecutionContext): Future[TxReport] = try {
+    val retractStmts = Seq(RetractEntity(eid))
+    val txMetaModel        = Model(Seq(TxMetaData(txMeta._model.elements)))
+    VerifyModel(txMetaModel, "save") // can throw exception
+    eid match {
+      case eid: Long =>
+      for{
+        txMetaStmts <- conn.modelTransformer(txMetaModel).saveStmts
+        txReport <- rpc.transact(conn.dbProxy, Stmts2Edn(retractStmts ++ txMetaStmts, conn))
+      }  yield txReport
 
-  def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = ???
+      case _         => throw MoleculeException(s"Unexpected eid $eid of type " + eid.getClass)
+    }
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
 
-  def retract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def getRetractStmts(implicit ec: ExecutionContext): Future[List[transactionModel.RetractEntity]] = {
+    Future(List(RetractEntity(eid)))
+  }
 
-  def inspectRetract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[Unit] = ???
+
+  def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = {
+    getRetractStmts.map { stmts =>
+      conn.inspect("Inspect `retract` on entity", 1)(1, stmts)
+    }
+  }
+
+  def inspectRetract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[Unit] = try {
+    val retractStmts = Seq(RetractEntity(eid))
+    val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
+    VerifyModel(model, "save") // can throw exception
+    conn.modelTransformer(model).saveStmts.map(txMetaStmts =>
+      conn.inspect(
+        "Inspect `retract` on entity with tx meta data", 1)(
+        1, retractStmts ++ txMetaStmts
+      )
+    )
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
 
   def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???
 
