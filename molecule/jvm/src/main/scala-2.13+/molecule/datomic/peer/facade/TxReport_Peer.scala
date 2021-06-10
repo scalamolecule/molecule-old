@@ -3,7 +3,7 @@ package molecule.datomic.peer.facade
 import java.util.{Date, List => jList, Map => jMap}
 import datomic.Connection.TEMPIDS
 import datomic.db.{Datum, DbId}
-import datomic.{Database, _}
+import datomic._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
 import molecule.datomic.base.facade.exception.DatomicFacadeException
@@ -102,5 +102,8 @@ case class TxReport_Peer(
 
   lazy val tx: Long = Peer.toTx(t).asInstanceOf[Long]
 
-  lazy val inst: Date = dbAfter.entity(tx).get(":db/txInstant").asInstanceOf[Date]
+  lazy val inst: Date = {
+    //    dbAfter.entity(tx).get(":db/txInstant").asInstanceOf[Date]
+    rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].get(0).asInstanceOf[Datum].v.asInstanceOf[Date]
+  }
 }

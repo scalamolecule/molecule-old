@@ -8,13 +8,14 @@ import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
+import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
-import molecule.datomic.base.marshalling.DatomicRpc.javaStmts
+import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
@@ -83,8 +84,7 @@ case class Conn_Peer(
   }
 
   def testDbAsOfNow: Unit = {
-    //    _testDb = Some(peerConn.db)
-    _testDb = None
+    _testDb = Some(peerConn.db)
   }
 
   def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
@@ -124,7 +124,7 @@ case class Conn_Peer(
       case Since(TxDate(d))         => baseDb.since(d)
       case History                  => baseDb.history()
       case With(stmtsEdn, uriAttrs) =>
-        val txData   = javaStmts(stmtsEdn, uriAttrs)
+        val txData   = getJavaStmts(stmtsEdn, uriAttrs)
         val txReport = TxReport_Peer(baseDb.`with`(txData))
         txReport.dbAfter.asOf(txReport.t)
     }
@@ -135,15 +135,41 @@ case class Conn_Peer(
 
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
-      //      println("C1  " + dbProxy.adhocDbView + "    " + _adhocDbView)
-      // Return singleton adhoc db
+      println("d1  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
       DatomicDb_Peer(getAdhocDb)
+
     } else if (_testDb.isDefined) {
-      //      println("C2  " + dbProxy.adhocDbView + "    " + _adhocDbView)
+      println("d2  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb + "  ##  " + peerConn.db)
+      if (dbProxy.testDbView.contains(AsOf(TxLong(-1)))) {
+        _testDb = None
+        println("d2_ " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
+        DatomicDb_Peer(peerConn.db)
+      } else {
+        DatomicDb_Peer(_testDb.get)
+      }
+
+    } else if (dbProxy.testDbView.isDefined) {
+      println("d3  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
+      dbProxy.testDbView.get match {
+        case AsOf(TxLong(-1))         => _testDb = None // use live db
+        case AsOf(TxLong(0))          => _testDb = Some(peerConn.db) // db as of now
+        case AsOf(TxLong(t))          => _testDb = Some(peerConn.db.asOf(t))
+        case AsOf(TxDate(d))          => _testDb = Some(peerConn.db.asOf(d))
+        case Since(TxLong(t))         => _testDb = Some(peerConn.db.since(t))
+        case Since(TxDate(d))         => _testDb = Some(peerConn.db.since(d))
+        case History                  => _testDb = Some(peerConn.db.history())
+        case With(stmtsEdn, uriAttrs) =>
+          val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+          val txReport = TxReport_Peer(peerConn.db.`with`(txData))
+          _testDb = Some(txReport.dbAfter.asOf(txReport.t))
+      }
+      println("d3  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
       // Test db
-      DatomicDb_Peer(_testDb.get)
+      DatomicDb_Peer(_testDb.getOrElse(peerConn.db))
+
     } else {
-      //      println("C3  " + dbProxy.adhocDbView + "    " + _adhocDbView)
+      println("d4  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
+
       // Live db
       DatomicDb_Peer(peerConn.db)
     }
@@ -158,11 +184,49 @@ case class Conn_Peer(
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
     if (_adhocDbView.isDefined) {
+      println("T1  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
       futScalaStmts.map(scalaStmts =>
         TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
       )
 
     } else if (_testDb.isDefined) {
+      println("T2  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
+      futScalaStmts.map { scalaStmts =>
+        // In-memory "transaction"
+        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
+
+        // Continue with updated in-memory db
+        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+        //      val dbAfter = txReport.dbAfter
+        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+        _testDb = Some(dbAfter)
+        println("T2  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
+        txReport
+      }
+
+
+    } else if (dbProxy.testDbView.isDefined) {
+      println("T3  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
+
+      // Set _testDb
+      if (_testDb.isEmpty) {
+        dbProxy.testDbView.get match {
+          case AsOf(TxLong(-1))         => _testDb = None // use live db
+          case AsOf(TxLong(0))          => _testDb = Some(peerConn.db) // db as of now
+          case AsOf(TxLong(t))          => _testDb = Some(peerConn.db.asOf(t))
+          case AsOf(TxDate(d))          => _testDb = Some(peerConn.db.asOf(d))
+          case Since(TxLong(t))         => _testDb = Some(peerConn.db.since(t))
+          case Since(TxDate(d))         => _testDb = Some(peerConn.db.since(d))
+          case History                  => _testDb = Some(peerConn.db.history())
+          case With(stmtsEdn, uriAttrs) =>
+            val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+            val txReport = TxReport_Peer(peerConn.db.`with`(txData))
+            _testDb = Some(txReport.dbAfter.asOf(txReport.t))
+        }
+        println("T3  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
+      }
+
+      // Transact temporary data
       futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
@@ -175,7 +239,9 @@ case class Conn_Peer(
         txReport
       }
 
+
     } else {
+      println("T4  " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView + "  " + _testDb)
       // Live transaction
       val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
       val p                                                  = Promise[util.Map[_, _]]()

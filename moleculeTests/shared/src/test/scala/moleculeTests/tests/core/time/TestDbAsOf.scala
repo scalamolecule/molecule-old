@@ -20,7 +20,7 @@ object TestDbAsOf extends AsyncTestSuite {
       e2 = txR2.eid
       e3 = txR3.eid
     } yield {
-      (txR1, txR2, txR3, e1, e2, e3, Counter.apply(e1))
+      (txR1, txR2, txR3, e1, e2, e3, Counter(e1))
     }
   }
 

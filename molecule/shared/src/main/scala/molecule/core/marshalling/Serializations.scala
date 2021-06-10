@@ -4,7 +4,6 @@ import java.net.URI
 import java.nio.ByteBuffer
 import boopickle.Default._
 import chameleon._
-import molecule.datomic.base.ast.dbView._
 import scala.util.{Failure, Success, Try}
 
 
@@ -22,29 +21,7 @@ trait Serializations {
         }
     }
 
-  // Some common pickle transformers
+  // Common picklers
   implicit val datePickler = transformPickler((t: Long) => new java.util.Date(t))(_.getTime)
   implicit val uriPickler  = transformPickler((t: String) => new URI(t))(_.toString)
-
-//  implicit val trowa = exceptionPickler
-//    .addException[DbException](m => DbException(m))
-
-
-//  implicit val pointInTimePickler = compositePickler[PointInTime].
-//    addConcreteType[TxDate].
-//    addConcreteType[TxLong]
-//
-//  implicit val dbViewPickler = compositePickler[DbView].
-//    addConcreteType[AsOf].
-//    addConcreteType[Since].
-//    addConcreteType[With].
-//    addConcreteType[History.type]
-//
-//  implicit val dbProxyPickler = compositePickler[DbProxy].
-//    addConcreteType[DatomicInMemProxy].
-//    addConcreteType[DatomicPeerProxy].
-//    addConcreteType[DatomicDevLocalProxy].
-//    addConcreteType[DatomicPeerServerProxy]
-
-
 }

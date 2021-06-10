@@ -22,7 +22,8 @@ import moleculeBuildInfo.BuildInfo.datomicProtocol
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 
 object DatomicRpc extends MoleculeRpc
@@ -39,13 +40,16 @@ object DatomicRpc extends MoleculeRpc
     stmtsEdn: String,
     uriAttrs: Set[String]
   ): Future[TxReportRPC] = {
-    println(stmtsEdn)
     for {
-      conn <- getCachedConn(dbProxy)
-      txReport <- conn.transactRaw(javaStmts(stmtsEdn, uriAttrs))
-    } yield TxReportRPC(
-      txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
-    )
+      conn <- getConn(dbProxy)
+      _ = println(stmtsEdn + "  " + conn.db.getDatomicDb)
+      txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
+    } yield {
+//      println(stmtsEdn + "  " + conn.db.getDatomicDb)
+      TxReportRPC(
+        txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
+      )
+    }
   }
 
   def query(
@@ -62,11 +66,14 @@ object DatomicRpc extends MoleculeRpc
     val t         = TimerPrint("DatomicRpc")
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules +: inputs else inputs
+//    println("B   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView)
     for {
-      conn <- getCachedConn(dbProxy)
-      conn2 = updateConnDbView(conn, dbProxy)
-      //      _ = println("B  " + dbProxy.adhocDbView + "    " + conn2._adhocDbView + "    " + connCache.get().size)
-      allRows <- conn2.qRaw(conn2.db, datalogQuery, allInputs)
+      conn <- getConn(dbProxy)
+
+//      _ = println("B   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView)
+//      _ = println("B   " + conn.dbProxy.adhocDbView + "  " + conn.dbProxy.testDbView)
+
+      allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
     } yield {
       val rowCountAll = allRows.size
       val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
@@ -76,7 +83,8 @@ object DatomicRpc extends MoleculeRpc
       val space     = " " * (70 - datalogQuery.split('\n').last.length)
       val time      = qTime(queryTime)
       val timeRight = " " * (8 - time.length) + time
-      log(datalogQuery + space + timeRight)
+//      log(datalogQuery + space + timeRight)
+      log(datalogQuery + space + timeRight + "  " + conn.db.getDatomicDb)
       log.print
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
@@ -87,11 +95,11 @@ object DatomicRpc extends MoleculeRpc
       //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
       //      log("rowCount    : " + rowCount)
 
-//      val allRows2 = allRows
-//      val it       = allRows2.iterator()
-//      //            it.next()
-//      val v        = it.next().get(0)
-//      println(s"v1: $v  ${v.getClass}")
+      //      val allRows2 = allRows
+      //      val it       = allRows2.iterator()
+      //      //            it.next()
+      //      val v        = it.next().get(0)
+      //      println(s"v1: $v  ${v.getClass}")
 
       val queryResult = Rows2QueryResult(
         allRows, rowCountAll, rowCount, queryTime, indexes
@@ -114,7 +122,7 @@ object DatomicRpc extends MoleculeRpc
   ): Future[List[String]] = {
     var vs = List.empty[String]
     for {
-      conn <- getCachedConn(dbProxy)
+      conn <- getConn(dbProxy)
       rows0 <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
       val rows = rows0.iterator
@@ -148,7 +156,7 @@ object DatomicRpc extends MoleculeRpc
     val datalogQuery = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
     var list         = List.empty[String]
     for {
-      conn <- getCachedConn(dbProxy)
+      conn <- getConn(dbProxy)
       rows <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
       rows.forEach { row =>
@@ -165,8 +173,8 @@ object DatomicRpc extends MoleculeRpc
   ): Future[TxReport] = {
     println(stmtsEdn)
     for {
-      conn <- getCachedConn(dbProxy)
-      txReport <- conn.transactRaw(javaStmts(stmtsEdn, uriAttrs))
+      conn <- getConn(dbProxy)
+      txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield TxReportRPC(
       txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
     )
@@ -180,16 +188,17 @@ object DatomicRpc extends MoleculeRpc
 
   private val connCache = new AtomicReference(Map.empty[String, Future[Conn]])
 
-  private def getCachedConn(
+  private def getConn(
     dbProxy: DbProxy
   ): Future[Conn] = {
-    var msg     = s"Conn ---- " + connCache.get.size
+    var msg     = s"--- " + dbProxy.adhocDbView + "  " + dbProxy.testDbView
     val futConn = connCache.get.getOrElse(
       dbProxy.uuid,
       {
-        msg = s"Conn CACHING ============= " + connCache.get.size
-        val futConn: Future[Conn_Datomic213] = dbProxy match {
+        msg = s"============= Conn CACHING ============= "
+        dbProxy match {
           case DatomicInMemProxy(schemaPeer, _, _, _, _) =>
+            println("=======================")
             Datomic_Peer.recreateDbFromEdn(schemaPeer)
 
           case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _) =>
@@ -212,32 +221,27 @@ object DatomicRpc extends MoleculeRpc
           case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _) =>
             Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
         }
-        connCache.set(connCache.get() + (dbProxy.uuid -> futConn))
-        futConn
       }
     )
-    //    println(msg)
-    futConn
-  }
 
-  private def updateConnDbView(conn0: Conn, dbProxy: DbProxy): Conn = {
-    // (no need to set dbProxy since it is not used by jvm conn implementations
-    conn0 match {
-      case conn: Conn_Peer =>
-        conn._adhocDbView = dbProxy.adhocDbView
-        conn
-
-      case conn: Conn_Client =>
-        conn._adhocDbView = dbProxy.adhocDbView
-        conn
-
-      case otherConn => otherConn
+    val futConnTimeAdjusted = futConn.map { conn =>
+      conn.updateTestDbView(dbProxy.testDbView)
+      conn.updateAdhocDbView(dbProxy.adhocDbView)
+      conn
     }
+    connCache.set(connCache.get() + (dbProxy.uuid -> futConnTimeAdjusted))
+
+//    println(msg)
+    val c = Await.result(futConnTimeAdjusted, 10.seconds)
+    println("----- " + c.asInstanceOf[Conn_Peer].peerConn.db)
+//    println("----- ")
+    futConnTimeAdjusted
   }
+
 
   // Helpers -------------------------------------------------
 
-  def javaStmts(
+  def getJavaStmts(
     stmtsEdn: String,
     uriAttrs: Set[String]
   ): jList[AnyRef] = {

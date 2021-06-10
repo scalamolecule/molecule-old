@@ -17,7 +17,7 @@ import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
-import molecule.datomic.base.marshalling.DatomicRpc.javaStmts
+import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.jdk.CollectionConverters._
@@ -148,7 +148,7 @@ case class Conn_Client(
       case Since(TxDate(d))         => baseDb.since(d)
       case History                  => baseDb.history
       case With(stmtsEdn, uriAttrs) =>
-        val txData = javaStmts(stmtsEdn, uriAttrs)
+        val txData = getJavaStmts(stmtsEdn, uriAttrs)
         baseDb.`with`(clientConn.withDb, txData).dbAfter
     }
     _adhocDbView = None

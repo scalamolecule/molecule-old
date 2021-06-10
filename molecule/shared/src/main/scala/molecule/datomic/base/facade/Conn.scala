@@ -40,40 +40,64 @@ trait Conn extends ColOps {
     this
   }
 
-  protected def updateAdhocDbView(adhocDbView: Option[DbView]): Unit = {
+  private[molecule] def updateAdhocDbView(adhocDbView: Option[DbView]): Unit = {
     _adhocDbView = adhocDbView
     dbProxy = dbProxy match {
-      case DatomicInMemProxy(edns, attrMap, testDbView, _, uuid) =>
-        DatomicInMemProxy(edns, attrMap, testDbView, adhocDbView, uuid)
-
-      case DatomicPeerProxy(protocol, dbIdentifier, edns, testDbView, _, uuid) =>
-        DatomicPeerProxy(protocol, dbIdentifier, edns, testDbView, adhocDbView, uuid)
-
-      case DatomicDevLocalProxy(system, storageDir, dbName, edns, testDbView, _, uuid) =>
-        DatomicDevLocalProxy(system, storageDir, dbName, edns, testDbView, adhocDbView, uuid)
-
-      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, testDbView, _, uuid) =>
-        DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, testDbView, adhocDbView, uuid)
+      case p: DatomicInMemProxy      => p.copy(adhocDbView = adhocDbView)
+      case p: DatomicPeerProxy       => p.copy(adhocDbView = adhocDbView)
+      case p: DatomicDevLocalProxy   => p.copy(adhocDbView = adhocDbView)
+      case p: DatomicPeerServerProxy => p.copy(adhocDbView = adhocDbView)
     }
   }
 
-  protected def updateTestDbView(testDbView: Option[DbView]): Unit = {
+  private[molecule] def updateTestDbView(testDbView: Option[DbView]): Unit = {
     // _testDb is updated in connection implementations
+//    val testDbView = if(testDbView0.contains(AsOf(TxLong(-1)))) None else testDbView0
     dbProxy = dbProxy match {
-      case DatomicInMemProxy(edns, attrMap, _, adhocDbView, uuid) =>
-        DatomicInMemProxy(edns, attrMap, testDbView, adhocDbView, uuid)
-
-      case DatomicPeerProxy(protocol, dbIdentifier, edns, _, adhocDbView, uuid) =>
-        DatomicPeerProxy(protocol, dbIdentifier, edns, testDbView, adhocDbView, uuid)
-
-      case DatomicDevLocalProxy(system, storageDir, dbName, edns, _, adhocDbView, uuid) =>
-        DatomicDevLocalProxy(system, storageDir, dbName, edns, testDbView, adhocDbView, uuid)
-
-      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, _, adhocDbView, uuid) =>
-        DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, edns, testDbView, adhocDbView, uuid)
+      case p: DatomicInMemProxy      => p.copy(testDbView = testDbView)
+      case p: DatomicPeerProxy       => p.copy(testDbView = testDbView)
+      case p: DatomicDevLocalProxy   => p.copy(testDbView = testDbView)
+      case p: DatomicPeerServerProxy => p.copy(testDbView = testDbView)
     }
   }
+  private[molecule] def queryJs[Tpl](
+    query: Query,
+    n: Int,
+    indexes: List[(Int, Int, Int, Int)],
+    qr2tpl: QueryResult => Int => Tpl
+  )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
+    val q2s          = Query2String(query)
+    val datalogQuery = q2s.multiLine(60)
+    val p            = q2s.p
+    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+    val (l, ll, lll) = marshallInputs(query)
 
+    println("------")
+    println("A   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView)
+
+    // Fetch QueryResult with Ajax call via typed Sloth wire
+    val futResult = rpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
+      val maxRows    = if (n == -1) qr.maxRows else n
+      val tplsBuffer = new ListBuffer[Tpl]
+      val columns    = qr2tpl(qr) // macro generated extractor
+      var rowIndex   = 0
+      while (rowIndex < maxRows) {
+        tplsBuffer += columns(rowIndex)
+        rowIndex += 1
+      }
+      tplsBuffer.toList
+    }
+    if (dbProxy.adhocDbView.isDefined) {
+      // Reset adhoc db view
+      updateAdhocDbView(None)
+    }
+    if (dbProxy.testDbView.contains(AsOf(TxLong(-1)))) {
+      // Reset test db view
+      updateTestDbView(None)
+    }
+    println("A   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView)
+    futResult
+  }.flatten
 
   /** Flag to indicate if live database is used */
   def liveDbUsed: Boolean
@@ -403,38 +427,7 @@ trait Conn extends ColOps {
 
   // JS query rpc api .........................................
 
-  private[molecule] def queryJs[Tpl](
-    query: Query,
-    n: Int,
-    indexes: List[(Int, Int, Int, Int)],
-    qr2tpl: QueryResult => Int => Tpl
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
-    val q2s          = Query2String(query)
-    val datalogQuery = q2s.multiLine(60)
-    val p            = q2s.p
-    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-    val (l, ll, lll) = marshallInputs(query)
 
-    //    println("A  " + dbProxy.adhocDbView + "    " + _adhocDbView)
-
-    // Fetch QueryResult with Ajax call via typed Sloth wire
-    val futResult = rpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
-      val maxRows    = if (n == -1) qr.maxRows else n
-      val tplsBuffer = new ListBuffer[Tpl]
-      val columns    = qr2tpl(qr) // macro generated extractor
-      var rowIndex   = 0
-      while (rowIndex < maxRows) {
-        tplsBuffer += columns(rowIndex)
-        rowIndex += 1
-      }
-      tplsBuffer.toList
-    }
-    if (dbProxy.adhocDbView.isDefined) {
-      // Reset adhoc db view
-      updateAdhocDbView(None)
-    }
-    futResult
-  }.flatten
 
   private[molecule] def jsGetAttrValues(
     datalogQuery: String,

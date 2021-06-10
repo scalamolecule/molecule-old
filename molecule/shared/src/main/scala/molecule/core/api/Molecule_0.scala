@@ -199,8 +199,7 @@ abstract class Molecule_0[Obj, Tpl](
       if (conn.isJsPlatform) {
         for {
           saveStmts <- conn.modelTransformer(_model).saveStmts
-          (stmtsEdn, uriAttrs) = Stmts2Edn(saveStmts, conn)
-          result <- conn.rpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+          result <- conn.rpc.transact(conn.dbProxy, Stmts2Edn(saveStmts, conn))
         } yield result
       } else {
         conn.transact(
@@ -306,8 +305,7 @@ abstract class Molecule_0[Obj, Tpl](
       if (conn.isJsPlatform) {
         for {
           insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
-          (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
-          result <- conn.rpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+          result <- conn.rpc.transact(conn.dbProxy, Stmts2Edn(insertStmts, conn))
         } yield result
       } else {
         conn.transact(
@@ -362,8 +360,7 @@ abstract class Molecule_0[Obj, Tpl](
       if (conn.isJsPlatform) {
         for {
           updateStmts <- conn.modelTransformer(_model).updateStmts
-          (stmtsEdn, uriAttrs) = Stmts2Edn(updateStmts, conn)
-          result <- conn.rpc.transact(conn.dbProxy, stmtsEdn, uriAttrs)
+          result <- conn.rpc.transact(conn.dbProxy, Stmts2Edn(updateStmts, conn))
         } yield result
       } else {
         conn.transact(

@@ -45,7 +45,7 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
   override def testDb(db: DatomicDb): Unit = ???
 
   override def testDbAsOfNow: Unit = {
-    updateTestDbView(None)
+    updateTestDbView(Some(AsOf(TxLong(0))))
   }
 
   override def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
@@ -80,7 +80,9 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
     }
   }
 
-  override def useLiveDb: Unit = ???
+  override def useLiveDb: Unit = {
+    updateTestDbView(Some(AsOf(TxLong(-1))))
+  }
 
   override def db: DatomicDb = DatomicDb_Js(rpc, dbProxy)
 
