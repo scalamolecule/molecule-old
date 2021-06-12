@@ -3,7 +3,6 @@ package molecule.core.marshalling
 import java.util.{UUID, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
-import molecule.core.exceptions.MoleculeException
 import molecule.core.util.DateHandling
 import molecule.datomic.base.ast.query.Query
 

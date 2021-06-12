@@ -10,9 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object GetWith extends AsyncTestSuite {
 
   def data(implicit conn: Future[Conn], ec: ExecutionContext): Future[Long] = {
-    for {
-      tx <- Ns.str("a").int(1).save
-    } yield tx.eid
+    Ns.str("a").int(1).save.map(_.eid)
   }
 
   lazy val tests = Tests {
@@ -42,7 +40,7 @@ object GetWith extends AsyncTestSuite {
 
     "getInsertTx" - core { implicit conn =>
       for {
-        - <- data
+        _ <- data
         _ <- Ns.int.getWith(Ns.int.getInsertStmts(2, 3)).map(_ ==> List(1, 2, 3))
 
         _ <- Ns.str.getWith(

@@ -3,12 +3,12 @@ package molecule.datomic.base.facade
 import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
-import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy, DbProxy, MoleculeRpc, QueryResult}
+import molecule.core.marshalling._
 import molecule.core.ops.ColOps
 import molecule.core.transform.ModelTransformer
 import molecule.datomic.base.api.DatomicEntity
+import molecule.datomic.base.ast.dbView.DbView
 import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.dbView.{AsOf, DbView, TxLong}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.TempIdFactory
@@ -26,7 +26,7 @@ trait Conn extends ColOps {
   val tempId = TempIdFactory
 
   // Temporary db for ad-hoc queries against time variation dbs
-  // (takes precedence over test db)
+  // (takes precedence over _testDb)
   private[molecule] var _adhocDbView: Option[DbView] = None
 
   protected val emptyDbProxy             = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
@@ -59,9 +59,10 @@ trait Conn extends ColOps {
     }
   }
 
-  private def debug = {
-    //    println("A   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView)
-    println("A   " + dbProxy.testDbStatus + "  " + dbProxy.testDbView)
+  protected def debug(prefix: String, suffix: String = "") = {
+    val p = prefix + " " * (4 - prefix.length)
+    //    println(p + dbProxy.adhocDbView + "   " + suffix)
+    println(s"$p  ${dbProxy.testDbStatus}  ${dbProxy.testDbView}   " + suffix)
   }
 
   private[molecule] def queryJs[Tpl](
@@ -76,8 +77,7 @@ trait Conn extends ColOps {
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
 
-    println("------")
-    debug
+//    debug("js")
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
     val futResult = rpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
@@ -91,17 +91,17 @@ trait Conn extends ColOps {
       }
       tplsBuffer.toList
     }
-//    if (dbProxy.adhocDbView.isDefined) {
-//      // Reset adhoc db view
-//      updateAdhocDbView(None)
-//    }
-//    if (dbProxy.testDbView.contains(AsOf(TxLong(-1)))) {
-//      // Reset test db view
-//      updateTestDbView(None)
-//    }
-    debug
+    if (dbProxy.adhocDbView.isDefined) {
+      // Reset adhoc db view
+      updateAdhocDbView(None)
+    }
+    if (dbProxy.testDbStatus == -1) {
+      // Reset test db view
+      updateTestDbView(None, 0)
+    }
     futResult
   }.flatten
+
 
   /** Flag to indicate if live database is used */
   def liveDbUsed: Boolean
@@ -180,11 +180,11 @@ trait Conn extends ColOps {
                 (implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database with temporary raw Java transaction data. */
-  //  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit]
-
-  /* testDbHistory not implemented.
-   * Instead, use `testDbAsOfNow`, make changes and get historic data with getHistory calls.
-   * */
+  //    def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit]
+  //
+  //  /* testDbHistory not implemented.
+  //   * Instead, use `testDbAsOfNow`, make changes and get historic data with getHistory calls.
+  //   * */
 
   /** Get out of test mode and back to live db. */
   def useLiveDb: Unit
@@ -430,7 +430,6 @@ trait Conn extends ColOps {
 
 
   // JS query rpc api .........................................
-
 
 
   private[molecule] def jsGetAttrValues(

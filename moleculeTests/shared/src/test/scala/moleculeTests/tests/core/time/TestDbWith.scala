@@ -198,11 +198,10 @@ object TestDbWith extends AsyncTestSuite {
 
 
       "with multiple txs" - core { implicit conn =>
+        // Some domain object
         val crud = Crud
         for {
           (e1, e2, e3) <- data
-
-          // Some domain object
 
           // Current live state
           _ <- crud.read.map(_ ==> List(1, 2, 3))

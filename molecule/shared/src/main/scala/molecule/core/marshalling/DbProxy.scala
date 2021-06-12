@@ -10,9 +10,8 @@ sealed trait DbProxy {
   val attrMap = Map.empty[String, (Int, String)]
 
   /** 0 inactive
-    * 1 JS make active
-    * 2 JVM make active
-    * 3 active
+    * 1 activate
+    * 2 active
     * -1 de-activate
     */
   val testDbStatus: Int

@@ -146,6 +146,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     exportJars := true,
 
     // Run tests for all systems sequentially to avoid data locks with db
+    // Only applies on JVM. On JS platform there's no parallelism anyway.
     Test / parallelExecution := false
   )
 }

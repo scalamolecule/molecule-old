@@ -42,13 +42,9 @@ object DatomicRpc extends MoleculeRpc
   ): Future[TxReportRPC] = {
     for {
       conn <- getConn(dbProxy)
-//      _ = println(stmtsEdn + "  " + conn.db.getDatomicDb)
-      _ = println(stmtsEdn)
+      _ = println(stmtsEdn + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
-//      println(stmtsEdn + "  " + conn.db.getDatomicDb)
-//      connCache.set(connCache.get() + (dbProxy.uuid -> Future(conn)))
-
       TxReportRPC(
         txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
       )
@@ -68,14 +64,9 @@ object DatomicRpc extends MoleculeRpc
     val log       = new log
     val t         = TimerPrint("DatomicRpc")
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
-    val allInputs = if (rules.nonEmpty) rules +: inputs else inputs
-//    println("B   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView)
+    val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
     for {
       conn <- getConn(dbProxy)
-
-//      _ = println("B   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView)
-//      _ = println("B   " + conn.dbProxy.adhocDbView + "  " + conn.dbProxy.testDbView)
-
       allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
     } yield {
       val rowCountAll = allRows.size
@@ -86,8 +77,8 @@ object DatomicRpc extends MoleculeRpc
       val space     = " " * (70 - datalogQuery.split('\n').last.length)
       val time      = qTime(queryTime)
       val timeRight = " " * (8 - time.length) + time
-//      log(datalogQuery + space + timeRight)
-      log(datalogQuery + space + timeRight + "  " + conn.db.getDatomicDb)
+      //      log(datalogQuery + space + timeRight)
+      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       log.print
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
@@ -189,16 +180,16 @@ object DatomicRpc extends MoleculeRpc
   // (datalogQuery, inputs) => raw data
   private type QueryExecutor = (String, Seq[AnyRef]) => Future[util.Collection[util.List[AnyRef]]]
 
-  private val connCache = new AtomicReference(Map.empty[String, Future[Conn]])
+  private val connCache = mutable.Map.empty[String, Future[Conn]]
 
   private def getConn(
     dbProxy: DbProxy
   ): Future[Conn] = {
-    var msg     = s"--- " + dbProxy.adhocDbView + "  " + dbProxy.testDbView
-    val futConn = connCache.get.getOrElse(
+    var msg     = s"--- " + dbProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
+    val futConn = connCache.getOrElse(
       dbProxy.uuid,
       {
-        msg = s"============= Conn CACHING ============= "
+        msg = s"============= Conn CACHING ============= " + dbProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
         dbProxy match {
           case DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
             println("==============================================")
@@ -232,12 +223,18 @@ object DatomicRpc extends MoleculeRpc
       conn.updateTestDbView(dbProxy.testDbView, dbProxy.testDbStatus)
       conn
     }
-    connCache.set(connCache.get() + (dbProxy.uuid -> futConnTimeAdjusted))
+    connCache(dbProxy.uuid) = futConnTimeAdjusted
 
-//    println(msg)
     val c = Await.result(futConnTimeAdjusted, 10.seconds)
-    println("----- " + c.asInstanceOf[Conn_Peer].peerConn.db)
-//    println("----- ")
+    //    println("----- " + c.asInstanceOf[Conn_Peer].peerConn.db)
+    //    println("----- " + dbProxy.testDbStatus + "  " + dbProxy.testDbView + "  " + c.asInstanceOf[Conn_Peer].peerConn.db)
+    println("----- " + c.dbProxy.testDbStatus + "  " + c.dbProxy.testDbView + "   " + c.asInstanceOf[Conn_Peer].peerConn.db)
+    //    msg = msg + "\n" + c._adhocDbView
+    //    msg = msg + "\n" + c._adhocDbView
+    //    msg = msg + "  " + c.asInstanceOf[Conn_Peer].peerConn.db
+    //    println(msg)
+    //    println("----- " + c._adhocDbView)
+    //    println("----- ")
     futConnTimeAdjusted
   }
 
@@ -313,7 +310,6 @@ object DatomicRpc extends MoleculeRpc
     case ("Date", v)       => str2date(v).asInstanceOf[Object]
     case ("UUID", v)       => java.util.UUID.fromString(v).asInstanceOf[Object]
     case ("URI", v)        => new java.net.URI(v).asInstanceOf[Object]
-    case _                 =>
-      throw MoleculeException("Unexpected input pair to cast: " + pair)
+    case _                 => throw MoleculeException("Unexpected input pair to cast: " + pair)
   }
 }

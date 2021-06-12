@@ -3,8 +3,8 @@ package molecule.core.facade
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.exceptions.MoleculeException
+import molecule.core.marshalling.DbProxy
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.{DbProxy, MoleculeRpc}
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.transactionModel

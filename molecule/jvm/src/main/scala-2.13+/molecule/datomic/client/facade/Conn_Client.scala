@@ -155,6 +155,12 @@ case class Conn_Client(
     adhocDb
   }
 
+
+//  // Temporary since time points - needs to be applied later to queries in order
+//  // to maintain special withdb
+//  private var sinceT = Option.empty[Long]
+//  private var sinceD = Option.empty[Date]
+
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
       // Adhoc db

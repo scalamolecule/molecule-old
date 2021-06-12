@@ -34,10 +34,6 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
 
   val isJsPlatform: Boolean = true
 
-  // In-memory fixed test db for integration testing of domain model
-  // (takes precedence over live db)
-  //  protected var _testDbView: Option[DbProxy] = None
-
   override lazy val rpc: MoleculeRpc = MoleculeWebClient.rpc
 
   override def liveDbUsed: Boolean = ???
@@ -49,8 +45,8 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
   }
 
   override def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
-
     updateTestDbView(Some(AsOf(TxLong(t))))
+    debug("js1")
   }
 
   override def testDbAsOf(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
@@ -73,7 +69,7 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
     updateTestDbView(Some(Since(TxLong(txR.t))))
   }
 
-  override def testDbWith(txMolecules: Future[Seq[Statement]]*)
+  def testDbWith(txMolecules: Future[Seq[Statement]]*)
                          (implicit ec: ExecutionContext): Future[Unit] = {
     Future.sequence(txMolecules).map { stmtss =>
       val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, this)
@@ -81,9 +77,7 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
     }
   }
 
-  override def useLiveDb: Unit = {
-    updateTestDbView(Some(AsOf(TxLong(-1))))
-  }
+  def useLiveDb: Unit = updateTestDbView(None, -1)
 
   override def db: DatomicDb = DatomicDb_Js(rpc, dbProxy)
 
