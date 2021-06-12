@@ -23,11 +23,11 @@ trait Conn extends ColOps {
   /** Flag to indicate if we are on the JS or JVM platform */
   val isJsPlatform: Boolean
 
+  val tempId = TempIdFactory
+
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over test db)
   private[molecule] var _adhocDbView: Option[DbView] = None
-
-  val tempId = TempIdFactory
 
   protected val emptyDbProxy             = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
   private[molecule] var dbProxy: DbProxy = emptyDbProxy
@@ -35,7 +35,7 @@ trait Conn extends ColOps {
   /** */
   lazy val rpc: MoleculeRpc = ???
 
-  def usingDbView(dbView: DbView): Conn = {
+  def usingAdhocDbView(dbView: DbView): Conn = {
     updateAdhocDbView(Some(dbView))
     this
   }
@@ -50,16 +50,20 @@ trait Conn extends ColOps {
     }
   }
 
-  private[molecule] def updateTestDbView(testDbView: Option[DbView]): Unit = {
-    // _testDb is updated in connection implementations
-//    val testDbView = if(testDbView0.contains(AsOf(TxLong(-1)))) None else testDbView0
+  private[molecule] def updateTestDbView(testDbView: Option[DbView], status: Int = 1): Unit = {
     dbProxy = dbProxy match {
-      case p: DatomicInMemProxy      => p.copy(testDbView = testDbView)
-      case p: DatomicPeerProxy       => p.copy(testDbView = testDbView)
-      case p: DatomicDevLocalProxy   => p.copy(testDbView = testDbView)
-      case p: DatomicPeerServerProxy => p.copy(testDbView = testDbView)
+      case p: DatomicInMemProxy      => p.copy(testDbStatus = status, testDbView = testDbView)
+      case p: DatomicPeerProxy       => p.copy(testDbStatus = status, testDbView = testDbView)
+      case p: DatomicDevLocalProxy   => p.copy(testDbStatus = status, testDbView = testDbView)
+      case p: DatomicPeerServerProxy => p.copy(testDbStatus = status, testDbView = testDbView)
     }
   }
+
+  private def debug = {
+    //    println("A   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView)
+    println("A   " + dbProxy.testDbStatus + "  " + dbProxy.testDbView)
+  }
+
   private[molecule] def queryJs[Tpl](
     query: Query,
     n: Int,
@@ -73,7 +77,7 @@ trait Conn extends ColOps {
     val (l, ll, lll) = marshallInputs(query)
 
     println("------")
-    println("A   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView)
+    debug
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
     val futResult = rpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
@@ -87,15 +91,15 @@ trait Conn extends ColOps {
       }
       tplsBuffer.toList
     }
-    if (dbProxy.adhocDbView.isDefined) {
-      // Reset adhoc db view
-      updateAdhocDbView(None)
-    }
-    if (dbProxy.testDbView.contains(AsOf(TxLong(-1)))) {
-      // Reset test db view
-      updateTestDbView(None)
-    }
-    println("A   " + dbProxy.adhocDbView + "  " + dbProxy.testDbView + "  //  " + _adhocDbView)
+//    if (dbProxy.adhocDbView.isDefined) {
+//      // Reset adhoc db view
+//      updateAdhocDbView(None)
+//    }
+//    if (dbProxy.testDbView.contains(AsOf(TxLong(-1)))) {
+//      // Reset test db view
+//      updateTestDbView(None)
+//    }
+    debug
     futResult
   }.flatten
 
@@ -109,7 +113,7 @@ trait Conn extends ColOps {
   def testDb(db: DatomicDb): Unit
 
   /** Use test database as of now. */
-  def testDbAsOfNow: Unit
+  def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit]
 
   /** Use test database as of time t / tx id.
     *
@@ -185,7 +189,7 @@ trait Conn extends ColOps {
   /** Get out of test mode and back to live db. */
   def useLiveDb: Unit
 
-  /** Get current test/live db. Test db has preference. */
+  /** Get current test/live db. */
   def db: DatomicDb
 
   /** Convenience method to retrieve entity. */

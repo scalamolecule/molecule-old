@@ -88,7 +88,7 @@ case class Conn_Client(
   }
 
 
-  def testDbAsOfNow: Unit = {
+  def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(clientConn.db)
   }
 

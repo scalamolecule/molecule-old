@@ -19,7 +19,6 @@ trait Conn_Datomic extends Conn {
   protected def cleanFrom(nextTimePoint: Any)(implicit ec: ExecutionContext): Future[Unit]
 
 
-
   def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = cleanFrom(t + 1)
 
   def testDbAsOf(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = cleanFrom(txR.t + 1)

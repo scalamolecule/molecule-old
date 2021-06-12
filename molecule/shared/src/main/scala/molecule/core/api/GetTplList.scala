@@ -175,7 +175,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
+    get(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule as of transaction time `t`.
@@ -223,7 +223,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsOf(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
+    get(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule as of tx.
@@ -273,7 +273,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     * */
   def getAsOf(txR: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingDbView(AsOf(TxLong(txR.t)))), ec)
+    get(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule as of tx.
@@ -316,7 +316,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     * */
   def getAsOf(txR: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingDbView(AsOf(TxLong(txR.t)))), ec)
+    get(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule as of date.
@@ -368,7 +368,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsOf(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
+    get(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule as of date.
@@ -408,7 +408,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getAsOf(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
+    get(n)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
   // get since ================================================================================================
@@ -444,7 +444,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
+    get(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule since transaction time `t`.
@@ -476,7 +476,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
+    get(n)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule since tx.
@@ -512,7 +512,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(txR: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingDbView(Since(TxLong(txR.t)))), ec)
+    get(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule since tx.
@@ -546,7 +546,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(txR: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingDbView(Since(TxLong(txR.t)))), ec)
+    get(n)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as tuples matching molecule since date.
@@ -577,7 +577,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
+    get(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as tuples matching molecule since date.
@@ -606,7 +606,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def getSince(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
-    get(n)(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
+    get(n)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -642,7 +642,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     Future.sequence(txData).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
-        conn.usingDbView(With(stmtsEdn, uriAttrs))
+        conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
       }
       get(connWith, ec)
     }
@@ -690,7 +690,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     Future.sequence(txData).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
-        conn.usingDbView(With(stmtsEdn, uriAttrs))
+        conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
       }
       get(n)(connWith, ec)
     }
@@ -809,7 +809,7 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return List[Tpl] where Tpl is tuple of data matching molecule
     */
   def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(conn.map(_.usingDbView(History)), ec)
+    get(conn.map(_.usingAdhocDbView(History)), ec)
   }
 
 

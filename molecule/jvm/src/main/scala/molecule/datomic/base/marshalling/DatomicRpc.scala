@@ -42,10 +42,13 @@ object DatomicRpc extends MoleculeRpc
   ): Future[TxReportRPC] = {
     for {
       conn <- getConn(dbProxy)
-      _ = println(stmtsEdn + "  " + conn.db.getDatomicDb)
+//      _ = println(stmtsEdn + "  " + conn.db.getDatomicDb)
+      _ = println(stmtsEdn)
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
 //      println(stmtsEdn + "  " + conn.db.getDatomicDb)
+//      connCache.set(connCache.get() + (dbProxy.uuid -> Future(conn)))
+
       TxReportRPC(
         txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
       )
@@ -197,11 +200,11 @@ object DatomicRpc extends MoleculeRpc
       {
         msg = s"============= Conn CACHING ============= "
         dbProxy match {
-          case DatomicInMemProxy(schemaPeer, _, _, _, _) =>
-            println("=======================")
+          case DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
+            println("==============================================")
             Datomic_Peer.recreateDbFromEdn(schemaPeer)
 
-          case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _) =>
+          case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _) =>
             if (datomicProtocol != protocol) {
               throw new RuntimeException(
                 s"\nProject is built with datomic `$datomicProtocol` protocol and " +
@@ -215,18 +218,18 @@ object DatomicRpc extends MoleculeRpc
                 "Please connect with `DatomicInMemProxy` to get an in-memory db.")
             }
 
-          case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _) =>
+          case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _) =>
             Datomic_DevLocal(system, storageDir).connect(dbName)
 
-          case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _) =>
+          case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _) =>
             Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
         }
       }
     )
 
     val futConnTimeAdjusted = futConn.map { conn =>
-      conn.updateTestDbView(dbProxy.testDbView)
       conn.updateAdhocDbView(dbProxy.adhocDbView)
+      conn.updateTestDbView(dbProxy.testDbView, dbProxy.testDbStatus)
       conn
     }
     connCache.set(connCache.get() + (dbProxy.uuid -> futConnTimeAdjusted))

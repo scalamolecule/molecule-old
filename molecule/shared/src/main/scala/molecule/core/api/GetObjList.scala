@@ -177,7 +177,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
+    getObjList(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule as of transaction time `t`.
@@ -223,7 +223,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingDbView(AsOf(TxLong(t)))), ec)
+    getObjList(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule as of tx.
@@ -275,7 +275,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     * */
   def getObjListAsOf(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))), ec)
+    getObjList(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule as of tx.
@@ -319,7 +319,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     * */
   def getObjListAsOf(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingDbView(AsOf(TxLong(tx.t)))), ec)
+    getObjList(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule as of date.
@@ -374,7 +374,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
+    getObjList(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule as of date.
@@ -416,7 +416,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListAsOf(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingDbView(AsOf(TxDate(date)))), ec)
+    getObjList(n)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
   // get since ================================================================================================
@@ -459,7 +459,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
+    getObjList(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule since transaction time `t`.
@@ -498,7 +498,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingDbView(Since(TxLong(t)))), ec)
+    getObjList(n)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule since tx.
@@ -541,7 +541,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(Since(TxLong(tx.t)))), ec)
+    getObjList(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule since tx.
@@ -582,7 +582,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingDbView(Since(TxLong(tx.t)))), ec)
+    getObjList(n)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
   /** Get `Future` with `List` of all rows as objects matching molecule since date.
@@ -620,7 +620,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
+    getObjList(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
   /** Get `Future` with `List` of n rows as objects matching molecule since date.
@@ -656,7 +656,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListSince(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(n)(conn.map(_.usingDbView(Since(TxDate(date)))), ec)
+    getObjList(n)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -698,7 +698,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     Future.sequence(txMolecules).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
-        conn.usingDbView(With(stmtsEdn, uriAttrs))
+        conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
       }
       getObjList(connWith, ec)
     }
@@ -762,7 +762,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     Future.sequence(txMolecules).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
-        conn.usingDbView(With(stmtsEdn, uriAttrs))
+        conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
       }
       getObjList(n)(connWith, ec)
 
@@ -815,7 +815,7 @@ trait GetObjList[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjListHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjList(conn.map(_.usingDbView(History)), ec)
+    getObjList(conn.map(_.usingAdhocDbView(History)), ec)
 
 
   // `getHistory(n: Int)` is not implemented since the whole data set normally needs to be sorted

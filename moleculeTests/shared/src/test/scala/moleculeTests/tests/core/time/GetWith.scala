@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object GetWith extends AsyncTestSuite {
 
-  def data(implicit conn: Future[Conn], ec: ExecutionContext) = {
+  def data(implicit conn: Future[Conn], ec: ExecutionContext): Future[Long] = {
     for {
       tx <- Ns.str("a").int(1).save
     } yield tx.eid
@@ -122,7 +122,7 @@ object GetWith extends AsyncTestSuite {
       for {
         _ <- data
 
-        // Clean initial state
+        // Clean initial live state
         _ <- Ns.e.str_.get.flatMap(retract(_))
         tx <- Ns.str("Fred").int(42).save
         fred = tx.eid
@@ -134,17 +134,17 @@ object GetWith extends AsyncTestSuite {
           Ns(fred).int(43).getUpdateStmts
         ).map(_ ==> List(("Fred", 43)))
 
-        // Production value intact
+        // Live value intact
         _ <- Ns.str.int.get.map(_ ==> List(("Fred", 42)))
 
         _ <- Ns.str.int.getWith(
           Ns.str("John").int(44).getSaveStmts
         ).map(_.sorted ==> List(
-          ("Fred", 42), // production value
+          ("Fred", 42), // live value
           ("John", 44) // insertion worked
         ))
 
-        // Production value intact
+        // Live value intact
         _ <- Ns.str.int.get.map(_ ==> List(("Fred", 42)))
 
         _ <- Ns.str.int.getWith(
