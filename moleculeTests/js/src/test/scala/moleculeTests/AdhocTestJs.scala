@@ -3,7 +3,6 @@ package moleculeTests
 import molecule.core.util.JavaUtil
 import molecule.datomic.api.in1_out13._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.attr.Attribute.{bool1, date1, double1, enum1, int1, long1, str1, uri1, uuid1}
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global

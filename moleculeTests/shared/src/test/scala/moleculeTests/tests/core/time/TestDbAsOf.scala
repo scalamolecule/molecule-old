@@ -110,14 +110,11 @@ object TestDbAsOf extends AsyncTestSuite {
 
         // Test state
         _ <- Ns.int.get.map(_ ==> List(1, 2))
-        _ <- Ns.int.get.map(_ ==> List(1, 2))
 
         // Test operations:
 
         // Save
         _ <- Ns.int(4).save
-        //        _ <- Ns.int(5).save
-        //        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 4, 5))
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 4))
 
         // Insert

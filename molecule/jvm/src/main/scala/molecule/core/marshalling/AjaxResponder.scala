@@ -48,21 +48,23 @@ object AjaxResponder extends App with Serializations {
                   byteBufferResult.get(dataAsByteArray)
                   dataAsByteArray
                 }
-                .recoverWith { exc =>
+                //                .recoverWith { exc =>
+                //                  println("---- Error in AjaxResponder ---------------------\n" + exc)
+                //                  println(exc.getStackTrace.mkString("\n"))
+                //                  // Disrupt ajax call Todo: how to send the failed future?
+                //                  Future.failed(exc)
+                //                }
+                .recover { exc =>
                   println("---- Error in AjaxResponder ---------------------\n" + exc)
-                  println(exc.getStackTrace.mkString("\n"))
-                  // Disrupt ajax call Todo: how to send the failed future?
-                  Future.failed(exc)
+                  //                  println(t.getStackTrace.mkString("\n"))
+                  println(exc.getClass)
+                                    val t: Throwable    = new IllegalArgumentException("No, no, no!")
+//                  val t: Throwable    = exc
+                  val tb              = Pickle.intoBytes(t)
+                  val dataAsByteArray = Array.ofDim[Byte](tb.remaining())
+                  tb.get(dataAsByteArray)
+                  dataAsByteArray
                 }
-            //                .recover { exc =>
-            //                  println("---- Error in AjaxResponder ---------------------\n" + exc)
-            //                  //                  println(t.getStackTrace.mkString("\n"))
-            //                  val t: Throwable    = exc
-            //                  val tb              = Pickle.intoBytes(t)
-            //                  val dataAsByteArray = Array.ofDim[Byte](tb.remaining())
-            //                  tb.get(dataAsByteArray)
-            //                  dataAsByteArray
-            //                }
 
             case Left(err) => {
               println(s"ServerFailure: " + err)

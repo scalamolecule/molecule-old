@@ -107,6 +107,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       val allowed = Seq(
         sharedTests + "/core/time",
         sharedTests + "/core/attr/Attribute.scala",
+        sharedTests + "/core/transaction",
         sharedTests + "/core/Adhoc.scala"
       )
       new SimpleFileFilter(f =>

@@ -8,19 +8,19 @@ import scala.concurrent.Future
 trait MoleculeRpc {
 
   def transact(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
   ): Future[TxReportRPC]
 
   def transact(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     stmtsData: (String,Set[String])
-  ): Future[TxReportRPC] = transact(dbProxy, stmtsData._1, stmtsData._2)
+  ): Future[TxReportRPC] = transact(connProxy, stmtsData._1, stmtsData._2)
 
 
   def query(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     datalogQuery: String,
     rules: Seq[String],
     l: Seq[(Int, (String, String))],
@@ -32,7 +32,7 @@ trait MoleculeRpc {
 
 
   def getAttrValues(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     datalogQuery: String,
     card: Int,
     tpe: String
@@ -40,18 +40,18 @@ trait MoleculeRpc {
 
 
   def entityAttrKeys(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     eid: Long
   ): Future[List[String]]
 
-  def t(dbProxy: DbProxy): Future[Long] = ???
-  def tx(dbProxy: DbProxy): Future[Long] = ???
-  def txInstant(dbProxy: DbProxy): Future[Date] = ???
+  def t(connProxy: ConnProxy): Future[Long] = ???
+  def tx(connProxy: ConnProxy): Future[Long] = ???
+  def txInstant(connProxy: ConnProxy): Future[Date] = ???
 
-//  def entity(dbProxy: DbProxy): Future[DatomicEntity] = ???
+//  def entity(connProxy: DbProxy): Future[DatomicEntity] = ???
 
 //  def pull(pattern: String, eid: Any): Future[]
 
-  def retract(dbProxy: DbProxy, eid: Long) = ???
+  def retract(connProxy: ConnProxy, eid: Long) = ???
 
 }

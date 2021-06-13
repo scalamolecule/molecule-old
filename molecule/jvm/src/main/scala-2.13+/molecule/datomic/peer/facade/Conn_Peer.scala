@@ -52,7 +52,8 @@ case class Conn_Peer(
     _testDb = Some(db.asInstanceOf[DatomicDb_Peer].peerDb)
   }
 
-  // Reset datoms of in-mem with-db from next timePoint after as-of t until end
+  // Reset datoms of in-mem with-db from next timePoint after as-of t until end.
+  // Otherwise, transactions on the _testDb will include datoms after the time point.
   override def cleanFrom(nextTimePoint: Any)
                         (implicit ec: ExecutionContext): Future[Unit] = try {
     def op(datom: Datom): String = if (datom.added) ":db/retract" else ":db/add"
@@ -130,12 +131,12 @@ case class Conn_Peer(
         txReport.dbAfter.asOf(txReport.t)
     }
     _adhocDbView = None
-    dbProxy = emptyDbProxy
+    connProxy = emptyConnProxy
     adhocDb
   }
 
   def updateDbProxyStatus(newStatus: Int) = {
-    dbProxy = dbProxy match {
+    connProxy = connProxy match {
       case p: DatomicInMemProxy      => p.copy(testDbStatus = newStatus)
       case p: DatomicPeerProxy       => p.copy(testDbStatus = newStatus)
       case p: DatomicDevLocalProxy   => p.copy(testDbStatus = newStatus)
@@ -148,8 +149,8 @@ case class Conn_Peer(
       debug("d1", peerConn.db.toString)
       DatomicDb_Peer(getAdhocDb)
 
-    } else if (dbProxy.testDbStatus == 1 && _testDb.isEmpty) {
-      val tempDb = dbProxy.testDbView.get match {
+    } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
+      val tempDb = connProxy.testDbView.get match {
         case AsOf(TxLong(0))          => Some(peerConn.db) // db as of now
         case AsOf(TxLong(t))          => Some(peerConn.db.asOf(t))
         case AsOf(TxDate(d))          => Some(peerConn.db.asOf(d))
@@ -165,7 +166,7 @@ case class Conn_Peer(
       DatomicDb_Peer(tempDb.get)
 
 
-    } else if (dbProxy.testDbStatus == -1) {
+    } else if (connProxy.testDbStatus == -1) {
       debug("d3", peerConn.db.toString)
       _testDb = None
       updateTestDbView(None, 0)
@@ -191,7 +192,6 @@ case class Conn_Peer(
     javaStmts: jList[_],
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
-
     def transactWith: Future[TxReport_Peer] = futScalaStmts.map { scalaStmts =>
       // In-memory "transaction"
       val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
@@ -204,6 +204,7 @@ case class Conn_Peer(
       debug("t", _testDb.toString)
       txReport
     }
+    def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
     if (_adhocDbView.isDefined) {
       debug("t1")
@@ -211,7 +212,7 @@ case class Conn_Peer(
         TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
       )
 
-    } else if (_testDb.isDefined && dbProxy.testDbStatus != -1) {
+    } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
       debug("t2")
       futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
@@ -225,14 +226,12 @@ case class Conn_Peer(
         txReport
       }
 
-    } else if (dbProxy.testDbStatus == 1 && _testDb.isEmpty) {
+    } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
       debug("t3", _testDb.toString)
-      val res = dbProxy.testDbView.get match {
-        case AsOf(TxLong(0)) => transactWith
-        case AsOf(TxLong(t)) => cleanFrom(t + 1).flatMap(_ => transactWith)
-        case AsOf(TxDate(d)) =>
-          cleanFrom(new Date(d.toInstant.plusMillis(1).toEpochMilli)).flatMap(_ => transactWith)
-
+      val res = connProxy.testDbView.get match {
+        case AsOf(TxLong(0))          => transactWith
+        case AsOf(TxLong(t))          => cleanFrom(t + 1).flatMap(_ => transactWith)
+        case AsOf(TxDate(d))          => cleanFrom(nextDateMs(d)).flatMap(_ => transactWith)
         case Since(TxLong(t))         => _testDb = Some(peerConn.db.since(t)); transactWith
         case Since(TxDate(d))         => _testDb = Some(peerConn.db.since(d)); transactWith
         case History                  => _testDb = Some(peerConn.db.history()); transactWith
@@ -245,7 +244,7 @@ case class Conn_Peer(
       res
 
     } else {
-      if (dbProxy.testDbStatus == -1) {
+      if (connProxy.testDbStatus == -1) {
         updateTestDbView(None, 0)
         _testDb = None
       }
@@ -266,7 +265,9 @@ case class Conn_Peer(
               case e: java.util.concurrent.ExecutionException =>
                 println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(e.getCause)
+                //                p.failure(new IllegalArgumentException(e.getCause.getMessage))
+                p.failure(new IllegalArgumentException("yeah"))
+              //                p.failure(e.getCause)
 
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
@@ -278,12 +279,22 @@ case class Conn_Peer(
         },
         (arg0: Runnable) => ec.execute(arg0)
       )
-      for {
-        moleculeInvocationResult <- p.future
-        scalaStmts <- futScalaStmts
-      } yield {
-        TxReport_Peer(moleculeInvocationResult, scalaStmts)
-      }
+      //      println("#### " + p)
+      //      println("#### " + p.future)
+      p.future
+        .flatMap(moleculeInvocationResult =>
+          futScalaStmts.map(scalaStmts =>
+            TxReport_Peer(moleculeInvocationResult, scalaStmts)
+          )
+        )
+        .recoverWith(exc => Future.failed(exc))
+      //      (for {
+      //        moleculeInvocationResult <- p.future
+      //        _ = println("@@@@@@ " + moleculeInvocationResult)
+      //        scalaStmts <- futScalaStmts
+      //      } yield {
+      //        TxReport_Peer(moleculeInvocationResult, scalaStmts)
+      //      }).recoverWith(exc => Future.failed(exc))
     }
   } catch {
     case NonFatal(ex) => Future.failed(ex)

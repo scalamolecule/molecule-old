@@ -34,7 +34,20 @@ trait TxBundles extends Helpers {
   def transactBundle(
     stmtss: Future[Seq[Statement]]*
   )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
-    conn.flatMap(_.transact(Future.sequence(stmtss).map(_.flatten)))
+//    conn.flatMap(_.transact(Future.sequence(stmtss).map(_.flatten)))
+
+    val stmts = Future.sequence(stmtss).map(_.flatten)
+    conn.flatMap { c =>
+      val a = c.transact(stmts).recoverWith{exc =>
+        println("exc " + exc)
+        Future.failed(exc)
+      }
+      println("a " + a)
+      a
+    }
+
+
+//    Future.failed(new IllegalArgumentException("auch"))
   }
 
 

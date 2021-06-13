@@ -6,7 +6,7 @@ import boopickle.Default._
 import molecule.core.ast.elements.Model
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.{DbProxy, MoleculeRpc, MoleculeWebClient}
+import molecule.core.marshalling.{ConnProxy, MoleculeRpc, MoleculeWebClient}
 import molecule.core.ops.ColOps
 import molecule.core.util.Helpers
 import molecule.datomic.base.api.DatomicEntity
@@ -24,11 +24,10 @@ import scala.concurrent.{ExecutionContext, Future}
   * Make a similar subclass of ConnProxy like this one in order to use an
   * alternative rpc implementation.
   *
-  * @param dbProxy0 Db coordinates to access db on server side
+  * @param connProxy0 Db coordinates to access db on server side
   */
-//case class Conn_Js(override val dbProxy: DbProxy) extends Conn with ColOps with Helpers {
-case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
-  dbProxy = dbProxy0
+case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers {
+  connProxy = connProxy0
 
   def ??? : Nothing = throw MoleculeException("Unexpected method call on JS side in Conn_Js")
 
@@ -79,7 +78,7 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
 
   def useLiveDb: Unit = updateTestDbView(None, -1)
 
-  override def db: DatomicDb = DatomicDb_Js(rpc, dbProxy)
+  override def db: DatomicDb = DatomicDb_Js(rpc, connProxy)
 
   override def entity(id: Any): DatomicEntity = db.entity(this, id)
 
@@ -105,7 +104,7 @@ case class Conn_Js(dbProxy0: DbProxy) extends Conn with ColOps with Helpers {
                        (implicit ec: ExecutionContext): Future[TxReport] = {
     for {
       stmts <- scalaStmts
-      result <- rpc.transact(dbProxy, Stmts2Edn(stmts, this))
+      result <- rpc.transact(connProxy, Stmts2Edn(stmts, this))
     } yield result
   }
 

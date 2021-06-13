@@ -1,6 +1,7 @@
 package molecule.core.marshalling.convert
 
-import java.util.Date
+import java.net.URI
+import java.util.{Date, UUID}
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn
@@ -12,7 +13,7 @@ object Stmts2Edn extends Helpers {
   var attrMap  = Map.empty[String, (Int, String)]
 
   def apply(stmts: Seq[Statement], conn: Conn): (String, Set[String]) = {
-    attrMap = conn.dbProxy.attrMap
+    attrMap = conn.connProxy.attrMap
 
     buf.clear()
     var following = false
@@ -56,20 +57,40 @@ object Stmts2Edn extends Helpers {
 
   def value(attr: String, v: Any): Unit = {
     val s = v.toString
-    (attrMap(attr)._2, v) match {
-      case ("String", Enum(prefix, enum))          => buf.append(prefix + enum)
-      case ("String", _)                           => quote(s)
-      case ("Long", TempId(part, i))               => buf.append(s"#db/id[$part $i]")
-      case ("Int" | "Long" | "ref" | "Boolean", _) => buf.append(s)
-      case ("Double", _)                           => buf.append(s + (if (s.contains('.')) "" else ".0"))
-      case ("Date", d: Date)                       => buf.append("#inst \"" + date2datomicStr(d) + "\"")
-      case ("UUID", _)                             => buf.append("#uuid \"" + v + "\"")
-      case ("URI", _)                              => uriAttrs = uriAttrs + attr; buf.append(s)
-      case ("BigInt", _)                           => buf.append(s + "N")
-      case ("BigDecimal", _)                       => buf.append(s + (if (s.contains('.')) "M" else ".0M"))
-      case (tpe, _)                                => throw new IllegalArgumentException(
-        s"Unexpected $tpe value of type ${v.getClass}: " + v
-      )
+    if (attrMap.isEmpty) {
+      v match {
+        case Enum(prefix, enum) => buf.append(prefix + enum)
+        case _: String          => quote(s)
+        case TempId(part, i)    => buf.append(s"#db/id[$part $i]")
+        case _: Int             => buf.append(s)
+        case _: Long            => buf.append(s)
+        case _: Boolean         => buf.append(s)
+        case _: Double          => buf.append(s + (if (s.contains('.')) "" else ".0"))
+        case d: Date            => buf.append("#inst \"" + date2datomicStr(d) + "\"")
+        case _: UUID            => buf.append("#uuid \"" + v + "\"")
+        case _: URI             => buf.append(s)
+        case _: BigInt          => buf.append(s + "N")
+        case _: BigDecimal      => buf.append(s + (if (s.contains('.')) "M" else ".0M"))
+        case _                  => throw new IllegalArgumentException(
+          s"Unexpected value `$v` of type ${v.getClass}."
+        )
+      }
+    } else {
+      (attrMap(attr)._2, v) match {
+        case ("String", Enum(prefix, enum))          => buf.append(prefix + enum)
+        case ("String", _)                           => quote(s)
+        case ("Long", TempId(part, i))               => buf.append(s"#db/id[$part $i]")
+        case ("Int" | "Long" | "ref" | "Boolean", _) => buf.append(s)
+        case ("Double", _)                           => buf.append(s + (if (s.contains('.')) "" else ".0"))
+        case ("Date", d: Date)                       => buf.append("#inst \"" + date2datomicStr(d) + "\"")
+        case ("UUID", _)                             => buf.append("#uuid \"" + v + "\"")
+        case ("URI", _)                              => uriAttrs = uriAttrs + attr; buf.append(s)
+        case ("BigInt", _)                           => buf.append(s + "N")
+        case ("BigDecimal", _)                       => buf.append(s + (if (s.contains('.')) "M" else ".0M"))
+        case (tpe, _)                                => throw new IllegalArgumentException(
+          s"Unexpected $tpe value of type ${v.getClass}: " + v
+        )
+      }
     }
   }
 

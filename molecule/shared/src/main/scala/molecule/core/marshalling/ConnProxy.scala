@@ -4,7 +4,7 @@ import java.util.UUID
 import molecule.datomic.base.ast.dbView.{AsOf, DbView, History, TxLong}
 
 
-sealed trait DbProxy {
+sealed trait ConnProxy {
   val uuid      : String
   val schemaPeer: Seq[String]
   val attrMap = Map.empty[String, (Int, String)]
@@ -26,7 +26,7 @@ case class DatomicInMemProxy(
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
-) extends DbProxy
+) extends ConnProxy
 
 case class DatomicPeerProxy(
   protocol: String,
@@ -36,7 +36,7 @@ case class DatomicPeerProxy(
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
-) extends DbProxy
+) extends ConnProxy
 
 case class DatomicDevLocalProxy(
   system: String,
@@ -47,7 +47,7 @@ case class DatomicDevLocalProxy(
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
-) extends DbProxy
+) extends ConnProxy
 
 case class DatomicPeerServerProxy(
   accessKey: String,
@@ -59,4 +59,4 @@ case class DatomicPeerServerProxy(
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
-) extends DbProxy
+) extends ConnProxy

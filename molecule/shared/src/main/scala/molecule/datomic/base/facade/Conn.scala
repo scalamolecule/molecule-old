@@ -29,8 +29,8 @@ trait Conn extends ColOps {
   // (takes precedence over _testDb)
   private[molecule] var _adhocDbView: Option[DbView] = None
 
-  protected val emptyDbProxy             = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
-  private[molecule] var dbProxy: DbProxy = emptyDbProxy
+  protected val emptyConnProxy               = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+  private[molecule] var connProxy: ConnProxy = emptyConnProxy
 
   /** */
   lazy val rpc: MoleculeRpc = ???
@@ -42,7 +42,7 @@ trait Conn extends ColOps {
 
   private[molecule] def updateAdhocDbView(adhocDbView: Option[DbView]): Unit = {
     _adhocDbView = adhocDbView
-    dbProxy = dbProxy match {
+    connProxy = connProxy match {
       case p: DatomicInMemProxy      => p.copy(adhocDbView = adhocDbView)
       case p: DatomicPeerProxy       => p.copy(adhocDbView = adhocDbView)
       case p: DatomicDevLocalProxy   => p.copy(adhocDbView = adhocDbView)
@@ -51,7 +51,7 @@ trait Conn extends ColOps {
   }
 
   private[molecule] def updateTestDbView(testDbView: Option[DbView], status: Int = 1): Unit = {
-    dbProxy = dbProxy match {
+    connProxy = connProxy match {
       case p: DatomicInMemProxy      => p.copy(testDbStatus = status, testDbView = testDbView)
       case p: DatomicPeerProxy       => p.copy(testDbStatus = status, testDbView = testDbView)
       case p: DatomicDevLocalProxy   => p.copy(testDbStatus = status, testDbView = testDbView)
@@ -61,8 +61,8 @@ trait Conn extends ColOps {
 
   protected def debug(prefix: String, suffix: String = "") = {
     val p = prefix + " " * (4 - prefix.length)
-    //    println(p + dbProxy.adhocDbView + "   " + suffix)
-    println(s"$p  ${dbProxy.testDbStatus}  ${dbProxy.testDbView}   " + suffix)
+    //    println(p + connProxy.adhocDbView + "   " + suffix)
+    println(s"$p  ${connProxy.testDbStatus}  ${connProxy.testDbView}   " + suffix)
   }
 
   private[molecule] def queryJs[Tpl](
@@ -80,7 +80,7 @@ trait Conn extends ColOps {
 //    debug("js")
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
-    val futResult = rpc.query(dbProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
+    val futResult = rpc.query(connProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
       val maxRows    = if (n == -1) qr.maxRows else n
       val tplsBuffer = new ListBuffer[Tpl]
       val columns    = qr2tpl(qr) // macro generated extractor
@@ -91,11 +91,11 @@ trait Conn extends ColOps {
       }
       tplsBuffer.toList
     }
-    if (dbProxy.adhocDbView.isDefined) {
+    if (connProxy.adhocDbView.isDefined) {
       // Reset adhoc db view
       updateAdhocDbView(None)
     }
-    if (dbProxy.testDbStatus == -1) {
+    if (connProxy.testDbStatus == -1) {
       // Reset test db view
       updateTestDbView(None, 0)
     }
@@ -437,10 +437,10 @@ trait Conn extends ColOps {
     card: Int,
     tpe: String
   )(implicit ec: ExecutionContext): Future[List[String]] =
-    rpc.getAttrValues(dbProxy, datalogQuery, card, tpe)
+    rpc.getAttrValues(connProxy, datalogQuery, card, tpe)
 
   private[molecule] def jsEntityAttrKeys(
     eid: Long
   )(implicit ec: ExecutionContext): Future[List[String]] =
-    rpc.entityAttrKeys(dbProxy, eid)
+    rpc.entityAttrKeys(connProxy, eid)
 }

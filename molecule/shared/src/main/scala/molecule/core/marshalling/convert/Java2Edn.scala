@@ -12,7 +12,7 @@
 //  var attrMap  = Map.empty[String, (Int, String)]
 //
 //  def apply(rows: jList[jList[_]], conn: Conn): (String, Set[String]) = {
-//    attrMap = conn.dbProxy.attrMap
+//    attrMap = conn.connProxy.attrMap
 //
 //    buf.clear()
 //    var following = false

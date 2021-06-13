@@ -3,7 +3,7 @@ package molecule.core.facade
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.exceptions.MoleculeException
-import molecule.core.marshalling.DbProxy
+import molecule.core.marshalling.ConnProxy
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.api.DatomicEntity
@@ -13,7 +13,7 @@ import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-case class DatomicEntity_Js(conn: Conn, dbProxy: DbProxy, eid: Any) extends DatomicEntity {
+case class DatomicEntity_Js(conn: Conn, connProxy: ConnProxy, eid: Any) extends DatomicEntity {
   val rpc = conn.rpc
 
   def ??? : Nothing = throw MoleculeException("Unexpected method call on JS side in DatomicEntity_Js")
@@ -36,7 +36,7 @@ case class DatomicEntity_Js(conn: Conn, dbProxy: DbProxy, eid: Any) extends Dato
 
   def retract(implicit ec: ExecutionContext): Future[TxReport] = {
     eid match {
-      case eid: Long => rpc.transact(conn.dbProxy, Stmts2Edn(List(RetractEntity(eid)), conn))
+      case eid: Long => rpc.transact(conn.connProxy, Stmts2Edn(List(RetractEntity(eid)), conn))
       case _         => throw MoleculeException(s"Unexpected eid $eid of type " + eid.getClass)
     }
   }
@@ -50,7 +50,7 @@ case class DatomicEntity_Js(conn: Conn, dbProxy: DbProxy, eid: Any) extends Dato
       case eid: Long =>
       for{
         txMetaStmts <- conn.modelTransformer(txMetaModel).saveStmts
-        txReport <- rpc.transact(conn.dbProxy, Stmts2Edn(retractStmts ++ txMetaStmts, conn))
+        txReport <- rpc.transact(conn.connProxy, Stmts2Edn(retractStmts ++ txMetaStmts, conn))
       }  yield txReport
 
       case _         => throw MoleculeException(s"Unexpected eid $eid of type " + eid.getClass)

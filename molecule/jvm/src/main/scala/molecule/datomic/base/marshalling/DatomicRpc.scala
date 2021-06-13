@@ -36,12 +36,12 @@ object DatomicRpc extends MoleculeRpc
   // Api ---------------------------------------------
 
   def transact(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
   ): Future[TxReportRPC] = {
     for {
-      conn <- getConn(dbProxy)
+      conn <- getConn(connProxy)
       _ = println(stmtsEdn + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
@@ -52,7 +52,7 @@ object DatomicRpc extends MoleculeRpc
   }
 
   def query(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     datalogQuery: String,
     rules: Seq[String],
     l: Seq[(Int, (String, String))],
@@ -66,7 +66,7 @@ object DatomicRpc extends MoleculeRpc
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
     for {
-      conn <- getConn(dbProxy)
+      conn <- getConn(connProxy)
       allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
     } yield {
       val rowCountAll = allRows.size
@@ -83,7 +83,7 @@ object DatomicRpc extends MoleculeRpc
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
       //      log(qTime(queryTime) + "  " + datalogQuery)
-      //      log("dbProxy uuid: " + dbProxy.uuid)
+      //      log("connProxy uuid: " + connProxy.uuid)
       //      log("Query time  : " + thousands(queryTime) + " ms")
       //      log("rowCountAll : " + rowCountAll)
       //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
@@ -109,14 +109,14 @@ object DatomicRpc extends MoleculeRpc
 
 
   def getAttrValues(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     datalogQuery: String,
     card: Int,
     tpe: String
   ): Future[List[String]] = {
     var vs = List.empty[String]
     for {
-      conn <- getConn(dbProxy)
+      conn <- getConn(connProxy)
       rows0 <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
       val rows = rows0.iterator
@@ -144,13 +144,13 @@ object DatomicRpc extends MoleculeRpc
   }
 
   def entityAttrKeys(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     eid: Long
   ): Future[List[String]] = {
     val datalogQuery = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
     var list         = List.empty[String]
     for {
-      conn <- getConn(dbProxy)
+      conn <- getConn(connProxy)
       rows <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
       rows.forEach { row =>
@@ -161,13 +161,13 @@ object DatomicRpc extends MoleculeRpc
   }
 
   def retract(
-    dbProxy: DbProxy,
+    connProxy: ConnProxy,
     stmtsEdn: String,
     uriAttrs: Set[String]
   ): Future[TxReport] = {
     println(stmtsEdn)
     for {
-      conn <- getConn(dbProxy)
+      conn <- getConn(connProxy)
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield TxReportRPC(
       txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
@@ -183,14 +183,14 @@ object DatomicRpc extends MoleculeRpc
   private val connCache = mutable.Map.empty[String, Future[Conn]]
 
   private def getConn(
-    dbProxy: DbProxy
+    connProxy: ConnProxy
   ): Future[Conn] = {
-    var msg     = s"--- " + dbProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
+    var msg     = s"--- " + connProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
     val futConn = connCache.getOrElse(
-      dbProxy.uuid,
+      connProxy.uuid,
       {
-        msg = s"============= Conn CACHING ============= " + dbProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
-        dbProxy match {
+        msg = s"============= Conn CACHING ============= " + connProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
+        connProxy match {
           case DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
             println("==============================================")
             Datomic_Peer.recreateDbFromEdn(schemaPeer)
@@ -219,16 +219,16 @@ object DatomicRpc extends MoleculeRpc
     )
 
     val futConnTimeAdjusted = futConn.map { conn =>
-      conn.updateAdhocDbView(dbProxy.adhocDbView)
-      conn.updateTestDbView(dbProxy.testDbView, dbProxy.testDbStatus)
+      conn.updateAdhocDbView(connProxy.adhocDbView)
+      conn.updateTestDbView(connProxy.testDbView, connProxy.testDbStatus)
       conn
     }
-    connCache(dbProxy.uuid) = futConnTimeAdjusted
+    connCache(connProxy.uuid) = futConnTimeAdjusted
 
     val c = Await.result(futConnTimeAdjusted, 10.seconds)
     //    println("----- " + c.asInstanceOf[Conn_Peer].peerConn.db)
-    //    println("----- " + dbProxy.testDbStatus + "  " + dbProxy.testDbView + "  " + c.asInstanceOf[Conn_Peer].peerConn.db)
-    println("----- " + c.dbProxy.testDbStatus + "  " + c.dbProxy.testDbView + "   " + c.asInstanceOf[Conn_Peer].peerConn.db)
+    //    println("----- " + connProxy.testDbStatus + "  " + connProxy.testDbView + "  " + c.asInstanceOf[Conn_Peer].peerConn.db)
+    println("----- " + c.connProxy.testDbStatus + "  " + c.connProxy.testDbView + "   " + c.asInstanceOf[Conn_Peer].peerConn.db)
     //    msg = msg + "\n" + c._adhocDbView
     //    msg = msg + "\n" + c._adhocDbView
     //    msg = msg + "  " + c.asInstanceOf[Conn_Peer].peerConn.db

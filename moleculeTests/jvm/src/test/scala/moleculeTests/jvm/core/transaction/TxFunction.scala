@@ -195,6 +195,7 @@ object TxFunction extends AsyncTestSuite {
     //    if (system == SystemPeer) {}
 
 
+
     "Basic inc example" - core { implicit conn =>
       // Example from https://www.youtube.com/watch?v=8fY687k7DMA
       for {
@@ -407,5 +408,4 @@ object TxFunction extends AsyncTestSuite {
       } yield ()
     }
   }
-  //  }
 }
