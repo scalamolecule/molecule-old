@@ -13,10 +13,10 @@ import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
-import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.dbView._
+import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn_Datomic213, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future, blocking}
@@ -120,7 +120,7 @@ case class Conn_Client(
 
 
   def testDbWith(txMolecules: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.sequence(txMolecules).map { stmtss =>
+    Future.sequence(txMolecules).flatMap { stmtss =>
       testDbWith(stmts2java(stmtss.flatten))
     }
   }
@@ -131,7 +131,7 @@ case class Conn_Client(
     withDbInUse = true
   }
 
-  def useLiveDb: Unit = {
+  def useLiveDb(): Unit = {
     sinceT = None
     sinceD = None
     withDbInUse = false
@@ -155,11 +155,6 @@ case class Conn_Client(
     adhocDb
   }
 
-
-//  // Temporary since time points - needs to be applied later to queries in order
-//  // to maintain special withdb
-//  private var sinceT = Option.empty[Long]
-//  private var sinceD = Option.empty[Date]
 
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
@@ -189,30 +184,54 @@ case class Conn_Client(
   def transactRaw(
     javaStmts: jList[_],
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
-  )(implicit ec: ExecutionContext): Future[TxReport] = try {
-    futScalaStmts.map { scalaStmts =>
-      if (_adhocDbView.isDefined) {
-        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
+  )(implicit ec: ExecutionContext): Future[TxReport] = futScalaStmts.map { scalaStmts =>
+    if (_adhocDbView.isDefined) {
+      TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
-      } else if (_testDb.isDefined) {
-        // In-memory "transaction"
-        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
+    } else if (_testDb.isDefined) {
+      // In-memory "transaction"
+      val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
-        // Continue with updated in-memory db
-        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-        //      val dbAfter = txReport.dbAfter
-        val dbAfter = txReport.dbAfter.asOf(txReport.t)
-        _testDb = Some(dbAfter)
-        txReport
+      // Continue with updated in-memory db
+      // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+      //      val dbAfter = txReport.dbAfter
+      val dbAfter = txReport.dbAfter.asOf(txReport.t)
+      _testDb = Some(dbAfter)
+      txReport
 
-      } else {
-        // Live transaction
-        TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
-      }
+    } else {
+      // Live transaction
+      TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
     }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
   }
+
+  //  def transactRaw(
+  //    javaStmts: jList[_],
+  //    futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
+  //  )(implicit ec: ExecutionContext): Future[TxReport] = try {
+  //    futScalaStmts.map { scalaStmts =>
+  //      if (_adhocDbView.isDefined) {
+  //        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
+  //
+  //      } else if (_testDb.isDefined) {
+  //        // In-memory "transaction"
+  //        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
+  //
+  //        // Continue with updated in-memory db
+  //        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+  //        //      val dbAfter = txReport.dbAfter
+  //        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+  //        _testDb = Some(dbAfter)
+  //        txReport
+  //
+  //      } else {
+  //        // Live transaction
+  //        TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
+  //      }
+  //    }
+  //  } catch {
+  //    case NonFatal(exc) => Future.failed(exc)
+  //  }
 
 
   def qRaw(
@@ -516,7 +535,7 @@ case class Conn_Client(
         val datom2row_ = datom2row(None)
         val raw        = db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1)
         raw.map { datoms =>
-          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
+          datoms.forEach(datom => datom2row_(datom).foreach(row => jColl.add(row)))
           jColl
         }
 
@@ -527,7 +546,7 @@ case class Conn_Client(
         val endValue   = args(2).asInstanceOf[Option[Any]]
         val raw        = db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1)
         raw.map { datoms =>
-          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
+          datoms.forEach(datom => datom2row_(datom).foreach(row => jColl.add(row)))
           jColl
         }
 
@@ -542,7 +561,7 @@ case class Conn_Client(
               // Use t from txRange result
               val datom2row_ = datom2row(Some(t))
               datoms.foreach { datom =>
-                datom2row_(datom).map(row => jColl.add(row))
+                datom2row_(datom).foreach(row => jColl.add(row))
               }
           }
           jColl

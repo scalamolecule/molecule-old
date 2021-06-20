@@ -5,6 +5,7 @@ import sbt._
  */
 trait SettingsDatomic {
 
+  // todo: make configurable
   // Replace with path to your Datomic downloads directory
   val datomicDistributionsDir = "/Users/mg/lib/datomic"
 

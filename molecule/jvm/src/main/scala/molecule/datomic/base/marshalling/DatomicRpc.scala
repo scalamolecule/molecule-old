@@ -2,32 +2,27 @@ package molecule.datomic.base.marshalling
 
 import java.io.StringReader
 import java.util
-import java.util.concurrent.atomic.AtomicReference
 import java.util.{Collections, Date, List => jList, Set => jSet}
-import boopickle.Default._
-import cats.implicits._
-import datomic.{Database, Util}
+//import boopickle.Default._
+//import cats.implicits._
+import datomic.Util
 import datomic.Util._
-import datomicScala.client.api.sync.Db
 import datomicClient.ClojureBridge
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
-import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.facade._
-import molecule.datomic.client.facade.{Conn_Client, Datomic_DevLocal, Datomic_PeerServer}
-import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer, TxReport_Peer}
+import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
+import molecule.datomic.peer.facade.{Conn_Peer, Datomic_Peer}
 import moleculeBuildInfo.BuildInfo.datomicProtocol
-import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 object DatomicRpc extends MoleculeRpc
-  with DateHandling with DateStrLocal with Helpers with ClojureBridge {
+  with DateHandling with DateStrLocal with Helpers with ClojureBridge with Serializations {
 
   // Necessary for `readString` to encode uri in transactions
   require("clojure.core.async")
@@ -42,7 +37,8 @@ object DatomicRpc extends MoleculeRpc
   ): Future[TxReportRPC] = {
     for {
       conn <- getConn(connProxy)
-      _ = println(stmtsEdn + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
+      //      _ = println(stmtsEdn + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
+      _ = println(stmtsEdn)
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
       TxReportRPC(
@@ -175,10 +171,7 @@ object DatomicRpc extends MoleculeRpc
   }
 
 
-  // Cache Conn and QueryExecutors ---------------------------------------------
-
-  // (datalogQuery, inputs) => raw data
-  private type QueryExecutor = (String, Seq[AnyRef]) => Future[util.Collection[util.List[AnyRef]]]
+  // Cached Conn ---------------------------------------------
 
   private val connCache = mutable.Map.empty[String, Future[Conn]]
 
@@ -192,7 +185,7 @@ object DatomicRpc extends MoleculeRpc
         msg = s"============= Conn CACHING ============= " + connProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
         connProxy match {
           case DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
-            println("==============================================")
+            //            println("==============================================")
             Datomic_Peer.recreateDbFromEdn(schemaPeer)
 
           case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _) =>
@@ -225,10 +218,10 @@ object DatomicRpc extends MoleculeRpc
     }
     connCache(connProxy.uuid) = futConnTimeAdjusted
 
-    val c = Await.result(futConnTimeAdjusted, 10.seconds)
+    //    val c = Await.result(futConnTimeAdjusted, 10.seconds)
     //    println("----- " + c.asInstanceOf[Conn_Peer].peerConn.db)
     //    println("----- " + connProxy.testDbStatus + "  " + connProxy.testDbView + "  " + c.asInstanceOf[Conn_Peer].peerConn.db)
-    println("----- " + c.connProxy.testDbStatus + "  " + c.connProxy.testDbView + "   " + c.asInstanceOf[Conn_Peer].peerConn.db)
+    //    println("----- " + c.connProxy.testDbStatus + "  " + c.connProxy.testDbView + "   " + c.asInstanceOf[Conn_Peer].peerConn.db)
     //    msg = msg + "\n" + c._adhocDbView
     //    msg = msg + "\n" + c._adhocDbView
     //    msg = msg + "  " + c.asInstanceOf[Conn_Peer].peerConn.db
@@ -269,7 +262,7 @@ object DatomicRpc extends MoleculeRpc
     }
   }
 
-  def qTime(queryTime: Long) = {
+  def qTime(queryTime: Long): String = {
     val indents = 5 - queryTime.toString.length
     " " * indents + thousands(queryTime) + " ms"
   }

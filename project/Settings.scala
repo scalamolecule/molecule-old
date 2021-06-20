@@ -14,9 +14,23 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     crossScalaVersions := Seq("2.12.13", "2.13.6"),
     ThisBuild / scalaVersion := "2.13.6",
     scalacOptions := List(
+//      "-feature",
+//      "-unchecked",
+//      "-deprecation",
+////      "-explaintypes",
+//      "-feature",
+////      "-language:_",
+//      "-Xlint",
+//      "-Yrangepos",
+//      "-Ywarn-value-discard",
+//      "-Ywarn-extra-implicit",
+//      "-Ywarn-unused",
+
+
+
       "-feature",
-      "-language:implicitConversions",
       "-deprecation",
+      "-language:implicitConversions",
       "-language:postfixOps",
       "-language:higherKinds",
       "-Yrangepos"
@@ -48,16 +62,16 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
-//
-//    // Temporarily
-//    unmanagedSources / excludeFilter := {
-//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-//      val allowed = Seq(
-//        sharedTests + "/core/time/GetAsOf.scala",
-//        sharedTests + "/core/attr/Attribute.scala"
-//      )
-//      new SimpleFileFilter(f => f.getCanonicalPath.startsWith(sharedTests) && !allowed.contains(f.getCanonicalPath))
-//    },
+    //
+    //    // Temporarily
+    //    unmanagedSources / excludeFilter := {
+    //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+    //      val allowed = Seq(
+    //        sharedTests + "/core/time/GetAsOf.scala",
+    //        sharedTests + "/core/attr/Attribute.scala"
+    //      )
+    //      new SimpleFileFilter(f => f.getCanonicalPath.startsWith(sharedTests) && !allowed.contains(f.getCanonicalPath))
+    //    },
   )
 
   val server: Seq[Def.Setting[_]] = {
@@ -93,9 +107,10 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val shared: Seq[Def.Setting[_]] = baseSettings ++ Seq(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.lihaoyi" %%% "utest" % "0.7.9",
+      "com.lihaoyi" %%% "utest" % "0.7.10",
       "io.suzaku" %%% "boopickle" % "1.3.3",
       "com.github.cornerman" %%% "sloth" % "0.3.0",
+      //      "com.github.cornerman" %%% "sloth" % "0.3.1-SNAPSHOT",
 
       "org.specs2" %%% "specs2-core" % "4.10.6"
     ),
@@ -104,8 +119,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     // Temporarily
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-      val allowed = Seq(
-        sharedTests + "/core/time",
+      val allowed     = Seq(
+        //        sharedTests + "/core/time",
         sharedTests + "/core/attr/Attribute.scala",
         sharedTests + "/core/transaction",
         sharedTests + "/core/Adhoc.scala"

@@ -1,6 +1,5 @@
 package molecule.datomic.client.facade
 
-import datomic.Util.read
 import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import scala.concurrent.{ExecutionContext, Future}
@@ -59,11 +58,5 @@ case class Datomic_PeerServer(
                         (implicit ec: ExecutionContext): Future[List[String]] = Future {
     client.listDatabases(timeout).asScala.toList.sorted
   }
-
-
-  //  def checkNotLambda: Any => Boolean = {
-  //    val fulltext = read(":db/fulltext")
-  //    (k: Any) => k == fulltext
-  //  }
 }
 

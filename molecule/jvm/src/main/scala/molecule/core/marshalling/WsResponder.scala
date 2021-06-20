@@ -11,6 +11,7 @@ import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 import boopickle.Default._
 import cats.implicits._
+//import chameleon.ext.boopickle._
 import molecule.datomic.base.marshalling.DatomicRpc
 import sloth._
 import scala.concurrent.Future

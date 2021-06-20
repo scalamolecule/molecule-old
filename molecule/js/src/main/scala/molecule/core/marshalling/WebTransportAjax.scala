@@ -8,7 +8,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.scalajs.js.typedarray._
 
-case class WebTransportAjax(baseAjaxUri: String) extends RequestTransport[ByteBuffer, Future] {
+case class WebTransportAjax(baseAjaxUri: String)
+  extends RequestTransport[ByteBuffer, Future] with Serializations {
 
   override def apply(req: Request[ByteBuffer]): Future[ByteBuffer] = {
     Ajax.post(
@@ -32,8 +33,26 @@ case class WebTransportAjax(baseAjaxUri: String) extends RequestTransport[ByteBu
         }
         println(msg)
         xhr
-    }.map { req =>
-      TypedArrayBuffer.wrap(req.response.asInstanceOf[ArrayBuffer])
+    }.flatMap { req =>
+      val raw       = req.response.asInstanceOf[ArrayBuffer]
+      val dataBytes = TypedArrayBuffer.wrap(raw.slice(1))
+
+      // Check first byte as flag of whether exception has been thrown or not
+      if (TypedArrayBuffer.wrap(raw.slice(0, 1)).get(0) == 1) {
+        // Failed future with exception
+        Future.failed(Unpickle.apply[Throwable].fromBytes(dataBytes))
+      } else {
+        // Successful future with data
+        Future.successful(dataBytes)
+      }
+
+      // todo: use exception flag from response header - need to find way to get it via akka-http
+      //        val dataBytes: ByteBuffer = TypedArrayBuffer.wrap(req.response.asInstanceOf[ArrayBuffer])
+      //        if (req.getResponseHeader("throwable") == "yes") {
+      //          Future.failed(Unpickle.apply[Throwable].fromBytes(dataBytes))
+      //        } else {
+      //          Future.successful(dataBytes)
+      //        }
     }
   }
 }

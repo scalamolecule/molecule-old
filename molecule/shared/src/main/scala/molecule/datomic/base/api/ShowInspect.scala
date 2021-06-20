@@ -552,26 +552,25 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
   }
 
 
-  protected def _inspectInsert(
-    conn: Future[Conn],
-    dataRows: Iterable[Seq[Any]]
-  ): Future[Unit] = conn.flatMap { conn =>
-    val transformer = conn.modelTransformer(_model)
-    val data        = untupled(dataRows)
-    try {
-      // Separate each row so that we can distinguish each insert row
-      Future.sequence(data.map(row => transformer.insertStmts(Iterable(row)))).map { stmtss =>
-        conn.inspect(
-          "output.Molecule._inspectInsert", 1
-        )(1, _model, transformer.genericStmts, dataRows, data, stmtss)
+  protected def _inspectInsert(conn: Future[Conn], dataRows: Iterable[Seq[Any]]): Future[Unit] = {
+    conn.flatMap { conn =>
+      val transformer = conn.modelTransformer(_model)
+      val data        = untupled(dataRows)
+      try {
+        // Separate each row so that we can distinguish each insert row
+        Future.sequence(data.map(row => transformer.insertStmts(Iterable(row)))).map { stmtss =>
+          conn.inspect(
+            "output.Molecule._inspectInsert", 1
+          )(1, _model, transformer.genericStmts, dataRows, data, stmtss)
+        }
+      } catch {
+        case NonFatal(exc) =>
+          println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
+          conn.inspect(
+            "output.Molecule._inspectInsert", 1
+          )(1, _model, transformer.genericStmts, dataRows, data)
+          Future.failed(exc)
       }
-    } catch {
-      case NonFatal(exc) =>
-        println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-        conn.inspect(
-          "output.Molecule._inspectInsert", 1
-        )(1, _model, transformer.genericStmts, dataRows, data)
-        Future.failed(exc)
     }
   }
 

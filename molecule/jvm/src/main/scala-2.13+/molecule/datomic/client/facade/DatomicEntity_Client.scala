@@ -5,13 +5,11 @@ import java.util.{Date, UUID, Collection => jCollection}
 import clojure.lang.{MapEntry, PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util
-import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
 import molecule.core.util.RegexMatching
 import molecule.datomic.base.api.DatomicEntityImpl
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
-import scala.language.existentials
 
 /** Datomic Entity facade for client api (peer-server/cloud/dev-local).
   *

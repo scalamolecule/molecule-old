@@ -49,7 +49,7 @@ object TestDbWith extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5))
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
 
         // Current live state is correctly unchanged
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -105,7 +105,7 @@ object TestDbWith extends AsyncTestSuite {
         // Etc...
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
 
         // Current live state is correctly unchanged
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -157,7 +157,7 @@ object TestDbWith extends AsyncTestSuite {
         // Etc...
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
 
         // Current live state is correctly unchanged
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -189,7 +189,7 @@ object TestDbWith extends AsyncTestSuite {
           _ <- crud.read.map(_ ==> List(0, 2, 3, 4))
 
           // Discard test db and go back to live db
-          _ <- conn.map(_.useLiveDb)
+          _ <- conn.map(_.useLiveDb())
 
           // Current live state is correctly unchanged
           _ <- crud.read.map(_ ==> List(1, 2, 3))
@@ -253,7 +253,7 @@ object TestDbWith extends AsyncTestSuite {
           // Etc...
 
           // Discard test db and go back to live db
-          _ <- conn.map(_.useLiveDb)
+          _ <- conn.map(_.useLiveDb())
 
           // Current live state is correctly unchanged
           _ <- crud.read.map(_ ==> List(1, 2, 3))

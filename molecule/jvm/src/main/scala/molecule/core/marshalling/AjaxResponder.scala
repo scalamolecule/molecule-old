@@ -10,6 +10,8 @@ import akka.http.scaladsl.server.Route
 import boopickle.Default._
 import cats.implicits._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import scala.util.control.NonFatal
+//import chameleon.ext.boopickle._
 import molecule.datomic.base.marshalling.DatomicRpc
 import sloth.ServerFailure._
 import sloth._
@@ -33,6 +35,19 @@ object AjaxResponder extends App with Serializations {
     path("ajax" / MoleculeRpc / Remaining)(respond)
   }
 
+  def serializeException(exc: Throwable) = {
+    val bytes            = Pickle.intoBytes(exc)
+    val dataLength       = bytes.remaining()
+    val bytesAsByteArray = Array.ofDim[Byte](dataLength + 1)
+
+    // Reserve first byte for exception flag
+    bytes.get(bytesAsByteArray, 1, dataLength)
+
+    // Set first byte as a flag (1) for exception thrown
+    bytesAsByteArray.update(0, 1)
+    bytesAsByteArray
+  }
+
   val respond: String => Route = (method: String) => post {
     extractRequest { req =>
       req.entity match {
@@ -41,30 +56,29 @@ object AjaxResponder extends App with Serializations {
           val args       = Unpickle.apply[ByteBuffer].fromBytes(strict.data.asByteBuffer)
           val callResult = router.apply(Request[ByteBuffer](path, args))
           val futResult  = callResult.toEither match {
-            case Right(byteBufferResultFuture) =>
-              byteBufferResultFuture
-                .map { byteBufferResult =>
-                  val dataAsByteArray = Array.ofDim[Byte](byteBufferResult.remaining())
-                  byteBufferResult.get(dataAsByteArray)
-                  dataAsByteArray
+            case Right(byteBufferResultFuture) => byteBufferResultFuture
+              .map { bytes =>
+                val dataLength                    = bytes.remaining()
+                val bytesAsByteArray: Array[Byte] = Array.ofDim[Byte](dataLength + 1)
+
+                // Reserve first byte for exception flag
+                bytes.get(bytesAsByteArray, 1, dataLength)
+
+                // Set first byte as a flag (0) for no exception thrown
+                bytesAsByteArray.update(0, 0)
+                bytesAsByteArray
+              }
+              .recover { exc =>
+                println("---- Error in AjaxResponder ---------------------\n" + exc)
+                println(exc.getStackTrace.mkString("\n"))
+                try {
+                  serializeException(exc)
+                } catch {
+                  case NonFatal(exceptionSerializationException) =>
+                    println("Internal unexpected exception serialization error:\n" + exceptionSerializationException)
+                    serializeException(exceptionSerializationException)
                 }
-                //                .recoverWith { exc =>
-                //                  println("---- Error in AjaxResponder ---------------------\n" + exc)
-                //                  println(exc.getStackTrace.mkString("\n"))
-                //                  // Disrupt ajax call Todo: how to send the failed future?
-                //                  Future.failed(exc)
-                //                }
-                .recover { exc =>
-                  println("---- Error in AjaxResponder ---------------------\n" + exc)
-                  //                  println(t.getStackTrace.mkString("\n"))
-                  println(exc.getClass)
-                                    val t: Throwable    = new IllegalArgumentException("No, no, no!")
-//                  val t: Throwable    = exc
-                  val tb              = Pickle.intoBytes(t)
-                  val dataAsByteArray = Array.ofDim[Byte](tb.remaining())
-                  tb.get(dataAsByteArray)
-                  dataAsByteArray
-                }
+              }
 
             case Left(err) => {
               println(s"ServerFailure: " + err)
@@ -77,9 +91,7 @@ object AjaxResponder extends App with Serializations {
           }
           complete(futResult)
 
-        case _ =>
-          println("Ooops, request entity is not strict!")
-          complete("Ooops, request entity is not strict!")
+        case _ => complete("Ooops, request entity is not strict!")
       }
     }
   }

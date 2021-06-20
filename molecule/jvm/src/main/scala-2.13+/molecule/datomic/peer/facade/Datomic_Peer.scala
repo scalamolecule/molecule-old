@@ -3,11 +3,8 @@ package molecule.datomic.peer.facade
 import java.util.UUID.randomUUID
 import datomic.Peer
 import molecule.core.data.SchemaTransaction
-import molecule.datomic.base.facade.exception.DatomicFacadeException
-import molecule.datomic.client.facade.Conn_Client
-import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
+import scala.jdk.CollectionConverters._
 
 
 /** Facade to Datomic Peer with selected methods.

@@ -214,7 +214,7 @@ object TxFunctions extends Helpers with JavaUtil {
       // Print tx report to console
       _ <- txFnCall(txFn, txMolecules, args: _*).map(_.inspect)
       // Go back to live db
-      _ <- conn.map(_.useLiveDb)
+      _ <- conn.map(_.useLiveDb())
     } yield ()
   }
 }

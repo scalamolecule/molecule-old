@@ -5,7 +5,6 @@ import molecule.core.api.exception.Molecule_2_Exception
 import molecule.core.ast.elements._
 import molecule.datomic.base.ast.query._
 import molecule.datomic.base.facade.Conn
-import molecule.datomic.base.transform.QueryOptimizer
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 

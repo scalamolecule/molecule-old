@@ -5,7 +5,6 @@ import java.util.{Collections, Date, Collection => jCollection, List => jList}
 import datomic.Peer.function
 import datomic.Util.{list, read, readAll}
 import datomic.{Peer, Util}
-import molecule.datomic.base.ast.dbView.{DbView, With}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
@@ -95,6 +94,7 @@ trait Conn_Datomic extends Conn {
       case l: Long         => l
       case TempId(part, i) => getTempId(part, i)
       case "datomic.tx"    => "datomic.tx"
+      case other           => throw new Exception("Unexpected entity id: " + other)
     }).asInstanceOf[AnyRef]
 
     def value(v: Any): AnyRef = (v match {

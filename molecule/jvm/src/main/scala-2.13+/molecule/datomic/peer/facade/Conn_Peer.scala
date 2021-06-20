@@ -113,7 +113,7 @@ case class Conn_Peer(
     _testDb = Some(peerConn.db.`with`(txDataJava).get(DB_AFTER).asInstanceOf[Database])
   }
 
-  def useLiveDb: Unit = {
+  def useLiveDb(): Unit = {
     _testDb = None
   }
 
@@ -146,7 +146,7 @@ case class Conn_Peer(
 
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
-      debug("d1", peerConn.db.toString)
+      //      debug("d1", peerConn.db.toString)
       DatomicDb_Peer(getAdhocDb)
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
@@ -162,23 +162,23 @@ case class Conn_Peer(
           val txReport = TxReport_Peer(peerConn.db.`with`(txData))
           Some(txReport.dbAfter.asOf(txReport.t))
       }
-      debug("d2", tempDb.toString)
+      //      debug("d2", tempDb.toString)
       DatomicDb_Peer(tempDb.get)
 
 
     } else if (connProxy.testDbStatus == -1) {
-      debug("d3", peerConn.db.toString)
+      //      debug("d3", peerConn.db.toString)
       _testDb = None
       updateTestDbView(None, 0)
       DatomicDb_Peer(peerConn.db)
 
     } else if (_testDb.isDefined) {
-      debug("d4", _testDb.toString)
+      //      debug("d4", _testDb.toString)
       // Test db
       DatomicDb_Peer(_testDb.get)
 
     } else {
-      debug("d5", peerConn.db.toString)
+      //      debug("d5", peerConn.db.toString)
       // Live db
       DatomicDb_Peer(peerConn.db)
     }
@@ -201,19 +201,19 @@ case class Conn_Peer(
       //      val dbAfter = txReport.dbAfter
       val dbAfter = txReport.dbAfter.asOf(txReport.t)
       _testDb = Some(dbAfter)
-      debug("t", _testDb.toString)
+      //      debug("t", _testDb.toString)
       txReport
     }
     def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
     if (_adhocDbView.isDefined) {
-      debug("t1")
+      //      debug("t1")
       futScalaStmts.map(scalaStmts =>
         TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
       )
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
-      debug("t2")
+      //      debug("t2")
       futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
@@ -227,7 +227,7 @@ case class Conn_Peer(
       }
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
-      debug("t3", _testDb.toString)
+      //      debug("t3", _testDb.toString)
       val res = connProxy.testDbView.get match {
         case AsOf(TxLong(0))          => transactWith
         case AsOf(TxLong(t))          => cleanFrom(t + 1).flatMap(_ => transactWith)
@@ -249,10 +249,6 @@ case class Conn_Peer(
         _testDb = None
       }
 
-      val st = javaStmts.get(0).toString.take(50)
-      if (!st.startsWith("{"))
-        debug("t4", peerConn.db.toString + "  " + st)
-
       // Live transaction
       val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
       val p                                                  = Promise[util.Map[_, _]]()
@@ -264,37 +260,24 @@ case class Conn_Peer(
             } catch {
               case e: java.util.concurrent.ExecutionException =>
                 println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
-                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                //                p.failure(new IllegalArgumentException(e.getCause.getMessage))
-                p.failure(new IllegalArgumentException("yeah"))
-              //                p.failure(e.getCause)
+                //                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+                p.failure(new RuntimeException(e.getMessage.trim))
 
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(e)
+                p.failure(new RuntimeException(e.toString))
             }
-            ()
           }
         },
         (arg0: Runnable) => ec.execute(arg0)
       )
-      //      println("#### " + p)
-      //      println("#### " + p.future)
-      p.future
-        .flatMap(moleculeInvocationResult =>
-          futScalaStmts.map(scalaStmts =>
-            TxReport_Peer(moleculeInvocationResult, scalaStmts)
-          )
-        )
-        .recoverWith(exc => Future.failed(exc))
-      //      (for {
-      //        moleculeInvocationResult <- p.future
-      //        _ = println("@@@@@@ " + moleculeInvocationResult)
-      //        scalaStmts <- futScalaStmts
-      //      } yield {
-      //        TxReport_Peer(moleculeInvocationResult, scalaStmts)
-      //      }).recoverWith(exc => Future.failed(exc))
+      for {
+        moleculeInvocationResult <- p.future
+        scalaStmts <- futScalaStmts
+      } yield {
+        TxReport_Peer(moleculeInvocationResult, scalaStmts)
+      }
     }
   } catch {
     case NonFatal(ex) => Future.failed(ex)

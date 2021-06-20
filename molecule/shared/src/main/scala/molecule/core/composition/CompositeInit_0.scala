@@ -5,7 +5,7 @@ import molecule.core.composition.Composite_0._
 import molecule.core.composition.Composite_1._
 import molecule.core.composition.Composite_2._
 import molecule.core.composition.Composite_3._
-import scala.language.higherKinds
+import scala.language.higherKinds // Keep for 2.12
 
 
 /** Build composite molecule.

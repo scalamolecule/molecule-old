@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import java.util.{Date, List => jList}
+import java.util.Date
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps
@@ -8,9 +8,7 @@ import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.language.implicitConversions
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Default asynchronous data getter methods on molecules returning `Future[List[Tpl]]`.

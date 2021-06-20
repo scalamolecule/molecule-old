@@ -9,11 +9,9 @@ import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, Quoted}
-import molecule.datomic.base.ast.transactionModel
-import molecule.datomic.base.ast.transactionModel.{RetractEntity, Statement}
+import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.existentials
 import scala.util.control.NonFatal
 
 
@@ -215,7 +213,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
           val sortedValue = scalaValue match {
             case l: Seq[_] => l.head match {
               case l0: Seq[_] => l0.head match {
-                case pair: (_, _) => // Now we now we have a Seq of Seq with pairs
+                case _: (_, _) => // Now we now we have a Seq of Seq with pairs
                   // Make typed Seq
                   val typedSeq: Seq[Seq[(String, Any)]] = l.collect {
                     case l1: Seq[_] => l1.collect {
@@ -232,6 +230,9 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
                   } else {
                     typedSeq
                   }
+                case other     =>
+                  // Propagates to failed Future
+                  throw new Exception("Expected pairs of values. Found: " + other)
               }
               case _          => l
             }

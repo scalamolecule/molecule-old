@@ -187,7 +187,7 @@ trait Conn extends ColOps {
   //   * */
 
   /** Get out of test mode and back to live db. */
-  def useLiveDb: Unit
+  def useLiveDb(): Unit
 
   /** Get current test/live db. */
   def db: DatomicDb

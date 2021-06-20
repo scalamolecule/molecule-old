@@ -59,7 +59,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 4, 5, 6))
 
         // Live state unchanged
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
@@ -92,7 +92,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
 
         // Original state unaffected
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
       } yield ()
     }
@@ -130,7 +130,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6))
 
         // Live state unchanged - and we can continue updating
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
         _ <- Ns.int(7).save
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3, 7))
       } yield ()
@@ -162,7 +162,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(2, 3, 11))
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
 
         // Live state unchanged
         _ <- counter.value.map(_ ==> 1)
@@ -197,7 +197,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(2, 21))
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb)
+        _ <- conn.map(_.useLiveDb())
 
         // Live state unchanged
         _ <- counter.value.map(_ ==> 1)

@@ -47,7 +47,7 @@ case class DatomicEntity_Js(conn: Conn, connProxy: ConnProxy, eid: Any) extends 
     val txMetaModel        = Model(Seq(TxMetaData(txMeta._model.elements)))
     VerifyModel(txMetaModel, "save") // can throw exception
     eid match {
-      case eid: Long =>
+      case _: Long =>
       for{
         txMetaStmts <- conn.modelTransformer(txMetaModel).saveStmts
         txReport <- rpc.transact(conn.connProxy, Stmts2Edn(retractStmts ++ txMetaStmts, conn))

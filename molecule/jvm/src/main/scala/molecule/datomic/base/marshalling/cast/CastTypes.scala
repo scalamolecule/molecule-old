@@ -3,11 +3,7 @@ package molecule.datomic.base.marshalling.cast
 import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
 import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
-import clojure.lang.Keyword
-import com.cognitect.transit.impl.URIImpl
 import molecule.core.exceptions.MoleculeException
-import molecule.datomic.client.facade.DatomicEntity_Client
-import scala.concurrent.Future
 
 class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
 

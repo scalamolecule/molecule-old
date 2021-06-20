@@ -1,6 +1,6 @@
 package molecule.datomic.base.marshalling.cast
 
-import java.lang.{Double => jDouble, Long => jLong}
+import java.lang.{Long => jLong}
 import java.net.URI
 import java.util.{Date, UUID, List => jList, Set => jSet}
 

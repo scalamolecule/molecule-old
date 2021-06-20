@@ -5,7 +5,6 @@ import molecule.core.api.exception.EntityException
 import molecule.datomic.base.api.DatomicEntityImpl
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
-import scala.language.existentials
 
 
 /** Datomic Entity facade for peer api.

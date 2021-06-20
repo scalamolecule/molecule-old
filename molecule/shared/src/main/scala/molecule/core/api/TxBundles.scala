@@ -1,12 +1,12 @@
 package molecule.core.api
 
+import molecule.core.marshalling.Serializations
 import molecule.core.util.Helpers
-import molecule.datomic.base.ast.dbView.With
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TxBundles extends Helpers {
+trait TxBundles extends Helpers with Serializations {
 
 
   /** Asynchronously transact bundled transaction statements
@@ -34,20 +34,7 @@ trait TxBundles extends Helpers {
   def transactBundle(
     stmtss: Future[Seq[Statement]]*
   )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
-//    conn.flatMap(_.transact(Future.sequence(stmtss).map(_.flatten)))
-
-    val stmts = Future.sequence(stmtss).map(_.flatten)
-    conn.flatMap { c =>
-      val a = c.transact(stmts).recoverWith{exc =>
-        println("exc " + exc)
-        Future.failed(exc)
-      }
-      println("a " + a)
-      a
-    }
-
-
-//    Future.failed(new IllegalArgumentException("auch"))
+    conn.flatMap(_.transact(Future.sequence(stmtss).map(_.flatten)))
   }
 
 
@@ -113,9 +100,10 @@ trait TxBundles extends Helpers {
       _ <- conn.testDbWith()
 
       // Print tx report to console
-      _ <- conn.transact(
-        Future.sequence(stmtss).map(_.flatten)
-      ).map(_.inspect)
-    } yield conn.useLiveDb
+      _ <- conn.transact(Future.sequence(stmtss).map(_.flatten)).map(_.inspect)
+    } yield {
+      // Return to live db
+      conn.useLiveDb()
+    }
   }
 }
