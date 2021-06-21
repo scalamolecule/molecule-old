@@ -29,15 +29,15 @@ import scala.concurrent.{ExecutionContext, Future}
 case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers {
   connProxy = connProxy0
 
-  def ??? : Nothing = throw MoleculeException("Unexpected method call on JS side in Conn_Js")
+  def ???(i: Int) : Nothing = throw MoleculeException(s"Unexpected method $i call on JS side in Conn_Js")
 
   val isJsPlatform: Boolean = true
 
   override lazy val rpc: MoleculeRpc = MoleculeWebClient.rpc
 
-  def liveDbUsed: Boolean = ???
+  def liveDbUsed: Boolean = ???(1)
 
-  def testDb(db: DatomicDb): Unit = ???
+  def testDb(db: DatomicDb): Unit = ???(2)
 
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(AsOf(TxLong(0))))
@@ -86,19 +86,20 @@ case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers 
   def transactRaw(
     javaStmts: jList[_],
     scalaStmts: Future[Seq[Statement]]
-  )(implicit ec: ExecutionContext): Future[TxReport] = ???
+  )(implicit ec: ExecutionContext): Future[TxReport] = ???(3)
 
   def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] = ???
+              (implicit ec: ExecutionContext): Future[TxReport] = ???(3)
 
   def transact(edn: String, scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] = ???
+              (implicit ec: ExecutionContext): Future[TxReport] = ???(4)
 
   def transact(stmtsReader: Reader)
-              (implicit ec: ExecutionContext): Future[TxReport] = ???
+              (implicit ec: ExecutionContext): Future[TxReport] = ???(5)
 
   def transact(edn: String)
-              (implicit ec: ExecutionContext): Future[TxReport] = ???
+              (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.transact(connProxy, (edn, Set.empty[String]))
 
   def transact(scalaStmts: Future[Seq[Statement]])
               (implicit ec: ExecutionContext): Future[TxReport] = {
@@ -110,31 +111,31 @@ case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers 
 
   private[molecule] def buildTxFnInstall(
     txFn: String,
-    args: Seq[Any]): jList[_] = ???
+    args: Seq[Any]): jList[_] = ???(6)
 
 
   def q(query: String, inputs: Any*)
-       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???
+       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???(7)
 
   def q(db: DatomicDb, query: String, inputs: Seq[Any])
-       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???
+       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???(8)
 
   def qRaw(query: String, inputs: Any*)
-          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
+          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(9)
 
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])
-          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
+          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(10)
 
   def query(model: Model, query: Query)
-           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
+           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(11)
 
   def _query(model: Model, query: Query, _db: Option[DatomicDb])
-            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
+            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(12)
 
   def _index(model: Model)
-            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
+            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(13)
 
-  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???
+  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???(14)
 
   def inspect(
     clazz: String,
@@ -143,5 +144,5 @@ case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers 
     showStackTrace: Boolean,
     maxLevel: Int,
     showBi: Boolean
-  )(id: Int, params: Any*): Unit = ???
+  )(id: Int, params: Any*): Unit = ???(15)
 }

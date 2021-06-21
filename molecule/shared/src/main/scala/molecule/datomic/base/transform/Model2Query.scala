@@ -107,20 +107,13 @@ object Model2Query extends Helpers {
 
   def makeBond(query: Query, bond: Bond, e: String, v: String, w: String, prevNs: String, prevAttr: String, prevRefNs: String)
   : (Query, String, String, String, String, String) = bond match {
-    case Bond(`prevNs`, `prevAttr`, refNs, _, bi: Bidirectional)               =>
-      (resolve(query, v, w, bond), v, w, prevNs, prevAttr, refNs)
-    case Bond(`prevNs`, `prevAttr`, refNs, _, _)                               =>
-      (resolve(query, v, w, bond), v, w, prevNs, prevAttr, refNs)
-    case Bond(`prevNs`, refAttr, refNs, _, _)                                  =>
-      (resolve(query, e, w, bond), e, w, prevNs, refAttr, refNs)
-    case Bond(`prevAttr`, refAttr, refNs, _, _)                                =>
-      (resolve(query, v, w, bond), v, w, prevAttr, refAttr, refNs)
-    case Bond(`prevRefNs`, refAttr, refNs, _, _)                               =>
-      (resolve(query, v, w, bond), v, w, prevRefNs, refAttr, refNs)
-    case Bond(nsFull, refAttr, refNs, _, _) if datomGeneric.contains(prevAttr) =>
-      (resolve(query, e, w, bond), e, w, nsFull, refAttr, refNs)
-    case Bond(nsFull, refAttr, refNs, _, _)                                    =>
-      (resolve(query, e, v, bond), e, v, nsFull, refAttr, refNs)
+    case Bond(`prevNs`, `prevAttr`, refNs, _, bi: Bidirectional)               => (resolve(query, v, w, bond), v, w, prevNs, prevAttr, refNs)
+    case Bond(`prevNs`, `prevAttr`, refNs, _, _)                               => (resolve(query, v, w, bond), v, w, prevNs, prevAttr, refNs)
+    case Bond(`prevNs`, refAttr, refNs, _, _)                                  => (resolve(query, e, w, bond), e, w, prevNs, refAttr, refNs)
+    case Bond(`prevAttr`, refAttr, refNs, _, _)                                => (resolve(query, v, w, bond), v, w, prevAttr, refAttr, refNs)
+    case Bond(`prevRefNs`, refAttr, refNs, _, _)                               => (resolve(query, v, w, bond), v, w, prevRefNs, refAttr, refNs)
+    case Bond(nsFull, refAttr, refNs, _, _) if datomGeneric.contains(prevAttr) => (resolve(query, e, w, bond), e, w, nsFull, refAttr, refNs)
+    case Bond(nsFull, refAttr, refNs, _, _)                                    => (resolve(query, e, v, bond), e, v, nsFull, refAttr, refNs)
   }
 
   def makeAtomUnify(query: Query, a: Atom, nsFull: String, attr: String, e: String, v: String, w: String, prevNs: String)

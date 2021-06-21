@@ -1058,7 +1058,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[String]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[String]
           while (it.hasNext)
             set += it.next.asInstanceOf[String]
@@ -1073,7 +1073,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[Int]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[Int]
           while (it.hasNext)
             set += it.next.asInstanceOf[jLong].toInt
@@ -1088,7 +1088,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[Long]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[Long]
           while (it.hasNext)
             set += it.next.asInstanceOf[jLong].toLong
@@ -1103,7 +1103,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[Double]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[Double]
           while (it.hasNext)
             set += it.next.asInstanceOf[jDouble].toDouble
@@ -1118,7 +1118,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[Boolean]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[Boolean]
           while (it.hasNext)
             set += it.next.asInstanceOf[Boolean]
@@ -1133,7 +1133,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[Date]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[Date]
           while (it.hasNext)
             set += it.next.asInstanceOf[Date]
@@ -1148,7 +1148,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[UUID]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[UUID]
           while (it.hasNext)
             set += it.next.asInstanceOf[UUID]
@@ -1163,7 +1163,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[URI]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[URI]
           while (it.hasNext)
             set += (it.next match {
@@ -1181,7 +1181,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[BigInt]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[BigInt]
           while (it.hasNext)
             set += BigInt(it.next.toString)
@@ -1196,7 +1196,7 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = row.get(colIndex) match {
         case null => Option.empty[Set[BigDecimal]]
         case v    =>
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          val it  = v.asInstanceOf[jSet[_]].iterator
           var set = Set.empty[BigDecimal]
           while (it.hasNext)
             set += BigDecimal(it.next.toString)

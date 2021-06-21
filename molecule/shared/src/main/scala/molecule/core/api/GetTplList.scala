@@ -50,8 +50,10 @@ trait GetTplList[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
   def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+    println("=============== " + _inputThrowable)
     _inputThrowable.fold(
       conn.flatMap { conn =>
+        println("--------- " + conn.isJsPlatform)
         if (conn.isJsPlatform) {
           conn.queryJs(_query, -1, indexes, qr2tpl)
         } else {

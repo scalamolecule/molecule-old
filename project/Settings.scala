@@ -26,8 +26,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 //      "-Ywarn-extra-implicit",
 //      "-Ywarn-unused",
 
-
-
       "-feature",
       "-deprecation",
       "-language:implicitConversions",
@@ -61,17 +59,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
     ),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
-    //
-    //    // Temporarily
-    //    unmanagedSources / excludeFilter := {
-    //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-    //      val allowed = Seq(
-    //        sharedTests + "/core/time/GetAsOf.scala",
-    //        sharedTests + "/core/attr/Attribute.scala"
-    //      )
-    //      new SimpleFileFilter(f => f.getCanonicalPath.startsWith(sharedTests) && !allowed.contains(f.getCanonicalPath))
-    //    },
+    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
   val server: Seq[Def.Setting[_]] = {
@@ -88,7 +76,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-http" % "10.2.4",
         "ch.megard" %% "akka-http-cors" % "1.1.1"
       ),
-      //      testFrameworks += new TestFramework("utest.runner.Framework"),
       // Ensure clojure loads correctly for async tests run from sbt
       Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
     ) ++ (if (datomicProtocol == "free") {
@@ -116,13 +103,15 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
-    // Temporarily
+    // Temporarily limit number of tests
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed     = Seq(
         //        sharedTests + "/core/time",
-        sharedTests + "/core/attr/Attribute.scala",
-        sharedTests + "/core/transaction",
+        sharedTests + "/core/attr",
+
+
+//        sharedTests + "/core/transaction",
         sharedTests + "/core/Adhoc.scala"
       )
       new SimpleFileFilter(f =>

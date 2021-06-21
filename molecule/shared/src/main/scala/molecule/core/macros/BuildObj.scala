@@ -43,6 +43,92 @@ trait BuildObj extends CastArrays {
       draw(Seq(this), 0).head
     }
   }
+  /*
+
+  final class outMolecule$macro$1 extends _root_.molecule.core.api.Molecule_0.Molecule_0_02[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_int with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1], Int, Int](Model(Seq(Atom("Ns", "int", "Int", 1, VarValue, scala.None, Seq(), Seq()), Bond("Ns", "refs1", "Ref1", 2, Seq()), Atom("Ref1", "int1", "Int", 1, VarValue, scala.None, Seq(), Seq()))), scala.Tuple5(Query(Find(Seq(Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding)))), scala.None, Query(Find(Seq(Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding)))), scala.None, scala.None)) {
+    def <init>() = {
+      super.<init>();
+      ()
+    };
+    final override def row2tpl(row: java.util.List[AnyRef]): scala.Tuple2[Int, Int] = scala.Tuple2(castOneInt(row, 0), castOneInt(row, 1));
+    final override def row2obj(row: java.util.List[AnyRef]): molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_int with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1] = {
+      final class $anon extends Init with Ns_int with Ns__Refs1[Init with Ref1_int1] {
+        def <init>() = {
+          super.<init>();
+          ()
+        };
+        final override lazy val int: Int = castOneInt(row, 0);
+        final override def Refs1: Init with Ref1_int1 = {
+          final class $anon extends Init with Ref1_int1 {
+            def <init>() = {
+              super.<init>();
+              ()
+            };
+            final override lazy val int1: Int = castOneInt(row, 1)
+          };
+          new $anon()
+        }
+      };
+      new $anon()
+    }
+  };
+  new outMolecule$macro$1()
+}
+======================================================
+
+  final class outMolecule$macro$1 extends _root_.molecule.core.api.Molecule_0.Molecule_0_02[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_int with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1], Int, Int](Model(Seq(Atom("Ns", "int", "Int", 1, VarValue, scala.None, Seq(), Seq()), Bond("Ns", "refs1", "Ref1", 2, Seq()), Atom("Ref1", "int1", "Int", 1, VarValue, scala.None, Seq(), Seq()))), scala.Tuple5(Query(Find(Seq(Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding)))), scala.None, Query(Find(Seq(Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding)))), scala.None, scala.None)) {
+    def <init>() = {
+      super.<init>();
+      ()
+    };
+    final override def qr2tpl(qr: QueryResult): _root_.scala.Function1[Int, scala.Tuple2[Int, Int]] = {
+      val a0 = qr.oneInt(0);
+      val a1 = qr.oneInt(1);
+      ((i: Int) => scala.Tuple2(a0(i), a1(i)))
+    };
+    final override def qr2obj(qr: QueryResult): _root_.scala.Function1[Int, molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_int with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1]] = $qmark$qmark$qmark;
+    final override lazy val indexes: List[scala.Tuple4[Int, Int, Int, Int]] = scala.collection.immutable.List(scala.Tuple4(0, 1, 1, 0), scala.Tuple4(1, 1, 1, 1))
+  };
+  new outMolecule$macro$1()
+}
+======================================================
+
+final class outMolecule$macro$1 extends _root_.molecule.core.api.Molecule_0.Molecule_0_02[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_int with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[Seq[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1]], Int, Seq[Int]](Model(Seq(Atom("Ns", "int", "Int", 1, VarValue, scala.None, Seq(), Seq()), Nested(Bond("Ns", "refs1", "Ref1", 2, Seq()), Seq(Atom("Ref1", "int1", "Int", 1, VarValue, scala.None, Seq(), Seq()))))), scala.Tuple5(Query(Find(Seq(Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding)))), scala.Some(Query(Find(Seq(Var("sort0"), Var("sort1"), Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(Funct("identity", Seq(Var("a")), ScalarBinding(Var("sort0"))), Funct("identity", Seq(Var("c")), ScalarBinding(Var("sort1"))), DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding))))), Query(Find(Seq(Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding)))), scala.Some(Query(Find(Seq(Var("sort0"), Var("sort1"), Var("b"), Var("d"))), With(Seq()), In(Seq(), Seq(), Seq(DS)), Where(Seq(DataClause(ImplDS, Var("a"), KW("Ns", "int", ""), Var("b"), Empty, NoBinding), DataClause(ImplDS, Var("a"), KW("Ns", "refs1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "int1", ""), Var("d"), Empty, NoBinding), Funct("identity", Seq(Var("a")), ScalarBinding(Var("sort0"))), Funct("identity", Seq(Var("c")), ScalarBinding(Var("sort1"))))))), scala.None))
+  with _root_.molecule.core.macros.NestedTuples.NestedTuples1[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_int with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[Seq[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1]], scala.Tuple2[Int, Seq[Int]]] {
+  def <init>() = {
+    super.<init>();
+    ()
+  };
+  final override def castBranch0(row: java.util.List[AnyRef], leafs: List[Any]): scala.Tuple2[Int, Seq[Int]] = scala.Tuple2(castOneInt(row, 2), leafs.asInstanceOf[List[Int]]);
+  final override def castLeaf1(row: java.util.List[AnyRef]): Any = castOneInt(row, 3);
+  final override def outerTpl2obj(tpl: scala.Tuple2[Int, Seq[Int]]): molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_int with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[Seq[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1]] = {
+    val tpl: Product = row2tpl(row);
+    {
+      final class $anon extends Init with Ns_int with Ns__Refs1[Seq[Init with Ref1_int1]] {
+        def <init>() = {
+          super.<init>();
+          ()
+        };
+        final override lazy val int: Int = tpl.productElement(0).asInstanceOf[Int];
+        final override def Refs1: Seq[Init with Ref1_int1] = tpl.productElement(1).asInstanceOf[Seq[Tuple1[Int]]].map(((tpl) => {
+          final class $anon extends Init with Ref1_int1 {
+            def <init>() = {
+              super.<init>();
+              ()
+            };
+            final override lazy val int1: Int = tpl.productElement(0).asInstanceOf[Int]
+          };
+          new $anon()
+        }))
+      };
+      new $anon()
+    }
+  }
+};
+new outMolecule$macro$1()
+}
+======================================================
+ */
 
   def classes(nodes: List[Node]): List[Tree] = {
     var prevClasses = List.empty[String]

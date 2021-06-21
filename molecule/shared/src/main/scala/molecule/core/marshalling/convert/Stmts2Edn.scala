@@ -79,7 +79,7 @@ object Stmts2Edn extends Helpers {
       (attrMap(attr)._2, v) match {
         case ("String", Enum(prefix, enum))          => buf.append(prefix + enum)
         case ("String", _)                           => quote(s)
-        case ("Long", TempId(part, i))               => buf.append(s"#db/id[$part $i]")
+        case ("Long" | "ref", TempId(part, i))       => buf.append(s"#db/id[$part $i]")
         case ("Int" | "Long" | "ref" | "Boolean", _) => buf.append(s)
         case ("Double", _)                           => buf.append(s + (if (s.contains('.')) "" else ".0"))
         case ("Date", d: Date)                       => buf.append("#inst \"" + date2datomicStr(d) + "\"")

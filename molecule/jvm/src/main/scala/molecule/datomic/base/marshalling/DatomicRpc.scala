@@ -3,8 +3,6 @@ package molecule.datomic.base.marshalling
 import java.io.StringReader
 import java.util
 import java.util.{Collections, Date, List => jList, Set => jSet}
-//import boopickle.Default._
-//import cats.implicits._
 import datomic.Util
 import datomic.Util._
 import datomicClient.ClojureBridge
@@ -73,8 +71,8 @@ object DatomicRpc extends MoleculeRpc
       val space     = " " * (70 - datalogQuery.split('\n').last.length)
       val time      = qTime(queryTime)
       val timeRight = " " * (8 - time.length) + time
-      //      log(datalogQuery + space + timeRight)
-      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
+      log(datalogQuery + space + timeRight)
+//      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       log.print
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
@@ -91,6 +89,7 @@ object DatomicRpc extends MoleculeRpc
       //      val v        = it.next().get(0)
       //      println(s"v1: $v  ${v.getClass}")
 
+      println(indexes)
       val queryResult = Rows2QueryResult(
         allRows, rowCountAll, rowCount, queryTime, indexes
       ).get
