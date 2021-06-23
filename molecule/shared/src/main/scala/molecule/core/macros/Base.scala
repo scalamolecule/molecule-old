@@ -21,6 +21,7 @@ private[molecule] trait Base extends Dsl2Model {
         import molecule.core.dsl.base.Init
         import molecule.core.exceptions.MoleculeException
         ..$genericImports
+        import molecule.core.macros.cast.TypedCastHelpers
         import molecule.core.marshalling.{MoleculeRpc, QueryResult}
         import molecule.core.ops.ModelOps._
         import molecule.datomic.base.ast.query._
@@ -144,7 +145,7 @@ private[molecule] trait Base extends Dsl2Model {
 
     def branch0until(subLevels: () => Tree) = if (postCasts.isEmpty) {
       q"""
-         final override def castBranch0(row: java.util.List[AnyRef], leafs: List[Any]): (..$OutTypes) = (..${castLevel(0)}, leafs.asInstanceOf[$t1])
+         final override def castBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): (..$OutTypes) = (..${castLevel(0)}, subBranches.asInstanceOf[$t1])
          ..${subLevels()}
        """
     } else {
@@ -156,7 +157,7 @@ private[molecule] trait Base extends Dsl2Model {
         postCastLambda(fieldIndex)
       }
       q"""
-         final override def castBranch0(row: java.util.List[AnyRef], leafs: List[Any]): (..$OutTypes) = (..$pre, leafs.asInstanceOf[$t1], ..$postFields)
+         final override def castBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): (..$OutTypes) = (..$pre, subBranches.asInstanceOf[$t1], ..$postFields)
          ..$subCastes
        """
     }
@@ -166,48 +167,48 @@ private[molecule] trait Base extends Dsl2Model {
 
     lazy val level2: () => Tree = () =>
       q"""
-         final override def castBranch1(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(1)}, leafs.asInstanceOf[$t2])
+         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
          final override def castLeaf2(row: java.util.List[AnyRef]): Any = (..${castLevel(2)})
         """
 
     lazy val level3: () => Tree = () =>
       q"""
-         final override def castBranch1(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(1)}, leafs.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(2)}, leafs.asInstanceOf[$t3])
+         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
+         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
          final override def castLeaf3(row: java.util.List[AnyRef]): Any = (..${castLevel(3)})
        """
     lazy val level4: () => Tree = () =>
       q"""
-         final override def castBranch1(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(1)}, leafs.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(2)}, leafs.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(3)}, leafs.asInstanceOf[$t4])
+         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
+         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
+         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
          final override def castLeaf4(row: java.util.List[AnyRef]): Any = (..${castLevel(4)})
        """
     lazy val level5: () => Tree = () =>
       q"""
-         final override def castBranch1(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(1)}, leafs.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(2)}, leafs.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(3)}, leafs.asInstanceOf[$t4])
-         final override def castBranch4(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(4)}, leafs.asInstanceOf[$t5])
+         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
+         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
+         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
+         final override def castBranch4(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(4)}, subBranches.asInstanceOf[$t5])
          final override def castLeaf5(row: java.util.List[AnyRef]): Any = (..${castLevel(5)})
        """
     lazy val level6: () => Tree = () =>
       q"""
-         final override def castBranch1(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(1)}, leafs.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(2)}, leafs.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(3)}, leafs.asInstanceOf[$t4])
-         final override def castBranch4(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(4)}, leafs.asInstanceOf[$t5])
-         final override def castBranch5(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(5)}, leafs.asInstanceOf[$t6])
+         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
+         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
+         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
+         final override def castBranch4(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(4)}, subBranches.asInstanceOf[$t5])
+         final override def castBranch5(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(5)}, subBranches.asInstanceOf[$t6])
          final override def castLeaf6(row: java.util.List[AnyRef]): Any = (..${castLevel(6)})
        """
     lazy val level7: () => Tree = () =>
       q"""
-         final override def castBranch1(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(1)}, leafs.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(2)}, leafs.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(3)}, leafs.asInstanceOf[$t4])
-         final override def castBranch4(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(4)}, leafs.asInstanceOf[$t5])
-         final override def castBranch5(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(5)}, leafs.asInstanceOf[$t6])
-         final override def castBranch6(row: java.util.List[AnyRef], leafs: List[Any]): Any = (..${castLevel(6)}, leafs.asInstanceOf[$t7])
+         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
+         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
+         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
+         final override def castBranch4(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(4)}, subBranches.asInstanceOf[$t5])
+         final override def castBranch5(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(5)}, subBranches.asInstanceOf[$t6])
+         final override def castBranch6(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(6)}, subBranches.asInstanceOf[$t7])
          final override def castLeaf7(row: java.util.List[AnyRef]): Any = (..${castLevel(7)})
        """
 

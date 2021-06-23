@@ -1,6 +1,7 @@
 package molecule.datomic.base.facade
 
 import java.io.Reader
+import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.marshalling._
@@ -77,19 +78,59 @@ trait Conn extends ColOps {
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
 
-//    debug("js")
+    //    debug("js")
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
     val futResult = rpc.query(connProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
-      val maxRows    = if (n == -1) qr.maxRows else n
-      val tplsBuffer = new ListBuffer[Tpl]
-      val columns    = qr2tpl(qr) // macro generated extractor
-      var rowIndex   = 0
+      val maxRows  = if (n == -1) qr.maxRows else n
+      val rows     = new ListBuffer[Tpl]
+      val columns  = qr2tpl(qr) // macro generated extractor
+      var rowIndex = 0
       while (rowIndex < maxRows) {
-        tplsBuffer += columns(rowIndex)
+        rows += columns(rowIndex)
         rowIndex += 1
       }
-      tplsBuffer.toList
+      rows.toList
+    }
+    if (connProxy.adhocDbView.isDefined) {
+      // Reset adhoc db view
+      updateAdhocDbView(None)
+    }
+    if (connProxy.testDbStatus == -1) {
+      // Reset test db view
+      updateTestDbView(None, 0)
+    }
+    futResult
+  }.flatten
+
+  private[molecule] def queryFlatJs(
+    query: Query,
+    n: Int,
+    indexes: List[(Int, Int, Int, Int)],
+    qr2list: QueryResult => Int => jList[AnyRef]
+  )(implicit ec: ExecutionContext): Future[util.ArrayList[jList[AnyRef]]] = Future {
+    val q2s          = Query2String(query)
+    val datalogQuery = q2s.multiLine(60)
+    val p            = q2s.p
+    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+    val (l, ll, lll) = marshallInputs(query)
+
+    //    debug("js")
+
+    // Fetch QueryResult with Ajax call via typed Sloth wire
+    val futResult = rpc.query(connProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
+
+//      println(qr)
+
+      val maxRows  = qr.maxRows // All rows used in nested
+      val rows     = new util.ArrayList[jList[AnyRef]](maxRows)
+      val columns  = qr2list(qr) // macro generated extractor
+      var rowIndex = 0
+      while (rowIndex < maxRows) {
+        rows.add(columns(rowIndex))
+        rowIndex += 1
+      }
+      rows
     }
     if (connProxy.adhocDbView.isDefined) {
       // Reset adhoc db view

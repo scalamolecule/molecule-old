@@ -23,19 +23,12 @@ object Adhoc extends AsyncTestSuite {
     "adhoc" - core { implicit conn =>
 
 
+
       for {
 
-//        _ <- m(Ns.int.Refs1 * Ref1.int1) insert List(
-//          (1, List(1, 2))
-//        )
 
-        _ <- m(Ns.int.Refs1.int1).get
-
-        _ <- m(Ns.int.Refs1 * Ref1.int1).get
-//                .map(_ ==> List(
-//          (1, List(1, 2))
-//        ))
-
+        _ <- Ns.str.ints.bool.insert("foo", Set(1, 2, 3), true)
+        _ <- Ns.str.ints.bool.get.map(_ ==> List(("foo", Set(1, 2, 3), true)))
 
 
 //        _ <- m(Ns.str.Refs1 * Ref1.str1.int1$) insert List(
@@ -46,6 +39,22 @@ object Adhoc extends AsyncTestSuite {
 //        _ <- m(Ns.str.Refs1 * Ref1.str1.int1$).get.map(_.sortBy(_._1) ==> List(
 //          ("a", List(("a1", Some(11)))),
 //          ("b", List(("b1", None)))))
+
+//        _ <- m(Ns.str.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)) insert List(
+//          ("a", List(
+//            (None, 11, List(
+//              ("a2", Some(12)))))),
+//          ("b", List(
+//            (Some("b1"), 21, List(
+//              ("b2", None))))))
+
+//        _ <- m(Ns.str.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)).get.map(_.sortBy(_._1) ==> List(
+//          ("a", List(
+//            (None, 11, List(
+//              ("a2", Some(12)))))),
+//          ("b", List(
+//            (Some("b1"), 21, List(
+//              ("b2", None)))))))
 
       } yield ()
     }

@@ -90,6 +90,8 @@ object DatomicRpc extends MoleculeRpc
       //      println(s"v1: $v  ${v.getClass}")
 
       println(indexes)
+      allRows.forEach(println)
+
       val queryResult = Rows2QueryResult(
         allRows, rowCountAll, rowCount, queryTime, indexes
       ).get

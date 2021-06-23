@@ -135,7 +135,10 @@ object NestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+        else
+          conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -198,7 +201,10 @@ object NestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+        else
+          conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -280,7 +286,10 @@ object NestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+        else
+          conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -388,7 +397,10 @@ object NestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+        else
+          conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -526,7 +538,10 @@ object NestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+        else
+          conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -699,7 +714,10 @@ object NestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+        else
+          conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -912,7 +930,10 @@ object NestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+        else
+          conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)

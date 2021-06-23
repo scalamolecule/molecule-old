@@ -7,13 +7,13 @@ import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
 
 /** Cast methods for converting raw data to Obj or Tpl
   */
-trait CastHelpersTypes extends CastHelpersAggr {
+trait CastHelpers extends CastHelpersAggr {
 
 
   // One ===========================================================================================
 
   protected def castOneInt(row: jList[_], colIndex: Int): Int =
-    row.get(colIndex).asInstanceOf[jLong].toInt
+    row.get(colIndex).toString.toInt
 
   protected def castOneInt2(row: jList[_], colIndex: Int): Int =
     row.get(colIndex).toString.toInt

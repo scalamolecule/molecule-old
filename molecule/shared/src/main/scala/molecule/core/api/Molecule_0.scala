@@ -2,7 +2,7 @@ package molecule.core.api
 
 import molecule.core.ast.elements._
 import molecule.core.macros.MakeMoleculeDynamic
-import molecule.core.macros.cast.CastHelpersTypes
+import molecule.core.macros.cast.CastHelpers
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.VerifyModel
@@ -156,7 +156,7 @@ abstract class Molecule_0[Obj, Tpl](
   model: Model,
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
 ) extends Marshalling[Obj, Tpl](model, queryData)
-  with CastHelpersTypes
+  with CastHelpers
   with GetTplList[Obj, Tpl]
   with GetObjList[Obj, Tpl]
   with ShowInspect[Obj, Tpl]

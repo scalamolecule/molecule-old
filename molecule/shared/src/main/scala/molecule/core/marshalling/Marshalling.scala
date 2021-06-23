@@ -1,5 +1,6 @@
 package molecule.core.marshalling
 
+import java.util
 import java.util.{UUID, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
@@ -41,6 +42,9 @@ abstract class Marshalling[Obj, Tpl](
     * @return rowIndex => Tpl
     */
   protected def qr2tpl(qr: QueryResult): Int => Tpl = ???
+
+
+  protected def qr2list(qr: QueryResult): Int => util.List[AnyRef] = ???
 
 
   // JVM ......................

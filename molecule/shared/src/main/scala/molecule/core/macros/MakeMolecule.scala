@@ -9,12 +9,12 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //  val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-//  val z = InspectMacro("MakeMolecule", 2, 8)
-    val z = InspectMacro("MakeMolecule", 9, 7)
+  //  val z = InspectMacro("MakeMolecule", 2, 8)
+  val z = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
-    val (genericImports, model0, typess, castss, indexes, obj,
+    val (genericImports, model0, typess, castss, indexes0, obj,
     hasVariables, txMetaCompositesCount,
     postTypes, postCasts, isOptNested,
     optNestedRefIndexes, optNestedTacitIndexes) = getModel(dsl)
@@ -28,20 +28,32 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     else
       q"val tpl: Product = row2tpl(row)"
 
-    def resolveIndexes = {
-      indexes.map {
+    def resolveIndexes(nestedLevels: Int) = {
+      val indexes           = if (nestedLevels == 0) indexes0 else {
+        val nestedIndexes = (0 until nestedLevels).toList.map(i => (i, 3, 2, i))
+        val dataIndexes   = indexes0.map {
+          case (colIndex, castIndex, 2, arrayIndex)         =>
+            // One Long array type where nested eid indexes are transferred
+            (colIndex + nestedLevels, castIndex, 2, arrayIndex + nestedLevels)
+          case (colIndex, castIndex, arrayType, arrayIndex) =>
+            (colIndex + nestedLevels, castIndex, arrayType, arrayIndex)
+        }
+        nestedIndexes ++ dataIndexes
+      }
+      val (arrays, lookups) = indexes.map {
         // Generic `v` of type Any needs to be cast on JS side
         case (colIndex, 11, arrayType, arrayIndex)        =>
           (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
         case (colIndex, castIndex, arrayType, arrayIndex) =>
           (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
       }.unzip
+      (indexes, arrays, lookups)
     }
 
 
     def mkFlat = {
       val typers = if (isJsPlatform) {
-        val (arrays, lookups0) = resolveIndexes
+        val (indexes, arrays, lookups0) = resolveIndexes(0)
 
         val lookups = if (txMetaCompositesCount > 0) {
           // Treat tx meta data as composite
@@ -51,7 +63,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         } else {
           q"(..$lookups0)"
         }
-        z(1, txMetaCompositesCount, castss, lookups)
         q"""
           final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
             ..$arrays
@@ -118,30 +129,72 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     }
 
     def mkNested = {
-      val resolvers        =
+      val jsResolvers = if (isJsPlatform) {
+        val (indexes, arrays, lookups) = resolveIndexes(castss.length)
+
+        val setters = lookups.map(lookup => q"list.add($lookup.asInstanceOf[AnyRef])")
         q"""
+          final override def qr2list(qr: QueryResult): Int => java.util.List[AnyRef] = {
+            ..$arrays
+            (i: Int) => {
+              val list = new java.util.ArrayList[AnyRef](${setters.length})
+              ..$setters
+              list
+            }
+          }
+          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
+        """
+      } else q""
+
+      val resolvers =
+        q"""
+          ..$jsResolvers
           ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
           final override def outerTpl2obj(tpl: (..$TplTypes)): $ObjType = {
             $tpl
             ${objCode(obj, isNested = true)._1}
           }
          """
-      val nestedTupleClass = nestedTupleClassX(castss.size)
-      if (hasVariables) {
-        q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
-            with $nestedTupleClass[$ObjType, (..$TplTypes)] {
-            ..$resolvers
-          }
-        """
+
+      val nestedTupleClass = tq"${nestedTupleClassX(castss.size)}"
+      val resolveModel     =
+        q"final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})"
+
+      if (isJsPlatform) {
+        if (hasVariables) {
+          q"""
+            $resolveModel
+            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
+              with $nestedTupleClass[$ObjType, (..$TplTypes)] with TypedCastHelpers {
+              ..$resolvers
+            }
+          """
+        } else {
+          q"""
+            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
+              with $nestedTupleClass[$ObjType, (..$TplTypes)] with TypedCastHelpers {
+              ..$resolvers
+            }
+          """
+        }
       } else {
-        q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-            with $nestedTupleClass[$ObjType, (..$TplTypes)] {
-            ..$resolvers
-          }
-        """
+        if (hasVariables) {
+          q"""
+            $resolveModel
+            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
+              with $nestedTupleClass[$ObjType, (..$TplTypes)] {
+              ..$resolvers
+            }
+          """
+        } else {
+          q"""
+            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
+              with $nestedTupleClass[$ObjType, (..$TplTypes)] {
+              ..$resolvers
+            }
+          """
+        }
       }
     }
 
