@@ -85,13 +85,6 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
-    "Enum" - core { implicit conn =>
-      for {
-        _ <- Ns.str.enum insert List(("a", "enum0"))
-        _ <- Ns.str.enum.get.map(_ ==> List(("a", "enum0")))
-      } yield ()
-    }
-
     "Ref enum after ref" - core { implicit conn =>
       for {
         _ <- Ns.str.Ref1.enum1 insert List(("b", "enum10"))

@@ -9,14 +9,16 @@ import molecule.core.generic.Log._
 import molecule.core.generic.Schema._
 import molecule.core.generic.VAET._
 import molecule.core.generic._
-import molecule.core.macros.BuildObj
-import molecule.core.ops.VerifyRawModel
+import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.macros.{BuildObj, MacroHelpers, MakeOptNested}
+import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 import scala.util.{Try => Check}
 
 private[molecule] trait Dsl2Model extends BuildObj {
+
   val c: blackbox.Context
 
   import c.universe._
@@ -34,11 +36,14 @@ private[molecule] trait Dsl2Model extends BuildObj {
       Model,
       List[List[Tree]],
       List[List[Int => Tree]],
+      List[List[Int => Tree]],
       List[(Int, Int, Int, Int)],
       Obj,
+      List[String],
       Boolean,
       Int,
       List[Tree],
+      List[Int => Tree],
       List[Int => Tree],
       Boolean,
       Map[Int, List[Int]],
@@ -62,6 +67,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
     var post     : Boolean           = true
     var postTypes: List[Tree]        = List.empty[Tree]
     var postCasts: List[Int => Tree] = List.empty[Int => Tree]
+    var postJsons: List[Int => Tree] = List.empty[Int => Tree]
 
     var isOptNested          : Boolean             = false
     var optNestedLevel       : Int                 = 0
@@ -71,11 +77,15 @@ private[molecule] trait Dsl2Model extends BuildObj {
     var genericImports: List[Tree]              = List(q"import molecule.core.generic.Datom._")
     var typess        : List[List[Tree]]        = List(List.empty[Tree])
     var castss        : List[List[Int => Tree]] = List(List.empty[Int => Tree])
+    var jsonss        : List[List[Int => Tree]] = List(List.empty[Int => Tree])
     var indexes       : List[(Int, Int, Int)]   = List.empty[(Int, Int, Int)]
     var arrayIndexes  : Map[Int, Int]           = Map.empty[Int, Int]
     var obj           : Obj                     = Obj("", "", 0, Nil)
     var objLevel      : Int                     = 0
-    var nestedRefAttrs: List[String]            = List.empty[String]
+
+    var tx            : String                                                  = ""
+//    var tempJsons     : List[((String, String) => Int => Tree, String, String)] = List.empty[((String, String) => Int => Tree, String, String)]
+    var nestedRefAttrs: List[String]                                            = List.empty[String]
 
     var hasVariables: Boolean = false
     var standard    : Boolean = true
@@ -102,9 +112,9 @@ private[molecule] trait Dsl2Model extends BuildObj {
         }
     }
 
-    def addProp(t: richTree, tpe: Tree, cast: Int => Tree, aggr: Option[(String, Tree)] = None): Unit = {
+    def addProp(t: richTree, tpe: Tree, cast: Int => Tree, json: Int => Tree, aggr: Option[(String, Tree)] = None): Unit = {
       val aggrTpe = aggr.map(_._2.toString)
-      obj = addNode(obj, Prop(t.nsFull + "_" + t.name.replace('$', '_'), t.name, tpe, cast, aggrTpe), objLevel)
+      obj = addNode(obj, Prop(t.nsFull + "_" + t.name.replace('$', '_'), t.name, tpe, cast, json, aggrTpe), objLevel)
     }
 
     def updateIndexes(): Unit = {
@@ -116,6 +126,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
     def addSpecific(
       t: richTree,
       cast: Int => Tree,
+      json: Int => Tree,
       optTpe: Option[Tree] = None,
       doAddProp: Boolean = true,
       optAggr: Option[(String, Tree)] = None
@@ -127,31 +138,75 @@ private[molecule] trait Dsl2Model extends BuildObj {
       if (post) {
         postTypes = tpe +: postTypes
         postCasts = cast +: postCasts
+        postJsons = json +: postJsons
         if (doAddProp)
-          addProp(t, tpe, cast, optAggr)
+          addProp(t, tpe, cast, json, optAggr)
       } else {
         typess = (tpe :: typess.head) +: typess.tail
         castss = (cast :: castss.head) +: castss.tail
+        jsonss = (json :: jsonss.head) +: jsonss.tail
         if (doAddProp)
-          addProp(t, tpe, cast, optAggr)
+          addProp(t, tpe, cast, json, optAggr)
       }
       updateIndexes()
     }
 
-    def addCast(castLambda: richTree => Int => Tree, t: richTree): Unit = {
+    def addLambdas(cast: richTree => Int => Tree, json: richTree => Int => Tree, t: richTree): Unit = {
       if (t.name.last != '_') {
         if (post) {
           postTypes = getType(t) +: postTypes
-          postCasts = castLambda(t) +: postCasts
-          addProp(t, getType(t), castLambda(t))
+          postCasts = cast(t) +: postCasts
+          postJsons = json(t) +: postJsons
+          addProp(t, getType(t), cast(t), json(t))
         } else {
           typess = (getType(t) :: typess.head) +: typess.tail
-          castss = (castLambda(t) :: castss.head) +: castss.tail
-          addProp(t, getType(t), castLambda(t))
+          castss = (cast(t) :: castss.head) +: castss.tail
+          jsonss = (json(t) :: jsonss.head) +: jsonss.tail
+          addProp(t, getType(t), cast(t), json(t))
         }
         updateIndexes()
       }
     }
+
+//    def addJson(fn: (String, String) => Int => Tree, tpe: String, field: String): Unit = {
+////      val indent = "  " * (2 + jsonss.size)
+//      tempJsons = (fn, tpe, field) +: tempJsons
+//    }
+
+//    def addJson1(fn1: (String, String) => Int => Tree, t: richTree): Unit = if (t.name.last != '_') {
+//      addJson(fn1, t.tpeS, t.nameClean)
+//    }
+
+//    def addJsonCard(fn1: (String, String) => Int => Tree, fn2: (String, String) => Int => Tree, t: richTree): Unit = if (t.name.last != '_') {
+//      addJson(if (t.card == 1) fn1 else fn2, t.tpeS, t.nameClean)
+//    }
+
+//    def addNamespacedJsonLambdas(refAttrPrefix: String): Unit = if (tempJsons.nonEmpty) {
+//      val prefix                      = tx + refAttrPrefix
+//      val resolved: List[Int => Tree] = tempJsons.map { case (fn, tpe, field) =>
+//        fn(tpe, prefix + field)
+//      }
+//      if (post) {
+//        postJsons = resolved ++ postJsons
+//      } else {
+//        jsonss = (resolved ++ jsonss.head) +: jsonss.tail
+//      }
+//      // Reset for next Ref namespace
+//      tempJsons = List.empty[((String, String) => Int => Tree, String, String)]
+//    }
+
+//    def addJsonLambdas: Unit = if (tempJsons.nonEmpty) {
+//      val resolved: List[Int => Tree] = tempJsons.map { case (fn, tpe, field) =>
+//        fn(tpe, tx + field)
+//      }
+//      if (post) {
+//        postJsons = resolved ++ postJsons
+//      } else {
+//        jsonss = (resolved ++ jsonss.head) +: jsonss.tail
+//      }
+//      // Reset for next Ref namespace
+//      tempJsons = List.empty[((String, String) => Int => Tree, String, String)]
+//    }
 
     def traverseElement(prev: Tree, p: richTree, element: Element): Seq[Element] = {
       if (p.isNS && !p.isFirstNS) {
@@ -304,6 +359,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
       isComposite = true
       collectCompositeElements = false
       val subCompositeElements = resolve(subCompositeTree)
+//      addJsonLambdas
       // Make sure we continue to collect composite elements
       collectCompositeElements = false
       xx(621, prev, subCompositeElements, typess, castss, obj, sameNs)
@@ -315,6 +371,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+      jsonss = List.empty[Int => Tree] :: jsonss
 
       // Make composite in obj
       levelCompositeObj(subCompositeElements, sameNs)
@@ -356,19 +413,30 @@ private[molecule] trait Dsl2Model extends BuildObj {
       } else if (t.isEnum) {
         xx(131, t.tpeS)
         if (optNestedLevel > 0) {
-          addSpecific(t, castOptNestedEnum(t))
+          addSpecific(t, castOptNestedEnum(t), jsonOptNestedEnum(t))
         } else {
-          addSpecific(t, castEnum(t))
+          addSpecific(t, castEnum(t), jsonEnum(t))
         }
+//        addJsonCard(jsonOneAttr, jsonManyAttr, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t)))
 
       } else if (t.isMapAttr) {
         xx(132, t.tpeS)
-        addCast(if (optNestedLevel > 0) castOptNestedMapAttr else castMandatoryMapAttr, t)
+        addLambdas(
+          if (optNestedLevel > 0) castOptNestedMapAttr else castMandatoryMapAttr,
+          if (optNestedLevel > 0) jsonOptNestedMapAttr else jsonMandatoryMapAttr,
+          t
+        )
+//        addJson1(jsonMandatoryMapAttr, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr) {
-        addCast(if (optNestedLevel > 0) castOptNestedMandatoryAttr else castMandatoryAttr, t)
+        addLambdas(
+          if (optNestedLevel > 0) castOptNestedMandatoryAttr else castMandatoryAttr,
+          if (optNestedLevel > 0) jsonOptNestedMandatoryAttr else jsonMandatoryAttr,
+          t
+        )
+//        addJsonCard(jsonOneAttr, jsonManyAttr, t)
         xx(133, t.tpeS, t.nsFull, t.name, optNestedLevel)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t)))
 
@@ -403,11 +471,17 @@ private[molecule] trait Dsl2Model extends BuildObj {
           objLevel = (objLevel - 1).max(0)
         }
         xx(155, objLevel, isComposite, objCompositesCount, refCls, obj)
+//        addNamespacedJsonLambdas(firstLow(attrStr) + ".")
         traverseElement(prev, p, Bond(t.refThis, firstLow(attrStr), t.refNext, t.refCard, bi(tree, t)))
 
       } else if (t.isRefAttr) {
         xx(136, t.tpeS)
-        addCast(if (optNestedLevel > 0) castOptNestedMandatoryRefAttr else castMandatoryAttr, t)
+        addLambdas(
+        if (optNestedLevel > 0) castOptNestedMandatoryRefAttr else castMandatoryAttr,
+        if (optNestedLevel > 0) jsonOptNestedMandatoryRefAttr else jsonMandatoryAttr,
+        t
+        )
+//        addJsonCard(jsonOneAttr, jsonManyAttr, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
@@ -423,22 +497,42 @@ private[molecule] trait Dsl2Model extends BuildObj {
 
       } else if (t.isEnum$) {
         xx(141, t.tpeS, optNestedLevel)
-        addCast(if (optNestedLevel > 0) castOptNestedOptEnum else castEnumOpt, t)
+        addLambdas(
+          if (optNestedLevel > 0) castOptNestedOptEnum else castEnumOpt,
+          if (optNestedLevel > 0) jsonOptNestedOptEnum else jsonEnumOpt,
+          t
+        )
+//        addJsonCard(jsonOptOneEnum, jsonOptManyEnum, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t)))
 
       } else if (t.isMapAttr$) {
         xx(142, t.tpeS)
-        addCast(if (optNestedLevel > 0) castOptNestedOptMapAttr else castOptionalMapAttr, t)
+        addLambdas(
+          if (optNestedLevel > 0) castOptNestedOptMapAttr else castOptionalMapAttr,
+          if (optNestedLevel > 0) jsonOptNestedOptMapAttr else jsonOptionalMapAttr,
+          t
+        )
+//        addJson1(jsonOptionalMapAttr, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr$) {
-        addCast(if (optNestedLevel > 0) castOptNestedOptAttr else castOptionalAttr, t)
+        addLambdas(
+          if (optNestedLevel > 0) castOptNestedOptAttr else castOptionalAttr,
+          if (optNestedLevel > 0) jsonOptNestedOptAttr else jsonOptionalAttr,
+          t
+        )
+//        addJsonCard(jsonOptOneAttr, jsonOptManyAttr, t)
         xx(143, t.tpeS, typess, postTypes)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t)))
 
       } else if (t.isRefAttr$) {
         xx(144, t.tpeS)
-        addCast(if (optNestedLevel > 0) castOptNestedOptRefAttr else castOptionalRefAttr, t)
+        addLambdas(
+          if (optNestedLevel > 0) castOptNestedOptRefAttr else castOptionalRefAttr,
+          if (optNestedLevel > 0) jsonOptNestedOptRefAttr else jsonOptionalRefAttr,
+          t
+        )
+//        addJsonCard(jsonOptOneAttr, jsonOptManyAttr, t)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
@@ -491,7 +585,8 @@ private[molecule] trait Dsl2Model extends BuildObj {
       }
       def castGeneric(tpe: String, value: Value): Seq[Element] = {
         val tpeOrAggrTpe = if (aggrType.nonEmpty) aggrType else tpe
-        addSpecific(t, castOneAttr(tpeOrAggrTpe), Some(tq"${TypeName(tpeOrAggrTpe)}"))
+        addSpecific(t, castOneAttr(tpeOrAggrTpe), jsonOneAttr(tpeOrAggrTpe, attrStr), Some(tq"${TypeName(tpeOrAggrTpe)}"))
+//        addJson(jsonOneAttr, tpeOrAggrTpe, genericType + "." + attrStr)
         traverseElement(prev, p, Generic(genericNs, attrStr, genericType, value))
       }
       val elements = attrStr match {
@@ -520,7 +615,8 @@ private[molecule] trait Dsl2Model extends BuildObj {
     def resolveMandatorySchemaAttr(t: richTree, prev: Tree, p: richTree, attrStr: String): Seq[Element] = {
       def castGeneric(tpe: String): Seq[Element] = {
         val tpeOrAggrTpe = if (aggrType.nonEmpty) aggrType else tpe
-        addSpecific(t, castOneAttr(tpeOrAggrTpe), Some(tq"${TypeName(tpeOrAggrTpe)}"))
+        addSpecific(t, castOneAttr(tpeOrAggrTpe), jsonOneAttr(tpeOrAggrTpe, attrStr), Some(tq"${TypeName(tpeOrAggrTpe)}"))
+//        addJson(jsonOneAttr, tpeOrAggrTpe, "schema." + attrStr)
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue))
       }
       xx(122, attrStr, p.nsFull, p.nsFull2)
@@ -552,11 +648,13 @@ private[molecule] trait Dsl2Model extends BuildObj {
         abort("Schema attributes that are present with all attribute definitions are not allowed to be optional.")
 
       case "unique$" =>
-        addCast(castEnumOpt, t)
+        addLambdas(castEnumOpt, jsonEnumOpt, t)
+//        addJsonCard(jsonOptOneEnum, jsonOptManyEnum, t)
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue))
 
       case optionalSchemaAttr =>
-        addCast(castOptionalAttr, t)
+        addLambdas(castOptionalAttr, jsonOptionalAttr, t)
+//        addJsonCard(jsonOptOneAttr, jsonOptManyAttr, t)
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue))
     }
 
@@ -603,9 +701,10 @@ private[molecule] trait Dsl2Model extends BuildObj {
             val nsFull = new nsp(t1.tpe.typeSymbol.owner).toString
             xx(260, attrStr, tpeStr)
             if (attrStr.last != '_') {
-              addSpecific(p, castKeyedMapAttr(tpeStr), Some(tq"${TypeName(tpeStr)}"), false)
+              addSpecific(p, castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t), Some(tq"${TypeName(tpeStr)}"), false)
+//              addJson(jsonKeyedMapAttr, tpeStr, clean(mapAttr.toString))
               // Have to add node manually since nsFull is resolved in a special way
-              val newProp = Prop(nsFull + "_" + attrStr, attrStr, tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr))
+              val newProp = Prop(nsFull + "_" + attrStr, attrStr, tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
               obj = addNode(obj, newProp, objLevel)
             }
             traverseElement(prev1, p, Atom(nsFull, mapAttr.toString, tpeStr, 4, VarValue, None, Nil, Seq(extract(q"$key").toString)))
@@ -631,11 +730,13 @@ private[molecule] trait Dsl2Model extends BuildObj {
               xx(251, "aggrType: " + aggrType)
               if (aggrType.nonEmpty) {
                 // Aggregate
-                addSpecific(t, castOneAttr(aggrType), Some(tq"${TypeName(aggrType)}"))
+                addSpecific(t, castOneAttr(aggrType), jsonOneAttr(aggrType, attrStr), Some(tq"${TypeName(aggrType)}"))
+//                addJson(jsonOneAttr, aggrType, "schema." + attrStr)
                 traverseElement(prev, p, Generic("Schema", attrStr, "schema", value))
               } else {
                 // Clean/comparison
-                addSpecific(t, castOneAttr(tpe), Some(tq"${TypeName(tpe)}"))
+                addSpecific(t, castOneAttr(tpe), jsonOneAttr(aggrType, attrStr), Some(tq"${TypeName(tpe)}"))
+//                addJson(jsonOneAttr, tpe, "schema." + attrStr)
                 traverseElement(prev, p, Generic("Schema", attrStr, "schema", value))
               }
             case "tacit"     =>
@@ -646,7 +747,8 @@ private[molecule] trait Dsl2Model extends BuildObj {
               }
             case "optional"  =>
               if (aggrType.isEmpty) {
-                addCast(castOptionalApplyAttr, t)
+                addLambdas(castOptionalApplyAttr, jsonOptionalApplyAttr, t)
+//                addJsonCard(jsonOptOneAttr, jsonOptManyAttr, t)
                 traverseElement(prev, p, Generic("Schema", attrStr, "schema", value))
               } else {
                 abort(s"Can only apply `count` to mandatory generic attribute. Please remove `$$` from `$attrStr`")
@@ -720,22 +822,26 @@ private[molecule] trait Dsl2Model extends BuildObj {
             xx(241, "aggrType: " + aggrType, t.nsFull, t.nsFull2, tpe, genericAttr, attrStr, obj)
             if (aggrType == "Int2") {
               // Count of generic attribute values
-              addSpecific(t, castOneAttr(aggrType), Some(tq"${TypeName(aggrType)}"), false)
+              addSpecific(t, castOneAttr("Int"), jsonOneAttr("Int", attrStr), Some(tq"${TypeName("Int")}"), false)
+//              addJson(jsonOneAttr, "Int", attrStr)
               if (genericAttr.nonEmpty) {
                 val newProp = Prop(
                   "Datom_" + genericAttr,
                   genericAttr,
                   tq"${TypeName(tpe)}",
-                  castOneAttr(aggrType),
-                  optAggrTpe = Some("Int"))
+                  castOneAttr("Int"),
+                  jsonOneAttr("Int", attrStr),
+                  optAggrTpe = Some("Int")
+                )
                 obj = addNode(obj, newProp, objLevel)
               }
               traverseElement(prev, t, Generic(t.nsFull2, attrStr, genericType, value))
             } else {
               // Clean/comparison
-              addSpecific(t, castOneAttr(tpe), Some(tq"${TypeName(tpe)}"), false)
+              addSpecific(t, castOneAttr(tpe), jsonOneAttr(tpe, attrStr), Some(tq"${TypeName(tpe)}"), false)
+//              addJson(jsonOneAttr, tpe, attrStr)
               if (genericAttr.nonEmpty) {
-                val newProp = Prop("Datom_" + genericAttr, genericAttr, tq"${TypeName(tpe)}", castOneAttr(tpe))
+                val newProp = Prop("Datom_" + genericAttr, genericAttr, tq"${TypeName(tpe)}", castOneAttr(tpe), jsonOneAttr(tpe, attrStr))
                 obj = addNode(obj, newProp, objLevel)
               }
               xx(242, t, t.nsFull, t.name, obj)
@@ -785,8 +891,12 @@ private[molecule] trait Dsl2Model extends BuildObj {
       case q"$prev.Tx.apply[..$t]($txMolecule)" =>
         txMetaDataStarted = true
 
+        // tx prefix for json field names. Available for tx molecule resolve. But needs to be blanked for appending attributes of the main molecule.
+        tx = "tx."
         val txMetaProps = resolve(q"$txMolecule")
         val txMetaData  = TxMetaData(txMetaProps)
+//        addJsonLambdas
+        tx = ""
 
         val err = "Unexpectedly couldn't find ns in sub composite:\n  " + txMetaProps.mkString("\n  ")
         val ns  = txMetaProps.collectFirst {
@@ -851,9 +961,16 @@ private[molecule] trait Dsl2Model extends BuildObj {
         val nsFull = new nsp(tpe.typeSymbol.owner).toString
         xx(420, nsFull, keyedAttr, tpeStr, obj)
         if (keyedAttr.toString().last != '_') {
-          addSpecific(richTree(q"$prev.$keyedAttr"), castKeyedMapAttr(tpeStr), Some(tq"${TypeName(tpeStr)}"), false)
+          addSpecific(
+            richTree(q"$prev.$keyedAttr"),
+            castKeyedMapAttr(tpeStr),
+            jsonKeyedMapAttr(t),
+            Some(tq"${TypeName(tpeStr)}"),
+            false
+          )
+//          addJson(jsonKeyedMapAttr, tpeStr, clean(keyedAttr.toString))
           // Have to add node manually since nsFull is resolved in a special way
-          val newProp = Prop(nsFull + "_" + keyedAttr, keyedAttr.toString(), tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr))
+          val newProp = Prop(nsFull + "_" + keyedAttr, keyedAttr.toString(), tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
           obj = addNode(obj, newProp, objLevel)
           xx(421, obj)
         }
@@ -891,12 +1008,14 @@ private[molecule] trait Dsl2Model extends BuildObj {
         }
       } else if (t.isMapAttr) {
         xx(94, attrStr, value)
-        addCast(castMandatoryMapAttr, t)
+        addLambdas(castMandatoryMapAttr, jsonMandatoryMapAttr, t)
+//        addJson1(jsonMandatoryMapAttr, t)
         Atom(t.nsFull, attrStr, t.tpeS, 3, value, None, bi(tree, t))
 
       } else if (t.isMapAttr$) {
         xx(95, attrStr, value)
-        addCast(castOptionalApplyMapAttr, t)
+        addLambdas(castOptionalApplyMapAttr, jsonOptionalApplyMapAttr, t)
+//        addJson1(jsonOptionalMapAttr, t)
         Atom(t.nsFull, attrStr, t.tpeS, 3, value, None, bi(tree, t))
 
       } else if (t.isRefAttr) {
@@ -969,12 +1088,15 @@ private[molecule] trait Dsl2Model extends BuildObj {
       if (isOptNested)
         abort("Optional nested structure can't be mixed with mandatory nested structure.")
       // From now on, elements are part of nested structure
+      // Transfer any tempJson lambdas to postJson lambdas
+//      addJsonLambdas
       post = false
       // Add nested elements on current level
       val nestedElement = nested1(prev, p, manyRef, q"$nested")
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+      jsonss = List.empty[Int => Tree] :: jsonss
       xx(523, nestedElement, post, prev, manyRef, nested, obj)
       traverseElement(prev, p, nestedElement)
     }
@@ -982,6 +1104,8 @@ private[molecule] trait Dsl2Model extends BuildObj {
     def resolveOptNested(prev: Tree, p: richTree, manyRef: TermName, nested: Tree): Seq[Element] = {
       xx(524, post)
       // From now on, elements are part of nested structure
+      // Transfer any tempJson lambdas to postJson lambdas
+//      addJsonLambdas
       post = false
       optNestedLevel += 1
       // Add nested elements on current level
@@ -991,6 +1115,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+      jsonss = List.empty[Int => Tree] :: jsonss
       xx(526, nestedElement, post)
       traverseElement(prev, p, nestedElement)
     }
@@ -1016,6 +1141,7 @@ private[molecule] trait Dsl2Model extends BuildObj {
       obj = Obj("", "", 0, Nil)
       val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nestedTree)
       val nestedObj   = Obj(nsFull + "__" + manyRef, manyRef.toString, 2, obj.props)
+//      addJsonLambdas
       obj = obj.copy(props = nestedObj +: postProps)
       xx(560, prev, manyRef, nestedTree, nsFull, parentNs, nestedRefAttrs, nestedElems, postProps, obj)
       Nested(Bond(nsFull, refAttr + opt, refNext, 2, bi(q"$prev.$manyRef", richTree(q"$prev.$manyRef"))), nestedElems)
@@ -1091,9 +1217,14 @@ private[molecule] trait Dsl2Model extends BuildObj {
       if (standard) {
         xx(81, attr)
         if (t.name.last != '$') {
-          addCast(castMandatoryAttr, t)
+          addLambdas(castMandatoryAttr, jsonMandatoryAttr, t)
+//          addJsonCard(jsonOneAttr, jsonManyAttr, t)
         } else {
-          if (apply) addCast(castOptionalApplyAttr, t) else addCast(castOptionalAttr, t)
+          if (apply)
+            addLambdas(castOptionalApplyAttr, jsonOptionalApplyAttr, t)
+          else
+            addLambdas(castOptionalAttr, jsonOptionalAttr, t)
+//          addJsonCard(jsonOptOneAttr, jsonOptManyAttr, t)
         }
       } else {
         xx(82, attr, s"aggrType: '$aggrType'", t.card, t.tpeS, tpeStr)
@@ -1103,30 +1234,68 @@ private[molecule] trait Dsl2Model extends BuildObj {
             val tpe    = TypeName(tpeStr)
             val propFn = attr + "_" + aggrFn
             xx(83, aggrType, ii, indexes)
-            val res = t.card match {
+            t.card match {
               case 2 => aggrType match {
-                case "int"          => addSpecific(t, castAggrInt, Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"${TypeName("Int")}")))
-                case "double"       => addSpecific(t, castAggrDouble, Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"${TypeName("Double")}")))
-                case "list"         => addSpecific(t, castAggrManyList(tpeStr), Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"List[$tpe]")))
-                case "listDistinct" => addSpecific(t, castAggrManyListDistinct(tpeStr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
-                case "listRand"     => addSpecific(t, castAggrManyListRand(tpeStr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
-                case "single"       => addSpecific(t, castAggrManySingle(tpeStr), optAggr = Some((propFn, tq"Set[$tpe]")))
+                case "int" =>
+//                  addSpecific(t, castAggrInt, Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"${TypeName("Int")}")))
+                  addSpecific(t, castOneAttr("Int"), jsonOneAttr("Int", attr), Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"${TypeName("Int")}")))
+//                  addJson(jsonOneAttr, "Int", t.nameClean)
+
+                case "double" =>
+//                  addSpecific(t, castAggrDouble, Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"${TypeName("Double")}")))
+                  addSpecific(t, castOneAttr("Double"), jsonOneAttr("Double", attr), Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"${TypeName("Double")}")))
+//                  addJson(jsonOneAttr, "Double", t.nameClean)
+
+                case "list" =>
+                  addSpecific(t, castAggrManyList(tpeStr), jsonAggrManyList(tpeStr, attr), Some(tq"Set[$tpe]"), optAggr = Some((propFn, tq"List[$tpe]")))
+//                  addJson(jsonAggrList, tpeStr, t.nameClean)
+
+                case "listDistinct" =>
+                  addSpecific(t, castAggrManyListDistinct(tpeStr), jsonAggrManyListDistinct(tpeStr, attr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
+//                  addJson(jsonAggrList, tpeStr, t.nameClean)
+
+                case "listRand" =>
+                  addSpecific(t, castAggrManyListRand(tpeStr), jsonAggrManyListRand(tpeStr, attr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
+//                  addJson(jsonAggrListRand, tpeStr, t.nameClean)
+
+                case "single" =>
+                  addSpecific(t, castAggrManySingle(tpeStr), jsonAggrManySingle(tpeStr, attr), optAggr = Some((propFn, tq"Set[$tpe]")))
+//                  addJson(jsonAggrSingle, tpeStr, t.nameClean)
+
               }
               case _ => aggrType match {
-                case "int"          =>
+                case "int" =>
                   xx(84, aggrType, ii, indexes)
+                  addSpecific(t, castOneAttr("Int"), jsonOneAttr("Int", attr), Some(tq"$tpe"), optAggr = Some((propFn, tq"${TypeName("Int")}")))
+//                  addJson(jsonOneAttr, "Int", t.nameClean)
 
-                  addSpecific(t, castAggrInt, Some(tq"$tpe"), optAggr = Some((propFn, tq"${TypeName("Int")}")))
-                case "double"       => addSpecific(t, castAggrDouble, Some(tq"$tpe"), optAggr = Some((propFn, tq"${TypeName("Double")}")))
-                case "list"         => addSpecific(t, castAggrOneList(tpeStr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
-                case "listDistinct" => addSpecific(t, castAggrOneListDistinct(tpeStr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
-                case "listRand"     => addSpecific(t, castAggrOneListRand(tpeStr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
-                case "singleSample" => addSpecific(t, castAggrSingleSample(tpeStr), optAggr = Some((propFn, tq"$tpe")))
-                case "single"       => addSpecific(t, castAggrOneSingle(tpeStr), optAggr = Some((propFn, tq"$tpe")))
+                case "double" =>
+                  addSpecific(t, castOneAttr("Double"), jsonOneAttr("Double", attr), Some(tq"$tpe"), optAggr = Some((propFn, tq"${TypeName("Double")}")))
+//                  addJson(jsonOneAttr, "Double", t.nameClean)
+
+                case "list" =>
+                  addSpecific(t, castAggrOneList(tpeStr), jsonAggrOneList(tpeStr, attr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
+//                  addJson(jsonAggrList, tpeStr, t.nameClean)
+
+                case "listDistinct" =>
+                  addSpecific(t, castAggrOneListDistinct(tpeStr), jsonAggrOneListDistinct(tpeStr, attr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
+//                  addJson(jsonAggrList, tpeStr, t.nameClean)
+
+                case "listRand" =>
+                  addSpecific(t, castAggrOneListRand(tpeStr), jsonAggrOneListRand(tpeStr, attr), Some(tq"$tpe"), optAggr = Some((propFn, tq"List[$tpe]")))
+//                  addJson(jsonAggrListRand, tpeStr, t.nameClean)
+
+                case "singleSample" =>
+                  addSpecific(t, castAggrSingleSample(tpeStr), jsonAggrSingleSample(tpeStr, attr), optAggr = Some((propFn, tq"$tpe")))
+//                  addJson(jsonAggrSingleSample, tpeStr, t.nameClean)
+
+                case "single" =>
+                  addSpecific(t, castAggrOneSingle(tpeStr), jsonAggrOneSingle(tpeStr, attr), optAggr = Some((propFn, tq"$tpe")))
+//                  addJson(jsonAggrSingle, tpeStr, t.nameClean)
+
               }
             }
             xx(85, aggrType, ii, indexes)
-            res
         }
         standard = true
         aggrType = ""
@@ -1495,12 +1664,15 @@ private[molecule] trait Dsl2Model extends BuildObj {
       markTacitIndexes(elements, 0)
     }
 
+//    addJsonLambdas
     if (post) {
       // no nested, so transfer
       typess = List(postTypes)
       castss = List(postCasts)
+      jsonss = List(postJsons)
       postTypes = Nil
       postCasts = Nil
+      postJsons = Nil
     }
     //    xx(801, elements)
     //    xx(801, elements, types, casts)
@@ -1512,9 +1684,10 @@ private[molecule] trait Dsl2Model extends BuildObj {
     (
       genericImports,
       Model(VerifyRawModel(elements, false)),
-      typess, castss, indexes2, obj,
-      hasVariables, txMetaCompositesCount,
-      postTypes, postCasts,
+      typess, castss, jsonss,
+      indexes2, obj,
+      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      postTypes, postCasts, postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes
     )

@@ -61,6 +61,8 @@ object CoreTestDataModel {
     val refs2    = many[Ref2]
     val refsSub2 = many[Ref2].isComponent
 
+    val nss = many[Ns]
+
     val intMap1 = mapInt
   }
 

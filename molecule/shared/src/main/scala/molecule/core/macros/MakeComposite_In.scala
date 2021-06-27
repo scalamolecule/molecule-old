@@ -1,5 +1,8 @@
 package molecule.core.macros
 
+import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.ops.{Liftables, TreeOps}
+import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
 import scala.language.experimental.macros
 import scala.language.higherKinds
@@ -12,9 +15,14 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
 
   private[this] final def generateComposite_In_Molecule(dsl: Tree, ObjType: Type, InTypes: Type*)(OutTypes: Type*): Tree = {
     val (
-      genericImports, model0, _, castss, indexes, obj,
-      hasVariables, txMetaCompositesCount, _, _, _, _, _
-      )                  = getModel(dsl)
+      genericImports, model0,
+      typess, castss, jsonss,
+      indexes, obj,
+      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      postTypes, postCasts, postJsons,
+      isOptNested,
+      optNestedRefIndexes, optNestedTacitIndexes
+      ) = getModel(dsl)
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
     val OutMoleculeTpe   = molecule_o(OutTypes.size)
@@ -63,6 +71,9 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {
+                ..${compositeJsons(jsonss)}
+              }
             }
             new $outMolecule
           }
@@ -85,6 +96,9 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {
+                ..${compositeJsons(jsonss)}
+              }
             }
             new $outMolecule
           }
@@ -111,6 +125,9 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {
+                ..${compositeJsons(jsonss)}
+              }
             }
             new $outMolecule
           }
@@ -134,6 +151,9 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: java.util.List[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+              final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {
+                ..${compositeJsons(jsonss)}
+              }
             }
             new $outMolecule
           }

@@ -1,5 +1,8 @@
 package molecule.core.macros
 
+import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.ops.{Liftables, TreeOps}
+import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
 import scala.language.experimental.macros
 import scala.language.higherKinds
@@ -10,16 +13,21 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-//    val z = InspectMacro("MakeComposite", 1, 9, mkError = true)
-//  val z = InspectMacro("MakeComposite", 1, 9)
-    val z = InspectMacro("MakeComposite", 9, 8)
+//    override val z = InspectMacro("MakeComposite", 1, 9, mkError = true)
+//  override val z = InspectMacro("MakeComposite", 1, 9)
+   override val z = InspectMacro("MakeComposite", 9, 8)
 
 
   private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
     val (
-      genericImports, model0, typess, castss, indexes, obj,
-      hasVariables, txMetaCompositesCount, _, _, _, _, _
-      )                = getModel(dsl)
+      genericImports, model0,
+      typess, castss, jsonss,
+      indexes, obj,
+      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      postTypes, postCasts, postJsons,
+      isOptNested,
+      optNestedRefIndexes, optNestedTacitIndexes
+      ) = getModel(dsl)
     val imports        = getImports(genericImports)
     val OutMoleculeTpe = molecule_o(TplTypes.size)
     val outMolecule    = TypeName(c.freshName("compositeOutMolecule$"))
@@ -92,6 +100,9 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
           final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {
+            ..${compositeJsons(jsonss)}
+          }
         """
     }
 

@@ -262,10 +262,10 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       def cardMap(v: Any): Map[String, String] = {
         val it  = v.asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, String]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map = map + (vs(0) -> vs(1))
+          pair = it.next.toString.split("@", 2)
+          map = map + (pair(0) -> pair(1))
         }
         map
       }
@@ -275,10 +275,10 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
         } else {
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, String]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map = map + (vs(0) -> vs(1))
+            pair = it.next.toString.split("@", 2)
+            map = map + (pair(0) -> pair(1))
           }
           Some(map)
         }

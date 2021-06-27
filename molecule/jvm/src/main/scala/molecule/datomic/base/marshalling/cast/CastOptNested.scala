@@ -33,13 +33,6 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //    val array = new Array[Int](maxRows)
 //    oneIntArrays = oneIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
-//      array(i) = it.next.asInstanceOf[jLong].toInt
-//  }
-//
-//  protected val castOptNestedOneInt2 = (colIndex: Int) => {
-//    val array = new Array[Int](maxRows)
-//    oneIntArrays = oneIntArrays :+ array
-//    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.toString.toInt
 //  }
 //
@@ -50,7 +43,6 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      array(i) = it.next.asInstanceOf[jDouble].toFloat
 //  }
 //
-//  // todo: Long | ref | datom
 //  protected val castOptNestedOneLong = (colIndex: Int) => {
 //    val array = new Array[Long](maxRows)
 //    oneLongArrays = oneLongArrays :+ array

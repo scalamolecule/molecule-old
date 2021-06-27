@@ -1,6 +1,9 @@
 package molecule.core.macros
 
 import molecule.core.exceptions.MoleculeException
+import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.ops.{Liftables, TreeOps}
+import molecule.core.transform.Dsl2Model
 import scala.language.higherKinds
 import scala.reflect.macros.blackbox
 

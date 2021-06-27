@@ -319,6 +319,9 @@ case class Conn_Peer(
         val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
         val allInputs       = first ++ inputsEvaluated
         val result          = Peer.q(query.toMap, allInputs: _*)
+
+//        result.forEach(row => println(row))
+
         Future(result)
       } catch {
         case NonFatal(exc) => Future.failed(QueryException(exc, model, query))

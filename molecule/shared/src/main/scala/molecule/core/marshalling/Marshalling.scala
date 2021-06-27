@@ -1,14 +1,16 @@
 package molecule.core.marshalling
 
-import java.util
 import java.util.{UUID, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
+import molecule.core.macros.qr.CastArrays
 import molecule.core.util.DateHandling
 import molecule.datomic.base.ast.query.Query
 
 
 /** Marshalling methods for casting raw row (server) / QueryResult (client) data.
+  *
+  * Methods are implemented by macros for either JS or JVM platform
   */
 abstract class Marshalling[Obj, Tpl](
   model: Model,
@@ -19,11 +21,26 @@ abstract class Marshalling[Obj, Tpl](
     *
     * - colIndex, column index of the attribute (index in output row from Datomic result)
     * - castIndex, index for cast code in jvm: molecule.datomic.base.marshalling.cast.CastLambdas.castLambdas
-    * - arrayType, index for data array type in [[molecule.core.macros.cast.CastArrays.dataArrays]]
+    * - arrayType, index for data array type in [[CastArrays.dataArrays]]
     * - arrayIndex, index within Seq of a specific type of data array
     * (two String attributes will occupy two String arrays and then have index 0 and 1 for instance)
     */
   protected lazy val indexes: List[(Int, Int, Int, Int)] = ???
+
+
+  // JVM ......................
+
+  // Macro-materialized row-to-json engine used by `molecule.api.Molecule.getJsonFlat`
+  // Adds row as json to a mutable StringBuilder for fast build-up.
+  protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
+
+
+  /** Row to object cast interface to be materialized by macro */
+  protected def row2obj(row: jList[AnyRef]): Obj = ???
+
+
+  /** Row to tuple cast interface to be materialized by macro */
+  protected def row2tpl(row: jList[AnyRef]): Tpl = ???
 
 
   // JS ......................
@@ -44,17 +61,7 @@ abstract class Marshalling[Obj, Tpl](
   protected def qr2tpl(qr: QueryResult): Int => Tpl = ???
 
 
-  protected def qr2list(qr: QueryResult): Int => util.List[AnyRef] = ???
-
-
-  // JVM ......................
-
-  /** Row to object cast interface to be materialized by macro */
-  protected def row2obj(row: jList[AnyRef]): Obj = ???
-
-
-  /** Row to tuple cast interface to be materialized by macro */
-  protected def row2tpl(row: jList[AnyRef]): Tpl = ???
+  protected def qr2list(qr: QueryResult): Int => jList[AnyRef] = ???
 
 
   // Generic `v` of type Any needs to be cast on JS side

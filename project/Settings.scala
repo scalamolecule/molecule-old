@@ -108,7 +108,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed     = Seq(
         //        sharedTests + "/core/time",
-        sharedTests + "/core/attr",
+//        sharedTests + "/core/attr",
+//        sharedTests + "/core/attrMap",
+        sharedTests + "/core/json",
 
 
 //        sharedTests + "/core/transaction",

@@ -21,17 +21,9 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
     val array = new Array[Int](maxRows)
     oneIntArrays = oneIntArrays :+ array
     (row: jList[AnyRef], i: Int) =>
-      array(i) = row.get(colIndex).asInstanceOf[jLong].toInt
-  }
-
-  protected val castOneInt2 = (colIndex: Int) => {
-    val array = new Array[Int](maxRows)
-    oneIntArrays = oneIntArrays :+ array
-    (row: jList[AnyRef], i: Int) =>
       array(i) = row.get(colIndex).toString.toInt
   }
 
-  // todo: Long | ref | datom
   protected val castOneLong = (colIndex: Int) => {
     val array = new Array[Long](maxRows)
     oneLongArrays = oneLongArrays :+ array
@@ -608,10 +600,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, String]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> vs(1))
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> pair(1))
         }
         map
       }
@@ -624,10 +616,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, Int]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> vs(1).toInt)
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> pair(1).toInt)
         }
         map
       }
@@ -640,10 +632,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, Long]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> vs(1).toLong)
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> pair(1).toLong)
         }
         map
       }
@@ -656,10 +648,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, Double]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> vs(1).toDouble)
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> pair(1).toDouble)
         }
         map
       }
@@ -672,10 +664,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, Boolean]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> vs(1).toBoolean)
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> pair(1).toBoolean)
         }
         map
       }
@@ -688,10 +680,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, Date]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> str2date(vs(1)))
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> str2date(pair(1)))
         }
         map
       }
@@ -704,10 +696,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, UUID]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> UUID.fromString(vs(1)))
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> UUID.fromString(pair(1)))
         }
         map
       }
@@ -720,10 +712,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, URI]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> new URI(vs(1)))
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> new URI(pair(1)))
         }
         map
       }
@@ -736,10 +728,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, BigInt]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> BigInt(vs(1)))
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> BigInt(pair(1)))
         }
         map
       }
@@ -752,10 +744,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
       array(i) = {
         val it  = row.get(colIndex).asInstanceOf[jSet[_]].iterator
         var map = Map.empty[String, BigDecimal]
-        var vs  = new Array[String](2)
+        var pair  = new Array[String](2)
         while (it.hasNext) {
-          vs = it.next.toString.split("@", 2)
-          map += (vs(0) -> BigDecimal(vs(1)))
+          pair = it.next.toString.split("@", 2)
+          map += (pair(0) -> BigDecimal(pair(1)))
         }
         map
       }
@@ -773,10 +765,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, String]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1))
           }
           Some(map)
       }
@@ -791,10 +783,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, Int]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toInt)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toInt)
           }
           Some(map)
       }
@@ -809,10 +801,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, Long]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toLong)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toLong)
           }
           Some(map)
       }
@@ -827,10 +819,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, Double]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toDouble)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toDouble)
           }
           Some(map)
       }
@@ -845,10 +837,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, Boolean]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toBoolean)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toBoolean)
           }
           Some(map)
       }
@@ -863,10 +855,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, Date]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> str2date(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> str2date(pair(1)))
           }
           Some(map)
       }
@@ -881,10 +873,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, UUID]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> UUID.fromString(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> UUID.fromString(pair(1)))
           }
           Some(map)
       }
@@ -899,10 +891,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, URI]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> new URI(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> new URI(pair(1)))
           }
           Some(map)
       }
@@ -917,10 +909,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, BigInt]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> BigInt(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> BigInt(pair(1)))
           }
           Some(map)
       }
@@ -935,10 +927,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
           var map = Map.empty[String, BigDecimal]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> BigDecimal(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> BigDecimal(pair(1)))
           }
           Some(map)
       }
@@ -1217,10 +1209,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, String]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1))
           }
           Some(map)
       }
@@ -1235,10 +1227,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, Int]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toInt)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toInt)
           }
           Some(map)
       }
@@ -1253,10 +1245,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, Long]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toLong)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toLong)
           }
           Some(map)
       }
@@ -1271,10 +1263,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, Double]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toDouble)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toDouble)
           }
           Some(map)
       }
@@ -1289,10 +1281,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, Boolean]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> vs(1).toBoolean)
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> pair(1).toBoolean)
           }
           Some(map)
       }
@@ -1307,10 +1299,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, Date]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> str2date(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> str2date(pair(1)))
           }
           Some(map)
       }
@@ -1325,10 +1317,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, UUID]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> UUID.fromString(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> UUID.fromString(pair(1)))
           }
           Some(map)
       }
@@ -1343,10 +1335,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, URI]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> new URI(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> new URI(pair(1)))
           }
           Some(map)
       }
@@ -1361,10 +1353,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, BigInt]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> BigInt(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> BigInt(pair(1)))
           }
           Some(map)
       }
@@ -1379,10 +1371,10 @@ class CastTypes(maxRows: Int) extends CastAggr(maxRows) {
         case v    =>
           val it  = v.asInstanceOf[jSet[_]].iterator
           var map = Map.empty[String, BigDecimal]
-          var vs  = new Array[String](2)
+          var pair  = new Array[String](2)
           while (it.hasNext) {
-            vs = it.next.toString.split("@", 2)
-            map += (vs(0) -> BigDecimal(vs(1)))
+            pair = it.next.toString.split("@", 2)
+            map += (pair(0) -> BigDecimal(pair(1)))
           }
           Some(map)
       }

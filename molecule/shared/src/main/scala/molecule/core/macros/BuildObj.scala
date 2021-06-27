@@ -1,144 +1,21 @@
 package molecule.core.macros
 
-import molecule.core.macros.cast.CastArrays
+import molecule.core.macros.qr.CastArrays
+import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
 
-trait BuildObj extends CastArrays {
+trait BuildObj extends BuildBase {
   val c: blackbox.Context
 
   import c.universe._
 
-  lazy val p = InspectMacro("ObjBuilder", 1, 900)
-
-  sealed trait Node
-  case class Prop(
-    cls: String,
-    prop: String,
-    tpe: Tree,
-    cast: Int => Tree,
-    optAggrTpe: Option[String] = None
-  ) extends Node {
-    override def toString: String = {
-      // Since the cast lambda is just an object reference, we simply add null so that we can copy/paste
-      s"""Prop("$cls", "$prop", "$tpe", null, $optAggrTpe)"""
-    }
-  }
-  case class Obj(
-    cls: String,
-    ref: String,
-    card: Int,
-    props: List[Node]
-  ) extends Node {
-    override def toString: String = {
-      def draw(nodes: Seq[Node], indent: Int): Seq[String] = {
-        val s = "  " * indent
-        nodes map {
-          case Obj(cls, ref, card, props) =>
-            s"""|${s}Obj("$cls", "$ref", $card, List(
-                |${draw(props, indent + 1).mkString(s",\n")}))""".stripMargin
-          case prop                       => s"$s$prop"
-        }
-      }
-      draw(Seq(this), 0).head
-    }
-  }
-/*
-.CoreTest.Ref1_str1 with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1_]], scala.Tuple2[String, Seq[(String, Option[Int])]]] {
-    def <init>() = {
-      super.<init>();
-      ()
-    };
-    final override def castBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): scala.Tuple2[String, Seq[(String, Option[Int])]] = scala.Tuple2(castOne[String](row, 2), subBranches.asInstanceOf[List[scala.Tuple2[String, Option[Int]]]]);
-    final override def castLeaf1(row: java.util.List[AnyRef]): Any = scala.Tuple2(castOne[String](row, 3), castOptOneInt(row, 4));
-    final override def outerTpl2obj(tpl: scala.Tuple2[String, Seq[(String, Option[Int])]]): molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_str with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[Seq[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_str1 with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1_]] = {
-      val tpl: Product = row2tpl(row);
-      {
-        final class $anon extends Init with Ns_str with Ns__Refs1[Seq[Init with Ref1_str1 with Ref1_int1_]] {
-          def <init>() = {
-            super.<init>();
-            ()
-          };
-          final override lazy val str: String = tpl.productElement(0).asInstanceOf[String];
-          final override def Refs1: Seq[Init with Ref1_str1 with Ref1_int1_] = tpl.productElement(1).asInstanceOf[Seq[Product]].map(((tpl) => {
-            final class $anon extends Init with Ref1_str1 with Ref1_int1_ {
-              def <init>() = {
-                super.<init>();
-                ()
-              };
-              final override lazy val str1: String = tpl.productElement(0).asInstanceOf[String];
-              final override lazy val int1$: Option[Int] = tpl.productElement(1).asInstanceOf[Option[Int]]
-            };
-            new $anon()
-          }))
-        };
-        new $anon()
-      }
-    }
-  };
-  new outMolecule$macro$1()
-}
-======================================================
-.CoreTest.Ref1_str1 with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1_]], scala.Tuple2[String, Seq[(String, Option[Int])]]] {
-    def <init>() = {
-      super.<init>();
-      ()
-    };
-    final override def qr2list(qr: QueryResult): _root_.scala.Function1[Int, java.util.List[AnyRef]] = {
-      val a0 = qr.oneLong(0);
-      val a1 = qr.oneLong(1);
-      val a2 = qr.oneString(0);
-      val a3 = qr.oneString(1);
-      val a4 = qr.optOneInt(0);
-      ((i: Int) => {
-        val list = new java.util.ArrayList[AnyRef](5);
-        list.add(a0(i).asInstanceOf[AnyRef]);
-        list.add(a1(i).asInstanceOf[AnyRef]);
-        list.add(a2(i).asInstanceOf[AnyRef]);
-        list.add(a3(i).asInstanceOf[AnyRef]);
-        list.add(a4(i).asInstanceOf[AnyRef]);
-        list
-      })
-    };
-    final override def qr2obj(qr: QueryResult): _root_.scala.Function1[Int, molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_str with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[Seq[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_str1 with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1_]]] = $qmark$qmark$qmark;
-    final override lazy val indexes: List[scala.Tuple4[Int, Int, Int, Int]] = scala.collection.immutable.List(scala.Tuple4(0, 3, 2, 0), scala.Tuple4(1, 3, 2, 1), scala.Tuple4(2, 0, 0, 0), scala.Tuple4(3, 0, 0, 1), scala.Tuple4(4, 14, 11, 0));
-    final override def castBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): scala.Tuple2[String, Seq[(String, Option[Int])]] = scala.Tuple2(castOne[String](row, 2), subBranches.asInstanceOf[List[scala.Tuple2[String, Option[Int]]]]);
-    final override def castLeaf1(row: java.util.List[AnyRef]): Any = scala.Tuple2(castOne[String](row, 3), castOptOneInt(row, 4));
-    final override def outerTpl2obj(tpl: scala.Tuple2[String, Seq[(String, Option[Int])]]): molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_str with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Refs1[Seq[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_str1 with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_int1_]] = {
-      val tpl: Product = row2tpl(row);
-      {
-        final class $anon extends Init with Ns_str with Ns__Refs1[Seq[Init with Ref1_str1 with Ref1_int1_]] {
-          def <init>() = {
-            super.<init>();
-            ()
-          };
-          final override lazy val str: String = tpl.productElement(0).asInstanceOf[String];
-          final override def Refs1: Seq[Init with Ref1_str1 with Ref1_int1_] = tpl.productElement(1).asInstanceOf[Seq[Product]].map(((tpl) => {
-            final class $anon extends Init with Ref1_str1 with Ref1_int1_ {
-              def <init>() = {
-                super.<init>();
-                ()
-              };
-              final override lazy val str1: String = tpl.productElement(0).asInstanceOf[String];
-              final override lazy val int1$: Option[Int] = tpl.productElement(1).asInstanceOf[Option[Int]]
-            };
-            new $anon()
-          }))
-        };
-        new $anon()
-      }
-    }
-  };
-  new outMolecule$macro$1()
-}
-======================================================
-
- */
+  lazy override val p = InspectMacro("BuildObj", 1, 900)
 
   def classes(nodes: List[Node]): List[Tree] = {
     var prevClasses = List.empty[String]
     nodes.flatMap {
-      case Prop(cls, _, _, _, _) =>
+      case Prop(cls, _, _, _, _, _) =>
         if (!prevClasses.contains(cls)) {
           prevClasses = prevClasses :+ cls
           Some(tq"${TypeName(cls)}")
@@ -207,7 +84,7 @@ trait BuildObj extends CastArrays {
     def properties(nodes: List[Node]): List[Tree] = {
       var propNames = List.empty[String]
       val propDefs  = nodes.flatMap {
-        case Prop(_, prop, tpe, cast, optAggr) =>
+        case Prop(_, prop, tpe, cast, _, optAggr) =>
           i += 1
           // Only generate 1 property, even if attribute is repeated in molecule
           if (!propNames.contains(prop)) {
@@ -232,8 +109,8 @@ trait BuildObj extends CastArrays {
           i += 1
           val productTpe = if (props.length == 1) {
             props.head match {
-              case Prop(_, _, tpe, _, _) => tq"Tuple1[$tpe]"
-              case Obj(_, _, _, _)       => tq"Tuple1[Product]"
+              case Prop(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
+              case Obj(_, _, _, _)          => tq"Tuple1[Product]"
             }
           } else {
             tq"Product"
@@ -299,19 +176,7 @@ trait BuildObj extends CastArrays {
       propDefs
     }
 
-    def hasSameNss: Boolean = {
-      var dupNss: Set[String] = Set.empty
-      def isDupe(ns: String) = if (dupNss(ns)) true else {
-        dupNss += ns;
-        false
-      }
-      obj.props.exists {
-        case Obj(ns, _, _, _) if isDupe(ns) => true
-        case _                              => false
-      }
-    }
-
-    val tree = if (hasSameNss) {
+    val tree = if (hasSameNss(obj)) {
       q"""throw MoleculeException(
             "Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
           )"""
@@ -344,177 +209,5 @@ trait BuildObj extends CastArrays {
       }
     }
     (tree, i)
-  }
-
-
-  def addNode(obj: Obj, node: Node, level: Int): Obj = {
-    val newProps = level match {
-      case 0 =>
-        node :: obj.props
-
-      case 1 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj1a = obj1.copy(props = node :: obj1.props)
-        obj1a :: obj.props.tail
-
-      case 2 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj2a = obj2.copy(props = node :: obj2.props)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 3 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj3a = obj3.copy(props = node :: obj3.props)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 4 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj4a = obj4.copy(props = node :: obj4.props)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 5 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj5  = obj4.props.head.asInstanceOf[Obj]
-        val obj5a = obj5.copy(props = node :: obj5.props)
-        val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 6 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj5  = obj4.props.head.asInstanceOf[Obj]
-        val obj6  = obj5.props.head.asInstanceOf[Obj]
-        val obj6a = obj6.copy(props = node :: obj6.props)
-        val obj5a = obj5.copy(props = obj6a :: obj5.props.tail)
-        val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 7 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj5  = obj4.props.head.asInstanceOf[Obj]
-        val obj6  = obj5.props.head.asInstanceOf[Obj]
-        val obj7  = obj6.props.head.asInstanceOf[Obj]
-        val obj7a = obj7.copy(props = node :: obj7.props)
-        val obj6a = obj6.copy(props = obj7a :: obj6.props.tail)
-        val obj5a = obj5.copy(props = obj6a :: obj5.props.tail)
-        val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-    }
-    obj.copy(props = newProps)
-  }
-
-
-  def addRef(obj: Obj, refCls: String, refName: String, card: Int, objLevel: Int): Obj = {
-    val newProps = objLevel match {
-      case 0 =>
-        List(Obj(refCls, refName, card, obj.props))
-
-      case 1 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj1a = obj1.copy(cls = refCls, ref = refName, card = card)
-        obj1a :: obj.props.tail
-
-      case 2 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj2a = obj2.copy(cls = refCls, ref = refName, card = card)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 3 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj3a = obj3.copy(cls = refCls, ref = refName, card = card)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 4 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj4a = obj4.copy(cls = refCls, ref = refName, card = card)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 5 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj5  = obj4.props.head.asInstanceOf[Obj]
-        val obj5a = obj5.copy(cls = refCls, ref = refName, card = card)
-        val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 6 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj5  = obj4.props.head.asInstanceOf[Obj]
-        val obj6  = obj5.props.head.asInstanceOf[Obj]
-        val obj6a = obj6.copy(cls = refCls, ref = refName, card = card)
-        val obj5a = obj5.copy(props = obj6a :: obj5.props.tail)
-        val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-
-      case 7 =>
-        val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj5  = obj4.props.head.asInstanceOf[Obj]
-        val obj6  = obj5.props.head.asInstanceOf[Obj]
-        val obj7  = obj6.props.head.asInstanceOf[Obj]
-        val obj7a = obj7.copy(cls = refCls, ref = refName, card = card)
-        val obj6a = obj6.copy(props = obj7a :: obj6.props.tail)
-        val obj5a = obj5.copy(props = obj6a :: obj5.props.tail)
-        val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
-        val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
-        val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
-        val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
-        obj1a :: obj.props.tail
-    }
-    obj.copy(props = newProps)
   }
 }

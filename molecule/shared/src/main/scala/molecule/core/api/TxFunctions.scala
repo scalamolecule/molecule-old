@@ -2,8 +2,8 @@ package molecule.core.api
 
 import java.util.concurrent.{ExecutionException => ExecutionExc}
 import molecule.core.ast.elements.{Composite, Model, TxMetaData}
+import molecule.core.exceptions.TxFnException
 import molecule.core.macros.TxFunctionCall
-import molecule.core.macros.exception.TxFnException
 import molecule.core.util.{Helpers, JavaUtil}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}

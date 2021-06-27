@@ -1,5 +1,8 @@
 package molecule.core.macros
 
+import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.ops.{Liftables, TreeOps}
+import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
 import scala.language.higherKinds
 import scala.reflect.macros.blackbox
@@ -8,16 +11,21 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //  val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  //  val z = InspectMacro("MakeMolecule", 2, 8)
-  val z = InspectMacro("MakeMolecule", 9, 7)
+  //  override val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
+    override val z = InspectMacro("MakeMolecule", 2, 8)
+//  override val z = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
-    val (genericImports, model0, typess, castss, indexes0, obj,
-    hasVariables, txMetaCompositesCount,
-    postTypes, postCasts, isOptNested,
-    optNestedRefIndexes, optNestedTacitIndexes) = getModel(dsl)
+    val (
+      genericImports, model0,
+      typess, castss, jsonss,
+      indexes0, obj,
+      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      postTypes, postCasts, postJsons,
+      isOptNested,
+      optNestedRefIndexes, optNestedTacitIndexes
+      ) = getModel(dsl)
 
     val imports              = getImports(genericImports)
     val OutMoleculeTpe: Tree = molecule_o(TplTypes.size)
@@ -84,6 +92,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
           final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {..${topLevelJson(jsonss)}}
         """
       }
 
@@ -151,13 +160,14 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"""
           ..$jsResolvers
           ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
+          ..${resolveNestedJsonMethods(jsonss, nestedRefAttrs, postJsons).get}
           final override def outerTpl2obj(tpl: (..$TplTypes)): $ObjType = {
             $tpl
             ${objCode(obj, isNested = true)._1}
           }
          """
 
-      val nestedTupleClass = tq"${nestedTupleClassX(castss.size)}"
+      val nestedTupleClass = tq"${nestedJsonClassX(castss.size)}"
       val resolveModel     =
         q"final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})"
 
@@ -210,7 +220,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         new $outMolecule
       """
 
-    z(7, t)
+    z(7, t, obj)
     t
   }
 

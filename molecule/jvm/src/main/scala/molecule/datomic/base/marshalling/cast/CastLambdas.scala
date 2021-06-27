@@ -9,7 +9,7 @@ class CastLambdas(maxRows: Int) extends CastTypes(maxRows) {
   val castLambdas: Array[Int => (util.List[AnyRef], Int) => Unit] = Array(
     /*   0 */ castOneString,
     /*   1 */ castOneInt,
-    /*   2 */ castOneInt2,
+    /*   2 */ castOneInt,
     /*   3 */ castOneLong,
     /*   4 */ castOneDouble,
     /*   5 */ castOneBoolean,
