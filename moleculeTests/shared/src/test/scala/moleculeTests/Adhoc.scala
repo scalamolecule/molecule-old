@@ -1,24 +1,13 @@
 package moleculeTests
 
-import java.util.UUID
-import molecule.core.exceptions.MoleculeException
-import molecule.core.ops.exception.VerifyModelException
-import molecule.core.util.DateHandling
-import molecule.datomic.api.in3_out11._
-import molecule.datomic.api.out11.m
-import molecule.datomic.base.util.SystemPeerServer
+import molecule.datomic.api.out11._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
-import moleculeTests.tests.core.json.JsonAttributes.{bigDec1, bigDec2, bigInt1, bigInt2, date1, date2, enum1, enum2, system, uri1, uri2, uuid1, uuid2}
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.control.NonFatal
-import scala.util.{Failure, Success}
 
 object Adhoc extends AsyncTestSuite {
-
 
   lazy val tests = Tests {
 
@@ -27,70 +16,286 @@ object Adhoc extends AsyncTestSuite {
 
 
       for {
-        _ <- Future(1 ==> 1)
+        //        _ <- Future(1 ==> 1)
+        _ <- Future(2 ==> 2)
 
 
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(
+        //          ("a", List(1)),
+        //          ("b", List(2, 3))
+        //        )
 
-//        // Creating 3 entities referencing 3 other entities
-//        tx <- Ns.str.Ref1.str1 insert List(
-//          ("a0", "a1"),
-//          ("b0", "b1"),
-//          ("c0", "c1")
+//        _ <- Ns.str.Refs1 * Ref1.int1 insert List(
+//          ("a", List(1)),
+//          ("b", List(2, 3))
 //        )
-//        List(a0, a1, b0, b1, c0, c1) = tx.eids
-
-        // Get attribute values from 2 namespaces
-        // Namespace references like `Ref1` starts with Capital letter
-        _ <- Ns.str.Ref1.str1.get
-
-//        _ <- Ns.str.Ref1.str1.getJson.map(_ ==>
+//
+//        // Nested
+//        _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
 //          """{
 //            |  "data": {
 //            |    "Ns": [
 //            |      {
-//            |        "str": "a0"
-//            |        "Ref1": {
-//            |          "str1": "a1"
-//            |        }
+//            |        "str": "a",
+//            |        "Refs1": [
+//            |          {
+//            |            "int1": 1
+//            |          }
+//            |        ]
 //            |      },
 //            |      {
-//            |        "str": "b0"
-//            |        "Ref1": {
-//            |          "str1": "b1"
-//            |        }
-//            |      },
-//            |      {
-//            |        "str": "c0"
-//            |        "Ref1": {
-//            |          "str1": "c1"
-//            |        }
+//            |        "str": "b",
+//            |        "Refs1": [
+//            |          {
+//            |            "int1": 2
+//            |          },
+//            |          {
+//            |            "int1": 3
+//            |          }
+//            |        ]
 //            |      }
 //            |    ]
 //            |  }
 //            |}""".stripMargin)
-//
-//
-//        // We can also retrieve the referenced entity id
-//        // Referenced entity id `ref1` starts with lower case letter
-//        _ <- Ns.str.ref1.getJson.map(_ ==>
-//          s"""{
-//             |  "data": {
-//             |    "Ns": [
-//             |      {
-//             |        "str": "a0"
-//             |        "ref1": $a1
-//             |      },
-//             |      {
-//             |        "str": "b0"
-//             |        "ref1": $b1
-//             |      },
-//             |      {
-//             |        "str": "c0"
-//             |        "ref1": $c1
-//             |      }
-//             |    ]
-//             |  }
-//             |}""".stripMargin)
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1).getObjs.map { case List(o1, o2) =>
+        //          o1.str ==> "a"
+        //          val List(r1) = o1.Refs1
+        //          r1.int1 ==> 1
+        //
+        //          o2.str ==> "b"
+        //          val List(r2, r3) = o2.Refs1
+        //          r2.int1 ==> 2
+        //          r3.int1 ==> 3
+        //        }
+
+        //        // Flat
+        //        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
+        //          """{
+        //            |  "data": {
+        //            |    "Ns": [
+        //            |      {
+        //            |        "str": "a",
+        //            |        "Refs1": {
+        //            |          "int1": 1
+        //            |        }
+        //            |      },
+        //            |      {
+        //            |        "str": "b",
+        //            |        "Refs1": {
+        //            |          "int1": 2
+        //            |        }
+        //            |      },
+        //            |      {
+        //            |        "str": "b",
+        //            |        "Refs1": {
+        //            |          "int1": 3
+        //            |        }
+        //            |      }
+        //            |    ]
+        //            |  }
+        //            |}""".stripMargin)
+
+
+
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)) insert List(
+          (
+            "a",
+            List(
+              (1, List(10)
+              )
+            )
+          ),
+          (
+            "b",
+            List(
+              (2, List(20)),
+              (3, List(30, 31))
+            )
+          )
+        )
+
+        // Nested
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1,
+            |            "Refs2": [
+            |              {
+            |                "int2": 10
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2,
+            |            "Refs2": [
+            |              {
+            |                "int2": 20
+            |              }
+            |            ]
+            |          },
+            |          {
+            |            "int1": 3,
+            |            "Refs2": [
+            |              {
+            |                "int2": 30
+            |              },
+            |              {
+            |                "int2": 31
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        /*
+{
+    "data": {
+      "Ns": [
+        {
+          "str": "a",
+          "Refs1": [
+            {
+              "int1": 1,
+              "Refs2": [
+                {
+                  "int2": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "str": "b",
+          "Refs1": [
+            {
+              "int1": 2,
+              "Refs2": [
+                {
+                  "int2": 20
+                }
+              ]
+            },
+            {
+              "int1": 3,
+              "Refs2": [
+                {
+                  "int2": 30
+                },
+                {
+                  "int2": 31
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+
+
+         */
+
+
+        //        s"""{
+        //          |  "data": {
+        //          |    "${firstNs(_model)}": []
+        //          |  }
+        //          |}""".stripMargin)
+
+        //        _ <- Ns.int(1).str$.getJson.map(_ ==>
+        //          """{
+        //            |  "data": {
+        //            |    "Ns": [
+        //            |      {
+        //            |        "int": 1,
+        //            |        "str": null
+        //            |      },
+        //            |      {
+        //            |        "int": 1,
+        //            |        "str": ""
+        //            |      },
+        //            |      {
+        //            |        "int": 1,
+        //            |        "str": "c"
+        //            |      }
+        //            |    ]
+        //            |  }
+        //            |}""".stripMargin)
+
+        //        // Creating 3 entities referencing 3 other entities
+        //        tx <- Ns.str.Ref1.str1 insert List(
+        //          ("a0", "a1"),
+        //          ("b0", "b1"),
+        //          ("c0", "c1")
+        //        )
+        //        List(a0, a1, b0, b1, c0, c1) = tx.eids
+
+        // Get attribute values from 2 namespaces
+        // Namespace references like `Ref1` starts with Capital letter
+        //        _ <- Ns.str.Ref1.str1.get
+
+        //        _ <- Ns.str.Ref1.str1.getJson.map(_ ==>
+        //          """{
+        //            |  "data": {
+        //            |    "Ns": [
+        //            |      {
+        //            |        "str": "a0"
+        //            |        "Ref1": {
+        //            |          "str1": "a1"
+        //            |        }
+        //            |      },
+        //            |      {
+        //            |        "str": "b0"
+        //            |        "Ref1": {
+        //            |          "str1": "b1"
+        //            |        }
+        //            |      },
+        //            |      {
+        //            |        "str": "c0"
+        //            |        "Ref1": {
+        //            |          "str1": "c1"
+        //            |        }
+        //            |      }
+        //            |    ]
+        //            |  }
+        //            |}""".stripMargin)
+        //
+        //
+        //        // We can also retrieve the referenced entity id
+        //        // Referenced entity id `ref1` starts with lower case letter
+        //        _ <- Ns.str.ref1.getJson.map(_ ==>
+        //          s"""{
+        //             |  "data": {
+        //             |    "Ns": [
+        //             |      {
+        //             |        "str": "a0"
+        //             |        "ref1": $a1
+        //             |      },
+        //             |      {
+        //             |        "str": "b0"
+        //             |        "ref1": $b1
+        //             |      },
+        //             |      {
+        //             |        "str": "c0"
+        //             |        "ref1": $c1
+        //             |      }
+        //             |    ]
+        //             |  }
+        //             |}""".stripMargin)
 
         /*
 {
@@ -138,14 +343,11 @@ Obj("", "", 0, List(
  */
 
 
-
-
-
-//                _ <- (Ns.int.str.Refs1 * Ref1.int1) insert List(
-//                  (1, "a", List(10, 11)),
-//                  (2, "b", List(20, 21))
-//                )
-//        //
+        //                _ <- (Ns.int.str.Refs1 * Ref1.int1) insert List(
+        //                  (1, "a", List(10, 11)),
+        //                  (2, "b", List(20, 21))
+        //                )
+        //        //
         //        _ <- m(Ns.int.str.Refs1 * Ref1.int1).getJson.map(_ ==>
         //          """{
         //            |  "data": {

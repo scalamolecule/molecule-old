@@ -720,55 +720,43 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
       conn <- conn
       jColl <- conn.query(_model, _query)
     } yield {
-      val firstNs    = _model.elements.head match {
-        case Atom(nsFull, _, _, _, _, _, _, _) => nsFull
-        case Bond(nsFull, _, _, _, _)          => nsFull
-        case other                             =>
-          throw MoleculeException("Unexpected first model element for buildJson: " + other)
-      }
-      val size       = jColl.size()
-      val rows       = jColl.iterator()
-      val sb         = new StringBuilder(s"{\n  \"data\": {\n    \"$firstNs\": ")
-      var subsequent = false
+      val size = jColl.size()
+      val rows = jColl.iterator()
+      val sb   = new StringBuilder()
+      var next = false
       size match {
         case 0 =>
-          // Empty result set
-          sb.append(s"[]")
+        // Empty result set
 
-        case _ => {
-          if (n == -1) {
-            // All rows
-            sb.append("[")
-            while (rows.hasNext) {
-              if (subsequent) {
-                sb.append(",")
-              } else {
-                subsequent = true
-              }
-              sb.append("\n      {\n        ")
-              row2json(sb, rows.next())
-              sb.append("\n      }")
-            }
-          } else {
-            // n rows
-            var i = 0
-            while (rows.hasNext && i < n) {
-              if (subsequent) {
-                sb.append(",")
-              } else {
-                subsequent = true
-              }
-              sb.append("\n      {\n        ")
-              row2json(sb, rows.next())
-              sb.append("\n      }")
-              i += 1
-            }
+        case _ if n == -1 => {
+          // All rows
+          while (rows.hasNext) {
+            if (next) sb.append(",") else next = true
+            sb.append("\n      {\n        ")
+            row2json(sb, rows.next())
+            sb.append("\n      }")
           }
-          sb.append("\n    ]")
+          sb.append("\n    ")
         }
+
+        case _ =>
+          // n rows
+          var i = 0
+          while (rows.hasNext && i < n) {
+            if (next) sb.append(",") else next = true
+            sb.append("\n      {\n        ")
+            row2json(sb, rows.next())
+            sb.append("\n      }")
+            i += 1
+          }
+          sb.append("\n    ")
       }
-      // All
-      sb.append("\n  }\n}").toString()
+
+      s"""{
+         |  "data": {
+         |    "${firstNs(_model)}": [${sb.toString()}]
+         |  }
+         |}""".stripMargin
     }
   }
 
@@ -780,16 +768,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   //      if (jColl.size == 0) {
   //        ""
   //      } else {
-  //        var subsequent = false
+  //        var next = false
   //        val it         = jColl.iterator()
   //        val sb         = new StringBuilder("[")
   //        if (n == -1) {
   //          // All
   //          while (it.hasNext) {
-  //            if (subsequent) {
+  //            if (next) {
   //              sb.append(",")
   //            } else {
-  //              subsequent = true
+  //              next = true
   //            }
   //            sb.append("\n[")
   //            row2json(sb, it.next())
@@ -799,10 +787,10 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   //          // n rows
   //          var i = 0
   //          while (it.hasNext && i < n) {
-  //            if (subsequent) {
+  //            if (next) {
   //              sb.append(",")
   //            } else {
-  //              subsequent = true
+  //              next = true
   //            }
   //            sb.append("\n[")
   //            row2json(sb, it.next())

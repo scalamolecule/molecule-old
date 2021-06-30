@@ -14,45 +14,61 @@ object JsonNested extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "Optional nested not implemented" - core { implicit conn =>
-      m(Ns.int.str.Refs1 *? Ref1.int1).getJson.recover { case MoleculeException(err, _) =>
-        err ==> "Optional nested data as json not implemented"
-      }
-    }
-
-
     "1 nested attr" - core { implicit conn =>
       for {
-        _ <- (Ns.int.str.Refs1 * Ref1.int1) insert List(
-          (1, "a", List(10, 11)),
-          (2, "b", List(20, 21))
+        _ <- Ns.str.Refs1 * Ref1.int1 insert List(
+          ("a", List(1)),
+          ("b", List(2, 3))
         )
 
-        _ <- m(Ns.int.str.Refs1 * Ref1.int1).getJson.map(_ ==>
+        // Flat
+        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
             |      {
-            |        "int": 1,
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 2
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        // Nested
+        _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
             |        "str": "a",
             |        "Refs1": [
             |          {
-            |            "int1": 10
-            |          },
-            |          {
-            |            "int1": 11
+            |            "int1": 1
             |          }
             |        ]
             |      },
             |      {
-            |        "int": 2,
             |        "str": "b",
             |        "Refs1": [
             |          {
-            |            "int1": 20
+            |            "int1": 2
             |          },
             |          {
-            |            "int1": 21
+            |            "int1": 3
             |          }
             |        ]
             |      }

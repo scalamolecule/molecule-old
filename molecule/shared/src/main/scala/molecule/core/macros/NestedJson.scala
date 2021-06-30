@@ -27,14 +27,14 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
   protected def jsonLeaf6(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
   protected def jsonLeaf7(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
 
-  protected val sb0: StringBuilder = new StringBuilder("")
-  protected val sb1: StringBuilder = new StringBuilder("")
-  protected val sb2: StringBuilder = new StringBuilder("")
-  protected val sb3: StringBuilder = new StringBuilder("")
-  protected val sb4: StringBuilder = new StringBuilder("")
-  protected val sb5: StringBuilder = new StringBuilder("")
-  protected val sb6: StringBuilder = new StringBuilder("")
-  protected val sb7: StringBuilder = new StringBuilder("")
+  protected val sb0: StringBuilder = new StringBuilder()
+  protected val sb1: StringBuilder = new StringBuilder()
+  protected val sb2: StringBuilder = new StringBuilder()
+  protected val sb3: StringBuilder = new StringBuilder()
+  protected val sb4: StringBuilder = new StringBuilder()
+  protected val sb5: StringBuilder = new StringBuilder()
+  protected val sb6: StringBuilder = new StringBuilder()
+  protected val sb7: StringBuilder = new StringBuilder()
 
   protected var firstLevel0      = true
   protected val firstJsonObjects = new Array[Boolean](7)
@@ -46,7 +46,7 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
     firstLevel0 = true
 
     sb0.clear()
-    sb0.append("[\n")
+    sb0.append("[")
     sb1.clear()
     sb2.clear()
     sb3.clear()
@@ -60,7 +60,14 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
     }
   }
 
-  def branch(level: Int, sb: StringBuilder, branchPairs: => StringBuilder, refAttr: String, leaf: StringBuilder, post: => StringBuilder = new StringBuilder()): StringBuilder = {
+  def branch(
+    level: Int,
+    sb: StringBuilder,
+    branchPairs: => StringBuilder,
+    ref: String,
+    leaf: StringBuilder,
+    post: => StringBuilder = new StringBuilder()
+  ): StringBuilder = {
     // Reset sub levels
     for (lvl <- (level + 1) to 6) {
       firstJsonObjects(lvl) = true
@@ -68,30 +75,64 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
     if (firstJsonObjects(level)) {
       firstJsonObjects(level) = false
     } else {
-      sb.append(s",\n")
-      sb.append("   " * level)
+      // Prepare next outer object
+      sb.append(",")
+      sb.append(indent(level * 2 - 1))
     }
+
+    // Outer object
     sb.append("{")
-    branchPairs // adds branch pairs to `sb`
-    if (sb.last != '{')
-      sb.append(s", ") // when no pairs before nested
-    quote(sb, refAttr)
-    sb.append(": [\n")
-    sb.append("   " * (level + 1))
+    sb.append(indent(level * 2))
+
+    // Pairs before nested
+    branchPairs
+
+    // Next pair
+    if (sb.last != '{') {
+      sb.append(",")
+      sb.append(indent(level * 2))
+    }
+
+    // Ref
+    quote(sb, ref)
+
+    // Array of inner field/value pairs
+    sb.append(": [")
+    sb.append(indent(level * 2 + 1))
+
+    // Inner pairs
     sb.append(leaf.toString)
     leaf.clear()
+
+    // End of inner pair array
+    sb.append(indent(level * 2))
     sb.append("]")
-    post // adds post fields to `sb`
+
+    // Post fields
+    post
+
+    // End of outer object
+    sb.append(indent(level * 2 - 1))
     sb.append("}")
+
   }
 
   def leaf(level: Int, sb: StringBuilder, leafPairs: => StringBuilder): StringBuilder = {
     if (sb.nonEmpty) {
-      sb.append(s",\n")
-      sb.append("   " * level)
+      // Prepare next object
+      sb.append(",")
+      sb.append(indent(level * 2 - 1))
     }
+    // Start of object
     sb.append("{")
-    leafPairs.append("}")
+    sb.append(indent(level * 2))
+
+    // Inner pairs
+    leafPairs
+
+    // End of object
+    sb.append(indent(level * 2 - 1))
+    sb.append("}")
   }
 }
 
@@ -112,22 +153,25 @@ object NestedJson {
         val last                                     = rows.size
 
         if (last == 0) {
-          ""
+          // Empty result set
 
         } else if (last == 1) {
           row = rows.iterator.next
+          sb0.append("\n      ")
           jsonBranch0(sb0, row,
-            jsonLeaf1(sb1, row)).append("\n]").toString
+            jsonLeaf1(sb1, row))
+          sb0.append("\n    ]")
 
         } else {
           rows.sort(this)
+          sb0.append("\n      ")
           val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
             e0 = row.get(0).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (e0 != p0) {
                 jsonBranch0(sb0, prevRow, sb1)
               }
@@ -137,14 +181,20 @@ object NestedJson {
               }
             } else {
               jsonLeaf1(sb1, row)
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
             p0 = e0
           }
-          sb0.append("\n]").toString()
+          sb0.append("\n    ]")
         }
+
+        s"""{
+           |  "data": {
+           |    "${firstNs(_model)}": ${sb0.toString()}
+           |  }
+           |}""".stripMargin
       }
     }
   }
@@ -164,16 +214,19 @@ object NestedJson {
         val last                                     = rows.size
 
         if (last == 0) {
-          ""
+          // Empty result set
 
         } else if (last == 1) {
           row = rows.iterator.next
+          sb0.append("\n      ")
           jsonBranch0(sb0, row,
             jsonBranch1(sb1, row,
-              jsonLeaf2(sb2, row))).append("\n]").toString
+              jsonLeaf2(sb2, row)))
+          sb0.append("\n    ]")
 
         } else {
           rows.sort(this)
+          sb0.append("\n      ")
           val it = rows.iterator
           while (it.hasNext) {
             i += 1
@@ -181,7 +234,7 @@ object NestedJson {
             e0 = row.get(0).asInstanceOf[jLong]
             e1 = row.get(1).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (e0 != p0) {
                 jsonBranch1(sb1, prevRow, sb2)
                 jsonBranch0(sb0, prevRow, sb1)
@@ -195,15 +248,21 @@ object NestedJson {
               }
             } else {
               jsonLeaf2(sb2, row)
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
             p0 = e0
             p1 = e1
           }
-          sb0.append("\n]").toString()
+          sb0.append("\n    ]")
         }
+
+        s"""{
+           |  "data": {
+           |    "${firstNs(_model)}": ${sb0.toString()}
+           |  }
+           |}""".stripMargin
       }
     }
   }
@@ -223,17 +282,20 @@ object NestedJson {
         val last                                     = rows.size
 
         if (last == 0) {
-          ""
+          // Empty result set
 
         } else if (last == 1) {
           row = rows.iterator.next
+          sb0.append("\n      ")
           jsonBranch0(sb0, row,
             jsonBranch1(sb1, row,
               jsonBranch2(sb2, row,
-                jsonLeaf3(sb3, row)))).append("\n]").toString
+                jsonLeaf3(sb3, row))))
+          sb0.append("\n    ]")
 
         } else {
           rows.sort(this)
+          sb0.append("\n      ")
           val it = rows.iterator
           while (it.hasNext) {
             i += 1
@@ -242,7 +304,7 @@ object NestedJson {
             e1 = row.get(1).asInstanceOf[jLong]
             e2 = row.get(2).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (e0 != p0) {
                 jsonBranch2(sb2, prevRow, sb3)
                 jsonBranch1(sb1, prevRow, sb2)
@@ -261,7 +323,7 @@ object NestedJson {
               }
             } else {
               jsonLeaf3(sb3, row)
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -269,8 +331,14 @@ object NestedJson {
             p1 = e1
             p2 = e2
           }
-          sb0.append("\n]").toString()
+          sb0.append("\n    ]")
         }
+
+        s"""{
+           |  "data": {
+           |    "${firstNs(_model)}": ${sb0.toString()}
+           |  }
+           |}""".stripMargin
       }
     }
   }
@@ -290,18 +358,21 @@ object NestedJson {
         val last                                     = rows.size
 
         if (last == 0) {
-          ""
+          // Empty result set
 
         } else if (last == 1) {
           row = rows.iterator.next
+          sb0.append("\n      ")
           jsonBranch0(sb0, row,
             jsonBranch1(sb1, row,
               jsonBranch2(sb2, row,
                 jsonBranch3(sb3, row,
-                  jsonLeaf4(sb4, row))))).append("\n]").toString
+                  jsonLeaf4(sb4, row)))))
+          sb0.append("\n    ]")
 
         } else {
           rows.sort(this)
+          sb0.append("\n      ")
           val it = rows.iterator
           while (it.hasNext) {
             i += 1
@@ -311,7 +382,7 @@ object NestedJson {
             e2 = row.get(2).asInstanceOf[jLong]
             e3 = row.get(3).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (e0 != p0) {
                 jsonBranch3(sb3, prevRow, sb4)
                 jsonBranch2(sb2, prevRow, sb3)
@@ -336,7 +407,7 @@ object NestedJson {
               }
             } else {
               jsonLeaf4(sb4, row)
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -345,8 +416,14 @@ object NestedJson {
             p2 = e2
             p3 = e3
           }
-          sb0.append("\n]").toString()
+          sb0.append("\n    ]")
         }
+
+        s"""{
+           |  "data": {
+           |    "${firstNs(_model)}": ${sb0.toString()}
+           |  }
+           |}""".stripMargin
       }
     }
   }
@@ -366,19 +443,22 @@ object NestedJson {
         val last                                     = rows.size
 
         if (last == 0) {
-          ""
+          // Empty result set
 
         } else if (last == 1) {
           row = rows.iterator.next
+          sb0.append("\n      ")
           jsonBranch0(sb0, row,
             jsonBranch1(sb1, row,
               jsonBranch2(sb2, row,
                 jsonBranch3(sb3, row,
                   jsonBranch4(sb4, row,
-                    jsonLeaf5(sb5, row)))))).append("\n]").toString
+                    jsonLeaf5(sb5, row))))))
+          sb0.append("\n    ]")
 
         } else {
           rows.sort(this)
+          sb0.append("\n      ")
           val it = rows.iterator
           while (it.hasNext) {
             i += 1
@@ -389,7 +469,7 @@ object NestedJson {
             e3 = row.get(3).asInstanceOf[jLong]
             e4 = row.get(4).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (e0 != p0) {
                 jsonBranch4(sb4, prevRow, sb5)
                 jsonBranch3(sb3, prevRow, sb4)
@@ -421,7 +501,7 @@ object NestedJson {
               }
             } else {
               jsonLeaf5(sb5, row)
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -431,8 +511,14 @@ object NestedJson {
             p3 = e3
             p4 = e4
           }
-          sb0.append("\n]").toString()
+          sb0.append("\n    ]")
         }
+
+        s"""{
+           |  "data": {
+           |    "${firstNs(_model)}": ${sb0.toString()}
+           |  }
+           |}""".stripMargin
       }
     }
   }
@@ -452,20 +538,23 @@ object NestedJson {
         val last                                     = rows.size
 
         if (last == 0) {
-          ""
+          // Empty result set
 
         } else if (last == 1) {
           row = rows.iterator.next
+          sb0.append("\n      ")
           jsonBranch0(sb0, row,
             jsonBranch1(sb1, row,
               jsonBranch2(sb2, row,
                 jsonBranch3(sb3, row,
                   jsonBranch4(sb4, row,
                     jsonBranch5(sb5, row,
-                      jsonLeaf6(sb6, row))))))).append("\n]").toString
+                      jsonLeaf6(sb6, row)))))))
+          sb0.append("\n    ]")
 
         } else {
           rows.sort(this)
+          sb0.append("\n      ")
           val it = rows.iterator
           while (it.hasNext) {
             i += 1
@@ -477,7 +566,7 @@ object NestedJson {
             e4 = row.get(4).asInstanceOf[jLong]
             e5 = row.get(5).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (e0 != p0) {
                 jsonBranch5(sb5, prevRow, sb6)
                 jsonBranch4(sb4, prevRow, sb5)
@@ -517,7 +606,7 @@ object NestedJson {
               }
             } else {
               jsonLeaf6(sb6, row)
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -528,8 +617,14 @@ object NestedJson {
             p4 = e4
             p5 = e5
           }
-          sb0.append("\n]").toString()
+          sb0.append("\n    ]")
         }
+
+        s"""{
+           |  "data": {
+           |    "${firstNs(_model)}": ${sb0.toString()}
+           |  }
+           |}""".stripMargin
       }
     }
   }
@@ -549,10 +644,11 @@ object NestedJson {
         val last                                     = rows.size
 
         if (last == 0) {
-          ""
+          // Empty result set
 
         } else if (last == 1) {
           row = rows.iterator.next
+          sb0.append("\n      ")
           jsonBranch0(sb0, row,
             jsonBranch1(sb1, row,
               jsonBranch2(sb2, row,
@@ -560,10 +656,12 @@ object NestedJson {
                   jsonBranch4(sb4, row,
                     jsonBranch5(sb5, row,
                       jsonBranch6(sb6, row,
-                        jsonLeaf7(sb7, row)))))))).append("\n]").toString
+                        jsonLeaf7(sb7, row))))))))
+          sb0.append("\n    ]")
 
         } else {
           rows.sort(this)
+          sb0.append("\n      ")
           val it = rows.iterator
           while (it.hasNext) {
             i += 1
@@ -576,7 +674,7 @@ object NestedJson {
             e5 = row.get(5).asInstanceOf[jLong]
             e6 = row.get(6).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (e0 != p0) {
                 jsonBranch6(sb6, prevRow, sb7)
                 jsonBranch5(sb5, prevRow, sb6)
@@ -625,7 +723,7 @@ object NestedJson {
               }
             } else {
               jsonLeaf7(sb7, row)
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -637,8 +735,14 @@ object NestedJson {
             p5 = e5
             p6 = e6
           }
-          sb0.append("\n]").toString()
+          sb0.append("\n    ]")
         }
+
+        s"""{
+           |  "data": {
+           |    "${firstNs(_model)}": ${sb0.toString()}
+           |  }
+           |}""".stripMargin
       }
     }
   }

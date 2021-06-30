@@ -3,15 +3,15 @@ package molecule.core.macros.qr
 import java.lang.{Long => jLong}
 import java.net.URI
 import java.util.{List => jList, Set => jSet}
-import molecule.core.macros.impls.CastAggr
+import molecule.core.macros.lambdas.CastAggr
 
-/** Core molecule interface defining actions that can be called on molecules.
+/** Core molecule interface override defining actions that can be called on molecules.
   *
   * Generally we could often have made higher-order methods taking a casting function for
   * variating cases. But we prioritize minimizing the macro-generated code as much as possible
   * to lower compile time overhead.
   */
-trait TypedCastHelpersAggr extends TypedCastHelpersOptNested { self: CastAggr =>
+trait TypedCastHelpersAggr extends CastAggr with TypedCastHelpersOptNested { 
 
   // card one
 

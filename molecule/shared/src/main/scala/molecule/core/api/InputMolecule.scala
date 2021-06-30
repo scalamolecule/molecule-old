@@ -116,7 +116,7 @@ abstract class InputMolecule(
       case ((found, v, acc), DataClause(_, `e`, `kw`, `v0`, _, _))   => (true, v, acc :+ NotClause(e, kw))
       case ((found, v, acc), DataClause(_, `e`, `kw`, Var(w), _, _)) => (true, w, acc :+ NotClause(e, kw))
 
-      // Remove subsequent function clauses related to main clause
+      // Remove next function clauses related to main clause
       case ((found, v, acc), Funct(_, List(Var(w), _), ScalarBinding(Var(x)))) if w == v => (found, x, acc)
       case ((found, v, acc), Funct(_, List(Var(w), _), _)) if w == v                     => (found, w, acc)
 

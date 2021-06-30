@@ -1,9 +1,11 @@
-package molecule.core.macros.trees
+package molecule.core.macros.lambdaTrees
 
+import molecule.core.macros.lambdas.CastOptNested
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-private[molecule] trait LambdaCastOptNested extends LambdaJsonTypes {
+//private[molecule] trait LambdaCastOptNested extends CastOptNested with TreeOps {
+private[molecule] trait LambdaCastOptNested extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._

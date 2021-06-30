@@ -3,12 +3,12 @@ package molecule.core.macros.qr
 import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
 import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
-import molecule.core.macros.impls.CastTypes
+import molecule.core.macros.lambdas.CastTypes
 
 
 /** Cast methods for converting raw data to Obj or Tpl
   */
-trait TypedCastHelpers extends TypedCastHelpersAggr { self: CastTypes =>
+trait TypedCastHelpers extends CastTypes with TypedCastHelpersAggr { 
 
 
   // One ===========================================================================================

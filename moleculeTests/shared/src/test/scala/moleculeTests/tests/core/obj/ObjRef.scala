@@ -1,12 +1,8 @@
 package moleculeTests.tests.core.obj
 
-import molecule.core.exceptions.MoleculeException
-import molecule.core.util.Helpers
-import molecule.datomic.api.in1_out12._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import moleculeTests.tests.core.ref.dsl.SelfJoin._
-import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -113,7 +109,28 @@ object ObjRef extends AsyncTestSuite with Helpers {
         }
       } yield ()
     }
+
     "Nested" - core { implicit conn =>
+      for {
+        _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(
+          ("a", List(1)),
+          ("b", List(2, 3))
+        )
+
+        _ <- Ns.str.Refs1.*(Ref1.int1).getObjs.map { case List(o1, o2) =>
+          o1.str ==> "a"
+          val List(r1) = o1.Refs1
+          r1.int1 ==> 1
+
+          o2.str ==> "b"
+          val List(r2, r3) = o2.Refs1
+          r2.int1 ==> 2
+          r3.int1 ==> 3
+        }
+      } yield ()
+    }
+
+    "Nested optional" - core { implicit conn =>
       for {
         _ <- m(Ns.int.Refs1 * Ref1.int1.str1$) insert List(
           (1, List((11, Some("a")), (12, None))),

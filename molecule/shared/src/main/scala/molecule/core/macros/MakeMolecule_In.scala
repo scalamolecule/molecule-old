@@ -1,6 +1,6 @@
 package molecule.core.macros
 
-import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.macros.lambdaTrees.LambdaCastAggr
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
@@ -14,8 +14,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //  override val z = InspectMacro("MakeMolecule_In", 1, 8, mkError = true)
-  override val z = InspectMacro("MakeMolecule_In", 9, 8)
+  //   val z = InspectMacro("MakeMolecule_In", 1, 8, mkError = true)
+   val z = InspectMacro("MakeMolecule_In", 9, 8)
   //      override val z = InspectMacro("MakeMolecule_In", 1, 8)
 
   private[this] final def generateInputMolecule(dsl: Tree, ObjType: Type, InTypes: Type*)(TplTypes: Type*): Tree = {
@@ -23,7 +23,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
       genericImports, model0,
       typess, castss, jsonss,
       indexes, obj,
-      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes
@@ -85,7 +85,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)]
               {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefAttrs, postJsons).get}
+                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -137,7 +137,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefAttrs, postJsons).get}
+                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -278,7 +278,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefAttrs, postJsons).get}
+                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -313,7 +313,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefAttrs, postJsons).get}
+                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }

@@ -1,13 +1,14 @@
-package molecule.core.macros.impls
+package molecule.core.macros.lambdas
 
 import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
 import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
+import molecule.core.util.Helpers
 
 
 /** Cast methods for converting raw data to Obj or Tpl
   */
-private[molecule] trait CastTypes extends CastAggr {
+private[molecule] trait CastTypes extends Helpers {
 
   // One ===========================================================================================
 

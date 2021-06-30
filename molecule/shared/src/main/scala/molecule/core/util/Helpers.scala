@@ -4,6 +4,8 @@ import java.net.URI
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.{Date, UUID}
+import molecule.core.ast.elements.{Atom, Bond, Model}
+import molecule.core.exceptions.MoleculeException
 import molecule.datomic.base.facade.TxReport
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -98,6 +100,13 @@ trait Helpers extends DateHandling {
       case t: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => Seq(t._1, t._2, t._3, t._4, t._5, t._6, t._7, t._8, t._9, t._10, t._11, t._12, t._13, t._14, t._15, t._16, t._17, t._18, t._19, t._20, t._21, t._22)
     }
     case a          => Seq(a)
+  }
+
+  def firstNs(model: Model): String = model.elements.head match {
+    case Atom(nsFull, _, _, _, _, _, _, _) => nsFull
+    case Bond(nsFull, _, _, _, _)          => nsFull
+    case other                             =>
+      throw MoleculeException("Unexpected first model element: " + other)
   }
 
 

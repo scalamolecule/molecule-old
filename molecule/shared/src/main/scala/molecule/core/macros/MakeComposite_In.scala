@@ -1,6 +1,6 @@
 package molecule.core.macros
 
-import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.macros.lambdaTrees.LambdaCastAggr
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
@@ -18,7 +18,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
       genericImports, model0,
       typess, castss, jsonss,
       indexes, obj,
-      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes

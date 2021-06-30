@@ -1,10 +1,11 @@
 package molecule.core.macros
 
 import molecule.core.macros.qr.CastArrays
+import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
 
-trait BuildBase extends CastArrays {
+trait BuildBase extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._
@@ -17,7 +18,7 @@ trait BuildBase extends CastArrays {
     prop: String,
     tpe: Tree,
     cast: Int => Tree,
-    json: Int => Tree,
+    json: (Int, Int) => Tree,
     optAggrTpe: Option[String] = None
   ) extends Node {
     override def toString: String = {

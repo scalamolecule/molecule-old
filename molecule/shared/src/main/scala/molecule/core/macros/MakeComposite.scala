@@ -1,6 +1,6 @@
 package molecule.core.macros
 
-import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.macros.lambdaTrees.LambdaCastAggr
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
@@ -13,9 +13,9 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-//    override val z = InspectMacro("MakeComposite", 1, 9, mkError = true)
-//  override val z = InspectMacro("MakeComposite", 1, 9)
-   override val z = InspectMacro("MakeComposite", 9, 8)
+//    val z = InspectMacro("MakeComposite", 1, 9, mkError = true)
+//  val z = InspectMacro("MakeComposite", 1, 9)
+   val z = InspectMacro("MakeComposite", 9, 8)
 
 
   private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -23,7 +23,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       genericImports, model0,
       typess, castss, jsonss,
       indexes, obj,
-      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes

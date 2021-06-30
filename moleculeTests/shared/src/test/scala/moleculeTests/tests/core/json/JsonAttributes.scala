@@ -144,7 +144,7 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.doubles insert Set(1.1, 2.2)
         _ <- Ns.bools insert Set(true, false)
         _ <- Ns.dates insert Set(date1, date2)
-        _ <- Ns.uuids insert Set(uuid1)
+        _ <- Ns.uuids insert Set(uuid1, uuid2)
         _ <- Ns.uris insert Set(uri1, uri2)
         _ <- Ns.enums insert Set(enum1, enum2)
         _ <- Ns.bigInts insert Set(bigInt1, bigInt2)
@@ -155,7 +155,11 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "strs": ["", "a", "b"]
+            |        "strs": [
+            |          "",
+            |          "a",
+            |          "b"
+            |        ]
             |      }
             |    ]
             |  }
@@ -166,7 +170,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "ints": [1, 2]
+            |        "ints": [
+            |          1,
+            |          2
+            |        ]
             |      }
             |    ]
             |  }
@@ -177,7 +184,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "longs": [1, 2]
+            |        "longs": [
+            |          1,
+            |          2
+            |        ]
             |      }
             |    ]
             |  }
@@ -189,7 +199,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "doubles": [1.1, 2.2]
+            |        "doubles": [
+            |          1.1,
+            |          2.2
+            |        ]
             |      }
             |    ]
             |  }
@@ -200,7 +213,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "bools": [true, false]
+            |        "bools": [
+            |          true,
+            |          false
+            |        ]
             |      }
             |    ]
             |  }
@@ -211,7 +227,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "dates": ["2001-07-01", "2002-01-01"]
+            |        "dates": [
+            |          "2001-07-01",
+            |          "2002-01-01"
+            |        ]
             |      }
             |    ]
             |  }
@@ -222,7 +241,9 @@ object JsonAttributes extends AsyncTestSuite {
              |  "data": {
              |    "Ns": [
              |      {
-             |        "uuids": ["$uuid1"]
+             |        "uuids": [
+             |          "$uuid1"
+             |        ]
              |      }
              |    ]
              |  }
@@ -306,7 +327,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "strMap": {"b": "B", "a": "A"}
+            |        "strMap": {
+            |          "b": "B",
+            |          "a": "A"
+            |        }
             |      }
             |    ]
             |  }
@@ -317,7 +341,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "intMap": {"b": 2, "a": 1}
+            |        "intMap": {
+            |          "b": 2,
+            |          "a": 1
+            |        }
             |      }
             |    ]
             |  }

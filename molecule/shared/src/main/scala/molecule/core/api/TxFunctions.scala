@@ -143,7 +143,7 @@ object TxFunctions extends Helpers with JavaUtil {
 
   def txFnException(e: Throwable): String = "Unexpected error when invoking transaction function:\n" + e.getCause
 
-  val redundant = "molecule.core.macros.exception.TxFnException: ".length
+  val redundant = "molecule.core.exceptions.TxFnException: ".length
 
 
   /** Invoke transaction function call synchronously (blocks)

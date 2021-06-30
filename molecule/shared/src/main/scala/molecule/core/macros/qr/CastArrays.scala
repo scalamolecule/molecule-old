@@ -1,10 +1,11 @@
 package molecule.core.macros.qr
 
 import molecule.core.macros.MakeOptNested
-import molecule.core.macros.trees.LambdaCastTypes
+import molecule.core.macros.lambdaTrees.LambdaCastTypes
+import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-private[molecule] trait CastArrays extends MakeOptNested {
+private[molecule] trait CastArrays extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._

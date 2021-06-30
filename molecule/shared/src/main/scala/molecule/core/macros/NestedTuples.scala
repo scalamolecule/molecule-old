@@ -57,11 +57,11 @@ trait NestedTuples[Obj, OuterTpl]
   protected var acc6: List[Any]      = List.empty[Any]
   protected var acc7: List[Any]      = List.empty[Any]
 
-  protected var subsequentRow: Boolean = false
-  protected var i                      = 0
-  protected var sortIndex              = 0
-  protected var result                 = 0
-  protected var descending             = true
+  protected var nextRow: Boolean = false
+  protected var i                = 0
+  protected var sortIndex        = 0
+  protected var result           = 0
+  protected var descending       = true
 
   protected def resetCastVars: Unit = {
     p0 = 0L
@@ -91,7 +91,7 @@ trait NestedTuples[Obj, OuterTpl]
 
     // Traverse backwards through rows
     descending = true
-    subsequentRow = false
+    nextRow = false
     i = 0
   }
 
@@ -161,7 +161,7 @@ object NestedTuples {
             row = it.next
             e0 = row.get(0).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc0 = castBranch0(prevRow, acc1) :: acc0
@@ -184,7 +184,7 @@ object NestedTuples {
               }
             } else {
               acc1 = List(castLeaf1(row))
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -229,7 +229,7 @@ object NestedTuples {
             e0 = row.get(0).asInstanceOf[jLong]
             e1 = row.get(1).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc1 = castBranch1(prevRow, acc2) :: acc1
@@ -269,7 +269,7 @@ object NestedTuples {
               }
             } else {
               acc2 = List(castLeaf2(row))
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -316,7 +316,7 @@ object NestedTuples {
             e1 = row.get(1).asInstanceOf[jLong]
             e2 = row.get(2).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc2 = castBranch2(prevRow, acc3) :: acc2
@@ -378,7 +378,7 @@ object NestedTuples {
               }
             } else {
               acc3 = List(castLeaf3(row))
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -429,7 +429,7 @@ object NestedTuples {
             e2 = row.get(2).asInstanceOf[jLong]
             e3 = row.get(3).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc3 = castBranch3(prevRow, acc4) :: acc3
@@ -518,7 +518,7 @@ object NestedTuples {
               }
             } else {
               acc4 = List(castLeaf4(row))
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -572,7 +572,7 @@ object NestedTuples {
             e3 = row.get(3).asInstanceOf[jLong]
             e4 = row.get(4).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc4 = castBranch4(prevRow, acc5) :: acc4
@@ -693,7 +693,7 @@ object NestedTuples {
               }
             } else {
               acc5 = List(castLeaf5(row))
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -750,7 +750,7 @@ object NestedTuples {
             e4 = row.get(4).asInstanceOf[jLong]
             e5 = row.get(5).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc5 = castBranch5(prevRow, acc6) :: acc5
@@ -908,7 +908,7 @@ object NestedTuples {
               }
             } else {
               acc6 = List(castLeaf6(row))
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row
@@ -968,7 +968,7 @@ object NestedTuples {
             e5 = row.get(5).asInstanceOf[jLong]
             e6 = row.get(6).asInstanceOf[jLong]
 
-            if (subsequentRow) {
+            if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc6 = castBranch6(prevRow, acc7) :: acc6
@@ -1168,7 +1168,7 @@ object NestedTuples {
               }
             } else {
               acc7 = List(castLeaf7(row))
-              subsequentRow = true
+              nextRow = true
             }
 
             prevRow = row

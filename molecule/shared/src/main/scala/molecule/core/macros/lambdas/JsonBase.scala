@@ -1,4 +1,4 @@
-package molecule.core.macros.impls
+package molecule.core.macros.lambdas
 
 import molecule.core.util.Helpers
 
@@ -73,4 +73,21 @@ private[molecule] trait JsonBase extends Helpers {
     sb.append(": ")
     sb.append(value)
   }
+
+  protected def jsonAnyValue(sb: StringBuilder, v: Any): StringBuilder = v match {
+    case value: String         => quote(sb, value)
+    case value: Int            => sb.append(value)
+    case value: Float          => sb.append(value)
+    case value: Boolean        => sb.append(value)
+    case value: Long           => sb.append(value)
+    case value: Double         => sb.append(value)
+    case value: java.util.Date => quote(sb, date2str(value))
+    case value: java.util.UUID => quote(sb, value.toString)
+    case value: java.net.URI   => quote(sb, value.toString)
+    case value: BigInt         => sb.append(value)
+    case value: BigDecimal     => sb.append(value)
+    case valueOfUnknownType    => quote(sb, valueOfUnknownType.toString)
+  }
+
+  def indent(level: Int): String = "\n" + "  " * (4 + level)
 }

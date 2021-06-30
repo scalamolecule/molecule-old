@@ -1,116 +1,195 @@
 package molecule.core.macros
 
-import molecule.core.macros.qr.CastArrays
 import scala.reflect.macros.blackbox
 
 
-trait BuildJson extends BuildObj {
+trait BuildJson extends BuildBase {
   val c: blackbox.Context
 
   import c.universe._
 
   lazy override val p = InspectMacro("BuildJson", 1, 900)
 
-
-  def jsonCode(obj: Obj, i0: Int = -1, isNested: Boolean = false): (Tree, Int) = {
+  def jsonCode(obj: Obj, i0: Int = -1, isNested: Boolean = false, level: Int = 0): (Tree, Int) = {
     // Property index of row/tuple
-    var i = if (isNested && i0 == -1) -1 else i0
+    var i       = if (isNested && i0 == -1) -1 else i0
+    val newLine = q"""sb.append(","); sb.append(indent($level))"""
 
     def properties(nodes: List[Node]): List[Tree] = {
-      var propNames = List.empty[String]
-      val propDefs  = nodes.flatMap {
-        case Prop(_, prop, tpe, _, json, optAggr) =>
-          i += 1
-          // Only generate 1 property, even if attribute is repeated in molecule
-          if (!propNames.contains(prop)) {
-            propNames = propNames :+ prop
-            optAggr match {
-              case None if isNested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($i).asInstanceOf[$tpe]")
-              case None             => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${json(i)}")
+      var next = false
+      var fieldNames = List.empty[String]
+      if (isNested) {
+        nodes.flatMap { node =>
+          val nl    = if (next) Seq(newLine) else Nil
+          val trees = node match {
+            case Prop(_, fieldName, tpe, _, json, optAggr) =>
+              i += 1
+              val field = Seq(q"""quote(sb, $fieldName)""", q"""sb.append(": ")""")
+              // Only generate 1 property, even if attribute is repeated in molecule
+              if (fieldNames.contains(fieldName)) Nil else {
+                fieldNames = fieldNames :+ fieldName
+                nl ++ (optAggr match {
+                  case None                                       => field :+ valueFromTpl(i, tpe, level)
+                  case Some(aggrTpe) if aggrTpe == tpe.toString() => field :+ valueFromTpl(i, tpe, level)
+                  case Some(aggrTpe)                              => aggrErr(fieldName, aggrTpe)
+                })
+              }
 
-              case Some(aggrTpe) if aggrTpe == tpe.toString() =>
-                if (isNested)
-                  Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($i).asInstanceOf[$tpe]")
-                else
-                  Some(q"final override lazy val ${TermName(prop)}: $tpe = ${json(i)}")
+            case o@Obj(_, _, 2, props) =>
+              i += 1
+              val productTpe = if (props.length == 1) {
+                props.head match {
+                  case Prop(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
+                  case Obj(_, _, _, _)          => tq"Tuple1[Product]"
+                }
+              } else {
+                tq"Product"
+              }
+              Seq(q"tpl.productElement($i).asInstanceOf[Seq[$productTpe]].map( tpl => ${jsonCode(o, -1, isNested, level + 1)._1} )")
 
-              case Some(aggrTpe) =>
-                val err = s"""Object property `$prop` not available since the aggregate changes its type to `$aggrTpe`. Please use tuple output instead to access aggregate value."""
-                Some(q"""final override lazy val ${TermName(prop)}: $tpe = throw MoleculeException($err)""")
-            }
-          } else None
-
-        case o@Obj(_, ref, 2, props) =>
-          i += 1
-          val productTpe = if (props.length == 1) {
-            props.head match {
-              case Prop(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
-              case Obj(_, _, _, _)          => tq"Tuple1[Product]"
-            }
-          } else {
-            tq"Product"
+            case o: Obj =>
+              val (subObj, j) = jsonCode(o, i, isNested, level + 1)
+              i = j
+              Seq(subObj)
           }
-          val subObj     = q"tpl.productElement($i).asInstanceOf[Seq[$productTpe]].map( tpl => ${jsonCode(o, -1, isNested)._1} )"
-          classes(props) match {
-            case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init] = $subObj")
-            case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Seq[Init with $a] = $subObj")
-            case List(a, b)                                                             => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b] = $subObj")
-            case List(a, b, c)                                                          => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c] = $subObj")
-            case List(a, b, c, d)                                                       => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d] = $subObj")
-            case List(a, b, c, d, e)                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e] = $subObj")
-            case List(a, b, c, d, e, f)                                                 => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f] = $subObj")
-            case List(a, b, c, d, e, f, g)                                              => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g] = $subObj")
-            case List(a, b, c, d, e, f, g, h)                                           => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i)                                        => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j)                                     => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k)                                  => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l)                               => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m)                            => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n)                         => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)                      => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)                   => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)                => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)             => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)          => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)       => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)    => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u with $v] = $subObj")
-            case _                                                                      => None
-          }
+          next = true
+          trees
+        }
 
-        case o@Obj(_, ref, _, props) =>
-          val (subObj, j) = jsonCode(o, i, isNested)
-          i = j
-          classes(props) match {
-            case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Init = $subObj")
-            case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Init with $a = $subObj")
-            case List(a, b)                                                             => Some(q"final override def ${TermName(ref)}: Init with $a with $b = $subObj")
-            case List(a, b, c)                                                          => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c = $subObj")
-            case List(a, b, c, d)                                                       => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d = $subObj")
-            case List(a, b, c, d, e)                                                    => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e = $subObj")
-            case List(a, b, c, d, e, f)                                                 => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f = $subObj")
-            case List(a, b, c, d, e, f, g)                                              => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g = $subObj")
-            case List(a, b, c, d, e, f, g, h)                                           => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h = $subObj")
-            case List(a, b, c, d, e, f, g, h, i)                                        => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j)                                     => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k)                                  => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l)                               => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m)                            => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n)                         => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)                      => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)                   => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)                => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)             => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)          => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)       => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)    => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u with $v = $subObj")
-            case _                                                                      => None
+      } else {
+
+        nodes.flatMap { node =>
+          val nl         = if (next) Seq(newLine) else Nil
+          val trees      = node match {
+            case Prop(_, fieldName, tpe, _, json, optAggr) =>
+              i += 1
+              // Only generate 1 property, even if attribute is repeated in molecule
+              if (fieldNames.contains(fieldName)) Nil else {
+                fieldNames = fieldNames :+ fieldName
+                nl ++ (optAggr match {
+                  case None                                       => Seq(json(i, level))
+                  case Some(aggrTpe) if aggrTpe == tpe.toString() => Seq(json(i, level))
+                  case Some(aggrTpe)                              => aggrErr(fieldName, aggrTpe)
+                })
+              }
+
+            case o@Obj(_, ref, 2, props) =>
+              i += 1
+              val productTpe = if (props.length == 1) {
+                props.head match {
+                  case Prop(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
+                  case Obj(_, _, _, _)          => tq"Tuple1[Product]"
+                }
+              } else {
+                tq"Product"
+              }
+              nl ++ Seq(
+                q"""
+                   quote(sb, $ref)
+                   sb.append(": {")
+                   sb.append(indent(${level + 1}))
+                   tpl.productElement($i).asInstanceOf[Seq[$productTpe]].map( tpl => ${jsonCode(o, -1, isNested, level + 1)._1} )
+                   sb.append(indent($level))
+                   sb.append("}")
+                   """
+              )
+
+            case o@Obj(_, ref, _, _) =>
+              val (subObj, j) = jsonCode(o, i, isNested, level + 1)
+              i = j
+              nl ++ Seq(
+                q"""
+                   quote(sb, $ref)
+                   sb.append(": {")
+                   sb.append(indent(${level + 1}))
+                   $subObj
+                   sb.append(indent($level))
+                   sb.append("}")
+                   """
+              )
           }
+          next = true
+          trees
+        }
       }
-      propDefs
     }
 
+    def aggrErr(fieldName: String, aggrTpe: String) = abort(
+      s"Field `$fieldName` not available since the aggregate changes its type to `$aggrTpe`. " +
+        s"Please use tuple output instead to access aggregate value."
+    )
+
+    def valueFromTpl(i: Int, tpe: Tree, level: Int): Tree = {
+      val v = q"""tpl.productElement($i).asInstanceOf[$tpe]"""
+      tpe.toString match {
+        case "String"     => q"quote(sb, $v)"
+        case "Int"        => q"sb.append($v)"
+        case "Long"       => q"sb.append($v)"
+        case "Double"     => q"sb.append($v)"
+        case "Boolean"    => q"sb.append($v)"
+        case "Date"       => q"quote(sb, date2str($v))"
+        case "UUID"       => q"quote(sb, $v)"
+        case "URI"        => q"quote(sb, $v)"
+        case "BigInt"     => q"quote(sb, $v)"
+        case "BigDecimal" => q"quote(sb, $v)"
+        case "Any"        => q"jsonAnyValue(sb, $v)"
+
+        case "Option[String]"     => q"jsonOptOneQuoted(sb, $v)"
+        case "Option[Int]"        => q"jsonOptOne(sb, $v)"
+        case "Option[Long]"       => q"jsonOptOne(sb, $v)"
+        case "Option[Double]"     => q"jsonOptOne(sb, $v)"
+        case "Option[Boolean]"    => q"jsonOptOne(sb, $v)"
+        case "Option[Date]"       => q"jsonOptOneDate(sb, $v)"
+        case "Option[UUID]"       => q"jsonOptOne(sb, $v)"
+        case "Option[URI]"        => q"jsonOptOne(sb, $v)"
+        case "Option[BigInt]"     => q"jsonOptOne(sb, $v)"
+        case "Option[BigDecimal]" => q"jsonOptOne(sb, $v)"
+
+        case "Set[String]"     => q"jsonSetQuoted(sb, $v, $level)"
+        case "Set[Int]"        => q"jsonSet(sb, $v, $level)"
+        case "Set[Long]"       => q"jsonSet(sb, $v, $level)"
+        case "Set[Double]"     => q"jsonSet(sb, $v, $level)"
+        case "Set[Boolean]"    => q"jsonSet(sb, $v, $level)"
+        case "Set[Date]"       => q"jsonSetDate(sb, $v, $level)"
+        case "Set[UUID]"       => q"jsonSet(sb, $v, $level)"
+        case "Set[URI]"        => q"jsonSet(sb, $v, $level)"
+        case "Set[BigInt]"     => q"jsonSet(sb, $v, $level)"
+        case "Set[BigDecimal]" => q"jsonSet(sb, $v, $level)"
+
+        case "Option[Set[String]]"     => q"jsonOptSetQuoted(sb, $v, $level)"
+        case "Option[Set[Int]]"        => q"jsonOptSet(sb, $v, $level)"
+        case "Option[Set[Long]]"       => q"jsonOptSet(sb, $v, $level)"
+        case "Option[Set[Double]]"     => q"jsonOptSet(sb, $v, $level)"
+        case "Option[Set[Boolean]]"    => q"jsonOptSet(sb, $v, $level)"
+        case "Option[Set[Date]]"       => q"jsonOptSetDate(sb, $v, $level)"
+        case "Option[Set[UUID]]"       => q"jsonOptSet(sb, $v, $level)"
+        case "Option[Set[URI]]"        => q"jsonOptSet(sb, $v, $level)"
+        case "Option[Set[BigInt]]"     => q"jsonOptSet(sb, $v, $level)"
+        case "Option[Set[BigDecimal]]" => q"jsonOptSet(sb, $v, $level)"
+
+        case "Map[String, String]"     => q"jsonMapQuoted(sb, $v, $level)"
+        case "Map[String, Int]"        => q"jsonMap(sb, $v, $level)"
+        case "Map[String, Long]"       => q"jsonMap(sb, $v, $level)"
+        case "Map[String, Double]"     => q"jsonMap(sb, $v, $level)"
+        case "Map[String, Boolean]"    => q"jsonMap(sb, $v, $level)"
+        case "Map[String, Date]"       => q"jsonMapDate(sb, $v, $level)"
+        case "Map[String, UUID]"       => q"jsonMap(sb, $v, $level)"
+        case "Map[String, URI]"        => q"jsonMap(sb, $v, $level)"
+        case "Map[String, BigInt]"     => q"jsonMap(sb, $v, $level)"
+        case "Map[String, BigDecimal]" => q"jsonMap(sb, $v, $level)"
+
+        case "Option[Map[String, String]]"     => q"jsonOptMapQuoted(sb, $v, $level)"
+        case "Option[Map[String, Int]]"        => q"jsonOptMap(sb, $v, $level)"
+        case "Option[Map[String, Long]]"       => q"jsonOptMap(sb, $v, $level)"
+        case "Option[Map[String, Double]]"     => q"jsonOptMap(sb, $v, $level)"
+        case "Option[Map[String, Boolean]]"    => q"jsonOptMap(sb, $v, $level)"
+        case "Option[Map[String, Date]]"       => q"jsonOptMapDate(sb, $v, $level)"
+        case "Option[Map[String, UUID]]"       => q"jsonOptMap(sb, $v, $level)"
+        case "Option[Map[String, URI]]"        => q"jsonOptMap(sb, $v, $level)"
+        case "Option[Map[String, BigInt]]"     => q"jsonOptMap(sb, $v, $level)"
+        case "Option[Map[String, BigDecimal]]" => q"jsonOptMap(sb, $v, $level)"
+      }
+    }
 
     val tree = if (hasSameNss(obj)) {
       q"""throw MoleculeException(

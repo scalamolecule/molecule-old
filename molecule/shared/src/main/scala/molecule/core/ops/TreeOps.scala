@@ -18,19 +18,12 @@ private[molecule] trait TreeOps extends Liftables {
 
   def firstLow(str: Any): String = str.toString.head.toLower.toString + str.toString.tail
 
-  def clean(attr: String): String = attr.last match {
-    case '_' => attr.init
-    case '$' => attr.init
-    case _   => attr
-  }
-
   def truncTpe(tpe: String): String = tpe match {
     case "java.util.Date" => "Date"
     case "java.util.UUID" => "UUID"
     case "java.net.URI"   => "URI"
     case other            => other
   }
-
 
   // (castIndex, arrayType) for looking up
   // - cast lambda array index in CastLamdas and

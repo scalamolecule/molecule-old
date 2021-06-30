@@ -2,10 +2,11 @@ package molecule.core.macros
 
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeCompileException
+import molecule.core.util.Helpers
 import scala.reflect.macros.blackbox
 import scala.util.matching
 
-private[molecule] trait MacroHelpers {
+private[molecule] trait MacroHelpers extends Helpers {
   val c: blackbox.Context
 
   import c.universe._
@@ -31,10 +32,6 @@ private[molecule] trait MacroHelpers {
     val tr   : String            = s"${e.getClassName}   ${e.getMethodName}   line ${e.getLineNumber}"
     val stack: String            = if (inspect) Seq("----------", tree.raw, "----------", tr, "----------") ++ Thread.currentThread.getStackTrace mkString "\n" else ""
     throw MoleculeCompileException(s"$msg:\n$tree \n$stack")
-  }
-
-  implicit class Regex(sc: StringContext) {
-    def r: matching.Regex = new scala.util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
 
   protected case class InspectMacro(

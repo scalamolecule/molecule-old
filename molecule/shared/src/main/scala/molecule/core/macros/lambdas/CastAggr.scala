@@ -1,8 +1,9 @@
-package molecule.core.macros.impls
+package molecule.core.macros.lambdas
 
 import java.lang.{Long => jLong}
 import java.net.URI
 import java.util.{List => jList, Set => jSet}
+import molecule.core.util.Helpers
 
 /** Core molecule interface defining actions that can be called on molecules.
   *
@@ -10,7 +11,7 @@ import java.util.{List => jList, Set => jSet}
   * variating cases. But we prioritize minimizing the macro-generated code as much as possible
   * to lower compile time overhead.
   */
-private[molecule] trait CastAggr extends CastOptNested {
+private[molecule] trait CastAggr extends Helpers {
 
   // One List --------------------------------------
 

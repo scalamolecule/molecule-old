@@ -1,7 +1,7 @@
 package moleculeTests.jvm.core.transaction
 
 import molecule.core.macros.TxFns
-import molecule.core.macros.exception.TxFnException
+import molecule.core.exceptions.TxFnException
 import molecule.datomic.api.out3._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn

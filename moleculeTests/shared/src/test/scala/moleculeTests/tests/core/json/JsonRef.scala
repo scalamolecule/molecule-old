@@ -12,38 +12,245 @@ object JsonRef extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "Ref / ref attr" - core { implicit conn =>
+    "Ref card 1" - core { implicit conn =>
       for {
-        // Creating 3 entities referencing 3 other entities
-        tx <- Ns.str.Ref1.str1 insert List(
-          ("a0", "a1"),
-          ("b0", "b1"),
-          ("c0", "c1")
-        )
-        List(a0, a1, b0, b1, c0, c1) = tx.eids
+        _ <- Ns.str.Ref1.int1 insert List(("a", 1), ("b", 2))
 
-        // Get attribute values from 2 namespaces
-        // Namespace references like `Ref1` starts with Capital letter
-        _ <- Ns.str.Ref1.str1.getJson.map(_ ==>
+        _ <- Ns.str.Ref1.int1.getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a0"
+            |        "str": "a"
             |        "Ref1": {
-            |          "str1": "a1"
+            |          "int1": 1
             |        }
             |      },
             |      {
-            |        "str": "b0"
+            |        "str": "b"
             |        "Ref1": {
-            |          "str1": "b1"
+            |          "int1": 2
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+      } yield ()
+    }
+
+
+    "Ref card 2" - core { implicit conn =>
+      for {
+        _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(
+          ("a", List(1)),
+          ("b", List(2, 3))
+        )
+
+        // Flat
+        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1
             |        }
             |      },
             |      {
-            |        "str": "c0"
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 2
+            |        }
+            |      },
+            |      {
+            |        "str": "b"
+            |        "Refs1": {
+            |          "int1": 3
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        // Nested
+        _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          },
+            |          {
+            |            "int1": 3
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+      } yield ()
+    }
+
+
+    "Ref card 2" - core { implicit conn =>
+      for {
+        _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(
+          ("a", List(1)),
+          ("b", List(2, 3))
+        )
+
+        // Flat
+        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1
+            |        "Refs1": {
+            |          "str1": "a"
+            |        }
+            |      },
+            |      {
+            |        "int": 2
+            |        "Refs1": {
+            |          "str1": "b"
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a"
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b"
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          },
+            |          {
+            |            "int1": 3
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+      } yield ()
+    }
+
+
+    "Nested, 2 levels" - core { implicit conn =>
+      for {
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)) insert List(
+          (
+            "a",
+            List(
+              (1, List(10)
+              )
+            )
+          ),
+          (
+            "b",
+            List(
+              (2, List(20)),
+              (3, List(30, 31))
+            )
+          )
+        )
+
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1,
+            |            "Refs2": [
+            |              {
+            |                "int2": 10
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2,
+            |            "Refs2": [
+            |              {
+            |                "int2": 20
+            |              }
+            |            ]
+            |          },
+            |          {
+            |            "int1": 3,
+            |            "Refs2": [
+            |              {
+            |                "int2": 30
+            |              },
+            |              {
+            |                "int2": 31
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+      } yield ()
+    }
+
+
+    "Ref / ref attr" - core { implicit conn =>
+      for {
+        List(_, refA, _, refB) <- Ns.int.Ref1.str1 insert List(
+          (1, "a"),
+          (2, "b")
+        ) map(_.eids)
+
+        // Ref namespace
+        _ <- Ns.int.Ref1.str1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1
             |        "Ref1": {
-            |          "str1": "c1"
+            |          "str1": "a"
+            |        }
+            |      },
+            |      {
+            |        "int": 2
+            |        "Ref1": {
+            |          "str1": "b"
             |        }
             |      }
             |    ]
@@ -51,23 +258,18 @@ object JsonRef extends AsyncTestSuite {
             |}""".stripMargin)
 
 
-        // We can also retrieve the referenced entity id
-        // Referenced entity id `ref1` starts with lower case letter
+        // Ref attr
         _ <- Ns.str.ref1.getJson.map(_ ==>
           s"""{
              |  "data": {
              |    "Ns": [
              |      {
-             |        "str": "a0"
-             |        "ref1": $a1
+             |        "int": 1
+             |        "ref1": $refA
              |      },
              |      {
-             |        "str": "b0"
-             |        "ref1": $b1
-             |      },
-             |      {
-             |        "str": "c0"
-             |        "ref1": $c1
+             |        "int": 2
+             |        "ref1": $refB
              |      }
              |    ]
              |  }

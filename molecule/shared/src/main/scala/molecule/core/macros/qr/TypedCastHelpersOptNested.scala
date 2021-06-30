@@ -4,16 +4,16 @@ import java.lang.{Double => jDouble, Long => jLong}
 import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
 import java.net.URI
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap}
-import molecule.core.macros.impls.CastOptNested
+import molecule.core.macros.lambdas.CastOptNested
 import molecule.core.util.Helpers
 
-/** Core molecule interface defining actions that can be called on molecules.
+/** Core molecule interface override defining actions that can be called on molecules.
   *
   * Generally we could often have made higher-order methods taking a casting function for
   * variating cases. But we prioritize minimizing the macro-generated code as much as possible
   * to lower compile time overhead.
   */
-trait TypedCastHelpersOptNested extends Helpers { self: CastOptNested =>
+trait TypedCastHelpersOptNested extends CastOptNested with Helpers { 
 
   // card one
 

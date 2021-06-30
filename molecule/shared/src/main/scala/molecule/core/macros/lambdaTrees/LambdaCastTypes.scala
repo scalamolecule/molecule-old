@@ -1,8 +1,9 @@
-package molecule.core.macros.trees
+package molecule.core.macros.lambdaTrees
 
+import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-private[molecule] trait LambdaCastTypes extends LambdaCastAggr {
+private[molecule] trait LambdaCastTypes extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._
@@ -116,7 +117,7 @@ private[molecule] trait LambdaCastTypes extends LambdaCastAggr {
     (colIndex: Int) => q"castMany[String](row, $colIndex)"
   }
 
-  val castEnumOpt: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
+  val castOptEnum: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
     ii = (12, 10)
     (colIndex: Int) => q"castOptOneEnum(row, $colIndex)"
   } else {

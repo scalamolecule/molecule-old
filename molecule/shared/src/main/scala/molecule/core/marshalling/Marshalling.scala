@@ -4,7 +4,7 @@ import java.util.{UUID, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
 import molecule.core.macros.qr.CastArrays
-import molecule.core.util.DateHandling
+import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
 
 
@@ -15,7 +15,7 @@ import molecule.datomic.base.ast.query.Query
 abstract class Marshalling[Obj, Tpl](
   model: Model,
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
-) extends Molecule(model, queryData) with DateHandling {
+) extends Molecule(model, queryData) with Helpers {
 
   /** Indexes to resolve marshalling for each attribute value in a row:
     *
@@ -30,8 +30,7 @@ abstract class Marshalling[Obj, Tpl](
 
   // JVM ......................
 
-  // Macro-materialized row-to-json engine used by `molecule.api.Molecule.getJsonFlat`
-  // Adds row as json to a mutable StringBuilder for fast build-up.
+  /** Adds row as json to a mutable StringBuilder for fast build-up. */
   protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
 
 

@@ -1,4 +1,4 @@
-package molecule.core.macros.impls
+package molecule.core.macros.lambdas
 
 import java.lang.{Double => jDouble, Long => jLong}
 import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}

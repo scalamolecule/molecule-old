@@ -18,7 +18,7 @@
 //    var following = false
 //    rows.forEach { row =>
 //      if (following)
-//        buf.append("\n ") // Indentation for subsequent clauses to align all
+//        buf.append("\n ") // Indentation for next clauses to align all
 //      else
 //        following = true
 //      addRow(row)

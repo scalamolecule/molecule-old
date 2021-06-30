@@ -1,6 +1,6 @@
 package molecule.core.macros
 
-import molecule.core.macros.trees.LambdaCastAggr
+import molecule.core.macros.lambdaTrees.LambdaCastAggr
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
@@ -11,9 +11,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //  override val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-    override val z = InspectMacro("MakeMolecule", 2, 8)
-//  override val z = InspectMacro("MakeMolecule", 9, 7)
+  //   val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
+//     val z = InspectMacro("MakeMolecule", 2, 8)
+   val z = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -21,7 +21,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       genericImports, model0,
       typess, castss, jsonss,
       indexes0, obj,
-      nestedRefAttrs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes
@@ -30,11 +30,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     val imports              = getImports(genericImports)
     val OutMoleculeTpe: Tree = molecule_o(TplTypes.size)
     val outMolecule          = TypeName(c.freshName("outMolecule$"))
-
-    lazy val tpl = if (TplTypes.length == 1)
-      q"val tpl: Product = Tuple1(row2tpl(row))"
-    else
-      q"val tpl: Product = row2tpl(row)"
 
     def resolveIndexes(nestedLevels: Int) = {
       val indexes           = if (nestedLevels == 0) indexes0 else {
@@ -92,8 +87,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
           final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {..${topLevelJson(jsonss)}}
+          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ${jsonCode(obj)._1}
         """
+//          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {..${topLevelJson(jsonss)}}
       }
 
       if (hasVariables) {
@@ -113,6 +109,12 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     }
 
     def mkOptNested = {
+
+      lazy val tpl = if (TplTypes.length == 1)
+        q"lazy val tpl: Product = Tuple1(row2tpl(row))"
+      else
+        q"lazy val tpl: Product = row2tpl(row)"
+
       if (hasVariables) {
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
@@ -156,12 +158,18 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         """
       } else q""
 
+
+      lazy val tpl = if (TplTypes.length == 1)
+        q"lazy val tpl: Product = Tuple1(tpl0)"
+      else
+        q"lazy val tpl: Product = tpl0"
+
       val resolvers =
         q"""
           ..$jsResolvers
           ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-          ..${resolveNestedJsonMethods(jsonss, nestedRefAttrs, postJsons).get}
-          final override def outerTpl2obj(tpl: (..$TplTypes)): $ObjType = {
+          ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
+          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
             $tpl
             ${objCode(obj, isNested = true)._1}
           }
@@ -215,9 +223,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     val t =
       q"""
-        ..$imports
-        ..$moleculeClass
-        new $outMolecule
+        {
+          ..$imports
+          ..$moleculeClass
+          new $outMolecule
+        }
       """
 
     z(7, t, obj)

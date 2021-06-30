@@ -2,7 +2,7 @@ package molecule.core.api
 
 import molecule.core.ast.elements._
 import molecule.core.macros.MakeMoleculeDynamic
-import molecule.core.macros.impls.{CastTypes, JsonTypes}
+import molecule.core.macros.lambdas.{CastTypes, JsonTypes}
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.VerifyModel

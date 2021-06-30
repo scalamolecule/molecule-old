@@ -1,6 +1,6 @@
 package molecule.core.macros
 
-import molecule.core.macros.trees.LambdaCastOptNested
+import molecule.core.macros.lambdaTrees.LambdaCastOptNested
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 

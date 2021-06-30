@@ -1,10 +1,10 @@
-package molecule.core.macros.impls
+package molecule.core.macros.lambdas
 
 import java.lang.{Long => jLong}
 import java.util.{Date, List => jList, Map => jMap, Set => jSet}
 
 
-private[molecule] trait JsonTypes extends JsonAggr {
+private[molecule] trait JsonTypes extends JsonBase {
 
   // One ===========================================================================================
 
@@ -42,51 +42,59 @@ private[molecule] trait JsonTypes extends JsonAggr {
 
   // Many ===========================================================================================
 
-  protected def jsonManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     quote(sb, field)
     sb.append(": [")
-    var subsequent = false
+    var next = false
     val it         = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (it.hasNext) {
-      if (subsequent) sb.append(", ") else subsequent = true
+      if (next) sb.append(",") else next = true
+      sb.append(indent(level + 1))
       quote(sb, it.next.toString)
     }
+    if (next) sb.append(indent(level))
     sb.append("]")
   }
 
-  protected def jsonMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     quote(sb, field)
     sb.append(": [")
-    var subsequent = false
+    var next = false
     val it         = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (it.hasNext) {
-      if (subsequent) sb.append(", ") else subsequent = true
+      if (next) sb.append(",") else next = true
+      sb.append(indent(level + 1))
       sb.append(it.next)
     }
+    if (next) sb.append(indent(level))
     sb.append("]")
   }
 
-  protected def jsonManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     quote(sb, field)
     sb.append(": [")
-    var subsequent = false
+    var next = false
     val it         = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (it.hasNext) {
-      if (subsequent) sb.append(", ") else subsequent = true
+      if (next) sb.append(",") else next = true
+      sb.append(indent(level + 1))
       sb.append(it.next.toString)
     }
+    if (next) sb.append(indent(level))
     sb.append("]")
   }
 
-  protected def jsonManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     quote(sb, field)
     sb.append(": [")
-    var subsequent = false
+    var next = false
     val it         = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (it.hasNext) {
-      if (subsequent) sb.append(", ") else subsequent = true
+      if (next) sb.append(",") else next = true
+      sb.append(indent(level + 1))
       quote(sb, date2str(it.next.asInstanceOf[Date]))
     }
+    if (next) sb.append(indent(level))
     sb.append("]")
   }
 
@@ -170,70 +178,78 @@ private[molecule] trait JsonTypes extends JsonAggr {
 
   // Optional card many ===========================================================================================
 
-  protected def jsonOptManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         quote(sb, it.next.toString)
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
 
-  protected def jsonOptMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         sb.append(it.next)
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
 
-  protected def jsonOptManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         sb.append(it.next.toString)
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
 
-  protected def jsonOptManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         quote(sb, date2str(it.next.asInstanceOf[Date]))
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
@@ -241,70 +257,78 @@ private[molecule] trait JsonTypes extends JsonAggr {
   // ------------------------------
 
 
-  protected def jsonOptApplyManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jSet[_]].iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         quote(sb, it.next.toString)
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
 
-  protected def jsonOptApplyMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jSet[_]].iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         sb.append(it.next)
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
 
-  protected def jsonOptApplyManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jSet[_]].iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         sb.append(it.next.toString)
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
 
-  protected def jsonOptApplyManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jSet[_]].iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         quote(sb, date2str(it.next.asInstanceOf[Date]))
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
@@ -330,19 +354,20 @@ private[molecule] trait JsonTypes extends JsonAggr {
     }
   }
 
-  protected def jsonOptManyRefAttr(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptManyRefAttr(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-      var set        = Set.empty[Long]
-      // Hack to avoid looking up map by clojure Keyword - there must be a better way...
+      // Hack to avoid looking up map by clojure Keyword (not available on JS platform)
+      // - there must be a better way...
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         var done = false
         it.next.asInstanceOf[jMap[_, _]].forEach {
           case _ if done                        =>
@@ -352,7 +377,18 @@ private[molecule] trait JsonTypes extends JsonAggr {
           case _                                =>
         }
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
+
+//      sb.append("Ref1: [")
+//      sb.append(indent(level + 1))
+//      sb.append("Ref1: {")
+//      sb.append(indent(level + 1))
+//      sb.append("}")
+//
+//      sb.append("Ref1: {")
+//      sb.append(indent(level + 1))
+//      sb.append("}")
     }
   }
 
@@ -371,19 +407,21 @@ private[molecule] trait JsonTypes extends JsonAggr {
     }
   }
 
-  protected def jsonOptManyEnum(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptManyEnum(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": [")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         quote(sb, getKwName(it.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
       }
+      if (next) sb.append(indent(level))
       sb.append("]")
     }
   }
@@ -391,122 +429,134 @@ private[molecule] trait JsonTypes extends JsonAggr {
 
   // Map ===========================================================================================
 
-  protected def jsonMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     quote(sb, field)
     sb.append(": {")
-    var subsequent = false
+    var next = false
     val it         = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     var pair       = new Array[String](2)
     while (it.hasNext) {
-      if (subsequent) sb.append(", ") else subsequent = true
+      if (next) sb.append(",") else next = true
+      sb.append(indent(level + 1))
       pair = it.next.toString.split("@", 2)
       quote(sb, pair(0))
       sb.append(": ")
       quote(sb, pair(1))
     }
+    if (next) sb.append(indent(level))
     sb.append("}")
   }
 
-  protected def jsonMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     quote(sb, field)
     sb.append(": {")
-    var subsequent = false
+    var next = false
     val it         = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     var pair       = new Array[String](2)
     while (it.hasNext) {
-      if (subsequent) sb.append(", ") else subsequent = true
+      if (next) sb.append(",") else next = true
+      sb.append(indent(level + 1))
       pair = it.next.toString.split("@", 2)
       quote(sb, pair(0))
       sb.append(": ")
       sb.append(pair(1))
     }
+    if (next) sb.append(indent(level))
     sb.append("}")
   }
 
   // Optional Map ===========================================================================================
 
-  protected def jsonOptMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": {")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
       var pair       = new Array[String](2)
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         pair = it.next.toString.split("@", 2)
         quote(sb, pair(0))
         sb.append(": ")
         quote(sb, pair(1))
       }
+      if (next) sb.append(indent(level))
       sb.append("}")
     }
   }
 
-  protected def jsonOptMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": {")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
       var pair       = new Array[String](2)
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         pair = it.next.toString.split("@", 2)
         quote(sb, pair(0))
         sb.append(": ")
         sb.append(pair(1))
       }
+      if (next) sb.append(indent(level))
       sb.append("}")
     }
   }
 
   // Optional Map apply ===========================================================================================
 
-  protected def jsonOptApplyMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": {")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jSet[_]].iterator
       var pair       = new Array[String](2)
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         pair = it.next.toString.split("@", 2)
         quote(sb, pair(0))
         sb.append(": ")
         quote(sb, pair(1))
       }
+      if (next) sb.append(indent(level))
       sb.append("}")
     }
   }
 
-  protected def jsonOptApplyMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, level: Int): StringBuilder = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
     } else {
       quote(sb, field)
       sb.append(": {")
-      var subsequent = false
+      var next = false
       val it         = value.asInstanceOf[jSet[_]].iterator
       var pair       = new Array[String](2)
       while (it.hasNext) {
-        if (subsequent) sb.append(", ") else subsequent = true
+        if (next) sb.append(",") else next = true
+        sb.append(indent(level + 1))
         pair = it.next.toString.split("@", 2)
         quote(sb, pair(0))
         sb.append(": ")
         sb.append(pair(1))
       }
+      if (next) sb.append(indent(level))
       sb.append("}")
     }
   }
