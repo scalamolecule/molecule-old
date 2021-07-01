@@ -5,6 +5,7 @@ import molecule.datomic.api.out11._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.tests.core.json.JsonRef.core
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -14,7 +15,7 @@ object JsonNested extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "1 nested attr" - core { implicit conn =>
+    "Nested, 1 level" - core { implicit conn =>
       for {
         _ <- Ns.str.Refs1 * Ref1.int1 insert List(
           ("a", List(1)),
@@ -79,14 +80,91 @@ object JsonNested extends AsyncTestSuite {
     }
 
 
+    "Nested, 2 levels" - core { implicit conn =>
+      for {
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)) insert List(
+          (
+            "a",
+            List(
+              (1, List(10)
+              )
+            )
+          ),
+          (
+            "b",
+            List(
+              (2, List(20)),
+              (3, List(30, 31))
+            )
+          )
+        )
+
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1,
+            |            "Refs2": [
+            |              {
+            |                "int2": 10
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2,
+            |            "Refs2": [
+            |              {
+            |                "int2": 20
+            |              }
+            |            ]
+            |          },
+            |          {
+            |            "int1": 3,
+            |            "Refs2": [
+            |              {
+            |                "int2": 30
+            |              },
+            |              {
+            |                "int2": 31
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+      } yield ()
+    }
+
+
     "Nested enum after ref" - core { implicit conn =>
       for {
         _ <- m(Ns.str.Refs1 * Ref1.enum1) insert List(("a", List("enum11")))
         _ <- m(Ns.str.Refs1 * Ref1.enum1).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ns.refs1": [
-            |   {"Ref1.enum1": "enum11"}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1: [
+            |          {
+            |            "enum1": "enum11"
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -99,21 +177,61 @@ object JsonNested extends AsyncTestSuite {
 
 
         _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ns.refs1": [
-            |   {"ref2.Ref2.int2": 12}]},
-            |{"Ns.str": "b", "Ns.refs1": [
-            |   {"ref2.Ref2.int2": 22}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": [
+            |          {
+            |            "Ref2": {
+            |              "int2": 12
+            |            }
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b", 
+            |        "Refs1": [
+            |          {
+            |            "Ref2": {
+            |              "int2": 22
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         // We can omit tacit attribute between Ref1 and Ref2
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ns.refs1": [
-            |   {"ref2.Ref2.int2": 12}]},
-            |{"Ns.str": "b", "Ns.refs1": [
-            |   {"ref2.Ref2.int2": 22}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1: [
+            |          {
+            |            "Ref2": {
+            |              "int2": 12
+            |            }
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b", 
+            |        "Refs1: [
+            |          {
+            |            "Ref2": {
+            |              "int2": 22
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -125,13 +243,37 @@ object JsonNested extends AsyncTestSuite {
           ("b", List(30))
         )
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ns.refs1": [
-            |   {"ref2.Ref2.int2": 10},
-            |   {"ref2.Ref2.int2": 20}]},
-            |{"Ns.str": "b", "Ns.refs1": [
-            |   {"ref2.Ref2.int2": 30}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": [
+            |          {
+            |            "Ref2": {
+            |              "int2": 10
+            |            }
+            |          },
+            |          {
+            |            "Ref2": {
+            |              "int2": 20
+            |            }
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b", 
+            |        "Refs1: [
+            |          {
+            |            "Ref2": {
+            |              "int2": 30
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -144,13 +286,70 @@ object JsonNested extends AsyncTestSuite {
         )
 
         _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ns.refs1": [
-            |   {"Ref1.int1": 1, "ref2.Ref2.int2": 10},
-            |   {"Ref1.int1": null, "ref2.Ref2.int2": 20}]},
-            |{"Ns.str": "b", "Ns.refs1": [
-            |   {"Ref1.int1": 3, "ref2.Ref2.int2": 30}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1: [
+            |          {
+            |            "int1": 1,
+            |            "Ref2": {
+            |              "int2": 10
+            |            }
+            |          },
+            |          {
+            |            "int1": null,
+            |            "Ref2": {
+            |              "int2": 20
+            |            }
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b", 
+            |        "Refs1: [
+            |          {
+            |            "int1": 3,
+            |            "Ref2": {
+            |              "int2": 30
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}
+            |{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1,
+            |            "int2": 10
+            |          },
+            |          {
+            |            "int1": null,
+            |            "int2": 20
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": [
+            |          {
+            |            "int1": 3,
+            |            "int2": 30
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}
+            |
+            |""".stripMargin)
       } yield ()
     }
 
@@ -163,22 +362,68 @@ object JsonNested extends AsyncTestSuite {
         )
 
         _ <- m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "refs1.Ref1.int1": 2, "Ref1.refs2": [
-            |   {"Ref2.int2": 20}]},
-            |{"Ns.str": "b", "refs1.Ref1.int1": null, "Ref1.refs2": [
-            |   {"Ref2.int2": 10},
-            |   {"Ref2.int2": 11}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": {
+            |          "int1": 2,
+            |          "Refs2": [
+            |            {
+            |              "int2": 20
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": null,
+            |          "Refs2": [
+            |            {
+            |              "int2": 10
+            |            },
+            |            {
+            |              "int2": 11
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ref1.refs2": [
-            |   {"Ref2.int2": 20}]},
-            |{"Ns.str": "b", "Ref1.refs2": [
-            |   {"Ref2.int2": 10},
-            |   {"Ref2.int2": 11}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Ref1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 20
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "b", 
+            |        "Ref1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 10
+            |            },
+            |            {
+            |              "int2": 11
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -188,16 +433,41 @@ object JsonNested extends AsyncTestSuite {
         _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.int2) insert List(("a", 1, List(2)))
 
         _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "ref1.Ref1.int1": 1, "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ns.str.Ref1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Ref1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -207,10 +477,26 @@ object JsonNested extends AsyncTestSuite {
         _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2) insert List(("a", 1, List(Set(2, 3))))
 
         _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "ref1.Ref1.int1": 1, "Ref1.refs2": [
-            |   {"Ref2.ints2": [3, 2]}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "ints2": [
+            |                3,
+            |                2
+            |              ]
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -220,16 +506,41 @@ object JsonNested extends AsyncTestSuite {
         _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2) insert List(("a", 1, List(2)))
 
         _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "refs1.Ref1.int1": 1, "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Ref1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -239,33 +550,93 @@ object JsonNested extends AsyncTestSuite {
         _ <- Ns.str.Refs1.int1.Refs2.int2.insert("a", 1, 2)
 
         _ <- Ns.str.Refs1.int1.Refs2.int2.getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "refs1.Ref1.int1": 1, "refs2.Ref2.int2": 2}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "refs1.Ref1.int1": 1, "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ns.str_("a").Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"refs1.Ref1.int1": 1, "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs2": [
+            |          {
+            |            "int2": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ns.str_("a").Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -279,14 +650,46 @@ object JsonNested extends AsyncTestSuite {
         )
 
         _ <- m(Ns.str.Refs1.int1.str1.Refs2 * Ref2.int2.str2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "refs1.Ref1.int1": 1, "refs1.Ref1.str1": "x", "Ref1.refs2": [
-            |   {"Ref2.int2": 11, "Ref2.str2": "xx"},
-            |   {"Ref2.int2": 12, "Ref2.str2": "xxx"}]},
-            |{"Ns.str": "a", "refs1.Ref1.int1": 2, "refs1.Ref1.str1": "y", "Ref1.refs2": [
-            |   {"Ref2.int2": 21, "Ref2.str2": "yy"},
-            |   {"Ref2.int2": 22, "Ref2.str2": "yyy"}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "str1": "x",
+            |          "Refs2": [
+            |            {
+            |              "int2": 11,
+            |              "str2": "xx"
+            |            },
+            |            {
+            |              "int2": 12,
+            |              "str2": "xxx"
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 2,
+            |          "str1": "y",
+            |          "Refs2": [
+            |            {
+            |              "int2": 21,
+            |              "str2": "yy"
+            |            },
+            |            {
+            |              "int2": 22,
+            |              "str2": "yyy"
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -296,10 +699,22 @@ object JsonNested extends AsyncTestSuite {
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2) insert List(("a", List(2)))
 
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ref1.refs2": [
-            |   {"Ref2.int2": 2}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -317,22 +732,66 @@ object JsonNested extends AsyncTestSuite {
 
         // Fully nested
         _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
-          """[
-            |{"Ns.str": "a", "Ns.refs1": [
-            |   {"Ref1.int1": 1, "Ref1.refs2": [
-            |      {"Ref2.int2": 11},
-            |      {"Ref2.int2": 12}]},
-            |   {"Ref1.int1": 2, "Ref1.refs2": [
-            |      {"Ref2.int2": 21},
-            |      {"Ref2.int2": 22}]}]},
-            |{"Ns.str": "b", "Ns.refs1": [
-            |   {"Ref1.int1": 3, "Ref1.refs2": [
-            |      {"Ref2.int2": 31},
-            |      {"Ref2.int2": 32}]},
-            |   {"Ref1.int1": 4, "Ref1.refs2": [
-            |      {"Ref2.int2": 41},
-            |      {"Ref2.int2": 42}]}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a", 
+            |        "Refs1: [
+            |          {
+            |            "int1": 1,
+            |            "Refs2": [
+            |              {
+            |                "int2": 11
+            |              },
+            |              {
+            |                "int2": 12
+            |              }
+            |            ]
+            |          },
+            |          {
+            |            "int1": 2,
+            |            "Refs2": [
+            |              {
+            |                "int2": 21
+            |              },
+            |              {
+            |                "int2": 22
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b", 
+            |        "Refs1: [
+            |          {
+            |            "int1": 3,
+            |            "Refs2": [
+            |              {
+            |                "int2": 31
+            |              },
+            |              {
+            |                "int2": 32
+            |              }
+            |            ]
+            |          },
+            |          {
+            |            "int1": 4,
+            |            "Refs2": [
+            |              {
+            |                "int2": 41
+            |              },
+            |              {
+            |                "int2": 42
+            |              }
+            |            ]
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
 
         // Ordering only stable with Peer
@@ -340,115 +799,244 @@ object JsonNested extends AsyncTestSuite {
           for {
             // Semi-nested A
             _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.int2).getJson.map(_ ==>
-              """[
-                |{"Ns.str": "a", "Ns.refs1": [
+              """{
+                |  "data": {
+                |    "Ns": [
+                |      {
+                |        "str": "a", 
+                |        "Refs1: [
                 |   {"Ref1.int1": 1, "refs2.Ref2.int2": 11},
                 |   {"Ref1.int1": 1, "refs2.Ref2.int2": 12},
                 |   {"Ref1.int1": 2, "refs2.Ref2.int2": 22},
-                |   {"Ref1.int1": 2, "refs2.Ref2.int2": 21}]},
-                |{"Ns.str": "b", "Ns.refs1": [
+                |   {"Ref1.int1": 2, "refs2.Ref2.int2": 21
+                |            }
+                |          }
+                |        ]
+                |      },
+                |      {
+                |        "str": "b",
+                |        "Refs1: [
                 |   {"Ref1.int1": 3, "refs2.Ref2.int2": 32},
                 |   {"Ref1.int1": 3, "refs2.Ref2.int2": 31},
                 |   {"Ref1.int1": 4, "refs2.Ref2.int2": 41},
-                |   {"Ref1.int1": 4, "refs2.Ref2.int2": 42}]}
-                |]""".stripMargin)
+                |   {"Ref1.int1": 4, "refs2.Ref2.int2": 42
+                |            }
+                |          }
+                |        ]
+                |      }
+                |    ]
+                |  }
+                |}""".stripMargin)
 
             // Semi-nested A without intermediary attr `int1`
             _ <- Ns.str.Refs1.*(Ref1.Refs2.int2).getJson.map(_ ==>
-              """[
-                |{"Ns.str": "a", "Ns.refs1": [
+              """{
+                |  "data": {
+                |    "Ns": [
+                |      {
+                |        "str": "a", 
+                |        "Refs1: [
                 |   {"refs2.Ref2.int2": 11},
                 |   {"refs2.Ref2.int2": 12},
                 |   {"refs2.Ref2.int2": 22},
-                |   {"refs2.Ref2.int2": 21}]},
-                |{"Ns.str": "b", "Ns.refs1": [
+                |   {"refs2.Ref2.int2": 21
+                |            }
+                |          }
+                |        ]
+                |      },
+                |      {
+                |        "str": "b",
+                |        "Refs1: [
                 |   {"refs2.Ref2.int2": 31},
                 |   {"refs2.Ref2.int2": 32},
                 |   {"refs2.Ref2.int2": 41},
-                |   {"refs2.Ref2.int2": 42}]}
-                |]""".stripMargin)
+                |   {"refs2.Ref2.int2": 42
+                |            }
+                |          }
+                |        ]
+                |      }
+                |    ]
+                |  }
+                |}""".stripMargin)
 
 
             // Semi-nested B
             _ <- Ns.str.Refs1.int1.Refs2.*(Ref2.int2).getJson.map(_ ==>
-              """[
-                |{"Ns.str": "a", "refs1.Ref1.int1": 1, "Ref1.refs2": [
+              """{
+                |  "data": {
+                |    "Ns": [
+                |      {
+                |        "str": "a", 
+                |        "refs1.Ref1.int1": 1, "Ref1.refs2": [
                 |   {"Ref2.int2": 11},
-                |   {"Ref2.int2": 12}]},
-                |{"Ns.str": "a", "refs1.Ref1.int1": 2, "Ref1.refs2": [
+                |   {"Ref2.int2": 12
+                |            }
+                |          }
+                |        ]
+                |      },
+                |{"Ns.str": "a", 
+                |        "refs1.Ref1.int1": 2, "Ref1.refs2": [
                 |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22}]},
-                |{"Ns.str": "b", "refs1.Ref1.int1": 3, "Ref1.refs2": [
+                |   {"Ref2.int2": 22
+                |            }
+                |          }
+                |        ]
+                |      },
+                |      {
+                |        "str": "b",
+                |        "refs1.Ref1.int1": 3, "Ref1.refs2": [
                 |   {"Ref2.int2": 31},
-                |   {"Ref2.int2": 32}]},
-                |{"Ns.str": "b", "refs1.Ref1.int1": 4, "Ref1.refs2": [
+                |   {"Ref2.int2": 32
+                |            }
+                |          }
+                |        ]
+                |      },
+                |      {
+                |        "str": "b",
+                |        "refs1.Ref1.int1": 4, "Ref1.refs2": [
                 |   {"Ref2.int2": 41},
-                |   {"Ref2.int2": 42}]}
-                |]""".stripMargin)
+                |   {"Ref2.int2": 42
+                |            }
+                |          }
+                |        ]
+                |      }
+                |    ]
+                |  }
+                |}""".stripMargin)
 
 
             // Semi-nested B without intermediary attr `int1`
             _ <- Ns.str.Refs1.Refs2.*(Ref2.int2).getJson.map(_ ==>
-              """[
-                |{"Ns.str": "a", "Ref1.refs2": [
+              """{
+                |  "data": {
+                |    "Ns": [
+                |      {
+                |        "str": "a", 
+                |        "Ref1.refs2": [
                 |   {"Ref2.int2": 11},
                 |   {"Ref2.int2": 12},
                 |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22}]},
-                |{"Ns.str": "b", "Ref1.refs2": [
+                |   {"Ref2.int2": 22
+                |            }
+                |          }
+                |        ]
+                |      },
+                |      {
+                |        "str": "b",
+                |        "Ref1.refs2": [
                 |   {"Ref2.int2": 31},
                 |   {"Ref2.int2": 32},
                 |   {"Ref2.int2": 41},
-                |   {"Ref2.int2": 42}]}
-                |]""".stripMargin)
+                |   {"Ref2.int2": 42
+                |            }
+                |          }
+                |        ]
+                |      }
+                |    ]
+                |  }
+                |}""".stripMargin)
 
 
             // Tacit filter
             _ <- m(Ns.str_("a").Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
-              """[
+              """{
+                |  "data": {
+                |
                 |{"refs1.Ref1.int1": 1, "Ref1.refs2": [
                 |   {"Ref2.int2": 11},
-                |   {"Ref2.int2": 12}]},
+                |   {"Ref2.int2": 12
+                |            }
+                |          }
+                |        ]
+                |      },
                 |{"refs1.Ref1.int1": 2, "Ref1.refs2": [
                 |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22}]}
-                |]""".stripMargin)
+                |   {"Ref2.int2": 22
+                |            }
+                |          }
+                |        ]
+                |      }
+                |    ]
+                |  }
+                |}""".stripMargin)
 
             // Tacit filters
             _ <- m(Ns.str_("a").Refs1.int1_(2).Refs2 * Ref2.int2).getJson.map(_ ==>
-              """[
+              """{
+                |  "data": {
+                |
                 |{"Ref1.refs2": [
                 |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22}]}
-                |]""".stripMargin)
+                |   {"Ref2.int2": 22
+                |            }
+                |          }
+                |        ]
+                |      }
+                |    ]
+                |  }
+                |}""".stripMargin)
 
 
             // Flat
             _ <- m(Ns.str.Refs1.int1.Refs2.int2).getJson.map(_ ==>
-              """[
-                |{"Ns.str": "a", "refs1.Ref1.int1": 2, "refs2.Ref2.int2": 21},
-                |{"Ns.str": "a", "refs1.Ref1.int1": 2, "refs2.Ref2.int2": 22},
-                |{"Ns.str": "b", "refs1.Ref1.int1": 4, "refs2.Ref2.int2": 42},
-                |{"Ns.str": "b", "refs1.Ref1.int1": 4, "refs2.Ref2.int2": 41},
-                |{"Ns.str": "a", "refs1.Ref1.int1": 1, "refs2.Ref2.int2": 12},
-                |{"Ns.str": "a", "refs1.Ref1.int1": 1, "refs2.Ref2.int2": 11},
-                |{"Ns.str": "b", "refs1.Ref1.int1": 3, "refs2.Ref2.int2": 31},
-                |{"Ns.str": "b", "refs1.Ref1.int1": 3, "refs2.Ref2.int2": 32}
-                |]""".stripMargin)
+              """{
+                |  "data": {
+                |    "Ns": [
+                |      {
+                |        "str": "a", 
+                |        "refs1.Ref1.int1": 2, "refs2.Ref2.int2": 21},
+                |{"Ns.str": "a", 
+                |        "refs1.Ref1.int1": 2, "refs2.Ref2.int2": 22},
+                |      {
+                |        "str": "b",
+                |        "refs1.Ref1.int1": 4, "refs2.Ref2.int2": 42},
+                |      {
+                |        "str": "b",
+                |        "refs1.Ref1.int1": 4, "refs2.Ref2.int2": 41},
+                |{"Ns.str": "a", 
+                |        "refs1.Ref1.int1": 1, "refs2.Ref2.int2": 12},
+                |{"Ns.str": "a", 
+                |        "refs1.Ref1.int1": 1, "refs2.Ref2.int2": 11},
+                |      {
+                |        "str": "b",
+                |        "refs1.Ref1.int1": 3, "refs2.Ref2.int2": 31},
+                |      {
+                |        "str": "b",
+                |        "refs1.Ref1.int1": 3, "refs2.Ref2.int2": 32}
+                |    ]
+                |  }
+                |}""".stripMargin)
 
 
             // Flat without intermediary attr `int1`
             res <- m(Ns.str.Refs1.Refs2.int2).getJson.map(_ ==>
-              """[
-                |{"Ns.str": "a", "refs2.Ref2.int2": 21},
-                |{"Ns.str": "a", "refs2.Ref2.int2": 22},
-                |{"Ns.str": "b", "refs2.Ref2.int2": 41},
-                |{"Ns.str": "b", "refs2.Ref2.int2": 42},
-                |{"Ns.str": "a", "refs2.Ref2.int2": 11},
-                |{"Ns.str": "a", "refs2.Ref2.int2": 12},
-                |{"Ns.str": "b", "refs2.Ref2.int2": 31},
-                |{"Ns.str": "b", "refs2.Ref2.int2": 32}
-                |]""".stripMargin)
+              """{
+                |  "data": {
+                |    "Ns": [
+                |      {
+                |        "str": "a", 
+                |        "refs2.Ref2.int2": 21},
+                |{"Ns.str": "a", 
+                |        "refs2.Ref2.int2": 22},
+                |      {
+                |        "str": "b",
+                |        "refs2.Ref2.int2": 41},
+                |      {
+                |        "str": "b",
+                |        "refs2.Ref2.int2": 42},
+                |{"Ns.str": "a", 
+                |        "refs2.Ref2.int2": 11},
+                |{"Ns.str": "a", 
+                |        "refs2.Ref2.int2": 12},
+                |      {
+                |        "str": "b",
+                |        "refs2.Ref2.int2": 31},
+                |      {
+                |        "str": "b",
+                |        "refs2.Ref2.int2": 32}
+                |    ]
+                |  }
+                |}""".stripMargin)
           } yield res
         } else Future.unit
       } yield ()
@@ -462,15 +1050,32 @@ object JsonNested extends AsyncTestSuite {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1) insert List(("book", "John", List("Marc")))
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).getJson.map(_ ==>
-            """[
-              |{"Ns.str": "book", "ref1.Ref1.str1": "John", "Ns.refs1": [
-              |   {"Ref1.str1": "Marc"}]}
-              |]""".stripMargin)
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "str": "book", 
+              |        "ref1.Ref1.str1": "John", 
+              |        "Refs1: [
+              |   {"Ref1.str1": "Marc"
+              |            }
+              |          }
+              |        ]
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin)
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1).getJson.map(_ ==>
-            """[
-              |{"Ns.str": "book", "ref1.Ref1.str1": "John", "refs1.Ref1.str1": "Marc"}
-              |]""".stripMargin)
+            """{
+              |  "data": {
+              |
+              |{"Ns.str": "book", 
+              |        "ref1.Ref1.str1": "John", 
+              |        "refs1.Ref1.str1": "Marc"}
+              |    ]
+              |  }
+              |}""".stripMargin)
         } yield ()
       }
 
@@ -479,15 +1084,34 @@ object JsonNested extends AsyncTestSuite {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2) insert List(("book", "John", List(("Marc", "Musician"))))
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2).getJson.map(_ ==>
-            """[
-              |{"Ns.str": "book", "ref1.Ref1.str1": "John", "Ns.refs1": [
-              |   {"Ref1.str1": "Marc", "refs2.Ref2.str2": "Musician"}]}
-              |]""".stripMargin)
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "str": "book", 
+              |        "ref1.Ref1.str1": "John", 
+              |        "Refs1: [
+              |   {"Ref1.str1": "Marc", 
+              |        "refs2.Ref2.str2": "Musician"
+              |            }
+              |          }
+              |        ]
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin)
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).getJson.map(_ ==>
-            """[
-              |{"Ns.str": "book", "ref1.Ref1.str1": "John", "refs1.Ref1.str1": "Marc", "refs2.Ref2.str2": "Musician"}
-              |]""".stripMargin)
+            """{
+              |  "data": {
+              |
+              |{"Ns.str": "book", 
+              |        "ref1.Ref1.str1": "John", 
+              |        "refs1.Ref1.str1": "Marc", 
+              |        "refs2.Ref2.str2": "Musician"}
+              |    ]
+              |  }
+              |}""".stripMargin)
         } yield ()
       }
 
@@ -496,16 +1120,36 @@ object JsonNested extends AsyncTestSuite {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)) insert List(("book", "John", List(("Marc", List("Musician")))))
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)).getJson.map(_ ==>
-            """[
-              |{"Ns.str": "book", "ref1.Ref1.str1": "John", "Ns.refs1": [
-              |   {"Ref1.str1": "Marc", "Ref1.refs2": [
-              |      {"Ref2.str2": "Musician"}]}]}
-              |]""".stripMargin)
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "str": "book", 
+              |        "ref1.Ref1.str1": "John", 
+              |        "Refs1: [
+              |   {"Ref1.str1": "Marc", 
+              |        "Ref1.refs2": [
+              |      {"Ref2.str2": "Musician"
+              |            }
+              |          }
+              |        ]
+              |      }]}
+              |    ]
+              |  }
+              |}""".stripMargin)
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).getJson.map(_ ==>
-            """[
-              |{"Ns.str": "book", "ref1.Ref1.str1": "John", "refs1.Ref1.str1": "Marc", "refs2.Ref2.str2": "Musician"}
-              |]""".stripMargin)
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "str": "book", 
+              |        "ref1.Ref1.str1": "John", 
+              |        "refs1.Ref1.str1": "Marc", 
+              |        "refs2.Ref2.str2": "Musician"}
+              |    ]
+              |  }
+              |}""".stripMargin)
         } yield ()
       }
     }
@@ -515,11 +1159,20 @@ object JsonNested extends AsyncTestSuite {
       for {
         eid <- Ns.str.Refs1.*(Ref1.int1).insert("a", List(1, 2)).map(_.eid)
         _ <- Ns(eid).Refs1.*(Ref1.int1).getJson.map(_ ==>
-          """[
-            |{"Ns.refs1": [
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "refs1": [
             |   {"Ref1.int1": 1},
-            |   {"Ref1.int1": 2}]}
-            |]""".stripMargin)
+            |   {"Ref1.int1": 2
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -529,18 +1182,44 @@ object JsonNested extends AsyncTestSuite {
         _ <- Ns.int.str.Refs1.*(Ref1.int1).insert(1, "a", Seq(11, 12))
 
         _ <- Ns.int.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          """[
-            |{"Ns.int": 1, "Ns.str": "a", "Ns.refs1": [
-            |   {"Ref1.int1": 11},
-            |   {"Ref1.int1": 12}]}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "str": "a",
+            |        "Refs1: [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int.Refs1.*(Ref1.int1).str.getJson.map(_ ==>
-          """[
-            |{"Ns.int": 1, "Ns.refs1": [
-            |   {"Ref1.int1": 11},
-            |   {"Ref1.int1": 12}], "Ns.str": "a"}
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Refs1: [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ],
+            |        "str": "a"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -560,25 +1239,48 @@ object JsonNested extends AsyncTestSuite {
 
         // Without Ns
         _ <- Ref1.str1.Refs2.*(Ref2.str2).getJson.map(_ ==>
-          """[
-            |{"Ref1.str1": "r1a", "Ref1.refs2": [
+          """{
+            |  "data": {
+            |
+            |{"Ref1.str1": "r1a", 
+            |        "Ref1.refs2": [
             |   {"Ref2.str2": "r2a"},
-            |   {"Ref2.str2": "r2b"}]},
-            |{"Ref1.str1": "r1b", "Ref1.refs2": [
+            |   {"Ref2.str2": "r2b"
+            |            }
+            |          }
+            |        ]
+            |      },
+            |{"Ref1.str1": "r1b", 
+            |        "Ref1.refs2": [
             |   {"Ref2.str2": "r2c"},
-            |   {"Ref2.str2": "r2d"}]}
-            |]""".stripMargin)
+            |   {"Ref2.str2": "r2d"
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         // With Ns
         // "Implicit" reference from Ns to Ref1 (without any attributes) implies that
         // some Ns entity is referencing some Ref1 entity.
         // This excludes "r1b" since no Ns entities reference it.
         _ <- Ns.Refs1.str1.Refs2.*(Ref2.str2).getJson.map(_ ==>
-          """[
-            |{"refs1.Ref1.str1": "r1a", "Ref1.refs2": [
+          """{
+            |  "data": {
+            |
+            |{"refs1.Ref1.str1": "r1a", 
+            |        "Ref1.refs2": [
             |   {"Ref2.str2": "r2a"},
-            |   {"Ref2.str2": "r2b"}]}
-            |]""".stripMargin)
+            |   {"Ref2.str2": "r2b"
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
   }

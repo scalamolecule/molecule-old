@@ -256,31 +256,83 @@ private[molecule] trait Base extends Dsl2Model {
   }
 
   case class resolveNestedJsonMethods(
+    obj: Obj,
     jsonss: List[List[(Int, Int) => Tree]],
     nestedRef: List[String],
     postJsons: List[(Int, Int) => Tree]
   ) {
-    var fieldIndex = jsonss.size - 1
+
+    val objs: Seq[Obj] = {
+      def recurse(obj: Obj): Seq[Obj] = obj.props.foldLeft(Seq(obj.copy(props = Nil))) {
+        case (oo, p: Prop)           => oo.init :+ oo.last.copy(props = oo.last.props :+ p)
+        case (oo, o@Obj(_, _, 2, _)) => oo ++ recurse(o)
+        case (oo, o: Obj)            => recurse(o) match {
+          case Seq(o) => oo.init :+ oo.last.copy(props = oo.last.props :+ o)
+          case nested => (oo.init :+ oo.last.copy(props = oo.last.props :+ nested.head)) ++ nested.tail
+        }
+      }
+      recurse(obj)
+    }
+
+    //    w(1, objs.mkString("\n---\n"), jsonss)
+
+    //    var fieldIndex = jsonss.size - 1
+    var fieldIndex = objs.size - 1
 
     def branchPairs(level: Int): List[Tree] = {
-      var first = true
-      jsonss(level) match {
-        case Nil         => List(q"sb")
-        case jsonLambdas => jsonLambdas.flatMap { jsonLambda =>
-          fieldIndex += 1
-          if (first) {
-            first = false
-            List(jsonLambda(fieldIndex, level * 2))
+      def recurse(obj: Obj, lvl: Int): List[Tree] = {
+        var next = false
+        obj.props.flatMap { node =>
+          val nl = if (next) {
+            q"""sb.append(",")
+                sb.append(indent($lvl))
+             """
           } else {
-            List(
-              q"""sb.append(","); sb.append(indent(${level * 2}))""",
-              jsonLambda(fieldIndex, level)
+            next = true
+            q""
+          }
+          node match {
+            case p: Prop =>
+              fieldIndex += 1
+              Seq(nl, p.json(fieldIndex, lvl))
+
+            case o: Obj => Seq(
+              nl,
+              q"""
+                 quote(sb, ${o.ref})
+                 sb.append(": {")
+                 sb.append(indent(${lvl + 1}))
+                 ..${recurse(o, lvl + 1)}
+                 sb.append(indent($lvl))
+                 sb.append("}")
+               """
             )
           }
         }
       }
+      recurse(objs(level), level * 2)
     }
-//    println(nestedRef)
+
+    //    def branchPairsOLD(level: Int): List[Tree] = {
+    //      var first = true
+    //      jsonss(level) match {
+    //        case Nil         => List(q"sb")
+    //        case jsonLambdas => jsonLambdas.zipWithIndex.map { case (jsonLambda, i) =>
+    //          fieldIndex += 1
+    //          if (first) {
+    //            first = false
+    //            jsonLambda(fieldIndex, level * 2)
+    //          } else {
+    //            q"""sb.append(",")
+    //                sb.append(indent(${level * 2}))
+    //                ${jsonLambda(fieldIndex, level * 2)}
+    //             """
+    //          }
+    //        }
+    //      }
+    //    }
+
+    //    println(nestedRef)
     def branch0until(subLevels: () => Tree): Tree = if (postJsons.isEmpty) {
       q"""
          final override def jsonBranch0(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(0, sb, {..${branchPairs(0)}}, ${nestedRef.head}, leaf)
@@ -353,7 +405,8 @@ private[molecule] trait Base extends Dsl2Model {
          final override def jsonLeaf7(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(7, sb, {..${branchPairs(7)}})
        """
 
-    def get: Tree = jsonss.size match {
+    //    def get: Tree = jsonss.size match {
+    def get: Tree = objs.size match {
       case 2 => branch0until(level1)
       case 3 => branch0until(level2)
       case 4 => branch0until(level3)

@@ -162,73 +162,6 @@ object JsonRef extends AsyncTestSuite {
     }
 
 
-    "Nested, 2 levels" - core { implicit conn =>
-      for {
-        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)) insert List(
-          (
-            "a",
-            List(
-              (1, List(10)
-              )
-            )
-          ),
-          (
-            "b",
-            List(
-              (2, List(20)),
-              (3, List(30, 31))
-            )
-          )
-        )
-
-        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": [
-            |          {
-            |            "int1": 1,
-            |            "Refs2": [
-            |              {
-            |                "int2": 10
-            |              }
-            |            ]
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": [
-            |          {
-            |            "int1": 2,
-            |            "Refs2": [
-            |              {
-            |                "int2": 20
-            |              }
-            |            ]
-            |          },
-            |          {
-            |            "int1": 3,
-            |            "Refs2": [
-            |              {
-            |                "int2": 30
-            |              },
-            |              {
-            |                "int2": 31
-            |              }
-            |            ]
-            |          }
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-      } yield ()
-    }
-
-
     "Ref / ref attr" - core { implicit conn =>
       for {
         List(_, refA, _, refB) <- Ns.int.Ref1.str1 insert List(
@@ -287,84 +220,258 @@ object JsonRef extends AsyncTestSuite {
           .Refs1.int1(11)
           .save
 
-        _ <- Ns.int.Ref1.int1.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-        }
-        _ <- Ns.int.Ref1.int1._Ns.str.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.str ==> "a"
-        }
-        _ <- Ns.int.Ref1.int1._Ns.Refs1.int1.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.Refs1.int1 ==> 11
-        }
-        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.Ref1.Ref2.int2 ==> 2
-          o.Ref1.str1 ==> "b"
-        }
-        _ <- Ns.int.Ref1.Ref2.int2._Ref1.int1.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.Ref2.int2 ==> 2
-          o.Ref1.int1 ==> 1
-        }
-        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.Refs2.int2.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.Ref1.Ref2.int2 ==> 2
-          o.Ref1.Refs2.int2 ==> 22
-        }
-        _ <- Ns.int.Ref1.Ref2.int2._Ref1.Refs2.int2.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.Ref2.int2 ==> 2
-          o.Ref1.Refs2.int2 ==> 22
-        }
-        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1._Ns.str.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.Ref1.Ref2.int2 ==> 2
-          o.Ref1.str1 ==> "b"
-          o.str ==> "a"
-        }
-        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1._Ns.str.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.Ref1.Ref2.int2 ==> 2
-          o.str ==> "a"
-        }
-        _ <- Ns.int.Ref1.Ref2.int2._Ref1._Ns.str.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.Ref2.int2 ==> 2
-          o.str ==> "a"
-        }
-        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1._Ns.Refs1.int1.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.Ref1.Ref2.int2 ==> 2
-          o.Ref1.str1 ==> "b"
-          o.Refs1.int1 ==> 11
-        }
-        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1._Ns.Refs1.int1.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.int1 ==> 1
-          o.Ref1.Ref2.int2 ==> 2
-          o.Refs1.int1 ==> 11
-        }
-        _ <- Ns.int.Ref1.Ref2.int2._Ref1._Ns.Refs1.int1.getObj.map { o =>
-          o.int ==> 0
-          o.Ref1.Ref2.int2 ==> 2
-          o.Refs1.int1 ==> 11
-        }
-        _ <- Ns.Ref1.Ref2.int2._Ref1._Ns.Refs1.int1.getObj.map { o =>
-          o.Ref1.Ref2.int2 ==> 2
-          o.Refs1.int1 ==> 11
-        }
+        _ <- Ns.int.Ref1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1._Ns.str.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1
+            |        },
+            |        "str": "a"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1._Ns.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1
+            |        },
+            |        "Refs1": {
+            |          "int1": 11
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Ref2": {
+            |            "int2": 2
+            |          },
+            |          "str1": "b"
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.Ref2.int2._Ref1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "Ref2": {
+            |            "int2": 2
+            |          },
+            |          "int1": 1
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.Refs2.int2.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Ref2": {
+            |            "int2": 2
+            |          },
+            |          "Refs2": {
+            |            "int2": 22
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.Ref2.int2._Ref1.Refs2.int2.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "Ref2": {
+            |            "int2": 2
+            |          },
+            |          "Refs2": {
+            |            "int2": 22
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1._Ns.str.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Ref2": {
+            |            "int2": 2
+            |          },
+            |          "str1": "b"
+            |        },
+            |        "str": "a"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1._Ns.str.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Ref2": {
+            |            "int2": 2
+            |          }
+            |        },
+            |        "str": "a"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.Ref2.int2._Ref1._Ns.str.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "Ref2": {
+            |            "int2": 2
+            |          }
+            |        },
+            |        "str": "a"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1._Ns.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Ref2": {
+            |            "int2": 2
+            |          },
+            |          "str1": "b"
+            |        },
+            |        "Refs1": {
+            |          "int1": 11
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1._Ns.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "int1": 1,
+            |          "Ref2": {
+            |            "int2": 2
+            |          }
+            |        },
+            |        "Refs1": {
+            |          "int1": 11
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.Ref1.Ref2.int2._Ref1._Ns.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 0,
+            |        "Ref1": {
+            |          "Ref2": {
+            |            "int2": 2
+            |          }
+            |        },
+            |        "Refs1": {
+            |          "int1": 11
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.Ref1.Ref2.int2._Ref1._Ns.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "Ref1": {
+            |          "Ref2": {
+            |            "int2": 2
+            |          }
+            |        },
+            |        "Refs1": {
+            |          "int1": 11
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
   }
-
 }

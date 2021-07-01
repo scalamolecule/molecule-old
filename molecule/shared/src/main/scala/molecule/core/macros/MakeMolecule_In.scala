@@ -85,7 +85,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)]
               {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
+                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -137,7 +137,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
+                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -278,7 +278,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
+                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -313,7 +313,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
                 with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
                 ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
+                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }

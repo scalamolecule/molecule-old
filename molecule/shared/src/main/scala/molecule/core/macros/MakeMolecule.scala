@@ -12,8 +12,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-//     val z = InspectMacro("MakeMolecule", 2, 8)
-   val z = InspectMacro("MakeMolecule", 9, 7)
+     val z = InspectMacro("MakeMolecule", 2, 8)
+//   val z = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -168,11 +168,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"""
           ..$jsResolvers
           ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-          ..${resolveNestedJsonMethods(jsonss, nestedRefs, postJsons).get}
           final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
             $tpl
             ${objCode(obj, isNested = true)._1}
           }
+          ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
          """
 
       val nestedTupleClass = tq"${nestedJsonClassX(castss.size)}"
@@ -230,7 +230,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         }
       """
 
-    z(7, t, obj)
+    z(7
+      , t
+      , obj
+      , jsonss
+    )
     t
   }
 

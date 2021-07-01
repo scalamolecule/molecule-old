@@ -19,104 +19,12 @@ object Adhoc extends AsyncTestSuite {
         //        _ <- Future(1 ==> 1)
         _ <- Future(2 ==> 2)
 
-
-        //        _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(
-        //          ("a", List(1)),
-        //          ("b", List(2, 3))
-        //        )
-
-//        _ <- Ns.str.Refs1 * Ref1.int1 insert List(
-//          ("a", List(1)),
-//          ("b", List(2, 3))
-//        )
-//
-//        // Nested
-//        _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
-//          """{
-//            |  "data": {
-//            |    "Ns": [
-//            |      {
-//            |        "str": "a",
-//            |        "Refs1": [
-//            |          {
-//            |            "int1": 1
-//            |          }
-//            |        ]
-//            |      },
-//            |      {
-//            |        "str": "b",
-//            |        "Refs1": [
-//            |          {
-//            |            "int1": 2
-//            |          },
-//            |          {
-//            |            "int1": 3
-//            |          }
-//            |        ]
-//            |      }
-//            |    ]
-//            |  }
-//            |}""".stripMargin)
-
-        //        _ <- Ns.str.Refs1.*(Ref1.int1).getObjs.map { case List(o1, o2) =>
-        //          o1.str ==> "a"
-        //          val List(r1) = o1.Refs1
-        //          r1.int1 ==> 1
-        //
-        //          o2.str ==> "b"
-        //          val List(r2, r3) = o2.Refs1
-        //          r2.int1 ==> 2
-        //          r3.int1 ==> 3
-        //        }
-
-        //        // Flat
-        //        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
-        //          """{
-        //            |  "data": {
-        //            |    "Ns": [
-        //            |      {
-        //            |        "str": "a",
-        //            |        "Refs1": {
-        //            |          "int1": 1
-        //            |        }
-        //            |      },
-        //            |      {
-        //            |        "str": "b",
-        //            |        "Refs1": {
-        //            |          "int1": 2
-        //            |        }
-        //            |      },
-        //            |      {
-        //            |        "str": "b",
-        //            |        "Refs1": {
-        //            |          "int1": 3
-        //            |        }
-        //            |      }
-        //            |    ]
-        //            |  }
-        //            |}""".stripMargin)
-
-
-
-        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)) insert List(
-          (
-            "a",
-            List(
-              (1, List(10)
-              )
-            )
-          ),
-          (
-            "b",
-            List(
-              (2, List(20)),
-              (3, List(30, 31))
-            )
-          )
+        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2) insert List(
+          ("a", List((1, 10))),
+          ("b", List((3, 30)))
         )
 
-        // Nested
-        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
+        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
@@ -125,11 +33,9 @@ object Adhoc extends AsyncTestSuite {
             |        "Refs1": [
             |          {
             |            "int1": 1,
-            |            "Refs2": [
-            |              {
-            |                "int2": 10
-            |              }
-            |            ]
+            |            "Ref2": {
+            |              "int2": 10
+            |            }
             |          }
             |        ]
             |      },
@@ -137,23 +43,10 @@ object Adhoc extends AsyncTestSuite {
             |        "str": "b",
             |        "Refs1": [
             |          {
-            |            "int1": 2,
-            |            "Refs2": [
-            |              {
-            |                "int2": 20
-            |              }
-            |            ]
-            |          },
-            |          {
             |            "int1": 3,
-            |            "Refs2": [
-            |              {
-            |                "int2": 30
-            |              },
-            |              {
-            |                "int2": 31
-            |              }
-            |            ]
+            |            "Ref2": {
+            |              "int2": 30
+            |            }
             |          }
             |        ]
             |      }
@@ -162,644 +55,355 @@ object Adhoc extends AsyncTestSuite {
             |}""".stripMargin)
 
         /*
-{
-    "data": {
-      "Ns": [
-        {
-          "str": "a",
-          "Refs1": [
-            {
-              "int1": 1,
-              "Refs2": [
-                {
-                  "int2": 10
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "str": "b",
-          "Refs1": [
-            {
-              "int1": 2,
-              "Refs2": [
-                {
-                  "int2": 20
-                }
-              ]
-            },
-            {
-              "int1": 3,
-              "Refs2": [
-                {
-                  "int2": 30
-                },
-                {
-                  "int2": 31
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
+final override def jsonBranch0(
+  sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder
+): StringBuilder = branch(0, sb, jsonOneQuoted(sb, "str", row, 2), "Refs1", leaf);
+
+final override def jsonLeaf1(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(1, sb, {
+  jsonOne(sb, "int1", row, 3);
+  {
+    sb.append(",");
+    sb.append(indent(2));
+    jsonOne(sb, "int2", row, 4)
   }
+})
 
 
+final override def jsonBranch0(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(0, sb, jsonOneQuoted(sb, "str", row, 2), "Refs1", leaf);
+final override def jsonLeaf1(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(1, sb, {
+  <empty>;
+  jsonOne(sb, "int1", row, 3);
+  {
+    sb.append(",");
+    sb.append(indent(2))
+  };
+  {
+    quote(sb, "Ref2");
+    sb.append(": {");
+    sb.append(indent(1));
+    <empty>;
+    jsonOne(sb, "int2", row, 4);
+    sb.append(indent(1))
+  }
+})
+};
+
+Obj("", "Ns", 2, List(
+  Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None)))
+---
+Obj("Ns__Refs1", "Refs1", 2, List(
+  Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+  Obj("Ref1__Ref2", "Ref2", 1, List(
+    Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None)))))
+------------------------------------------------
+List(
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1258/1344378021@6edd2a41),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1254/1321777823@76edf444,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1254/1321777823@469c5b9))
+======================================================
          */
 
 
-        //        s"""{
-        //          |  "data": {
-        //          |    "${firstNs(_model)}": []
-        //          |  }
-        //          |}""".stripMargin)
-
-        //        _ <- Ns.int(1).str$.getJson.map(_ ==>
-        //          """{
-        //            |  "data": {
-        //            |    "Ns": [
-        //            |      {
-        //            |        "int": 1,
-        //            |        "str": null
-        //            |      },
-        //            |      {
-        //            |        "int": 1,
-        //            |        "str": ""
-        //            |      },
-        //            |      {
-        //            |        "int": 1,
-        //            |        "str": "c"
-        //            |      }
-        //            |    ]
-        //            |  }
-        //            |}""".stripMargin)
-
-        //        // Creating 3 entities referencing 3 other entities
-        //        tx <- Ns.str.Ref1.str1 insert List(
-        //          ("a0", "a1"),
-        //          ("b0", "b1"),
-        //          ("c0", "c1")
-        //        )
-        //        List(a0, a1, b0, b1, c0, c1) = tx.eids
-
-        // Get attribute values from 2 namespaces
-        // Namespace references like `Ref1` starts with Capital letter
-        //        _ <- Ns.str.Ref1.str1.get
-
-        //        _ <- Ns.str.Ref1.str1.getJson.map(_ ==>
-        //          """{
-        //            |  "data": {
-        //            |    "Ns": [
-        //            |      {
-        //            |        "str": "a0"
-        //            |        "Ref1": {
-        //            |          "str1": "a1"
-        //            |        }
-        //            |      },
-        //            |      {
-        //            |        "str": "b0"
-        //            |        "Ref1": {
-        //            |          "str1": "b1"
-        //            |        }
-        //            |      },
-        //            |      {
-        //            |        "str": "c0"
-        //            |        "Ref1": {
-        //            |          "str1": "c1"
-        //            |        }
-        //            |      }
-        //            |    ]
-        //            |  }
-        //            |}""".stripMargin)
-        //
-        //
-        //        // We can also retrieve the referenced entity id
-        //        // Referenced entity id `ref1` starts with lower case letter
-        //        _ <- Ns.str.ref1.getJson.map(_ ==>
-        //          s"""{
-        //             |  "data": {
-        //             |    "Ns": [
-        //             |      {
-        //             |        "str": "a0"
-        //             |        "ref1": $a1
-        //             |      },
-        //             |      {
-        //             |        "str": "b0"
-        //             |        "ref1": $b1
-        //             |      },
-        //             |      {
-        //             |        "str": "c0"
-        //             |        "ref1": $c1
-        //             |      }
-        //             |    ]
-        //             |  }
-        //             |}""".stripMargin)
 
         /*
-{
-"ref1", "Ref1"), Var("c"), Empty, NoBinding), DataClause(ImplDS, Var("c"), KW("Ref1", "str1", ""), Var("d"), Empty, NoBinding)))), scala.None, scala.None)) {
-    def <init>() = {
-      super.<init>();
-      ()
-    };
-    final override def row2tpl(row: java.util.List[AnyRef]): scala.Tuple2[String, String] = scala.Tuple2(castOne[String](row, 0), castOne[String](row, 1));
-    final override def row2obj(row: java.util.List[AnyRef]): molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ns_str with moleculeTests.tests.core.base.dsl.CoreTest.Ns__Ref1[molecule.core.dsl.base.Init with moleculeTests.tests.core.base.dsl.CoreTest.Ref1_str1] = {
-      final class $anon extends Init with Ns_str with Ns__Ref1[Init with Ref1_str1] {
-        def <init>() = {
-          super.<init>();
-          ()
-        };
-        final override lazy val str: String = castOne[String](row, 0);
-        final override def Ref1: Init with Ref1_str1 = {
-          final class $anon extends Init with Ref1_str1 {
-            def <init>() = {
-              super.<init>();
-              ()
-            };
-            final override lazy val str1: String = castOne[String](row, 1)
-          };
-          new $anon()
-        }
-      };
-      new $anon()
-    };
-    final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {
-      jsonOneQuoted(sb, "str", row, 0);
-      sb.append(",\n        ");
-      jsonOneQuoted(sb, "ref1.str1", row, 1)
-    }
-  };
-  new outMolecule$macro$1()
-}
+Obj("", "Ns", 2, List(
+  Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None),
+
+  Obj("Ns__Refs1", "Refs1", 2, List(
+    Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+    Obj("Ref1__Ref2", "Ref2", 1, List(
+      Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None)))))))
 ------------------------------------------------
-Obj("", "", 0, List(
-  Prop("Ns_str", "str", "String", <cast-lambda>, None),
-  Obj("Ns__Ref1", "Ref1", 1, List(
-    Prop("Ref1_str1", "str1", "String", <cast-lambda>, None)))))
+List(
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1258/1099748511@5eaf191f),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1254/1462400302@ddf8890,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1254/1462400302@7b6faa0a))
 ======================================================
 
- */
+        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2).getJson.map(_ ==>
 
 
-        //                _ <- (Ns.int.str.Refs1 * Ref1.int1) insert List(
-        //                  (1, "a", List(10, 11)),
-        //                  (2, "b", List(20, 21))
-        //                )
-        //        //
-        //        _ <- m(Ns.int.str.Refs1 * Ref1.int1).getJson.map(_ ==>
+
+Obj("", "Ns", 2, List(
+  Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None),
+  Obj("Ns__Refs1", "Refs1", 2, List(
+    Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+    Obj("Ref1__Ref2", "Ref2", 1, List(
+      Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None),
+      Obj("Ref2__Refs3", "Refs3", 2, List(
+        Prop("Ref3_int3", "int3", "Int", <cast-lambda>, <json-lambda>, None),
+        Obj("Ref3__Ref4", "Ref4", 1, List(
+          Prop("Ref4_int4", "int4", "Int", <cast-lambda>, <json-lambda>, None)))))))))))
+------------------------------------------------
+List(
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1257/1409415405@4530538a),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1253/980466178@d25d8d1,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1253/980466178@35f240a5),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1253/980466178@56af1f75,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1253/980466178@1144ba29))
+======================================================
+
+        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3.Ref4.int4))).get
+
+
+Obj("", "Ns", 2, List(
+  Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None),
+  Obj("Ns__Refs1", "Refs1", 2, List(
+    Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+    Obj("Ref1__Ref2", "Ref2", 1, List(
+      Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None))),
+    Obj("Ref1__Refs2", "Refs2", 2, List(
+      Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None),
+      Obj("Ref2__Ref3", "Ref3", 1, List(
+        Prop("Ref3_int3", "int3", "Int", <cast-lambda>, <json-lambda>, None)))))))))
+------------------------------------------------
+List(
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1253/1791147004@79b947b1),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1249/719393503@be71ff3,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1249/719393503@4b8cba0d),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1249/719393503@58a0ca4d,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1249/719393503@6b179a27))
+======================================================
+
+        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2._Ref1.Refs2.*(Ref2.int2.Ref3.int3))).get
+
+Obj("", "Ns", 2, List(
+  Prop("Ns_str", "str", "String", null, null, None),
+
+  Obj("Ns__Refs1", "Refs1", 2, List(
+    Prop("Ref1_int1", "int1", "Int", null, null, None),
+    Obj("Ref1__Ref2", "Ref2", 1, List(
+      Prop("Ref2_int2", "int2", "Int", null, null, None))),
+
+    Obj("Ref1__Refs2", "Refs2", 2, List(
+      Prop("Ref2_int2", "int2", "Int", null, null, None),
+      Obj("Ref2__Ref3", "Ref3", 1, List(
+        Prop("Ref3_int3", "int3", "Int", null, null, None)))))))))
+
+
+
+
+
+Obj("", "Ns", 2, List(
+  Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None),
+  Obj("Ns__Ref1", "Ref1", 1, List(
+    Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+    Obj("Ref1__Ref2", "Ref2", 1, List(
+      Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None))))),
+
+  Obj("Ns__Refs1", "Refs1", 2, List(
+    Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+    Obj("Ref1__Ref2", "Ref2", 1, List(
+      Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None),
+
+      Obj("Ref2__Refs3", "Refs3", 2, List(
+        Prop("Ref3_int3", "int3", "Int", <cast-lambda>, <json-lambda>, None),
+        Obj("Ref3__Ref4", "Ref4", 1, List(
+          Prop("Ref4_int4", "int4", "Int", <cast-lambda>, <json-lambda>, None)))))))))))
+------------------------------------------------
+List(
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1255/1017891572@35d6177d,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1251/1073828387@2579dbdc,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1251/1073828387@1e9708fa),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1251/1073828387@3a493f39,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1251/1073828387@3fa1aaf2),
+  List(
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1251/1073828387@546d21e1,
+    molecule.core.macros.lambdaTrees.LambdaJsonTypes$$Lambda$1251/1073828387@729b334e))
+======================================================
+
+        _ <- m(Ns.str.Ref1.int1.Ref2.int2._Ref1._Ns.Refs1.*(Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3.Ref4.int4))).get
+         */
+        //        _ <- m(Ns.str.Ref1.int1.Refs2.*(Ref2.int2.Ref3.int3.Refs4.*(Ref4.int4))).get
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2._Ref1.Refs2.*(Ref2.int2.Ref3.int3))).get
+
+        //        _ <- m(Ns.str.Ref1.int1.Ref2.int2._Ref1._Ns.Refs1.*(Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3.Ref4.int4))).get
+
+
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3))) insert List(
+        //          (
+        //            "a",
+        //            List(
+        //              (1, 10, List(100))
+        //            )
+        //          ),
+        //          (
+        //            "b",
+        //            List(
+        //              (2, 20, List(200, 201))
+        //            )
+        //          )
+        //        )
+        /*
+[warn] Obj("", "", 0, List(
+[warn]   Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None),
+[warn]   Obj("Ns__Refs1", "Refs1", 2, List(
+[warn]     Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+[warn]     Obj("Ref1__Ref2", "Ref2", 1, List(
+[warn]       Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None),
+[warn]       Obj("Ref2__Refs3", "Refs3", 2, List(
+[warn]         Prop("Ref3_int3", "int3", "Int", <cast-lambda>, <json-lambda>, None)))))))))
+
+
+Obj("", "Ns", 2, List(
+  Prop("Ns_int", "int", "Int", <cast-lambda>, <json-lambda>, None),
+  Obj("Ns__Ref1", "Ref1", 1, List(
+    Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+    Obj("Ref1__Ref2", "Ref2", 1, List(
+      Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None))),
+    Prop("Ref1_str1", "str1", "String", <cast-lambda>, <json-lambda>, None))),
+  Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None)))
+======================================================
+
+        _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1._Ns.str.getJson.map(_ ==>
+
+         */
+
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2.Ref3.str3))) insert List(
+        //          (
+        //            "a",
+        //            List(
+        //              (1, List((10, "aa")))
+        //            )
+        //          ),
+        //          (
+        //            "b",
+        //            List(
+        //              (2, List((20, "bb"), (21, "bc")))
+        //            )
+        //          )
+        //        )
+        /*
+[warn] Obj("", "", 0, List(
+[warn]   Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None),
+[warn]   Obj("Ns__Refs1", "Refs1", 2, List(
+[warn]     Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+[warn]     Obj("Ref1__Refs2", "Refs2", 2, List(
+[warn]       Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None),
+[warn]       Obj("Ref2__Ref3", "Ref3", 1, List(
+[warn]         Prop("Ref3_str3", "str3", "String", <cast-lambda>, <json-lambda>, None)))))))))
+         */
+        //
+        //
+        //
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3.Ref4.str4))) insert List(
+        //          (
+        //            "a",
+        //            List(
+        //              (1, 10, List(
+        //                (100, "aaa")))
+        //            )
+        //          ),
+        //          (
+        //            "b",
+        //            List(
+        //              (2, 20, List(
+        //                (200, "bbb"),
+        //                (201, "bbc")))
+        //            )
+        //          )
+        //        )
+        /*
+[warn] Obj("", "", 0, List(
+[warn]   Prop("Ns_str", "str", "String", <cast-lambda>, <json-lambda>, None),
+[warn]   Obj("Ns__Refs1", "Refs1", 2, List(
+[warn]     Prop("Ref1_int1", "int1", "Int", <cast-lambda>, <json-lambda>, None),
+[warn]     Obj("Ref1__Ref2", "Ref2", 1, List(
+[warn]       Prop("Ref2_int2", "int2", "Int", <cast-lambda>, <json-lambda>, None),
+[warn]       Obj("Ref2__Refs3", "Refs3", 2, List(
+[warn]         Prop("Ref3_int3", "int3", "Int", <cast-lambda>, <json-lambda>, None),
+[warn]         Obj("Ref3__Ref4", "Ref4", 1, List(
+[warn]           Prop("Ref4_str4", "str4", "String", <cast-lambda>, <json-lambda>, None)))))))))))
+         */
+
+
+        //        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2) insert List(
+        //          ("a", List((Some(1), 10), (None, 20))),
+        //          ("b", List((Some(3), 30)))
+        //        )
+        //
+        //        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2).getJson.map(_ ==>
         //          """{
         //            |  "data": {
         //            |    "Ns": [
         //            |      {
-        //            |        "int": 1,
+        //            |        "str": "a",
+        //            |        "Refs1: [
+        //            |          {
+        //            |            "int1": 1,
+        //            |            "Ref2": {
+        //            |              "int2": 10
+        //            |            }
+        //            |          },
+        //            |          {
+        //            |            "int1": null,
+        //            |            "Ref2": {
+        //            |              "int2": 20
+        //            |            }
+        //            |          }
+        //            |        ]
+        //            |      },
+        //            |      {
+        //            |        "str": "b",
+        //            |        "Refs1: [
+        //            |          {
+        //            |            "int1": 3,
+        //            |            "Ref2": {
+        //            |              "int2": 30
+        //            |            }
+        //            |          }
+        //            |        ]
+        //            |      }
+        //            |    ]
+        //            |  }
+        //            |}""".stripMargin)
+        //
+        //        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2).getJson.map(_ ==>
+        //          """{
+        //            |  "data": {
+        //            |    "Ns": [
+        //            |      {
         //            |        "str": "a",
         //            |        "Refs1": [
         //            |          {
-        //            |            "int1": 10
+        //            |            "int1": 1,
+        //            |            "int2": 10
         //            |          },
         //            |          {
-        //            |            "int1": 11
+        //            |            "int1": null,
+        //            |            "int2": 20
         //            |          }
         //            |        ]
         //            |      },
         //            |      {
-        //            |        "int": 2,
         //            |        "str": "b",
         //            |        "Refs1": [
         //            |          {
-        //            |            "int1": 20
-        //            |          },
-        //            |          {
-        //            |            "int1": 21
+        //            |            "int1": 3,
+        //            |            "int2": 30
         //            |          }
         //            |        ]
         //            |      }
         //            |    ]
         //            |  }
-        //            |}""".stripMargin)
-
-
-        //        _ <- m(Ref1.int1.Nss * Ns.int.str$) insert List(
-        //          (1, List((1, Some("a")), (2, None))),
-        //          (2, List())
-        //        )
-
-        //        _ <- m(Ref1.int1.Nss * Ns.int.str$).get.map(_ ==> List(
-        //          (1, List((1, Some("a")), (2, None)))
-        //        ))
-        //        _ <- m(Ref1.int1.Nss * Ns.int.str).get.map(_ ==> List(
-        //          (1, List((1, "a")))
-        //        ))
-        //        _ <- m(Ref1.int1.Nss * Ns.int.str_).get.map(_ ==> List(
-        //          (1, List(1))
-        //        ))
-
-        //        // Optional nested
-        //        _ <- m(Ref1.int1.Nss *? Ns.int.str$).get.map(_.sortBy(_._1) ==> List(
-        //          (1, List((1, Some("a")), (2, None))),
-        //          (2, List())
-        //        ))
-        //        _ <- m(Ref1.int1.Nss *? Ns.int.str).get.map(_.sortBy(_._1) ==> List(
-        //          (1, List((1, "a"))),
-        //          (2, List())
-        //        ))
-
-        //        _ <- m(Ns.str.Refs1 * Ref1.str1.int1$) insert List(
-        //          ("a", List(("a1", Some(11)))),
-        //          ("b", List(("b1", None))))
-
-
-        //        _ <- m(Ns.int.Refs1 * Ref1.int1) insert List(
-        //          (1, List(1, 2)),
-        //          (2, List(2, 3)),
-        //          (3, List())
-        //        )
-        //
-        //        _ <- m(Ns.int.Refs1 * Ref1.int1.>(1)).get.map(_.sortBy(_._1) ==> List(
-        //          (1, List(2)),
-        //          (2, List(2, 3))
-        //        ))
-        //
-        //        // Now there's a ref from entity with "b" to entity with "b1"
-        //        _ <- m(Ns.str.Refs1 * Ref1.str1.int1$).get.map(_.sortBy(_._1) ==> List(
-        //          ("a", List(("a1", Some(11)))),
-        //          ("b", List(("b1", None)))))
-
-        //        _ <- m(Ns.str.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)) insert List(
-        //          ("a", List(
-        //            (None, 11, List(
-        //              ("a2", Some(12)))))),
-        //          ("b", List(
-        //            (Some("b1"), 21, List(
-        //              ("b2", None))))))
-
-        //        _ <- m(Ns.str.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)).get.map(_.sortBy(_._1) ==> List(
-        //          ("a", List(
-        //            (None, 11, List(
-        //              ("a2", Some(12)))))),
-        //          ("b", List(
-        //            (Some("b1"), 21, List(
-        //              ("b2", None)))))))
+        //            |}
+        //            |
+        //            |""".stripMargin)
 
       } yield ()
     }
-
-
-    //    "String" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.str$) insert List(
-    //          (1, List((1, Some("a")), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.str$).get.map(_ ==> List(
-    //          (1, List((1, Some("a")), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.str).get.map(_ ==> List(
-    //          (1, List((1, "a")))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.str_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        // Optional nested
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.str$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some("a")), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.str).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, "a"))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.str_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "Enum" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.enum$) insert List(
-    //          (1, List((1, Some("enum1")), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.enum$).get.map(_ ==> List(
-    //          (1, List((1, Some("enum1")), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.enum).get.map(_ ==> List(
-    //          (1, List((1, "enum1")))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.enum_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.enum$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some("enum1")), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.enum).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, "enum1"))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.enum_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "Long" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.long$) insert List(
-    //          (1, List((1, Some(10L)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.long$).get.map(_ ==> List(
-    //          (1, List((1, Some(10L)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.long).get.map(_ ==> List(
-    //          (1, List((1, 10L)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.long_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        // Optional nested
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.long$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(10L)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.long).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, 10L))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.long_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "ref" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.ref1$) insert List(
-    //          (1, List((1, Some(42L)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.ref1$).get.map(_ ==> List(
-    //          (1, List((1, Some(42L)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.ref1).get.map(_ ==> List(
-    //          (1, List((1, 42L)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.ref1_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.ref1$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(42L)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.ref1).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, 42L))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.ref1_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "Double" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.double$) insert List(
-    //          (1, List((1, Some(1.1)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.double$).get.map(_ ==> List(
-    //          (1, List((1, Some(1.1)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.double).get.map(_ ==> List(
-    //          (1, List((1, 1.1)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.double_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.double$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(1.1)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.double).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, 1.1))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.double_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "Boolean" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bool$) insert List(
-    //          (1, List((1, Some(true)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bool$).get.map(_ ==> List(
-    //          (1, List((1, Some(true)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bool).get.map(_ ==> List(
-    //          (1, List((1, true)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bool_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bool$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(true)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bool).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, true))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bool_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "Date" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.date$) insert List(
-    //          (1, List((1, Some(date1)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.date$).get.map(_ ==> List(
-    //          (1, List((1, Some(date1)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.date).get.map(_ ==> List(
-    //          (1, List((1, date1)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.date_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.date$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(date1)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.date).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, date1))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.date_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "UUID" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uuid$) insert List(
-    //          (1, List((1, Some(uuid1)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uuid$).get.map(_ ==> List(
-    //          (1, List((1, Some(uuid1)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uuid).get.map(_ ==> List(
-    //          (1, List((1, uuid1)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uuid_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.uuid$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(uuid1)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.uuid).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, uuid1))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.uuid_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "URI" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uri$) insert List(
-    //          (1, List((1, Some(uri1)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uri$).get.map(_ ==> List(
-    //          (1, List((1, Some(uri1)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uri).get.map(_ ==> List(
-    //          (1, List((1, uri1)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.uri_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.uri$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(uri1)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.uri).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, uri1))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.uri_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "BigInt" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigInt$) insert List(
-    //          (1, List((1, Some(bigInt1)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigInt$).get.map(_ ==> List(
-    //          (1, List((1, Some(bigInt1)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigInt).get.map(_ ==> List(
-    //          (1, List((1, bigInt1)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigInt_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bigInt$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(bigInt1)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bigInt).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, bigInt1))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bigInt_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
-    //
-    //    "BigDecimal" - core { implicit conn =>
-    //      for {
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigDec$) insert List(
-    //          (1, List((1, Some(bigDec1)), (2, None))),
-    //          (2, List())
-    //        )
-    //
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigDec$).get.map(_ ==> List(
-    //          (1, List((1, Some(bigDec1)), (2, None)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigDec).get.map(_ ==> List(
-    //          (1, List((1, bigDec1)))
-    //        ))
-    //        _ <- m(Ref1.int1.Nss * Ns.int.bigDec_).get.map(_ ==> List(
-    //          (1, List(1))
-    //        ))
-    //
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bigDec$).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, Some(bigDec1)), (2, None))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bigDec).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List((1, bigDec1))),
-    //          (2, List())
-    //        ))
-    //        _ <- m(Ref1.int1.Nss *? Ns.int.bigDec_).get.map(_.sortBy(_._1) ==> List(
-    //          (1, List(1)),
-    //          (2, List())
-    //        ))
-    //      } yield ()
-    //    }
 
 
   }

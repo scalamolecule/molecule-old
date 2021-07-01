@@ -2,6 +2,7 @@ package molecule.core.transform
 
 import molecule.core.ast.elements._
 import molecule.core.dsl.attributes._
+import molecule.core.exceptions.MoleculeException
 import molecule.core.generic.AEVT._
 import molecule.core.generic.AVET._
 import molecule.core.generic.EAVT._
@@ -9,7 +10,7 @@ import molecule.core.generic.Log._
 import molecule.core.generic.Schema._
 import molecule.core.generic.VAET._
 import molecule.core.generic._
-import molecule.core.macros.lambdas.{CastAggr, CastOptNested, CastTypes, JsonAggr, JsonOptNested, JsonTypes, JsonNested}
+import molecule.core.macros.lambdas.{CastAggr, CastOptNested, CastTypes, JsonAggr, JsonNested, JsonOptNested, JsonTypes}
 import molecule.core.macros.qr.CastArrays
 import molecule.core.macros.lambdaTrees.{LambdaCastAggr, LambdaCastOptNested, LambdaCastTypes, LambdaJsonAggr, LambdaJsonOptNested, LambdaJsonTypes}
 import molecule.core.macros.{BuildJson, BuildObj, MacroHelpers, MakeOptNested}
@@ -106,10 +107,11 @@ private[molecule] trait Dsl2Model
     var indexes       : List[(Int, Int, Int)]          = List.empty[(Int, Int, Int)]
     var arrayIndexes  : Map[Int, Int]                  = Map.empty[Int, Int]
     var obj           : Obj                            = Obj("", "", 0, Nil)
+    //    var nodes         : Seq[Node]                      = Nil
     var objLevel      : Int                            = 0
 
-    var tx            : String       = ""
     //    var tempJsons     : List[((String, String) => Int => Tree, String, String)] = List.empty[((String, String) => Int => Tree, String, String)]
+    var tx        : String       = ""
     var nestedRefs: List[String] = List.empty[String]
 
     var hasVariables: Boolean = false
@@ -1120,7 +1122,7 @@ private[molecule] trait Dsl2Model
       val opt               = if (isOptNested) "$" else ""
       val (nsFull, refAttr) = (parentNs.toString, firstLow(manyRef))
       xx(550, q"$prev.$manyRef", prev, manyRef, refNext, parentNs, post, nsFull, refAttr, obj)
-//      nestedRefAttrs = nestedRefAttrs :+ s"$nsFull.$refAttr"
+      //      nestedRefAttrs = nestedRefAttrs :+ s"$nsFull.$refAttr"
       nestedRefs = nestedRefs :+ manyRef.toString
       // park post props
       val postProps = obj.props
@@ -1648,6 +1650,18 @@ private[molecule] trait Dsl2Model
         }
       }
       markTacitIndexes(elements, 0)
+    }
+
+    obj = {
+      def getNs(element: Element): Obj = element match {
+        case Atom(nsFull, _, _, _, _, _, _, _) => obj.copy(ref = nsFull, card = 2)
+        case Bond(nsFull, _, _, _, _)          => obj.copy(ref = nsFull, card = 2)
+        case Generic(nsFull, _, _, _)          => obj.copy(ref = nsFull, card = 2)
+        case Composite(elements)               => getNs(elements.head)
+        case other                             =>
+          throw MoleculeException("Unexpected first model element: " + other)
+      }
+      getNs(elements.head)
     }
 
     //    addJsonLambdas
