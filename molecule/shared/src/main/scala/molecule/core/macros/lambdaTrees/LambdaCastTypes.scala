@@ -8,7 +8,7 @@ private[molecule] trait LambdaCastTypes extends TreeOps {
 
   import c.universe._
 
-  lazy val y = InspectMacro("LambdaCastTypes", 1)
+  private lazy val xx = InspectMacro("LambdaCast", 1)
 
   val castOneAttr: String => Int => Tree = {
     case "String"     => ii = (0, 0); (colIndex: Int) => q"castOne[String](row, $colIndex)"

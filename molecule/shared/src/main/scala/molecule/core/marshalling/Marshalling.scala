@@ -63,6 +63,12 @@ abstract class Marshalling[Obj, Tpl](
   protected def qr2list(qr: QueryResult): Int => jList[AnyRef] = ???
 
 
+
+  protected def json2obj(json: String): Obj = ???
+  protected def json2tpl(json: String): Tpl = ???
+  protected def json2list(json: String): jList[AnyRef] = ???
+
+
   // Generic `v` of type Any needs to be cast on JS side
   protected def castV(s: String): Any = {
     val v = s.drop(10)

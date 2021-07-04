@@ -1,5 +1,7 @@
-package molecule.core.macros
+package molecule.core.macros.build.json
 
+import molecule.core.macros.build.BuildBase
+import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.blackbox
 
 
@@ -8,9 +10,9 @@ trait BuildJson extends BuildBase {
 
   import c.universe._
 
-  lazy override val p = InspectMacro("BuildJson", 1, 900)
+  private lazy val xx = InspectMacro("BuildJson", 1, 900)
 
-  def jsonFlat(obj: Obj, i0: Int = -1, isOptNested: Boolean = false, level: Int = 0): (Tree, Int) = {
+  def jsonFlat(obj: BuilderObj, i0: Int = -1, isOptNested: Boolean = false, level: Int = 0): (Tree, Int) = {
     // Property index of row/tuple
     var i           = if (isOptNested && i0 == -1) -1 else i0
     val tabs        = level + 1
@@ -19,55 +21,16 @@ trait BuildJson extends BuildBase {
       q"""sb.append(indent($tabs))"""
     )
 
-    def properties(nodes: List[Node]): Seq[Tree] = {
+    def properties(nodes: List[BuilderNode]): Seq[Tree] = {
       var next       = false
       var fieldNames = List.empty[String]
-      //      if (isOptNested) {
-      //        nodes.flatMap { node =>
-      //          val nl    = if (next) newLine else Nil
-      //          val trees = node match {
-      //            case Prop(_, fieldName, tpe, _, json, optAggr) =>
-      //              i += 1
-      //              val field = Seq(q"""quote(sb, $fieldName)""", q"""sb.append(": ")""")
-      //              // Only generate 1 property, even if attribute is repeated in molecule
-      //              if (fieldNames.contains(fieldName)) Nil else {
-      //                fieldNames = fieldNames :+ fieldName
-      //                nl ++ (optAggr match {
-      //                  case None                                       => field :+ valueFromTpl(i, tpe, tabs)
-      //                  case Some(aggrTpe) if aggrTpe == tpe.toString() => field :+ valueFromTpl(i, tpe, tabs)
-      //                  case Some(aggrTpe)                              => aggrErr(fieldName, aggrTpe)
-      //                })
-      //              }
-      //
-      //            case o@Obj(_, _, 2, props) =>
-      //              i += 1
-      //              val productTpe = if (props.length == 1) {
-      //                props.head match {
-      //                  case Prop(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
-      //                  case Obj(_, _, _, _)          => tq"Tuple1[Product]"
-      //                }
-      //              } else {
-      //                tq"Product"
-      //              }
-      //              Seq(q"tpl.productElement($i).asInstanceOf[Seq[$productTpe]].map( tpl => ${jsonCode(o, -1, isOptNested, tabs + 1)._1} )")
-      //
-      //            case o: Obj =>
-      //              val (subObj, j) = jsonCode(o, i, isOptNested, tabs + 1)
-      //              i = j
-      //              Seq(subObj)
-      //          }
-      //          next = true
-      //          trees
-      //        }
-      //      } else {
-
       nodes.flatMap { node =>
         val newLine = if (next) newLineCode else {
           next = true
           Nil
         }
         val trees   = node match {
-          case Prop(_, fieldName, tpe, _, json, optAggr) =>
+          case BuilderProp(_, fieldName, tpe, _, json, optAggr) =>
             i += 1
             // Only generate 1 property, even if attribute is repeated in molecule
             if (fieldNames.contains(fieldName)) Nil else {
@@ -79,12 +42,12 @@ trait BuildJson extends BuildBase {
               })
             }
 
-          case o@Obj(_, ref, 2, props) =>
+          case o@BuilderObj(_, ref, 2, props) =>
             i += 1
             val productTpe = if (props.length == 1) {
               props.head match {
-                case Prop(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
-                case Obj(_, _, _, _)          => tq"Tuple1[Product]"
+                case BuilderProp(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
+                case BuilderObj(_, _, _, _)          => tq"Tuple1[Product]"
               }
             } else {
               tq"Product"
@@ -98,7 +61,7 @@ trait BuildJson extends BuildBase {
               q"""sb.append("}")""",
             )
 
-          case o@Obj(_, ref, _, _) =>
+          case o@BuilderObj(_, ref, _, _) =>
             val (subObj, j) = jsonFlat(o, i, isOptNested, level + 1)
             i = j
             newLine ++ Seq(
@@ -112,7 +75,6 @@ trait BuildJson extends BuildBase {
         }
         trees
       }
-      //      }
     }
 
     def aggrErr(fieldName: String, aggrTpe: String) = abort(

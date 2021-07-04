@@ -1,7 +1,6 @@
-package molecule.core.macros
+package molecule.core.macros.build.obj
 
-import molecule.core.macros.qr.CastArrays
-import molecule.core.ops.TreeOps
+import molecule.core.macros.build.BuildBase
 import scala.reflect.macros.blackbox
 
 
@@ -10,18 +9,18 @@ trait BuildObj extends BuildBase {
 
   import c.universe._
 
-  lazy override val p = InspectMacro("BuildObj", 1, 900)
+  private lazy val xx = InspectMacro("BuildObj", 1, 900)
 
-  def classes(nodes: List[Node]): List[Tree] = {
+  def classes(nodes: List[BuilderNode]): List[Tree] = {
     var prevClasses = List.empty[String]
     nodes.flatMap {
-      case Prop(cls, _, _, _, _, _) =>
+      case BuilderProp(cls, _, _, _, _, _) =>
         if (!prevClasses.contains(cls)) {
           prevClasses = prevClasses :+ cls
           Some(tq"${TypeName(cls)}")
         } else None
 
-      case Obj(cls, _, 2, props) => classes(props) match {
+      case BuilderObj(cls, _, 2, props) => classes(props) match {
         case Nil                                                                    => Some(tq"${TypeName(cls)}[Seq[Init]]")
         case List(a)                                                                => Some(tq"${TypeName(cls)}[Seq[Init with $a]]")
         case List(a, b)                                                             => Some(tq"${TypeName(cls)}[Seq[Init with $a with $b]]")
@@ -48,7 +47,7 @@ trait BuildObj extends BuildBase {
         case _                                                                      => None
       }
 
-      case Obj(cls, _, _, props) => classes(props) match {
+      case BuilderObj(cls, _, _, props) => classes(props) match {
         case Nil                                                                    => Some(tq"${TypeName(cls)}[Init]")
         case List(a)                                                                => Some(tq"${TypeName(cls)}[Init with $a]")
         case List(a, b)                                                             => Some(tq"${TypeName(cls)}[Init with $a with $b]")
@@ -77,14 +76,14 @@ trait BuildObj extends BuildBase {
     }
   }
 
-  def objFlat(obj: Obj, i0: Int = -1, isOptNested: Boolean = false): (Tree, Int) = {
+  def objFlat(obj: BuilderObj, i0: Int = -1, isOptNested: Boolean = false): (Tree, Int) = {
     // Property index of row/tuple
     var i = if (isOptNested && i0 == -1) -1 else i0
 
-    def properties(nodes: List[Node]): List[Tree] = {
+    def properties(nodes: List[BuilderNode]): List[Tree] = {
       var propNames = List.empty[String]
       val propDefs  = nodes.flatMap {
-        case Prop(_, prop, tpe, cast, _, optAggr) =>
+        case BuilderProp(_, prop, tpe, cast, _, optAggr) =>
           i += 1
           // Only generate 1 property, even if attribute is repeated in molecule
           if (!propNames.contains(prop)) {
@@ -105,12 +104,12 @@ trait BuildObj extends BuildBase {
             }
           } else None
 
-        case o@Obj(_, ref, 2, props) =>
+        case o@BuilderObj(_, ref, 2, props) =>
           i += 1
           val productTpe = if (props.length == 1) {
             props.head match {
-              case Prop(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
-              case Obj(_, _, _, _)          => tq"Tuple1[Product]"
+              case BuilderProp(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
+              case BuilderObj(_, _, _, _)          => tq"Tuple1[Product]"
             }
           } else {
             tq"Product"
@@ -143,7 +142,7 @@ trait BuildObj extends BuildBase {
             case _                                                                      => None
           }
 
-        case o@Obj(_, ref, _, props) =>
+        case o@BuilderObj(_, ref, _, props) =>
           val (subObj, j) = objFlat(o, i, isOptNested)
           i = j
           classes(props) match {

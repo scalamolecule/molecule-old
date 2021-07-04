@@ -14,7 +14,7 @@ private[molecule] object expectCompileError {
 
   class CompileChecker(val c: blackbox.Context) extends MacroHelpers {
     import c.universe._
-    val x = InspectMacro("CompileChecker", 1)
+    private lazy val xx = InspectMacro("expectCompileError", 1)
 
     def applyImplNoExp(code: c.Expr[String]) = applyImpl(code, null)
 
@@ -52,7 +52,7 @@ private[molecule] object expectCompileError {
             case 1 => msgLines.head
             case _ => msgLines.tail.takeWhile(!_.startsWith("\tat ")).mkString("\n")
           }
-          x(0, e)
+          xx(0, e)
 
           if ((expected ne null) && !msg.startsWith(expPat))
             c.abort(c.enclosingPosition,

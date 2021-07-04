@@ -1,15 +1,14 @@
-package molecule.core.macros
+package molecule.core.macros.build.tpl
 
 import molecule.core.macros.lambdaTrees.LambdaCastOptNested
-import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-private[molecule] trait MakeOptNested extends LambdaCastOptNested {
+private[molecule] trait BuildTplOptNested extends LambdaCastOptNested {
   val c: blackbox.Context
 
   import c.universe._
 
-  val aa = InspectMacro("MakeOptNested", 2, 1)
+  private lazy val xx = InspectMacro("BuildTplOptNested", 2, 1)
 
   def castOptNestedRows(
     levelCasts: List[List[Int => Tree]],
@@ -139,7 +138,7 @@ private[molecule] trait MakeOptNested extends LambdaCastOptNested {
         final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) =
           nested_0(row).asInstanceOf[(..$OutTypes)]
        """
-    aa(1, tree)
+    xx(1, tree)
     tree
   }
 }

@@ -16,9 +16,9 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
   import c.universe._
 
-  //  val tfm = InspectMacro("TxFns", 1, 3, mkError = true)
-  val tfm = InspectMacro("TxFns", 1, 3)
-  //  val tfm = InspectMacro("TxFns", 1, 0)
+  //  private lazy val xx = InspectMacro("TxFns", 1, 3, mkError = true)
+  private lazy val xx = InspectMacro("TxFns", 1, 3)
+  //  private lazy val xx = InspectMacro("TxFns", 1, 0)
 
   def prepareForDatalog(annottees: Tree*): Tree = annottees match {
     case List(obj: ModuleDef) => obj match {

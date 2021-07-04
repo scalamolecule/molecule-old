@@ -14,7 +14,6 @@ private[molecule] trait Base extends Dsl2Model {
 
   import c.universe._
 
-  val w = InspectMacro("Base", 10)
 
   def getImports(genericImports: List[Tree]) =
     q"""
@@ -78,20 +77,47 @@ private[molecule] trait Base extends Dsl2Model {
     (identifiers0 ++ newIdentifiers).distinct
   }
 
-  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
-    var i              = -1 + offset
-    var subTupleFields = Seq.empty[Tree]
-    val subTuples      = castss.flatMap {
-      case Nil   => None
-      case casts =>
-        subTupleFields = casts.map { c =>
-          i += 1
-          c(i)
-        }
-        Some(q"(..$subTupleFields)")
+
+  def resolveIndexes(
+    indexes0: List[(Int, Int, Int, Int)],
+    nestedLevels: Int
+  ): (List[(Int, Int, Int, Int)], List[c.universe.Tree], List[c.universe.Tree]) = {
+    val indexes           = if (nestedLevels == 0) indexes0 else {
+      val nestedIndexes = (0 until nestedLevels).toList.map(i => (i, 3, 2, i))
+      val dataIndexes   = indexes0.map {
+        case (colIndex, castIndex, 2, arrayIndex)         =>
+          // One Long array type where nested eid indexes are transferred
+          (colIndex + nestedLevels, castIndex, 2, arrayIndex + nestedLevels)
+        case (colIndex, castIndex, arrayType, arrayIndex) =>
+          (colIndex + nestedLevels, castIndex, arrayType, arrayIndex)
+      }
+      nestedIndexes ++ dataIndexes
     }
-    subTuples
+    val (arrays, lookups) = indexes.map {
+      // Generic `v` of type Any needs to be cast on JS side
+      case (colIndex, 11, arrayType, arrayIndex)        =>
+        (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
+      case (colIndex, castIndex, arrayType, arrayIndex) =>
+        (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
+    }.unzip
+    (indexes, arrays, lookups)
   }
+
+
+//  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
+//    var i              = -1 + offset
+//    var subTupleFields = Seq.empty[Tree]
+//    val subTuples      = castss.flatMap {
+//      case Nil   => None
+//      case casts =>
+//        subTupleFields = casts.map { c =>
+//          i += 1
+//          c(i)
+//        }
+//        Some(q"(..$subTupleFields)")
+//    }
+//    subTuples
+//  }
 
   def compositeLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): Seq[Tree] = {
     var i              = -1 + offset
@@ -108,390 +134,39 @@ private[molecule] trait Base extends Dsl2Model {
     subTuples
   }
 
-  def compositeJsons(jsonss: List[List[(Int, Int) => Tree]]): ListBuffer[Tree] = {
-    var fieldIndex = -1
-    var firstGroup = true
-    var firstPair  = true
-    val buf        = new ListBuffer[Tree]
-    jsonss.foreach { jsonLambdas =>
-      if (firstGroup) firstGroup = false else buf.append(q"""sb.append(", ")""")
-      buf.append(q"""sb.append("{")""")
-      firstPair = true
-      jsonLambdas.foreach { jsonLambda =>
-        fieldIndex += 1
-        if (firstPair) firstPair = false else buf.append(q"""sb.append(", ")""")
-        buf.append(jsonLambda(fieldIndex, 0)) // level 0 ok?
-      }
-      buf.append(q"""sb.append("}")""")
-    }
-    buf
-  }
+//  def compositeJsons(jsonss: List[List[(Int, Int) => Tree]]): ListBuffer[Tree] = {
+//    var fieldIndex = -1
+//    var firstGroup = true
+//    var firstPair  = true
+//    val buf        = new ListBuffer[Tree]
+//    jsonss.foreach { jsonLambdas =>
+//      if (firstGroup) firstGroup = false else buf.append(q"""sb.append(", ")""")
+//      buf.append(q"""sb.append("{")""")
+//      firstPair = true
+//      jsonLambdas.foreach { jsonLambda =>
+//        fieldIndex += 1
+//        if (firstPair) firstPair = false else buf.append(q"""sb.append(", ")""")
+//        buf.append(jsonLambda(fieldIndex, 0)) // level 0 ok?
+//      }
+//      buf.append(q"""sb.append("}")""")
+//    }
+//    buf
+//  }
 
 
-  def topLevel(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
-    var i = -1 + offset
-    castss.head.map { cast =>
-      i += 1
-      cast(i)
-    }
-  }
+//  def topLevel(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
+//    var i = -1 + offset
+//    castss.head.map { cast =>
+//      i += 1
+//      cast(i)
+//    }
+//  }
 
   def topLevelLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): List[Tree] = {
     var i = -1 + offset
     castss.head.map { _ =>
       i += 1
       lookups(i)
-    }
-  }
-
-  def topLevelJson(jsonss: List[List[Int => Tree]]): List[Tree] = {
-    jsonss.head.zipWithIndex.flatMap {
-      case (jsonLambda, 0) => Seq(jsonLambda(0))
-      case (jsonLambda, i) => Seq(q"""sb.append(",\n        ")""", jsonLambda(i))
-    }
-  }
-
-
-  case class resolveNestedTupleMethods(
-    castss: List[List[Int => Tree]],
-    typess: List[List[Tree]],
-    OutTypes: Seq[Type],
-    postTypes: List[Tree],
-    postCasts: List[Int => Tree]
-  ) {
-    val levelCount = castss.size
-    lazy val t1: Tree = tq"List[(..${if (levelCount == 2) typess(1) else typess(1) :+ t2})]"
-    lazy val t2: Tree = tq"List[(..${if (levelCount == 3) typess(2) else typess(2) :+ t3})]"
-    lazy val t3: Tree = tq"List[(..${if (levelCount == 4) typess(3) else typess(3) :+ t4})]"
-    lazy val t4: Tree = tq"List[(..${if (levelCount == 5) typess(4) else typess(4) :+ t5})]"
-    lazy val t5: Tree = tq"List[(..${if (levelCount == 6) typess(5) else typess(5) :+ t6})]"
-    lazy val t6: Tree = tq"List[(..${if (levelCount == 7) typess(6) else typess(6) :+ t7})]"
-    lazy val t7: Tree = tq"List[(..${typess(7)})]"
-
-    var colIndex = levelCount - 1
-
-    def castLevel(level: Int): List[Tree] = castss(level).map { castLambda =>
-      colIndex += 1
-      castLambda(colIndex)
-    }
-
-    def branch0until(subLevels: () => Tree) = if (postCasts.isEmpty) {
-      q"""
-         final override def castBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): (..$OutTypes) = (..${castLevel(0)}, subBranches.asInstanceOf[$t1])
-         ..${subLevels()}
-       """
-    } else {
-      // Ensuring that post fields are last
-      val pre        = castLevel(0)
-      val subCastes  = subLevels()
-      val postFields = postCasts.map { postCastLambda =>
-        colIndex += 1
-        postCastLambda(colIndex)
-      }
-      q"""
-         final override def castBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): (..$OutTypes) = (..$pre, subBranches.asInstanceOf[$t1], ..$postFields)
-         ..$subCastes
-       """
-    }
-
-    lazy val level1: () => Tree = () =>
-      q"final override def castLeaf1(row: java.util.List[AnyRef]): Any = (..${castLevel(1)})"
-
-    lazy val level2: () => Tree = () =>
-      q"""
-         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
-         final override def castLeaf2(row: java.util.List[AnyRef]): Any = (..${castLevel(2)})
-        """
-
-    lazy val level3: () => Tree = () =>
-      q"""
-         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
-         final override def castLeaf3(row: java.util.List[AnyRef]): Any = (..${castLevel(3)})
-       """
-    lazy val level4: () => Tree = () =>
-      q"""
-         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
-         final override def castLeaf4(row: java.util.List[AnyRef]): Any = (..${castLevel(4)})
-       """
-    lazy val level5: () => Tree = () =>
-      q"""
-         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
-         final override def castBranch4(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(4)}, subBranches.asInstanceOf[$t5])
-         final override def castLeaf5(row: java.util.List[AnyRef]): Any = (..${castLevel(5)})
-       """
-    lazy val level6: () => Tree = () =>
-      q"""
-         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
-         final override def castBranch4(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(4)}, subBranches.asInstanceOf[$t5])
-         final override def castBranch5(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(5)}, subBranches.asInstanceOf[$t6])
-         final override def castLeaf6(row: java.util.List[AnyRef]): Any = (..${castLevel(6)})
-       """
-    lazy val level7: () => Tree = () =>
-      q"""
-         final override def castBranch1(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(1)}, subBranches.asInstanceOf[$t2])
-         final override def castBranch2(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(2)}, subBranches.asInstanceOf[$t3])
-         final override def castBranch3(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(3)}, subBranches.asInstanceOf[$t4])
-         final override def castBranch4(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(4)}, subBranches.asInstanceOf[$t5])
-         final override def castBranch5(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(5)}, subBranches.asInstanceOf[$t6])
-         final override def castBranch6(row: java.util.List[AnyRef], subBranches: List[Any]): Any = (..${castLevel(6)}, subBranches.asInstanceOf[$t7])
-         final override def castLeaf7(row: java.util.List[AnyRef]): Any = (..${castLevel(7)})
-       """
-
-    def get: Tree = levelCount match {
-      case 2 => branch0until(level1)
-      case 3 => branch0until(level2)
-      case 4 => branch0until(level3)
-      case 5 => branch0until(level4)
-      case 6 => branch0until(level5)
-      case 7 => branch0until(level6)
-      case 8 => branch0until(level7)
-    }
-  }
-
-
-  case class resolveNestedJsonMethods(
-    obj: Obj,
-    jsonss: List[List[(Int, Int) => Tree]],
-    nestedRef: List[String],
-    postJsons: List[(Int, Int) => Tree]
-  ) {
-    // Filter out post props since we handle those with postJsons
-    val objWithoutPostProps = obj.copy(props = obj.props.foldLeft(List.empty[Node], false) {
-      case ((acc, true), _)              => (acc, true)
-      case ((acc, _), o@Obj(_, _, 2, _)) => (acc :+ o, true)
-      case ((acc, _), node)              => (acc :+ node, false)
-    }._1)
-
-    // Object for each level
-    val (objs, exitDepths, initTabs): (Seq[Obj], Seq[Int], Seq[Int]) = {
-      def recurse(obj: Obj, depth: Int): (Seq[Obj], Seq[Int], Seq[Int]) = obj.props.zipWithIndex.foldLeft(
-        Seq(obj.copy(props = Nil)), Seq(0), Seq(0)
-      ) {
-        case ((objs, depths, tabs), (node, i)) =>
-          val last = i == obj.props.size - 1
-          node match {
-            case p: Prop =>
-              (
-                objs.init :+ objs.last.copy(props = objs.last.props :+ p),
-                depths.init :+ depth,
-                tabs
-              )
-
-            case o@Obj(_, _, 2, _) =>
-              val (nestedObjs, nestedDepths, nestedTabs) = recurse(o, 0) // Start over for next level
-              (
-                objs ++ nestedObjs,
-                depths ++ nestedDepths,
-                tabs ++ nestedTabs.map(_ + tabs.last + 2)
-              )
-
-            // First namespace that has been back-reffed to
-            case o: Obj if !last =>
-              val (refObjs, refDepths, refTabs) = recurse(o, depth + 1)
-              (
-                (objs.init :+ objs.last.copy(props = objs.last.props :+ refObjs.head)) ++ refObjs.tail,
-                depths.init :+ depth, // exit depth
-                (tabs.init :+ tabs.last + refTabs.head) ++ refTabs.tail.map(_ + tabs.last + 1)
-              )
-
-            case o: Obj =>
-              val (refObjs, refDepths, refTabs) = recurse(o, depth + 1)
-              if (refObjs.head.props.nonEmpty) {
-                (
-                  (objs.init :+ objs.last.copy(props = objs.last.props :+ refObjs.head)) ++ refObjs.tail,
-                  (depths.init :+ refDepths.head) ++ refDepths.tail,
-                  (tabs.init :+ tabs.last + refTabs.head) ++ refTabs.tail.map(_ + tabs.last + 1)
-                )
-              } else {
-                // Intermediary ref without attributes
-                (
-                  (objs.init :+ objs.last.copy(props = objs.last.props :+ refObjs.head)) ++ refObjs.tail,
-                  (depths.init :+ refDepths.head + 1) ++ refDepths.tail,
-                  tabs ++ refTabs.tail.map(_ + tabs.last + 1)
-                )
-              }
-          }
-      }
-      recurse(objWithoutPostProps, 0)
-    }
-    w(4
-      , obj
-      , objWithoutPostProps
-      , objs.mkString("\n---\n")
-      , exitDepths
-      , initTabs
-      //      , postJsons
-    )
-
-    val levelCount = objs.size
-
-    // Skip initial entity id columns used for sorting rows
-    var colIndex = levelCount - 1
-
-    def branchPairs(level: Int): Tree = {
-      val exitDepth = exitDepths(level)
-      def recurse(obj: Obj, depth: Int, tabs: Int, nestedAdded: Boolean = false): Seq[Tree] = {
-        var next  = false
-        val nodes = obj.props
-        if (nodes.isEmpty) {
-          Seq(
-            q"""sb.append(nested)"""
-          )
-        } else {
-          val newLineCode = Seq(
-            q"""sb.append(",")""",
-            q"""sb.append(indent(${tabs + 1}))""",
-          )
-          nodes.zipWithIndex.flatMap { case (node, i) =>
-            val lastNode  = i + 1 == nodes.size
-            val lastLevel = (level + 1) == levelCount
-            val newLine   = if (next) newLineCode else {
-              next = true
-              Nil
-            }
-
-            node match {
-              case p: Prop =>
-                colIndex += 1
-                val nested =
-                  if (nestedAdded) {
-                    Nil
-                  } else if (lastNode && lastLevel) {
-                    Seq(q"""sb.append(nested)""")
-                  } else if (lastNode) {
-                    Seq(
-                      q"""sb.append(",")""",
-                      q"""sb.append(indent(${tabs + 1}))""",
-                      q"""sb.append(nested)"""
-                    )
-                  } else Nil
-                newLine ++ Seq(p.json(colIndex, tabs + 1)) ++ nested
-
-              case o: Obj if depth == exitDepth =>
-                newLine ++ Seq(
-                  q"""quote(sb, ${o.ref})""",
-                  q"""sb.append(": {")""",
-                  q"""sb.append(indent(${tabs + 2}))""",
-                  q"""..${recurse(o, depth + 1, tabs + 1, true)}""",
-                  q"""sb.append(indent(${tabs + 1}))""",
-                  q"""sb.append("}")"""
-                ) ++ (
-                  if (lastNode) {
-                    Seq(
-                      q"""sb.append(",")""",
-                      q"""sb.append(indent(${tabs + 1}))"""
-                    )
-                  } else Nil
-                  ) ++ Seq(q"""sb.append(nested)""")
-
-              case o: Obj =>
-                newLine ++ Seq(
-                  q"""quote(sb, ${o.ref})""",
-                  q"""sb.append(": {")""",
-                  q"""sb.append(indent(${tabs + 2}))""",
-                  q"""..${recurse(o, depth + 1, tabs + 1, nestedAdded)}""",
-                  q"""sb.append(indent(${tabs + 1}))""",
-                  q"""sb.append("}")""",
-                )
-            }
-          }
-        }
-      }
-      val resolved = recurse(objs(level), 0, initTabs(level))
-      if (resolved.nonEmpty)
-        q"""(nested: StringBuilder) => { ..$resolved }"""
-      else
-        q"""(nested: StringBuilder) => { sb.append(nested) }"""
-    }
-
-    def branch0until(subLevels: () => Tree): Tree = if (postJsons.isEmpty) {
-      q"""
-         final override def jsonBranch0(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..${branchPairs(0)}}, ${nestedRef.head}, leaf)
-         ..${subLevels()}
-       """
-    } else {
-      // Ensure that post fields are last (run branchPairs2 first so that mutable colIndex increments orderly)
-      val pre        = branchPairs(0)
-      val subJsons   = subLevels()
-      val postFields = postJsons.flatMap { portJsonLambda =>
-        colIndex += 1
-        Seq(
-          q"""sb.append(",")""",
-          q"""sb.append(indent(1))""",
-          q"""${portJsonLambda(colIndex, 0)}"""
-        )
-      }
-      q"""
-         final override def jsonBranch0(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..$pre}, ${nestedRef.head}, leaf, {..$postFields})
-         ..$subJsons
-       """
-    }
-
-    lazy val level1: () => Tree = () =>
-      q"""
-         final override def jsonLeaf1(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(${initTabs(1)}, sb, {..${branchPairs(1)}})
-       """
-    lazy val level2: () => Tree = () =>
-      q"""
-         final override def jsonBranch1(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, ${branchPairs(1)}, ${nestedRef(1)}, leaf)
-         final override def jsonLeaf2(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(${initTabs(2)}, sb, {..${branchPairs(2)}})
-       """
-    lazy val level3: () => Tree = () =>
-      q"""
-         final override def jsonBranch1(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonLeaf3(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(${initTabs(3)}, sb, {..${branchPairs(3)}})
-       """
-    lazy val level4: () => Tree = () =>
-      q"""
-         final override def jsonBranch1(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonLeaf4(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(${initTabs(4)}, sb, {..${branchPairs(4)}})
-       """
-    lazy val level5: () => Tree = () =>
-      q"""
-         final override def jsonBranch1(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonBranch4(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
-         final override def jsonLeaf5(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(${initTabs(5)}, sb, {..${branchPairs(5)}})
-       """
-    lazy val level6: () => Tree = () =>
-      q"""
-         final override def jsonBranch1(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonBranch4(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
-         final override def jsonBranch5(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(5, ${initTabs(5)}, ${initTabs(6)}, sb, {..${branchPairs(5)}}, ${nestedRef(5)}, leaf)
-         final override def jsonLeaf6(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(${initTabs(6)}, sb, {..${branchPairs(6)}})
-       """
-    lazy val level7: () => Tree = () =>
-      q"""
-         final override def jsonBranch1(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonBranch4(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
-         final override def jsonBranch5(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(5, ${initTabs(5)}, ${initTabs(6)}, sb, {..${branchPairs(5)}}, ${nestedRef(5)}, leaf)
-         final override def jsonBranch6(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(6, ${initTabs(6)}, ${initTabs(7)}, sb, {..${branchPairs(6)}}, ${nestedRef(6)}, leaf)
-         final override def jsonLeaf7(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = leaf(${initTabs(7)}, sb, {..${branchPairs(7)}})
-       """
-
-    def get: Tree = objs.size match {
-      case 2 => branch0until(level1)
-      case 3 => branch0until(level2)
-      case 4 => branch0until(level3)
-      case 5 => branch0until(level4)
-      case 6 => branch0until(level5)
-      case 7 => branch0until(level6)
-      case 8 => branch0until(level7)
     }
   }
 }

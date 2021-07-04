@@ -1,5 +1,6 @@
 package moleculeTests
 
+import molecule.datomic.api.in3_out11.m
 import molecule.datomic.api.out11._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -17,29 +18,39 @@ object Adhoc extends AsyncTestSuite {
         //        _ <- Future(1 ==> 1)
         _ <- Future(2 ==> 2)
 
-        _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2) insert List(("a", 1, List(Set(2, 3))))
 
-        _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2).getJson.map(_ ==>
+
+
+        _ <- Ref2.int2 + Ns.int insert Seq(
+          // Two rows of data
+          (1, 11),
+          (2, 22)
+        )
+
+        _ <- m(Ref2.int2 + Ns.int).getJson.map(_ ==>
           """{
             |  "data": {
-            |    "Ns": [
+            |    "composite": [
             |      {
-            |        "str": "a",
-            |        "Ref1": {
-            |          "int1": 1,
-            |          "Refs2": [
-            |            {
-            |              "ints2": [
-            |                3,
-            |                2
-            |              ]
-            |            }
-            |          ]
+            |        "Ref2": {
+            |          "int2": 1
+            |        },
+            |        "Ns": {
+            |          "int": 11
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2
+            |        },
+            |        "Ns": {
+            |          "int": 22
             |        }
             |      }
             |    ]
             |  }
             |}""".stripMargin)
+
 
       } yield ()
     }

@@ -1,15 +1,14 @@
-package molecule.core.macros
+package molecule.core.macros.nested
 
 import java.lang.{Long => jLong}
-import java.util.{Comparator => jComparator, List => jList}
+import java.util.{List => jList}
 import molecule.core.api.Molecule_0
-import molecule.core.macros.NestedTuples._
+import molecule.core.macros.lambdas.JsonBase
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Builder classes of various arity of nested JSON. */
-trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
-  with jComparator[jList[AnyRef]] { self: Molecule_0[Obj, OuterTpl] =>
+trait NestedJson[Obj, OuterTpl] extends NestedBase[Obj, OuterTpl] with JsonBase { self: Molecule_0[Obj, OuterTpl] =>
 
   protected def jsonBranch0(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
   protected def jsonBranch1(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
@@ -39,8 +38,9 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
   protected var firstLevel0      = true
   protected val firstJsonObjects = new Array[Boolean](7)
 
-  protected def resetJsonVars: Unit = {
-    resetCastVars
+  protected def resetJsonVars(): Unit = {
+    resetVars()
+    
     // Traverse forward through rows (tuples require traversing backwards)
     descending = false
     firstLevel0 = true
@@ -136,7 +136,7 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
 
 object NestedJson {
 
-  trait NestedJson1[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] with NestedTuples1[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson1[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
@@ -146,7 +146,7 @@ object NestedJson {
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
-        resetJsonVars
+        resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
@@ -198,7 +198,7 @@ object NestedJson {
     }
   }
 
-  trait NestedJson2[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] with NestedTuples2[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson2[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
@@ -208,7 +208,7 @@ object NestedJson {
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
-        resetJsonVars
+        resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
@@ -267,7 +267,7 @@ object NestedJson {
     }
   }
 
-  trait NestedJson3[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] with NestedTuples3[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson3[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
@@ -277,7 +277,7 @@ object NestedJson {
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
-        resetJsonVars
+        resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
@@ -344,7 +344,7 @@ object NestedJson {
     }
   }
 
-  trait NestedJson4[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] with NestedTuples4[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson4[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
@@ -354,7 +354,7 @@ object NestedJson {
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
-        resetJsonVars
+        resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
@@ -430,7 +430,7 @@ object NestedJson {
     }
   }
 
-  trait NestedJson5[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] with NestedTuples5[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson5[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
@@ -440,7 +440,7 @@ object NestedJson {
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
-        resetJsonVars
+        resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
@@ -526,7 +526,7 @@ object NestedJson {
     }
   }
 
-  trait NestedJson6[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] with NestedTuples6[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson6[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
@@ -536,7 +536,7 @@ object NestedJson {
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
-        resetJsonVars
+        resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
@@ -633,7 +633,7 @@ object NestedJson {
     }
   }
 
-  trait NestedJson7[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] with NestedTuples7[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson7[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
@@ -643,7 +643,7 @@ object NestedJson {
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
-        resetJsonVars
+        resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 

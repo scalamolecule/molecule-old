@@ -8,7 +8,7 @@ import molecule.core.macros.lambdas.CastTypes
 
 /** Cast methods for converting raw data to Obj or Tpl
   */
-trait TypedCastHelpers extends CastTypes with TypedCastHelpersAggr { 
+trait TypedCastHelpers extends CastTypes with TypedCastHelpersAggr {
 
 
   // One ===========================================================================================

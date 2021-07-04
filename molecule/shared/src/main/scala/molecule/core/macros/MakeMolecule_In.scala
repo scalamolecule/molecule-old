@@ -14,9 +14,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //   val z = InspectMacro("MakeMolecule_In", 1, 8, mkError = true)
-   val z = InspectMacro("MakeMolecule_In", 9, 8)
-  //      override val z = InspectMacro("MakeMolecule_In", 1, 8)
+  //   private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8, mkError = true)
+  private lazy val xx = InspectMacro("MakeMolecule_In", 9, 8)
+  //      private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8)
 
   private[this] final def generateInputMolecule(dsl: Tree, ObjType: Type, InTypes: Type*)(TplTypes: Type*): Tree = {
     val (
@@ -82,10 +82,10 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)]
+                with ${nestedTupleClassX(castss.size)}[$ObjType, (..$TplTypes)]
               {
-                ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
+                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
+                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -135,9 +135,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
-                ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
+                with ${nestedTupleClassX(castss.size)}[$ObjType, (..$TplTypes)] {
+                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
+                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -146,7 +146,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     }
 
     if (flat) {
-      val typers = if (isJsPlatform) {
+      val transformers = if (isJsPlatform) {
         val (arrays, lookups0) = indexes.map {
           // Generic `v` of type Any needs to be cast on JS side
           case (colIndex, 11, arrayType, arrayIndex) =>
@@ -164,7 +164,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         } else {
           q"(..$lookups0)"
         }
-        z(1, txMetaCompositesCount, castss, lookups)
+        xx(1, txMetaCompositesCount, castss, lookups)
         q"""
           final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
             ..$arrays
@@ -204,7 +204,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 }
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
-                ..$typers
+                ..$transformers
               }
               new $outMolecule
             }
@@ -229,7 +229,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                   }
                 }
                 final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
-                  ..$typers
+                  ..$transformers
                 }
                 new $outMolecule
               }
@@ -238,7 +238,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
             new $inputMolecule
           """
 
-        z(1
+        xx(1
           //          , model0
           //          , obj
           , t
@@ -276,9 +276,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 }
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
-                ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
+                with ${nestedTupleClassX(castss.size)}[$ObjType, (..$TplTypes)] {
+                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
+                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }
@@ -311,9 +311,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 }
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with ${nestedJsonClassX(castss.size)}[$ObjType, (..$TplTypes)] {
-                ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
+                with ${nestedTupleClassX(castss.size)}[$ObjType, (..$TplTypes)] {
+                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
+                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
               }
               new $outMolecule
             }

@@ -144,7 +144,7 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.doubles insert Set(1.1, 2.2)
         _ <- Ns.bools insert Set(true, false)
         _ <- Ns.dates insert Set(date1, date2)
-        _ <- Ns.uuids insert Set(uuid1, uuid2)
+        _ <- Ns.uuids insert Set(uuid1)
         _ <- Ns.uris insert Set(uri1, uri2)
         _ <- Ns.enums insert Set(enum1, enum2)
         _ <- Ns.bigInts insert Set(bigInt1, bigInt2)
@@ -255,7 +255,10 @@ object JsonAttributes extends AsyncTestSuite {
                |  "data": {
                |    "Ns": [
                |      {
-               |        "uris": ["$uri2", "$uri1"]
+               |        "uris": [
+               |          "$uri2",
+               |          "$uri1"
+               |        ]
                |      }
                |    ]
                |  }
@@ -266,7 +269,10 @@ object JsonAttributes extends AsyncTestSuite {
                |  "data": {
                |    "Ns": [
                |      {
-               |        "uris": ["$uri1", "$uri2"]
+               |        "uris": [
+               |          "$uri1",
+               |          "$uri2"
+               |        ]
                |      }
                |    ]
                |  }
@@ -278,7 +284,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "enums": ["enum1", "enum2"]
+            |        "enums": [
+            |          "enum1",
+            |          "enum2"
+            |        ]
             |      }
             |    ]
             |  }
@@ -289,7 +298,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "bigInts": [1, 2]
+            |        "bigInts": [
+            |          1,
+            |          2
+            |        ]
             |      }
             |    ]
             |  }
@@ -300,7 +312,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "bigDecs": [2.0, 1.0]
+            |        "bigDecs": [
+            |          2.0,
+            |          1.0
+            |        ]
             |      }
             |    ]
             |  }
@@ -355,7 +370,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "longMap": {"b": 2, "a": 1}
+            |        "longMap": {
+            |          "b": 2,
+            |          "a": 1
+            |        }
             |      }
             |    ]
             |  }
@@ -366,7 +384,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "doubleMap": {"b": 2.2, "a": 1.1}
+            |        "doubleMap": {
+            |          "b": 2.2,
+            |          "a": 1.1
+            |        }
             |      }
             |    ]
             |  }
@@ -377,7 +398,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "boolMap": {"b": false, "a": true}
+            |        "boolMap": {
+            |          "b": false,
+            |          "a": true
+            |        }
             |      }
             |    ]
             |  }
@@ -388,7 +412,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "dateMap": {"a": "2001-07-01", "b": "2002-01-01"}
+            |        "dateMap": {
+            |          "a": "2001-07-01",
+            |          "b": "2002-01-01"
+            |        }
             |      }
             |    ]
             |  }
@@ -399,7 +426,9 @@ object JsonAttributes extends AsyncTestSuite {
              |  "data": {
              |    "Ns": [
              |      {
-             |        "uuidMap": {"a": "$uuid1"}
+             |        "uuidMap": {
+             |          "a": "$uuid1"
+             |        }
              |      }
              |    ]
              |  }
@@ -410,7 +439,10 @@ object JsonAttributes extends AsyncTestSuite {
              |  "data": {
              |    "Ns": [
              |      {
-             |        "uriMap": {"b": "$uri2", "a": "$uri1"}
+             |        "uriMap": {
+             |          "b": "$uri2",
+             |          "a": "$uri1"
+             |        }
              |      }
              |    ]
              |  }
@@ -421,7 +453,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "bigIntMap": {"b": 2, "a": 1}
+            |        "bigIntMap": {
+            |          "b": 2,
+            |          "a": 1
+            |        }
             |      }
             |    ]
             |  }
@@ -432,7 +467,10 @@ object JsonAttributes extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "bigDecMap": {"b": 2.0, "a": 1.0}
+            |        "bigDecMap": {
+            |          "b": 2.0,
+            |          "a": 1.0
+            |        }
             |      }
             |    ]
             |  }
@@ -662,7 +700,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 1,
-            |        "strs": ["", "b"]
+            |        "strs": [
+            |          "",
+            |          "b"
+            |        ]
             |      }
             |    ]
             |  }
@@ -678,7 +719,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 2,
-            |        "ints": [1, 2]
+            |        "ints": [
+            |          1,
+            |          2
+            |        ]
             |      }
             |    ]
             |  }
@@ -694,7 +738,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 3,
-            |        "longs": [1, 2]
+            |        "longs": [
+            |          1,
+            |          2
+            |        ]
             |      }
             |    ]
             |  }
@@ -710,7 +757,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 4,
-            |        "doubles": [1.1, 2.2]
+            |        "doubles": [
+            |          1.1,
+            |          2.2
+            |        ]
             |      }
             |    ]
             |  }
@@ -727,7 +777,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 5,
-            |        "bools": [false, true]
+            |        "bools": [
+            |          false,
+            |          true
+            |        ]
             |      }
             |    ]
             |  }
@@ -743,7 +796,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 6,
-            |        "dates": ["2001-07-01", "2002-01-01"]
+            |        "dates": [
+            |          "2001-07-01",
+            |          "2002-01-01"
+            |        ]
             |      }
             |    ]
             |  }
@@ -759,7 +815,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 7,
-             |        "uuids": ["$uuid1", "$uuid2"]
+             |        "uuids": [
+             |          "$uuid1",
+             |          "$uuid2"
+             |        ]
              |      }
              |    ]
              |  }
@@ -775,7 +834,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 8,
-             |        "uris": ["$uri1", "$uri2"]
+             |        "uris": [
+             |          "$uri1",
+             |          "$uri2"
+             |        ]
              |      }
              |    ]
              |  }
@@ -791,7 +853,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 9,
-            |        "enums": ["enum1", "enum2"]
+            |        "enums": [
+            |          "enum1",
+            |          "enum2"
+            |        ]
             |      }
             |    ]
             |  }
@@ -807,7 +872,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 10,
-             |        "bigInts": [$bigInt1, $bigInt2]
+             |        "bigInts": [
+             |          $bigInt1,
+             |          $bigInt2
+             |        ]
              |      }
              |    ]
              |  }
@@ -823,7 +891,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 11,
-             |        "bigDecs": [$bigDec1, $bigDec2]
+             |        "bigDecs": [
+             |          $bigDec1,
+             |          $bigDec2
+             |        ]
              |      }
              |    ]
              |  }
@@ -855,7 +926,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 1,
-            |        "strMap": {"a": "A", "b": "B"}
+            |        "strMap": {
+            |          "a": "A",
+            |          "b": "B"
+            |        }
             |      }
             |    ]
             |  }
@@ -871,7 +945,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 2,
-            |        "intMap": {"a": 1, "b": 2}
+            |        "intMap": {
+            |          "a": 1,
+            |          "b": 2
+            |        }
             |      }
             |    ]
             |  }
@@ -887,7 +964,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 3,
-            |        "longMap": {"a": 1, "b": 2}
+            |        "longMap": {
+            |          "a": 1,
+            |          "b": 2
+            |        }
             |      }
             |    ]
             |  }
@@ -903,7 +983,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 4,
-            |        "doubleMap": {"a": 1.1, "b": 2.2}
+            |        "doubleMap": {
+            |          "a": 1.1,
+            |          "b": 2.2
+            |        }
             |      }
             |    ]
             |  }
@@ -919,7 +1002,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 5,
-            |        "boolMap": {"a": true, "b": false}
+            |        "boolMap": {
+            |          "a": true,
+            |          "b": false
+            |        }
             |      }
             |    ]
             |  }
@@ -935,7 +1021,10 @@ object JsonAttributes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 6,
-            |        "dateMap": {"a": "2001-07-01", "b": "2002-01-01"}
+            |        "dateMap": {
+            |          "a": "2001-07-01",
+            |          "b": "2002-01-01"
+            |        }
             |      }
             |    ]
             |  }
@@ -951,7 +1040,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 7,
-             |        "uuidMap": {"a": "$uuid1", "b": "$uuid2"}
+             |        "uuidMap": {
+             |          "a": "$uuid1",
+             |          "b": "$uuid2"
+             |        }
              |      }
              |    ]
              |  }
@@ -967,7 +1059,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 8,
-             |        "uriMap": {"a": "$uri1", "b": "$uri2"}
+             |        "uriMap": {
+             |          "a": "$uri1",
+             |          "b": "$uri2"
+             |        }
              |      }
              |    ]
              |  }
@@ -983,7 +1078,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 9,
-             |        "bigIntMap": {"a": $bigInt1, "b": $bigInt2}
+             |        "bigIntMap": {
+             |          "a": $bigInt1,
+             |          "b": $bigInt2
+             |        }
              |      }
              |    ]
              |  }
@@ -999,7 +1097,10 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 10,
-             |        "bigDecMap": {"a": $bigDec1, "b": $bigDec2}
+             |        "bigDecMap": {
+             |          "a": $bigDec1,
+             |          "b": $bigDec2
+             |        }
              |      }
              |    ]
              |  }

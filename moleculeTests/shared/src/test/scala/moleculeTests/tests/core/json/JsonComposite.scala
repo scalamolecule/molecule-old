@@ -19,10 +19,33 @@ object JsonComposite extends AsyncTestSuite {
         )
 
         _ <- m(Ref2.int2 + Ns.int).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 2}, {"Ns.int": 22}],
-            |[{"Ref2.int2": 1}, {"Ns.int": 11}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1
+            |        },
+            |        "Ns": {
+            |          "int": 11
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2
+            |        },
+            |        "Ns": {
+            |          "int": 22
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+//          """[
+//            |[{"Ref2.int2": 2}, {"Ns.int": 22}],
+//            |[{"Ref2.int2": 1}, {"Ns.int": 11}]
+//            |]""".stripMargin)
       } yield ()
     }
 

@@ -15,9 +15,9 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
 
   override def abort(msg: String): Nothing = throw MoleculeException(msg)
 
-  val zz = InspectMacro("MakeMolecule", 9, 8)
-  //    val zz = InspectMacro("MakeMoleculeDynamic", 1, 10)
-  //  val zz = InspectMacro("MakeMoleculeDynamic", 2, 10, mkError = true)
+  private lazy val xx = InspectMacro("MakeMolecule", 9, 8)
+  //    private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10)
+  //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 2, 10, mkError = true)
 
 
   final def apply[Obj: W](body: Tree): Tree = {
@@ -147,7 +147,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
          $t0
          """
 
-    zz(1, t)
+    xx(1, t)
     t
   }
 }

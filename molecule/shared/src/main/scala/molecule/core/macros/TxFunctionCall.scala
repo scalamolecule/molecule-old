@@ -8,7 +8,7 @@ class TxFunctionCall(val c: blackbox.Context) extends MacroHelpers {
 
   import c.universe._
 
-  val tfc = InspectMacro("TxFunctionCall", 1)
+  private lazy val xx = InspectMacro("TxFunctionCall", 1)
 
   private[this] def resolve(txFnCall: Tree): (String, Seq[Tree]) = {
     val q"$owner.$txFn(..$args)(..$conn)" = txFnCall

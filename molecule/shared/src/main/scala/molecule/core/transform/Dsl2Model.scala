@@ -10,48 +10,56 @@ import molecule.core.generic.Log._
 import molecule.core.generic.Schema._
 import molecule.core.generic.VAET._
 import molecule.core.generic._
-import molecule.core.macros.lambdas.{CastAggr, CastOptNested, CastTypes, JsonAggr, JsonNested, JsonOptNested, JsonTypes}
+import molecule.core.macros.build.json._
+import molecule.core.macros.build.obj.BuildObj
+import molecule.core.macros.build.tpl._
+import molecule.core.macros.lambdaTrees._
+import molecule.core.macros.lambdas._
 import molecule.core.macros.qr.CastArrays
-import molecule.core.macros.lambdaTrees.{LambdaCastAggr, LambdaCastOptNested, LambdaCastTypes, LambdaJsonAggr, LambdaJsonOptNested, LambdaJsonTypes}
-import molecule.core.macros.{BuildJson, BuildObj, MacroHelpers, MakeOptNested}
-import molecule.core.ops.{Liftables, TreeOps, VerifyRawModel}
+import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 import scala.util.{Try => Check}
 
-private[molecule] trait Dsl2Model
-  extends BuildJson
-    with BuildObj
-    with CastArrays
-    with MakeOptNested
+private[molecule] trait Dsl2Model extends TreeOps
+  with BuildTpl
+  with BuildTplComposite
+  with BuildTplOptNested
+  with BuildTplNested
 
-    with LambdaCastTypes
-    with LambdaCastAggr
-    with LambdaCastOptNested
+  with BuildObj
 
-    with LambdaJsonTypes
-    with LambdaJsonAggr
-    with LambdaJsonOptNested
+  with BuildJson
+  with BuildJsonComposite
+  with BuildJsonNested
 
-    with CastTypes
-    with CastAggr
-    with CastOptNested
+  with CastArrays
 
-    with JsonTypes
-    with JsonAggr
-    with JsonOptNested
-    with JsonNested
+  with LambdaCastTypes
+  with LambdaCastAggr
+  with LambdaCastOptNested
 
-    with TreeOps {
+  with LambdaJsonTypes
+  with LambdaJsonAggr
+  with LambdaJsonOptNested
+
+  with CastTypes
+  with CastAggr
+  with CastOptNested
+
+  with JsonTypes
+  with JsonAggr
+  with JsonOptNested
+  with JsonNested {
 
   val c: blackbox.Context
 
   import c.universe._
 
-  val xx = InspectMacro("Dsl2Model", 901, 900)
-  //    val xx = InspectMacro("Dsl2Model", 101, 800)
-  //      val xx = InspectMacro("Dsl2Model", 2, 800)
+  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //    private lazy val xx = InspectMacro("Dsl2Model", 101, 800)
+  //    private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
 
@@ -64,7 +72,7 @@ private[molecule] trait Dsl2Model
       List[List[Int => Tree]],
       List[List[(Int, Int) => Tree]],
       List[(Int, Int, Int, Int)],
-      Obj,
+      BuilderObj,
       List[String],
       Boolean,
       Int,
@@ -105,10 +113,10 @@ private[molecule] trait Dsl2Model
     var castss        : List[List[Int => Tree]]        = List(List.empty[Int => Tree])
     var jsonss        : List[List[(Int, Int) => Tree]] = List(List.empty[(Int, Int) => Tree])
     var indexes       : List[(Int, Int, Int)]          = List.empty[(Int, Int, Int)]
-    var arrayIndexes  : Map[Int, Int]                  = Map.empty[Int, Int]
-    var obj           : Obj                            = Obj("", "", 0, Nil)
+    var arrayIndexes  : Map[Int, Int] = Map.empty[Int, Int]
+    var obj           : BuilderObj    = BuilderObj("", "", 0, Nil)
     //    var nodes         : Seq[Node]                      = Nil
-    var objLevel      : Int                            = 0
+    var objLevel      : Int           = 0
 
     //    var tempJsons     : List[((String, String) => Int => Tree, String, String)] = List.empty[((String, String) => Int => Tree, String, String)]
     var tx        : String       = ""
@@ -141,7 +149,7 @@ private[molecule] trait Dsl2Model
 
     def addProp(t: richTree, tpe: Tree, cast: Int => Tree, json: (Int, Int) => Tree, aggr: Option[(String, Tree)] = None): Unit = {
       val aggrTpe = aggr.map(_._2.toString)
-      obj = addNode(obj, Prop(t.nsFull + "_" + t.name.replace('$', '_'), t.name, tpe, cast, json, aggrTpe), objLevel)
+      obj = addNode(obj, BuilderProp(t.nsFull + "_" + t.name.replace('$', '_'), t.name, tpe, cast, json, aggrTpe), objLevel)
     }
 
     def updateIndexes(): Unit = {
@@ -317,24 +325,24 @@ private[molecule] trait Dsl2Model
       val nsCls = ns + "_"
 
       // Prepend namespace in obj
-      val newProps: List[Node] = if (objCompositesCount > 0) {
-        val (props, composites) = obj.props.splitAt(obj.props.length - objCompositesCount)
-        val newP: List[Node]    = composites.head match {
-          case Obj("Tx_", _, _, _) =>
+      val newProps: List[BuilderNode] = if (objCompositesCount > 0) {
+        val (props, composites)     = obj.props.splitAt(obj.props.length - objCompositesCount)
+        val newP: List[BuilderNode] = composites.head match {
+          case BuilderObj("Tx_", _, _, _) =>
             // Reset obj composites count
             objCompositesCount = 0
-            List(Obj(nsCls, ns, 1, props ++ composites))
+            List(BuilderObj(nsCls, ns, 1, props ++ composites))
 
-          case compositeObj@Obj(compositeCls, _, _, _) if sameNs && nsCls == compositeCls =>
+          case compositeObj@BuilderObj(compositeCls, _, _, _) if sameNs && nsCls == compositeCls =>
             compositeObj.copy(props = props ++ compositeObj.props) +: composites.tail
 
-          case _ => Obj(nsCls, ns, 1, props) +: composites
+          case _ => BuilderObj(nsCls, ns, 1, props) +: composites
         }
         xx(631, props, composites, newP)
         newP
       } else {
-        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(Obj(nsCls, ns, 1, obj.props))), sameNs)
-        List(Obj(nsCls, ns, 1, obj.props))
+        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(BuilderObj(nsCls, ns, 1, obj.props))), sameNs)
+        List(BuilderObj(nsCls, ns, 1, obj.props))
       }
       obj = obj.copy(props = newProps)
       xx(633, obj, ns)
@@ -429,7 +437,7 @@ private[molecule] trait Dsl2Model
 
       } else if (attrStr.head == '_') {
         xx(134, attrStr.tail)
-        obj = addNode(obj, Obj("", "", 0, Nil), objLevel)
+        obj = addNode(obj, BuilderObj("", "", 0, Nil), objLevel)
         objLevel += 1
         xx(151, obj)
         traverseElement(prev, p, ReBond(attrStr.tail))
@@ -441,12 +449,12 @@ private[molecule] trait Dsl2Model
         val refCls  = t.nsFull + "__" + refName
         if (objCompositesCount > 0) {
           val (props, composites) = obj.props.splitAt(obj.props.length - objCompositesCount)
-          val newProps            = Obj(refCls, refName, 1, props) +: composites
+          val newProps            = BuilderObj(refCls, refName, 1, props) +: composites
           obj = obj.copy(props = newProps)
           xx(152, props, composites, newProps, obj)
 
         } else if (txMetaDataDone) {
-          val props     = Obj(refCls, refName, 1, obj.props.init)
+          val props     = BuilderObj(refCls, refName, 1, obj.props.init)
           val txMetaObj = obj.props.last
           obj = obj.copy(props = List(props, txMetaObj))
           objLevel = 0
@@ -691,7 +699,7 @@ private[molecule] trait Dsl2Model
               addSpecific(p, castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t), Some(tq"${TypeName(tpeStr)}"), false)
               //              addJson(jsonKeyedMapAttr, tpeStr, clean(mapAttr.toString))
               // Have to add node manually since nsFull is resolved in a special way
-              val newProp = Prop(nsFull + "_" + attrStr, attrStr, tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
+              val newProp = BuilderProp(nsFull + "_" + attrStr, attrStr, tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
               obj = addNode(obj, newProp, objLevel)
             }
             traverseElement(prev1, p, Atom(nsFull, mapAttr.toString, tpeStr, 4, VarValue, None, Nil, Seq(extract(q"$key").toString)))
@@ -812,7 +820,7 @@ private[molecule] trait Dsl2Model
               addSpecific(t, castOneAttr("Int"), jsonOneAttr("Int", attrStr), Some(tq"${TypeName("Int")}"), false)
               //              addJson(jsonOneAttr, "Int", attrStr)
               if (genericAttr.nonEmpty) {
-                val newProp = Prop(
+                val newProp = BuilderProp(
                   "Datom_" + genericAttr,
                   genericAttr,
                   tq"${TypeName(tpe)}",
@@ -828,7 +836,7 @@ private[molecule] trait Dsl2Model
               addSpecific(t, castOneAttr(tpe), jsonOneAttr(tpe, attrStr), Some(tq"${TypeName(tpe)}"), false)
               //              addJson(jsonOneAttr, tpe, attrStr)
               if (genericAttr.nonEmpty) {
-                val newProp = Prop("Datom_" + genericAttr, genericAttr, tq"${TypeName(tpe)}", castOneAttr(tpe), jsonOneAttr(tpe, attrStr))
+                val newProp = BuilderProp("Datom_" + genericAttr, genericAttr, tq"${TypeName(tpe)}", castOneAttr(tpe), jsonOneAttr(tpe, attrStr))
                 obj = addNode(obj, newProp, objLevel)
               }
               xx(242, t, t.nsFull, t.name, obj)
@@ -957,7 +965,7 @@ private[molecule] trait Dsl2Model
           )
           //          addJson(jsonKeyedMapAttr, tpeStr, clean(keyedAttr.toString))
           // Have to add node manually since nsFull is resolved in a special way
-          val newProp = Prop(nsFull + "_" + keyedAttr, keyedAttr.toString(), tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
+          val newProp = BuilderProp(nsFull + "_" + keyedAttr, keyedAttr.toString(), tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
           obj = addNode(obj, newProp, objLevel)
           xx(421, obj)
         }
@@ -1126,9 +1134,9 @@ private[molecule] trait Dsl2Model
       nestedRefs = nestedRefs :+ manyRef.toString
       // park post props
       val postProps = obj.props
-      obj = Obj("", "", 0, Nil)
+      obj = BuilderObj("", "", 0, Nil)
       val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nestedTree)
-      val nestedObj   = Obj(nsFull + "__" + manyRef, manyRef.toString, 2, obj.props)
+      val nestedObj   = BuilderObj(nsFull + "__" + manyRef, manyRef.toString, 2, obj.props)
       //      addJsonLambdas
       obj = obj.copy(props = nestedObj +: postProps)
       xx(560, prev, manyRef, nestedTree, nsFull, parentNs, nestedRefs, nestedElems, postProps, obj)
@@ -1653,7 +1661,7 @@ private[molecule] trait Dsl2Model
     }
 
     obj = {
-      def getNs(element: Element): Obj = element match {
+      def getNs(element: Element): BuilderObj = element match {
         case Atom(nsFull, _, _, _, _, _, _, _) => obj.copy(ref = nsFull, card = 2)
         case Bond(nsFull, _, _, _, _)          => obj.copy(ref = nsFull, card = 2)
         case Generic(nsFull, _, _, _)          => obj.copy(ref = nsFull, card = 2)
