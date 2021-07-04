@@ -1,9 +1,7 @@
 package moleculeTests.tests.core.crud.insert
 
-import molecule.datomic.api.out2._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -43,6 +41,19 @@ object InsertNested extends AsyncTestSuite {
             Map(":db/id" -> p2, ":Ref1/int1" -> 7, ":Ref1/str1" -> "product2")
           ),
           ":Ns/str" -> "order"
+        ))
+      } yield ()
+    }
+
+
+    // todo?
+    "Post attribute" - core { implicit conn =>
+      for {
+        _ <- Ns.str.Refs1.*(Ref1.int1).bool insert List(
+          ("a", List(10, 11), true)
+        )
+        _ <- Ns.str.Refs1.*(Ref1.int1).bool.get.map(_ ==> List(
+          ("a", true, List(10, 11))
         ))
       } yield ()
     }

@@ -89,5 +89,5 @@ private[molecule] trait JsonBase extends Helpers {
     case valueOfUnknownType    => quote(sb, valueOfUnknownType.toString)
   }
 
-  def indent(level: Int): String = "\n" + "  " * (4 + level)
+  def indent(tabs: Int): String = "\n" + "  " * (3 + tabs)
 }

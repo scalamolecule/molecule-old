@@ -62,8 +62,10 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
 
   def branch(
     level: Int,
+    tabs: Int,
+    tabsNested: Int,
     sb: StringBuilder,
-    branchPairs: => StringBuilder,
+    branchPairs: StringBuilder => StringBuilder,
     ref: String,
     leaf: StringBuilder,
     post: => StringBuilder = new StringBuilder()
@@ -77,61 +79,57 @@ trait NestedJson[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
     } else {
       // Prepare next outer object
       sb.append(",")
-      sb.append(indent(level * 2 - 1))
+      sb.append(indent(tabs))
     }
 
     // Outer object
     sb.append("{")
-    sb.append(indent(level * 2))
+    sb.append(indent(tabs + 1))
 
     // Pairs before nested
-    branchPairs
+    branchPairs {
+      val sb = new StringBuilder()
 
-    // Next pair
-    if (sb.last != '{') {
-      sb.append(",")
-      sb.append(indent(level * 2))
+      // Ref
+      quote(sb, ref)
+
+      // Array of inner field/value pairs
+      sb.append(": [")
+      sb.append(indent(tabsNested))
+
+      // Inner pairs
+      sb.append(leaf)
+      leaf.clear()
+
+      // End of inner pair array
+      sb.append(indent(tabsNested - 1))
+      sb.append("]")
     }
-
-    // Ref
-    quote(sb, ref)
-
-    // Array of inner field/value pairs
-    sb.append(": [")
-    sb.append(indent(level * 2 + 1))
-
-    // Inner pairs
-    sb.append(leaf.toString)
-    leaf.clear()
-
-    // End of inner pair array
-    sb.append(indent(level * 2))
-    sb.append("]")
 
     // Post fields
     post
 
     // End of outer object
-    sb.append(indent(level * 2 - 1))
+    sb.append(indent(tabs))
     sb.append("}")
-
   }
 
-  def leaf(level: Int, sb: StringBuilder, leafPairs: => StringBuilder): StringBuilder = {
+
+  def leaf(tabs: Int, sb: StringBuilder, leafPairs: StringBuilder => StringBuilder): StringBuilder = {
     if (sb.nonEmpty) {
       // Prepare next object
       sb.append(",")
-      sb.append(indent(level * 2 - 1))
+      sb.append(indent(tabs))
     }
     // Start of object
     sb.append("{")
-    sb.append(indent(level * 2))
+    sb.append(indent(tabs + 1))
 
     // Inner pairs
-    leafPairs
+    leafPairs(new StringBuilder())
 
     // End of object
-    sb.append(indent(level * 2 - 1))
+    sb.append(indent(tabs))
     sb.append("}")
   }
 }
@@ -154,6 +152,7 @@ object NestedJson {
 
         if (last == 0) {
           // Empty result set
+          sb0.append("]")
 
         } else if (last == 1) {
           row = rows.iterator.next
@@ -215,6 +214,7 @@ object NestedJson {
 
         if (last == 0) {
           // Empty result set
+          sb0.append("]")
 
         } else if (last == 1) {
           row = rows.iterator.next
@@ -283,6 +283,7 @@ object NestedJson {
 
         if (last == 0) {
           // Empty result set
+          sb0.append("]")
 
         } else if (last == 1) {
           row = rows.iterator.next
@@ -359,6 +360,7 @@ object NestedJson {
 
         if (last == 0) {
           // Empty result set
+          sb0.append("]")
 
         } else if (last == 1) {
           row = rows.iterator.next
@@ -444,6 +446,7 @@ object NestedJson {
 
         if (last == 0) {
           // Empty result set
+          sb0.append("]")
 
         } else if (last == 1) {
           row = rows.iterator.next
@@ -539,6 +542,7 @@ object NestedJson {
 
         if (last == 0) {
           // Empty result set
+          sb0.append("]")
 
         } else if (last == 1) {
           row = rows.iterator.next
@@ -645,6 +649,7 @@ object NestedJson {
 
         if (last == 0) {
           // Empty result set
+          sb0.append("]")
 
         } else if (last == 1) {
           row = rows.iterator.next

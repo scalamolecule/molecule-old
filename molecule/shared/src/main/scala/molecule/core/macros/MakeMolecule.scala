@@ -12,8 +12,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   val z = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-     val z = InspectMacro("MakeMolecule", 2, 8)
-//   val z = InspectMacro("MakeMolecule", 9, 7)
+//     val z = InspectMacro("MakeMolecule", 2, 8)
+   val z = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -86,8 +86,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         }
         q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
-          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
-          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ${jsonCode(obj)._1}
+          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
+          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
         """
 //          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {..${topLevelJson(jsonss)}}
       }
@@ -122,7 +122,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             ..${castOptNestedRows(castss, TplTypes, optNestedRefIndexes, optNestedTacitIndexes)}
             final override def row2obj(row: java.util.List[AnyRef]): $ObjType = {
               $tpl
-              ${objCode(obj, isNested = true)._1}
+              ${objFlat(obj, isOptNested = true)._1}
             }
           }
         """
@@ -132,7 +132,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             ..${castOptNestedRows(castss, TplTypes, optNestedRefIndexes, optNestedTacitIndexes)}
             final override def row2obj(row: java.util.List[AnyRef]): $ObjType = {
               $tpl
-              ${objCode(obj, isNested = true)._1}
+              ${objFlat(obj, isOptNested = true)._1}
             }
           }
         """
@@ -170,7 +170,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           ..${resolveNestedTupleMethods(castss, typess, TplTypes, postTypes, postCasts).get}
           final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
             $tpl
-            ${objCode(obj, isNested = true)._1}
+            ${objFlat(obj, isOptNested = true)._1}
           }
           ..${resolveNestedJsonMethods(obj, jsonss, nestedRefs, postJsons).get}
          """
@@ -232,8 +232,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     z(7
       , t
-      , obj
-      , jsonss
+//      , obj
+//      , jsonss
     )
     t
   }

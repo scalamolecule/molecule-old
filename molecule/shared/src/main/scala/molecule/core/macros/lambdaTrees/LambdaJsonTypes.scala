@@ -23,16 +23,16 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
     case "Any"        => (colIndex: Int, _: Int) => q"jsonOneAny(sb, $field, row, $colIndex)"
   }
   val jsonManyAttr: (String, String) => (Int, Int) => Tree = (tpe: String, field: String) => tpe match {
-    case "String"     => (colIndex: Int, level: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $level)"
-    case "Int"        => (colIndex: Int, level: Int) => q"jsonMany(sb, $field, row, $colIndex, $level)"
-    case "Long"       => (colIndex: Int, level: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $level)"
-    case "Double"     => (colIndex: Int, level: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $level)"
-    case "Boolean"    => (colIndex: Int, level: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $level)"
-    case "Date"       => (colIndex: Int, level: Int) => q"jsonManyDate(sb, $field, row, $colIndex, $level)"
-    case "UUID"       => (colIndex: Int, level: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $level)"
-    case "URI"        => (colIndex: Int, level: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $level)"
-    case "BigInt"     => (colIndex: Int, level: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $level)"
-    case "BigDecimal" => (colIndex: Int, level: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $level)"
+    case "String"     => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "Int"        => (colIndex: Int, tabs: Int) => q"jsonMany(sb, $field, row, $colIndex, $tabs)"
+    case "Long"       => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
+    case "Double"     => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
+    case "Boolean"    => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
+    case "Date"       => (colIndex: Int, tabs: Int) => q"jsonManyDate(sb, $field, row, $colIndex, $tabs)"
+    case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "URI"        => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
   }
 
   val jsonMandatoryAttr: richTree => (Int, Int) => Tree = (t: richTree) =>
@@ -56,16 +56,16 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
       }
     } else {
       t.tpeS match {
-        case "String"     => (colIndex: Int, level: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $level)"
-        case "Int"        => (colIndex: Int, level: Int) => q"jsonOptMany(sb, $field, row, $colIndex, $level)"
-        case "Long"       => (colIndex: Int, level: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $level)"
-        case "Double"     => (colIndex: Int, level: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $level)"
-        case "Boolean"    => (colIndex: Int, level: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $level)"
-        case "Date"       => (colIndex: Int, level: Int) => q"jsonOptManyDate(sb, $field, row, $colIndex, $level)"
-        case "UUID"       => (colIndex: Int, level: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $level)"
-        case "URI"        => (colIndex: Int, level: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $level)"
-        case "BigInt"     => (colIndex: Int, level: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $level)"
-        case "BigDecimal" => (colIndex: Int, level: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $level)"
+        case "String"     => (colIndex: Int, tabs: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $tabs)"
+        case "Int"        => (colIndex: Int, tabs: Int) => q"jsonOptMany(sb, $field, row, $colIndex, $tabs)"
+        case "Long"       => (colIndex: Int, tabs: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "Double"     => (colIndex: Int, tabs: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "Boolean"    => (colIndex: Int, tabs: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptManyDate(sb, $field, row, $colIndex, $tabs)"
+        case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $tabs)"
+        case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $tabs)"
+        case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $tabs)"
       }
     }
   }
@@ -87,16 +87,16 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
       }
     } else {
       t.tpeS match {
-        case "String"     => (colIndex: Int, level: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $level)"
-        case "Int"        => (colIndex: Int, level: Int) => q"jsonOptApplyMany(sb, $field, row, $colIndex, $level)"
-        case "Long"       => (colIndex: Int, level: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $level)"
-        case "Double"     => (colIndex: Int, level: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $level)"
-        case "Boolean"    => (colIndex: Int, level: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $level)"
-        case "Date"       => (colIndex: Int, level: Int) => q"jsonOptApplyManyDate(sb, $field, row, $colIndex, $level)"
-        case "UUID"       => (colIndex: Int, level: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $level)"
-        case "URI"        => (colIndex: Int, level: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $level)"
-        case "BigInt"     => (colIndex: Int, level: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $level)"
-        case "BigDecimal" => (colIndex: Int, level: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $level)"
+        case "String"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $tabs)"
+        case "Int"        => (colIndex: Int, tabs: Int) => q"jsonOptApplyMany(sb, $field, row, $colIndex, $tabs)"
+        case "Long"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "Double"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "Boolean"    => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyDate(sb, $field, row, $colIndex, $tabs)"
+        case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $tabs)"
+        case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $tabs)"
+        case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
+        case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
       }
     }
   }
@@ -106,7 +106,7 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
     if (t.card == 1) {
       (colIndex: Int, _: Int) => q"jsonOptOneRefAttr(sb, $field, row, $colIndex)"
     } else {
-      (colIndex: Int, level: Int) => q"jsonOptManyRefAttr(sb, $field, row, $colIndex, $level)"
+      (colIndex: Int, tabs: Int) => q"jsonOptManyRefAttr(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
@@ -118,7 +118,7 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
       (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
     } else {
       ii = (24, 20)
-      (colIndex: Int, level: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $level)"
+      (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
@@ -129,7 +129,7 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
       (colIndex: Int, _: Int) => q"jsonOptOneEnum(sb, $field, row, $colIndex)"
     } else {
       ii = (35, 30)
-      (colIndex: Int, level: Int) => q"jsonOptManyEnum(sb, $field, row, $colIndex, $level)"
+      (colIndex: Int, tabs: Int) => q"jsonOptManyEnum(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
@@ -137,48 +137,48 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
   val jsonMandatoryMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     t.tpeS match {
-      case "String"     => (colIndex: Int, level: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "Int"        => (colIndex: Int, level: Int) => q"jsonMap(sb, $field, row, $colIndex, $level)"
-      case "Long"       => (colIndex: Int, level: Int) => q"jsonMap(sb, $field, row, $colIndex, $level)"
-      case "Double"     => (colIndex: Int, level: Int) => q"jsonMap(sb, $field, row, $colIndex, $level)"
-      case "Boolean"    => (colIndex: Int, level: Int) => q"jsonMap(sb, $field, row, $colIndex, $level)"
-      case "Date"       => (colIndex: Int, level: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "UUID"       => (colIndex: Int, level: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "URI"        => (colIndex: Int, level: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "BigInt"     => (colIndex: Int, level: Int) => q"jsonMap(sb, $field, row, $colIndex, $level)"
-      case "BigDecimal" => (colIndex: Int, level: Int) => q"jsonMap(sb, $field, row, $colIndex, $level)"
+      case "String"     => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "Int"        => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
+      case "Long"       => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
+      case "Double"     => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
+      case "Boolean"    => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
+      case "Date"       => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "URI"        => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
+      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
   val jsonOptionalMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     t.tpeS match {
-      case "String"     => (colIndex: Int, level: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "Int"        => (colIndex: Int, level: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $level)"
-      case "Long"       => (colIndex: Int, level: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $level)"
-      case "Double"     => (colIndex: Int, level: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $level)"
-      case "Boolean"    => (colIndex: Int, level: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $level)"
-      case "Date"       => (colIndex: Int, level: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "UUID"       => (colIndex: Int, level: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "URI"        => (colIndex: Int, level: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "BigInt"     => (colIndex: Int, level: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $level)"
-      case "BigDecimal" => (colIndex: Int, level: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $level)"
+      case "String"     => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "Int"        => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
+      case "Long"       => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
+      case "Double"     => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
+      case "Boolean"    => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
+      case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
+      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
   val jsonOptionalApplyMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     t.tpeS match {
-      case "String"     => (colIndex: Int, level: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "Int"        => (colIndex: Int, level: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $level)"
-      case "Long"       => (colIndex: Int, level: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $level)"
-      case "Double"     => (colIndex: Int, level: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $level)"
-      case "Boolean"    => (colIndex: Int, level: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $level)"
-      case "Date"       => (colIndex: Int, level: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "UUID"       => (colIndex: Int, level: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "URI"        => (colIndex: Int, level: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $level)"
-      case "BigInt"     => (colIndex: Int, level: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $level)"
-      case "BigDecimal" => (colIndex: Int, level: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $level)"
+      case "String"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "Int"        => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
+      case "Long"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
+      case "Double"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
+      case "Boolean"    => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
+      case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
+      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
     }
   }
 

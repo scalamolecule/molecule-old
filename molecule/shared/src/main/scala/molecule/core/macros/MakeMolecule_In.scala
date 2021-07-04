@@ -56,7 +56,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
                 final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
-                final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+                final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
               }
               new $outMolecule
             }
@@ -109,7 +109,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
                 final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
-                final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+                final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
               }
               new $outMolecule
             }
@@ -183,7 +183,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         }
         q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
-          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
         """
       }
 

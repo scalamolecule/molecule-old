@@ -1,11 +1,9 @@
 package moleculeTests.tests.core.json
 
-import molecule.core.exceptions.MoleculeException
 import molecule.datomic.api.out11._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import moleculeTests.tests.core.json.JsonRef.core
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -155,8 +153,8 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
-            |        "Refs1: [
+            |        "str": "a",
+            |        "Refs1": [
             |          {
             |            "enum1": "enum11"
             |          }
@@ -181,7 +179,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": [
             |          {
             |            "Ref2": {
@@ -191,7 +189,7 @@ object JsonNested extends AsyncTestSuite {
             |        ]
             |      },
             |      {
-            |        "str": "b", 
+            |        "str": "b",
             |        "Refs1": [
             |          {
             |            "Ref2": {
@@ -210,8 +208,8 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
-            |        "Refs1: [
+            |        "str": "a",
+            |        "Refs1": [
             |          {
             |            "Ref2": {
             |              "int2": 12
@@ -220,8 +218,8 @@ object JsonNested extends AsyncTestSuite {
             |        ]
             |      },
             |      {
-            |        "str": "b", 
-            |        "Refs1: [
+            |        "str": "b",
+            |        "Refs1": [
             |          {
             |            "Ref2": {
             |              "int2": 22
@@ -247,7 +245,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": [
             |          {
             |            "Ref2": {
@@ -262,8 +260,8 @@ object JsonNested extends AsyncTestSuite {
             |        ]
             |      },
             |      {
-            |        "str": "b", 
-            |        "Refs1: [
+            |        "str": "b",
+            |        "Refs1": [
             |          {
             |            "Ref2": {
             |              "int2": 30
@@ -290,8 +288,8 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
-            |        "Refs1: [
+            |        "str": "a",
+            |        "Refs1": [
             |          {
             |            "int1": 1,
             |            "Ref2": {
@@ -307,8 +305,8 @@ object JsonNested extends AsyncTestSuite {
             |        ]
             |      },
             |      {
-            |        "str": "b", 
-            |        "Refs1: [
+            |        "str": "b",
+            |        "Refs1": [
             |          {
             |            "int1": 3,
             |            "Ref2": {
@@ -319,54 +317,45 @@ object JsonNested extends AsyncTestSuite {
             |      }
             |    ]
             |  }
-            |}
-            |{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": [
-            |          {
-            |            "int1": 1,
-            |            "int2": 10
-            |          },
-            |          {
-            |            "int1": null,
-            |            "int2": 20
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": [
-            |          {
-            |            "int1": 3,
-            |            "int2": 30
-            |          }
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}
-            |
-            |""".stripMargin)
+            |}""".stripMargin)
       } yield ()
     }
 
 
-    "Optional attribute" - core { implicit conn =>
+    "Optional attribute, flat card-many ref" - core { implicit conn =>
       for {
         _ <- m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2) insert List(
           ("a", Some(2), List(20)),
           ("b", None, List(10, 11))
         )
 
+        // mandatory int1
+        _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 2,
+            |          "Refs2": [
+            |            {
+            |              "int2": 20
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        // optional int1$
         _ <- m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": {
             |          "int1": 2,
             |          "Refs2": [
@@ -394,12 +383,109 @@ object JsonNested extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
+        // relationship exists despite not having attribute values
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 20
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 10
+            |            },
+            |            {
+            |              "int2": 11
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+      } yield ()
+    }
+
+
+    "Optional attribute, card-one ref" - core { implicit conn =>
+      for {
+        _ <- m(Ns.str.Ref1.int1$.Refs2 * Ref2.int2) insert List(
+          ("a", Some(2), List(20)),
+          ("b", None, List(10, 11))
+        )
+
+        // mandatory int1
+        _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Ref1": {
+            |          "int1": 2,
+            |          "Refs2": [
+            |            {
+            |              "int2": 20
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        // optional int1$
+        _ <- m(Ns.str.Ref1.int1$.Refs2 * Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Ref1": {
+            |          "int1": 2,
+            |          "Refs2": [
+            |            {
+            |              "int2": 20
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Ref1": {
+            |          "int1": null,
+            |          "Refs2": [
+            |            {
+            |              "int2": 10
+            |            },
+            |            {
+            |              "int2": 11
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        // relationship exists despite not having attribute values
+        _ <- m(Ns.str.Ref1.Refs2 * Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
             |        "Ref1": {
             |          "Refs2": [
             |            {
@@ -409,7 +495,7 @@ object JsonNested extends AsyncTestSuite {
             |        }
             |      },
             |      {
-            |        "str": "b", 
+            |        "str": "b",
             |        "Ref1": {
             |          "Refs2": [
             |            {
@@ -437,7 +523,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Ref1": {
             |          "int1": 1,
             |          "Refs2": [
@@ -481,7 +567,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Ref1": {
             |          "int1": 1,
             |          "Refs2": [
@@ -510,7 +596,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": {
             |          "int1": 1,
             |          "Refs2": [
@@ -529,8 +615,8 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
-            |        "Ref1": {
+            |        "str": "a",
+            |        "Refs1": {
             |          "Refs2": [
             |            {
             |              "int2": 2
@@ -554,14 +640,12 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": {
             |          "int1": 1,
-            |          "Refs2": [
-            |            {
-            |              "int2": 2
-            |            }
-            |          ]
+            |          "Refs2": {
+            |            "int2": 2
+            |          }
             |        }
             |      }
             |    ]
@@ -573,7 +657,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": {
             |          "int1": 1,
             |          "Refs2": [
@@ -610,12 +694,14 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
-            |        "Refs2": [
-            |          {
-            |            "int2": 2
-            |          }
-            |        ]
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 2
+            |            }
+            |          ]
+            |        }
             |      }
             |    ]
             |  }
@@ -654,7 +740,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": {
             |          "int1": 1,
             |          "str1": "x",
@@ -703,7 +789,7 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
+            |        "str": "a",
             |        "Refs1": {
             |          "Refs2": [
             |            {
@@ -736,8 +822,8 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "str": "a", 
-            |        "Refs1: [
+            |        "str": "a",
+            |        "Refs1": [
             |          {
             |            "int1": 1,
             |            "Refs2": [
@@ -763,8 +849,8 @@ object JsonNested extends AsyncTestSuite {
             |        ]
             |      },
             |      {
-            |        "str": "b", 
-            |        "Refs1: [
+            |        "str": "b",
+            |        "Refs1": [
             |          {
             |            "int1": 3,
             |            "Refs2": [
@@ -803,23 +889,59 @@ object JsonNested extends AsyncTestSuite {
                 |  "data": {
                 |    "Ns": [
                 |      {
-                |        "str": "a", 
-                |        "Refs1: [
-                |   {"Ref1.int1": 1, "refs2.Ref2.int2": 11},
-                |   {"Ref1.int1": 1, "refs2.Ref2.int2": 12},
-                |   {"Ref1.int1": 2, "refs2.Ref2.int2": 22},
-                |   {"Ref1.int1": 2, "refs2.Ref2.int2": 21
+                |        "str": "a",
+                |        "Refs1": [
+                |          {
+                |            "int1": 1,
+                |            "Refs2": {
+                |              "int2": 11
+                |            }
+                |          },
+                |          {
+                |            "int1": 1,
+                |            "Refs2": {
+                |              "int2": 12
+                |            }
+                |          },
+                |          {
+                |            "int1": 2,
+                |            "Refs2": {
+                |              "int2": 22
+                |            }
+                |          },
+                |          {
+                |            "int1": 2,
+                |            "Refs2": {
+                |              "int2": 21
                 |            }
                 |          }
                 |        ]
                 |      },
                 |      {
                 |        "str": "b",
-                |        "Refs1: [
-                |   {"Ref1.int1": 3, "refs2.Ref2.int2": 32},
-                |   {"Ref1.int1": 3, "refs2.Ref2.int2": 31},
-                |   {"Ref1.int1": 4, "refs2.Ref2.int2": 41},
-                |   {"Ref1.int1": 4, "refs2.Ref2.int2": 42
+                |        "Refs1": [
+                |          {
+                |            "int1": 3,
+                |            "Refs2": {
+                |              "int2": 32
+                |            }
+                |          },
+                |          {
+                |            "int1": 3,
+                |            "Refs2": {
+                |              "int2": 31
+                |            }
+                |          },
+                |          {
+                |            "int1": 4,
+                |            "Refs2": {
+                |              "int2": 41
+                |            }
+                |          },
+                |          {
+                |            "int1": 4,
+                |            "Refs2": {
+                |              "int2": 42
                 |            }
                 |          }
                 |        ]
@@ -834,23 +956,51 @@ object JsonNested extends AsyncTestSuite {
                 |  "data": {
                 |    "Ns": [
                 |      {
-                |        "str": "a", 
-                |        "Refs1: [
-                |   {"refs2.Ref2.int2": 11},
-                |   {"refs2.Ref2.int2": 12},
-                |   {"refs2.Ref2.int2": 22},
-                |   {"refs2.Ref2.int2": 21
+                |        "str": "a",
+                |        "Refs1": [
+                |          {
+                |            "Refs2": {
+                |              "int2": 11
+                |            }
+                |          },
+                |          {
+                |            "Refs2": {
+                |              "int2": 12
+                |            }
+                |          },
+                |          {
+                |            "Refs2": {
+                |              "int2": 22
+                |            }
+                |          },
+                |          {
+                |            "Refs2": {
+                |              "int2": 21
                 |            }
                 |          }
                 |        ]
                 |      },
                 |      {
                 |        "str": "b",
-                |        "Refs1: [
-                |   {"refs2.Ref2.int2": 31},
-                |   {"refs2.Ref2.int2": 32},
-                |   {"refs2.Ref2.int2": 41},
-                |   {"refs2.Ref2.int2": 42
+                |        "Refs1": [
+                |          {
+                |            "Refs2": {
+                |              "int2": 31
+                |            }
+                |          },
+                |          {
+                |            "Refs2": {
+                |              "int2": 32
+                |            }
+                |          },
+                |          {
+                |            "Refs2": {
+                |              "int2": 41
+                |            }
+                |          },
+                |          {
+                |            "Refs2": {
+                |              "int2": 42
                 |            }
                 |          }
                 |        ]
@@ -866,39 +1016,60 @@ object JsonNested extends AsyncTestSuite {
                 |  "data": {
                 |    "Ns": [
                 |      {
-                |        "str": "a", 
-                |        "refs1.Ref1.int1": 1, "Ref1.refs2": [
-                |   {"Ref2.int2": 11},
-                |   {"Ref2.int2": 12
+                |        "str": "a",
+                |        "Refs1": {
+                |          "int1": 1,
+                |          "Refs2": [
+                |            {
+                |              "int2": 11
+                |            },
+                |            {
+                |              "int2": 12
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      },
-                |{"Ns.str": "a", 
-                |        "refs1.Ref1.int1": 2, "Ref1.refs2": [
-                |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22
+                |      {
+                |        "str": "a",
+                |        "Refs1": {
+                |          "int1": 2,
+                |          "Refs2": [
+                |            {
+                |              "int2": 21
+                |            },
+                |            {
+                |              "int2": 22
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      },
                 |      {
                 |        "str": "b",
-                |        "refs1.Ref1.int1": 3, "Ref1.refs2": [
-                |   {"Ref2.int2": 31},
-                |   {"Ref2.int2": 32
+                |        "Refs1": {
+                |          "int1": 3,
+                |          "Refs2": [
+                |            {
+                |              "int2": 31
+                |            },
+                |            {
+                |              "int2": 32
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      },
                 |      {
                 |        "str": "b",
-                |        "refs1.Ref1.int1": 4, "Ref1.refs2": [
-                |   {"Ref2.int2": 41},
-                |   {"Ref2.int2": 42
+                |        "Refs1": {
+                |          "int1": 4,
+                |          "Refs2": [
+                |            {
+                |              "int2": 41
+                |            },
+                |            {
+                |              "int2": 42
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      }
                 |    ]
                 |  }
@@ -911,26 +1082,42 @@ object JsonNested extends AsyncTestSuite {
                 |  "data": {
                 |    "Ns": [
                 |      {
-                |        "str": "a", 
-                |        "Ref1.refs2": [
-                |   {"Ref2.int2": 11},
-                |   {"Ref2.int2": 12},
-                |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22
+                |        "str": "a",
+                |        "Refs1": {
+                |          "Refs2": [
+                |            {
+                |              "int2": 11
+                |            },
+                |            {
+                |              "int2": 12
+                |            },
+                |            {
+                |              "int2": 21
+                |            },
+                |            {
+                |              "int2": 22
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      },
                 |      {
                 |        "str": "b",
-                |        "Ref1.refs2": [
-                |   {"Ref2.int2": 31},
-                |   {"Ref2.int2": 32},
-                |   {"Ref2.int2": 41},
-                |   {"Ref2.int2": 42
+                |        "Refs1": {
+                |          "Refs2": [
+                |            {
+                |              "int2": 31
+                |            },
+                |            {
+                |              "int2": 32
+                |            },
+                |            {
+                |              "int2": 41
+                |            },
+                |            {
+                |              "int2": 42
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      }
                 |    ]
                 |  }
@@ -941,20 +1128,32 @@ object JsonNested extends AsyncTestSuite {
             _ <- m(Ns.str_("a").Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
               """{
                 |  "data": {
-                |
-                |{"refs1.Ref1.int1": 1, "Ref1.refs2": [
-                |   {"Ref2.int2": 11},
-                |   {"Ref2.int2": 12
+                |    "Ns": [
+                |      {
+                |        "Refs1": {
+                |          "int1": 1,
+                |          "Refs2": [
+                |            {
+                |              "int2": 11
+                |            },
+                |            {
+                |              "int2": 12
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      },
-                |{"refs1.Ref1.int1": 2, "Ref1.refs2": [
-                |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22
+                |      {
+                |        "Refs1": {
+                |          "int1": 2,
+                |          "Refs2": [
+                |            {
+                |              "int2": 21
+                |            },
+                |            {
+                |              "int2": 22
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      }
                 |    ]
                 |  }
@@ -964,13 +1163,18 @@ object JsonNested extends AsyncTestSuite {
             _ <- m(Ns.str_("a").Refs1.int1_(2).Refs2 * Ref2.int2).getJson.map(_ ==>
               """{
                 |  "data": {
-                |
-                |{"Ref1.refs2": [
-                |   {"Ref2.int2": 21},
-                |   {"Ref2.int2": 22
+                |    "Ns": [
+                |      {
+                |        "Refs1": {
+                |          "Refs2": [
+                |            {
+                |              "int2": 21
+                |            },
+                |            {
+                |              "int2": 22
                 |            }
-                |          }
-                |        ]
+                |          ]
+                |        }
                 |      }
                 |    ]
                 |  }
@@ -983,26 +1187,77 @@ object JsonNested extends AsyncTestSuite {
                 |  "data": {
                 |    "Ns": [
                 |      {
-                |        "str": "a", 
-                |        "refs1.Ref1.int1": 2, "refs2.Ref2.int2": 21},
-                |{"Ns.str": "a", 
-                |        "refs1.Ref1.int1": 2, "refs2.Ref2.int2": 22},
+                |        "str": "a",
+                |        "Refs1": {
+                |          "int1": 2,
+                |          "Refs2": {
+                |            "int2": 21
+                |          }
+                |        }
+                |      },
+                |      {
+                |        "str": "a",
+                |        "Refs1": {
+                |          "int1": 2,
+                |          "Refs2": {
+                |            "int2": 22
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs1.Ref1.int1": 4, "refs2.Ref2.int2": 42},
+                |        "Refs1": {
+                |          "int1": 4,
+                |          "Refs2": {
+                |            "int2": 42
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs1.Ref1.int1": 4, "refs2.Ref2.int2": 41},
-                |{"Ns.str": "a", 
-                |        "refs1.Ref1.int1": 1, "refs2.Ref2.int2": 12},
-                |{"Ns.str": "a", 
-                |        "refs1.Ref1.int1": 1, "refs2.Ref2.int2": 11},
+                |        "Refs1": {
+                |          "int1": 4,
+                |          "Refs2": {
+                |            "int2": 41
+                |          }
+                |        }
+                |      },
+                |      {
+                |        "str": "a",
+                |        "Refs1": {
+                |          "int1": 1,
+                |          "Refs2": {
+                |            "int2": 12
+                |          }
+                |        }
+                |      },
+                |      {
+                |        "str": "a",
+                |        "Refs1": {
+                |          "int1": 1,
+                |          "Refs2": {
+                |            "int2": 11
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs1.Ref1.int1": 3, "refs2.Ref2.int2": 31},
+                |        "Refs1": {
+                |          "int1": 3,
+                |          "Refs2": {
+                |            "int2": 31
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs1.Ref1.int1": 3, "refs2.Ref2.int2": 32}
+                |        "Refs1": {
+                |          "int1": 3,
+                |          "Refs2": {
+                |            "int2": 32
+                |          }
+                |        }
+                |      }
                 |    ]
                 |  }
                 |}""".stripMargin)
@@ -1014,26 +1269,69 @@ object JsonNested extends AsyncTestSuite {
                 |  "data": {
                 |    "Ns": [
                 |      {
-                |        "str": "a", 
-                |        "refs2.Ref2.int2": 21},
-                |{"Ns.str": "a", 
-                |        "refs2.Ref2.int2": 22},
+                |        "str": "a",
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 21
+                |          }
+                |        }
+                |      },
+                |      {
+                |        "str": "a",
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 22
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs2.Ref2.int2": 41},
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 41
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs2.Ref2.int2": 42},
-                |{"Ns.str": "a", 
-                |        "refs2.Ref2.int2": 11},
-                |{"Ns.str": "a", 
-                |        "refs2.Ref2.int2": 12},
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 42
+                |          }
+                |        }
+                |      },
+                |      {
+                |        "str": "a",
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 11
+                |          }
+                |        }
+                |      },
+                |      {
+                |        "str": "a",
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 12
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs2.Ref2.int2": 31},
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 31
+                |          }
+                |        }
+                |      },
                 |      {
                 |        "str": "b",
-                |        "refs2.Ref2.int2": 32}
+                |        "Refs1": {
+                |          "Refs2": {
+                |            "int2": 32
+                |          }
+                |        }
+                |      }
                 |    ]
                 |  }
                 |}""".stripMargin)
@@ -1054,11 +1352,13 @@ object JsonNested extends AsyncTestSuite {
               |  "data": {
               |    "Ns": [
               |      {
-              |        "str": "book", 
-              |        "ref1.Ref1.str1": "John", 
-              |        "Refs1: [
-              |   {"Ref1.str1": "Marc"
-              |            }
+              |        "str": "book",
+              |        "Ref1": {
+              |          "str1": "John"
+              |        },
+              |        "Refs1": [
+              |          {
+              |            "str1": "Marc"
               |          }
               |        ]
               |      }
@@ -1069,10 +1369,16 @@ object JsonNested extends AsyncTestSuite {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1).getJson.map(_ ==>
             """{
               |  "data": {
-              |
-              |{"Ns.str": "book", 
-              |        "ref1.Ref1.str1": "John", 
-              |        "refs1.Ref1.str1": "Marc"}
+              |    "Ns": [
+              |      {
+              |        "str": "book",
+              |        "Ref1": {
+              |          "str1": "John"
+              |        },
+              |        "Refs1": {
+              |          "str1": "Marc"
+              |        }
+              |      }
               |    ]
               |  }
               |}""".stripMargin)
@@ -1081,18 +1387,24 @@ object JsonNested extends AsyncTestSuite {
 
       "Nested + adjacent" - core { implicit conn =>
         for {
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2) insert List(("book", "John", List(("Marc", "Musician"))))
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2) insert List(
+            ("book", "John", List(("Marc", "Musician")))
+          )
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2).getJson.map(_ ==>
             """{
               |  "data": {
               |    "Ns": [
               |      {
-              |        "str": "book", 
-              |        "ref1.Ref1.str1": "John", 
-              |        "Refs1: [
-              |   {"Ref1.str1": "Marc", 
-              |        "refs2.Ref2.str2": "Musician"
+              |        "str": "book",
+              |        "Ref1": {
+              |          "str1": "John"
+              |        },
+              |        "Refs1": [
+              |          {
+              |            "str1": "Marc",
+              |            "Refs2": {
+              |              "str2": "Musician"
               |            }
               |          }
               |        ]
@@ -1104,11 +1416,19 @@ object JsonNested extends AsyncTestSuite {
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).getJson.map(_ ==>
             """{
               |  "data": {
-              |
-              |{"Ns.str": "book", 
-              |        "ref1.Ref1.str1": "John", 
-              |        "refs1.Ref1.str1": "Marc", 
-              |        "refs2.Ref2.str2": "Musician"}
+              |    "Ns": [
+              |      {
+              |        "str": "book",
+              |        "Ref1": {
+              |          "str1": "John"
+              |        },
+              |        "Refs1": {
+              |          "str1": "Marc",
+              |          "Refs2": {
+              |            "str2": "Musician"
+              |          }
+              |        }
+              |      }
               |    ]
               |  }
               |}""".stripMargin)
@@ -1117,23 +1437,30 @@ object JsonNested extends AsyncTestSuite {
 
       "Nested + nested" - core { implicit conn =>
         for {
-          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)) insert List(("book", "John", List(("Marc", List("Musician")))))
+          _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)) insert List(
+            ("book", "John", List(("Marc", List("Musician"))))
+          )
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)).getJson.map(_ ==>
             """{
               |  "data": {
               |    "Ns": [
               |      {
-              |        "str": "book", 
-              |        "ref1.Ref1.str1": "John", 
-              |        "Refs1: [
-              |   {"Ref1.str1": "Marc", 
-              |        "Ref1.refs2": [
-              |      {"Ref2.str2": "Musician"
-              |            }
+              |        "str": "book",
+              |        "Ref1": {
+              |          "str1": "John"
+              |        },
+              |        "Refs1": [
+              |          {
+              |            "str1": "Marc",
+              |            "Refs2": [
+              |              {
+              |                "str2": "Musician"
+              |              }
+              |            ]
               |          }
               |        ]
-              |      }]}
+              |      }
               |    ]
               |  }
               |}""".stripMargin)
@@ -1143,10 +1470,17 @@ object JsonNested extends AsyncTestSuite {
               |  "data": {
               |    "Ns": [
               |      {
-              |        "str": "book", 
-              |        "ref1.Ref1.str1": "John", 
-              |        "refs1.Ref1.str1": "Marc", 
-              |        "refs2.Ref2.str2": "Musician"}
+              |        "str": "book",
+              |        "Ref1": {
+              |          "str1": "John"
+              |        },
+              |        "Refs1": {
+              |          "str1": "Marc",
+              |          "Refs2": {
+              |            "str2": "Musician"
+              |          }
+              |        }
+              |      }
               |    ]
               |  }
               |}""".stripMargin)
@@ -1163,10 +1497,12 @@ object JsonNested extends AsyncTestSuite {
             |  "data": {
             |    "Ns": [
             |      {
-            |        "refs1": [
-            |   {"Ref1.int1": 1},
-            |   {"Ref1.int1": 2
-            |            }
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          },
+            |          {
+            |            "int1": 2
             |          }
             |        ]
             |      }
@@ -1188,7 +1524,7 @@ object JsonNested extends AsyncTestSuite {
             |      {
             |        "int": 1,
             |        "str": "a",
-            |        "Refs1: [
+            |        "Refs1": [
             |          {
             |            "int1": 11
             |          },
@@ -1207,7 +1543,7 @@ object JsonNested extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "Refs1: [
+            |        "Refs1": [
             |          {
             |            "int1": 11
             |          },
@@ -1241,20 +1577,26 @@ object JsonNested extends AsyncTestSuite {
         _ <- Ref1.str1.Refs2.*(Ref2.str2).getJson.map(_ ==>
           """{
             |  "data": {
-            |
-            |{"Ref1.str1": "r1a", 
-            |        "Ref1.refs2": [
-            |   {"Ref2.str2": "r2a"},
-            |   {"Ref2.str2": "r2b"
-            |            }
+            |    "Ref1": [
+            |      {
+            |        "str1": "r1a",
+            |        "Refs2": [
+            |          {
+            |            "str2": "r2a"
+            |          },
+            |          {
+            |            "str2": "r2b"
             |          }
             |        ]
             |      },
-            |{"Ref1.str1": "r1b", 
-            |        "Ref1.refs2": [
-            |   {"Ref2.str2": "r2c"},
-            |   {"Ref2.str2": "r2d"
-            |            }
+            |      {
+            |        "str1": "r1b",
+            |        "Refs2": [
+            |          {
+            |            "str2": "r2c"
+            |          },
+            |          {
+            |            "str2": "r2d"
             |          }
             |        ]
             |      }
@@ -1269,14 +1611,19 @@ object JsonNested extends AsyncTestSuite {
         _ <- Ns.Refs1.str1.Refs2.*(Ref2.str2).getJson.map(_ ==>
           """{
             |  "data": {
-            |
-            |{"refs1.Ref1.str1": "r1a", 
-            |        "Ref1.refs2": [
-            |   {"Ref2.str2": "r2a"},
-            |   {"Ref2.str2": "r2b"
+            |    "Ns": [
+            |      {
+            |        "Refs1": {
+            |          "str1": "r1a",
+            |          "Refs2": [
+            |            {
+            |              "str2": "r2a"
+            |            },
+            |            {
+            |              "str2": "r2b"
             |            }
-            |          }
-            |        ]
+            |          ]
+            |        }
             |      }
             |    ]
             |  }

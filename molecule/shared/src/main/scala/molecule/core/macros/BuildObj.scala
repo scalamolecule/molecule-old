@@ -77,9 +77,9 @@ trait BuildObj extends BuildBase {
     }
   }
 
-  def objCode(obj: Obj, i0: Int = -1, isNested: Boolean = false): (Tree, Int) = {
+  def objFlat(obj: Obj, i0: Int = -1, isOptNested: Boolean = false): (Tree, Int) = {
     // Property index of row/tuple
-    var i = if (isNested && i0 == -1) -1 else i0
+    var i = if (isOptNested && i0 == -1) -1 else i0
 
     def properties(nodes: List[Node]): List[Tree] = {
       var propNames = List.empty[String]
@@ -90,11 +90,11 @@ trait BuildObj extends BuildBase {
           if (!propNames.contains(prop)) {
             propNames = propNames :+ prop
             optAggr match {
-              case None if isNested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($i).asInstanceOf[$tpe]")
-              case None             => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(i)}")
+              case None if isOptNested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($i).asInstanceOf[$tpe]")
+              case None                => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(i)}")
 
               case Some(aggrTpe) if aggrTpe == tpe.toString() =>
-                if (isNested)
+                if (isOptNested)
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($i).asInstanceOf[$tpe]")
                 else
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(i)}")
@@ -115,7 +115,7 @@ trait BuildObj extends BuildBase {
           } else {
             tq"Product"
           }
-          val subObj     = q"tpl.productElement($i).asInstanceOf[Seq[$productTpe]].map( tpl => ${objCode(o, -1, isNested)._1} )"
+          val subObj     = q"tpl.productElement($i).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init] = $subObj")
             case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Seq[Init with $a] = $subObj")
@@ -144,7 +144,7 @@ trait BuildObj extends BuildBase {
           }
 
         case o@Obj(_, ref, _, props) =>
-          val (subObj, j) = objCode(o, i, isNested)
+          val (subObj, j) = objFlat(o, i, isOptNested)
           i = j
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Init = $subObj")

@@ -99,7 +99,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
       q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = $casts
-          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objCode(obj)._1}
+          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
           final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = {
             ..${compositeJsons(jsonss)}
           }

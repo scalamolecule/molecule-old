@@ -115,7 +115,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
 
 //        sharedTests + "/core/transaction",
-        sharedTests + "/core/Adhoc.scala"
+        sharedTests + "/core/Adhoc.scala",
       )
       new SimpleFileFilter(f =>
         f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))

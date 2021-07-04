@@ -23,6 +23,5 @@ object JsonNestedOpt extends AsyncTestSuite {
 
       1 ==> 1
     }
-
   }
 }
