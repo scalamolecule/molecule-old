@@ -1,14 +1,15 @@
 package molecule.core.macros.nested
 
 import java.lang.{Long => jLong}
-import java.util.{ArrayList => jArrayList, Comparator => jComparator, List => jList}
+import java.util.{List => jList}
 import molecule.core.api.Molecule_0
+import molecule.core.macros.nested.NestedJson._
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Builder classes of various arity of nested tuples. */
-trait NestedTuples[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl]{ self: Molecule_0[Obj, OuterTpl] =>
+trait NestedTuples[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
   protected def tplBranch0(row: jList[AnyRef], leaf: List[Any]): OuterTpl = ???
   protected def tplBranch1(row: jList[AnyRef], leaf: List[Any]): Any = ???
@@ -69,7 +70,9 @@ trait NestedTuples[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl]{ self: Molec
 
 object NestedTuples {
 
-  trait NestedTuples1[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples1[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
+    // Extends to NestedJsonX to override `getJson` too without having to extend each molecule to both interfaces.
+    with NestedJson1[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -135,7 +138,8 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples2[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples2[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
+    with NestedJson2[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -220,7 +224,8 @@ object NestedTuples {
     }
   }
 
-  trait NestedTuples3[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples3[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
+    with NestedJson3[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -331,7 +336,8 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples4[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples4[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
+    with NestedJson4[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -472,7 +478,8 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples5[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples5[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
+    with NestedJson5[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -648,7 +655,8 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples6[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples6[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
+    with NestedJson6[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -864,7 +872,8 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples7[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples7[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl]
+    with NestedJson7[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {

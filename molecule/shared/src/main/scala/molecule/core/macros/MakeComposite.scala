@@ -13,9 +13,9 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-//    private lazy val xx = InspectMacro("MakeComposite", 1, 9, mkError = true)
-//  private lazy val xx = InspectMacro("MakeComposite", 1, 9)
-   private lazy val xx = InspectMacro("MakeComposite", 9, 8)
+  //    private lazy val xx = InspectMacro("MakeComposite", 1, 9, mkError = true)
+//    private lazy val xx = InspectMacro("MakeComposite", 1, 9)
+  private lazy val xx = InspectMacro("MakeComposite", 9, 8)
 
 
   private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -27,84 +27,58 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       postTypes, postCasts, postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes
-      ) = getModel(dsl)
+      )                = getModel(dsl)
     val imports        = getImports(genericImports)
     val OutMoleculeTpe = molecule_o(TplTypes.size)
     val outMolecule    = TypeName(c.freshName("compositeOutMolecule$"))
 
-//    val ordinaryComposites = castss.take(castss.length - txMetaCompositesCount)
-//    val txMetaComposites   = castss.takeRight(txMetaCompositesCount)
-//    val firstComposites    = ordinaryComposites.init
-//    val lastComposite      = ordinaryComposites.last
-//    val lastOffset         = firstComposites.flatten.length
-//    val metaOffset         = ordinaryComposites.flatten.length
+    //    val ordinaryComposites = castss.take(castss.length - txMetaCompositesCount)
+    //    val txMetaComposites   = castss.takeRight(txMetaCompositesCount)
+    //    val firstComposites    = ordinaryComposites.init
+    //    val lastComposite      = ordinaryComposites.last
+    //    val lastOffset         = firstComposites.flatten.length
+    //    val metaOffset         = ordinaryComposites.flatten.length
 
     val transformers = if (isJsPlatform) {
-//      val (arrays, lookups0) = indexes.map {
-//        case (colIndex, castIndex, arrayType, arrayIndex) =>
-//          (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
-//      }.unzip
-//
-//      val lookups = if (txMetaCompositesCount > 0) {
-//        val first = compositeLookups(firstComposites, lookups0)
-//        val last  = topLevelLookups(List(lastComposite), lookups0, lastOffset) ++
-//          compositeLookups(txMetaComposites, lookups0, metaOffset)
-//        xx(1, castss, first, last)
-//
-//        (first, last) match {
-//          case (Nil, last)   => q"(..$last)"
-//          case (first, Nil)  => q"(..$first)"
-//          case (first, last) => q"(..$first, (..$last))"
-//        }
-//
-//      } else {
-//        q"(..${compositeLookups(castss, lookups0)})"
-//      }
+      //      val (arrays, lookups0) = indexes.map {
+      //        case (colIndex, castIndex, arrayType, arrayIndex) =>
+      //          (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
+      //      }.unzip
+      //
+      //      val lookups = if (txMetaCompositesCount > 0) {
+      //        val first = compositeLookups(firstComposites, lookups0)
+      //        val last  = topLevelLookups(List(lastComposite), lookups0, lastOffset) ++
+      //          compositeLookups(txMetaComposites, lookups0, metaOffset)
+      //        xx(1, castss, first, last)
+      //
+      //        (first, last) match {
+      //          case (Nil, last)   => q"(..$last)"
+      //          case (first, Nil)  => q"(..$first)"
+      //          case (first, last) => q"(..$first, (..$last))"
+      //        }
+      //
+      //      } else {
+      //        q"(..${compositeLookups(castss, lookups0)})"
+      //      }
 
-//      q"""
-//         final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-//           ..$arrays
-//           (i: Int) => $lookups
-//         }
-//         final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-//         final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
-//       """
+      //      q"""
+      //         final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
+      //           ..$arrays
+      //           (i: Int) => $lookups
+      //         }
+      //         final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+      //         final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
+      //       """
       q"""
           final override protected def json2tpl(json: String): (..$TplTypes) = ???
           final override protected def json2obj(json: String): $ObjType = ???
           final override protected def json2list(json: String): java.util.List[AnyRef] = ???
        """
-//              q"""
-//                final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-//                  ..$arrays
-//                  val x = "-----------"
-//                  val z = (i: Int) => (..$lookups);
-//                  (i: Int) => scala.Tuple2(scala.Tuple2(a0(i), a1(i)), scala.Tuple2(a2(i), a3(i)))
-//                }
-//                final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-//                final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
-//              """
-
     } else {
-
-//      val casts = if (txMetaCompositesCount > 0) {
-//        val first = compositeCasts(firstComposites)
-//        val last  = topLevel(List(lastComposite), lastOffset) ++ compositeCasts(txMetaComposites, metaOffset)
-//
-//        //      z(1, model0, types, castss, first, last)
-//        (first, last) match {
-//          case (Nil, last)   => q"(..$last)"
-//          case (first, Nil)  => q"(..$first)"
-//          case (first, last) => q"(..$first, (..$last))"
-//        }
-//      } else {
-//        q"(..${compositeCasts(castss)})"
-//      }
-
       q"""
           final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetaCompositesCount)}
           final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
-          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ${jsonComposite(jsonss)}
+          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
         """
     }
 

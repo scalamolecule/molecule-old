@@ -31,7 +31,7 @@ private[molecule] trait Dsl2Model extends TreeOps
   with BuildObj
 
   with BuildJson
-  with BuildJsonComposite
+//  with BuildJsonComposite
   with BuildJsonNested
 
   with CastArrays
@@ -1660,16 +1660,17 @@ private[molecule] trait Dsl2Model extends TreeOps
       markTacitIndexes(elements, 0)
     }
 
+    // Set outer object ref and card
     obj = {
-      def getNs(element: Element): BuilderObj = element match {
+      def streamlineObj(element: Element): BuilderObj = element match {
         case Atom(nsFull, _, _, _, _, _, _, _) => obj.copy(ref = nsFull, card = 2)
         case Bond(nsFull, _, _, _, _)          => obj.copy(ref = nsFull, card = 2)
         case Generic(nsFull, _, _, _)          => obj.copy(ref = nsFull, card = 2)
-        case Composite(elements)               => getNs(elements.head)
+        case Composite(elements)               => streamlineObj(elements.head)
         case other                             =>
           throw MoleculeException("Unexpected first model element: " + other)
       }
-      getNs(elements.head)
+      streamlineObj(elements.head)
     }
 
     //    addJsonLambdas

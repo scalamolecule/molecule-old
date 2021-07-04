@@ -24,28 +24,23 @@ object JsonComposite extends AsyncTestSuite {
             |    "composite": [
             |      {
             |        "Ref2": {
-            |          "int2": 1
-            |        },
-            |        "Ns": {
-            |          "int": 11
-            |        }
-            |      },
-            |      {
-            |        "Ref2": {
             |          "int2": 2
             |        },
             |        "Ns": {
             |          "int": 22
             |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 1
+            |        },
+            |        "Ns": {
+            |          "int": 11
+            |        }
             |      }
             |    ]
             |  }
             |}""".stripMargin)
-
-//          """[
-//            |[{"Ref2.int2": 2}, {"Ns.int": 22}],
-//            |[{"Ref2.int2": 1}, {"Ns.int": 11}]
-//            |]""".stripMargin)
       } yield ()
     }
 
@@ -59,10 +54,30 @@ object JsonComposite extends AsyncTestSuite {
         )
 
         _ <- m(Ref2.int2 + Ns.int.str).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 1}, {"Ns.int": 11, "Ns.str": "aa"}],
-            |[{"Ref2.int2": 2}, {"Ns.int": 22, "Ns.str": "bb"}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1
+            |        },
+            |        "Ns": {
+            |          "int": 11,
+            |          "str": "aa"
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2
+            |        },
+            |        "Ns": {
+            |          "int": 22,
+            |          "str": "bb"
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -76,10 +91,30 @@ object JsonComposite extends AsyncTestSuite {
         )
 
         _ <- m(Ref2.int2.str2 + Ns.int).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ns.int": 22}],
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ns.int": 11}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ns": {
+            |          "int": 22
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ns": {
+            |          "int": 11
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -91,12 +126,33 @@ object JsonComposite extends AsyncTestSuite {
           ((2, "b"), (22, "bb"))
         )
 
-
         _ <- m(Ref2.int2.str2 + Ns.int.str).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ns.int": 11, "Ns.str": "aa"}],
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ns.int": 22, "Ns.str": "bb"}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ns": {
+            |          "int": 11,
+            |          "str": "aa"
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ns": {
+            |          "int": 22,
+            |          "str": "bb"
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -109,17 +165,71 @@ object JsonComposite extends AsyncTestSuite {
         )
 
         _ <- m(Ref2.int2.str2 + Ref1.int1.str1).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ref1.int1": 11, "Ref1.str1": "aa"}],
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ref1.int1": 22, "Ref1.str1": "bb"}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ref1": {
+            |          "int1": 11,
+            |          "str1": "aa"
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ref1": {
+            |          "int1": 22,
+            |          "str1": "bb"
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         // .. including transaction meta data
         _ <- m(Ref2.int2.str2 + Ref1.int1.str1.Tx(Ns.str)).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ref1.int1": 11, "Ref1.str1": "aa", "tx.Ns.str": "Tx meta data"}],
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ref1.int1": 22, "Ref1.str1": "bb", "tx.Ns.str": "Tx meta data"}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ref1": {
+            |          "int1": 11,
+            |          "str1": "aa",
+            |          "Tx": {
+            |            "Ns": {
+            |              "str": "Tx meta data"
+            |            }
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ref1": {
+            |          "int1": 22,
+            |          "str1": "bb",
+            |          "Tx": {
+            |            "Ns": {
+            |              "str": "Tx meta data"
+            |            }
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -133,10 +243,48 @@ object JsonComposite extends AsyncTestSuite {
 
         // Note how ref attr in tx meta data has both a `tx` and `ref1` prefix
         _ <- m(Ref2.int2.str2 + Ref1.int1.str1.Tx(Ns.str.Ref1.int1)).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ref1.int1": 11, "Ref1.str1": "aa", "tx.Ns.str": "Tx meta data", "tx.ref1.Ref1.int1": 42}],
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ref1.int1": 22, "Ref1.str1": "bb", "tx.Ns.str": "Tx meta data", "tx.ref1.Ref1.int1": 42}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ref1": {
+            |          "int1": 11,
+            |          "str1": "aa",
+            |          "Tx": {
+            |            "Ns": {
+            |              "str": "Tx meta data",
+            |              "Ref1": {
+            |                "int1": 42
+            |              }
+            |            }
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ref1": {
+            |          "int1": 22,
+            |          "str1": "bb",
+            |          "Tx": {
+            |            "Ns": {
+            |              "str": "Tx meta data",
+            |              "Ref1": {
+            |                "int1": 42
+            |              }
+            |            }
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -149,10 +297,36 @@ object JsonComposite extends AsyncTestSuite {
         )
 
         _ <- m(Ref2.int2.str2 + Ns.int.Ref1.str1).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ns.int": 11, "ref1.Ref1.str1": "aa"}],
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ns.int": 22, "ref1.Ref1.str1": "bb"}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ns": {
+            |          "int": 11,
+            |          "Ref1": {
+            |            "str1": "aa"
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ns": {
+            |          "int": 22,
+            |          "Ref1": {
+            |            "str1": "bb"
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -165,10 +339,36 @@ object JsonComposite extends AsyncTestSuite {
         )
 
         _ <- m(Ref2.int2.str2 + Ns.int.Refs1.str1).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ns.int": 11, "refs1.Ref1.str1": "aa"}],
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ns.int": 22, "refs1.Ref1.str1": "bb"}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ns": {
+            |          "int": 11,
+            |          "Refs1": {
+            |            "str1": "aa"
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ns": {
+            |          "int": 22,
+            |          "Refs1": {
+            |            "str1": "bb"
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -181,16 +381,64 @@ object JsonComposite extends AsyncTestSuite {
         )).map(_.eids)
 
         _ <- m(Ref2.int2.str2 + Ns.Refs1.int1).getJson.map(_ ==>
-          """[
-            |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"refs1.Ref1.int1": 22}],
-            |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"refs1.Ref1.int1": 11}]
-            |]""".stripMargin)
+          """{
+            |  "data": {
+            |    "composite": [
+            |      {
+            |        "Ref2": {
+            |          "int2": 2,
+            |          "str2": "b"
+            |        },
+            |        "Ns": {
+            |          "Refs1": {
+            |            "int1": 22
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "Ref2": {
+            |          "int2": 1,
+            |          "str2": "a"
+            |        },
+            |        "Ns": {
+            |          "Refs1": {
+            |            "int1": 11
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- m(Ref2.int2.str2 + Ns.refs1).getJson.map(_ ==>
-          s"""[
-             |[{"Ref2.int2": 1, "Ref2.str2": "a"}, {"Ns.refs1": [$r1a]}],
-             |[{"Ref2.int2": 2, "Ref2.str2": "b"}, {"Ns.refs1": [$r1b]}]
-             |]""".stripMargin)
+          s"""{
+             |  "data": {
+             |    "composite": [
+             |      {
+             |        "Ref2": {
+             |          "int2": 1,
+             |          "str2": "a"
+             |        },
+             |        "Ns": {
+             |          "refs1": [
+             |            17592186045454
+             |          ]
+             |        }
+             |      },
+             |      {
+             |        "Ref2": {
+             |          "int2": 2,
+             |          "str2": "b"
+             |        },
+             |        "Ns": {
+             |          "refs1": [
+             |            17592186045456
+             |          ]
+             |        }
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
       } yield ()
     }
   }

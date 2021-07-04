@@ -12,7 +12,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  //   private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+//     private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
   private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 

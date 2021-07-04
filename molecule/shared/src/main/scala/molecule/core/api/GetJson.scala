@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import molecule.core.ast.elements.{Atom, Bond}
+import molecule.core.ast.elements.{Atom, Bond, Composite}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
@@ -752,11 +752,20 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           sb.append("\n    ")
       }
 
-      s"""{
-         |  "data": {
-         |    "${firstNs(_model)}": [${sb.toString()}]
-         |  }
-         |}""".stripMargin
+      _model.elements.head match {
+        case _: Composite =>
+          s"""{
+             |  "data": {
+             |    "composite": [${sb.toString()}]
+             |  }
+             |}""".stripMargin
+        case _            =>
+          s"""{
+             |  "data": {
+             |    "${firstNs(_model)}": [${sb.toString()}]
+             |  }
+             |}""".stripMargin
+      }
     }
   }
 
