@@ -346,7 +346,7 @@ object NestedRef extends AsyncTestSuite {
 
     "Unrelated nested" - core { implicit conn =>
       compileError("m(Ns.int.Refs1 * Ref2.int2)").check("",
-        "Un-related many reference should be stopped in Dsl2Model"
+        "`Refs1` can only nest to `Ref1`. Found: `Ref2`"
       )
     }
   }

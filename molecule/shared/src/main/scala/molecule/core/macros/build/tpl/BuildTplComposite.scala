@@ -9,30 +9,6 @@ trait BuildTplComposite extends TreeOps { self: BuildTpl =>
 
   import c.universe._
 
-
-//  def topLevel(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
-//    var i = -1 + offset
-//    castss.head.map { cast =>
-//      i += 1
-//      cast(i)
-//    }
-//  }
-
-  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
-    var i              = -1 + offset
-    var subTupleFields = Seq.empty[Tree]
-    val subTuples      = castss.flatMap {
-      case Nil   => None
-      case casts =>
-        subTupleFields = casts.map { c =>
-          i += 1
-          c(i)
-        }
-        Some(q"(..$subTupleFields)")
-    }
-    subTuples
-  }
-
   def tplComposite(
     castss: List[List[Int => Tree]],
     txMetaCompositesCount: Int
@@ -58,5 +34,20 @@ trait BuildTplComposite extends TreeOps { self: BuildTpl =>
     } else {
       q"(..${compositeCasts(castss)})"
     }
+  }
+
+  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
+    var i              = -1 + offset
+    var subTupleFields = Seq.empty[Tree]
+    val subTuples      = castss.flatMap {
+      case Nil   => None
+      case casts =>
+        subTupleFields = casts.map { c =>
+          i += 1
+          c(i)
+        }
+        Some(q"(..$subTupleFields)")
+    }
+    subTuples
   }
 }

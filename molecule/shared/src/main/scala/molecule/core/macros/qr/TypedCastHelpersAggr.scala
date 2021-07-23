@@ -3,7 +3,7 @@ package molecule.core.macros.qr
 import java.lang.{Long => jLong}
 import java.net.URI
 import java.util.{List => jList, Set => jSet}
-import molecule.core.macros.lambdas.CastAggr
+import molecule.core.macros.attrResolvers.CastAggr
 
 /** Core molecule interface override defining actions that can be called on molecules.
   *

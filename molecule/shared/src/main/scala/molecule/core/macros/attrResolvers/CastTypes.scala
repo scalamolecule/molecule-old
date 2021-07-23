@@ -1,4 +1,4 @@
-package molecule.core.macros.lambdas
+package molecule.core.macros.attrResolvers
 
 import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI

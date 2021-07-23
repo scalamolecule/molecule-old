@@ -2,6 +2,7 @@ package molecule.core.macros.build
 
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
+import java.util.{Collection => jCollection, Iterator => jIterator, List => jList, Map => jMap}
 
 
 trait BuildBase extends TreeOps {
@@ -22,7 +23,7 @@ trait BuildBase extends TreeOps {
   ) extends BuilderNode {
     override def toString: String = {
       // Since the cast lambda is just an object reference, we simply add null so that we can copy/paste
-      s"""Prop("$cls", "$prop", "$tpe", <cast-lambda>, <json-lambda>, $optAggrTpe)"""
+      s"""BuilderProp("$cls", "$prop", "$tpe", <cast-lambda>, <json-lambda>, $optAggrTpe)"""
     }
   }
 
@@ -37,7 +38,7 @@ trait BuildBase extends TreeOps {
         val s = "  " * indent
         nodes map {
           case BuilderObj(cls, ref, card, props) =>
-            s"""|${s}Obj("$cls", "$ref", $card, List(
+            s"""|${s}BuilderObj("$cls", "$ref", $card, List(
                 |${draw(props, indent + 1).mkString(s",\n")}))""".stripMargin
           case prop                              => s"$s$prop"
         }
@@ -45,6 +46,110 @@ trait BuildBase extends TreeOps {
       draw(Seq(this), 0).head
     }
   }
+
+  def isDeeper(obj: BuilderObj) = obj.props.last match {
+    case BuilderObj(_, _, 2, _) => true
+    case _                      => false
+  }
+
+  def getPropCount(nodes: List[BuilderNode]): Int = nodes.foldLeft(0) {
+    case (acc, _: BuilderProp)                => acc + 1
+    case (acc, BuilderObj(_, _, 1, refProps)) => acc + getPropCount(refProps)
+    case (acc, _: BuilderObj)                 => acc // ignore nested - handled in macros
+  }
+
+  //  def extractFlatValues(
+  //    nestedRows: jList[Any],
+  //    propCount: Int,
+  //    refIndexes: List[Int],
+  //    tacitIndexes: List[Int],
+  //    deeper: Boolean = false
+  //  ): jIterator[Any] = {
+  //    val rowCount             = nestedRows.size()
+  //    val flatValues           = new java.util.ArrayList[Any](rowCount * propCount)
+  //    val nonTacitIndexes      = (0 until propCount).diff(tacitIndexes)
+  //    var testArray            = new Array[AnyRef](propCount)
+  //    val testList             = new java.util.ArrayList[Any](propCount)
+  //    var vs: jCollection[Any] = null
+  //    var i                    = 0
+  //
+  //    println("================================")
+  //    println("nestedRows      : " + nestedRows)
+  //    println("propCount       : " + propCount)
+  //    println("refIndexes      : " + refIndexes)
+  //    println("tacitIndexes    : " + tacitIndexes)
+  //    println("mandatoryIndexes: " + nonTacitIndexes)
+  //
+  //    (refIndexes.isEmpty, tacitIndexes.isEmpty) match {
+  //      case (true, true) =>
+  //        nestedRows.forEach { row =>
+  //          vs = row.asInstanceOf[jMap[Any, Any]].values()
+  //          println("-- 1 ------- " + vs.size + "  " + propCount)
+  //          vs.forEach(v => println(v))
+  //          if (deeper && vs.size() - 1 == propCount || vs.size() == propCount)
+  //            flatValues.addAll(vs)
+  //        }
+  //
+  //      case (true, false) =>
+  //        nestedRows.forEach { row =>
+  //          vs = row.asInstanceOf[jMap[Any, Any]].values()
+  //          testArray = vs.toArray
+  //          // Skip all values on this level if some tacit value is missing
+  //          val valid: Boolean = tacitIndexes.collectFirst {
+  //            case i if testArray(i) == "__none__" => true
+  //          }.isEmpty
+  //
+  //          println("-- 2 ------- " + valid)
+  //          vs.forEach(v => println(v))
+  //          if (valid) {
+  //            // Get non-tacit values only
+  //            nonTacitIndexes.foreach { i =>
+  //              flatValues.add(testArray(i))
+  //            }
+  //          }
+  //        }
+  //
+  //      case (false, true) =>
+  //        nestedRows.forEach { row =>
+  //          vs = row.asInstanceOf[jMap[Any, Any]].values()
+  //          testList.clear()
+  //          i = 0
+  //          def addValues(vs: jCollection[Any]): Unit = vs.forEach {
+  //            case ref: jMap[_, _] => addValues(ref.asInstanceOf[jMap[Any, Any]].values())
+  //            case v               => i += 1; testList.add(v)
+  //          }
+  //          addValues(vs)
+  //          println("-- 3 -------")
+  //          testList.forEach(v => println(v))
+  //          if (i == propCount)
+  //            flatValues.addAll(testList)
+  //        }
+  //
+  //      case (false, false) =>
+  //        nestedRows.forEach { row =>
+  //          vs = row.asInstanceOf[jMap[Any, Any]].values()
+  //          testList.clear()
+  //          i = 0
+  //          def addValues(vs: jCollection[Any]): Unit = vs.forEach {
+  //            case ref: jMap[_, _]                        => addValues(ref.asInstanceOf[jMap[Any, Any]].values())
+  //            case "__none__" if tacitIndexes.contains(i) => i += 1 // tacit value missing
+  //            case v if tacitIndexes.contains(i)          => // tacit value exists
+  //            case v                                      => i += 1; testList.add(v)
+  //          }
+  //          addValues(vs)
+  //          println("-- 4 ------- " + i + "  " + testList.size)
+  //          testList.forEach(v => println(v))
+  //          if (i == testList.size)
+  //            flatValues.addAll(testList)
+  //        }
+  //    }
+  //
+  //    println("-------------------------------")
+  //    flatValues.forEach(v => println(v))
+  //
+  //    flatValues.iterator
+  //  }
+
 
   def addNode(obj: BuilderObj, node: BuilderNode, level: Int): BuilderObj = {
     val newProps = level match {

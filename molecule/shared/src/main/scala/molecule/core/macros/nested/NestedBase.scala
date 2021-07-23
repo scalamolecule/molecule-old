@@ -8,8 +8,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Builder classes of various arity of nested tuples. */
-trait NestedBase[Obj, OuterTpl]
-  extends jComparator[jList[AnyRef]] { self: Molecule_0[Obj, OuterTpl] =>
+trait NestedBase[Obj, Tpl]
+  extends jComparator[jList[AnyRef]] { self: Molecule_0[Obj, Tpl] =>
 
   val levels = _nestedQuery.fold(0)(_.f.outputs.size - _query.f.outputs.size)
 
@@ -61,7 +61,8 @@ trait NestedBase[Obj, OuterTpl]
 
 
   // java.util.Comparator sorting interface implemented by NestedTuples subclasses (`rows.sort(this)`)
-  // Sorting from outer to nested levels, level by level
+  // Tuples (descending true) : Sorting backwards, building from leaf to branches
+  // Json   (descending false): Sorting from outer to nested levels, level by level
   def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
     sortIndex = 0
     result = 0

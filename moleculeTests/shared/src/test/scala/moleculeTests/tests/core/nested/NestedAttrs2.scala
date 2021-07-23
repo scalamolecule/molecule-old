@@ -11,7 +11,7 @@ object NestedAttrs2 extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "attr" - core { implicit conn =>
+    "strs" - core { implicit conn =>
       for {
         _ <- m(Ns.int.Refs1 * Ref1.int1.strs1$) insert List(
           (1, List((1, Some(Set("a", "b"))), (2, None))),
@@ -43,7 +43,7 @@ object NestedAttrs2 extends AsyncTestSuite {
       } yield ()
     }
 
-    "enum" - core { implicit conn =>
+    "enums" - core { implicit conn =>
       for {
         _ <- m(Ns.int.Refs1 * Ref1.int1.enums1$) insert List(
           (1, List((1, Some(Set("enum10", "enum11"))), (2, None))),
@@ -75,7 +75,7 @@ object NestedAttrs2 extends AsyncTestSuite {
       } yield ()
     }
 
-    "ref" - core { implicit conn =>
+    "refs" - core { implicit conn =>
       for {
         _ <- m(Ns.int.Refs1 * Ref1.int1.refs2$) insert List(
           (1, List((1, Some(Set(42L, 43L))), (2, None))),

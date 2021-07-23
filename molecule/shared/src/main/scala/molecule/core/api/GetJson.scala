@@ -715,16 +715,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   // Default implementation for flat (non-nested) rows
   // The `row2json` doing the heavy lifting is materialized by macros when `molecule.api.json._` is imported
   // Composite molecules override this method to use `getJsonComposite` (see below) instead.
-  protected def buildJson(n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+  private def buildJson(n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
     for {
       conn <- conn
       jColl <- conn.query(_model, _query)
     } yield {
-      val size = jColl.size()
+      val count = jColl.size()
       val rows = jColl.iterator()
       val sb   = new StringBuilder()
       var next = false
-      size match {
+      count match {
         case 0 =>
         // Empty result set
 
@@ -733,7 +733,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           while (rows.hasNext) {
             if (next) sb.append(",") else next = true
             sb.append("\n      {\n        ")
-            row2json(sb, rows.next())
+            row2json(sb, rows.next)
             sb.append("\n      }")
           }
           sb.append("\n    ")
@@ -745,7 +745,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           while (rows.hasNext && i < n) {
             if (next) sb.append(",") else next = true
             sb.append("\n      {\n        ")
-            row2json(sb, rows.next())
+            row2json(sb, rows.next)
             sb.append("\n      }")
             i += 1
           }

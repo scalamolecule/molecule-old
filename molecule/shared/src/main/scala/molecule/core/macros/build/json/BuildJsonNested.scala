@@ -1,10 +1,11 @@
 package molecule.core.macros.build.json
 
+import molecule.core.macros.attrResolvers.JsonBase
 import molecule.core.macros.build.BuildBase
 import scala.reflect.macros.blackbox
 
 
-trait BuildJsonNested extends BuildBase {
+trait BuildJsonNested extends BuildBase with JsonBase{
   val c: blackbox.Context
 
   import c.universe._
@@ -100,8 +101,7 @@ trait BuildJsonNested extends BuildBase {
           )
         } else {
           val newLineCode = Seq(
-            q"""sb.append(",")""",
-            q"""sb.append(indent(${tabs + 1}))""",
+            q"""sb.append(${"," + indent(tabs + 1)})""",
           )
           nodes.zipWithIndex.flatMap { case (node, i) =>
             val lastNode  = i + 1 == nodes.size
@@ -121,8 +121,7 @@ trait BuildJsonNested extends BuildBase {
                     Seq(q"""sb.append(nested)""")
                   } else if (lastNode) {
                     Seq(
-                      q"""sb.append(",")""",
-                      q"""sb.append(indent(${tabs + 1}))""",
+                      q"""sb.append(${"," + indent(tabs + 1)})""",
                       q"""sb.append(nested)"""
                     )
                   } else Nil
@@ -131,16 +130,13 @@ trait BuildJsonNested extends BuildBase {
               case o: BuilderObj if depth == exitDepth =>
                 newLine ++ Seq(
                   q"""quote(sb, ${o.ref})""",
-                  q"""sb.append(": {")""",
-                  q"""sb.append(indent(${tabs + 2}))""",
+                  q"""sb.append(${": {" + indent(tabs + 2)})""",
                   q"""..${recurse(o, depth + 1, tabs + 1, true)}""",
-                  q"""sb.append(indent(${tabs + 1}))""",
-                  q"""sb.append("}")"""
+                  q"""sb.append(${indent(tabs + 1) + "}"})""",
                 ) ++ (
                   if (lastNode) {
                     Seq(
-                      q"""sb.append(",")""",
-                      q"""sb.append(indent(${tabs + 1}))"""
+                      q"""sb.append(${"," + indent(tabs + 1)})"""
                     )
                   } else Nil
                   ) ++ Seq(q"""sb.append(nested)""")
@@ -148,11 +144,9 @@ trait BuildJsonNested extends BuildBase {
               case o: BuilderObj =>
                 newLine ++ Seq(
                   q"""quote(sb, ${o.ref})""",
-                  q"""sb.append(": {")""",
-                  q"""sb.append(indent(${tabs + 2}))""",
+                  q"""sb.append(${": {" + indent(tabs + 2)})""",
                   q"""..${recurse(o, depth + 1, tabs + 1, nestedAdded)}""",
-                  q"""sb.append(indent(${tabs + 1}))""",
-                  q"""sb.append("}")""",
+                  q"""sb.append(${indent(tabs + 1) + "}"})""",
                 )
             }
           }
@@ -177,8 +171,7 @@ trait BuildJsonNested extends BuildBase {
       val postFields = postJsons.flatMap { portJsonLambda =>
         colIndex += 1
         Seq(
-          q"""sb.append(",")""",
-          q"""sb.append(indent(1))""",
+          q"""sb.append(${"," + indent(1)})""",
           q"""${portJsonLambda(colIndex, 0)}"""
         )
       }

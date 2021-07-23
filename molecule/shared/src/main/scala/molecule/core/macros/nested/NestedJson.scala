@@ -3,12 +3,12 @@ package molecule.core.macros.nested
 import java.lang.{Long => jLong}
 import java.util.{List => jList}
 import molecule.core.api.Molecule_0
-import molecule.core.macros.lambdas.JsonBase
+import molecule.core.macros.attrResolvers.JsonBase
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Builder classes of various arity of nested JSON. */
-trait NestedJson[Obj, OuterTpl] extends NestedBase[Obj, OuterTpl] with JsonBase { self: Molecule_0[Obj, OuterTpl] =>
+trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Molecule_0[Obj, Tpl] =>
 
   protected def jsonBranch0(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
   protected def jsonBranch1(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???

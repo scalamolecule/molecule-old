@@ -1,4 +1,4 @@
-package molecule.core.macros.lambdaTrees
+package molecule.core.macros.attrResolverTrees
 
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox

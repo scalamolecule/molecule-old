@@ -1,4 +1,4 @@
-package molecule.core.macros.lambdas
+package molecule.core.macros.attrResolvers
 
 import java.lang.{Long => jLong}
 import java.util.{Date, Iterator => jIterator, List => jList, Map => jMap}
@@ -10,10 +10,18 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOneQuoted(sb: StringBuilder, field: String, it: jIterator[_]): StringBuilder = {
     quotedPair(sb, field, it.next.toString)
+//    if(it.hasNext)
+//      quotedPair(sb, field, it.next.toString)
+//    else
+//      throw new RuntimeException("unexpected empty iterator (jsonOptNestedOneQuoted)")
   }
 
   protected def jsonOptNestedOne(sb: StringBuilder, field: String, it: jIterator[_]): StringBuilder = {
     pair(sb, field, it.next)
+//    if(it.hasNext)
+//      pair(sb, field, it.next)
+//    else
+//      throw new RuntimeException("unexpected empty iterator (jsonOptNestedOne)")
   }
 
   protected def jsonOptNestedOneToString(sb: StringBuilder, field: String, it: jIterator[_]): StringBuilder = {
@@ -49,6 +57,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
       .asInstanceOf[jMap[_, _]].values().iterator().next
       .asInstanceOf[jLong].toLong
     pair(sb, field, refAttr)
+//    pair(sb, field, it.next.asInstanceOf[jLong].toLong)
   }
 
 
@@ -173,7 +182,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
   protected def jsonOptNestedOptOneEnum(sb: StringBuilder, field: String, it: jIterator[_]): StringBuilder = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
-      case v          => quotedPair(sb, field, getKwName(v.asInstanceOf[jMap[_, _]].values().iterator().next.toString))
+      case v          => quotedPair(sb, field, getKwName(v.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
     }
   }
 
@@ -388,4 +397,50 @@ private[molecule] trait JsonOptNested extends JsonBase {
         sb.append("}")
     }
   }
+
+//  // Optional Map apply ===========================================================================================
+//
+//  protected def jsonOptApplyMapQuoted(sb: StringBuilder, field: String, it: jIterator[_], tabs: Int): StringBuilder = {
+//    it.next match {
+//      case "__none__" => pair(sb, field, "null")
+//      case v          =>
+//        quote(sb, field)
+//        sb.append(": {")
+//        var next = false
+//        val it         = v.asInstanceOf[jList[_]].iterator
+//        var pair       = new Array[String](2)
+//        while (it.hasNext) {
+//          if (next) sb.append(", ") else next = true
+//          sb.append(indent(tabs + 1))
+//          pair = it.next.toString.split("@", 2)
+//          quote(sb, pair(0))
+//          sb.append(": ")
+//          quote(sb, pair(1))
+//        }
+//        if (next) sb.append(indent(tabs))
+//        sb.append("}")
+//    }
+//  }
+//
+//  protected def jsonOptApplyMap(sb: StringBuilder, field: String, it: jIterator[_], tabs: Int): StringBuilder = {
+//    it.next match {
+//      case "__none__" => pair(sb, field, "null")
+//      case v          =>
+//        quote(sb, field)
+//        sb.append(": {")
+//        var next = false
+//        val it         = v.asInstanceOf[jList[_]].iterator
+//        var pair       = new Array[String](2)
+//        while (it.hasNext) {
+//          if (next) sb.append(", ") else next = true
+//          sb.append(indent(tabs + 1))
+//          pair = it.next.toString.split("@", 2)
+//          quote(sb, pair(0))
+//          sb.append(": ")
+//          sb.append(pair(1))
+//        }
+//        if (next) sb.append(indent(tabs))
+//        sb.append("}")
+//    }
+//  }
 }

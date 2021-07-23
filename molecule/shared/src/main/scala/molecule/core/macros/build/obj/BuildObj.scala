@@ -76,27 +76,26 @@ trait BuildObj extends BuildBase {
     }
   }
 
-  def objFlat(obj: BuilderObj, i0: Int = -1, isOptNested: Boolean = false): (Tree, Int) = {
-    // Property index of row/tuple
-    var i = if (isOptNested && i0 == -1) -1 else i0
+  def objFlat(obj: BuilderObj, colIndex0: Int = -1, isOptNested: Boolean = false): (Tree, Int) = {
+    var colIndex = if (isOptNested && colIndex0 == -1) -1 else colIndex0
 
     def properties(nodes: List[BuilderNode]): List[Tree] = {
       var propNames = List.empty[String]
       val propDefs  = nodes.flatMap {
         case BuilderProp(_, prop, tpe, cast, _, optAggr) =>
-          i += 1
+          colIndex += 1
           // Only generate 1 property, even if attribute is repeated in molecule
           if (!propNames.contains(prop)) {
             propNames = propNames :+ prop
             optAggr match {
-              case None if isOptNested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($i).asInstanceOf[$tpe]")
-              case None                => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(i)}")
+              case None if isOptNested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
+              case None                => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
 
               case Some(aggrTpe) if aggrTpe == tpe.toString() =>
                 if (isOptNested)
-                  Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($i).asInstanceOf[$tpe]")
+                  Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
                 else
-                  Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(i)}")
+                  Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
 
               case Some(aggrTpe) =>
                 val err = s"""Object property `$prop` not available since the aggregate changes its type to `$aggrTpe`. Please use tuple output instead to access aggregate value."""
@@ -105,7 +104,7 @@ trait BuildObj extends BuildBase {
           } else None
 
         case o@BuilderObj(_, ref, 2, props) =>
-          i += 1
+          colIndex += 1
           val productTpe = if (props.length == 1) {
             props.head match {
               case BuilderProp(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
@@ -114,7 +113,7 @@ trait BuildObj extends BuildBase {
           } else {
             tq"Product"
           }
-          val subObj     = q"tpl.productElement($i).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
+          val subObj     = q"tpl.productElement($colIndex).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init] = $subObj")
             case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Seq[Init with $a] = $subObj")
@@ -143,8 +142,8 @@ trait BuildObj extends BuildBase {
           }
 
         case o@BuilderObj(_, ref, _, props) =>
-          val (subObj, j) = objFlat(o, i, isOptNested)
-          i = j
+          val (subObj, colIndexSub) = objFlat(o, colIndex, isOptNested)
+          colIndex = colIndexSub
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Init = $subObj")
             case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Init with $a = $subObj")
@@ -207,6 +206,6 @@ trait BuildObj extends BuildBase {
         case list                                                                   => abort("Unexpected list of types:\n  " + list.mkString("\n  "))
       }
     }
-    (tree, i)
+    (tree, colIndex)
   }
 }

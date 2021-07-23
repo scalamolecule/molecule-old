@@ -1,8 +1,5 @@
 package molecule.core.macros
 
-import molecule.core.macros.lambdaTrees.LambdaCastAggr
-import molecule.core.ops.{Liftables, TreeOps}
-import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
 import scala.language.higherKinds
 import scala.reflect.macros.blackbox
@@ -12,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-//     private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-  private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+//  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -33,36 +30,36 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     def mkFlat = {
       val transformers = if (isJsPlatform) {
-//        val (indexes, arrays, lookups0) = resolveIndexes(indexes0, 0)
-//
-//        val lookups = if (txMetaCompositesCount > 0) {
-//          // Treat tx meta data as composite
-//          val first = topLevelLookups(List(castss.head), lookups0)
-//          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
-//          q"(..$first, ..$last)"
-//        } else {
-//          q"(..$lookups0)"
-//        }
-//        q"""
-//          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-//            ..$arrays
-//            (i: Int) => $lookups
-//          }
-//          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-//          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
-//        """
+        //        val (indexes, arrays, lookups0) = resolveIndexes(indexes0, 0)
+        //
+        //        val lookups = if (txMetaCompositesCount > 0) {
+        //          // Treat tx meta data as composite
+        //          val first = topLevelLookups(List(castss.head), lookups0)
+        //          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
+        //          q"(..$first, ..$last)"
+        //        } else {
+        //          q"(..$lookups0)"
+        //        }
+        //        q"""
+        //          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
+        //            ..$arrays
+        //            (i: Int) => $lookups
+        //          }
+        //          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+        //          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
+        //        """
 
         q"""
           final override protected def json2tpl(json: String): (..$TplTypes) = ???
           final override protected def json2obj(json: String): $ObjType = ???
-          final override protected def json2list(json: String): java.util.List[AnyRef] = ???
+          final override protected def json2list(json: String): jList[AnyRef] = ???
          """
 
       } else {
         q"""
-          final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = ${tplFlat(castss, txMetaCompositesCount)}
-          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
-          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplFlat(castss, txMetaCompositesCount)}
+          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+          final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
         """
       }
 
@@ -84,30 +81,52 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
 
     def mkOptNested = {
+//      val optNestedTplClass  = tq"_root_.molecule.core.macros.nested.OptNestedTpl"
+      val optNestedJsonClass = tq"_root_.molecule.core.macros.nested.OptNestedJson"
+
       lazy val tpl = if (TplTypes.length == 1)
         q"lazy val tpl: Product = Tuple1(row2tpl(row))"
       else
         q"lazy val tpl: Product = row2tpl(row)"
 
+      val api =
+        q"""
+          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
+            ${tplOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}.asInstanceOf[(..$TplTypes)]
+
+          final override def row2obj(row: jList[AnyRef]): $ObjType = {
+            $tpl
+            ${objFlat(obj, isOptNested = true)._1}
+          }
+
+          final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder =
+            ${jsonOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}
+        """
+
       if (hasVariables) {
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel)) {
-            ..${castOptNestedRows(castss, TplTypes, optNestedRefIndexes, optNestedTacitIndexes)}
-            final override def row2obj(row: java.util.List[AnyRef]): $ObjType = {
-              $tpl
-              ${objFlat(obj, isOptNested = true)._1}
-            }
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
+            with $optNestedJsonClass[$ObjType, (..$TplTypes)] {
+            ..$api
           }
         """
       } else {
+        //        q"""
+        //          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
+        //            {
+        //            ..${tplOptNested(castss, TplTypes, optNestedRefIndexes, optNestedTacitIndexes)}
+        //            final override def row2obj(row: jList[AnyRef]): $ObjType = {
+        //              $tpl
+        //              ${objFlat(obj, isOptNested = true)._1}
+        //            }
+        //            final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonOptNested(obj)._1}
+        //          }
+        //        """
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
-            ..${castOptNestedRows(castss, TplTypes, optNestedRefIndexes, optNestedTacitIndexes)}
-            final override def row2obj(row: java.util.List[AnyRef]): $ObjType = {
-              $tpl
-              ${objFlat(obj, isOptNested = true)._1}
-            }
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
+            with $optNestedJsonClass[$ObjType, (..$TplTypes)] {
+            ..$api
           }
         """
       }
@@ -119,7 +138,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
         val setters = lookups.map(lookup => q"list.add($lookup.asInstanceOf[AnyRef])")
         q"""
-          final override def qr2list(qr: QueryResult): Int => java.util.List[AnyRef] = {
+          final override def qr2list(qr: QueryResult): Int => jList[AnyRef] = {
             ..$arrays
             (i: Int) => {
               val list = new java.util.ArrayList[AnyRef](${setters.length})
@@ -150,22 +169,25 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
          """
 
       val nestedTupleClass = tq"${nestedTupleClassX(castss.size)}"
-      val resolveModel     =
-        q"final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})"
+      val nestedJsonClass  = tq"${nestedJsonClassX(castss.size)}"
 
       if (isJsPlatform) {
         if (hasVariables) {
           q"""
-            $resolveModel
+            final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
-              with $nestedTupleClass[$ObjType, (..$TplTypes)] with TypedCastHelpers {
+              with $nestedTupleClass[$ObjType, (..$TplTypes)]
+              with $nestedJsonClass[$ObjType, (..$TplTypes)] {
+//              with TypedCastHelpers {
               ..$resolvers
             }
           """
         } else {
           q"""
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-              with $nestedTupleClass[$ObjType, (..$TplTypes)] with TypedCastHelpers {
+              with $nestedTupleClass[$ObjType, (..$TplTypes)]
+              with $nestedJsonClass[$ObjType, (..$TplTypes)] {
+//              with TypedCastHelpers {
               ..$resolvers
             }
           """
@@ -173,16 +195,20 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       } else {
         if (hasVariables) {
           q"""
-            $resolveModel
+            final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
-              with $nestedTupleClass[$ObjType, (..$TplTypes)] {
+              with $nestedTupleClass[$ObjType, (..$TplTypes)]
+              with $nestedJsonClass[$ObjType, (..$TplTypes)] {
+//              with TypedCastHelpers {
               ..$resolvers
             }
           """
         } else {
           q"""
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-              with $nestedTupleClass[$ObjType, (..$TplTypes)] {
+              with $nestedTupleClass[$ObjType, (..$TplTypes)]
+              with $nestedJsonClass[$ObjType, (..$TplTypes)] {
+//              with TypedCastHelpers {
               ..$resolvers
             }
           """
@@ -209,6 +235,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     xx(7
       , t
+      //      , model0
+      //      , Model2Query(model0)._1
+      //      , Model2Query(model0)._2
+      //      , Model2Query(model0)._3
+      //      , Model2Query(model0)._4
       //      , obj
       //      , jsonss
     )

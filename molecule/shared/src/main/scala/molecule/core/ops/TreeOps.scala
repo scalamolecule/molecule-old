@@ -223,17 +223,17 @@ private[molecule] trait TreeOps extends Liftables {
     case o => abort(s"Unsupported arity for NestedTuplesX: $o")
   }
 
-//  def nestedJsonClassX(allLevels: Int): Tree = allLevels match {
-//    case 1 => q""
-//    case 2 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson1"
-//    case 3 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson2"
-//    case 4 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson3"
-//    case 5 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson4"
-//    case 6 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson5"
-//    case 7 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson6"
-//    case 8 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson7"
-//    case o => abort(s"Unsupported arity for NestedJsonX: $o")
-//  }
+  def nestedJsonClassX(allLevels: Int): Tree = allLevels match {
+    case 1 => q""
+    case 2 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson1"
+    case 3 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson2"
+    case 4 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson3"
+    case 5 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson4"
+    case 6 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson5"
+    case 7 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson6"
+    case 8 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson7"
+    case o => abort(s"Unsupported arity for NestedJsonX: $o")
+  }
 
   def namespaceSymbol(tree: Tree): Symbol = {
     def traverse(t: Tree): Symbol = t match {

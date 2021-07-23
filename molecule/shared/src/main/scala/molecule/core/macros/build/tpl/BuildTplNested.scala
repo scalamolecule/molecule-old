@@ -33,7 +33,7 @@ private[molecule] trait BuildTplNested extends BuildBase {
       castLambda(colIndex)
     }
 
-    def branch0until(subLevels: () => Tree) = if (postCasts.isEmpty) {
+    def branch0until(subLevels: () => Tree): Tree = if (postCasts.isEmpty) {
       q"""
          final override def tplBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): (..$OutTypes) = (..${castLevel(0)}, subBranches.asInstanceOf[$t1])
          ..${subLevels()}

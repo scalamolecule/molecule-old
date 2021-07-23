@@ -1,12 +1,14 @@
 package moleculeTests
 
-import molecule.datomic.api.out11._
+import java.util
+import molecule.datomic.api.in3_out11._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import moleculeTests.tests.core.json.JsonNestedTypes.{date1, enum1, str1, uri1, uuid1}
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import java.util.{Collections, Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
+import scala.collection.mutable.ListBuffer
 
 object Adhoc extends AsyncTestSuite {
 
@@ -14,24 +16,22 @@ object Adhoc extends AsyncTestSuite {
 
     //    "adhoc" - bidirectional { implicit conn =>
     "adhoc" - core { implicit conn =>
+
       for {
-        //        _ <- Future(1 ==> 1)
-        _ <- Future(2 ==> 2)
+        _ <- Future(1 ==> 1)
+        //        _ <- Future(2 ==> 2)
 
-        _ <- Ns.str.Refs1.*(Ref1.int1).insert(str1, Seq(1))
+        _ <- m(Ref1.str1.Nss * Ns.int.ref1$) insert List(
+          ("A", List((1, Some(42L)), (2, None))),
+          ("B", List())
+        )
 
-//        _ <- Ns.str.Refs1.*(Ref1.int1).get.map(_ ==> 7)
-        _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": "a", "Ns.refs1": [
-            |   {"Ref1.int1": 1}]}
-            |]""".stripMargin)
-
+        _ <- m(Ref1.str1.Nss *? Ns.int.ref1).get.map(_.sortBy(_._1) ==> List(
+          ("A", List((1, 42L))),
+          ("B", List())
+        ))
 
       } yield ()
     }
-
-
   }
 }

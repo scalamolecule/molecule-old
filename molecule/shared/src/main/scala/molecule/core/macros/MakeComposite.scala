@@ -1,6 +1,6 @@
 package molecule.core.macros
 
-import molecule.core.macros.lambdaTrees.LambdaCastAggr
+import molecule.core.macros.attrResolverTrees.LambdaCastAggr
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query
@@ -72,13 +72,13 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       q"""
           final override protected def json2tpl(json: String): (..$TplTypes) = ???
           final override protected def json2obj(json: String): $ObjType = ???
-          final override protected def json2list(json: String): java.util.List[AnyRef] = ???
+          final override protected def json2list(json: String): jList[AnyRef] = ???
        """
     } else {
       q"""
-          final override def row2tpl(row: java.util.List[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetaCompositesCount)}
-          final override def row2obj(row: java.util.List[AnyRef]): $ObjType = ${objFlat(obj)._1}
-          final override def row2json(sb: StringBuilder, row: java.util.List[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetaCompositesCount)}
+          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+          final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
         """
     }
 

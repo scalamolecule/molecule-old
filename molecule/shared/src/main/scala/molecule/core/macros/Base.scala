@@ -2,7 +2,7 @@ package molecule.core.macros
 
 import molecule.core.ast.elements._
 import molecule.core.macros.qr.CastArrays
-import molecule.core.macros.lambdaTrees.{LambdaCastAggr, LambdaCastOptNested, LambdaCastTypes, LambdaJsonAggr, LambdaJsonOptNested, LambdaJsonTypes}
+import molecule.core.macros.attrResolverTrees.{LambdaCastAggr, LambdaCastOptNested, LambdaCastTypes, LambdaJsonAggr, LambdaJsonOptNested, LambdaJsonTypes}
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import scala.collection.mutable.ListBuffer
@@ -18,7 +18,7 @@ private[molecule] trait Base extends Dsl2Model {
   def getImports(genericImports: List[Tree]) =
     q"""
         import java.net.URI
-        import java.util.{Date, UUID}
+        import java.util.{Collections, Date, UUID, List=>jList, Map=>jMap, Iterator=>jIterator, Set=>jSet}
         import molecule.core.ast.elements._
         import molecule.core.composition._
         import molecule.core.dsl.base.Init

@@ -4,7 +4,7 @@ import java.lang.{Double => jDouble, Long => jLong}
 import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
 import java.net.URI
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap}
-import molecule.core.macros.lambdas.CastOptNested
+import molecule.core.macros.attrResolvers.CastOptNested
 import molecule.core.util.Helpers
 
 /** Core molecule interface override defining actions that can be called on molecules.

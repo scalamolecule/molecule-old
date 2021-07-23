@@ -11,7 +11,7 @@ object NestedAttrs3 extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "card 3 (map)" - core { implicit conn =>
+    "intMap" - core { implicit conn =>
       for {
         _ <- m(Ns.int.Refs1 * Ref1.int1.intMap1$) insert List(
           (1, List((1, Some(Map("a" -> 1, "b" -> 2))), (2, None))),

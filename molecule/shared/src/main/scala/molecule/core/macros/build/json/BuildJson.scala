@@ -1,11 +1,10 @@
 package molecule.core.macros.build.json
 
+import molecule.core.macros.attrResolvers.JsonBase
 import molecule.core.macros.build.BuildBase
-import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.blackbox
 
-
-trait BuildJson extends BuildBase {
+trait BuildJson extends BuildBase with JsonBase {
   val c: blackbox.Context
 
   import c.universe._
@@ -16,8 +15,7 @@ trait BuildJson extends BuildBase {
     var colIndex    = colIndex0
     val tabs        = level + 1
     val newLineCode = Seq(
-      q"""sb.append(",")""",
-      q"""sb.append(indent($tabs))"""
+      q"""sb.append(${"," + indent(tabs)})"""
     )
 
     def properties(nodes: List[BuilderNode]): Seq[Tree] = {
@@ -45,22 +43,18 @@ trait BuildJson extends BuildBase {
             }
 
           case refObj@BuilderObj(_, ref, _, _) =>
-            val (subObj, colIndex2) = jsonFlat(refObj, colIndex, level + 1)
-            colIndex = colIndex2
+            val (subObj, colIndexSub) = jsonFlat(refObj, colIndex, level + 1)
+            colIndex = colIndexSub
             newLine ++ Seq(
               q"""quote(sb, $ref)""",
-              q"""sb.append(": {")""",
-              q"""sb.append(indent(${tabs + 1}))""",
+              q"""sb.append(${": {" + indent(tabs + 1)})""",
               q"""$subObj""",
-              q"""sb.append(indent($tabs))""",
-              q"""sb.append("}")""",
+              q"""sb.append(${indent(tabs) + "}"})""",
             )
         }
         trees
       }
     }
-
-
     //    def valueFromTpl(i: Int, tpe: Tree, level: Int): Tree = {
     //      val v = q"""tpl.productElement($i).asInstanceOf[$tpe]"""
     //      tpe.toString match {
@@ -132,7 +126,6 @@ trait BuildJson extends BuildBase {
     //        case "Option[Map[String, BigDecimal]]" => q"jsonOptMap(sb, $v, $level)"
     //      }
     //    }
-
     val tree = if (hasSameNss(obj)) {
       q"""throw MoleculeException(
             "Please compose multiple same-name namespaces with `++` instead of `+` to access field values."

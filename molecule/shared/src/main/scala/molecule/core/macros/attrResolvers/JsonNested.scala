@@ -1,4 +1,4 @@
-package molecule.core.macros.lambdas
+package molecule.core.macros.attrResolvers
 
 import java.lang.{Long => jLong}
 import java.util.{Date, List => jList, Map => jMap, Set => jSet}
