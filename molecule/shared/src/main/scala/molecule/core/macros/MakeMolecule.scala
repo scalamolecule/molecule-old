@@ -112,17 +112,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           }
         """
       } else {
-        //        q"""
-        //          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-        //            {
-        //            ..${tplOptNested(castss, TplTypes, optNestedRefIndexes, optNestedTacitIndexes)}
-        //            final override def row2obj(row: jList[AnyRef]): $ObjType = {
-        //              $tpl
-        //              ${objFlat(obj, isOptNested = true)._1}
-        //            }
-        //            final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonOptNested(obj)._1}
-        //          }
-        //        """
         q"""
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
             with $optNestedJsonClass[$ObjType, (..$TplTypes)] {
