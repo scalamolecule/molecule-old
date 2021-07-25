@@ -14,6 +14,8 @@ private[molecule] trait TreeOps extends Liftables {
 
   import c.universe._
 
+  private lazy val xx = InspectMacro("TreeOps", 3, 2)
+
   override def abort(msg: String) = throw TreeOpsException(msg)
 
   def firstLow(str: Any): String = str.toString.head.toLower.toString + str.toString.tail

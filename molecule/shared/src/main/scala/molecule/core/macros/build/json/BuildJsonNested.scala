@@ -5,7 +5,7 @@ import molecule.core.macros.build.BuildBase
 import scala.reflect.macros.blackbox
 
 
-trait BuildJsonNested extends BuildBase with JsonBase{
+trait BuildJsonNested extends BuildBase with JsonBase {
   val c: blackbox.Context
 
   import c.universe._
@@ -166,9 +166,9 @@ trait BuildJsonNested extends BuildBase with JsonBase{
        """
     } else {
       // Ensure that post fields are last (run branchPairs2 first so that mutable colIndex increments orderly)
-      val pre        = branchPairs(0)
-      val subJsons   = subLevels()
-      val postFields = postJsons.flatMap { portJsonLambda =>
+      val pre       = branchPairs(0)
+      val subJsons  = subLevels()
+      val postProps = postJsons.flatMap { portJsonLambda =>
         colIndex += 1
         Seq(
           q"""sb.append(${"," + indent(1)})""",
@@ -176,7 +176,7 @@ trait BuildJsonNested extends BuildBase with JsonBase{
         )
       }
       q"""
-         final override def jsonBranch0(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..$pre}, ${nestedRef.head}, leaf, {..$postFields})
+         final override def jsonBranch0(sb: StringBuilder, row: java.util.List[AnyRef], leaf: StringBuilder): StringBuilder = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..$pre}, ${nestedRef.head}, leaf, {..$postProps})
          ..$subJsons
        """
     }

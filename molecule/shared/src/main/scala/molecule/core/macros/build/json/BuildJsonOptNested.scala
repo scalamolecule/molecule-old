@@ -23,31 +23,24 @@ private[molecule] trait BuildJsonOptNested extends BuildBase with JsonBase {
     )
 
     def properties(nodes: List[BuilderNode]): Seq[Tree] = {
-      var next       = false
-      var fieldNames = List.empty[String]
+      var next  = false
+      var props = List.empty[String]
       nodes.flatMap { node =>
         val newLine = if (next) newLineCode else {
           next = true
           Nil
         }
         node match {
-          case BuilderProp(_, fieldName, tpe, _, json, optAggr) =>
+          case BuilderProp(_, prop, _, _, json, _) =>
             // Only generate 1 property, even if attribute is repeated in molecule
-            if (fieldNames.contains(fieldName)) Nil else {
-              fieldNames = fieldNames :+ fieldName
-              newLine ++ (optAggr match {
-                case None                                       => Seq(json(42, tabs))
-                case Some(aggrTpe) if aggrTpe == tpe.toString() => Seq(json(42, tabs))
-                case Some(aggrTpe)                              => abort(
-                  s"Field `$fieldName` not available since the aggregate changes its type to `$aggrTpe`. " +
-                    s"Please use tuple output instead to access aggregate value."
-                )
-              })
+            if (props.contains(prop)) Nil else {
+              props = props :+ prop
+              newLine :+ json(42, tabs) // colIndex not used
             }
 
           case nested@BuilderObj(_, ref, 2, nestedProps) =>
             val propCount = getPropCount(nestedProps)
-            val deeper = isDeeper(nested)
+            val deeper    = isDeeper(nested)
             newLine ++ Seq(
               q"""quote(sb, $ref)""",
               q"""sb.append(": [")""",
@@ -71,7 +64,7 @@ private[molecule] trait BuildJsonOptNested extends BuildBase with JsonBase {
     val tree = if (hasSameNss(current)) {
       q"""
         throw MoleculeException(
-          "Please compose multiple same-name namespaces with `++` instead of `+` to access field values."
+          "Please compose multiple same-name namespaces with `++` instead of `+` to access property values."
         )
       """
 
@@ -87,7 +80,7 @@ private[molecule] trait BuildJsonOptNested extends BuildBase with JsonBase {
       current.props.last match {
         case last@BuilderObj(_, ref, 2, nestedProps) =>
           val propCount = getPropCount(nestedProps)
-          val deeper = isDeeper(last)
+          val deeper    = isDeeper(last)
           q"""
             var next = false
             while (it.hasNext) {
@@ -108,7 +101,7 @@ private[molecule] trait BuildJsonOptNested extends BuildBase with JsonBase {
               sb.append(${indent(tabs) + "}"})
             }
           """
-        case _                      =>
+        case _                                       =>
           q"""
             var next = false
             while (it.hasNext) {

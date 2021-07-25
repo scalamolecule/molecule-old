@@ -105,15 +105,31 @@ trait BuildObj extends BuildBase {
 
         case o@BuilderObj(_, ref, 2, props) =>
           colIndex += 1
-          val productTpe = if (props.length == 1) {
-            props.head match {
-              case BuilderProp(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
-              case BuilderObj(_, _, _, _)          => tq"Tuple1[Product]"
-            }
-          } else {
-            tq"Product"
+          //          val productTpe = if (props.length == 1) {
+          //            props.head match {
+          //              case BuilderProp(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
+          //              case BuilderObj(_, _, _, _)          => tq"Tuple1[Product]"
+          //            }
+          //          } else {
+          //            tq"Product"
+          //          }
+          //          val subObj     = q"tpl.productElement($colIndex).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
+
+          val oneNestedProp    = props.length == 1
+          val singleNestedType = props.head match {
+            case BuilderProp(_, _, tpe, _, _, _) => tq"$tpe"
+            case _: BuilderObj                   => tq"Product"
           }
-          val subObj     = q"tpl.productElement($colIndex).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
+          val subObj           = if (oneNestedProp)
+            q"""
+              tpl.productElement($colIndex).asInstanceOf[Seq[$singleNestedType]].map { v =>
+                val tpl = Tuple1(v)
+                ${objFlat(o, -1, isOptNested)._1}
+              }
+            """
+          else
+            q"tpl.productElement($colIndex).asInstanceOf[Seq[Product]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
+
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init] = $subObj")
             case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Seq[Init with $a] = $subObj")

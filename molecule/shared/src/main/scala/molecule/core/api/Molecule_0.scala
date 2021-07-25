@@ -206,12 +206,12 @@ abstract class Molecule_0[Obj, Tpl](
     conn.flatMap { conn =>
       if (conn.isJsPlatform) {
         for {
-          saveStmts <- conn.modelTransformer(_model).saveStmts
+          saveStmts <- conn.model2stmts(_model).saveStmts
           result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
         } yield result
       } else {
         conn.transact(
-          conn.modelTransformer(_model).saveStmts
+          conn.model2stmts(_model).saveStmts
         )
       }
     }
@@ -229,7 +229,7 @@ abstract class Molecule_0[Obj, Tpl](
   def getSaveStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
     VerifyModel(_model, "save")
     conn.flatMap { conn =>
-      conn.modelTransformer(_model).saveStmts
+      conn.model2stmts(_model).saveStmts
     }
   } catch {
     // Catch failed model verification
@@ -312,12 +312,12 @@ abstract class Molecule_0[Obj, Tpl](
     conn.flatMap { conn =>
       if (conn.isJsPlatform) {
         for {
-          insertStmts <- conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+          insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
           result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(insertStmts, conn))
         } yield result
       } else {
         conn.transact(
-          conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+          conn.model2stmts(_model).insertStmts(untupled(dataRows))
         )
       }
     }
@@ -332,7 +332,7 @@ abstract class Molecule_0[Obj, Tpl](
   )(implicit ec: ExecutionContext): Future[Seq[Statement]] = try {
     VerifyModel(_model, "insert")
     conn.flatMap { conn =>
-      conn.modelTransformer(_model).insertStmts(untupled(dataRows))
+      conn.model2stmts(_model).insertStmts(untupled(dataRows))
     }
   } catch {
     // Catch failed model verification
@@ -367,13 +367,13 @@ abstract class Molecule_0[Obj, Tpl](
     conn.flatMap { conn =>
       if (conn.isJsPlatform) {
         for {
-          updateStmts <- conn.modelTransformer(_model).updateStmts
+          updateStmts <- conn.model2stmts(_model).updateStmts
           result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(updateStmts, conn))
         } yield result
       } else {
         conn.transact(
           try {
-            conn.modelTransformer(_model).updateStmts
+            conn.model2stmts(_model).updateStmts
           } catch {
             case NonFatal(exc) => Future.failed(exc)
           }
@@ -395,7 +395,7 @@ abstract class Molecule_0[Obj, Tpl](
   def getUpdateStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
     VerifyModel(_model, "update")
     conn.flatMap { conn =>
-      conn.modelTransformer(_model).updateStmts
+      conn.model2stmts(_model).updateStmts
     }
   } catch {
     // Catch failed model verification

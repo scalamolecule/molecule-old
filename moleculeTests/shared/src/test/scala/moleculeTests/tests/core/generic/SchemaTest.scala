@@ -12,7 +12,8 @@ object SchemaTest extends AsyncTestSuite {
 
   // Differing counts and ids for different systems
   val List(attrCount, a1, a2, a3, card1count, card2count) = system match {
-    case SystemPeer       => List(68, 106, 108, 109, 30, 38)
+//    case SystemPeer       => List(68, 106, 108, 109, 30, 38)
+    case SystemPeer       => List(69, 106, 108, 109, 30, 39)
     case SystemDevLocal   => List(71, 105, 107, 108, 31, 40)
     case SystemPeerServer => List(71, 104, 106, 107, 31, 40)
   }
@@ -211,14 +212,14 @@ object SchemaTest extends AsyncTestSuite {
 
           // We can though filter by one or more tacit namespace names
           _ <- Schema.nsFull_("Ref1").attr.get.map(_.sorted ==> List(
-            "enum1", "enums1", "int1", "intMap1", "ints1",
+            "enum1", "enums1", "int1", "intMap1", "ints1", "nss",
             "ref2", "refSub2", "refs2", "refsSub2", "str1", "strs1"
           ))
 
           // Attributes in namespace "Ref1" or "Ref2"
           _ <- Schema.nsFull_("Ref1", "Ref2").attr.get.map(_.sorted ==> List(
             "enum1", "enum2", "enums1", "int1", "int2", "intMap1", "ints1",
-            "ints2", "ref2", "ref3", "refSub2", "refs2", "refs3", "refsSub2",
+            "ints2", "nss", "ref2", "ref3", "refSub2", "refs2", "refs3", "refsSub2",
             "str1", "str2", "strs1", "strs2"
           ))
 
@@ -227,6 +228,7 @@ object SchemaTest extends AsyncTestSuite {
             "enum1", "enum2", "enum3", "enum4", "enums1",
             "int1", "int2", "int3", "int4", "intMap1",
             "ints1", "ints2", "ints3", "ints4",
+            "nss",
             "ref2", "ref3", "ref4", "refSub2",
             "refs2", "refs3", "refs4", "refsSub2",
             "str1", "str2", "str3", "str4",
@@ -236,6 +238,7 @@ object SchemaTest extends AsyncTestSuite {
             "enum1", "enum3", "enum4", "enums1",
             "int1", "int3", "int4", "intMap1",
             "ints1", "ints3", "ints4",
+            "nss",
             "ref2", "ref4", "refSub2",
             "refs2", "refs4", "refsSub2",
             "str1", "str3", "str4",
@@ -263,7 +266,7 @@ object SchemaTest extends AsyncTestSuite {
 
           // We can though filter by one or more tacit namespace names
           _ <- Schema.ns_("Ref1").attr.get.map(_.sorted ==> List(
-            "enum1", "enums1", "int1", "intMap1", "ints1",
+            "enum1", "enums1", "int1", "intMap1", "ints1", "nss",
             "ref2", "refSub2", "refs2", "refsSub2", "str1", "strs1"
           ))
 
@@ -272,6 +275,7 @@ object SchemaTest extends AsyncTestSuite {
             "enum1", "enum2", "enums1",
             "int1", "int2", "intMap1",
             "ints1", "ints2",
+            "nss",
             "ref2", "ref3", "refSub2",
             "refs2", "refs3", "refsSub2",
             "str1", "str2",
@@ -283,6 +287,7 @@ object SchemaTest extends AsyncTestSuite {
             "enum1", "enum2", "enum3", "enum4", "enums1",
             "int1", "int2", "int3", "int4", "intMap1",
             "ints1", "ints2", "ints3", "ints4",
+            "nss",
             "ref2", "ref3", "ref4", "refSub2",
             "refs2", "refs3", "refs4", "refsSub2",
             "str1", "str2", "str3", "str4",
@@ -292,6 +297,7 @@ object SchemaTest extends AsyncTestSuite {
             "enum1", "enum3", "enum4", "enums1",
             "int1", "int3", "int4", "intMap1",
             "ints1", "ints3", "ints4",
+            "nss",
             "ref2", "ref4", "refSub2",
             "refs2", "refs4", "refsSub2",
             "str1", "str3", "str4",

@@ -175,26 +175,26 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
     def isAggr(fn: String) = Seq("count", "count-distinct", "avg", "variance", "stddev").contains(fn)
 
-    // outputMatrix:
-    // card, isOptional, isDate, isAggr
-    def recurse(i: Int, acc: Seq[(Int, Boolean, Boolean, Boolean)], elements: Seq[Element])
+    // level, (card, isOptional, isDate, isAggr)
+    def recurse(level: Int, acc: Seq[(Int, Boolean, Boolean, Boolean)], elements: Seq[Element])
     : (Int, Seq[(Int, Boolean, Boolean, Boolean)]) = {
-      elements.foldLeft(i, acc) {
-        case ((i, acc), Generic(_, "txInstant", _, _))                      => (i + 1, acc :+ (1, false, true, false))
-        case ((i, acc), Generic(_, _, "datom" | "schema", _))               => (i + 1, acc :+ (1, false, false, false))
-        case ((i, acc), ga: GenericAtom) if ga.attr.last == '_'             => (i, acc)
-        case ((i, acc), Atom(_, _, _, _, Fn(fn, _), _, _, _)) if isAggr(fn) => (i + 1, acc :+ (1, false, false, true))
-        case ((i, acc), Atom(_, attr, "Date", card, _, _, _, _))            => (i + 1, acc :+ (card, attr.last == '$', true, false))
-        case ((i, acc), Atom(_, attr, _, card, _, _, _, _))                 => (i + 1, acc :+ (card, attr.last == '$', false, false))
-        case ((i, acc), Nested(_, nestedElements))                          => recurse(i, acc, nestedElements)
-        case ((i, acc), Composite(compositeElements))                       => recurse(i, acc, compositeElements)
-        case ((i, acc), TxMetaData(txElements))                             => recurse(i, acc, txElements)
-        case ((i, acc), _)                                                  => (i, acc)
+      elements.foldLeft(level, acc) {
+        case ((level, acc), Generic(_, "txInstant", _, _))                      => (level, acc :+ (1, false, true, false))
+        case ((level, acc), Generic(_, _, "datom" | "schema", _))               => (level, acc :+ (1, false, false, false))
+        case ((level, acc), ga: GenericAtom) if ga.attr.last == '_'             => (level, acc)
+        case ((level, acc), Atom(_, _, _, _, Fn(fn, _), _, _, _)) if isAggr(fn) => (level, acc :+ (1, false, false, true))
+        case ((level, acc), Atom(_, attr, "Date", card, _, _, _, _))            => (level, acc :+ (card, attr.last == '$', true, false))
+        case ((level, acc), Atom(_, attr, _, card, _, _, _, _))                 => (level, acc :+ (card, attr.last == '$', false, false))
+        case ((level, acc), Nested(_, nestedElements))                          => recurse(level + 1, acc, nestedElements)
+        case ((level, acc), Composite(compositeElements))                       => recurse(level, acc, compositeElements)
+        case ((level, acc), TxMetaData(txElements))                             => recurse(level, acc, txElements)
+        case ((level, acc), _)                                                  => (level, acc)
       }
     }
 
     val outputMatrix: Seq[(Int, Boolean, Boolean, Boolean)] = {
-      recurse(0, Seq.empty[(Int, Boolean, Boolean, Boolean)], _model.elements)._2
+      val (levels, outMatrix) = recurse(0, Seq.empty[(Int, Boolean, Boolean, Boolean)], _model.elements)
+      (0 to levels).toList.map(level => (1, false, false, false)) ++ outMatrix
     }
 
     def resolve(rawRows: Iterable[jList[AnyRef]]): Seq[ListBuffer[Any]] = {
@@ -260,9 +260,9 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       }
 
       def cardMap(v: Any): Map[String, String] = {
-        val it  = v.asInstanceOf[jSet[_]].iterator
-        var map = Map.empty[String, String]
-        var pair  = new Array[String](2)
+        val it   = v.asInstanceOf[jSet[_]].iterator
+        var map  = Map.empty[String, String]
+        var pair = new Array[String](2)
         while (it.hasNext) {
           pair = it.next.toString.split("@", 2)
           map = map + (pair(0) -> pair(1))
@@ -273,9 +273,9 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
         if (v == null) {
           Option.empty[Map[String, String]]
         } else {
-          val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-          var map = Map.empty[String, String]
-          var pair  = new Array[String](2)
+          val it   = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+          var map  = Map.empty[String, String]
+          var pair = new Array[String](2)
           while (it.hasNext) {
             pair = it.next.toString.split("@", 2)
             map = map + (pair(0) -> pair(1))
@@ -317,23 +317,22 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
 
     def data(): Future[Unit] = conn.flatMap { conn =>
+      val query = _rawNestedQuery.getOrElse(_query)
       try {
         // Also do Model2Query transformation at runtime to be able to inspect it.
         // Note though that input variables are only bound in the macro at compile
         // time and are therefore not present in this runtime process.
         Model2Query(_model)
 
-        val ins   = QueryOps(_query).inputs
-        val p     = Query2String(_query).p
-        val rules = "[" + (_query.i.rules.map(p).mkString(" ")) + "]"
-        val db    = conn.db
-        conn._query(_model, _query, Some(db)).map { res =>
+        val ins = QueryOps(query).inputs
+        val db  = conn.db
+        conn._query(_model, query, Some(db)).map { res =>
           val rows = resolve(res.asScala.take(500))
 
-          val rulesOut: String = if (_query.i.rules.isEmpty)
+          val rulesOut: String = if (query.i.rules.isEmpty)
             "none\n\n"
           else
-            "[\n " + _query.i.rules.map(Query2String(_query).p(_)).mkString("\n ") + "\n]\n\n"
+            "[\n " + query.i.rules.map(Query2String(query).p(_)).mkString("\n ") + "\n]\n\n"
 
           val inputs: String = if (ins.isEmpty)
             "none\n\n"
@@ -345,8 +344,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
           println(
             "\n--------------------------------------------------------------------------\n" +
               _model + "\n\n" +
-              _query + "\n\n" +
-              _query.datalog + "\n\n" +
+              query + "\n\n" +
+              query.datalog + "\n\n" +
               "RULES: " + rulesOut +
               "INPUTS: " + inputs +
               "OUTPUTS:\n" + outs + "\n(showing up to 500 rows)" +
@@ -354,7 +353,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
           )
         }
       } catch {
-        case NonFatal(exc) => Future.failed(QueryException(exc, _model, _query))
+        case NonFatal(exc) => Future.failed(QueryException(exc, _model, query))
       }
     }
 
@@ -487,24 +486,22 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
       conn.map { conn2 =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(txMolecules.flatten, conn2)
         conn2.usingAdhocDbView(With(stmtsEdn, uriAttrs))
-//        println("Transaction data:\n========================================================================")
-//        txMolecules.zipWithIndex foreach { case (stmts, i) =>
-//          conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
-//        }
-//        conn2
+        //        println("Transaction data:\n========================================================================")
+        //        txMolecules.zipWithIndex foreach { case (stmts, i) =>
+        //          conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
+        //        }
+        //        conn2
       }
     )
       .flatMap { _ =>
-      conn.map { conn2 =>
-        println("Transaction data:\n========================================================================")
-        txMolecules.zipWithIndex foreach { case (stmts, i) =>
-          conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
+        conn.map { conn2 =>
+          println("Transaction data:\n========================================================================")
+          txMolecules.zipWithIndex foreach { case (stmts, i) =>
+            conn2.inspect(s"Statements, transaction molecule ${i + 1}:", 1)(i + 1, stmts)
+          }
         }
       }
-    }
   }
-
-
 
 
   /** Inspect call to `getHistory` on a molecule (without affecting the db).
@@ -533,7 +530,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @return Unit
     */
   def inspectSave(implicit conn: Future[Conn]): Future[Unit] = conn.flatMap { conn =>
-    val transformer = conn.modelTransformer(_model)
+    val transformer = conn.model2stmts(_model)
     try {
       VerifyModel(_model, "save")
       transformer.saveStmts.map(stmts =>
@@ -554,7 +551,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def _inspectInsert(conn: Future[Conn], dataRows: Iterable[Seq[Any]]): Future[Unit] = {
     conn.flatMap { conn =>
-      val transformer = conn.modelTransformer(_model)
+      val transformer = conn.model2stmts(_model)
       val data        = untupled(dataRows)
       try {
         // Separate each row so that we can distinguish each insert row
@@ -586,7 +583,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
     * @return
     */
   def inspectUpdate(implicit conn: Future[Conn]): Future[Unit] = conn.flatMap { conn =>
-    val transformer = conn.modelTransformer(_model)
+    val transformer = conn.model2stmts(_model)
     try {
       VerifyModel(_model, "update")
       transformer.updateStmts.map(stmts =>

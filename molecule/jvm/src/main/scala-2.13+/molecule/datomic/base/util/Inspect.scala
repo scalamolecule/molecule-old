@@ -43,7 +43,7 @@ private[molecule] case class Inspect(
             indent + ":db/add" + padS(10, ":db/add") + e + padS(32, e.toString) + a + padS(20, a) + s"list($biStr\n" +
               stmts.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
 
-          case add:Add => indent + add
+          case add: Add     => indent + add
           case ret: Retract => indent + ret
 
           case RetractEntity(e) =>
@@ -146,11 +146,11 @@ private[molecule] case class Inspect(
       }
 
       println(
-        s"## $id ## $clazz \n================================================================================================================\n" +
+        s"## $id ## $clazz \n=============================================================================\n" +
           params.toList.zipWithIndex.map {
             case (x, i) => traverse(x, 0, i + 1)
-          }.mkString("\n----------------------------------------------------------------------------------------------------------------\n") +
-          s"\n================================================================================================================\n$stackTrace"
+          }.mkString("\n-----------------------------------------------------------------------------\n") +
+          s"\n=============================================================================\n$stackTrace"
       )
     }
   }

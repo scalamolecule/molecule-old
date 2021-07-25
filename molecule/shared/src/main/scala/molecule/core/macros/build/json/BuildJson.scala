@@ -19,27 +19,20 @@ trait BuildJson extends BuildBase with JsonBase {
     )
 
     def properties(nodes: List[BuilderNode]): Seq[Tree] = {
-      var next       = false
-      var fieldNames = List.empty[String]
+      var next  = false
+      var props = List.empty[String]
       nodes.flatMap { node =>
         val newLine = if (next) newLineCode else {
           next = true
           Nil
         }
         val trees   = node match {
-          case BuilderProp(_, fieldName, tpe, _, json, optAggr) =>
+          case BuilderProp(_, prop, _, _, json, _) =>
             colIndex += 1
             // Only generate 1 property, even if attribute is repeated in molecule
-            if (fieldNames.contains(fieldName)) Nil else {
-              fieldNames = fieldNames :+ fieldName
-              newLine ++ (optAggr match {
-                case None                                       => Seq(json(colIndex, tabs))
-                case Some(aggrTpe) if aggrTpe == tpe.toString() => Seq(json(colIndex, tabs))
-                case Some(aggrTpe)                              => abort(
-                  s"Field `$fieldName` not available since the aggregate changes its type to `$aggrTpe`. " +
-                    s"Please use tuple output instead to access aggregate value."
-                )
-              })
+            if (props.contains(prop)) Nil else {
+              props = props :+ prop
+              newLine :+ json(colIndex, tabs)
             }
 
           case refObj@BuilderObj(_, ref, _, _) =>
@@ -128,7 +121,7 @@ trait BuildJson extends BuildBase with JsonBase {
     //    }
     val tree = if (hasSameNss(obj)) {
       q"""throw MoleculeException(
-            "Please compose multiple same-name namespaces with `++` instead of `+` to access field values."
+            "Please compose multiple same-name namespaces with `++` instead of `+` to access property values."
           )"""
     } else {
       q"{ ..${properties(obj.props)} }"

@@ -170,7 +170,7 @@ object TxFunctions extends Helpers with JavaUtil {
           }
         }
         val txModel    = Model(Seq(TxMetaData(txElements)))
-        conn.modelTransformer(txModel).saveStmts
+        conn.model2stmts(txModel).saveStmts
       } else Future(Nil)
 
       res <- {

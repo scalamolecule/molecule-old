@@ -20,7 +20,7 @@ case class VerifyModel(model: Model, op: String) {
     unexpectedAppliedId
     noGenericsInTail
     noTacitAttrs
-    missingAttrInStartEnd
+//    missingAttrInStartEnd
     noConflictingCardOneValues
     noNested
     noEdgePropRefs
@@ -32,7 +32,7 @@ case class VerifyModel(model: Model, op: String) {
     noGenericsInTail
     onlyTacitTxAttrs
     noTacitAttrs
-    missingAttrInStartEnd
+//    missingAttrInStart
     noNestedEdgesWithoutTarget
     edgeComplete
   }
@@ -123,7 +123,7 @@ case class VerifyModel(model: Model, op: String) {
     detectTacitAttrs(model.elements)
   }
 
-  private def missingAttrInStartEnd: Unit = {
+  private def missingAttrInStart: Unit = {
     model.elements.foldLeft(Seq[Element]()) {
       case (attrs, e) => e match {
         case a: Atom if a.attr.last != '$'         => attrs :+ a

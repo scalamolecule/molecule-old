@@ -6,7 +6,7 @@ import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.marshalling._
 import molecule.core.ops.ColOps
-import molecule.core.transform.ModelTransformer
+import molecule.core.transform.Model2Stmts
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView.DbView
 import molecule.datomic.base.ast.query.Query
@@ -456,7 +456,7 @@ trait Conn extends ColOps {
                               (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
 
-  def modelTransformer(model: Model): ModelTransformer = ModelTransformer(this, model)
+  def model2stmts(model: Model): Model2Stmts = Model2Stmts(this, model)
 
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 

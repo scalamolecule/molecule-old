@@ -155,21 +155,19 @@ private[molecule] trait LambdaJsonOptNested extends TreeOps {
 //    }
 //  }
 
-  val jsonOptNestedKeyedMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => jsonOptNestedOneAttr(t.tpeS, t.nameClean)
-  //  val jsonOptNestedKeyedMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
-//    val field = t.nameClean
-//    t.tpeS match {
-//      case "String"     => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, row, $colIndex)"
-//      case "Int"        => (_: Int, _: Int) => q"jsonOptNestedOne(sb, $field, row, $colIndex)"
-//      case "Long"       => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
-//      case "Double"     => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
-//      case "Boolean"    => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
-//      case "Date"       => (_: Int, _: Int) => q"jsonOptNestedOneDate(sb, $field, row, $colIndex)"
-//      case "UUID"       => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, row, $colIndex)"
-//      case "URI"        => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, row, $colIndex)"
-//      case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
-//      case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
-//      case "Any"        => (_: Int, _: Int) => q"jsonOptNestedOneAny(sb, $field, row, $colIndex)"
-//    }
-//  }
+    val jsonOptNestedKeyedMapAttr: (String, String) => (Int, Int) => Tree = (tpe: String, field: String) => {
+    tpe match {
+      case "String"     => (colIndex: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, row, $colIndex)"
+      case "Int"        => (colIndex: Int, _: Int) => q"jsonOptNestedOne(sb, $field, row, $colIndex)"
+      case "Long"       => (colIndex: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
+      case "Double"     => (colIndex: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
+      case "Boolean"    => (colIndex: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
+      case "Date"       => (colIndex: Int, _: Int) => q"jsonOptNestedOneDate(sb, $field, row, $colIndex)"
+      case "UUID"       => (colIndex: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, row, $colIndex)"
+      case "URI"        => (colIndex: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, row, $colIndex)"
+      case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
+      case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, row, $colIndex)"
+      case "Any"        => (colIndex: Int, _: Int) => q"jsonOptNestedOneAny(sb, $field, row, $colIndex)"
+    }
+  }
 }

@@ -49,7 +49,7 @@ case class DatomicEntity_Js(conn: Conn, connProxy: ConnProxy, eid: Any) extends 
     eid match {
       case _: Long =>
       for{
-        txMetaStmts <- conn.modelTransformer(txMetaModel).saveStmts
+        txMetaStmts <- conn.model2stmts(txMetaModel).saveStmts
         txReport <- rpc.transact(conn.connProxy, Stmts2Edn(retractStmts ++ txMetaStmts, conn))
       }  yield txReport
 
@@ -74,7 +74,7 @@ case class DatomicEntity_Js(conn: Conn, connProxy: ConnProxy, eid: Any) extends 
     val retractStmts = Seq(RetractEntity(eid))
     val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
     VerifyModel(model, "save") // can throw exception
-    conn.modelTransformer(model).saveStmts.map(txMetaStmts =>
+    conn.model2stmts(model).saveStmts.map(txMetaStmts =>
       conn.inspect(
         "Inspect `retract` on entity with tx meta data", 1)(
         1, retractStmts ++ txMetaStmts

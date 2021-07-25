@@ -8,6 +8,8 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
 
   import c.universe._
 
+  private lazy val xx = InspectMacro("LambdaJsonTypes", 1, 2)
+
 
   val jsonOneAttr : (String, String) => (Int, Int) => Tree = (tpe: String, field: String) => tpe match {
     case "String"     => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
@@ -182,21 +184,19 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
     }
   }
 
-  val jsonKeyedMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => jsonOneAttr(t.tpeS, t.nameClean)
-//  val jsonKeyedMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
-//    val field = t.nameClean
-//    t.tpeS match {
-//      case "String"     => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-//      case "Int"        => (colIndex: Int, _: Int) => q"jsonOne(sb, $field, row, $colIndex)"
-//      case "Long"       => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-//      case "Double"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-//      case "Boolean"    => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-//      case "Date"       => (colIndex: Int, _: Int) => q"jsonOneDate(sb, $field, row, $colIndex)"
-//      case "UUID"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-//      case "URI"        => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-//      case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-//      case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-//      case "Any"        => (colIndex: Int, _: Int) => q"jsonOneAny(sb, $field, row, $colIndex)"
-//    }
-//  }
+  val jsonKeyedMapAttr: (String, String) => (Int, Int) => Tree = (tpe: String, field: String) => {
+    tpe match {
+      case "String"     => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+      case "Int"        => (colIndex: Int, _: Int) => q"jsonOne(sb, $field, row, $colIndex)"
+      case "Long"       => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+      case "Double"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+      case "Boolean"    => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+      case "Date"       => (colIndex: Int, _: Int) => q"jsonOneDate(sb, $field, row, $colIndex)"
+      case "UUID"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+      case "URI"        => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+      case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+      case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+      case "Any"        => (colIndex: Int, _: Int) => q"jsonOneAny(sb, $field, row, $colIndex)"
+    }
+  }
 }

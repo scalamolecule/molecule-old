@@ -1,9 +1,10 @@
 package moleculeTests.tests.core.crud.insert
 
+import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import scala.concurrent.ExecutionContext.Implicits.global
-
+import utest._
 
 object InsertNested extends AsyncTestSuite {
 
@@ -32,41 +33,32 @@ object InsertNested extends AsyncTestSuite {
     }
 
 
-    "Mandatory" - core { implicit conn =>
+    "With intermediary namespaces without attributes" - core { implicit conn =>
       for {
-        tx <- Ns.Refs1.*(Ref1.str1).insert(List("r1", "r2"))
-        List(e, r1, r2) = tx.eids
+        _ <- Ns.Refs1.*(Ref1.str1).insert(List("a", "b"))
+        _ <- Ns.Refs1.*(Ref1.str1).get.map(_.head ==> List("a", "b"))
 
-        _ <- e.touch.map(_ ==> Map(
-          ":db/id" -> e,
-          ":Ns/refs1" -> List(
-            Map(":db/id" -> r1, ":Ref1/str1" -> "r1"),
-            Map(":db/id" -> r2, ":Ref1/str1" -> "r2")
-          )))
-
-        tx2 <- m(Ns.str.Refs1 * Ref1.int1.str1).insert("order", List((4, "product1"), (7, "product2")))
-        List(order, p1, p2) = tx2.eids
-
-        _ <- order.touch.map(_ ==> Map(
-          ":db/id" -> order,
-          ":Ns/refs1" -> List(
-            Map(":db/id" -> p1, ":Ref1/int1" -> 4, ":Ref1/str1" -> "product1"),
-            Map(":db/id" -> p2, ":Ref1/int1" -> 7, ":Ref1/str1" -> "product2")
-          ),
-          ":Ns/str" -> "order"
-        ))
+        _ <- Ns.Ref1.Refs2.*(Ref2.str2).insert(List("c", "d"))
+        _ <- Ns.Ref1.Refs2.*(Ref2.str2).get.map(_.head ==> List("c", "d"))
       } yield ()
     }
 
 
-    // todo?
-    "Post attribute" - core { implicit conn =>
+    "Post attributes" - core { implicit conn =>
       for {
         _ <- Ns.str.Refs1.*(Ref1.int1).bool insert List(
           ("a", List(10, 11), true)
         )
         _ <- Ns.str.Refs1.*(Ref1.int1).bool.get.map(_ ==> List(
-          ("a", true, List(10, 11))
+          ("a", List(10, 11), true)
+        ))
+
+        // Post attributes allow nested and ref data to be inserted in one go
+        _ <- Ns.str.Refs1.*(Ref1.int1).Parent.int.Ref1.str1 insert List(
+          ("a", List(10, 11), 1, "aa")
+        )
+        _ <- Ns.str.Refs1.*(Ref1.int1).Parent.int.Ref1.str1.get.map(_ ==> List(
+          ("a", List(10, 11), 1, "aa")
         ))
       } yield ()
     }

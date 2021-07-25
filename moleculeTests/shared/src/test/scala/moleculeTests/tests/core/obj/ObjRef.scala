@@ -1,10 +1,13 @@
 package moleculeTests.tests.core.obj
 
+import molecule.core.exceptions.MoleculeException
+import molecule.core.util.Helpers
+import molecule.datomic.api.out10._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import moleculeTests.tests.core.ref.dsl.SelfJoin._
+import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-
 
 object ObjRef extends AsyncTestSuite with Helpers {
 
@@ -117,7 +120,7 @@ object ObjRef extends AsyncTestSuite with Helpers {
           ("b", List(2, 3))
         )
 
-        _ <- Ns.str.Refs1.*(Ref1.int1).getObjs.map { case List(o1, o2) =>
+        _ <- Ns.str.Refs1.*(Ref1.int1).getObjs.collect { case List(o1, o2) =>
           o1.str ==> "a"
           val List(r1) = o1.Refs1
           r1.int1 ==> 1

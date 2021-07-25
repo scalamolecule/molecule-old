@@ -24,8 +24,6 @@ import scala.reflect.macros.blackbox
 import scala.util.{Try => Check}
 
 private[molecule] trait Dsl2Model extends TreeOps
-  //  with BuildBase
-
   with BuildTpl
   with BuildTplComposite
   with BuildTplOptNested
@@ -61,9 +59,9 @@ private[molecule] trait Dsl2Model extends TreeOps
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
   //    private lazy val xx = InspectMacro("Dsl2Model", 133, 143)
-  //      private lazy val xx = InspectMacro("Dsl2Model", 101, 800)
+  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 101, 800)
   //  private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
@@ -94,7 +92,7 @@ private[molecule] trait Dsl2Model extends TreeOps
     lazy val datomGeneric     = Seq("e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
     lazy val keywords         = Seq("$qmark", "Nil", "None", "count", "countDistinct", "min", "max", "sum", "avg", "unify", "distinct", "median", "variance", "stddev", "rand", "sample")
     lazy val numberTypes      = Seq("Int", "Long", "Float", "Double", "BigInt", "BigDecimal")
-    def badFn(fn: TermName) = List("countDistinct", "distinct", "max", "min", "rand", "sample", "avg", "median", "stddev", "sum", "variance").contains(fn.toString())
+    def badFn(fn: TermName) = List("countDistinct", "distinct", "max", "min", "rand", "sample", "avg", "median", "stddev", "sum", "variance").contains(fn.toString)
 
     var txMetaDataStarted       : Boolean = false
     var txMetaDataDone          : Boolean = false
@@ -737,13 +735,19 @@ private[molecule] trait Dsl2Model extends TreeOps
               addSpecific(
                 p,
                 castKeyedMapAttr(tpeStr),
-                jsonKeyedMapAttr(t),
-                jsonOptNestedKeyedMapAttr(t),
+                jsonKeyedMapAttr(tpeStr, attrStr),
+                jsonOptNestedKeyedMapAttr(tpeStr, attrStr),
                 Some(tq"${TypeName(tpeStr)}"),
                 false
               )
               // Have to add node manually since nsFull is resolved in a special way
-              val newProp = BuilderProp(nsFull + "_" + attrStr, attrStr, tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
+              val newProp = BuilderProp(
+                nsFull + "_" + attrStr,
+                attrStr,
+                tq"${TypeName(tpeStr)}",
+                castKeyedMapAttr(tpeStr),
+                jsonKeyedMapAttr(tpeStr, attrStr)
+              )
               obj = addNode(obj, newProp, objLevel)
             }
             traverseElement(prev1, p, Atom(nsFull, mapAttr.toString, tpeStr, 4, VarValue, None, Nil, Seq(extract(q"$key").toString)))
@@ -782,8 +786,8 @@ private[molecule] trait Dsl2Model extends TreeOps
                 addSpecific(
                   t,
                   castOneAttr(tpe),
-                  jsonOneAttr(aggrType, attrStr),
-                  jsonOptNestedOneAttr(aggrType, attrStr),
+                  jsonOneAttr(tpe, attrStr),
+                  jsonOptNestedOneAttr(tpe, attrStr),
                   Some(tq"${TypeName(tpe)}")
                 )
                 traverseElement(prev, p, Generic("Schema", attrStr, "schema", value))
@@ -901,7 +905,13 @@ private[molecule] trait Dsl2Model extends TreeOps
                 false
               )
               if (genericAttr.nonEmpty) {
-                val newProp = BuilderProp("Datom_" + genericAttr, genericAttr, tq"${TypeName(tpe)}", castOneAttr(tpe), jsonOneAttr(tpe, attrStr))
+                val newProp = BuilderProp(
+                  "Datom_" + genericAttr,
+                  genericAttr,
+                  tq"${TypeName(tpe)}",
+                  castOneAttr(tpe),
+                  jsonOneAttr(tpe, attrStr)
+                )
                 obj = addNode(obj, newProp, objLevel)
               }
               xx(242, t, t.nsFull, t.name, obj)
@@ -1015,21 +1025,28 @@ private[molecule] trait Dsl2Model extends TreeOps
 
       // Keyed attribute map operation
       case t@q"$prev.$keyedAttr.apply($key).$op(..$values)" if q"$prev.$keyedAttr($key)".isMapAttrK =>
-        val tpe    = c.typecheck(q"$prev.$keyedAttr($key)").tpe
-        val tpeStr = truncTpe(tpe.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last.toString)
-        val nsFull = new nsp(tpe.typeSymbol.owner).toString
-        xx(420, nsFull, keyedAttr, tpeStr, obj)
+        val tpe     = c.typecheck(q"$prev.$keyedAttr($key)").tpe
+        val attrStr = keyedAttr.toString
+        val tpeStr  = truncTpe(tpe.baseType(weakTypeOf[One[_, _, _]].typeSymbol).typeArgs.last.toString)
+        val nsFull  = new nsp(tpe.typeSymbol.owner).toString
+        xx(420, nsFull, keyedAttr, tpeStr)
         if (keyedAttr.toString().last != '_') {
           addSpecific(
             richTree(q"$prev.$keyedAttr"),
             castKeyedMapAttr(tpeStr),
-            jsonKeyedMapAttr(t),
-            jsonOptNestedKeyedMapAttr(t),
+            jsonKeyedMapAttr(tpeStr, attrStr),
+            jsonOptNestedKeyedMapAttr(tpeStr, attrStr),
             Some(tq"${TypeName(tpeStr)}"),
             false
           )
           // Have to add node manually since nsFull is resolved in a special way
-          val newProp = BuilderProp(nsFull + "_" + keyedAttr, keyedAttr.toString(), tq"${TypeName(tpeStr)}", castKeyedMapAttr(tpeStr), jsonKeyedMapAttr(t))
+          val newProp = BuilderProp(
+            nsFull + "_" + attrStr,
+            attrStr,
+            tq"${TypeName(tpeStr)}",
+            castKeyedMapAttr(tpeStr),
+            jsonKeyedMapAttr(tpeStr, attrStr)
+          )
           obj = addNode(obj, newProp, objLevel)
           xx(421, obj)
         }
@@ -1809,6 +1826,7 @@ private[molecule] trait Dsl2Model extends TreeOps
         case Bond(nsFull, _, _, _, _)          => obj.copy(ref = nsFull, card = 2)
         case Generic(nsFull, _, _, _)          => obj.copy(ref = nsFull, card = 2)
         case Composite(elements)               => streamlineObj(elements.head)
+        case Nested(Bond(ns, _, _, _, _), _)   => obj.copy(ref = ns, card = 2)
         case other                             =>
           throw MoleculeException("Unexpected first model element: " + other)
       }

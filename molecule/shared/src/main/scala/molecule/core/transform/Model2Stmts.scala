@@ -13,7 +13,7 @@ import scala.util.control.NonFatal
 /** Model to Statements transformer.
   *
   * */
-case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn, model) {
+case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, model) {
 
   private def getPairs(e: Any, a: String, key: String = ""): Future[Map[String, String]] = {
     val query = if (key.isEmpty) {
@@ -913,6 +913,9 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
     futNewStmts.map(stmts ++ _)
   }
 
+  // Cache entity id before nested inserts for post inserts
+  private var nestedBaseE = Option.empty[Any]
+  private var nestedDone  = false
 
   private def matchDataStmt(
     stmts: Seq[Statement],
@@ -1026,11 +1029,11 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
 
     // Nested data structures
     case Add(e, ref, nestedGenStmts0: Seq[_], bi) => {
-      val parentE = if (e == "parentId")
+      val parentE = if (e == "parentId") {
         tempId(ref)
-      else if (stmts.isEmpty)
+      } else if (stmts.isEmpty) {
         e
-      else
+      } else {
         stmts.reverse.collectFirst {
           // Find entity value of Add statement with matching namespace
           case add: Add if eidV(stmts) => stmts.last.v
@@ -1042,6 +1045,8 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
             "\ne  : " + e +
             "\nref: " + ref)
         )
+      }
+      nestedBaseE = Some(parentE)
 
       val nestedGenStmts = nestedGenStmts0.map { case s: Statement => s }
       val nestedRows     = untupleNestedArgss(nestedGenStmts0, arg)
@@ -1142,7 +1147,9 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
       }
 
       futNestedInsertStmts.map { nestedInsertStmts =>
-        (next, edgeB, stmts ++ nestedInsertStmts)
+        val res = (next, edgeB, stmts ++ nestedInsertStmts)
+        nestedDone = true
+        res
       }
     }
 
@@ -1175,6 +1182,9 @@ case class ModelTransformer(conn: Conn, model: Model) extends GenericStmts(conn,
             case Add("nsFull", _, backRef, _) => (stmts0.init, backRef)
             case Add(_, _, _: TempId, _)      => (stmts0, 0L)
             case Add(-1, _, _, _)             => (stmts0, 0L)
+            case _ if nestedDone              =>
+              nestedDone = false // continue as before nested
+              (stmts0, nestedBaseE.get)
             case _                            => (stmts0, stmts0.last.e)
           }
 

@@ -49,11 +49,12 @@ object TxBundle extends AsyncTestSuite {
           transactBundle(
             Ns(e3).int(31).getUpdateStmts,
             Ns(e3).int(32).getUpdateStmts
-          ).failed.collect { case e: RuntimeException => e.getMessage ==>
-            "java.lang.IllegalArgumentException: " +
-              ":db.error/datoms-conflict Two datoms in the same transaction conflict\n" +
-              s"{:d1 [$e3 :Ns/int 31 13194139534350 true],\n" +
-              s" :d2 [$e3 :Ns/int 32 13194139534350 true]}"
+          ).failed.collect { case e: RuntimeException => e.getMessage.contains(
+            ":db.error/datoms-conflict Two datoms in the same transaction conflict") ==> true
+//            e.getMessage ==> "java.lang.IllegalArgumentException: " +
+//              ":db.error/datoms-conflict Two datoms in the same transaction conflict\n" +
+//              s"{:d1 [$e3 :Ns/int 31 13194139534350 true],\n" +
+//              s" :d2 [$e3 :Ns/int 32 13194139534350 true]}"
           }
         } else Future.unit
       } yield ()

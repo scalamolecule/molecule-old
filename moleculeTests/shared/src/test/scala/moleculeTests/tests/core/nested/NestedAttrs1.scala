@@ -66,10 +66,10 @@ object NestedAttrs1 extends AsyncTestSuite {
           o.Nss(0).int ==> 1
           o.Nss(0).str ==> "a"
         }
-//        _ <- m(Ref1.str1.Nss * Ns.int.str_).getObjs.collect { case List(o) =>
-//          o.str1 ==> "A"
-//          o.Nss(0).int ==> 1
-//        }
+        _ <- m(Ref1.str1.Nss * Ns.int.str_).getObjs.collect { case List(o) =>
+          o.str1 ==> "A"
+          o.Nss(0).int ==> 1
+        }
 
         _ <- m(Ref1.str1.Nss *? Ns.int.str$).getObjs.collect { case List(o1, o2) =>
           o1.str1 ==> "A"
@@ -87,12 +87,12 @@ object NestedAttrs1 extends AsyncTestSuite {
           o2.str1 ==> "B"
           o2.Nss ==> Nil
         }
-//        _ <- m(Ref1.str1.Nss *? Ns.int.str_).getObjs.collect { case List(o1, o2) =>
-//          o1.str1 ==> "A"
-//          o1.Nss(0).int ==> 1
-//          o2.str1 ==> "B"
-//          o2.Nss ==> Nil
-//        }
+        _ <- m(Ref1.str1.Nss *? Ns.int.str_).getObjs.collect { case List(o1, o2) =>
+          o1.str1 ==> "A"
+          o1.Nss(0).int ==> 1
+          o2.str1 ==> "B"
+          o2.Nss ==> Nil
+        }
 
 
         _ <- m(Ref1.str1.Nss * Ns.int.str$).getJson.map(_ ==>

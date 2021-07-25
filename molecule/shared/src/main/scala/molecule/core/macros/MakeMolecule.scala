@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-//  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+//    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -146,7 +146,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       else
         q"lazy val tpl: Product = tpl0"
 
-      val resolvers =
+      val transformers =
         q"""
           ..$jsResolvers
           ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
@@ -168,7 +168,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
 //              with TypedCastHelpers {
-              ..$resolvers
+              ..$transformers
             }
           """
         } else {
@@ -177,7 +177,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
 //              with TypedCastHelpers {
-              ..$resolvers
+              ..$transformers
             }
           """
         }
@@ -189,7 +189,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
 //              with TypedCastHelpers {
-              ..$resolvers
+              ..$transformers
             }
           """
         } else {
@@ -198,7 +198,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
 //              with TypedCastHelpers {
-              ..$resolvers
+              ..$transformers
             }
           """
         }

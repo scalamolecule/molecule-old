@@ -50,14 +50,15 @@ object Model2Query extends Helpers {
     }
 
     // Resolve nested
-    val query3nested  : Query         = query3.copy(
-      f = Find(nestedEntityVars ++ query2.f.outputs),
-      wh = Where(query2.wh.clauses ++ nestedEntityClauses)
-    )
-    val quer3nestedOpt: Option[Query] = if (nestedEntityClauses.nonEmpty) Some(query3nested) else None
+    val query3nested: Option[Query] = if (nestedEntityClauses.nonEmpty) Some(
+      query3.copy(
+        f = Find(nestedEntityVars ++ query2.f.outputs),
+        wh = Where(query2.wh.clauses ++ nestedEntityClauses)
+      )
+    ) else None
 
     // Optimize
-    (QueryOptimizer(query3), quer3nestedOpt.map(QueryOptimizer.apply), query3, quer3nestedOpt, None) // todo: handle exceptions!?
+    (QueryOptimizer(query3), query3nested.map(QueryOptimizer.apply), query3, query3nested, None) // todo: handle exceptions!?
   }
 
 
@@ -75,12 +76,14 @@ object Model2Query extends Helpers {
       case nested: Nested         =>
         if (!nested.bond.refAttr.endsWith("$")) {
           if (nestedEntityClauses.isEmpty) {
+            // Initial level
             nestedEntityVars = List(Var("sort0"))
             nestedEntityClauses = List(Funct("identity", Seq(Var(e)), ScalarBinding(Var("sort0"))))
           }
           // Next level
           nestedEntityVars = nestedEntityVars :+ Var("sort" + nestedEntityClauses.size)
-          nestedEntityClauses = nestedEntityClauses :+ Funct("identity", Seq(Var(w)), ScalarBinding(Var("sort" + nestedEntityClauses.size)))
+          val refV = if (query.wh.clauses.isEmpty) v else w
+          nestedEntityClauses = nestedEntityClauses :+ Funct("identity", Seq(Var(refV)), ScalarBinding(Var("sort" + nestedEntityClauses.size)))
         }
         makeNested(model, query, nested, e, v, w, prevNs, prevAttr, prevRefNs)
       case composite: Composite   => makeComposite(model, query, composite, e, v, prevNs, prevAttr, prevRefNs)

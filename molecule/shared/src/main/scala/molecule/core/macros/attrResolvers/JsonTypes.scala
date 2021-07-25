@@ -379,16 +379,6 @@ private[molecule] trait JsonTypes extends JsonBase {
       }
       if (next) sb.append(indent(tabs))
       sb.append("]")
-
-//      sb.append("Ref1: [")
-//      sb.append(indent(tabs + 1))
-//      sb.append("Ref1: {")
-//      sb.append(indent(tabs + 1))
-//      sb.append("}")
-//
-//      sb.append("Ref1: {")
-//      sb.append(indent(tabs + 1))
-//      sb.append("}")
     }
   }
 

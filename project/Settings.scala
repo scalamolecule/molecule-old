@@ -31,6 +31,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "-language:implicitConversions",
       "-language:postfixOps",
       "-language:higherKinds",
+      "-language:existentials",
       "-Yrangepos"
     ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) => Seq("-Ymacro-annotations")
@@ -103,25 +104,25 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
-    // Temporarily limit number of tests
-    unmanagedSources / excludeFilter := {
-      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-      val allowed     = Seq(
-        //        sharedTests + "/core/time",
-//        sharedTests + "/core/attr",
-//        sharedTests + "/core/attrMap",
-        sharedTests + "/core/build",
-        sharedTests + "/core/json",
-        sharedTests + "/core/nested",
-
-
-//        sharedTests + "/core/transaction",
-        sharedTests + "/core/Adhoc.scala",
-      )
-      new SimpleFileFilter(f =>
-        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-      )
-    },
+//    // Temporarily limit number of tests
+//    unmanagedSources / excludeFilter := {
+//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+//      val allowed     = Seq(
+//        //        sharedTests + "/core/time",
+////        sharedTests + "/core/attr",
+////        sharedTests + "/core/attrMap",
+//        sharedTests + "/core/build",
+//        sharedTests + "/core/json",
+//        sharedTests + "/core/nested",
+//
+//
+////        sharedTests + "/core/transaction",
+//        sharedTests + "/core/Adhoc.scala",
+//      )
+//      new SimpleFileFilter(f =>
+//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+//      )
+//    },
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,

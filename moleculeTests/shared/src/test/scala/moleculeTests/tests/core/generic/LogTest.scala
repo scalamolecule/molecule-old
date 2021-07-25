@@ -306,12 +306,15 @@ object LogTest extends AsyncTestSuite {
           for {
             // Start - t3 (exclusive)
             // Includes all Datomic database bootstrapping and schema transactions
-            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 396)
+//            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 396)
+            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 401)
 
             // Start - end !! The whole database!
-            _ <- Log(None, None).t.get.map(_.size ==> 427)
+//            _ <- Log(None, None).t.get.map(_.size ==> 427)
+            _ <- Log(None, None).t.get.map(_.size ==> 432)
             // Same as this shortcut
-            res <- Log().t.get.map(_.size ==> 427)
+//            res <- Log().t.get.map(_.size ==> 427)
+            res <- Log().t.get.map(_.size ==> 432)
           } yield res
         } else if (system == SystemDevLocal) {
           for {

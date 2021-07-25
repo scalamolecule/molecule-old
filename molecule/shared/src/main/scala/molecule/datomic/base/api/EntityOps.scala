@@ -137,7 +137,7 @@ trait EntityOps {
         try {
           val txMetaDataModel = Model(txMetaDataMolecules.map(m => TxMetaData(m._model.elements)))
           VerifyModel(txMetaDataModel, "save") // can throw exception
-          val txMetaDataStmts = conn.modelTransformer(txMetaDataModel).saveStmts
+          val txMetaDataStmts = conn.model2stmts(txMetaDataModel).saveStmts
           conn.transact(Future.sequence(Seq(retractStmts, txMetaDataStmts)).map(_.flatten))
         } catch {
           case NonFatal(exc) => Future.failed(exc)
@@ -201,8 +201,8 @@ trait EntityOps {
         txMetaDataModel
       }
 
-      val transformer = conn.modelTransformer(txMetaDataModel)
-      conn.modelTransformer(txMetaDataModel).saveStmts.map { saveStmts =>
+      val transformer = conn.model2stmts(txMetaDataModel)
+      conn.model2stmts(txMetaDataModel).saveStmts.map { saveStmts =>
         val stmts = Seq(retractStmts ++ saveStmts)
         conn.inspect(
           "molecule.core.Datomic.inspectRetract", 1

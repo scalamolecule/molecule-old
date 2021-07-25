@@ -105,7 +105,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
     VerifyModel(model, "save") // can throw exception
     conn.transact(
-      conn.modelTransformer(model).saveStmts.map(txMetaStmts => retractStmts ++ txMetaStmts)
+      conn.model2stmts(model).saveStmts.map(txMetaStmts => retractStmts ++ txMetaStmts)
     )
   } catch {
     case NonFatal(exc) => Future.failed(exc)
@@ -120,7 +120,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     val retractStmts = Seq(RetractEntity(eid))
     val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
     VerifyModel(model, "save") // can throw exception
-    conn.modelTransformer(model).saveStmts.map(txMetaStmts =>
+    conn.model2stmts(model).saveStmts.map(txMetaStmts =>
       conn.inspect(
         "Inspect `retract` on entity with tx meta data", 1)(
         1, retractStmts ++ txMetaStmts

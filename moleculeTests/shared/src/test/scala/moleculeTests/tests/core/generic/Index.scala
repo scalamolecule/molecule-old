@@ -129,12 +129,15 @@ object Index extends AsyncTestSuite {
         _ <- system match {
           case SystemPeer =>
             for {
-              _ <- EAVT.a.get.map(_.size ==> 679)
-              _ <- AEVT.a.get.map(_.size ==> 679)
-              _ <- VAET.a.get.map(_.size ==> 331)
-              r <- AVET.a.get.map(_.size ==> 214)
+              _ <- EAVT.a.get.map(_.size ==> 684)
+              _ <- AEVT.a.get.map(_.size ==> 684)
+              _ <- VAET.a.get.map(_.size ==> 334)
+              r <- AVET.a.get.map(_.size ==> 215)
+//              _ <- EAVT.a.get.map(_.size ==> 679)
+//              _ <- AEVT.a.get.map(_.size ==> 679)
+//              _ <- VAET.a.get.map(_.size ==> 331)
+//              r <- AVET.a.get.map(_.size ==> 214)
             } yield r
-
 
           case SystemDevLocal =>
             for {

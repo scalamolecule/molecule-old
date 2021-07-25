@@ -1,24 +1,20 @@
 package moleculeTests.tests.core.time
 
-import molecule.datomic.api.out2._
+import molecule.datomic.api.out3._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 object GetWith extends AsyncTestSuite {
 
-  def data(implicit conn: Future[Conn], ec: ExecutionContext): Future[Long] = {
-    Ns.str("a").int(1).save.map(_.eid)
-  }
-
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
 
     "getSaveTx" - core { implicit conn =>
       for {
-        _ <- data
+        _ <- Ns.str("a").int(1).save.map(_.eid)
         _ <- Ns.int.getWith(Ns.int(2).getSaveStmts).map(_ ==> List(1, 2))
         _ <- Ns.int.getWith(Ns.str("b").getSaveStmts).map(_ ==> List(1))
         _ <- Ns.int.getWith(Ns.str("b").int(2).getSaveStmts).map(_ ==> List(1, 2))
@@ -40,7 +36,7 @@ object GetWith extends AsyncTestSuite {
 
     "getInsertTx" - core { implicit conn =>
       for {
-        _ <- data
+        _ <- Ns.str("a").int(1).save.map(_.eid)
         _ <- Ns.int.getWith(Ns.int.getInsertStmts(2, 3)).map(_ ==> List(1, 2, 3))
 
         _ <- Ns.str.getWith(
@@ -77,7 +73,7 @@ object GetWith extends AsyncTestSuite {
 
     "getUpdateTx" - core { implicit conn =>
       for {
-        eid <- data
+        eid <- Ns.str("a").int(1).save.map(_.eid)
         _ <- Ns.int.getWith(Ns(eid).int(2).getUpdateStmts).map(_ ==> List(2))
         _ <- Ns.int.getWith(Ns(eid).str("b").int(2).getUpdateStmts).map(_ ==> List(2))
         _ <- Ns.str.getWith(Ns(eid).str("b").int(2).getUpdateStmts).map(_ ==> List("b"))
@@ -92,7 +88,7 @@ object GetWith extends AsyncTestSuite {
 
     "getRetractTx" - core { implicit conn =>
       for {
-        _ <- data
+        _ <- Ns.str("a").int(1).save.map(_.eid)
         tx <- Ns.str("b").int(2).save
         eid2 = tx.eid
 
@@ -118,7 +114,7 @@ object GetWith extends AsyncTestSuite {
 
     "Combination example" - core { implicit conn =>
       for {
-        _ <- data
+        _ <- Ns.str("a").int(1).save.map(_.eid)
 
         // Clean initial live state
         _ <- Ns.e.str_.get.flatMap(retract(_))
