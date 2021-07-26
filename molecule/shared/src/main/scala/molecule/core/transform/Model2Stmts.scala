@@ -913,9 +913,6 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
     futNewStmts.map(stmts ++ _)
   }
 
-  // Cache entity id before nested inserts for post inserts
-  private var nestedBaseE = Option.empty[Any]
-  private var nestedDone  = false
 
   private def matchDataStmt(
     stmts: Seq[Statement],
@@ -1046,7 +1043,6 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
             "\nref: " + ref)
         )
       }
-      nestedBaseE = Some(parentE)
 
       val nestedGenStmts = nestedGenStmts0.map { case s: Statement => s }
       val nestedRows     = untupleNestedArgss(nestedGenStmts0, arg)
@@ -1147,9 +1143,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
       }
 
       futNestedInsertStmts.map { nestedInsertStmts =>
-        val res = (next, edgeB, stmts ++ nestedInsertStmts)
-        nestedDone = true
-        res
+        (next, edgeB, stmts ++ nestedInsertStmts)
       }
     }
 
@@ -1182,9 +1176,6 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
             case Add("nsFull", _, backRef, _) => (stmts0.init, backRef)
             case Add(_, _, _: TempId, _)      => (stmts0, 0L)
             case Add(-1, _, _, _)             => (stmts0, 0L)
-            case _ if nestedDone              =>
-              nestedDone = false // continue as before nested
-              (stmts0, nestedBaseE.get)
             case _                            => (stmts0, stmts0.last.e)
           }
 

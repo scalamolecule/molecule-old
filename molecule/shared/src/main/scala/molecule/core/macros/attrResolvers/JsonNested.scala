@@ -8,21 +8,21 @@ private[molecule] trait JsonNested extends JsonBase {
 
   // Opt One ===========================================================================================
 
-  protected def jsonOptOneQuoted(sb: StringBuilder, value: Option[String]): StringBuilder = {
+  protected def jsonOptOneQuoted(sb: StringBuffer, value: Option[String]): StringBuffer = {
     value match {
       case Some(s) => quote(sb, s)
       case None    => sb.append("null")
     }
   }
 
-  protected def jsonOptOne(sb: StringBuilder, value: Option[Any]): StringBuilder = {
+  protected def jsonOptOne(sb: StringBuffer, value: Option[Any]): StringBuffer = {
     value match {
       case Some(v) => sb.append(v)
       case None    => sb.append("null")
     }
   }
 
-  protected def jsonOptOneDate(sb: StringBuilder, value: Option[Date]): StringBuilder = {
+  protected def jsonOptOneDate(sb: StringBuffer, value: Option[Date]): StringBuffer = {
     value match {
       case Some(d) => quote(sb, date2str(d))
       case None    => sb.append("null")
@@ -32,7 +32,7 @@ private[molecule] trait JsonNested extends JsonBase {
 
   // Set ===========================================================================================
 
-  protected def jsonSetQuoted(sb: StringBuilder, set: Set[String], tabs: Int): StringBuilder = {
+  protected def jsonSetQuoted(sb: StringBuffer, set: Set[String], tabs: Int): StringBuffer = {
     sb.append("[")
     var next = false
     set.foreach { s =>
@@ -44,7 +44,7 @@ private[molecule] trait JsonNested extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonSet(sb: StringBuilder, set: Set[Any], tabs: Int): StringBuilder = {
+  protected def jsonSet(sb: StringBuffer, set: Set[Any], tabs: Int): StringBuffer = {
     sb.append("[")
     var next = false
     set.foreach { v =>
@@ -56,7 +56,7 @@ private[molecule] trait JsonNested extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonSetDate(sb: StringBuilder, set: Set[Date], tabs: Int): StringBuilder = {
+  protected def jsonSetDate(sb: StringBuffer, set: Set[Date], tabs: Int): StringBuffer = {
     sb.append("[")
     var next = false
     set.foreach { d =>
@@ -71,21 +71,21 @@ private[molecule] trait JsonNested extends JsonBase {
 
   // Opt Set ===========================================================================================
 
-  protected def jsonOptSetQuoted(sb: StringBuilder, value: Option[Set[String]], tabs: Int): StringBuilder = {
+  protected def jsonOptSetQuoted(sb: StringBuffer, value: Option[Set[String]], tabs: Int): StringBuffer = {
     value match {
       case Some(s) => jsonSetQuoted(sb, s, tabs)
       case None    => sb.append("null")
     }
   }
 
-  protected def jsonOptSet(sb: StringBuilder, value: Option[Set[Any]], tabs: Int): StringBuilder = {
+  protected def jsonOptSet(sb: StringBuffer, value: Option[Set[Any]], tabs: Int): StringBuffer = {
     value match {
       case Some(v) => jsonSet(sb, v, tabs)
       case None    => sb.append("null")
     }
   }
 
-  protected def jsonOptSetDate(sb: StringBuilder, value: Option[Set[Date]], tabs: Int): StringBuilder = {
+  protected def jsonOptSetDate(sb: StringBuffer, value: Option[Set[Date]], tabs: Int): StringBuffer = {
     value match {
       case Some(d) => jsonSetDate(sb, d, tabs)
       case None    => sb.append("null")
@@ -95,7 +95,7 @@ private[molecule] trait JsonNested extends JsonBase {
 
   // Map ===========================================================================================
 
-  protected def jsonMapQuoted(sb: StringBuilder, set: Map[String, String], tabs: Int): StringBuilder = {
+  protected def jsonMapQuoted(sb: StringBuffer, set: Map[String, String], tabs: Int): StringBuffer = {
     sb.append("{")
     var next = false
     set.foreach { case (k, v) =>
@@ -109,7 +109,7 @@ private[molecule] trait JsonNested extends JsonBase {
     sb.append("}")
   }
 
-  protected def jsonMap(sb: StringBuilder, set: Map[String, Any], tabs: Int): StringBuilder = {
+  protected def jsonMap(sb: StringBuffer, set: Map[String, Any], tabs: Int): StringBuffer = {
     sb.append("{")
     var next = false
     set.foreach { case (k, v) =>
@@ -123,7 +123,7 @@ private[molecule] trait JsonNested extends JsonBase {
     sb.append("}")
   }
 
-  protected def jsonMapDate(sb: StringBuilder, set: Map[String, Date], tabs: Int): StringBuilder = {
+  protected def jsonMapDate(sb: StringBuffer, set: Map[String, Date], tabs: Int): StringBuffer = {
     sb.append("{")
     var next = false
     set.foreach { case (k, d) =>
@@ -140,21 +140,21 @@ private[molecule] trait JsonNested extends JsonBase {
 
   // Opt Map ===========================================================================================
 
-  protected def jsonOptMapQuoted(sb: StringBuilder, value: Option[Map[String, String]], tabs: Int): StringBuilder = {
+  protected def jsonOptMapQuoted(sb: StringBuffer, value: Option[Map[String, String]], tabs: Int): StringBuffer = {
     value match {
       case Some(s) => jsonMapQuoted(sb, s, tabs)
       case None    => sb.append("null")
     }
   }
 
-  protected def jsonOptMap(sb: StringBuilder, value: Option[Map[String, Any]], tabs: Int): StringBuilder = {
+  protected def jsonOptMap(sb: StringBuffer, value: Option[Map[String, Any]], tabs: Int): StringBuffer = {
     value match {
       case Some(v) => jsonMap(sb, v, tabs)
       case None    => sb.append("null")
     }
   }
 
-  protected def jsonOptMapDate(sb: StringBuilder, value: Option[Map[String, Date]], tabs: Int): StringBuilder = {
+  protected def jsonOptMapDate(sb: StringBuffer, value: Option[Map[String, Date]], tabs: Int): StringBuffer = {
     value match {
       case Some(d) => jsonMapDate(sb, d, tabs)
       case None    => sb.append("null")

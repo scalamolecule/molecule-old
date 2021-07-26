@@ -8,7 +8,7 @@ import molecule.core.util.fns.date2str
 trait Quoted {
 
   protected def quote(value: Any): String = {
-    val sb = new StringBuilder
+    val sb = new StringBuffer
     def traverse(value: Any, tabs: Int): Unit = {
       val t = "  " * tabs
       var i = 0
@@ -63,11 +63,11 @@ trait Quoted {
       }
     }
     traverse(value, 1)
-    sb.result()
+    sb.toString
   }
 
   protected def quote2(value: Any): String = {
-    val sb = new StringBuilder
+    val sb = new StringBuffer
     def traverse(value: Any, tabs: Int): Unit = {
       val t = "  " * tabs
       var i = 0
@@ -154,6 +154,6 @@ trait Quoted {
       }
     }
     traverse(value, 1)
-    sb.result()
+    sb.toString
   }
 }

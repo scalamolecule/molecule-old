@@ -71,7 +71,7 @@ object Model2Query extends Helpers {
       case atom: Atom             => makeAtom(query, atom, e, v, w, prevNs, prevAttr, prevRefNs)
       case bond: Bond             => makeBond(query, bond, e, v, w, prevNs, prevAttr, prevRefNs)
       case rb: ReBond             => makeReBond(model, query, rb, v)
-      case g: Generic             => makeGeneric(query, g, e, v, w, y, prevNs, prevAttr, prevRefNs)
+      case g: Generic             => makeGeneric(query, g, e, v, w, y, prevRefNs)
       case txMetaData: TxMetaData => makeTxMetaData(model, query, txMetaData, w, prevNs, prevAttr, prevRefNs)
       case nested: Nested         =>
         if (!nested.bond.refAttr.endsWith("$")) {
@@ -82,10 +82,15 @@ object Model2Query extends Helpers {
           }
           // Next level
           nestedEntityVars = nestedEntityVars :+ Var("sort" + nestedEntityClauses.size)
-          val refV = if (query.wh.clauses.isEmpty) v else w
+          val refV = if (
+            query.f.outputs.isEmpty
+              && query.i.inputs.isEmpty
+              && query.wh.clauses.isEmpty
+              && !nested.elements.last.isInstanceOf[Nested]
+          ) v else w
           nestedEntityClauses = nestedEntityClauses :+ Funct("identity", Seq(Var(refV)), ScalarBinding(Var("sort" + nestedEntityClauses.size)))
         }
-        makeNested(model, query, nested, e, v, w, prevNs, prevAttr, prevRefNs)
+        makeNested(model, query, nested, e, v, prevNs, prevAttr, prevRefNs)
       case composite: Composite   => makeComposite(model, query, composite, e, v, prevNs, prevAttr, prevRefNs)
       case Self                   => (query, w, y, prevNs, prevAttr, prevRefNs)
       case other                  => abort("Unresolved query variables from model: " + (other, e, v, prevNs, prevAttr, prevRefNs))
@@ -152,7 +157,7 @@ object Model2Query extends Helpers {
     (query, backRefE, v, backRef, "", "")
   }
 
-  def makeGeneric(query: Query, g: Generic, e: String, v: String, w: String, y: String, prevNs: String, prevAttr: String, prevRefNs: String)
+  def makeGeneric(query: Query, g: Generic, e: String, v: String, w: String, y: String, prevRefNs: String)
   : (Query, String, String, String, String, String) = if (prevRefNs.nonEmpty) {
     // Advance variable letters to next namespace
     (resolve(query, v, w, g), v, y, g.tpe, g.attr, "")
@@ -183,7 +188,7 @@ object Model2Query extends Helpers {
     (q2, e2, nextChar(v2, 1), prevNs2, prevAttr2, prevRefNs2)
   }
 
-  def makeNested(model: Model, query: Query, nested: Nested, e: String, v: String, w: String, prevNs: String, prevAttr: String, prevRefNs: String)
+  def makeNested(model: Model, query: Query, nested: Nested, e: String, v: String, prevNs: String, prevAttr: String, prevRefNs: String)
   : (Query, String, String, String, String, String) = {
     val Nested(b@Bond(nsFull, refAttr, _, _, _), elements) = nested
     if (refAttr.endsWith("$")) {
@@ -274,7 +279,7 @@ object Model2Query extends Helpers {
     element match {
       case atom: Atom                         => resolveAtom(q, e, atom, v, v1, v2, v3)
       case Bond(nsFull, refAttr, refNs, _, _) => q.ref(e, nsFull, refAttr, v, refNs)
-      case generic: Generic                   => resolveGeneric(q, e, generic, v, v1, v2, v3)
+      case generic: Generic                   => resolveGeneric(q, e, generic, v, v1)
       case ReBond(backRef)                    => q.ref(e, backRef, "", v, "")
       case unresolved                         => abort("Unresolved model: " + unresolved)
     }
@@ -314,7 +319,7 @@ object Model2Query extends Helpers {
   }
 
 
-  def resolveGeneric(q: Query, e: String, g: Generic, v: String, v1: String, v2: String, v3: String): Query = g.tpe match {
+  def resolveGeneric(q: Query, e: String, g: Generic, v: String, v1: String): Query = g.tpe match {
     case "schema" => resolveSchema(q, g)
     case "datom"  => resolveDatom(q, e, g, v, v1)
     case _        => q // Indexes are handled in Conn directly from Model elements

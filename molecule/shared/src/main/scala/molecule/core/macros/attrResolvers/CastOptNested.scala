@@ -143,19 +143,7 @@ private[molecule] trait CastOptNested extends Helpers {
   protected def castOptNestedOptOneEnum(it: jIterator[_]): Option[String] =
     it.next match {
       case null | "__none__" => Option.empty[String]
-      case v: jMap[_, _]     =>
-        println(v)
-        println(v.values)
-        println(v.values.iterator.next)
-        println(getKwName(v.values.iterator.next.toString))
-        Some(getKwName(v.values.iterator.next.toString))
-
-      //        Some(
-      //          getKwName(
-      //            v.values.iterator.next
-      //              .asInstanceOf[jMap[_, _]].values.iterator.next.toString
-      //          )
-      //        )
+      case v: jMap[_, _]     => Some(getKwName(v.values.iterator.next.toString))
       case v => Some(
         getKwName(v.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
       )

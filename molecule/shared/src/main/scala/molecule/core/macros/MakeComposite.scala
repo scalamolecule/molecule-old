@@ -78,7 +78,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetaCompositesCount)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-          final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
         """
     }
 

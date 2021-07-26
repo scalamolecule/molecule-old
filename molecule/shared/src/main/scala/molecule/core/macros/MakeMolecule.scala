@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-//    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+//  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -59,7 +59,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplFlat(castss, txMetaCompositesCount)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-          final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
         """
       }
 
@@ -99,7 +99,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             ${objFlat(obj, isOptNested = true)._1}
           }
 
-          final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder =
+          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
             ${jsonOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}
         """
 

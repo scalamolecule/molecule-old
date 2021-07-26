@@ -8,23 +8,23 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // One ===========================================================================================
 
-  protected def jsonOneQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOneQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quotedPair(sb, field, row.get(colIndex).toString)
   }
 
-  protected def jsonOne(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOne(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     pair(sb, field, row.get(colIndex))
   }
 
-  protected def jsonOneToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOneToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     pair(sb, field, row.get(colIndex).toString)
   }
 
-  protected def jsonOneDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOneDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quotedPair(sb, field, date2str(row.get(colIndex).asInstanceOf[Date]))
   }
 
-  protected def jsonOneAny(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = row.get(colIndex) match {
+  protected def jsonOneAny(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = row.get(colIndex) match {
     case value: String         => quotedPair(sb, field, value)
     case value: Int            => pair(sb, field, value)
     case value: Float          => pair(sb, field, value)
@@ -42,7 +42,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Many ===========================================================================================
 
-  protected def jsonManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonManyQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -56,7 +56,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonMany(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -70,7 +70,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonManyToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -84,7 +84,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonManyDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -101,7 +101,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Optional card one ===========================================================================================
 
-  protected def jsonOptOneQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptOneQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -110,7 +110,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptOne(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptOne(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -119,7 +119,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptOneToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptOneToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -128,7 +128,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptOneDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptOneDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -139,7 +139,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // ----------------------------------------------
 
-  protected def jsonOptApplyOneQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyOneQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -148,7 +148,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptApplyOne(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyOne(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -157,7 +157,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptApplyOneToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyOneToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -166,7 +166,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptApplyOneDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptApplyOneDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -178,7 +178,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Optional card many ===========================================================================================
 
-  protected def jsonOptManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptManyQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -197,7 +197,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptMany(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -216,7 +216,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptManyToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -235,7 +235,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptManyDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -257,7 +257,7 @@ private[molecule] trait JsonTypes extends JsonBase {
   // ------------------------------
 
 
-  protected def jsonOptApplyManyQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptApplyManyQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -276,7 +276,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptApplyMany(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptApplyMany(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -295,7 +295,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptApplyManyToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptApplyManyToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -314,7 +314,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptApplyManyDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptApplyManyDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -336,7 +336,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Optional ref attr ===========================================================================================
 
-  protected def jsonOptOneRefAttr(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptOneRefAttr(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -354,7 +354,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptManyRefAttr(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptManyRefAttr(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -385,7 +385,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Enum opt ===========================================================================================
 
-  protected def jsonOptOneEnum(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonOptOneEnum(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -397,7 +397,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptManyEnum(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptManyEnum(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -419,7 +419,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Map ===========================================================================================
 
-  protected def jsonMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonMapQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": {")
     var next = false
@@ -437,7 +437,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     sb.append("}")
   }
 
-  protected def jsonMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonMap(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": {")
     var next = false
@@ -457,7 +457,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Optional Map ===========================================================================================
 
-  protected def jsonOptMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptMapQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -480,7 +480,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptMap(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -505,7 +505,7 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // Optional Map apply ===========================================================================================
 
-  protected def jsonOptApplyMapQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptApplyMapQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")
@@ -528,7 +528,7 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  protected def jsonOptApplyMap(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonOptApplyMap(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
     if (value == null) {
       pair(sb, field, "null")

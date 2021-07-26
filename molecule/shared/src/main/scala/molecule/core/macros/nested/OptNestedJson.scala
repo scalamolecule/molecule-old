@@ -19,7 +19,7 @@ trait OptNestedJson[Obj, Tpl] extends JsonBase { self: Molecule_0[Obj, Tpl] =>
           conn.query(_model, _query)
       } yield {
         val count = rows.size
-        val sb    = new StringBuilder()
+        val sb    = new StringBuffer()
         var next  = false
 
         if (count == 0) {

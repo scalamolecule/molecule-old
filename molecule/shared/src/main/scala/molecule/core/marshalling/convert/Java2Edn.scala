@@ -7,14 +7,14 @@
 //
 //object Java2Edn extends Helpers {
 //
-//  val buf      = new StringBuilder()
+//  val buf      = new StringBuffer()
 //  var uriAttrs = Set.empty[String]
 //  var attrMap  = Map.empty[String, (Int, String)]
 //
 //  def apply(rows: jList[jList[_]], conn: Conn): (String, Set[String]) = {
 //    attrMap = conn.connProxy.attrMap
 //
-//    buf.clear()
+//    buf.setLength(0)
 //    var following = false
 //    rows.forEach { row =>
 //      if (following)

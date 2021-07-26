@@ -258,15 +258,25 @@ case class Conn_Peer(
             try {
               p.success(listenableFuture.get())
             } catch {
+              //              case e: java.util.concurrent.ExecutionException =>
+              //                println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
+              //                //                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+              //                p.failure(new RuntimeException(e.getMessage.trim))
+              //
+              //              case NonFatal(e) =>
+              //                println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
+              //                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+              //                p.failure(new RuntimeException(e.toString))
+
               case e: java.util.concurrent.ExecutionException =>
                 println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
-                //                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(new RuntimeException(e.getMessage.trim))
+                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+                p.failure(e.getCause)
 
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(new RuntimeException(e.toString))
+                p.failure(e)
             }
           }
         },
@@ -319,9 +329,6 @@ case class Conn_Peer(
         val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
         val allInputs       = first ++ inputsEvaluated
         val result          = Peer.q(query.toMap, allInputs: _*)
-
-//        result.forEach(row => println(row))
-
         Future(result)
       } catch {
         case NonFatal(exc) => Future.failed(QueryException(exc, model, query))

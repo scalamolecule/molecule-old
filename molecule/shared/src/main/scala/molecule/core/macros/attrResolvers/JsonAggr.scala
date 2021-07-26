@@ -12,7 +12,7 @@ private[molecule] trait JsonAggr extends JsonBase {
 
   // One List --------------------------------------
 
-  protected def jsonAggrOneListQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -26,7 +26,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneList(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneList(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -40,7 +40,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -54,7 +54,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -70,7 +70,7 @@ private[molecule] trait JsonAggr extends JsonBase {
 
   // Many List --------------------------------------
 
-  protected def jsonAggrManyListQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -84,7 +84,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]]")
   }
 
-  protected def jsonAggrManyList(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyList(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -98,7 +98,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]]")
   }
 
-  protected def jsonAggrManyListToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -112,7 +112,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]]")
   }
 
-  protected def jsonAggrManyListDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -129,7 +129,7 @@ private[molecule] trait JsonAggr extends JsonBase {
 
   // One List Distinct --------------------------------------
 
-  protected def jsonAggrOneListDistinctQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListDistinctQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -143,7 +143,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListDistinct(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListDistinct(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -157,7 +157,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListDistinctToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListDistinctToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -171,7 +171,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListDistinctDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListDistinctDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -187,7 +187,7 @@ private[molecule] trait JsonAggr extends JsonBase {
 
   // Many List Distinct --------------------------------------
 
-  protected def jsonAggrManyListDistinctQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListDistinctQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -201,7 +201,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]]")
   }
 
-  protected def jsonAggrManyListDistinct(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListDistinct(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -215,7 +215,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]]")
   }
 
-  protected def jsonAggrManyListDistinctToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListDistinctToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -229,7 +229,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]]")
   }
 
-  protected def jsonAggrManyListDistinctDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListDistinctDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [[")
     var next = false
@@ -246,7 +246,7 @@ private[molecule] trait JsonAggr extends JsonBase {
 
   // One List Rand --------------------------------------
 
-  protected def jsonAggrOneListRandQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListRandQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -260,7 +260,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListRand(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListRand(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -274,7 +274,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListRandToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListRandToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -288,7 +288,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrOneListRandDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrOneListRandDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -304,7 +304,7 @@ private[molecule] trait JsonAggr extends JsonBase {
 
   // Many List Rand --------------------------------------
 
-  protected def jsonAggrManyListRandQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListRandQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -318,7 +318,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrManyListRand(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListRand(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -332,7 +332,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrManyListRandToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListRandToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -346,7 +346,7 @@ private[molecule] trait JsonAggr extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonAggrManyListRandDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuilder = {
+  protected def jsonAggrManyListRandDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -363,46 +363,46 @@ private[molecule] trait JsonAggr extends JsonBase {
 
   // Single Sample --------------------------------------
 
-  protected def jsonAggrSingleSampleQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrSingleSampleQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quotedPair(sb, field, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.toString)
   }
 
-  protected def jsonAggrSingleSample(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrSingleSample(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     pair(sb, field, row.get(colIndex).asInstanceOf[jList[_]].iterator.next)
   }
 
-  protected def jsonAggrSingleSampleToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrSingleSampleToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     pair(sb, field, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.toString)
   }
 
-  protected def jsonAggrSingleSampleDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrSingleSampleDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quotedPair(sb, field, date2str(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
   // Many Single --------------------------------------
 
-  protected def jsonAggrManySingleQuoted(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrManySingleQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     quote(sb, row.get(colIndex).toString)
     sb.append("]")
   }
 
-  protected def jsonAggrManySingle(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrManySingle(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     sb.append(row.get(colIndex))
     sb.append("]")
   }
 
-  protected def jsonAggrManySingleToString(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrManySingleToString(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     sb.append(row.get(colIndex).toString)
     sb.append("]")
   }
 
-  protected def jsonAggrManySingleDate(sb: StringBuilder, field: String, row: jList[_], colIndex: Int): StringBuilder = {
+  protected def jsonAggrManySingleDate(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     quote(sb, date2str(row.get(colIndex).asInstanceOf[Date]))

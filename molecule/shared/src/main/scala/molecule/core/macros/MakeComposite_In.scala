@@ -71,7 +71,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
             }
             new $outMolecule
           }
@@ -94,7 +94,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
             }
             new $outMolecule
           }
@@ -121,7 +121,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
             }
             new $outMolecule
           }
@@ -145,7 +145,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              final override def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ${jsonFlat(obj)._1}
+              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
             }
             new $outMolecule
           }

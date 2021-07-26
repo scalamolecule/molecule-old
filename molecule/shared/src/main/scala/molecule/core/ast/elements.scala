@@ -33,7 +33,7 @@ object elements {
             s"""|Nested(
                 |$s  $bond,
                 |$s  List(
-                |$s    ${draw(nestedElements, indent + 2).mkString(s",\n$s  ")}))""".stripMargin
+                |$s    ${draw(nestedElements, indent + 2).mkString(s",\n$s    ")}))""".stripMargin
           case TxMetaData(nestedElements)   =>
             s"""|TxMetaData(List(
                 |$s  ${draw(nestedElements, indent + 1).mkString(s",\n$s  ")}))""".stripMargin

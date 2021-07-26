@@ -88,9 +88,8 @@ object GetWith extends AsyncTestSuite {
 
     "getRetractTx" - core { implicit conn =>
       for {
-        _ <- Ns.str("a").int(1).save.map(_.eid)
-        tx <- Ns.str("b").int(2).save
-        eid2 = tx.eid
+        _ <- Ns.str("a").int(1).save
+        eid2 <- Ns.str("b").int(2).save.map(_.eid)
 
         // Current state
         _ <- Ns.str.int.get.map(_.sortBy(_._2) ==> List(

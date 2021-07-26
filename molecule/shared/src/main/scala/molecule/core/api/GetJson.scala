@@ -79,7 +79,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
       } yield {
         val count = jColl.size()
         val rows  = jColl.iterator()
-        val sb    = new StringBuilder()
+        val sb    = new StringBuffer()
         var next  = false
         count match {
           case 0 =>
@@ -775,7 +775,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   //    } yield {
   //      val count = jColl.size()
   //      val rows = jColl.iterator()
-  //      val sb   = new StringBuilder()
+  //      val sb   = new StringBuffer()
   //      var next = false
   //      count match {
   //        case 0 =>
@@ -832,7 +832,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   //      } else {
   //        var next = false
   //        val it         = jColl.iterator()
-  //        val sb         = new StringBuilder("[")
+  //        val sb         = new StringBuffer("[")
   //        if (n == -1) {
   //          // All
   //          while (it.hasNext) {

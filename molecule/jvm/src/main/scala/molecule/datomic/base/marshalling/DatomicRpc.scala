@@ -72,7 +72,7 @@ object DatomicRpc extends MoleculeRpc
       val time      = qTime(queryTime)
       val timeRight = " " * (8 - time.length) + time
       log(datalogQuery + space + timeRight)
-//      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
+      //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       log.print
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)

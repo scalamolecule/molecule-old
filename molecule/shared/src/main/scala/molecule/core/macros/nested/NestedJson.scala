@@ -10,30 +10,30 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Builder classes of various arity of nested JSON. */
 trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Molecule_0[Obj, Tpl] =>
 
-  protected def jsonBranch0(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
-  protected def jsonBranch1(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
-  protected def jsonBranch2(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
-  protected def jsonBranch3(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
-  protected def jsonBranch4(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
-  protected def jsonBranch5(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
-  protected def jsonBranch6(sb: StringBuilder, row: jList[AnyRef], leaf: StringBuilder): StringBuilder = ???
+  protected def jsonBranch0(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
+  protected def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
+  protected def jsonBranch2(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
+  protected def jsonBranch3(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
+  protected def jsonBranch4(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
+  protected def jsonBranch5(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
+  protected def jsonBranch6(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
 
-  protected def jsonLeaf1(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-  protected def jsonLeaf2(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-  protected def jsonLeaf3(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-  protected def jsonLeaf4(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-  protected def jsonLeaf5(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-  protected def jsonLeaf6(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
-  protected def jsonLeaf7(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
+  protected def jsonLeaf1(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
+  protected def jsonLeaf2(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
+  protected def jsonLeaf3(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
+  protected def jsonLeaf4(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
+  protected def jsonLeaf5(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
+  protected def jsonLeaf6(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
+  protected def jsonLeaf7(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
 
-  protected val sb0: StringBuilder = new StringBuilder()
-  protected val sb1: StringBuilder = new StringBuilder()
-  protected val sb2: StringBuilder = new StringBuilder()
-  protected val sb3: StringBuilder = new StringBuilder()
-  protected val sb4: StringBuilder = new StringBuilder()
-  protected val sb5: StringBuilder = new StringBuilder()
-  protected val sb6: StringBuilder = new StringBuilder()
-  protected val sb7: StringBuilder = new StringBuilder()
+  protected val sb0: StringBuffer = new StringBuffer()
+  protected val sb1: StringBuffer = new StringBuffer()
+  protected val sb2: StringBuffer = new StringBuffer()
+  protected val sb3: StringBuffer = new StringBuffer()
+  protected val sb4: StringBuffer = new StringBuffer()
+  protected val sb5: StringBuffer = new StringBuffer()
+  protected val sb6: StringBuffer = new StringBuffer()
+  protected val sb7: StringBuffer = new StringBuffer()
 
   protected var firstLevel0      = true
   protected val firstJsonObjects = new Array[Boolean](7)
@@ -45,15 +45,15 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     descending = false
     firstLevel0 = true
 
-    sb0.clear()
+    sb0.setLength(0)
     sb0.append("[")
-    sb1.clear()
-    sb2.clear()
-    sb3.clear()
-    sb4.clear()
-    sb5.clear()
-    sb6.clear()
-    sb7.clear()
+    sb1.setLength(0)
+    sb2.setLength(0)
+    sb3.setLength(0)
+    sb4.setLength(0)
+    sb5.setLength(0)
+    sb6.setLength(0)
+    sb7.setLength(0)
 
     for (lvl <- 0 to 6) {
       firstJsonObjects(lvl) = true
@@ -64,12 +64,12 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     level: Int,
     tabs: Int,
     tabsNested: Int,
-    sb: StringBuilder,
-    branchPairs: StringBuilder => StringBuilder,
+    sb: StringBuffer,
+    branchPairs: StringBuffer => StringBuffer,
     ref: String,
-    leaf: StringBuilder,
-    post: => StringBuilder = new StringBuilder()
-  ): StringBuilder = {
+    leaf: StringBuffer,
+    post: => StringBuffer = new StringBuffer()
+  ): StringBuffer = {
     // Reset sub levels
     for (lvl <- (level + 1) to 6) {
       firstJsonObjects(lvl) = true
@@ -88,7 +88,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
 
     // Pairs before nested
     branchPairs {
-      val sb = new StringBuilder()
+      val sb = new StringBuffer()
 
       // Ref
       quote(sb, ref)
@@ -99,7 +99,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
 
       // Inner pairs
       sb.append(leaf)
-      leaf.clear()
+      leaf.setLength(0)
 
       // End of inner pair array
       sb.append(indent(tabsNested - 1))
@@ -115,8 +115,8 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
   }
 
 
-  def leaf(tabs: Int, sb: StringBuilder, leafPairs: StringBuilder => StringBuilder): StringBuilder = {
-    if (sb.nonEmpty) {
+  def leaf(tabs: Int, sb: StringBuffer, leafPairs: StringBuffer => StringBuffer): StringBuffer = {
+    if (sb.length > 0) {
       // Prepare next object
       sb.append(",")
       sb.append(indent(tabs))
@@ -126,7 +126,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     sb.append(indent(tabs + 1))
 
     // Inner pairs
-    leafPairs(new StringBuilder())
+    leafPairs(new StringBuffer())
 
     // End of object
     sb.append(indent(tabs))

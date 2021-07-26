@@ -34,7 +34,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
                 ..${typedTxFns.map(untypedTxFn(_))}
               }
           """
-        //       tfm(1, t)
+        //       xx(1, t)
         t
 
       case _ => c.abort(c.enclosingPosition, s"No self-type allowed in @TxFns-annotated container.")

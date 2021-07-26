@@ -30,8 +30,8 @@ abstract class Marshalling[Obj, Tpl](
 
   // JVM ......................
 
-  /** Adds row as json to a mutable StringBuilder for fast build-up. */
-  protected def row2json(sb: StringBuilder, row: jList[AnyRef]): StringBuilder = ???
+  /** Adds row as json to a mutable StringBuffer for fast build-up. */
+  protected def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
 
 
   /** Row to object cast interface to be materialized by macro */

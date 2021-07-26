@@ -26,7 +26,7 @@ private[molecule] trait JsonBase extends Helpers {
         set ++ (start to end).toSet
     }
 
-  protected def appendEscapedString(sb: StringBuilder, s: String): Unit = {
+  protected def appendEscapedString(sb: StringBuffer, s: String): Unit = {
     s.foreach { c =>
       val strReplacement = c match {
         case '"'  => "\\\""
@@ -52,25 +52,25 @@ private[molecule] trait JsonBase extends Helpers {
     }
   }
 
-  protected def quote(sb: StringBuilder, s: String): StringBuilder = {
+  protected def quote(sb: StringBuffer, s: String): StringBuffer = {
     sb.append('"') //open quote
     appendEscapedString(sb, s)
     sb.append('"') //close quote
   }
 
-  protected def quotedPair(sb: StringBuilder, field: String, value: String): StringBuilder = {
+  protected def quotedPair(sb: StringBuffer, field: String, value: String): StringBuffer = {
     quote(sb, field)
     sb.append(": ")
     quote(sb, value)
   }
 
-  protected def pair(sb: StringBuilder, field: String, value: Any): StringBuilder = {
+  protected def pair(sb: StringBuffer, field: String, value: Any): StringBuffer = {
     quote(sb, field)
     sb.append(": ")
     sb.append(value)
   }
 
-  protected def jsonAnyValue(sb: StringBuilder, v: Any): StringBuilder = v match {
+  protected def jsonAnyValue(sb: StringBuffer, v: Any): StringBuffer = v match {
     case value: String         => quote(sb, value)
     case value: Int            => sb.append(value)
     case value: Float          => sb.append(value)
