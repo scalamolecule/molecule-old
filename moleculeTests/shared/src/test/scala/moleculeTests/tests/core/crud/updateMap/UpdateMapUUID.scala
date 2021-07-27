@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.updateMap
 
 import java.util.UUID
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -42,13 +43,13 @@ object UpdateMapUUID extends AsyncTestSuite {
           // Can't add pairs with duplicate keys
 
           // vararg
-          _ = compileError("""Ns(eid).uuidMap.assert(str1 -> uuid1, str1 -> uuid2).update""").check("",
+          _ = expectCompileError("""Ns(eid).uuidMap.assert(str1 -> uuid1, str1 -> uuid2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
               "\n__ident__str1 -> __ident__uuid1" +
               "\n__ident__str1 -> __ident__uuid2")
 
           // Seq
-          _ = compileError("""Ns(eid).uuidMap.assert(Seq(str1 -> uuid1, str1 -> uuid2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).uuidMap.assert(Seq(str1 -> uuid1, str1 -> uuid2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
               "\n__ident__str1 -> __ident__uuid1" +
               "\n__ident__str1 -> __ident__uuid2")
@@ -105,12 +106,12 @@ object UpdateMapUUID extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-          _ = compileError("""Ns(eid).uuidMap.replace(str1 -> uuid1, str1 -> uuid2).update""").check("",
+          _ = expectCompileError("""Ns(eid).uuidMap.replace(str1 -> uuid1, str1 -> uuid2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
               "\n__ident__str1 -> __ident__uuid1" +
               "\n__ident__str1 -> __ident__uuid2")
 
-          _ = compileError("""Ns(eid).uuidMap.replace(Seq(str1 -> uuid1, str1 -> uuid2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).uuidMap.replace(Seq(str1 -> uuid1, str1 -> uuid2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
               "\n__ident__str1 -> __ident__uuid1" +
               "\n__ident__str1 -> __ident__uuid2")
@@ -194,12 +195,12 @@ object UpdateMapUUID extends AsyncTestSuite {
           }
 
           // todo?
-//          _ = compileError("""Ns(eid).uuidMap(str1 -> uuid1, str1 -> uuid2).update""").check("",
+//          _ = expectCompileError("""Ns(eid).uuidMap(str1 -> uuid1, str1 -> uuid2).update""",
 //            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
 //              "\n__ident__str1 -> __ident__uuid1" +
 //              "\n__ident__str1 -> __ident__uuid2")
 //
-//          _ = compileError("""Ns(eid).uuidMap(Seq(str1 -> uuid1, str1 -> uuid2)).update""").check("",
+//          _ = expectCompileError("""Ns(eid).uuidMap(Seq(str1 -> uuid1, str1 -> uuid2)).update""",
 //            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
 //              "\n__ident__str1 -> __ident__uuid1" +
 //              "\n__ident__str1 -> __ident__uuid2")

@@ -45,7 +45,6 @@ private[molecule] trait JsonOptNested extends JsonBase {
       .asInstanceOf[jMap[_, _]].values().iterator().next
       .asInstanceOf[jLong].toLong
     pair(sb, field, refAttr)
-//    pair(sb, field, it.next.asInstanceOf[jLong].toLong)
   }
 
 

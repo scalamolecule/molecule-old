@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.equality
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -44,9 +45,8 @@ object ApplyEnum extends AsyncTestSuite {
           _ <- Ns.enum.apply(List("enum1", "enum2", "enum3")).get.map(_ ==> List("enum3", "enum2", "enum1"))
 
           // Applying a non-existing enum value ("zzz") won't compile!
-          _ = compileError("""m(Ns.enum("zzz"))""").check("",
-            """
-              |molecule.core.transform.exception.Dsl2ModelException: 'zzz' is not among available enum values of attribute :Ns/enum:
+          _ = expectCompileError("""m(Ns.enum("zzz"))""",
+            """molecule.core.transform.exception.Dsl2ModelException: 'zzz' is not among available enum values of attribute :Ns/enum:
               |  enum0
               |  enum1
               |  enum2
@@ -56,7 +56,7 @@ object ApplyEnum extends AsyncTestSuite {
               |  enum6
               |  enum7
               |  enum8
-              |  enum9""".stripMargin)
+              |  enum9""")
         } yield ()
       }
 

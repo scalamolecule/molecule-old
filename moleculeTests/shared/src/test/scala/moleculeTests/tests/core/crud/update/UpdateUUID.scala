@@ -2,6 +2,7 @@ package moleculeTests.tests.core.crud.update
 
 import java.util.UUID
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -122,11 +123,11 @@ object UpdateUUID extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).uuids.replace(uuid7 -> uuid8, uuid8 -> uuid8).update""").check("",
+          _ = expectCompileError("""Ns(eid).uuids.replace(uuid7 -> uuid8, uuid8 -> uuid8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/uuids`:" +
               "\n__ident__uuid8")
 
-          _ = compileError(            """Ns(eid).uuids.replace(Seq(uuid7 -> uuid8, uuid8 -> uuid8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).uuids.replace(Seq(uuid7 -> uuid8, uuid8 -> uuid8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/uuids`:" +
               "\n__ident__uuid8")
 

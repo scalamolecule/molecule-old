@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.crud.updateMap
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -41,13 +42,13 @@ object UpdateMapString extends AsyncTestSuite {
           // Can't add pairs with duplicate keys
 
           // vararg
-          _ = compileError(            """Ns(eid).strMap.assert("str1" -> "a", "str1" -> "b").update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.assert("str1" -> "a", "str1" -> "b").update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\nstr1 -> a" +
               "\nstr1 -> b")
 
           // Seq
-          _ = compileError(            """Ns(eid).strMap.assert(Seq("str1" -> "a", "str1" -> "b")).update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.assert(Seq("str1" -> "a", "str1" -> "b")).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\nstr1 -> a" +
               "\nstr1 -> b")
@@ -85,12 +86,12 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-          _ = compileError(            """Ns(eid).strMap.replace("str1" -> "a", "str1" -> "b").update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.replace("str1" -> "a", "str1" -> "b").update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\nstr1 -> a" +
               "\nstr1 -> b")
 
-          _ = compileError(            """Ns(eid).strMap.replace(Seq("str1" -> "a", "str1" -> "b")).update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.replace(Seq("str1" -> "a", "str1" -> "b")).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\nstr1 -> a" +
               "\nstr1 -> b")
@@ -207,13 +208,13 @@ object UpdateMapString extends AsyncTestSuite {
           // Can't add pairs with duplicate keys
 
           // vararg
-          _ = compileError(            """Ns(eid).strMap.assert(str1 -> str1, str1 -> str2).update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.assert(str1 -> str1, str1 -> str2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\n__ident__str1 -> __ident__str1" +
               "\n__ident__str1 -> __ident__str2")
 
           // Seq
-          _ = compileError(            """Ns(eid).strMap.assert(Seq(str1 -> str1, str1 -> str2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.assert(Seq(str1 -> str1, str1 -> str2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\n__ident__str1 -> __ident__str1" +
               "\n__ident__str1 -> __ident__str2")
@@ -270,12 +271,12 @@ object UpdateMapString extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-          _ = compileError(            """Ns(eid).strMap.replace(str1 -> str1, str1 -> str2).update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.replace(str1 -> str1, str1 -> str2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\n__ident__str1 -> __ident__str1" +
               "\n__ident__str1 -> __ident__str2")
 
-          _ = compileError(            """Ns(eid).strMap.replace(Seq(str1 -> str1, str1 -> str2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).strMap.replace(Seq(str1 -> str1, str1 -> str2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
               "\n__ident__str1 -> __ident__str1" +
               "\n__ident__str1 -> __ident__str2")

@@ -2,6 +2,7 @@ package moleculeTests.tests.core.obj
 
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.in1_out3._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
@@ -55,7 +56,7 @@ object ObjAggr extends AsyncTestSuite with Helpers {
         _ <- Ns.int(sum).getObj.map(_.int ==> 6)
         _ <- Ns.double(sum).getObj.map(_.double ==> 6.0)
 
-        _ = compileError("""m(Ns.str(sum))""").check("",
+        _ = expectCompileError("""m(Ns.str(sum))""",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "Can't apply `sum` aggregate to non-number attribute `str` of type `String`.")
       } yield ()

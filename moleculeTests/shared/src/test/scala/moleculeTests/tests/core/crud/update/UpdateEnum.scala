@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.update
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import molecule.datomic.base.util.SystemPeer
@@ -144,11 +145,11 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError("""Ns(eid).enums.replace("enum7" -> "enum8", "enum8" -> "enum8").update""").check("",
+          _ = expectCompileError("""Ns(eid).enums.replace("enum7" -> "enum8", "enum8" -> "enum8").update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\nenum8")
 
-          _ = compileError("""Ns(eid).enums.replace(Seq("enum7" -> "enum8", "enum8" -> "enum8")).update""").check("",
+          _ = expectCompileError("""Ns(eid).enums.replace(Seq("enum7" -> "enum8", "enum8" -> "enum8")).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\nenum8")
         } yield ()
@@ -299,11 +300,11 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError("""Ns(eid).enums.replace(enum7 -> enum8, enum8 -> enum8).update""").check("",
+          _ = expectCompileError("""Ns(eid).enums.replace(enum7 -> enum8, enum8 -> enum8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\n__ident__enum8")
 
-          _ = compileError("""Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> enum8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> enum8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\n__ident__enum8")
 

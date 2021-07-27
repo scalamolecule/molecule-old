@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.update
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -139,11 +140,11 @@ object UpdateLong extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).longs.replace(7L -> 8L, 8L -> 8L).update""").check("",
+          _ = expectCompileError("""Ns(eid).longs.replace(7L -> 8L, 8L -> 8L).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
               "\n8")
 
-          _ = compileError(            """Ns(eid).longs.replace(Seq(7L -> 8L, 8L -> 8L)).update""").check("",
+          _ = expectCompileError("""Ns(eid).longs.replace(Seq(7L -> 8L, 8L -> 8L)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
               "\n8")
         } yield ()
@@ -297,11 +298,11 @@ object UpdateLong extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).longs.replace(long7 -> long8, long8 -> long8).update""").check("",
+          _ = expectCompileError("""Ns(eid).longs.replace(long7 -> long8, long8 -> long8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
               "\n__ident__long8")
 
-          _ = compileError(            """Ns(eid).longs.replace(Seq(long7 -> long8, long8 -> long8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).longs.replace(Seq(long7 -> long8, long8 -> long8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/longs`:" +
               "\n__ident__long8")
 

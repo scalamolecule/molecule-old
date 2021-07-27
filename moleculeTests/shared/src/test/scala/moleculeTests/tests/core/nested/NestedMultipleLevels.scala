@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.nested
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -14,11 +15,11 @@ object NestedMultipleLevels extends AsyncTestSuite {
     "Optional/mandatory" - core { implicit conn =>
       // Can't mix mandatory/optional nested structures
 
-      compileError("""m(Ns.str.Refs1.*?(Ref1.int1.Refs2.*(Ref2.int2)))""").check("",
+      expectCompileError("""m(Ns.str.Refs1.*?(Ref1.int1.Refs2.*(Ref2.int2)))""",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Optional nested structure can't be mixed with mandatory nested structure.")
 
-      compileError("""m(Ns.str.Refs1.*(Ref1.int1.Refs2.*?(Ref2.int2)))""").check("",
+      expectCompileError("""m(Ns.str.Refs1.*(Ref1.int1.Refs2.*?(Ref2.int2)))""",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Optional nested structure can't be mixed with mandatory nested structure.")
     }

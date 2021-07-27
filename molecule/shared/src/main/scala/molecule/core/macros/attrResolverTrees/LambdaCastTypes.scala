@@ -37,11 +37,11 @@ private[molecule] trait LambdaCastTypes extends TreeOps {
     case "BigDecimal" => ii = (34, 29); (colIndex: Int) => q"castManyBigDecimal(row, $colIndex)"
   }
 
-  val castMandatoryAttr: richTree => Int => Tree = (t: richTree) =>
+  val castAttr: richTree => Int => Tree = (t: richTree) =>
     if (t.card == 1) castOneAttr(t.tpeS) else castManyAttr(t.tpeS)
 
 
-  val castOptionalAttr: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
+  val castOptAttr: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
     // Optional, card one
     t.tpeS match {
       case "String"     => ii = (13, 10); (colIndex: Int) => q"castOptOne[String](row, $colIndex)"
@@ -71,7 +71,7 @@ private[molecule] trait LambdaCastTypes extends TreeOps {
     }
   }
 
-  val castOptionalApplyAttr: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
+  val castOptApplyAttr: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
     // Optional, card one
     t.tpeS match {
       case "String"     => ii = (67, 10); (colIndex: Int) => q"castOptApplyOne[String](row, $colIndex)"
@@ -101,7 +101,7 @@ private[molecule] trait LambdaCastTypes extends TreeOps {
     }
   }
 
-  val castOptionalRefAttr: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
+  val castOptRefAttr: richTree => Int => Tree = (t: richTree) => if (t.card == 1) {
     ii = (23, 12)
     (colIndex: Int) => q"castOptOneRefAttr(row, $colIndex)"
   } else {
@@ -125,7 +125,7 @@ private[molecule] trait LambdaCastTypes extends TreeOps {
     (colIndex: Int) => q"castOptManyEnum(row, $colIndex)"
   }
 
-  val castMandatoryMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
+  val castMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
     case "String"     => ii = (47, 40); (colIndex: Int) => q"castMapString(row, $colIndex)"
     case "Int"        => ii = (48, 41); (colIndex: Int) => q"castMapInt(row, $colIndex)"
     case "Long"       => ii = (49, 42); (colIndex: Int) => q"castMapLong(row, $colIndex)"
@@ -138,7 +138,7 @@ private[molecule] trait LambdaCastTypes extends TreeOps {
     case "BigDecimal" => ii = (56, 49); (colIndex: Int) => q"castMapBigDecimal(row, $colIndex)"
   }
 
-  val castOptionalMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
+  val castOptMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
     case "String"     => ii = (57, 50); (colIndex: Int) => q"castOptMapString(row, $colIndex)"
     case "Int"        => ii = (58, 51); (colIndex: Int) => q"castOptMapInt(row, $colIndex)"
     case "Long"       => ii = (59, 52); (colIndex: Int) => q"castOptMapLong(row, $colIndex)"
@@ -151,7 +151,7 @@ private[molecule] trait LambdaCastTypes extends TreeOps {
     case "BigDecimal" => ii = (66, 59); (colIndex: Int) => q"castOptMapBigDecimal(row, $colIndex)"
   }
 
-  val castOptionalApplyMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
+  val castOptApplyMapAttr: richTree => Int => Tree = (t: richTree) => t.tpeS match {
     case "String"     => ii = (87, 50); (colIndex: Int) => q"castOptApplyMapString(row, $colIndex)"
     case "Int"        => ii = (88, 51); (colIndex: Int) => q"castOptApplyMapInt(row, $colIndex)"
     case "Boolean"    => ii = (89, 52); (colIndex: Int) => q"castOptApplyMapBoolean(row, $colIndex)"

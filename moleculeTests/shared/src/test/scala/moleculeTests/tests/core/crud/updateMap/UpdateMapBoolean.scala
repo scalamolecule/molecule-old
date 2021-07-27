@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.crud.updateMap
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -41,13 +42,13 @@ object UpdateMapBoolean extends AsyncTestSuite {
           // Can't add pairs with duplicate keys
 
           // vararg
-          _ = compileError(            """Ns(eid).boolMap.assert(str1 -> bool1, str1 -> bool2).update""").check("",
+          _ = expectCompileError("""Ns(eid).boolMap.assert(str1 -> bool1, str1 -> bool2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
               "\n__ident__str1 -> __ident__bool1" +
               "\n__ident__str1 -> __ident__bool2")
 
           // Seq
-          _ = compileError(            """Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1 -> bool2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1 -> bool2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
               "\n__ident__str1 -> __ident__bool1" +
               "\n__ident__str1 -> __ident__bool2")
@@ -105,12 +106,12 @@ object UpdateMapBoolean extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-          _ = compileError(            """Ns(eid).boolMap.replace(str1 -> bool1, str1 -> bool2).update""").check("",
+          _ = expectCompileError("""Ns(eid).boolMap.replace(str1 -> bool1, str1 -> bool2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
               "\n__ident__str1 -> __ident__bool1" +
               "\n__ident__str1 -> __ident__bool2")
 
-          _ = compileError(            """Ns(eid).boolMap.replace(Seq(str1 -> bool1, str1 -> bool2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).boolMap.replace(Seq(str1 -> bool1, str1 -> bool2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
               "\n__ident__str1 -> __ident__bool1" +
               "\n__ident__str1 -> __ident__bool2")

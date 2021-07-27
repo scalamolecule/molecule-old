@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.update
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -126,11 +127,11 @@ object UpdateBigInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).bigInts.replace(bigInt7 -> bigInt8, bigInt8 -> bigInt8).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigInts.replace(bigInt7 -> bigInt8, bigInt8 -> bigInt8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigInts`:" +
               "\n__ident__bigInt8")
 
-          _ = compileError(            """Ns(eid).bigInts.replace(Seq(bigInt7 -> bigInt8, bigInt8 -> bigInt8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigInts.replace(Seq(bigInt7 -> bigInt8, bigInt8 -> bigInt8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigInts`:" +
               "\n__ident__bigInt8")
 

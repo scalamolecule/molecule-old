@@ -2,6 +2,7 @@ package moleculeTests.tests.core.crud.update
 
 import java.net.URI
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -123,11 +124,11 @@ object UpdateURI extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).uris.replace(uri7 -> uri8, uri8 -> uri8).update""").check("",
+          _ = expectCompileError("""Ns(eid).uris.replace(uri7 -> uri8, uri8 -> uri8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/uris`:" +
               "\n__ident__uri8")
 
-          _ = compileError(            """Ns(eid).uris.replace(Seq(uri7 -> uri8, uri8 -> uri8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).uris.replace(Seq(uri7 -> uri8, uri8 -> uri8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/uris`:" +
               "\n__ident__uri8")
 

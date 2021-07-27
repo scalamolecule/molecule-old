@@ -1,12 +1,12 @@
 package moleculeTests.tests.core.generic
 
 import molecule.core.exceptions.MoleculeException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out5._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import moleculeTests.tests.core.generic.Datom.delay
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -289,7 +289,7 @@ object Index extends AsyncTestSuite {
 
       "Datom args" - core { implicit conn =>
         // Applying values to Index attributes not allowed
-        compileError("m(EAVT(42L).e.a.v(500).t)").check("",
+        expectCompileError("m(EAVT(42L).e.a.v(500).t)",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "EAVT index attributes not allowed to have values applied.\n" +
             "EAVT index only accepts datom arguments: `EAVT(<e/a/v/t>)`.")
@@ -353,7 +353,7 @@ object Index extends AsyncTestSuite {
 
       "Only mandatory datom args" - core { implicit conn =>
         // Applying values to Index attributes not allowed
-        compileError("""m(AEVT(":Ns/int").a.e.v(42).t)""").check("",
+        expectCompileError("""m(AEVT(":Ns/int").a.e.v(42).t)""",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "AEVT index attributes not allowed to have values applied.\n" +
             "AEVT index only accepts datom arguments: `AEVT(<a/e/v/t>)`.")
@@ -402,7 +402,7 @@ object Index extends AsyncTestSuite {
 
       "Only mandatory datom args" - core { implicit conn =>
         // Applying values to Index attributes not allowed
-        compileError("""m(AVET(":Ns/int").a.v.e(77L).t)""").check("",
+        expectCompileError("""m(AVET(":Ns/int").a.v.e(77L).t)""",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "AVET index attributes not allowed to have values applied.\n" +
             "AVET index only accepts datom arguments: `AVET(<a/v/e/t>)` or range arguments: `AVET.range(a, from, until)`.")
@@ -594,7 +594,7 @@ object Index extends AsyncTestSuite {
 
       "Only mandatory datom args" - core { implicit conn =>
         // Applying values to Index attributes not allowed
-        compileError("m(VAET(42L).v.a.e(77L).t)").check("",
+        expectCompileError("m(VAET(42L).v.a.e(77L).t)",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "VAET index attributes not allowed to have values applied.\n" +
             "VAET index only accepts datom arguments: `VAET(<v/a/e/t>)`.")

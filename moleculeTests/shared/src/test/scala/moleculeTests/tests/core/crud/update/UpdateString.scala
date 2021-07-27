@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.update
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -139,11 +140,11 @@ object UpdateString extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).strs.replace("g" -> "h", "h" -> "h").update""").check("",
+          _ = expectCompileError("""Ns(eid).strs.replace("g" -> "h", "h" -> "h").update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
               "\nh")
 
-          _ = compileError(            """Ns(eid).strs.replace(Seq("g" -> "h", "h" -> "h")).update""").check("",
+          _ = expectCompileError("""Ns(eid).strs.replace(Seq("g" -> "h", "h" -> "h")).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
               "\nh")
         } yield ()
@@ -297,11 +298,11 @@ object UpdateString extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).strs.replace(str7 -> str8, str8 -> str8).update""").check("",
+          _ = expectCompileError("""Ns(eid).strs.replace(str7 -> str8, str8 -> str8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
               "\n__ident__str8")
 
-          _ = compileError(            """Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> str8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> str8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/strs`:" +
               "\n__ident__str8")
 

@@ -75,7 +75,10 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       for {
         conn <- conn
-        jColl <- conn.query(_model, _query)
+        jColl <- if (conn.isJsPlatform)
+          conn.queryFlatJs(_query, -1, indexes, qr2list)
+        else
+          conn.query(_model, _query)
       } yield {
         val count = jColl.size()
         val rows  = jColl.iterator()
@@ -113,13 +116,13 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           case _: Composite =>
             s"""{
                |  "data": {
-               |    "composite": [${sb.toString()}]
+               |    "composite": [${sb.toString}]
                |  }
                |}""".stripMargin
           case _            =>
             s"""{
                |  "data": {
-               |    "${firstNs(_model)}": [${sb.toString()}]
+               |    "${firstNs(_model)}": [${sb.toString}]
                |  }
                |}""".stripMargin
         }

@@ -16,7 +16,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
     val (
       genericImports, model0,
-      typess, castss, jsonss,
+      typess, castss,
       indexes0, obj,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
@@ -48,7 +48,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         //          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
         //          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
         //        """
-
         q"""
           final override protected def json2tpl(json: String): (..$TplTypes) = ???
           final override protected def json2obj(json: String): $ObjType = ???
@@ -81,7 +80,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
 
     def mkOptNested = {
-//      val optNestedTplClass  = tq"_root_.molecule.core.macros.nested.OptNestedTpl"
       val optNestedJsonClass = tq"_root_.molecule.core.macros.nested.OptNestedJson"
 
       lazy val tpl = if (TplTypes.length == 1)
@@ -167,7 +165,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-//              with TypedCastHelpers {
               ..$transformers
             }
           """
@@ -176,7 +173,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-//              with TypedCastHelpers {
               ..$transformers
             }
           """
@@ -188,7 +184,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-//              with TypedCastHelpers {
               ..$transformers
             }
           """
@@ -197,7 +192,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
               with $nestedTupleClass[$ObjType, (..$TplTypes)]
               with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-//              with TypedCastHelpers {
               ..$transformers
             }
           """

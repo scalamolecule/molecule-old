@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.update
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -151,11 +152,11 @@ object UpdateInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError("""Ns(eid).ints.replace(7 -> 8, 8 -> 8).update""").check("",
+          _ = expectCompileError("""Ns(eid).ints.replace(7 -> 8, 8 -> 8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n8")
 
-          _ = compileError("""Ns(eid).ints.replace(Seq(7 -> 8, 8 -> 8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).ints.replace(Seq(7 -> 8, 8 -> 8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n8")
         } yield ()
@@ -311,11 +312,11 @@ object UpdateInt extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError("""Ns(eid).ints.replace(int7 -> int8, int8 -> int8).update""").check("",
+          _ = expectCompileError("""Ns(eid).ints.replace(int7 -> int8, int8 -> int8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n__ident__int8")
 
-          _ = compileError("""Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> int8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> int8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/ints`:" +
               "\n__ident__int8")
 

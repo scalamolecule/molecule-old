@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.crud.updateMap
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -41,13 +42,13 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
           // Can't add pairs with duplicate keys
 
           // vararg
-          _ = compileError(            """Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1 -> bigDec2).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1 -> bigDec2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
               "\n__ident__str1 -> __ident__bigDec1" +
               "\n__ident__str1 -> __ident__bigDec2")
 
           // Seq
-          _ = compileError(            """Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
               "\n__ident__str1 -> __ident__bigDec1" +
               "\n__ident__str1 -> __ident__bigDec2")
@@ -105,12 +106,12 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-          _ = compileError(            """Ns(eid).bigDecMap.replace(str1 -> bigDec1, str1 -> bigDec2).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigDecMap.replace(str1 -> bigDec1, str1 -> bigDec2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
               "\n__ident__str1 -> __ident__bigDec1" +
               "\n__ident__str1 -> __ident__bigDec2")
 
-          _ = compileError(            """Ns(eid).bigDecMap.replace(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigDecMap.replace(Seq(str1 -> bigDec1, str1 -> bigDec2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
               "\n__ident__str1 -> __ident__bigDec1" +
               "\n__ident__str1 -> __ident__bigDec2")

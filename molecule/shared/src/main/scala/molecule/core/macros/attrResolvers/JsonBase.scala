@@ -102,19 +102,19 @@ private[molecule] trait JsonBase extends Helpers {
     var vs: jCollection[Any] = null
     var i                    = 0
 
-//    println("================================")
-//    println("nestedRows      : " + nestedRows)
-//    println("propCount       : " + propCount)
-//    println("refIndexes      : " + refIndexes)
-//    println("tacitIndexes    : " + tacitIndexes)
-//    println("deeper          : " + deeper)
+    //    println("================================")
+    //    println("nestedRows      : " + nestedRows)
+    //    println("propCount       : " + propCount)
+    //    println("refIndexes      : " + refIndexes)
+    //    println("tacitIndexes    : " + tacitIndexes)
+    //    println("deeper          : " + deeper)
 
     (refIndexes.isEmpty, tacitIndexes.isEmpty) match {
       case (true, true) =>
         nestedRows.forEach { row =>
           vs = row.asInstanceOf[jMap[Any, Any]].values()
-//          println("-- 1 ------- " + vs.size + "  " + propCount)
-//          vs.forEach(v => println(v))
+          //          println("-- 1 ------- " + vs.size + "  " + propCount)
+          //          vs.forEach(v => println(v))
           if (deeper && vs.size() - 1 == propCount || !deeper && vs.size() == propCount)
             flatValues.addAll(vs)
         }
@@ -127,8 +127,8 @@ private[molecule] trait JsonBase extends Helpers {
           val valid: Boolean = tacitIndexes.collectFirst {
             case i if testArray(i) == "__none__" => true
           }.isEmpty
-//          println("-- 2 ------- " + valid)
-//          vs.forEach(v => println(v))
+          //          println("-- 2 ------- " + valid)
+          //          vs.forEach(v => println(v))
           if (valid) {
             // Get non-tacit values only
             nonTacitIndexes.foreach { j =>
@@ -151,8 +151,8 @@ private[molecule] trait JsonBase extends Helpers {
             case v               => i += 1; testList.add(v)
           }
           addValues(vs)
-//          println("-- 3 -------")
-//          testList.forEach(v => println(v))
+          //          println("-- 3 -------")
+          //          testList.forEach(v => println(v))
           if (i == propCount)
             flatValues.addAll(testList)
         }
@@ -166,36 +166,33 @@ private[molecule] trait JsonBase extends Helpers {
           i = 0
           def addValues(vs: jCollection[Any]): Unit = vs.forEach {
             case ref: jMap[_, _]                        =>
-//              println(s"-  -  -  " + ref.asInstanceOf[jMap[Any, Any]].values())
+              //              println(s"-  -  -  " + ref.asInstanceOf[jMap[Any, Any]].values())
               addValues(ref.asInstanceOf[jMap[Any, Any]].values())
             case "__none__" if tacitIndexes.contains(i) =>
               // tacit value missing
               i += 1
-//              println(s"A  $i  $presentValues  __none__")
-            case v if tacitIndexes.contains(i)          =>
+            case v if tacitIndexes.contains(i) =>
               // tacit value exists
               i += 1
               presentValues += 1
-//              println(s"B  $i  $presentValues  $v")
-            case v                                      =>
+            case v =>
               i += 1
               presentValues += 1
               testList.add(v)
-//              println(s"C  $i  $presentValues  $v")
           }
           addValues(vs)
           val ok1 = ok(presentValues)
-//          println("-- 4 ------- " + presentValues + "  " + ok1)
-//          vs.forEach(v => println(v))
-//          println("-------")
-//          testList.forEach(v => println(v))
+          //          println("-- 4 ------- " + presentValues + "  " + ok1)
+          //          vs.forEach(v => println(v))
+          //          println("-------")
+          //          testList.forEach(v => println(v))
           if (ok1)
             flatValues.addAll(testList)
         }
     }
 
-//    println("-------------------------------")
-//    flatValues.forEach(v => println(v))
+    //    println("-------------------------------")
+    //    flatValues.forEach(v => println(v))
 
     flatValues.iterator
   }

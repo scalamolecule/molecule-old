@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.generic
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out6._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeerServer}
@@ -233,7 +234,7 @@ object Datom extends AsyncTestSuite {
           ))
 
           // Other generic attributes not allowed before first attribute
-          _ = compileError("Ns.t.op.int.get").check("",
+          _ = expectCompileError("Ns.t.op.int.get",
             "molecule.core.ops.exception.VerifyRawModelException: " +
               "Can't add first attribute `int` after generic attributes (except `e` which is ok to have first). " +
               "Please add generic attributes `t`, `op` after `int`.")
@@ -262,7 +263,7 @@ object Datom extends AsyncTestSuite {
 
           // Generic attributes without an entity id applied or custom attributes added would
           // cause a full scan of the whole database and is not allowed
-          _ = compileError("Ns.e.a.v.t.get").check("",
+          _ = expectCompileError("Ns.e.a.v.t.get",
             "molecule.core.ops.exception.VerifyRawModelException: " +
               "Molecule with only generic attributes and no entity id(s) applied are not allowed since " +
               "it would cause a full scan of the whole database.")
@@ -275,7 +276,7 @@ object Datom extends AsyncTestSuite {
           ))
 
           // Count also involves full scan if no other attribute is present
-          _ = compileError("Ns.e(count).get").check("",
+          _ = expectCompileError("Ns.e(count).get",
             "molecule.core.ops.exception.VerifyRawModelException: " +
               "Molecule with only generic attributes and no entity id(s) applied are not allowed since " +
               "it would cause a full scan of the whole database.")
@@ -335,7 +336,7 @@ object Datom extends AsyncTestSuite {
       }
 
       "Tacit" - core { implicit conn =>
-        compileError("""m(Ns.int.tx_)""").check("",
+        expectCompileError("""m(Ns.int.tx_)""",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "Tacit `tx_` can only be used with an applied value i.e. `tx_(<value>)`")
         //                for {
@@ -393,7 +394,7 @@ object Datom extends AsyncTestSuite {
           _ <- Ns.v(3, "b").get.map(_ ==> List("b", 3))
           _ <- Ns.v.not(3).get.map(_.sortBy(_.toString) ==> List(r1, 5, "b", "hello", "x").sortBy(_.toString))
           _ <- Ns.v.not(3, "b").get.map(_.sortBy(_.toString) ==> List(r1, 5, "hello", "x").sortBy(_.toString))
-          _ = compileError("""m(Ns.v.>(3))""").check("",
+          _ = expectCompileError("""m(Ns.v.>(3))""",
             "molecule.core.transform.exception.Dsl2ModelException: " +
               "Can't compare generic values being of different types. Found: v.>(3)")
 
@@ -479,7 +480,7 @@ object Datom extends AsyncTestSuite {
           _ <- Ns.int_.op(count).get.map(_ ==> List(1))
 
           // Generic attributes only allowed to aggregate `count`
-          _ = compileError("""m(Ns.int.t(max))""").check("",
+          _ = expectCompileError("""m(Ns.int.t(max))""",
             "molecule.core.transform.exception.Dsl2ModelException: " +
               "Generic attributes only allowed to aggregate `count`. Found: `max`")
         } yield ()
@@ -508,7 +509,7 @@ object Datom extends AsyncTestSuite {
         _ <- Ns.int.v_(3, "b").get.map(_ ==> List(3))
         _ <- Ns.int.v_.not(3).get.map(_ ==> List(5))
         _ <- Ns.int.v_.not(3, "b").get.map(_ ==> List(5))
-        _ = compileError("""m(Ns.int.v_.<=(3))""").check("",
+        _ = expectCompileError("""m(Ns.int.v_.<=(3))""",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "Can't compare generic values being of different types. Found: v_.<=(3)")
 
@@ -579,16 +580,16 @@ object Datom extends AsyncTestSuite {
     }
 
     "Optional tx data not allowed" - core { implicit conn =>
-      compileError("""m(Ns.int$.tx.str)""").check("",
+      expectCompileError("""m(Ns.int$.tx.str)""",
         "molecule.core.transform.exception.Dsl2ModelException: Optional attributes (`int$`) can't be followed by generic transaction attributes (`tx`).")
 
-      compileError("""m(Ns.int$.t.str)""").check("",
+      expectCompileError("""m(Ns.int$.t.str)""",
         "molecule.core.transform.exception.Dsl2ModelException: Optional attributes (`int$`) can't be followed by generic transaction attributes (`t`).")
 
-      compileError("""m(Ns.int$.txInstant.str)""").check("",
+      expectCompileError("""m(Ns.int$.txInstant.str)""",
         "molecule.core.transform.exception.Dsl2ModelException: Optional attributes (`int$`) can't be followed by generic transaction attributes (`txInstant`).")
 
-      compileError("""m(Ns.int$.op.str)""").check("",
+      expectCompileError("""m(Ns.int$.op.str)""",
         "molecule.core.transform.exception.Dsl2ModelException: Optional attributes (`int$`) can't be followed by generic transaction attributes (`op`).")
       //            for {
       //            } yield()

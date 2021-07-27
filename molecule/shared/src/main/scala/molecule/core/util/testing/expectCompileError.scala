@@ -7,7 +7,7 @@ import scala.reflect.macros.{TypecheckException, blackbox}
 // Modified `illTyped` macro by Stefan Zeiger (@StefanZeiger)
 // See also shapeless.test.illTyped
 
-private[molecule] object expectCompileError {
+object expectCompileError {
 
   def apply(code: String): Unit = macro CompileChecker.applyImplNoExp
   def apply(code: String, expected: String): Unit = macro CompileChecker.applyImpl

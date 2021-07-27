@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.update
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -139,11 +140,11 @@ object UpdateDouble extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).doubles.replace(7.0 -> 8.0, 8.0 -> 8.0).update""").check("",
+          _ = expectCompileError("""Ns(eid).doubles.replace(7.0 -> 8.0, 8.0 -> 8.0).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/doubles`:" +
               "\n8.0")
 
-          _ = compileError(            """Ns(eid).doubles.replace(Seq(7.0 -> 8.0, 8.0 -> 8.0)).update""").check("",
+          _ = expectCompileError("""Ns(eid).doubles.replace(Seq(7.0 -> 8.0, 8.0 -> 8.0)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/doubles`:" +
               "\n8.0")
         } yield ()
@@ -299,11 +300,11 @@ object UpdateDouble extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).doubles.replace(double7 -> double8, double8 -> double8).update""").check("",
+          _ = expectCompileError("""Ns(eid).doubles.replace(double7 -> double8, double8 -> double8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/doubles`:" +
               "\n__ident__double8")
 
-          _ = compileError(            """Ns(eid).doubles.replace(Seq(double7 -> double8, double8 -> double8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).doubles.replace(Seq(double7 -> double8, double8 -> double8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/doubles`:" +
               "\n__ident__double8")
 

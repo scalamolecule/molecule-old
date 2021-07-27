@@ -15,13 +15,13 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8, mkError = true)
-    private lazy val xx = InspectMacro("MakeMolecule_In", 9, 8)
-//  private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8)
+  private lazy val xx = InspectMacro("MakeMolecule_In", 9, 8)
+  //  private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8)
 
   private[this] final def generateInputMolecule(dsl: Tree, ObjType: Type, InTypes: Type*)(TplTypes: Type*): Tree = {
     val (
       genericImports, model0,
-      typess, castss, jsonss,
+      typess, castss,
       indexes, obj,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
@@ -38,13 +38,29 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     val nestedJsonClass  = tq"${nestedJsonClassX(castss.size)}"
 
     // Methods for applying separate lists of input
+    lazy val outMoleculeFlat =
+      q"""
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
+          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
+          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+        }
+        new $outMolecule
+      """
+    lazy val outMoleculeNested =
+      q"""
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
+          with $nestedTupleClass[$ObjType, (..$TplTypes)]
+          with $nestedJsonClass[$ObjType, (..$TplTypes)] {
+          ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
+          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
+        }
+        new $outMolecule
+      """
+
     val applySeqs = InTypes match {
       case Seq(it1) => q"" // no extra
 
       case Seq(it1, it2) =>
-        val (i1, i2)                     = (TermName(s"in1"), TermName(s"in2"))
-        val (t1, t2)                     = (tq"Seq[$it1]", tq"Seq[$it2]")
-        val (inParams, inTerm1, inTerm2) = (Seq(q"$i1: $t1", q"$i2: $t2"), i1, i2)
         if (flat) {
           q"""
             def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2])])
@@ -56,11 +72,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 }
                 case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
               }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
-                final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
-                final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              }
-              new $outMolecule
+              ..$outMoleculeFlat
             }
           """
         } else {
@@ -83,21 +95,12 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 }
                 case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
               }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with $nestedTupleClass[$ObjType, (..$TplTypes)]
-                with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
-              }
-              new $outMolecule
+              ..$outMoleculeNested
             }
           """
         }
 
       case Seq(it1, it2, it3) =>
-        val (i1, i2, i3)                          = (TermName(s"in1"), TermName(s"in2"), TermName(s"in3"))
-        val (t1, t2, t3)                          = (tq"Seq[$it1]", tq"Seq[$it2]", tq"Seq[$it3]")
-        val (inParams, inTerm1, inTerm2, inTerm3) = (Seq(q"$i1: $t1", q"$i2: $t2", q"$i3: $t3"), i1, i2, i3)
         if (flat) {
           q"""
             def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2], Seq[$it3])])
@@ -109,11 +112,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 }
                 case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
               }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
-                final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
-                final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              }
-              new $outMolecule
+              ..$outMoleculeFlat
             }
           """
         } else {
@@ -136,45 +135,44 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
                 }
                 case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
               }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with $nestedTupleClass[$ObjType, (..$TplTypes)]
-                with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
-              }
-              new $outMolecule
+              ..$outMoleculeNested
             }
           """
         }
     }
 
-    val t = if (flat) {
+    def mkFlat = {
       val transformers = if (isJsPlatform) {
-        val (arrays, lookups0) = indexes.map {
-          // Generic `v` of type Any needs to be cast on JS side
-          case (colIndex, 11, arrayType, arrayIndex) =>
-            (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
-
-          case (colIndex, castIndex, arrayType, arrayIndex) =>
-            (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
-        }.unzip
-
-        val lookups = if (txMetaCompositesCount > 0) {
-          // Treat tx meta data as composite
-          val first = topLevelLookups(List(castss.head), lookups0)
-          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
-          q"(..$first, ..$last)"
-        } else {
-          q"(..$lookups0)"
-        }
+        //        val (arrays, lookups0) = indexes.map {
+        //          // Generic `v` of type Any needs to be cast on JS side
+        //          case (colIndex, 11, arrayType, arrayIndex) =>
+        //            (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
+        //
+        //          case (colIndex, castIndex, arrayType, arrayIndex) =>
+        //            (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
+        //        }.unzip
+        //
+        //        val lookups = if (txMetaCompositesCount > 0) {
+        //          // Treat tx meta data as composite
+        //          val first = topLevelLookups(List(castss.head), lookups0)
+        //          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
+        //          q"(..$first, ..$last)"
+        //        } else {
+        //          q"(..$lookups0)"
+        //        }
+        //        q"""
+        //          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
+        //            ..$arrays
+        //            (i: Int) => $lookups
+        //          }
+        //          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+        //          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
+        //        """
         q"""
-          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-            ..$arrays
-            (i: Int) => $lookups
-          }
-          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-          final override lazy val indexes: List[(Int, Int, Int, Int)] = $indexes
-        """
+          final override protected def json2tpl(json: String): (..$TplTypes) = ???
+          final override protected def json2obj(json: String): $ObjType = ???
+          final override protected def json2list(json: String): jList[AnyRef] = ???
+         """
 
       } else {
         val casts = if (txMetaCompositesCount > 0) {
@@ -189,134 +187,107 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         """
       }
 
+      val body =
+        q"""
+          def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
+                               (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
+            val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
+              case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
+              case Right(args) => bindValues(_rawQuery, args) match {
+                case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
+                case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
+              }
+            }
+            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
+              ..$transformers
+            }
+            new $outMolecule
+          }
+          $applySeqs
+        """
+
       if (hasVariables) {
         q"""
-          ..$imports
           private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
           final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$TplTypes](
             _resolvedModel, Model2Query(_resolvedModel)
           ) {
-            def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
-                                 (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-                case Right(args) => bindValues(_rawQuery, args) match {
-                  case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-                }
-              }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
-                ..$transformers
-              }
-              new $outMolecule
-            }
-            $applySeqs
+            ..$body
           }
-          new $inputMolecule
         """
       } else {
         q"""
-          ..$imports
           final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$TplTypes](
             $model0, ${Model2Query(model0)}
           ) {
-            def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
-                                 (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-                case Right(args) => bindValues(_rawQuery, args) match {
-                  case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-                }
-              }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
-                ..$transformers
-              }
-              new $outMolecule
-            }
-            $applySeqs
+            ..$body
           }
-          new $inputMolecule
-        """
-      }
-
-    } else {
-
-      if (hasVariables) {
-        q"""
-          ..$imports
-          private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
-          final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$TplTypes](
-            _resolvedModel, Model2Query(_resolvedModel)
-          ) {
-            def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
-                                 (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryDataNested: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-                case Right(args) => bindValues(_rawQuery, args) match {
-                  case Right(boundRawQuery) => bindValues(_rawNestedQuery.get, args) match {
-                    case Right(boundRawNestedQuery) => (
-                      QueryOptimizer(boundRawQuery),
-                      Some(QueryOptimizer(boundRawNestedQuery)),
-                      boundRawQuery,
-                      Some(boundRawNestedQuery),
-                      None
-                    )
-                    case Left(exc)                  => (_rawQuery, None, _rawQuery, None, Some(exc))
-                  }
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-                }
-              }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with $nestedTupleClass[$ObjType, (..$TplTypes)]
-                with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
-              }
-              new $outMolecule
-            }
-            $applySeqs
-          }
-          new $inputMolecule
-        """
-      } else {
-        q"""
-          ..$imports
-          final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$TplTypes](
-            $model0, ${Model2Query(model0)}
-          ) {
-            def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
-                                 (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryDataNested: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-                case Right(args) => bindValues(_rawQuery, args) match {
-                  case Right(boundRawQuery) => bindValues(_rawNestedQuery.get, args) match {
-                    case Right(boundRawNestedQuery) => (
-                      QueryOptimizer(boundRawQuery),
-                      Some(QueryOptimizer(boundRawNestedQuery)),
-                      boundRawQuery,
-                      Some(boundRawNestedQuery),
-                      None
-                    )
-                    case Left(exc)                  => (_rawQuery, None, _rawQuery, None, Some(exc))
-                  }
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-                }
-              }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
-                with $nestedTupleClass[$ObjType, (..$TplTypes)]
-                with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-                ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
-                ..${buildJsonNested(obj, nestedRefs, postJsons).get}
-              }
-              new $outMolecule
-            }
-            $applySeqs
-          }
-          new $inputMolecule
         """
       }
     }
+
+
+    def mkNested = {
+      val body =
+        q"""
+          def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
+                               (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
+            val queryDataNested: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
+              case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
+              case Right(args) => bindValues(_rawQuery, args) match {
+                case Right(boundRawQuery) => bindValues(_rawNestedQuery.get, args) match {
+                  case Right(boundRawNestedQuery) => (
+                    QueryOptimizer(boundRawQuery),
+                    Some(QueryOptimizer(boundRawNestedQuery)),
+                    boundRawQuery,
+                    Some(boundRawNestedQuery),
+                    None
+                  )
+                  case Left(exc)                  => (_rawQuery, None, _rawQuery, None, Some(exc))
+                }
+                case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
+              }
+            }
+            ..$outMoleculeNested
+          }
+          $applySeqs
+        """
+
+      if (hasVariables) {
+        q"""
+          private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
+          final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$TplTypes](
+            _resolvedModel, Model2Query(_resolvedModel)
+          ) {
+            ..$body
+          }
+        """
+      } else {
+        q"""
+          final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$TplTypes](
+            $model0, ${Model2Query(model0)}
+          ) {
+            ..$body
+          }
+        """
+      }
+    }
+
+    val moleculeClass = if (flat || txMetaCompositesCount > 0)
+      mkFlat
+    else
+      mkNested
+
+    // (optional nested structures not allowed to have inputs)
+
+    val t =
+      q"""
+        {
+          ..$imports
+          ..$moleculeClass
+          new $inputMolecule
+        }
+      """
 
     xx(7
       , model0

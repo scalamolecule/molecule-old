@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.ref
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out8._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
@@ -341,7 +342,7 @@ object SelfJoin extends AsyncTestSuite {
         // Unifying attributes should be tacit
         // Grab the value from the first attribute that it unifies with (if needed)
 
-        _ = compileError("m(Person.age_(23).Likes.beverage._Person.Self.age_(25).Likes.beverage(unify))").check("",
+        _ = expectCompileError("m(Person.age_(23).Likes.beverage._Person.Self.age_(25).Likes.beverage(unify))",
           "molecule.core.transform.exception.Dsl2ModelException: Can only unify on tacit attributes. Please add underscore to attribute: `beverage_(unify)`")
       } yield ()
     }

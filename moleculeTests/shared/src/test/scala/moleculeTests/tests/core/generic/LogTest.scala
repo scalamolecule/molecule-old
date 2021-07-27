@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.generic
 
 import molecule.core.exceptions.MoleculeException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out5._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer}
@@ -264,7 +265,7 @@ object LogTest extends AsyncTestSuite {
         ))
 
         // Applying values to Schema attributes not allowed
-        _ = compileError("m(Log.e(e1).a.v.t)").check("",
+        _ = expectCompileError("m(Log.e(e1).a.v.t)",
           "molecule.core.transform.exception.Dsl2ModelException: Log attributes not allowed to have values applied.\n" +
             "Log only accepts range arguments: `Log(from, until)`.")
 

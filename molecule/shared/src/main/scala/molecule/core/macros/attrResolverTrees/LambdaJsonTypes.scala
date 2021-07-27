@@ -37,7 +37,7 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
     case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
   }
 
-  val jsonMandatoryAttr: richTree => (Int, Int) => Tree = (t: richTree) =>
+  val jsonAttr: richTree => (Int, Int) => Tree = (t: richTree) =>
     if (t.card == 1) jsonOneAttr(t.tpeS, t.nameClean) else jsonManyAttr(t.tpeS, t.nameClean)
 
 
@@ -136,7 +136,7 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
   }
 
 
-  val jsonMandatoryMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
+  val jsonMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     t.tpeS match {
       case "String"     => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"

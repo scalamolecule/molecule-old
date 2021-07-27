@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.updateMap
 
 import java.util.Date
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -42,13 +43,13 @@ object UpdateMapDate extends AsyncTestSuite {
           // Can't add pairs with duplicate keys
 
           // vararg
-          _ = compileError(            """Ns(eid).dateMap.assert(str1 -> date1, str1 -> date2).update""").check("",
+          _ = expectCompileError("""Ns(eid).dateMap.assert(str1 -> date1, str1 -> date2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")
 
           // Seq
-          _ = compileError(            """Ns(eid).dateMap.assert(Seq(str1 -> date1, str1 -> date2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).dateMap.assert(Seq(str1 -> date1, str1 -> date2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")
@@ -106,12 +107,12 @@ object UpdateMapDate extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-          _ = compileError(            """Ns(eid).dateMap.replace(str1 -> date1, str1 -> date2).update""").check("",
+          _ = expectCompileError("""Ns(eid).dateMap.replace(str1 -> date1, str1 -> date2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")
 
-          _ = compileError(            """Ns(eid).dateMap.replace(Seq(str1 -> date1, str1 -> date2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).dateMap.replace(Seq(str1 -> date1, str1 -> date2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")

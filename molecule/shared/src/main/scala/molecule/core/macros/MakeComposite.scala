@@ -21,7 +21,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
   private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
     val (
       genericImports, model0,
-      typess, castss, jsonss,
+      typess, castss,
       indexes, obj,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,

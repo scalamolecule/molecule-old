@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.ref
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -206,22 +207,22 @@ object Relations extends AsyncTestSuite {
       for {
         _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(("a", List(1, 2)))
 
-        _ = compileError("m(Ns.str.refs1.Refs1.int1)").check("",
+        _ = expectCompileError("m(Ns.str.refs1.Refs1.int1)",
           "molecule.core.ops.exception.VerifyRawModelException: Instead of getting the ref id with `refs1` please get it via the referenced namespace: `Refs1.e ...`")
 
-        _ = compileError("m(Ns.refs1.str.Refs1.int1)").check("",
+        _ = expectCompileError("m(Ns.refs1.str.Refs1.int1)",
           "molecule.core.ops.exception.VerifyRawModelException: Instead of getting the ref id with `refs1` please get it via the referenced namespace: `Refs1.e ...`")
       } yield ()
     }
 
     "Molecule has to end with attribute" - {
       "Ending with ref" - core { implicit conn =>
-        compileError("m(Ns.str.Ref1)").check("",
+        expectCompileError("m(Ns.str.Ref1)",
           "molecule.core.ops.exception.VerifyRawModelException: Molecule not allowed to end with a reference. Please add one or more attribute to the reference.")
       }
 
       "Ending with refs" - core { implicit conn =>
-        compileError("m(Ns.str.Refs1)").check("",
+        expectCompileError("m(Ns.str.Refs1)",
           "molecule.core.ops.exception.VerifyRawModelException: Molecule not allowed to end with a reference. Please add one or more attribute to the reference.")
       }
     }

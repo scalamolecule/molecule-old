@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.attr
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out5._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
@@ -424,11 +425,11 @@ object OptionalValues extends AsyncTestSuite {
 
 
     "Only optional attributes" - core { implicit conn =>
-      compileError("m(Ns.str$)").check("",
+      expectCompileError("m(Ns.str$)",
         "molecule.core.ops.exception.VerifyRawModelException: " +
           "Molecule has only optional attributes. Please add one or more mandatory/tacit attributes.")
 
-      compileError("m(Ns.str$.int$)").check("",
+      expectCompileError("m(Ns.str$.int$)",
         "molecule.core.ops.exception.VerifyRawModelException: " +
           "Molecule has only optional attributes. Please add one or more mandatory/tacit attributes.")
     }

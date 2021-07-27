@@ -11,6 +11,7 @@ import molecule.core.util.Helpers
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
+import molecule.core.util.testing.expectCompileError
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
@@ -18,8 +19,13 @@ object Adhoc extends AsyncTestSuite with Helpers {
   lazy val tests = Tests {
 
     "adhoc" - core { implicit conn =>
+
+
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+
+
+
 
       } yield ()
     }

@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.nested
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.in3_out9._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -11,13 +12,15 @@ object NestedInput extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "Optional nested" - core { implicit conn =>
-      // Optional nested structures not allowed to have inputs
+    "Input in optional nested not allowed" - core { implicit conn =>
 
-      // No api
-      // Ns.int(?).Refs1.*?(Ref1.int1)
+      expectCompileError("""m(Ns.int(?).Refs1 *? Ref1.int1)""",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Input not allowed in optional nested structures. " +
+          """Found: Atom("Ns", "int", "Int", 1, Qm, None, Seq(), Seq())"""
+      )
 
-      compileError("""m(Ns.int.Refs1 *? Ref1.int1(?))""").check("",
+      expectCompileError("""m(Ns.int.Refs1 *? Ref1.int1(?))""",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Input not allowed in optional nested structures. " +
           """Found: Atom("Ref1", "int1", "Int", 1, Qm, None, Seq(), Seq())"""

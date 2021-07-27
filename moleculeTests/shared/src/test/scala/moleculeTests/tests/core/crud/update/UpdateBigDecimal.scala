@@ -1,11 +1,12 @@
 package moleculeTests.tests.core.crud.update
 
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import utest.{compileError, _}
+import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object UpdateBigDecimal extends AsyncTestSuite {
@@ -126,11 +127,11 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError("""Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> bigDec8).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigDecs.replace(bigDec7 -> bigDec8, bigDec8 -> bigDec8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
               "\n__ident__bigDec8")
 
-          _ = compileError("""Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> bigDec8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).bigDecs.replace(Seq(bigDec7 -> bigDec8, bigDec8 -> bigDec8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/bigDecs`:" +
               "\n__ident__bigDec8")
 

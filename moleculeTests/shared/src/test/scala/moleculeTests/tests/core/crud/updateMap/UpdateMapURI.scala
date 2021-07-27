@@ -1,6 +1,7 @@
 package moleculeTests.tests.core.crud.updateMap
 
 import java.net.URI
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -42,13 +43,13 @@ object UpdateMapURI extends AsyncTestSuite {
           // Can't add pairs with duplicate keys
 
           // vararg
-          _ = compileError(            """Ns(eid).uriMap.assert(str1 -> uri1, str1 -> uri2).update""").check("",
+          _ = expectCompileError("""Ns(eid).uriMap.assert(str1 -> uri1, str1 -> uri2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
               "\n__ident__str1 -> __ident__uri1" +
               "\n__ident__str1 -> __ident__uri2")
 
           // Seq
-          _ = compileError(            """Ns(eid).uriMap.assert(Seq(str1 -> uri1, str1 -> uri2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).uriMap.assert(Seq(str1 -> uri1, str1 -> uri2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
               "\n__ident__str1 -> __ident__uri1" +
               "\n__ident__str1 -> __ident__uri2")
@@ -106,12 +107,12 @@ object UpdateMapURI extends AsyncTestSuite {
 
           // Can't replace pairs with duplicate keys
 
-          _ = compileError(            """Ns(eid).uriMap.replace(str1 -> uri1, str1 -> uri2).update""").check("",
+          _ = expectCompileError("""Ns(eid).uriMap.replace(str1 -> uri1, str1 -> uri2).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
               "\n__ident__str1 -> __ident__uri1" +
               "\n__ident__str1 -> __ident__uri2")
 
-          _ = compileError(            """Ns(eid).uriMap.replace(Seq(str1 -> uri1, str1 -> uri2)).update""").check("",
+          _ = expectCompileError("""Ns(eid).uriMap.replace(Seq(str1 -> uri1, str1 -> uri2)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
               "\n__ident__str1 -> __ident__uri1" +
               "\n__ident__str1 -> __ident__uri2")

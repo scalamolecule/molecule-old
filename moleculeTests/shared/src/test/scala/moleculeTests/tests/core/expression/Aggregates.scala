@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.expression
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out3._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
@@ -532,11 +533,11 @@ object Aggregates extends AsyncTestSuite {
     }
 
     "Map attributes can't use aggregates" - core { implicit conn =>
-      compileError("m(Ns.intMap(min))").check("",
+      expectCompileError("m(Ns.intMap(min))",
         "molecule.core.ops.exception.VerifyRawModelException: Only expression keywords `not` and `unify` can be applied to Map attributes."
       )
 
-      compileError("""m(Ns.intMapK("a")(min))""").check("",
+      expectCompileError("""m(Ns.intMapK("a")(min))""",
         "molecule.core.ops.exception.VerifyRawModelException: Only expression keywords `not` and `unify` can be applied to Map attributes."
       )
     }

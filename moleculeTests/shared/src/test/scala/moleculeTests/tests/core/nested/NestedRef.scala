@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.nested
 
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -179,7 +180,7 @@ object NestedRef extends AsyncTestSuite {
         ))
 
         // Flat card many refs not allowed in optional nested structure
-        _ = compileError("m(Ns.str.Refs1.*?(Ref1.int1.Refs2.int2))").check("",
+        _ = expectCompileError("m(Ns.str.Refs1.*?(Ref1.int1.Refs2.int2))",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "Flat card many ref not allowed with optional nesting. " +
             """Found: Bond("Ref1", "refs2", "Ref2", 2, Seq())""")
@@ -345,7 +346,8 @@ object NestedRef extends AsyncTestSuite {
     }
 
     "Unrelated nested" - core { implicit conn =>
-      compileError("m(Ns.int.Refs1 * Ref2.int2)").check("",
+      expectCompileError("m(Ns.int.Refs1 * Ref2.int2)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
         "`Refs1` can only nest to `Ref1`. Found: `Ref2`"
       )
     }

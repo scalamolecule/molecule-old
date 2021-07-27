@@ -35,10 +35,10 @@ private[molecule] trait LambdaJsonOptNested extends TreeOps {
     case "BigDecimal" => (_: Int, tabs: Int) => q"jsonOptNestedManyToString(sb, $field, it, $tabs)"
   }
 
-  val jsonOptNestedMandatoryAttr: richTree => (Int, Int) => Tree = (t: richTree) =>
+  val jsonOptNestedAttr: richTree => (Int, Int) => Tree = (t: richTree) =>
     if (t.card == 1) jsonOptNestedOneAttr(t.tpeS, t.nameClean) else jsonOptNestedManyAttr(t.tpeS, t.nameClean)
 
-  val jsonOptNestedMandatoryRefAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
+  val jsonOptNestedRefAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     if (t.card == 1)
       (_: Int, tabs: Int) => q"jsonOptNestedOneRefAttr(sb, $field, it)"
@@ -106,7 +106,7 @@ private[molecule] trait LambdaJsonOptNested extends TreeOps {
       (_: Int, tabs: Int) => q"jsonOptNestedOptManyEnum(sb, $field, it, $tabs)"
   }
 
-  val jsonOptNestedMandatoryMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
+  val jsonOptNestedMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     t.tpeS match {
       case "String"     => (_: Int, tabs: Int) => q"jsonOptNestedMapQuoted(sb, $field, it, $tabs)"
@@ -139,21 +139,6 @@ private[molecule] trait LambdaJsonOptNested extends TreeOps {
   }
 
   val jsonOptNestedOptApplyMapAttr: richTree => (Int, Int) => Tree = jsonOptNestedOptMapAttr
-//  val jsonOptNestedOptApplyMapAttr: richTree => (Int, Int) => Tree = (t: richTree) => {
-//    val field = t.nameClean
-//    t.tpeS match {
-//      case "String"     => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
-//      case "Int"        => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMap(sb, $field, row, $colIndex, $tabs)"
-//      case "Long"       => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMap(sb, $field, row, $colIndex, $tabs)"
-//      case "Double"     => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMap(sb, $field, row, $colIndex, $tabs)"
-//      case "Boolean"    => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMap(sb, $field, row, $colIndex, $tabs)"
-//      case "Date"       => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
-//      case "UUID"       => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
-//      case "URI"        => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
-//      case "BigInt"     => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMap(sb, $field, row, $colIndex, $tabs)"
-//      case "BigDecimal" => (_: Int, tabs: Int) => q"jsonOptNestedOptApplyMap(sb, $field, row, $colIndex, $tabs)"
-//    }
-//  }
 
     val jsonOptNestedKeyedMapAttr: (String, String) => (Int, Int) => Tree = (tpe: String, field: String) => {
     tpe match {

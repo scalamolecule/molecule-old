@@ -2,6 +2,7 @@ package moleculeTests.tests.core.crud.update
 
 import java.util.Date
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
@@ -123,11 +124,11 @@ object UpdateDate extends AsyncTestSuite {
 
           // Can't replace duplicate values
 
-          _ = compileError(            """Ns(eid).dates.replace(date7 -> date8, date8 -> date8).update""").check("",
+          _ = expectCompileError("""Ns(eid).dates.replace(date7 -> date8, date8 -> date8).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/dates`:" +
               "\n__ident__date8")
 
-          _ = compileError(            """Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> date8)).update""").check("",
+          _ = expectCompileError("""Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> date8)).update""",
             "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/dates`:" +
               "\n__ident__date8")
 

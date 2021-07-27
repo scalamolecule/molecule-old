@@ -2,6 +2,7 @@ package moleculeTests.tests.core.generic
 
 import molecule.datomic.api.out3._
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
+import molecule.core.util.testing.expectCompileError
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -529,7 +530,7 @@ object SchemaTest extends AsyncTestSuite {
                 "Card one Int attribute"
               ))
               // Fulltext search for multiple words not allowed
-              _ = compileError("""m(Schema.doc.contains("Int", "String"))""").check("",
+              _ = expectCompileError("""m(Schema.doc.contains("Int", "String"))""",
                 "molecule.datomic.base.transform.exception.Model2QueryException: " +
                   "Fulltext search can only be performed with 1 search phrase.")
             } yield res

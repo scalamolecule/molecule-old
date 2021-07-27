@@ -35,10 +35,10 @@ private[molecule] trait LambdaCastOptNested extends TreeOps {
     case "BigDecimal" => (_: Int) => q"castOptNestedManyBigDecimal(it)"
   }
 
-  val castOptNestedMandatoryAttr: richTree => Int => Tree = (t: richTree) =>
+  val castOptNestedAttr: richTree => Int => Tree = (t: richTree) =>
     if (t.card == 1) castOptNestedOneAttr(t.tpeS) else castOptNestedManyAttr(t.tpeS)
 
-  val castOptNestedMandatoryRefAttr: richTree => Int => Tree = (t: richTree) =>
+  val castOptNestedRefAttr: richTree => Int => Tree = (t: richTree) =>
     if (t.card == 1)
       (_: Int) => q"castOptNestedOneRefAttr(it)"
     else
