@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /** Facade to Datomic Connection.
   * */
-trait Conn extends ColOps {
+trait Conn extends ColOps with Serializations {
 
   /** Flag to indicate if we are on the JS or JVM platform */
   val isJsPlatform: Boolean
@@ -84,7 +84,7 @@ trait Conn extends ColOps {
     val futResult = rpc.query(connProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
       val maxRows  = if (n == -1) qr.maxRows else n
       val rows     = new ListBuffer[Tpl]
-      val columns  = qr2tpl(qr) // macro generated extractor
+      val columns  = qr2tpl(qr) // macro generated transformer
       var rowIndex = 0
       while (rowIndex < maxRows) {
         rows += columns(rowIndex)
@@ -107,8 +107,8 @@ trait Conn extends ColOps {
     query: Query,
     n: Int,
     indexes: List[(Int, Int, Int, Int)],
-    qr2list: QueryResult => Int => jList[AnyRef]
-  )(implicit ec: ExecutionContext): Future[util.ArrayList[jList[AnyRef]]] = Future {
+    qr2list: QueryResult => Int => jList[Any]
+  )(implicit ec: ExecutionContext): Future[util.ArrayList[jList[Any]]] = Future {
     val q2s          = Query2String(query)
     val datalogQuery = q2s.multiLine(60)
     val p            = q2s.p
@@ -119,12 +119,9 @@ trait Conn extends ColOps {
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
     val futResult = rpc.query(connProxy, datalogQuery, rules, l, ll, lll, n, indexes).map { qr =>
-
-//      println(qr)
-
       val maxRows  = qr.maxRows // All rows used in nested
-      val rows     = new util.ArrayList[jList[AnyRef]](maxRows)
-      val columns  = qr2list(qr) // macro generated extractor
+      val rows     = new util.ArrayList[jList[Any]](maxRows)
+      val columns  = qr2list(qr) // macro generated transformer
       var rowIndex = 0
       while (rowIndex < maxRows) {
         rows.add(columns(rowIndex))

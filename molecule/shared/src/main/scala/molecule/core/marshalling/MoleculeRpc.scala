@@ -15,9 +15,8 @@ trait MoleculeRpc {
 
   def transact(
     connProxy: ConnProxy,
-    stmtsData: (String,Set[String])
+    stmtsData: (String, Set[String])
   ): Future[TxReportRPC] = transact(connProxy, stmtsData._1, stmtsData._2)
-
 
   def query(
     connProxy: ConnProxy,
@@ -48,9 +47,9 @@ trait MoleculeRpc {
   def tx(connProxy: ConnProxy): Future[Long] = ???
   def txInstant(connProxy: ConnProxy): Future[Date] = ???
 
-//  def entity(connProxy: DbProxy): Future[DatomicEntity] = ???
+  //  def entity(connProxy: DbProxy): Future[DatomicEntity] = ???
 
-//  def pull(pattern: String, eid: Any): Future[]
+  //  def pull(pattern: String, eid: Any): Future[]
 
   def retract(connProxy: ConnProxy, eid: Long) = ???
 

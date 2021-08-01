@@ -59,8 +59,9 @@ private[molecule] trait Dsl2Model extends TreeOps
   import c.universe._
 
   //    private lazy val xx = InspectMacro("Dsl2Model", 133, 143)
-  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 101, 800)
+    private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+//  private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
   //  private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
@@ -104,7 +105,9 @@ private[molecule] trait Dsl2Model extends TreeOps
     var postCasts: List[Int => Tree]        = List.empty[Int => Tree]
     var postJsons: List[(Int, Int) => Tree] = List.empty[(Int, Int) => Tree]
 
-    var isOptNested          : Boolean         = false
+    var isOptNestedCheck: Boolean = false
+    var isOptNested     : Boolean = dsl.toString.contains(".*?[")
+
     var optNestedLevel       : Int             = 0
     var optNestedRefIndexes  : List[List[Int]] = List(List.empty[Int])
     var optNestedTacitIndexes: List[List[Int]] = List(List.empty[Int])
@@ -113,9 +116,21 @@ private[molecule] trait Dsl2Model extends TreeOps
     var typess        : List[List[Tree]]        = List(List.empty[Tree])
     var castss        : List[List[Int => Tree]] = List(List.empty[Int => Tree])
     var indexes       : List[(Int, Int, Int)]   = List.empty[(Int, Int, Int)]
-    var arrayIndexes  : Map[Int, Int]           = Map.empty[Int, Int]
-    var obj           : BuilderObj              = BuilderObj("", "", 0, Nil)
-    var objLevel      : Int                     = 0
+
+    case class Indexes(
+      colIndex: Int,
+      castIndex: Int,
+      arrayType: Int,
+      arrayIndex: Int,
+      post: Boolean = false,
+      nested: List[Indexes] = Nil
+    )
+    var indexes2: List[List[Indexes]] = List(List.empty[Indexes])
+    //    var indexes2: List[Indexes] = List.empty[Indexes]
+
+    var arrayIndexes: Map[Int, Int] = Map.empty[Int, Int]
+    var obj         : BuilderObj    = BuilderObj("", "", 0, Nil)
+    var objLevel    : Int           = 0
 
     var tx        : String       = ""
     var nestedRefs: List[String] = List.empty[String]
@@ -150,9 +165,18 @@ private[molecule] trait Dsl2Model extends TreeOps
       obj = addNode(obj, BuilderProp(t.nsFull + "_" + t.name.replace('$', '_'), t.name, tpe, cast, json, aggrTpe), objLevel)
     }
 
-    def updateIndexes(): Unit = {
-      arrayIndexes = arrayIndexes + (ii._2 -> (arrayIndexes.getOrElse(ii._2, -1) + 1))
-      indexes = (ii._1, ii._2, arrayIndexes(ii._2)) :: indexes
+    def updateIndexes(colIndex: Int = 0): Unit = {
+      val (castIndex, arrayType) = ii
+
+      arrayIndexes = arrayIndexes + (arrayType -> (arrayIndexes.getOrElse(arrayType, -1) + 1))
+      val arrayIndex = arrayIndexes(arrayType)
+      indexes = (castIndex, arrayType, arrayIndex) :: indexes
+
+
+      val nextIndexes = Indexes(colIndex, castIndex, arrayType, arrayIndexes(arrayType), post)
+      indexes2 = (nextIndexes :: indexes2.head) :: indexes2.tail
+      //      indexes2 = nextIndexes :: indexes2
+
       ii = (-1, -1)
     }
 
@@ -168,15 +192,17 @@ private[molecule] trait Dsl2Model extends TreeOps
         case Some((_, aggrTpe)) => aggrTpe
         case None               => getType(t)
       })
+
+      t.name
       if (post) {
-        postTypes = tpe +: postTypes
-        postCasts = cast +: postCasts
-        postJsons = json +: postJsons
+        postTypes = tpe :: postTypes
+        postCasts = cast :: postCasts
+        postJsons = json :: postJsons
         if (doAddProp)
           addProp(t, tpe, cast, json, optAggr)
       } else {
-        typess = (tpe :: typess.head) +: typess.tail
-        castss = (cast :: castss.head) +: castss.tail
+        typess = (tpe :: typess.head) :: typess.tail
+        castss = (cast :: castss.head) :: castss.tail
         if (doAddProp)
           addProp(t, tpe, cast, json, optAggr)
       }
@@ -184,19 +210,19 @@ private[molecule] trait Dsl2Model extends TreeOps
     }
 
     def addLambdas(
+      t: richTree,
       cast: richTree => Int => Tree,
-      json: richTree => (Int, Int) => Tree,
-      t: richTree
+      json: richTree => (Int, Int) => Tree
     ): Unit = {
       if (t.name.last != '_') {
         if (post) {
-          postTypes = getType(t) +: postTypes
-          postCasts = cast(t) +: postCasts
-          postJsons = json(t) +: postJsons
+          postTypes = getType(t) :: postTypes
+          postCasts = cast(t) :: postCasts
+          postJsons = json(t) :: postJsons
           addProp(t, getType(t), cast(t), json(t))
         } else {
-          typess = (getType(t) :: typess.head) +: typess.tail
-          castss = (cast(t) :: castss.head) +: castss.tail
+          typess = (getType(t) :: typess.head) :: typess.tail
+          castss = (cast(t) :: castss.head) :: castss.tail
           addProp(t, getType(t), cast(t), json(t))
         }
         updateIndexes()
@@ -240,7 +266,10 @@ private[molecule] trait Dsl2Model extends TreeOps
       }
     }
 
-    def resolve(tree: Tree): Seq[Element] = {
+    def resolve(tree: Tree, forceNotOptNested: Boolean = false): Seq[Element] = {
+      if (forceNotOptNested)
+        isOptNested = false
+
       if (first) {
         val p = richTree(tree)
         if (p.tpe_ <:< typeOf[GenericNs]) p.tpe_ match {
@@ -295,7 +324,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
         case q"$prev.$manyRef.*?[..$types]($nested)" =>
           xx(501, manyRef)
-          isOptNested = true
+          isOptNestedCheck = true
           resolveOptNested(prev, richTree(prev), manyRef, nested)
 
         case q"$prev.+[..$types]($subComposite)" =>
@@ -334,9 +363,9 @@ private[molecule] trait Dsl2Model extends TreeOps
             List(BuilderObj(nsCls, ns, 1, props ++ composites))
 
           case compositeObj@BuilderObj(compositeCls, _, _, _) if sameNs && nsCls == compositeCls =>
-            compositeObj.copy(props = props ++ compositeObj.props) +: composites.tail
+            compositeObj.copy(props = props ++ compositeObj.props) :: composites.tail
 
-          case _ => BuilderObj(nsCls, ns, 1, props) +: composites
+          case _ => BuilderObj(nsCls, ns, 1, props) :: composites
         }
         xx(631, props, composites, newP)
         newP
@@ -415,18 +444,18 @@ private[molecule] trait Dsl2Model extends TreeOps
       } else if (t.isMapAttr) {
         xx(132, t.tpeS)
         if (isOptNested)
-          addLambdas(castOptNestedMapAttr, jsonOptNestedMapAttr, t)
+          addLambdas(t, castOptNestedMapAttr, jsonOptNestedMapAttr)
         else
-          addLambdas(castMapAttr, jsonMapAttr, t)
+          addLambdas(t, castMapAttr, jsonMapAttr)
 
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr) {
-        xx(133, t.tpeS, t.nsFull, t.name, isOptNested, optNestedLevel)
+        xx(133, t.tpeS, t.nsFull, t.name, post, isOptNested, optNestedLevel)
         if (isOptNested)
-          addLambdas(castOptNestedAttr, jsonOptNestedAttr, t)
+          addLambdas(t, castOptNestedAttr, jsonOptNestedAttr)
         else
-          addLambdas(castAttr, jsonAttr, t)
+          addLambdas(t, castAttr, jsonAttr)
 
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t)))
 
@@ -444,7 +473,7 @@ private[molecule] trait Dsl2Model extends TreeOps
         val refCls  = t.nsFull + "__" + refName
         if (objCompositesCount > 0) {
           val (props, composites) = obj.props.splitAt(obj.props.length - objCompositesCount)
-          val newProps            = BuilderObj(refCls, refName, 1, props) +: composites
+          val newProps            = BuilderObj(refCls, refName, 1, props) :: composites
           obj = obj.copy(props = newProps)
           xx(152, props, composites, newProps, obj)
 
@@ -466,9 +495,9 @@ private[molecule] trait Dsl2Model extends TreeOps
       } else if (t.isRefAttr) {
         xx(136, t.tpeS)
         if (isOptNested)
-          addLambdas(castOptNestedRefAttr, jsonOptNestedRefAttr, t)
+          addLambdas(t, castOptNestedRefAttr, jsonOptNestedRefAttr)
         else
-          addLambdas(castAttr, jsonAttr, t)
+          addLambdas(t, castAttr, jsonAttr)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
@@ -485,33 +514,33 @@ private[molecule] trait Dsl2Model extends TreeOps
       } else if (t.isEnum$) {
         xx(141, t.tpeS, optNestedLevel)
         if (isOptNested)
-          addLambdas(castOptNestedOptEnum, jsonOptNestedOptEnum, t)
+          addLambdas(t, castOptNestedOptEnum, jsonOptNestedOptEnum)
         else
-          addLambdas(castOptEnum, jsonOptEnum, t)
+          addLambdas(t, castOptEnum, jsonOptEnum)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t)))
 
       } else if (t.isMapAttr$) {
         xx(142, t.tpeS)
         if (isOptNested)
-          addLambdas(castOptNestedOptMapAttr, jsonOptNestedOptMapAttr, t)
+          addLambdas(t, castOptNestedOptMapAttr, jsonOptNestedOptMapAttr)
         else
-          addLambdas(castOptMapAttr, jsonOptMapAttr, t)
+          addLambdas(t, castOptMapAttr, jsonOptMapAttr)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr$) {
         xx(143, t.tpeS, typess, postTypes, optNestedLevel, isOptNested)
         if (isOptNested)
-          addLambdas(castOptNestedOptAttr, jsonOptNestedOptAttr, t)
+          addLambdas(t, castOptNestedOptAttr, jsonOptNestedOptAttr)
         else
-          addLambdas(castOptAttr, jsonOptAttr, t)
+          addLambdas(t, castOptAttr, jsonOptAttr)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t)))
 
       } else if (t.isRefAttr$) {
         xx(144, t.tpeS)
         if (isOptNested)
-          addLambdas(castOptNestedOptRefAttr, jsonOptNestedOptRefAttr, t)
+          addLambdas(t, castOptNestedOptRefAttr, jsonOptNestedOptRefAttr)
         else
-          addLambdas(castOptRefAttr, jsonOptRefAttr, t)
+          addLambdas(t, castOptRefAttr, jsonOptRefAttr)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
@@ -529,22 +558,22 @@ private[molecule] trait Dsl2Model extends TreeOps
 
       } else if (t.isEnum) {
         if (optNestedLevel > 0)
-          castss = (castOptNestedOptEnum(t) :: castss.head) +: castss.tail
+          castss = (castOptNestedOptEnum(t) :: castss.head) :: castss.tail
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t)))
 
       } else if (t.isMapAttr) {
         if (optNestedLevel > 0)
-          castss = (castOptNestedOptMapAttr(t) :: castss.head) +: castss.tail
+          castss = (castOptNestedOptMapAttr(t) :: castss.head) :: castss.tail
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr) {
         if (optNestedLevel > 0)
-          castss = (castOptNestedOptAttr(t) :: castss.head) +: castss.tail
+          castss = (castOptNestedOptAttr(t) :: castss.head) :: castss.tail
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t)))
 
       } else if (t.isRefAttr) {
         if (optNestedLevel > 0)
-          castss = (castOptNestedOptRefAttr(t) :: castss.head) +: castss.tail
+          castss = (castOptNestedOptRefAttr(t) :: castss.head) :: castss.tail
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
@@ -635,11 +664,11 @@ private[molecule] trait Dsl2Model extends TreeOps
         abort("Schema attributes that are present with all attribute definitions are not allowed to be optional.")
 
       case "unique$" =>
-        addLambdas(castOptEnum, if (isOptNested) jsonOptNestedOptEnum else jsonOptEnum, t)
+        addLambdas(t, castOptEnum, if (isOptNested) jsonOptNestedOptEnum else jsonOptEnum)
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue))
 
       case optionalSchemaAttr =>
-        addLambdas(castOptAttr, if (isOptNested) jsonOptNestedOptAttr else jsonOptAttr, t)
+        addLambdas(t, castOptAttr, if (isOptNested) jsonOptNestedOptAttr else jsonOptAttr)
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue))
     }
 
@@ -751,7 +780,7 @@ private[molecule] trait Dsl2Model extends TreeOps
               }
             case "optional"  =>
               if (aggrType.isEmpty) {
-                addLambdas(castOptApplyAttr, jsonOptApplyAttr, t)
+                addLambdas(t, castOptApplyAttr, jsonOptApplyAttr)
                 traverseElement(prev, p, Generic("Schema", attrStr, "schema", value))
               } else {
                 abort(s"Can only apply `count` to mandatory generic attribute. Please remove `$$` from `$attrStr`")
@@ -1032,12 +1061,12 @@ private[molecule] trait Dsl2Model extends TreeOps
         }
       } else if (t.isMapAttr) {
         xx(94, attrStr, value)
-        addLambdas(castMapAttr, if (isOptNested) jsonOptNestedMapAttr else jsonMapAttr, t)
+        addLambdas(t, castMapAttr, if (isOptNested) jsonOptNestedMapAttr else jsonMapAttr)
         Atom(t.nsFull, attrStr, t.tpeS, 3, value, None, bi(tree, t))
 
       } else if (t.isMapAttr$) {
         xx(95, attrStr, value)
-        addLambdas(castOptApplyMapAttr, if (isOptNested) jsonOptNestedOptApplyMapAttr else jsonOptApplyMapAttr, t)
+        addLambdas(t, castOptApplyMapAttr, if (isOptNested) jsonOptNestedOptApplyMapAttr else jsonOptApplyMapAttr)
         Atom(t.nsFull, attrStr, t.tpeS, 3, value, None, bi(tree, t))
 
       } else if (t.isRefAttr) {
@@ -1117,6 +1146,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+
       xx(523, nestedElement, post, prev, manyRef, nested, obj)
       traverseElement(prev, p, nestedElement)
     }
@@ -1134,6 +1164,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+      indexes2 = List.empty[Indexes] :: indexes2
       xx(526, nestedElement, post)
       traverseElement(prev, p, nestedElement)
     }
@@ -1237,16 +1268,16 @@ private[molecule] trait Dsl2Model extends TreeOps
         xx(81, attr)
         if (t.name.last != '$') {
           if (isOptNested)
-            addLambdas(castOptNestedAttr, jsonOptNestedAttr, t)
+            addLambdas(t, castOptNestedAttr, jsonOptNestedAttr)
           else
-            addLambdas(castAttr, jsonAttr, t)
+            addLambdas(t, castAttr, jsonAttr)
         } else {
           if (isOptNested)
-            addLambdas(castOptNestedOptAttr, jsonOptNestedOptAttr, t)
+            addLambdas(t, castOptNestedOptAttr, jsonOptNestedOptAttr)
           else if (apply)
-            addLambdas(castOptApplyAttr, jsonOptApplyAttr, t)
+            addLambdas(t, castOptApplyAttr, jsonOptApplyAttr)
           else
-            addLambdas(castOptAttr, jsonOptAttr, t)
+            addLambdas(t, castOptAttr, jsonOptAttr)
         }
       } else {
         xx(82, attr, s"aggrType: '$aggrType'", t.card, t.tpeS, tpeStr)
@@ -1697,10 +1728,14 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     // Init ======================================================================================================
 
-    val elements: Seq[Element] = resolve(dsl)
+    val elements0: Seq[Element] = resolve(dsl)
 
 
     // Post-process optional nested structures
+
+    // Re-generate if finding ".*?]" in dsl was not really a optional nested structure
+    val forceNotOptNested      = isOptNested && !isOptNestedCheck
+    val elements: Seq[Element] = if (forceNotOptNested) resolve(dsl, forceNotOptNested) else elements0
 
     if (isOptNested) {
       def markRefIndexes(elements: Seq[Element], level: Int): (Int, Int) = {
@@ -1738,8 +1773,8 @@ private[molecule] trait Dsl2Model extends TreeOps
               case _                                                                                       =>
                 abort(s"Expressions not allowed within optional nested structures. Found: $a")
             }
-          case ((_, _), e)                                  =>
-            abort(s"Expressions not allowed within optional nested structures. Found: $e")
+
+          case ((l, i), e) => (l, i + 1)
         }
       }
       markRefIndexes(elements, 0)
@@ -1777,6 +1812,8 @@ private[molecule] trait Dsl2Model extends TreeOps
       streamlineObj(elements.head)
     }
 
+    xx(802, indexes2, post, postTypes, postCasts)
+
     if (post) {
       // no nested, so transfer
       typess = List(postTypes)
@@ -1789,14 +1826,19 @@ private[molecule] trait Dsl2Model extends TreeOps
     //    xx(801, elements, types, casts)
     xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetaCompositesCount, postTypes, postCasts, post)
 
-    val indexes2 = indexes.zipWithIndex.map { case ((a, b, c), i) => (i, a, b, arrayIndexes(b) - c) }
+
+    val indexes1 = indexes.zipWithIndex.map { case ((a, b, c), i) => (i, a, b, arrayIndexes(b) - c) }
+
+    xx(803, indexes1)
+
+    //    val indexes3 = indexes2.map { case Indexes(colIndex, ) => (i, a, b, arrayIndexes(b) - c) }
 
     // Return checked model
     (
       genericImports,
       Model(VerifyRawModel(elements, false)),
       typess, castss,
-      indexes2, obj,
+      indexes1, obj,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,

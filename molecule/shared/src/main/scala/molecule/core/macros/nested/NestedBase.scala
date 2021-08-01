@@ -61,17 +61,17 @@ trait NestedBase[Obj, Tpl]
 
 
   // java.util.Comparator sorting interface implemented by NestedTuples subclasses (`rows.sort(this)`)
-  // Tuples (descending true) : Sorting backwards, building from leaf to branches
-  // Json   (descending false): Sorting from outer to nested levels, level by level
   def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
     sortIndex = 0
     result = 0
     if (descending) {
+      // Tuples: Sorting backwards, building from leaf to branches
       do {
         result = (-a.get(sortIndex).asInstanceOf[jLong]).compareTo(-b.get(sortIndex).asInstanceOf[jLong])
         sortIndex += 1 // 1 level deeper
       } while (sortIndex < levels && result == 0)
     } else {
+      // Json: Sorting from outer to nested levels, level by level
       do {
         result = a.get(sortIndex).asInstanceOf[jLong].compareTo(b.get(sortIndex).asInstanceOf[jLong])
         sortIndex += 1 // 1 level deeper

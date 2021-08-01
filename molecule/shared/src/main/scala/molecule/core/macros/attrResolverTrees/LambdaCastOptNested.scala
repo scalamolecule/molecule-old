@@ -9,17 +9,17 @@ private[molecule] trait LambdaCastOptNested extends TreeOps {
   import c.universe._
 
   val castOptNestedOneAttr: String => Int => Tree = {
-    case "String"     => (_: Int) => q"castOptNestedOne[String](it)"
-    case "Int"        => (_: Int) => q"castOptNestedOneInt(it)"
-    case "Long"       => (_: Int) => q"castOptNestedOne[Long](it)"
-    case "Double"     => (_: Int) => q"castOptNestedOne[Double](it)"
-    case "Boolean"    => (_: Int) => q"castOptNestedOne[Boolean](it)"
-    case "Date"       => (_: Int) => q"castOptNestedOne[Date](it)"
-    case "UUID"       => (_: Int) => q"castOptNestedOne[UUID](it)"
-    case "URI"        => (_: Int) => q"castOptNestedOne[URI](it)"
-    case "BigInt"     => (_: Int) => q"castOptNestedOneBigInt(it)"
-    case "BigDecimal" => (_: Int) => q"castOptNestedOneBigDecimal(it)"
-    case "Any"        => (colIndex: Int) => q"row.get($colIndex)" // todo?
+    case "String"     => ii = (0, 0); (_: Int) => q"castOptNestedOne[String](it)"
+    case "Int"        => ii = (1, 1); (_: Int) => q"castOptNestedOneInt(it)"
+    case "Long"       => ii = (3, 2); (_: Int) => q"castOptNestedOne[Long](it)"
+    case "Double"     => ii = (4, 3); (_: Int) => q"castOptNestedOne[Double](it)"
+    case "Boolean"    => ii = (5, 4); (_: Int) => q"castOptNestedOne[Boolean](it)"
+    case "Date"       => ii = (6, 5); (_: Int) => q"castOptNestedOne[Date](it)"
+    case "UUID"       => ii = (7, 6); (_: Int) => q"castOptNestedOne[UUID](it)"
+    case "URI"        => ii = (8, 7); (_: Int) => q"castOptNestedOne[URI](it)"
+    case "BigInt"     => ii = (9, 8); (_: Int) => q"castOptNestedOneBigInt(it)"
+    case "BigDecimal" => ii = (10, 9); (_: Int) => q"castOptNestedOneBigDecimal(it)"
+    case "Any"        => ii = (11, 0); (colIndex: Int) => q"row.get($colIndex)" // todo?
   }
 
   val castOptNestedManyAttr: String => Int => Tree = {

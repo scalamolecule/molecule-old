@@ -1,6 +1,7 @@
 package molecule.core.macros.nested
 
 import java.lang.{Long => jLong}
+import java.util
 import java.util.{List => jList}
 import molecule.core.api.Molecule_0
 import molecule.datomic.base.facade.Conn
@@ -8,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Builder classes of various arity of nested tuples. */
-trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
+trait JsOptNestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def tplBranch0(row: jList[AnyRef], leaf: List[Any]): Tpl = ???
   protected def tplBranch1(row: jList[AnyRef], leaf: List[Any]): Any = ???
@@ -67,9 +68,9 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
 }
 
 
-object NestedTuples {
+object JsOptNestedTuples {
 
-  trait NestedTuples1[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait JsOptNestedTuples1[Obj, OuterTpl] extends JsOptNestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -80,8 +81,48 @@ object NestedTuples {
           conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
-        val last                                     = rows.size
+        val rows1: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+
+        val rows2 = new util.ArrayList[jList[Any]](2)
+
+
+        {
+          val row = new util.ArrayList[Any](2)
+          row.add(17592186045456L)
+          row.add(0L)
+          row.add("B")
+          row.add(null)
+          //          row.add(null)
+          rows2.add(row)
+        }
+        {
+          val row = new util.ArrayList[Any](2)
+          row.add(17592186045453L)
+          row.add(17592186045454L)
+          row.add("A")
+          row.add(1)
+          val map = new java.util.HashMap[Any, Any](1)
+          map.put(":Ns/str", "a")
+          row.add(map)
+          rows2.add(row)
+        }
+        {
+          val row = new util.ArrayList[Any](2)
+          row.add(17592186045453L)
+          row.add(17592186045455L)
+          row.add("A")
+          row.add(2)
+          row.add(null)
+          rows2.add(row)
+        }
+
+
+        val rows = rows2.asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        rows2.forEach(r => println(r))
+        println("------")
+        rows.forEach(r => println(r))
+
+        val last = rows.size
 
         if (last == 0) {
           List.empty[OuterTpl]
@@ -98,30 +139,36 @@ object NestedTuples {
             i += 1
             row = it.next
             e0 = row.get(0).asInstanceOf[jLong]
+            e1 = row.get(1).asInstanceOf[jLong]
+            val ee1 = e1
 
             if (nextRow) {
               if (i == last) {
                 if (e0 != p0) {
                   acc0 = tplBranch0(prevRow, acc1) :: acc0
 
-                  acc1 = List(tplLeaf1(row))
+                  acc1 = if (e1 == 0L) Nil else List(tplLeaf1(row))
                   acc0 = tplBranch0(row, acc1) :: acc0
 
                 } else /* e1 != p1 */ {
-                  acc1 = tplLeaf1(row) :: acc1
+                  acc1 = (if (e1 == 0L) Nil else tplLeaf1(row)) :: acc1
                   acc0 = tplBranch0(row, acc1) :: acc0
                 }
 
               } else if (e0 != p0) {
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
-                acc1 = List(tplLeaf1(row))
+                acc1 = if (e1 == 0L) Nil else List(tplLeaf1(row))
 
               } else /* e1 != p1 */ {
                 acc1 = tplLeaf1(row) :: acc1
               }
             } else {
-              acc1 = List(tplLeaf1(row))
+              //              acc1 = List(tplLeaf1(row))
+              acc1 = if (e1 == 0L)
+                Nil
+              else
+                List(tplLeaf1(row))
               nextRow = true
             }
 
@@ -135,7 +182,7 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples2[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait JsOptNestedTuples2[Obj, OuterTpl] extends JsOptNestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -220,7 +267,7 @@ object NestedTuples {
     }
   }
 
-  trait NestedTuples3[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait JsOptNestedTuples3[Obj, OuterTpl] extends JsOptNestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -331,7 +378,7 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples4[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait JsOptNestedTuples4[Obj, OuterTpl] extends JsOptNestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -472,7 +519,7 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples5[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait JsOptNestedTuples5[Obj, OuterTpl] extends JsOptNestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -648,7 +695,7 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples6[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait JsOptNestedTuples6[Obj, OuterTpl] extends JsOptNestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
@@ -864,7 +911,7 @@ object NestedTuples {
   }
 
 
-  trait NestedTuples7[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait JsOptNestedTuples7[Obj, OuterTpl] extends JsOptNestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {

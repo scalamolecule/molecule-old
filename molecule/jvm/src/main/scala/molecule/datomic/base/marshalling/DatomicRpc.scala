@@ -1,6 +1,6 @@
 package molecule.datomic.base.marshalling
 
-import java.io.StringReader
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream, StringReader}
 import java.util
 import java.util.{Collections, Date, List => jList, Set => jSet}
 import datomic.Util
@@ -43,6 +43,22 @@ object DatomicRpc extends MoleculeRpc
         txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
       )
     }
+  }
+
+
+  def serialize(value: Any): Array[Byte] = {
+    val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
+    val oos = new ObjectOutputStream(stream)
+    oos.writeObject(value)
+    oos.close()
+    stream.toByteArray
+  }
+
+  def deserialize(bytes: Array[Byte]): Any = {
+    val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
+    val value = ois.readObject
+    ois.close()
+    value
   }
 
   def query(

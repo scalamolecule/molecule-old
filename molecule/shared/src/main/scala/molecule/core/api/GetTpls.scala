@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import java.util.Date
+import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps
@@ -46,12 +46,12 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * simply named `get` (and not `getList`).
     *
     * @group get
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
     _inputThrowable.fold(
-      conn.flatMap { conn =>
+      futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
           conn.queryJs(_query, -1, indexes, qr2tpl)
         } else {
@@ -81,20 +81,20 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * simply named `get` (and not `getList`).
     *
     * @group get
-    * @param n    Int Number of rows returned
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @param n       Int Number of rows returned
+    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def get(n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  def get(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
     _inputThrowable.fold(
-      conn.flatMap { conn2 =>
-        if (conn2.isJsPlatform) {
-          conn2.queryJs(_query, n, indexes, qr2tpl)
+      futConn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          conn.queryJs(_query, n, indexes, qr2tpl)
         } else {
           if (n == -1) {
-            get(conn, ec)
+            get(futConn, ec)
           } else {
-            conn2.query(_model, _query).map { jColl =>
+            conn.query(_model, _query).map { jColl =>
               val size = jColl.size
               val max  = if (size < n) size else n
               if (max == 0) {
@@ -113,7 +113,7 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
           }
         }
       }
-    )(Future.failed) // Pass on exception from input failure
+    )(Future.failed) // Wrap exception from input failure in Future
   }
 
 

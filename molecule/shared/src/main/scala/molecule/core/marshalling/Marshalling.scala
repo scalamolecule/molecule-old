@@ -30,7 +30,7 @@ abstract class Marshalling[Obj, Tpl](
 
   // JVM ......................
 
-  /** Adds row as json to a mutable StringBuffer for fast build-up. */
+  /** Adds row as json to a mutable StringBuffer for fast build-up. Built by macro */
   protected def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
 
 
@@ -60,7 +60,7 @@ abstract class Marshalling[Obj, Tpl](
   protected def qr2tpl(qr: QueryResult): Int => Tpl = ???
 
 
-  protected def qr2list(qr: QueryResult): Int => jList[AnyRef] = ???
+  protected def qr2list(qr: QueryResult): Int => jList[Any] = ???
 
 
 

@@ -185,15 +185,10 @@ abstract class Molecule_0[Obj, Tpl](
     * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about
     * the result of the save transaction.
     * {{{
-    *   val futureSave: Future[TxReport] = Person.name("Ben").age(42).saveAsync
-    *
     *   for {
-    *     _ <- futureSave
-    *     result <- Person.name.age.getAsync
-    *   } yield {
-    *     // Data was saved
-    *     result.head ==> ("Ben", 42)
-    *   }
+    *     _ <- Person.name("Ben").age(42).save
+    *     _ <- Person.name.age.get.map(_.head ==> ("Ben", 42))
+    *   } yield ()
     * }}}
     * The save operation is asynchronous and non-blocking. Internally calls Datomic's asynchronous API.
     *

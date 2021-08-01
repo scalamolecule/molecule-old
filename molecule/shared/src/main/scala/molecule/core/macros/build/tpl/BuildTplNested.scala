@@ -32,6 +32,13 @@ private[molecule] trait BuildTplNested extends BuildBase {
       colIndex += 1
       castLambda(colIndex)
     }
+    /*
+    final override def tplBranch0(row: java.util.List[AnyRef], subBranches: List[Any]): scala.Tuple2[String, Seq[(Int, Option[String])]] =
+      scala.Tuple2(castOne[String](row, 2), subBranches.asInstanceOf[List[scala.Tuple2[Int, Option[String]]]]);
+
+    final override def tplLeaf1(row: java.util.List[AnyRef]): Any =
+      scala.Tuple2(castOneInt(row, 3), castOptOne[String](row, 4));
+ */
 
     def branch0until(subLevels: () => Tree): Tree = if (postCasts.isEmpty) {
       q"""

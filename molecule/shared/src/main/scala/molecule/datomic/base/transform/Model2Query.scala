@@ -35,7 +35,8 @@ object Model2Query extends Helpers {
 
     // Resolve elements
     val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) {
-      case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) => make(model, query_, element, e, v, prevNs, prevAttr, prevRefNs)
+      case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) =>
+        make(model, query_, element, e, v, prevNs, prevAttr, prevRefNs)
     }._1
 
     // Resolve AND clauses
@@ -230,7 +231,7 @@ object Model2Query extends Helpers {
       val q2         = query
         .copy(f = find2)
         .func("identity", Seq(Var(nestedE)), ScalarBinding(Var(pullScalar)))
-      (q2, "", "", "", "", "")
+      (q2, e, v, "", "", "")
     } else {
       // Mandatory nested values - where clauses
       val (e2, elements2)                 = if (nsFull == "")
