@@ -17,7 +17,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
     val (
       genericImports, model0,
       typess, castss,
-      indexes, obj,
+      flatIndexes, nestedIndexes, obj,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,

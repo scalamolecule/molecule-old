@@ -1,23 +1,28 @@
 package molecule.datomic.base.marshalling
 
 import java.util
-import molecule.core.marshalling.QueryResult
+import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
+import molecule.core.macros.attrResolvers.JsonBase
+import molecule.core.marshalling.{Indexes, QueryResult}
 import molecule.datomic.base.marshalling.cast.CastLambdas
 
-case class NestedRows2QueryResult(
+case class OptNestedRows2QueryResult(
   rowCollection: java.util.Collection[java.util.List[AnyRef]],
   rowCountAll: Int,
   maxRows: Int,
   queryMs: Long,
-  indexes: List[(Int, Int, Int, Int)]
-) extends CastLambdas(maxRows) {
-  val rows                        = rowCollection.iterator
-  var row: java.util.List[AnyRef] = _
-  var i                           = 0
+  refIndexes: List[List[Int]],
+  tacitIndexes: List[List[Int]],
+  flatIndexes: List[(Int, Int, Int, Int)],
+  nestedIndexes: List[Indexes]
+) extends CastLambdas(maxRows) with JsonBase {
+  var rows: util.Iterator[jList[AnyRef]] = rowCollection.iterator
+  var row : java.util.List[AnyRef]       = _
+  var i                                  = 0
 
   def get: QueryResult = {
     // Populate mutable arrays
-    indexes.size match {
+    nestedIndexes.size match {
       case 1   => get1()
       case 2   => get2()
       case 3   => get3()
@@ -217,12 +222,50 @@ case class NestedRows2QueryResult(
     )
   }
 
-  def getCastingLambda(colIndex: Int): (util.List[AnyRef], Int) => Unit = {
-    castLambdas(indexes(colIndex)._2)(colIndex)
+  def getCastingLambda(localColIndex: Int): (util.List[AnyRef], Int) => Unit = {
+    //    castLambdas(flatIndexes(rowIndex)._2)(rowIndex)
+
+
+    def resolve(indexes: Indexes): (util.List[AnyRef], Int) => Unit = {
+      indexes match {
+        case Indexes(_, colIndex, castIndex, arrayType, arrayIndex, post, Nil) =>
+          castLambdas(castIndex)(colIndex)
+
+        case Indexes(_, colIndex, castIndex, arrayType, arrayIndex, post, nested) =>
+          (row: util.List[AnyRef], rowIndex: Int) => {
+            row.get(rowIndex) match {
+              case null | "__none__" =>
+                // todo: empty list?
+                ()
+
+              case last              =>
+                val list      = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
+                val attrCount = 1
+                val deeper    = true
+                val level     = 0
+                val it        = extractFlatValues(list, attrCount, refIndexes(level + 1), tacitIndexes(level + 1), deeper)
+                nested
+            }
+          }
+      }
+    }
+
+    resolve(nestedIndexes(localColIndex))
   }
+
 
   // See indexes in cast.CastLambdas
   //  println("indexes:\n  " + indexes.mkString("\n  "))
+
+  def test = {
+    nestedIndexes.map {
+      case Indexes(_, colIndex, castIndex, arrayType, arrayIndex, post, Nil)    =>
+        val castLambda: (util.List[AnyRef], Int) => Unit = castLambdas(castIndex)(colIndex)
+      case Indexes(_, colIndex, castIndex, arrayType, arrayIndex, post, nested) =>
+
+        val castLambda: (util.List[AnyRef], Int) => Unit = castLambdas(castIndex)(colIndex)
+    }
+  }
 
   def get1() = {
     // Casting lambda for first column

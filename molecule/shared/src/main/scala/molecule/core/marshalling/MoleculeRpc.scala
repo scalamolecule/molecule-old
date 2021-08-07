@@ -26,7 +26,9 @@ trait MoleculeRpc {
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    indexes: List[(Int, Int, Int, Int)]
+    flatIndexes: List[(Int, Int, Int, Int)],
+    nestedIndexes: List[Indexes],
+    isOptNested: Boolean
   ): Future[QueryResult]
 
 

@@ -7,7 +7,7 @@ import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 
-/** Builder classes of various arity of nested tuples. */
+/** Nested tuple builder classes of various levels. */
 trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def tplBranch0(row: jList[AnyRef], leaf: List[Any]): Tpl = ???
@@ -75,7 +75,7 @@ object NestedTuples {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -141,7 +141,7 @@ object NestedTuples {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -226,7 +226,7 @@ object NestedTuples {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -337,7 +337,7 @@ object NestedTuples {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -478,7 +478,7 @@ object NestedTuples {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -654,7 +654,7 @@ object NestedTuples {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -870,7 +870,7 @@ object NestedTuples {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {

@@ -4,6 +4,7 @@ import java.net.URI
 import java.util.{Date, UUID}
 import molecule.core.ast.elements._
 import molecule.core.macros.MacroHelpers
+import molecule.core.marshalling.{IndexContainer, Indexes}
 import molecule.core.ops.exception.LiftablesException
 import molecule.datomic.base.ast.query.{NestedAttrs, _}
 import scala.collection.immutable.HashSet
@@ -105,6 +106,14 @@ private[molecule] trait Liftables extends MacroHelpers {
     case other                          => abort(s"Can't lift unexpected product type: $other")
   }
 
+  implicit val liftIndexes: c.universe.Liftable[Indexes] = Liftable[Indexes] { i =>
+    val nestedIndexes = i.nested.map(n => q"$n")
+    q"Indexes(${i.attr}, ${i.colIndex}, ${i.castIndex}, ${i.arrayType}, ${i.arrayIndex}, ${i.post}, List(..${nestedIndexes}))"
+  }
+
+  implicit val liftIndexContainer: c.universe.Liftable[IndexContainer] = Liftable[IndexContainer] {
+    case indexes: Indexes => q"$indexes"
+  }
 
   // Liftables for Throwables --------------------------------------------------------------
 

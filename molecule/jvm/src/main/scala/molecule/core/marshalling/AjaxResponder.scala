@@ -16,6 +16,7 @@ import sloth._
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
+import chameleon.ext.boopickle._
 
 /** Akka Http Ajax responder implementation
   *

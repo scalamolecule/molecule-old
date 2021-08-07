@@ -48,14 +48,14 @@ object DatomicRpc extends MoleculeRpc
 
   def serialize(value: Any): Array[Byte] = {
     val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
-    val oos = new ObjectOutputStream(stream)
+    val oos                           = new ObjectOutputStream(stream)
     oos.writeObject(value)
     oos.close()
     stream.toByteArray
   }
 
   def deserialize(bytes: Array[Byte]): Any = {
-    val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
+    val ois   = new ObjectInputStream(new ByteArrayInputStream(bytes))
     val value = ois.readObject
     ois.close()
     value
@@ -69,7 +69,9 @@ object DatomicRpc extends MoleculeRpc
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    indexes: List[(Int, Int, Int, Int)]
+    flatIndexes: List[(Int, Int, Int, Int)],
+    nestedIndexes: List[Indexes],
+    isOptNested: Boolean
   ): Future[QueryResult] = try {
     val log       = new log
     val t         = TimerPrint("DatomicRpc")
@@ -105,12 +107,18 @@ object DatomicRpc extends MoleculeRpc
       //      val v        = it.next().get(0)
       //      println(s"v1: $v  ${v.getClass}")
 
-      println(indexes)
+      println(flatIndexes)
       allRows.forEach(println)
 
-      val queryResult = Rows2QueryResult(
-        allRows, rowCountAll, rowCount, queryTime, indexes
-      ).get
+      val queryResult = if (isOptNested)
+        OptNestedRows2QueryResult(
+          allRows, rowCountAll, rowCount, queryTime, Nil, Nil, Nil, Nil
+        ).get
+      else
+        Rows2QueryResult(
+          allRows, rowCountAll, rowCount, queryTime, flatIndexes
+        ).get
+
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)
       //        log("Sending data to client... Total server time: " + t.msTotal)

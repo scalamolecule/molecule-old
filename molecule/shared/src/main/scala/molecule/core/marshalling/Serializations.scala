@@ -1,6 +1,5 @@
 package molecule.core.marshalling
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 import java.net.URI
 import java.nio.ByteBuffer
 import boopickle.Default._

@@ -25,7 +25,7 @@ private[molecule] trait Base extends Dsl2Model {
         import molecule.core.exceptions.MoleculeException
         ..$genericImports
         import molecule.core.macros.qr.TypedCastHelpers
-        import molecule.core.marshalling.{MoleculeRpc, QueryResult}
+        import molecule.core.marshalling.{Indexes, MoleculeRpc, QueryResult}
         import molecule.core.ops.ModelOps._
         import molecule.datomic.base.ast.query._
         import molecule.datomic.base.transform.{Model2Query, QueryOptimizer}
@@ -79,12 +79,12 @@ private[molecule] trait Base extends Dsl2Model {
 
 
   def resolveIndexes(
-    indexes0: List[(Int, Int, Int, Int)],
+    flatIndexes0: List[(Int, Int, Int, Int)],
     nestedLevels: Int
   ): (List[(Int, Int, Int, Int)], List[c.universe.Tree], List[c.universe.Tree]) = {
-    val indexes           = if (nestedLevels == 0) indexes0 else {
+    val flatIndexes           = if (nestedLevels == 0) flatIndexes0 else {
       val nestedIndexes = (0 until nestedLevels).toList.map(i => (i, 3, 2, i))
-      val dataIndexes   = indexes0.map {
+      val dataIndexes   = flatIndexes0.map {
         case (colIndex, castIndex, 2, arrayIndex)         =>
           // One Long array type where nested eid indexes are transferred
           (colIndex + nestedLevels, castIndex, 2, arrayIndex + nestedLevels)
@@ -93,14 +93,14 @@ private[molecule] trait Base extends Dsl2Model {
       }
       nestedIndexes ++ dataIndexes
     }
-    val (arrays, lookups) = indexes.map {
+    val (arrays, lookups) = flatIndexes.map {
       // Generic `v` of type Any needs to be cast on JS side
       case (colIndex, 11, arrayType, arrayIndex)        =>
         (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
       case (colIndex, castIndex, arrayType, arrayIndex) =>
         (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
     }.unzip
-    (indexes, arrays, lookups)
+    (flatIndexes, arrays, lookups)
   }
 
 

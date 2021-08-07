@@ -77,7 +77,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
       for {
         conn <- conn
         jColl0 <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_query, -1, indexes, qr2list)
+          conn.queryFlatJs(_query, -1, flatIndexes, qr2list)
         else
           conn.query(_model, _query)
       } yield {

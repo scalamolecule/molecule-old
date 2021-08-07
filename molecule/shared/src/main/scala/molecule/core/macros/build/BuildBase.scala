@@ -23,7 +23,7 @@ trait BuildBase extends TreeOps {
   ) extends BuilderNode {
     override def toString: String = {
       // Since the cast lambda is just an object reference, we simply add null so that we can copy/paste
-      s"""BuilderProp("$cls", "$prop", "$tpe", <cast-lambda>, <json-lambda>, $optAggrTpe)"""
+      s"""BuilderProp("$cls", "$prop", "$tpe", <cast>, <json>, $optAggrTpe)"""
     }
   }
 

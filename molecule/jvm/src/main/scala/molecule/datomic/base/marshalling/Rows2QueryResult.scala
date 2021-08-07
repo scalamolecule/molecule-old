@@ -9,7 +9,7 @@ case class Rows2QueryResult(
   rowCountAll: Int,
   maxRows: Int,
   queryMs: Long,
-  indexes: List[(Int, Int, Int, Int)]
+  flatIndexes: List[(Int, Int, Int, Int)]
 ) extends CastLambdas(maxRows) {
   val rows                        = rowCollection.iterator
   var row: java.util.List[AnyRef] = _
@@ -17,7 +17,7 @@ case class Rows2QueryResult(
 
   def get: QueryResult = {
     // Populate mutable arrays
-    indexes.size match {
+    flatIndexes.size match {
       case 1   => get1()
       case 2   => get2()
       case 3   => get3()
@@ -218,7 +218,7 @@ case class Rows2QueryResult(
   }
 
   def getCastingLambda(colIndex: Int): (util.List[AnyRef], Int) => Unit = {
-    castLambdas(indexes(colIndex)._2)(colIndex)
+    castLambdas(flatIndexes(colIndex)._2)(colIndex)
   }
 
   // See indexes in cast.CastLambdas

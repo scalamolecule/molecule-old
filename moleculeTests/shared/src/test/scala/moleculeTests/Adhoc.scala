@@ -55,32 +55,42 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        ))
 
 
-        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3_(1)) insert List(
-          (true, List("a", "b")),
-          (false, Nil)
+//        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3_(1)) insert List(
+//          (true, List("a", "b")),
+//          (false, Nil)
+//        )
+////
+////        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
+////          (true, List("a", "b"), 1)
+////        ))
+//
+//        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).inspectGet
+//        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
+//          (true, List("a", "b"), 1),
+//          (false, Nil, 1)
+//        ))
+
+//        _ <- Ns.str.Refs1.*(Ref1.int1$.str1).Tx(Ref3.int3_(1)) insert List(
+//
+//          ("E", List())
+//        )
+
+
+        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
+          ("A", List((Some(11), Some(12), "a"))),
+          ("B", List((Some(13), None, "b"))),
+          ("C", List((None, Some(14), "c"))),
+          ("D", List((None, None, "d"))),
+          ("E", List())
         )
 
-        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
-          (true, List("a", "b"), 1)
-        ))
-
-        //        _ = {
-        //          val model = Model(List(
-        //            Atom("Ns", "bool", "Boolean", 1, VarValue, None, Seq(), Seq()),
-        //            Nested(
-        //              Bond("Ns", "refs1$", "Ref1", 2, Seq()),
-        //              List(
-        //                Atom("Ref1", "str1", "String", 1, VarValue, None, Seq(), Seq()))),
-        //            TxMetaData(List(
-        //              Atom("Ref3", "int3", "Int", 1, VarValue, None, Seq(), Seq())))))
-        //
-        //          val q = Model2Query(model)
-        //          q
-        //        }
-
-        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
-          (true, List("a", "b"), 1),
-          (false, Nil, 1)
+        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).inspectGet
+        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+          ("A", List((Some(11), Some(12), "a")), 1),
+          ("B", List((Some(13), None, "b")), 1),
+          ("C", List((None, Some(14), "c")), 1),
+          ("D", List((None, None, "d")), 1),
+          ("E", List(), 1)
         ))
 
 

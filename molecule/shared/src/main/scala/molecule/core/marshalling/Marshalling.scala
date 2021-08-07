@@ -25,7 +25,10 @@ abstract class Marshalling[Obj, Tpl](
     * - arrayIndex, index within Seq of a specific type of data array
     * (two String attributes will occupy two String arrays and then have index 0 and 1 for instance)
     */
-  protected lazy val indexes: List[(Int, Int, Int, Int)] = ???
+  protected lazy val flatIndexes  : List[(Int, Int, Int, Int)] = ???
+  protected lazy val nestedIndexes: List[Indexes]              = ???
+  protected lazy val isOptNested  : Boolean                    = ???
+
 
 
   // JVM ......................
@@ -63,7 +66,6 @@ abstract class Marshalling[Obj, Tpl](
   protected def qr2list(qr: QueryResult): Int => jList[Any] = ???
 
 
-
   protected def json2obj(json: String): Obj = ???
   protected def json2tpl(json: String): Tpl = ???
   protected def json2list(json: String): jList[AnyRef] = ???
@@ -72,7 +74,7 @@ abstract class Marshalling[Obj, Tpl](
   // Generic `v` of type Any needs to be cast on JS side
   protected def castV(s: String): Any = {
     val v = s.drop(10)
-    s.take(10) match{
+    s.take(10) match {
       case "String    " => v
       case "Integer   " => v.toInt
       case "Long      " => v.toLong
