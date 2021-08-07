@@ -1,6 +1,6 @@
 package molecule.core.macros.nested
 
-import java.util.{List => jList}
+import java.util.{List => jList, Collection => jCollection}
 import molecule.core.api.Molecule_0
 import molecule.core.ast.elements.Composite
 import molecule.core.macros.attrResolvers.JsonBase
@@ -19,7 +19,7 @@ trait OptNestedJson[Obj, Tpl] extends JsonBase { self: Molecule_0[Obj, Tpl] =>
         else
           conn.query(_model, _query)
       } yield {
-        val rows = rows0.asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows = rows0.asInstanceOf[jCollection[jList[AnyRef]]]
         val count = rows.size
         val sb    = new StringBuffer()
         var next  = false

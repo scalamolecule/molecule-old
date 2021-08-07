@@ -1,10 +1,12 @@
 package moleculeTests.tests.core.build.flat
 
 import molecule.datomic.api.out11._
+import moleculeTests.Adhoc.{core, uuid1, uuid2}
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.control.NonFatal
 
 object Many extends AsyncTestSuite {
 
@@ -210,24 +212,43 @@ object Many extends AsyncTestSuite {
       for {
         _ <- Ns.uuids insert Set(uuid1, uuid2)
 
-//        _ <- Ns.uuids.get.map(_.head.toList.sortBy(_.toString) ==> List(uuid1, uuid2))
         _ <- Ns.uuids.get.map(_.head.toList.sortBy(_.toString) ==> List(uuid1, uuid2))
 
         _ <- Ns.uuids.getObj.map(_.uuids.toList.sortBy(_.toString) ==> List(uuid1, uuid2))
 
-        _ <- Ns.uuids.getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "uuids": [
-             |          "$uuid1",
-             |          "$uuid2"
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+        // Order of set elements is not guaranteed
+        _ <- Ns.uuids.getJson.map(json =>
+          try {
+            json ==>
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      {
+                 |        "uuids": [
+                 |          "$uuid1",
+                 |          "$uuid2"
+                 |        ]
+                 |      }
+                 |    ]
+                 |  }
+                 |}""".stripMargin
+          } catch {
+            case NonFatal(e) =>
+              json ==>
+                s"""{
+                   |  "data": {
+                   |    "Ns": [
+                   |      {
+                   |        "uuids": [
+                   |          "$uuid2",
+                   |          "$uuid1"
+                   |        ]
+                   |      }
+                   |    ]
+                   |  }
+                   |}""".stripMargin
+          }
+        )
       } yield ()
     }
 
@@ -334,7 +355,7 @@ object Many extends AsyncTestSuite {
 
     "Ref attr" - core { implicit conn =>
       for {
-        List(refId1, refId2) <- Ref1.int1.insert(1,2).map(_.eids)
+        List(refId1, refId2) <- Ref1.int1.insert(1, 2).map(_.eids)
         _ <- Ns.refs1(refId1, refId2).save
 
         _ <- Ns.refs1.get.map(_.head ==> Set(refId1, refId2))

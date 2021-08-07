@@ -79,7 +79,7 @@ Run commands below to perform these 3 operations:
 
 ## STEP 6 - Create molecule samples (once)
 
-Run `molecule.setup.RecreateTestDbs` in molecule-tests to create sample databases. This is necessary before starting the peer server so that it can "see" the mbrainz-subset db.
+Run `moleculeTests.restore.RecreateTestDbs` in shared moleculeTests (main) to create sample databases. This is necessary before starting the peer server so that it can "see" the mbrainz-subset db.
 
 
 ## STEP 7 - Start peer server

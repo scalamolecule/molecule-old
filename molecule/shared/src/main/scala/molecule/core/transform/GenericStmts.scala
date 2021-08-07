@@ -193,15 +193,15 @@ abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
     composite: Any = "e"
   ): Any = {
     bi match {
-      case BiTargetRef(_, _) => {
+      case BiTargetRef(_, _) =>
         val lastEdgeNs = attr.split("/").head
         stmts.reverse.collectFirst {
           case Add(e: TempId, a, _, _) if a.startsWith(lastEdgeNs) => e
         } getOrElse err("lastE",
           s"Couldn't find namespace `$lastEdgeNs` in any previous Add statements:\n"
             + stmts.mkString("\n"))
-      }
-      case _                 => {
+
+      case _ =>
         if (forcedE != 0L) {
           forcedE
         } else if (stmts.isEmpty) {
@@ -217,7 +217,6 @@ abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
         } else {
           stmts.last.e
         }
-      }
     }
   }
 

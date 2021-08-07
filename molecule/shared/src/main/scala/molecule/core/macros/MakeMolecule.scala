@@ -221,7 +221,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       else
         q"lazy val tpl: Product = tpl0"
 
-      val transformers1 =
+      val transformers =
         q"""
           ..$jsTransformers
           ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
@@ -231,7 +231,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           }
           ..${buildJsonNested(obj, nestedRefs, postJsons).get}
          """
-      val transformers =
+      val transformers1 =
         q"""
           ..$jsTransformers
           ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}

@@ -7,6 +7,7 @@ import moleculeTests.tests.core.base.dsl.CoreTest._
 import moleculeTests.tests.core.nested.NestedAttrs1.core
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
 object NestedRef extends AsyncTestSuite {
@@ -337,6 +338,7 @@ object NestedRef extends AsyncTestSuite {
       //    } yield ()
     }
 
+
     "Applied eid" - core { implicit conn =>
       for {
         eid <- Ns.str.Refs1.*(Ref1.int1).insert("a", List(1, 2)).map(_.eid)
@@ -345,11 +347,33 @@ object NestedRef extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Unrelated nested" - core { implicit conn =>
       expectCompileError("m(Ns.int.Refs1 * Ref2.int2)",
         "molecule.core.transform.exception.Dsl2ModelException: " +
         "`Refs1` can only nest to `Ref1`. Found: `Ref2`"
       )
+    }
+
+
+    "With tx meta data" - core { implicit conn =>
+      for {
+        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
+          ("A", List((Some(11), Some(12), "a"))),
+          ("B", List((Some(13), None, "b"))),
+          ("C", List((None, Some(14), "c"))),
+          ("D", List((None, None, "d"))),
+          ("E", List())
+        )
+
+        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+          ("A", List((Some(11), Some(12), "a")), 1),
+          ("B", List((Some(13), None, "b")), 1),
+          ("C", List((None, Some(14), "c")), 1),
+          ("D", List((None, None, "d")), 1),
+          ("E", List(), 1)
+        ))
+      } yield ()
     }
   }
 }

@@ -1198,7 +1198,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
               valueStmts(stmts, lastE(stmts, a, 0L, bi), a, edgeA, None, bi, edgeB1).map((cur, edgeB1, _))
 
             case (None, Add("e", a, refNs: String, bi)) if !refNs.startsWith("__") =>
-              valueStmts(stmts, lastE(stmts, a, 0L, bi), a, tempId(refNs), None, bi, edgeB).map((cur, edgeB, _))
+              valueStmts(stmts, lastE(stmts, a, forcedE, bi), a, tempId(refNs), None, bi, edgeB).map((cur, edgeB, _))
 
             case (None, _) =>
               Future((next, edgeB, stmts))

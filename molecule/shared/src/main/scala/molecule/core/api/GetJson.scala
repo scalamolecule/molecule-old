@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import java.util.{List => jList}
+import java.util.{List => jList, Collection => jCollection}
 import molecule.core.ast.elements.{Atom, Bond, Composite}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
@@ -81,7 +81,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         else
           conn.query(_model, _query)
       } yield {
-        val jColl = jColl0.asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val jColl = jColl0.asInstanceOf[jCollection[jList[AnyRef]]]
         val count = jColl.size()
         val rows  = jColl.iterator()
         val sb    = new StringBuffer()

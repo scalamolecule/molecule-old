@@ -14,15 +14,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
+import molecule.datomic.peer.facade.Datomic_Peer
+import moleculeTests.tests.core.base.schema.CoreTestSchema
+import scala.util.control.NonFatal
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
 
   lazy val tests = Tests {
 
-    "adhoc" - core { implicit conn =>
-
-
+    "core" - core { implicit conn =>
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
 
@@ -55,25 +56,34 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        ))
 
 
-//        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3_(1)) insert List(
-//          (true, List("a", "b")),
-//          (false, Nil)
-//        )
-////
-////        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
-////          (true, List("a", "b"), 1)
-////        ))
-//
-//        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).inspectGet
-//        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
-//          (true, List("a", "b"), 1),
-//          (false, Nil, 1)
-//        ))
+        //        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3_(1)) insert List(
+        //          (true, List("a", "b")),
+        //          (false, Nil)
+        //        )
+        ////
+        ////        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
+        ////          (true, List("a", "b"), 1)
+        ////        ))
+        //
+        //        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).inspectGet
+        //        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
+        //          (true, List("a", "b"), 1),
+        //          (false, Nil, 1)
+        //        ))
 
-//        _ <- Ns.str.Refs1.*(Ref1.int1$.str1).Tx(Ref3.int3_(1)) insert List(
-//
-//          ("E", List())
-//        )
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.str1).Tx(Ref3.int3_(1)) insert List(
+        //
+        //          ("E", List())
+        //        )
+
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2) inspectInsert List(
+        ////          ("A", List((Some(11), Some(12), "a"))),
+        ////          ("B", List((Some(13), None, "b"))),
+        ////          ("C", List((None, Some(14), "c"))),
+        //          ("D", List((None, None, "d"))),
+        ////          ("E", List())
+        //        )
 
 
         _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
@@ -98,10 +108,6 @@ object Adhoc extends AsyncTestSuite with Helpers {
     }
 
 
-
-
-
-
     //    "adhoc" - products { implicit conn =>
     //      import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
     //
@@ -111,7 +117,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //    }
 
 
-    //    "query" - mbrainz { implicit conn =>
+    //    "mbrainz" - mbrainz { implicit conn =>
     //      import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
     //      val ledZeppelinUUID = UUID.fromString("678d88b2-87b0-403b-b63d-5da7465aecc3")
     //
