@@ -4,6 +4,7 @@ import java.util.{UUID, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
 import molecule.core.macros.qr.CastArrays
+import molecule.core.marshalling.attrIndexes.Indexes
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
 
@@ -17,18 +18,9 @@ abstract class Marshalling[Obj, Tpl](
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
 ) extends Molecule(model, queryData) with Helpers {
 
-  /** Indexes to resolve marshalling for each attribute value in a row:
-    *
-    * - colIndex, column index of the attribute (index in output row from Datomic result)
-    * - castIndex, index for cast code in jvm: molecule.datomic.base.marshalling.cast.CastLambdas.castLambdas
-    * - arrayType, index for data array type in [[CastArrays.dataArrays]]
-    * - arrayIndex, index within Seq of a specific type of data array
-    * (two String attributes will occupy two String arrays and then have index 0 and 1 for instance)
-    */
-  protected lazy val flatIndexes  : List[(Int, Int, Int, Int)] = ???
-  protected lazy val nestedIndexes: List[Indexes]              = ???
-  protected lazy val isOptNested  : Boolean                    = ???
-
+  /** Indexes to resolve marshalling for each attribute value in a row. */
+  protected lazy val indexes    : Indexes = ???
+  protected lazy val isOptNested: Boolean = ???
 
 
   // JVM ......................

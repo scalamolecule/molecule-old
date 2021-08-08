@@ -15,7 +15,7 @@ trait OptNestedJson[Obj, Tpl] extends JsonBase { self: Molecule_0[Obj, Tpl] =>
       for {
         conn <- futConn
         rows0 <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_query, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_query, -1, indexes, qr2list)
         else
           conn.query(_model, _query)
       } yield {

@@ -5,6 +5,7 @@ import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.marshalling._
+import molecule.core.marshalling.attrIndexes.Indexes
 import molecule.core.ops.ColOps
 import molecule.core.transform.Model2Stmts
 import molecule.datomic.base.api.DatomicEntity
@@ -69,8 +70,7 @@ trait Conn extends ColOps with Serializations {
   private[molecule] def queryJs[Tpl](
     query: Query,
     n: Int,
-    flatIndexes: List[(Int, Int, Int, Int)],
-    nestedIndexes: List[Indexes],
+    indexes: Indexes,
     isOptNested: Boolean,
     qr2tpl: QueryResult => Int => Tpl
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
@@ -84,7 +84,7 @@ trait Conn extends ColOps with Serializations {
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
     val futResult = rpc.query(
-      connProxy, datalogQuery, rules, l, ll, lll, n, flatIndexes, nestedIndexes, isOptNested
+      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, isOptNested
     ).map { qr =>
       val maxRows  = if (n == -1) qr.maxRows else n
       val rows     = new ListBuffer[Tpl]
@@ -110,7 +110,7 @@ trait Conn extends ColOps with Serializations {
   private[molecule] def queryFlatJs(
     query: Query,
     n: Int,
-    flatIndexes: List[(Int, Int, Int, Int)],
+    indexes: Indexes,
     qr2list: QueryResult => Int => jList[Any]
   )(implicit ec: ExecutionContext): Future[util.ArrayList[jList[Any]]] = Future {
     val q2s          = Query2String(query)
@@ -123,7 +123,7 @@ trait Conn extends ColOps with Serializations {
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
     val futResult = rpc.query(
-      connProxy, datalogQuery, rules, l, ll, lll, n, flatIndexes, Nil, false
+      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, false
     ).map { qr =>
       val maxRows  = qr.maxRows // All rows used in nested
       val rows     = new util.ArrayList[jList[Any]](maxRows)

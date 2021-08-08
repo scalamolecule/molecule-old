@@ -22,7 +22,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     val (
       genericImports, model0,
       typess, castss,
-      flatIndexes, nestedIndexes, obj,
+      obj, indexes,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,
@@ -166,7 +166,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         //            (i: Int) => $lookups
         //          }
         //          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-        //          final override lazy val flatIndexes: List[(Int, Int, Int, Int)] = $indexes
+        //          final override lazy val indexes: Indexes = $indexes
         //        """
         q"""
           final override protected def json2tpl(json: String): (..$TplTypes) = ???

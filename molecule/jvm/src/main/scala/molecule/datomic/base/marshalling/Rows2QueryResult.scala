@@ -2,6 +2,7 @@ package molecule.datomic.base.marshalling
 
 import java.util
 import molecule.core.marshalling.QueryResult
+import molecule.core.marshalling.attrIndexes._
 import molecule.datomic.base.marshalling.cast.CastLambdas
 
 case class Rows2QueryResult(
@@ -9,7 +10,7 @@ case class Rows2QueryResult(
   rowCountAll: Int,
   maxRows: Int,
   queryMs: Long,
-  flatIndexes: List[(Int, Int, Int, Int)]
+  indexes: Indexes
 ) extends CastLambdas(maxRows) {
   val rows                        = rowCollection.iterator
   var row: java.util.List[AnyRef] = _
@@ -17,7 +18,7 @@ case class Rows2QueryResult(
 
   def get: QueryResult = {
     // Populate mutable arrays
-    flatIndexes.size match {
+    indexes.attrs.size match {
       case 1   => get1()
       case 2   => get2()
       case 3   => get3()
@@ -218,7 +219,7 @@ case class Rows2QueryResult(
   }
 
   def getCastingLambda(colIndex: Int): (util.List[AnyRef], Int) => Unit = {
-    castLambdas(flatIndexes(colIndex)._2)(colIndex)
+    castLambdas(indexes.attrs(colIndex).asInstanceOf[AttrIndex].castIndex)(colIndex)
   }
 
   // See indexes in cast.CastLambdas

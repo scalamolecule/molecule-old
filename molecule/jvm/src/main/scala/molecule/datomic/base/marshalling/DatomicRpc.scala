@@ -8,6 +8,7 @@ import datomic.Util._
 import datomicClient.ClojureBridge
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
+import molecule.core.marshalling.attrIndexes.Indexes
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
 import molecule.datomic.base.facade._
@@ -69,8 +70,7 @@ object DatomicRpc extends MoleculeRpc
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    flatIndexes: List[(Int, Int, Int, Int)],
-    nestedIndexes: List[Indexes],
+    indexes: Indexes,
     isOptNested: Boolean
   ): Future[QueryResult] = try {
     val log       = new log
@@ -107,16 +107,16 @@ object DatomicRpc extends MoleculeRpc
       //      val v        = it.next().get(0)
       //      println(s"v1: $v  ${v.getClass}")
 
-      println(flatIndexes)
+      println(indexes)
       allRows.forEach(println)
 
       val queryResult = if (isOptNested)
         OptNestedRows2QueryResult(
-          allRows, rowCountAll, rowCount, queryTime, Nil, Nil, Nil, Nil
+          allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes
         ).get
       else
         Rows2QueryResult(
-          allRows, rowCountAll, rowCount, queryTime, flatIndexes
+          allRows, rowCountAll, rowCount, queryTime, indexes
         ).get
 
       // log("QueryResult: " + queryResult)

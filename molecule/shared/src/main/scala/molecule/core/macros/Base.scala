@@ -3,6 +3,7 @@ package molecule.core.macros
 import molecule.core.ast.elements._
 import molecule.core.macros.qr.CastArrays
 import molecule.core.macros.attrResolverTrees.{LambdaCastAggr, LambdaCastOptNested, LambdaCastTypes, LambdaJsonAggr, LambdaJsonOptNested, LambdaJsonTypes}
+import molecule.core.marshalling.attrIndexes._
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import scala.collection.mutable.ListBuffer
@@ -25,7 +26,8 @@ private[molecule] trait Base extends Dsl2Model {
         import molecule.core.exceptions.MoleculeException
         ..$genericImports
         import molecule.core.macros.qr.TypedCastHelpers
-        import molecule.core.marshalling.{Indexes, MoleculeRpc, QueryResult}
+        import molecule.core.marshalling.{MoleculeRpc, QueryResult}
+        import molecule.core.marshalling.attrIndexes._
         import molecule.core.ops.ModelOps._
         import molecule.datomic.base.ast.query._
         import molecule.datomic.base.transform.{Model2Query, QueryOptimizer}
@@ -78,46 +80,80 @@ private[molecule] trait Base extends Dsl2Model {
   }
 
 
+//  def resolveIndexesOLD(
+//    flatIndexes0: List[(Int, Int, Int, Int)],
+//    nestedLevels: Int
+//  ): (List[(Int, Int, Int, Int)], List[c.universe.Tree], List[c.universe.Tree]) = {
+//    val flatIndexes       = if (nestedLevels == 0) flatIndexes0 else {
+//      val nestedIndexes = (0 until nestedLevels).toList.map(i => (i, 3, 2, i))
+//      val dataIndexes   = flatIndexes0.map {
+//        case (colIndex, castIndex, 2, arrayIndex)         =>
+//          // One Long array type where nested eid indexes are transferred
+//          (colIndex + nestedLevels, castIndex, 2, arrayIndex + nestedLevels)
+//        case (colIndex, castIndex, arrayType, arrayIndex) =>
+//          (colIndex + nestedLevels, castIndex, arrayType, arrayIndex)
+//      }
+//      nestedIndexes ++ dataIndexes
+//    }
+//    val (arrays, lookups) = flatIndexes.map {
+//      // Generic `v` of type Any needs to be cast on JS side
+//      case (colIndex, 11, arrayType, arrayIndex)        =>
+//        (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
+//      case (colIndex, castIndex, arrayType, arrayIndex) =>
+//        (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
+//    }.unzip
+//    (flatIndexes, arrays, lookups)
+//  }
+
+
   def resolveIndexes(
-    flatIndexes0: List[(Int, Int, Int, Int)],
+    indexes: Indexes,
     nestedLevels: Int
-  ): (List[(Int, Int, Int, Int)], List[c.universe.Tree], List[c.universe.Tree]) = {
-    val flatIndexes           = if (nestedLevels == 0) flatIndexes0 else {
-      val nestedIndexes = (0 until nestedLevels).toList.map(i => (i, 3, 2, i))
-      val dataIndexes   = flatIndexes0.map {
-        case (colIndex, castIndex, 2, arrayIndex)         =>
-          // One Long array type where nested eid indexes are transferred
-          (colIndex + nestedLevels, castIndex, 2, arrayIndex + nestedLevels)
-        case (colIndex, castIndex, arrayType, arrayIndex) =>
-          (colIndex + nestedLevels, castIndex, arrayType, arrayIndex)
+  ): (List[c.universe.Tree], List[c.universe.Tree]) = {
+    var colIndex = -1
+    var arrays   = List.empty[c.universe.Tree]
+    var lookups  = List.empty[c.universe.Tree]
+
+    def recurse(indexes: Indexes): Unit = {
+      // Nested eid indexes
+      (0 until nestedLevels).toList.foreach { i =>
+        colIndex += 1
+        arrays = arrays :+ dataArrays(2)(colIndex, colIndex)
+        lookups = lookups :+ q"${TermName("a" + colIndex)}(i)"
       }
-      nestedIndexes ++ dataIndexes
+      // Data
+      indexes.attrs.foreach {
+        case AttrIndex(_, castIndex, arrayType, arrayIndex, _) =>
+          colIndex += 1
+          arrays = arrays :+ dataArrays(arrayType)(colIndex, arrayIndex)
+          val lookup = if (castIndex == 11)
+            q"castV(${TermName("a" + colIndex)}(i))"
+          else
+            q"${TermName("a" + colIndex)}(i)"
+          lookups = lookups :+ lookup
+
+        case ii: Indexes => recurse(ii)
+      }
     }
-    val (arrays, lookups) = flatIndexes.map {
-      // Generic `v` of type Any needs to be cast on JS side
-      case (colIndex, 11, arrayType, arrayIndex)        =>
-        (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
-      case (colIndex, castIndex, arrayType, arrayIndex) =>
-        (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
-    }.unzip
-    (flatIndexes, arrays, lookups)
+    recurse(indexes)
+    (arrays, lookups)
   }
 
 
-//  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
-//    var i              = -1 + offset
-//    var subTupleFields = Seq.empty[Tree]
-//    val subTuples      = castss.flatMap {
-//      case Nil   => None
-//      case casts =>
-//        subTupleFields = casts.map { c =>
-//          i += 1
-//          c(i)
-//        }
-//        Some(q"(..$subTupleFields)")
-//    }
-//    subTuples
-//  }
+  //  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
+  //    var i              = -1 + offset
+  //    var subTupleFields = Seq.empty[Tree]
+  //    val subTuples      = castss.flatMap {
+  //      case Nil   => None
+  //      case casts =>
+  //        subTupleFields = casts.map { c =>
+  //          i += 1
+  //          c(i)
+  //        }
+  //        Some(q"(..$subTupleFields)")
+  //    }
+  //    subTuples
+  //  }
 
   def compositeLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): Seq[Tree] = {
     var i              = -1 + offset
@@ -134,33 +170,33 @@ private[molecule] trait Base extends Dsl2Model {
     subTuples
   }
 
-//  def compositeJsons(jsonss: List[List[(Int, Int) => Tree]]): ListBuffer[Tree] = {
-//    var fieldIndex = -1
-//    var firstGroup = true
-//    var firstPair  = true
-//    val buf        = new ListBuffer[Tree]
-//    jsonss.foreach { jsonLambdas =>
-//      if (firstGroup) firstGroup = false else buf.append(q"""sb.append(", ")""")
-//      buf.append(q"""sb.append("{")""")
-//      firstPair = true
-//      jsonLambdas.foreach { jsonLambda =>
-//        fieldIndex += 1
-//        if (firstPair) firstPair = false else buf.append(q"""sb.append(", ")""")
-//        buf.append(jsonLambda(fieldIndex, 0)) // level 0 ok?
-//      }
-//      buf.append(q"""sb.append("}")""")
-//    }
-//    buf
-//  }
+  //  def compositeJsons(jsonss: List[List[(Int, Int) => Tree]]): ListBuffer[Tree] = {
+  //    var fieldIndex = -1
+  //    var firstGroup = true
+  //    var firstPair  = true
+  //    val buf        = new ListBuffer[Tree]
+  //    jsonss.foreach { jsonLambdas =>
+  //      if (firstGroup) firstGroup = false else buf.append(q"""sb.append(", ")""")
+  //      buf.append(q"""sb.append("{")""")
+  //      firstPair = true
+  //      jsonLambdas.foreach { jsonLambda =>
+  //        fieldIndex += 1
+  //        if (firstPair) firstPair = false else buf.append(q"""sb.append(", ")""")
+  //        buf.append(jsonLambda(fieldIndex, 0)) // level 0 ok?
+  //      }
+  //      buf.append(q"""sb.append("}")""")
+  //    }
+  //    buf
+  //  }
 
 
-//  def topLevel(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
-//    var i = -1 + offset
-//    castss.head.map { cast =>
-//      i += 1
-//      cast(i)
-//    }
-//  }
+  //  def topLevel(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
+  //    var i = -1 + offset
+  //    castss.head.map { cast =>
+  //      i += 1
+  //      cast(i)
+  //    }
+  //  }
 
   def topLevelLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): List[Tree] = {
     var i = -1 + offset

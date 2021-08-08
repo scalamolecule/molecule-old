@@ -1,6 +1,7 @@
 package molecule.core.marshalling
 
 import java.util.Date
+import molecule.core.marshalling.attrIndexes.Indexes
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade.TxReportRPC
 import scala.concurrent.Future
@@ -26,8 +27,7 @@ trait MoleculeRpc {
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    flatIndexes: List[(Int, Int, Int, Int)],
-    nestedIndexes: List[Indexes],
+    indexes: Indexes,
     isOptNested: Boolean
   ): Future[QueryResult]
 

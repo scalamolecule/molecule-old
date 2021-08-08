@@ -22,7 +22,6 @@ trait BuildBase extends TreeOps {
     optAggrTpe: Option[String] = None
   ) extends BuilderNode {
     override def toString: String = {
-      // Since the cast lambda is just an object reference, we simply add null so that we can copy/paste
       s"""BuilderProp("$cls", "$prop", "$tpe", <cast>, <json>, $optAggrTpe)"""
     }
   }
@@ -40,7 +39,7 @@ trait BuildBase extends TreeOps {
           case BuilderObj(cls, ref, card, props) =>
             s"""|${s}BuilderObj("$cls", "$ref", $card, List(
                 |${draw(props, indent + 1).mkString(s",\n")}))""".stripMargin
-          case prop                              => s"$s$prop"
+          case prop                              => s + prop
         }
       }
       draw(Seq(this), 0).head
@@ -144,8 +143,8 @@ trait BuildBase extends TreeOps {
   }
 
 
-  def addRef(obj: BuilderObj, refCls: String, refName: String, card: Int, objLevel: Int): BuilderObj = {
-    val newProps = objLevel match {
+  def addRef(obj: BuilderObj, refCls: String, refName: String, card: Int, level: Int): BuilderObj = {
+    val newProps = level match {
       case 0 =>
         List(BuilderObj(refCls, refName, card, obj.props))
 

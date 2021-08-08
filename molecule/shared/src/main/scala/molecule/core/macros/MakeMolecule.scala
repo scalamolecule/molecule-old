@@ -17,7 +17,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     val (
       genericImports, model0,
       typess, castss,
-      flatIndexes0, nestedIndexes, obj,
+      obj, indexes,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
       isOptNested,
@@ -30,7 +30,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     def mkFlat = {
       val transformers = if (isJsPlatform) {
-        val (indexes, arrays, lookups0) = resolveIndexes(flatIndexes0, 0)
+//        val (indexes, arrays, lookups0) = resolveIndexesOLD(flatIndexes0, 0)
+        val (arrays, lookups0) = resolveIndexes(indexes, 0)
 
         val lookups = if (txMetaCompositesCount > 0) {
           // Treat tx meta data as composite
@@ -46,7 +47,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             (i: Int) => $lookups
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-          final override lazy val flatIndexes: List[(Int, Int, Int, Int)] = $indexes
+          final override lazy val indexes: Indexes = $indexes
         """
         //              q"""
         //                final override protected def json2tpl(json: String): (..$TplTypes) = ???
@@ -94,7 +95,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
 
       if (isJsPlatform) {
-        val (flatIndexes, arrays, lookups) = resolveIndexes(flatIndexes0, castss.length)
+//        val (flatIndexes, arrays, lookups) = resolveIndexes(flatIndexes0, castss.length)
+        val (arrays, lookups) = resolveIndexes(indexes, castss.length)
 
         val setters        = lookups.map(lookup => q"list.add($lookup.asInstanceOf[Any])")
         val jsTransformers =
@@ -108,8 +110,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             }
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-          final override lazy val flatIndexes: List[(Int, Int, Int, Int)] = $flatIndexes
-          final override lazy val nestedIndexes: List[Indexes] = $nestedIndexes
+          final override lazy val indexes: Indexes = $indexes
           final override lazy val isOptNested: Boolean = $isOptNested
         """
 
@@ -196,7 +197,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     def mkNested = {
       val jsTransformers = if (isJsPlatform) {
-        val (indexes, arrays, lookups) = resolveIndexes(flatIndexes0, castss.length)
+//        val (indexes, arrays, lookups) = resolveIndexes(flatIndexes0, castss.length)
+        val (arrays, lookups) = resolveIndexes(indexes, castss.length)
 
 //        xx(3, indexes)
 
@@ -211,7 +213,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             }
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-          final override lazy val flatIndexes: List[(Int, Int, Int, Int)] = $indexes
+          final override lazy val indexes: Indexes = $indexes
         """
       } else q""
 
@@ -229,12 +231,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             $tpl
             ${objFlat(obj, isOptNested = true)._1}
           }
-          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
-         """
-      val transformers1 =
-        q"""
-          ..$jsTransformers
-          ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
           ..${buildJsonNested(obj, nestedRefs, postJsons).get}
          """
 

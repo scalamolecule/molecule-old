@@ -142,7 +142,7 @@ object NestedJson {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -204,7 +204,7 @@ object NestedJson {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -273,7 +273,7 @@ object NestedJson {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -350,7 +350,7 @@ object NestedJson {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -436,7 +436,7 @@ object NestedJson {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -532,7 +532,7 @@ object NestedJson {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
@@ -639,7 +639,7 @@ object NestedJson {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, flatIndexes, qr2list)
+          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
         else
           conn.query(_model, _nestedQuery.get)
       } yield {
