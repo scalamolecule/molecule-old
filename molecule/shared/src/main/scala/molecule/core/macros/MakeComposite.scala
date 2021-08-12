@@ -70,9 +70,9 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       //         final override lazy val indexes: Indexes = $indexes
       //       """
       q"""
-          final override protected def json2tpl(json: String): (..$TplTypes) = ???
-          final override protected def json2obj(json: String): $ObjType = ???
-          final override protected def json2list(json: String): jList[AnyRef] = ???
+          final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ???
+          final override protected def packed2obj(vs: Iterator[String]): $ObjType = ???
+          final override protected def packed2json(vs: Iterator[String]): String = ???
        """
     } else {
       q"""

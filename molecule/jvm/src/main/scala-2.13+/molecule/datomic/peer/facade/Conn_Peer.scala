@@ -1,7 +1,7 @@
 package molecule.datomic.peer.facade
 
 import java.util
-import java.util.{Date, Collection => jCollection, List => jList}
+import java.util.{Date, Collection => jCollection, List => jList, Map => jMap}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
@@ -329,6 +329,18 @@ case class Conn_Peer(
         val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
         val allInputs       = first ++ inputsEvaluated
         val result          = Peer.q(query.toMap, allInputs: _*)
+
+        //        val row = result.iterator.next
+        //        println("Result:\n" + result)
+        //        println(row.get(1))
+        //        println(row.get(1).getClass)
+        //        println(row.get(1).asInstanceOf[clojure.lang.PersistentArrayMap].valIterator().next)
+        //        println(row.get(1).asInstanceOf[clojure.lang.PersistentArrayMap].valIterator().next.getClass)
+        //        println(row.get(1).asInstanceOf[clojure.lang.PersistentArrayMap].valIterator().next.asInstanceOf[clojure.lang.PersistentVector].nth(0))
+        //        println(row.get(1).asInstanceOf[jMap[String, Any]].values().iterator().next.asInstanceOf[jList[Any]].get(0))
+        //        println(row.get(1).asInstanceOf[jMap[String, Any]].values().iterator().next.asInstanceOf[jList[Any]].get(0).getClass)
+        //        println(row.get(1).asInstanceOf[jMap[String, Any]].values().iterator().next.asInstanceOf[jList[Any]].get(0).asInstanceOf[jMap[String, Any]].values().iterator().next)
+
         Future(result)
       } catch {
         case NonFatal(exc) => Future.failed(QueryException(exc, model, query))

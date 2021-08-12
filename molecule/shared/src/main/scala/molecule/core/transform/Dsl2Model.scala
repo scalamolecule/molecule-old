@@ -17,6 +17,7 @@ import molecule.core.macros.build.obj.BuildObj
 import molecule.core.macros.build.tpl._
 import molecule.core.macros.qr.CastArrays
 import molecule.core.marshalling.attrIndexes._
+import molecule.core.marshalling.unpack.{Vs2tpl, UnpackTypes}
 import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
@@ -35,6 +36,9 @@ private[molecule] trait Dsl2Model extends TreeOps
   //  with BuildJsonComposite
   with BuildJsonNested
   with BuildJsonOptNested
+
+  with Vs2tpl
+  with UnpackTypes
 
   with CastArrays
 
@@ -61,7 +65,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
   //    private lazy val xx = InspectMacro("Dsl2Model", 133, 143)
   //    private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
-        private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+          private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
 //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
   //  private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
@@ -116,9 +120,6 @@ private[molecule] trait Dsl2Model extends TreeOps
     var genericImports: List[Tree]              = List(q"import molecule.core.generic.Datom._")
     var typess        : List[List[Tree]]        = List(List.empty[Tree])
     var castss        : List[List[Int => Tree]] = List(List.empty[Int => Tree])
-    //    var flatIndexes   : List[(Int, Int, Int)]   = List.empty[(Int, Int, Int)]
-    //    var nestedIndexes : List[List[AttrIndexes]] = List(List.empty[AttrIndexes])
-    //    var postIndexes   : List[AttrIndexes]       = List.empty[AttrIndexes]
 
     var arrayIndexes: Map[Int, Int] = Map.empty[Int, Int]
     var obj         : BuilderObj    = BuilderObj("", "", 0, Nil)
@@ -169,23 +170,6 @@ private[molecule] trait Dsl2Model extends TreeOps
       xx(803, t.name, objBefore, obj, indexesBefore, indexes)
     }
 
-    //    def updateIndexes(attr: String): Unit = {
-    //      val (castIndex, arrayType) = ii
-    //
-    //      arrayIndexes = arrayIndexes + (arrayType -> (arrayIndexes.getOrElse(arrayType, -1) + 1))
-    //      val arrayIndex = arrayIndexes(arrayType)
-    //      flatIndexes = (castIndex, arrayType, arrayIndex) :: flatIndexes
-    //
-    //
-    //      //      val nextIndexes = AttrIndexes(attr, 0, castIndex, arrayType, arrayIndexes(arrayType), post)
-    //      //      if (post)
-    //      //        postIndexes = nextIndexes :: postIndexes
-    //      //      else
-    //      //        nestedIndexes = (nextIndexes :: nestedIndexes.head) :: nestedIndexes.tail
-    //
-    //      ii = (-1, -1)
-    //    }
-
     def addSpecific(
       t: richTree,
       cast: Int => Tree,
@@ -212,7 +196,6 @@ private[molecule] trait Dsl2Model extends TreeOps
         if (doAddProp)
           addProp(t, tpe, cast, json, optAggr)
       }
-      //      updateIndexes(t.name)
     }
 
     def addLambdas(
@@ -231,7 +214,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           castss = (cast(t) :: castss.head) :: castss.tail
           addProp(t, getType(t), cast(t), json(t))
         }
-        //        updateIndexes(t.name)
       }
     }
 
@@ -360,8 +342,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       val nsCls = ns + "_"
 
       // Prepend namespace in obj
-//      val (newBuilderNodes: List[BuilderNode], newAttrIndexes: List[AttrIndex]) = if (objCompositesCount > 0) {
-      val (newBuilderNodes,  newAttrIndexes): (List[BuilderNode], List[IndexTree]) = if (objCompositesCount > 0) {
+      val (newBuilderNodes, newAttrIndexes): (List[BuilderNode], List[IndexNode]) = if (objCompositesCount > 0) {
         val (props, compositeProps) = obj.props.splitAt(obj.props.length - objCompositesCount)
         val (attrs, compositeAttrs) = indexes.attrs.splitAt(indexes.attrs.length - objCompositesCount)
 
@@ -377,7 +358,7 @@ private[molecule] trait Dsl2Model extends TreeOps
           case _ => BuilderObj(nsCls, ns, 1, props) :: compositeProps
         }
 
-        val newAttrIndexes: List[IndexTree] = compositeAttrs.head match {
+        val newAttrIndexes: List[IndexNode] = compositeAttrs.head match {
           case Indexes("Tx", _, _) =>
             // Reset obj composites count
             objCompositesCount = 0
@@ -1213,7 +1194,6 @@ private[molecule] trait Dsl2Model extends TreeOps
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
-      //      nestedIndexes = List.empty[AttrIndexes] :: nestedIndexes
       xx(526, nestedElement, post)
       traverseElement(prev, p, nestedElement)
     }
@@ -1265,7 +1245,6 @@ private[molecule] trait Dsl2Model extends TreeOps
         } else {
           val refAttr = manyRef.toString().split('.').last
           abort(s"`$refAttr` can only nest to `$refNext`. Found: `$nestedNs`")
-          //          abort(s"`$manyRef` has more than one ref pointing to `$nestedNs`:\n${refPairs.mkString("\n")}")
         }
         xx(571, manyRef, refNext, nested, nestedNs, nestedElements, refs, refPairs, refPairsFiltered, nestedElements2, obj)
         nestedElements2
@@ -1394,8 +1373,8 @@ private[molecule] trait Dsl2Model extends TreeOps
                     jsonAggrManySingle(tpeStr, attr),
                     optAggr = Some((propFn, tq"Set[$tpe]"))
                   )
-
               }
+
               case _ => aggrType match {
                 case "int" =>
                   xx(84, aggrType, ii)
@@ -1458,7 +1437,6 @@ private[molecule] trait Dsl2Model extends TreeOps
                     jsonAggrOneSingle(tpeStr, attr),
                     optAggr = Some((propFn, tq"$tpe"))
                   )
-
               }
             }
             xx(85, aggrType, ii)
@@ -1882,48 +1860,6 @@ private[molecule] trait Dsl2Model extends TreeOps
     //    xx(801, elements)
     //    xx(801, elements, types, casts)
     xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetaCompositesCount, postTypes, postCasts, post)
-
-
-    //    val flatIndexes1 = flatIndexes.zipWithIndex.map { case ((a, b, c), i) => (i, a, b, arrayIndexes(b) - c) }
-
-
-    //    var colIndex = -1
-    //    def packIndexes(indexes: List[List[AttrIndexes]], topLevel: Boolean): List[AttrIndexes] = {
-    //      val mainIndexes  = indexes match {
-    //        case last :: Nil => last.map {
-    //          case AttrIndexes(a, _, c, d, e, f, g) =>
-    //            colIndex += 1
-    //            AttrIndexes(a, colIndex, c, d, e, f, g)
-    //        }
-    //
-    //        case cur :: more =>
-    //          val last       = cur.size - 1
-    //          val curIndexes = cur.zipWithIndex.flatMap {
-    //            case (AttrIndexes(a, _, c, d, e, f, g), `last`) =>
-    //              colIndex += 1
-    //              val curIndex    = AttrIndexes(a, colIndex, c, d, e, f, g)
-    //              val nested      = packIndexes(more, false)
-    //              val nestedIndex = AttrIndexes("<nested>", 0, 0, 0, 0, false, nested)
-    //              List(curIndex, nestedIndex)
-    //            case (AttrIndexes(a, _, c, d, e, f, g), _)      =>
-    //              colIndex += 1
-    //              List(AttrIndexes(a, colIndex, c, d, e, f, g))
-    //          }
-    //          curIndexes
-    //
-    //        case _ => Nil
-    //      }
-    //      val postIndexes2 = if (topLevel) postIndexes.map {
-    //        case AttrIndexes(a, _, c, d, e, f, g) =>
-    //          colIndex += 1
-    //          AttrIndexes(a, colIndex, c, d, e, f, g)
-    //      } else Nil
-    //
-    //      mainIndexes ++ postIndexes2
-    //    }
-
-    //    val nestedIndexes1 = packIndexes(nestedIndexes, true)
-    //    xx(802, flatIndexes1, nestedIndexes, nestedIndexes1, postIndexes, postTypes, postCasts, obj)
     xx(802, obj, indexes)
 
 

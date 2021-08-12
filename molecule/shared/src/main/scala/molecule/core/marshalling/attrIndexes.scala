@@ -4,7 +4,7 @@ import boopickle.Default._
 
 object attrIndexes {
 
-  sealed trait IndexTree
+  sealed trait IndexNode
 
   case class AttrIndex(
     attr: String,
@@ -12,23 +12,23 @@ object attrIndexes {
     arrayType: Int,
     arrayIndex: Int,
     post: Boolean = false,
-  ) extends IndexTree {
+  ) extends IndexNode {
     override def toString: String = {
-      s"""AttrIndex($attr, $castIndex, $arrayType, $arrayIndex, $post)"""
+      s"""AttrIndex("$attr", $castIndex, $arrayType, $arrayIndex, $post)"""
     }
   }
 
   case class Indexes(
     ref: String,
     card: Int,
-    attrs: List[IndexTree]
-  ) extends IndexTree {
+    attrs: List[IndexNode]
+  ) extends IndexNode {
     override def toString: String = {
-      def draw(attrs: Seq[IndexTree], indent: Int): Seq[String] = {
+      def draw(attrs: Seq[IndexNode], indent: Int): Seq[String] = {
         val s = "  " * indent
         attrs map {
           case Indexes(ref, card, attrs) =>
-            s"""|${s}indexes("$ref", $card, List(
+            s"""|${s}Indexes("$ref", $card, List(
                 |${draw(attrs, indent + 1).mkString(s",\n")}))""".stripMargin
 
           case attrIndex => s + attrIndex
@@ -38,14 +38,14 @@ object attrIndexes {
     }
   }
 
-  object IndexTree {
-    implicit val indexesPickler = compositePickler[IndexTree]
+  object IndexNode {
+    implicit val indexesPickler = compositePickler[IndexNode]
     indexesPickler
       .addConcreteType[AttrIndex]
       .addConcreteType[Indexes]
   }
 
-  def addAttrIndex(indexes: Indexes, attr: IndexTree, level: Int): Indexes = {
+  def addAttrIndex(indexes: Indexes, attr: IndexNode, level: Int): Indexes = {
     val newattrs = level match {
       case 0 =>
         attr :: indexes.attrs

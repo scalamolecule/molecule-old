@@ -5,6 +5,7 @@ import molecule.core.macros.MakeMoleculeDynamic
 import molecule.core.macros.attrResolvers.{CastAggr, CastOptNested, CastTypes, JsonAggr, JsonNested, JsonOptNested, JsonTypes}
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
+import molecule.core.marshalling.unpack.UnpackTypes
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers
@@ -159,10 +160,13 @@ abstract class Molecule_0[Obj, Tpl](
   with CastTypes
   with CastAggr
   with CastOptNested
+
   with JsonTypes
   with JsonAggr
   with JsonOptNested
   with JsonNested
+
+  with UnpackTypes
 
   with GetTpls[Obj, Tpl]
   with GetObjs[Obj, Tpl]

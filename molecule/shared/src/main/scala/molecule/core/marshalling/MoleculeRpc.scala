@@ -27,9 +27,19 @@ trait MoleculeRpc {
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    indexes: Indexes,
-    isOptNested: Boolean
+    indexes: Indexes
   ): Future[QueryResult]
+
+  def queryStr(
+    connProxy: ConnProxy,
+    datalogQuery: String,
+    rules: Seq[String],
+    l: Seq[(Int, (String, String))],
+    ll: Seq[(Int, Seq[(String, String)])],
+    lll: Seq[(Int, Seq[Seq[(String, String)]])],
+    maxRows: Int,
+    indexes: Indexes
+  ): Future[String]
 
 
   def getAttrValues(

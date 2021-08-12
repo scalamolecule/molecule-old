@@ -72,7 +72,8 @@ trait Conn extends ColOps with Serializations {
     n: Int,
     indexes: Indexes,
     isOptNested: Boolean,
-    qr2tpl: QueryResult => Int => Tpl
+    qr2tpl: QueryResult => Int => Tpl,
+    packed2tpl: Iterator[String] => Tpl
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
     val q2s          = Query2String(query)
     val datalogQuery = q2s.multiLine(60)
@@ -83,18 +84,35 @@ trait Conn extends ColOps with Serializations {
     //    debug("js")
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
-    val futResult = rpc.query(
-      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, isOptNested
-    ).map { qr =>
-      val maxRows  = if (n == -1) qr.maxRows else n
-      val rows     = new ListBuffer[Tpl]
-      val columns  = qr2tpl(qr) // macro generated transformer
-      var rowIndex = 0
-      while (rowIndex < maxRows) {
-        rows += columns(rowIndex)
-        rowIndex += 1
+    val futResult = if (isOptNested) {
+      rpc.queryStr(
+        connProxy, datalogQuery, rules, l, ll, lll, n, indexes
+      ).map { packed =>
+
+//        println(packed)
+
+        val vs = packed.linesIterator
+        val buf   = new ListBuffer[Tpl]
+        while (vs.hasNext) {
+          buf.addOne(packed2tpl(vs))
+        }
+        buf.toList
       }
-      rows.toList
+    } else {
+      rpc.query(
+        connProxy, datalogQuery, rules, l, ll, lll, n, indexes
+      ).map { qr =>
+        println("@@@@@@@@@ normal")
+        val maxRows  = if (n == -1) qr.maxRows else n
+        val rows     = new ListBuffer[Tpl]
+        val columns  = qr2tpl(qr) // macro generated transformer
+        var rowIndex = 0
+        while (rowIndex < maxRows) {
+          rows += columns(rowIndex)
+          rowIndex += 1
+        }
+        rows.toList
+      }
     }
     if (connProxy.adhocDbView.isDefined) {
       // Reset adhoc db view
@@ -106,6 +124,7 @@ trait Conn extends ColOps with Serializations {
     }
     futResult
   }.flatten
+
 
   private[molecule] def queryFlatJs(
     query: Query,
@@ -123,7 +142,7 @@ trait Conn extends ColOps with Serializations {
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
     val futResult = rpc.query(
-      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, false
+      connProxy, datalogQuery, rules, l, ll, lll, n, indexes
     ).map { qr =>
       val maxRows  = qr.maxRows // All rows used in nested
       val rows     = new util.ArrayList[jList[Any]](maxRows)

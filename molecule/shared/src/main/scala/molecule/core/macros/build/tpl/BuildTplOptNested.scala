@@ -20,7 +20,7 @@ private[molecule] trait BuildTplOptNested extends LambdaCastOptNested with Build
 
     def properties(nodes: List[BuilderNode]): Seq[Tree] = {
       nodes.flatMap {
-        case attr: BuilderProp                       => Seq(attr.cast(43))
+        case attr: BuilderProp                       => Seq(attr.cast(42)) // colIndex not used here
         case nested@BuilderObj(_, _, 2, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper = isDeeper(nested)

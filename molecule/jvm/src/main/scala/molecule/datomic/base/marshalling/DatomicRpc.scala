@@ -36,8 +36,9 @@ object DatomicRpc extends MoleculeRpc
   ): Future[TxReportRPC] = {
     for {
       conn <- getConn(connProxy)
-      //      _ = println(stmtsEdn + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
+
       _ = println(stmtsEdn)
+
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
       TxReportRPC(
@@ -70,8 +71,7 @@ object DatomicRpc extends MoleculeRpc
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    indexes: Indexes,
-    isOptNested: Boolean
+    indexes: Indexes
   ): Future[QueryResult] = try {
     val log       = new log
     val t         = TimerPrint("DatomicRpc")
@@ -83,12 +83,63 @@ object DatomicRpc extends MoleculeRpc
     } yield {
       val rowCountAll = allRows.size
       val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
+      val queryTime   = t.delta
+      val space       = " " * (70 - datalogQuery.split('\n').last.length)
+      val time        = qTime(queryTime)
+      val timeRight   = " " * (8 - time.length) + time
+      log(datalogQuery + space + timeRight)
+      //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
+      log.print
+      //      log(s"\n---- Querying Datomic... --------------------")
+      //      log(datalogQuery)
+      //      log(qTime(queryTime) + "  " + datalogQuery)
+      //      log("connProxy uuid: " + connProxy.uuid)
+      //      log("Query time  : " + thousands(queryTime) + " ms")
+      //      log("rowCountAll : " + rowCountAll)
+      //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
+      //      log("rowCount    : " + rowCount)
 
-      val queryTime = t.delta
+      //      val allRows2 = allRows
+      //      val it       = allRows2.iterator()
+      //      //            it.next()
+      //      val v        = it.next().get(0)
+      //      println(s"v1: $v  ${v.getClass}")
+      println(indexes)
+      allRows.forEach(println)
+      val queryResult = Rows2QueryResult(allRows, rowCountAll, rowCount, queryTime, indexes).get
+      // log("QueryResult: " + queryResult)
+      //        log("Rows2QueryResult took " + t.ms)
+      //        log("Sending data to client... Total server time: " + t.msTotal)
+      queryResult
+    }
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
 
-      val space     = " " * (70 - datalogQuery.split('\n').last.length)
-      val time      = qTime(queryTime)
-      val timeRight = " " * (8 - time.length) + time
+  def queryStr(
+    connProxy: ConnProxy,
+    datalogQuery: String,
+    rules: Seq[String],
+    l: Seq[(Int, (String, String))],
+    ll: Seq[(Int, Seq[(String, String)])],
+    lll: Seq[(Int, Seq[Seq[(String, String)]])],
+    maxRows: Int,
+    indexes: Indexes
+  ): Future[String] = try {
+    val log       = new log
+    val t         = TimerPrint("DatomicRpc")
+    val inputs    = unmarshallInputs(l ++ ll ++ lll)
+    val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
+    for {
+      conn <- getConn(connProxy)
+      allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
+    } yield {
+      val rowCountAll = allRows.size
+      val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
+      val queryTime   = t.delta
+      val space       = " " * (70 - datalogQuery.split('\n').last.length)
+      val time        = qTime(queryTime)
+      val timeRight   = " " * (8 - time.length) + time
       log(datalogQuery + space + timeRight)
       //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       log.print
@@ -107,22 +158,18 @@ object DatomicRpc extends MoleculeRpc
       //      val v        = it.next().get(0)
       //      println(s"v1: $v  ${v.getClass}")
 
+      println("-------------------------")
       println(indexes)
+      println("-------------------------")
       allRows.forEach(println)
 
-      val queryResult = if (isOptNested)
-        OptNestedRows2QueryResult(
-          allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes
-        ).get
-      else
-        Rows2QueryResult(
-          allRows, rowCountAll, rowCount, queryTime, indexes
-        ).get
+      val dataString = OptNestedRows2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes).get
+//      println("DatomicRpc ####################\n" + dataString)
 
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)
       //        log("Sending data to client... Total server time: " + t.msTotal)
-      queryResult
+      dataString
     }
   } catch {
     case NonFatal(exc) => Future.failed(exc)

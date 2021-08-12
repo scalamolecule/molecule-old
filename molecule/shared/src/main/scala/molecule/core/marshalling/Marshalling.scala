@@ -20,7 +20,7 @@ abstract class Marshalling[Obj, Tpl](
 
   /** Indexes to resolve marshalling for each attribute value in a row. */
   protected lazy val indexes    : Indexes = ???
-  protected lazy val isOptNested: Boolean = ???
+  protected lazy val isOptNested: Boolean = false
 
 
   // JVM ......................
@@ -58,9 +58,9 @@ abstract class Marshalling[Obj, Tpl](
   protected def qr2list(qr: QueryResult): Int => jList[Any] = ???
 
 
-  protected def json2obj(json: String): Obj = ???
-  protected def json2tpl(json: String): Tpl = ???
-  protected def json2list(json: String): jList[AnyRef] = ???
+  protected def packed2tpl(vs: Iterator[String]): Tpl = ???
+  protected def packed2obj(vs: Iterator[String]): Obj = ???
+  protected def packed2json(vs: Iterator[String]): String = ???
 
 
   // Generic `v` of type Any needs to be cast on JS side

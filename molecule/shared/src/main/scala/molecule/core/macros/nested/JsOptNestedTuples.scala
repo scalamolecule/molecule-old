@@ -75,9 +75,9 @@ object JsOptNestedTuples {
     final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
-        data <- if (conn.isJsPlatform)
+        data <- if (conn.isJsPlatform) {
           conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
+        } else
           conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()

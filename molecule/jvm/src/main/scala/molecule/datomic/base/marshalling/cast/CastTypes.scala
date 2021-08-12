@@ -2,7 +2,7 @@ package molecule.datomic.base.marshalling.cast
 
 import java.lang.{Double => jDouble, Long => jLong}
 import java.net.URI
-import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
+import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet, Collection => jCollection}
 import molecule.core.exceptions.MoleculeException
 
 class CastTypes(maxRows: Int) extends CastAggr(maxRows) {

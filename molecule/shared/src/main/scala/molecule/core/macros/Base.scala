@@ -80,32 +80,6 @@ private[molecule] trait Base extends Dsl2Model {
   }
 
 
-//  def resolveIndexesOLD(
-//    flatIndexes0: List[(Int, Int, Int, Int)],
-//    nestedLevels: Int
-//  ): (List[(Int, Int, Int, Int)], List[c.universe.Tree], List[c.universe.Tree]) = {
-//    val flatIndexes       = if (nestedLevels == 0) flatIndexes0 else {
-//      val nestedIndexes = (0 until nestedLevels).toList.map(i => (i, 3, 2, i))
-//      val dataIndexes   = flatIndexes0.map {
-//        case (colIndex, castIndex, 2, arrayIndex)         =>
-//          // One Long array type where nested eid indexes are transferred
-//          (colIndex + nestedLevels, castIndex, 2, arrayIndex + nestedLevels)
-//        case (colIndex, castIndex, arrayType, arrayIndex) =>
-//          (colIndex + nestedLevels, castIndex, arrayType, arrayIndex)
-//      }
-//      nestedIndexes ++ dataIndexes
-//    }
-//    val (arrays, lookups) = flatIndexes.map {
-//      // Generic `v` of type Any needs to be cast on JS side
-//      case (colIndex, 11, arrayType, arrayIndex)        =>
-//        (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
-//      case (colIndex, castIndex, arrayType, arrayIndex) =>
-//        (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
-//    }.unzip
-//    (flatIndexes, arrays, lookups)
-//  }
-
-
   def resolveIndexes(
     indexes: Indexes,
     nestedLevels: Int
