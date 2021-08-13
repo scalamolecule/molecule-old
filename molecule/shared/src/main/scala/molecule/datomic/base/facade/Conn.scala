@@ -88,11 +88,12 @@ trait Conn extends ColOps with Serializations {
       rpc.queryStr(
         connProxy, datalogQuery, rules, l, ll, lll, n, indexes
       ).map { packed =>
-
-//        println(packed)
-
-        val vs = packed.linesIterator
-        val buf   = new ListBuffer[Tpl]
+                println(packed)
+        val vs          = packed.linesIterator
+        val rowCountAll = vs.next().toInt
+        val rowCount    = vs.next().toInt
+        val queryMs     = vs.next().toLong
+        val buf         = new ListBuffer[Tpl]
         while (vs.hasNext) {
           buf.addOne(packed2tpl(vs))
         }

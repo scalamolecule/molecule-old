@@ -8,6 +8,7 @@ import utest._
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.{Collections, Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.ast.elements._
+//import molecule.core.marshalling.OptNestedRows2packed
 import molecule.core.marshalling.unpack.UnpackTypes
 //import molecule.core.marshalling.OptNestedRows2String
 import molecule.core.marshalling.attrIndexes._
@@ -22,105 +23,114 @@ import scala.util.control.NonFatal
 
 object Adhoc extends AsyncTestSuite with Helpers with UnpackTypes {
 
-//  List((A,List((Some(11),Some(12),Some(a)), (Some(110),Some(120),Some(aa))),1), (B,List((Some(13),None,Some(b))),1), (C,List((None,Some(14),Some(c))),1), (D,List((None,None,Some(d))),1), (E,List(),1)) !=
-//  List((A,List((Some(11),Some(12),a), (Some(110),Some(120),aa)),1), (B,List((Some(13),None,b)),1), (C,List((None,Some(14),c)),1), (D,List((None,None,d)),1), (E,List(),1))
 
   lazy val tests = Tests {
 
-    //    "vs2tpl" - {
-    //      val vs = List(
-    //        "A",
-    //        "◄", // end of string
-    //
-    //        "11",
-    //        "12",
-    //        "a",
-    //        "◄", // end of string
-    //
-    //        "110",
-    //        "120",
-    //        "aa",
-    //        "◄", // end of string
-    //
-    //        "◄", // end of subs
-    //
-    //        "1",
-    //
-    //        //        "B",
-    //        //        "◄",
-    //        //        "13",
-    //        //        "◄",
-    //        //        "b",
-    //        //        "◄",
-    //        //        "◄",
-    //        //        "1",
-    //        //
-    //        //        "C",
-    //        //        "◄",
-    //        //        "◄",
-    //        //        "14",
-    //        //        "c",
-    //        //        "◄",
-    //        //        "◄",
-    //        //        "1",
-    //        //
-    //        //        "D",
-    //        //        "◄",
-    //        //        "◄",
-    //        //        "◄",
-    //        //        "d",
-    //        //        "◄",
-    //        //        "◄",
-    //        //        "1",
-    //        //
-    //        //        "E",
-    //        //        "◄",
-    //        //        "◄◄",
-    //        //        "1"
-    //      ).iterator
-    //
-    //      def sub = {
-    //        v = vs.next()
-    //        if (v == "◄◄") {
-    //          Nil
-    //        } else {
-    //          //          val buf = new ListBuffer[(Option[Int], Option[Int], String)]
-    //          val buf = new ListBuffer[Product]
-    //          first = true
-    //          do {
-    //            buf.append(
-    //              (
-    //                unpackOptOneInt(v),
-    //                unpackOptOneInt(vs.next()),
-    //                unpackOneString(vs.next(), vs)
-    //              )
-    //            )
-    //            v = vs.next()
-    //          } while (v != "◄")
-    //          buf.toList
-    //        }
-    //      }
-    //
-    //      (unpackOneString(vs.next(), vs), sub, unpackOneInt(vs.next()))
-    //        .asInstanceOf[(String, List[(Option[Int], Option[Int], String)], Int)] ==> 42
-    //    }
+//            "vs2tpl" - {
+//              val vs = List(
+//                "A",
+//                "◄", // end of string
+//
+//                "11",
+//                "12",
+//                "a",
+//                "◄", // end of string
+//
+//                "110",
+//                "120",
+//                "aa",
+//                "◄", // end of string
+//
+//                "◄", // end of subs
+//
+//                "1",
+//
+//                //        "B",
+//                //        "◄",
+//                //        "13",
+//                //        "◄",
+//                //        "b",
+//                //        "◄",
+//                //        "◄",
+//                //        "1",
+//                //
+//                //        "C",
+//                //        "◄",
+//                //        "◄",
+//                //        "14",
+//                //        "c",
+//                //        "◄",
+//                //        "◄",
+//                //        "1",
+//                //
+//                //        "D",
+//                //        "◄",
+//                //        "◄",
+//                //        "◄",
+//                //        "d",
+//                //        "◄",
+//                //        "◄",
+//                //        "1",
+//                //
+//                //        "E",
+//                //        "◄",
+//                //        "◄◄",
+//                //        "1"
+//              ).iterator
+//
+//              def sub = {
+//                v = vs.next()
+//                if (v == "◄◄") {
+//                  Nil
+//                } else {
+//                  //          val buf = new ListBuffer[(Option[Int], Option[Int], String)]
+//                  val buf = new ListBuffer[Product]
+//                  first = true
+//                  do {
+//                    buf.append(Tuple1(unpackOptOneInt(v)))
+//    //                buf.append(
+//    //                  (
+//    //                    unpackOptOneInt(v),
+//    ////                    unpackOptOneInt(vs.next()),
+//    ////                    unpackOneString(vs.next(), vs)
+//    //                  )
+//    //                )
+//                    v = vs.next()
+//                  } while (v != "◄")
+//                  buf.toList
+//                }
+//              }
+//
+//              (unpackOneString(vs.next(), vs), sub, unpackOneInt(vs.next()))
+//    //            .asInstanceOf[(String, List[(Option[Int], Option[Int], String)], Int)] ==> 42
+//                .asInstanceOf[(String, List[Option[Int]], Int)] ==> 42
+//            }
+
 
     "core" - core { implicit futConn =>
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
+
         //        _ <- Ns.str.Refs1.*(Ref1.int1).Tx(Ref3.int3_(7)) insert List(
-        //          ("A".stripMargin, List(1, 2)),
+        //          (
+        //            """multi
+        //              |line""".stripMargin, List(1, 2)),
         //          ("B", Nil)
         //        )
+        //
+        //
+        //
+        //
         //        //        //        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
         //        //        //          (true, List("a", "b"), 1)
         //        //        //        ))
         //        //
         //        //        //        _ <- Ns.str.Refs1.*?(Ref1.int1).Tx(Ref3.int3).inspectGet
         //        _ <- Ns.str.Refs1.*?(Ref1.int1).Tx(Ref3.int3).get.map(_ ==> List(
-        //          ("A", List(1, 2), 7),
+        //          ("""multi
+        //             |line""".stripMargin, List(1, 2), 7),
         //          ("B", Nil, 7)
         //        ))
         //
@@ -219,26 +229,24 @@ https://en.wikipedia.org/wiki/List_of_Unicode_characters
         //          ("D", List((None, None, "d"))),
         //          ("E", List())
         //        )
+        //                        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).inspectGet
 
-        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
-          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
-          ("B", List((Some(13), None, "b"))),
-          ("C", List((None, Some(14), "c"))),
-          ("D", List((None, None, "d"))),
-          ("E", List())
-        )
-
-
-        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).inspectGet
-
-        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
-          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 1),
-          ("B", List((Some(13), None, "b")), 1),
-          ("C", List((None, Some(14), "c")), 1),
-          ("D", List((None, None, "d")), 1),
-          ("E", List(), 1)
-        ))
-
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
+        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
+        //          ("B", List((Some(13), None, "b"))),
+        //          ("C", List((None, Some(14), "c"))),
+        //          ("D", List((None, None, "d"))),
+        //          ("E", List())
+        //        )
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 1),
+        //          ("B", List((Some(13), None, "b")), 1),
+        //          ("C", List((None, Some(14), "c")), 1),
+        //          ("D", List((None, None, "d")), 1),
+        //          ("E", List(), 1)
+        //        ))
+        //
         //        rows <- conn.qRaw(
         //          """[:find  ?b
         //            |        (pull ?a__1 [
@@ -265,10 +273,9 @@ https://en.wikipedia.org/wiki/List_of_Unicode_characters
         //              Indexes("Ref3", 1, List(
         //                AttrIndex("int3", 1, 1, 0, true)))))))
         //
-        //          val str = OptNestedRows2String(rows, 10, 10, 10L, Nil, Nil, indexes).get
+        //          val str = OptNestedRows2packed(rows, 10, 10, 10L, Nil, Nil, indexes).getPacked
         //
-        //          println("=========================================")
-        //          println(str)
+        //          println("=========================================" + str)
         //        }
 
         /*
@@ -377,6 +384,65 @@ E
 
          */
 
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)) insert List(
+          ("A", List(
+            (1, Some("a1"), List(
+              (11, Some("a11")),
+              (12, None)
+            )),
+            (2, None, List(
+              (21, Some("a21")),
+              (22, None)
+            )),
+            (3, Some("a3"), List()),
+            (4, None, List())
+          )),
+          ("B", List())
+        )
+
+        _ <- Ns.str.Refs1.*?(Ref1.int1.str1$.Refs2.*?(Ref2.int2.str2$)).get.map(_.sortBy(_._1) ==> List(
+          ("A", List(
+            (1, Some("a1"), List(
+              (11, Some("a11")),
+              (12, None)
+            )),
+            (2, None, List(
+              (21, Some("a21")),
+              (22, None)
+            )),
+            (3, Some("a3"), List()),
+            (4, None, List())
+          )),
+          ("B", List())
+        ))
+        //
+        //                rows <- conn.qRaw(
+        //                  """[:find  ?b
+        //                    |        (pull ?a__1 [
+        //                    |          {(:Ns/refs1 :limit nil) [
+        //                    |            (:Ref1/int1 :limit nil)
+        //                    |            (:Ref1/str1 :limit nil :default "__none__")
+        //                    |            {(:Ref1/refs2 :limit nil :default "__none__") [
+        //                    |              (:Ref2/int2 :limit nil)
+        //                    |              (:Ref2/str2 :limit nil :default "__none__")]}]}])
+        //                    | :where [(identity ?a) ?a__1] [?a :Ns/str ?b]]""".stripMargin
+        //                )
+        //                _ = {
+        //                  rows.forEach(row => println(row))
+        //
+        //                  val indexes = Indexes("Ns", 2, List(
+        //                    AttrIndex("str", 0, 0, 0, false),
+        //                    Indexes("Refs1", 2, List(
+        //                      AttrIndex("int1", 1, 1, 1, false),
+        //                      AttrIndex("str1$", 13, 10, 1, false),
+        //                      Indexes("Refs2", 2, List(
+        //                        AttrIndex("int2", 1, 1, 0, false),
+        //                        AttrIndex("str2$", 13, 10, 0, false)))))))
+        //
+        //                  val str = OptNestedRows2packed(rows, 10, 10, 10L, Nil, Nil, indexes).getPacked
+        //
+        //                  println("=========================================" + str)
+        //                }
 
       } yield ()
     }

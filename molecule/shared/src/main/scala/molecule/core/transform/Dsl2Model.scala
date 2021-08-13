@@ -17,7 +17,7 @@ import molecule.core.macros.build.obj.BuildObj
 import molecule.core.macros.build.tpl._
 import molecule.core.macros.qr.CastArrays
 import molecule.core.marshalling.attrIndexes._
-import molecule.core.marshalling.unpack.{Vs2tpl, UnpackTypes}
+import molecule.core.marshalling.unpack.{Packed2tpl, UnpackTypes}
 import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
@@ -37,7 +37,7 @@ private[molecule] trait Dsl2Model extends TreeOps
   with BuildJsonNested
   with BuildJsonOptNested
 
-  with Vs2tpl
+  with Packed2tpl
   with UnpackTypes
 
   with CastArrays
@@ -1860,7 +1860,7 @@ private[molecule] trait Dsl2Model extends TreeOps
     //    xx(801, elements)
     //    xx(801, elements, types, casts)
     xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetaCompositesCount, postTypes, postCasts, post)
-    xx(802, obj, indexes)
+    xx(802, obj, indexes, typess, postTypes)
 
 
     // Return checked model

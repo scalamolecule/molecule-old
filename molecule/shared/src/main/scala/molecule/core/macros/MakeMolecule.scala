@@ -104,7 +104,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           }
           final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
 
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${vs2tpl(TplTypes, indexes)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 

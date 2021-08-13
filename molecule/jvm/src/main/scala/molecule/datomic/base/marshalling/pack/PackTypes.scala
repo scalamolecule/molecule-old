@@ -5,19 +5,20 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
 
+
 trait PackTypes extends PackBase with Helpers {
 
   // packOne -------------------------------------------------------
-  protected val packOneString = (it: jIterator[_]) => {
+  protected lazy val packOneString = (it: jIterator[_]) => {
     add(it.next.asInstanceOf[String])
     end()
   }
 
-  protected val packOne     = (it: jIterator[_]) => add(it.next.toString)
-  protected val packOneDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
+  protected lazy val packOne     = (it: jIterator[_]) => add(it.next.toString)
+  protected lazy val packOneDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String with appended type to be packed on JS side
-  protected val packOneAny = (it: jIterator[_]) => {
+  protected lazy val packOneAny = (it: jIterator[_]) => {
     val prefixed = it.next match {
       case s: java.lang.String      => "String    " + s
       case i: java.lang.Integer     => "Integer   " + i.toString
@@ -44,7 +45,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptOne -------------------------------------------------------
 
-  protected val packOptOneEnum   = (it: jIterator[_]) => {
+  protected lazy val packOptOneEnum   = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(
@@ -55,7 +56,7 @@ trait PackTypes extends PackBase with Helpers {
       )
     }
   }
-  protected val packOptOneString = (it: jIterator[_]) => {
+  protected lazy val packOptOneString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          =>
@@ -64,21 +65,21 @@ trait PackTypes extends PackBase with Helpers {
     }
   }
 
-  protected val packOptOne = (it: jIterator[_]) => {
+  protected lazy val packOptOne = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(v.toString)
     }
   }
 
-  protected val packOptOneDate = (it: jIterator[_]) => {
+  protected lazy val packOptOneDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(date2strLocal(v.asInstanceOf[Date]))
     }
   }
 
-  protected val packOptOneRefAttr = (it: jIterator[_]) => {
+  protected lazy val packOptOneRefAttr = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          =>
@@ -97,14 +98,14 @@ trait PackTypes extends PackBase with Helpers {
 
   // packMany -------------------------------------------------------
 
-  protected val packManyEnum = (it: jIterator[_]) => {
+  protected lazy val packManyEnum = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(vs.next.toString)
     end()
   }
 
-  protected val packManyString = (it: jIterator[_]) => {
+  protected lazy val packManyString = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
       add(vs.next.toString)
@@ -113,14 +114,14 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packMany = (it: jIterator[_]) => {
+  protected lazy val packMany = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(vs.next.toString)
     end()
   }
 
-  protected val packManyDate = (it: jIterator[_]) => {
+  protected lazy val packManyDate = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(date2strLocal(vs.next.asInstanceOf[Date]))
@@ -130,7 +131,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptMany -------------------------------------------------------
 
-  protected val packOptManyEnum = (it: jIterator[_]) => {
+  protected lazy val packOptManyEnum = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -141,7 +142,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptManyString = (it: jIterator[_]) => {
+  protected lazy val packOptManyString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -154,7 +155,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptMany = (it: jIterator[_]) => {
+  protected lazy val packOptMany = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -165,7 +166,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptManyDate = (it: jIterator[_]) => {
+  protected lazy val packOptManyDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -176,7 +177,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptManyRefAttr = (it: jIterator[_]) => {
+  protected lazy val packOptManyRefAttr = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -197,7 +198,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packMap -------------------------------------------------------
 
-  protected val packMapString = (it: jIterator[_]) => {
+  protected lazy val packMapString = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
       add(vs.next.toString)
@@ -206,7 +207,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packMap = (it: jIterator[_]) => {
+  protected lazy val packMap = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(vs.next.toString)
@@ -216,7 +217,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptMap -------------------------------------------------------
 
-  protected val packOptMapString = (it: jIterator[_]) => {
+  protected lazy val packOptMapString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -229,7 +230,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptMap = (it: jIterator[_]) => {
+  protected lazy val packOptMap = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -243,7 +244,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptApplyOne -------------------------------------------------------
 
-  protected val packOptApplyOneString = (it: jIterator[_]) => {
+  protected lazy val packOptApplyOneString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -252,14 +253,14 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptApplyOne = (it: jIterator[_]) => {
+  protected lazy val packOptApplyOne = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(v.toString)
     }
   }
 
-  protected val packOptApplyOneDate = (it: jIterator[_]) => {
+  protected lazy val packOptApplyOneDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(date2strLocal(v.asInstanceOf[Date]))
@@ -270,7 +271,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptApplyMany -------------------------------------------------------
 
-  protected val packOptApplyManyString = (it: jIterator[_]) => {
+  protected lazy val packOptApplyManyString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -283,7 +284,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptApplyMany = (it: jIterator[_]) => {
+  protected lazy val packOptApplyMany = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -294,7 +295,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptApplyManyDate = (it: jIterator[_]) => {
+  protected lazy val packOptApplyManyDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -308,7 +309,7 @@ trait PackTypes extends PackBase with Helpers {
 
   //  packOptApplyMap -------------------------------------------------------
 
-  protected val packOptApplyMapString = (it: jIterator[_]) => {
+  protected lazy val packOptApplyMapString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -321,7 +322,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptApplyMap = (it: jIterator[_]) => {
+  protected lazy val packOptApplyMap = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -332,7 +333,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected val packOptApplyMapDate = (it: jIterator[_]) => {
+  protected lazy val packOptApplyMapDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -346,16 +347,16 @@ trait PackTypes extends PackBase with Helpers {
 
   //  packKeyedMap -------------------------------------------------------
 
-  protected val packKeyedMapString = (it: jIterator[_]) => {
+  protected lazy val packKeyedMapString = (it: jIterator[_]) => {
     add(it.next.toString)
     end()
   }
 
-  protected val packKeyedMap     = (it: jIterator[_]) => add(it.next.toString)
-  protected val packKeyedMapDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
+  protected lazy val packKeyedMap     = (it: jIterator[_]) => add(it.next.toString)
+  protected lazy val packKeyedMapDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String}
-  protected val packKeyedMapAny = (it: jIterator[_]) => {
+  protected lazy val packKeyedMapAny = (it: jIterator[_]) => {
     it.next match {
       case s: String => add(s); end()
       case d: Date   => add(date2strLocal(d))
