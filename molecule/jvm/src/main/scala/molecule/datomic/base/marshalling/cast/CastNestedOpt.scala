@@ -7,78 +7,78 @@ package molecule.datomic.base.marshalling.cast
 //import molecule.core.util.{DateHandling, Helpers}
 //import molecule.datomic.base.marshalling.DateStrLocal
 
-class CastOptNested(maxRows: Int) extends DataArrays
+class CastNestedOpt(maxRows: Int) extends DataArrays
 //{
 //
 //
-//  // castOptNestedOne -----------------------------------------------------
-////  protected def castOptNestedOneEnum(it: jIterator[_]): String =
+//  // castNestedOptOne -----------------------------------------------------
+////  protected def castNestedOptOneEnum(it: jIterator[_]): String =
 ////    getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
 //
-//  protected val castOptNestedOneEnum = (colIndex: Int) => {
+//  protected val castNestedOptOneEnum = (colIndex: Int) => {
 //    val array = new Array[String](maxRows)
 //    oneStringArrays = oneStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
 //  }
 //
-//  protected val castOptNestedOneString = (colIndex: Int) => {
+//  protected val castNestedOptOneString = (colIndex: Int) => {
 //    val array = new Array[String](maxRows)
 //    oneStringArrays = oneStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.asInstanceOf[String]
 //  }
 //
-//  protected val castOptNestedOneInt    = (colIndex: Int) => {
+//  protected val castNestedOptOneInt    = (colIndex: Int) => {
 //    val array = new Array[Int](maxRows)
 //    oneIntArrays = oneIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.toString.toInt
 //  }
 //
-//  protected val castOptNestedOneFloat = (colIndex: Int) => {
+//  protected val castNestedOptOneFloat = (colIndex: Int) => {
 //    val array = new Array[Float](maxRows)
 //    oneFloatArrays = oneFloatArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.asInstanceOf[jDouble].toFloat
 //  }
 //
-//  protected val castOptNestedOneLong = (colIndex: Int) => {
+//  protected val castNestedOptOneLong = (colIndex: Int) => {
 //    val array = new Array[Long](maxRows)
 //    oneLongArrays = oneLongArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.asInstanceOf[Long]
 //  }
 //
-//  protected val castOptNestedOneDouble = (colIndex: Int) => {
+//  protected val castNestedOptOneDouble = (colIndex: Int) => {
 //    val array = new Array[Double](maxRows)
 //    oneDoubleArrays = oneDoubleArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.asInstanceOf[Double]
 //  }
 //
-//  protected val castOptNestedOneBoolean = (colIndex: Int) => {
+//  protected val castNestedOptOneBoolean = (colIndex: Int) => {
 //    val array = new Array[Boolean](maxRows)
 //    oneBooleanArrays = oneBooleanArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.asInstanceOf[Boolean]
 //  }
 //
-//  protected val castOptNestedOneDate = (colIndex: Int) => {
+//  protected val castNestedOptOneDate = (colIndex: Int) => {
 //    val array = new Array[Date](maxRows)
 //    oneDateArrays = oneDateArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.asInstanceOf[Date]
 //  }
 //
-//  protected val castOptNestedOneUUID = (colIndex: Int) => {
+//  protected val castNestedOptOneUUID = (colIndex: Int) => {
 //    val array = new Array[UUID](maxRows)
 //    oneUUIDArrays = oneUUIDArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = it.next.asInstanceOf[UUID]
 //  }
 //
-//  protected val castOptNestedOneURI = (colIndex: Int) => {
+//  protected val castNestedOptOneURI = (colIndex: Int) => {
 //    val array = new Array[URI](maxRows)
 //    oneURIArrays = oneURIArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -88,21 +88,21 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOneBigInt = (colIndex: Int) => {
+//  protected val castNestedOptOneBigInt = (colIndex: Int) => {
 //    val array = new Array[BigInt](maxRows)
 //    oneBigIntArrays = oneBigIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = BigInt(it.next.toString)
 //  }
 //
-//  protected val castOptNestedOneBigDecimal = (colIndex: Int) => {
+//  protected val castNestedOptOneBigDecimal = (colIndex: Int) => {
 //    val array = new Array[BigDecimal](maxRows)
 //    oneBigDecimalArrays = oneBigDecimalArrays :+ array
 //    (it: jIterator[_], i: Int) =>
 //      array(i) = BigDecimal(it.next.toString)
 //  }
 //
-//  protected val castOptNestedOneRefAttr = (colIndex: Int) => {
+//  protected val castNestedOptOneRefAttr = (colIndex: Int) => {
 //    val array = new Array[BigDecimal](maxRows)
 //    oneBigDecimalArrays = oneBigDecimalArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -112,7 +112,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //  }
 //
 //  // Generic `v` attribute value converted to String}
-//  protected val castOptNestedOneAny = (colIndex: Int) => {
+//  protected val castNestedOptOneAny = (colIndex: Int) => {
 //    val array = new Array[String](maxRows)
 //    oneStringArrays = oneStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -125,9 +125,9 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //  }
 //
 //
-//  // castOptNestedOptOne -----------------------------------------------------
+//  // castNestedOptOptOne -----------------------------------------------------
 //
-//  protected val castOptNestedOptOneEnum = (colIndex: Int) => {
+//  protected val castNestedOptOptOneEnum = (colIndex: Int) => {
 //    val array = new Array[Option[String]](maxRows)
 //    optOneStringArrays = optOneStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -142,7 +142,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneString = (colIndex: Int) => {
+//  protected val castNestedOptOptOneString = (colIndex: Int) => {
 //    val array = new Array[Option[String]](maxRows)
 //    optOneStringArrays = optOneStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -153,7 +153,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneInt = (colIndex: Int) => {
+//  protected val castNestedOptOptOneInt = (colIndex: Int) => {
 //    val array = new Array[Option[Int]](maxRows)
 //    optOneIntArrays = optOneIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -163,7 +163,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneFloat = (colIndex: Int) => {
+//  protected val castNestedOptOptOneFloat = (colIndex: Int) => {
 //    val array = new Array[Option[Float]](maxRows)
 //    optOneFloatArrays = optOneFloatArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -173,7 +173,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneLong = (colIndex: Int) => {
+//  protected val castNestedOptOptOneLong = (colIndex: Int) => {
 //    val array = new Array[Option[Long]](maxRows)
 //    optOneLongArrays = optOneLongArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -183,7 +183,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneDouble = (colIndex: Int) => {
+//  protected val castNestedOptOptOneDouble = (colIndex: Int) => {
 //    val array = new Array[Option[Double]](maxRows)
 //    optOneDoubleArrays = optOneDoubleArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -193,7 +193,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneBoolean = (colIndex: Int) => {
+//  protected val castNestedOptOptOneBoolean = (colIndex: Int) => {
 //    val array = new Array[Option[Boolean]](maxRows)
 //    optOneBooleanArrays = optOneBooleanArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -203,7 +203,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneDate = (colIndex: Int) => {
+//  protected val castNestedOptOptOneDate = (colIndex: Int) => {
 //    val array = new Array[Option[Date]](maxRows)
 //    optOneDateArrays = optOneDateArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -213,7 +213,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneUUID = (colIndex: Int) => {
+//  protected val castNestedOptOptOneUUID = (colIndex: Int) => {
 //    val array = new Array[Option[UUID]](maxRows)
 //    optOneUUIDArrays = optOneUUIDArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -223,7 +223,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneURI = (colIndex: Int) => {
+//  protected val castNestedOptOptOneURI = (colIndex: Int) => {
 //    val array = new Array[Option[URI]](maxRows)
 //    optOneURIArrays = optOneURIArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -236,7 +236,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneBigInt = (colIndex: Int) => {
+//  protected val castNestedOptOptOneBigInt = (colIndex: Int) => {
 //    val array = new Array[Option[BigInt]](maxRows)
 //    optOneBigIntArrays = optOneBigIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -246,7 +246,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptOneBigDecimal = (colIndex: Int) => {
+//  protected val castNestedOptOptOneBigDecimal = (colIndex: Int) => {
 //    val array = new Array[Option[BigDecimal]](maxRows)
 //    optOneBigDecimalArrays = optOneBigDecimalArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -257,7 +257,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //  }
 //
 //
-//  // castOptNestedMany -----------------------------------------------------
+//  // castNestedOptMany -----------------------------------------------------
 //
 //  protected val castOpNestedManyEnum = (colIndex: Int) => {
 //    val array = new Array[Set[String]](maxRows)
@@ -419,9 +419,9 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //  }
 //
 //
-//  // castOptNestedOptMany -----------------------------------------------------
+//  // castNestedOptOptMany -----------------------------------------------------
 //
-//  protected val castOptNestedOptManyEnum = (colIndex: Int) => {
+//  protected val castNestedOptOptManyEnum = (colIndex: Int) => {
 //    val array = new Array[Option[Set[String]]](maxRows)
 //    optManyStringArrays = optManyStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -436,7 +436,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyString = (colIndex: Int) => {
+//  protected val castNestedOptOptManyString = (colIndex: Int) => {
 //    val array = new Array[Option[Set[String]]](maxRows)
 //    optManyStringArrays = optManyStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -451,7 +451,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyInt = (colIndex: Int) => {
+//  protected val castNestedOptOptManyInt = (colIndex: Int) => {
 //    val array = new Array[Option[Set[Int]]](maxRows)
 //    optManyIntArrays = optManyIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -466,7 +466,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyFloat = (colIndex: Int) => {
+//  protected val castNestedOptOptManyFloat = (colIndex: Int) => {
 //    val array = new Array[Option[Set[Float]]](maxRows)
 //    optManyFloatArrays = optManyFloatArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -481,7 +481,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyLong = (colIndex: Int) => {
+//  protected val castNestedOptOptManyLong = (colIndex: Int) => {
 //    val array = new Array[Option[Set[Long]]](maxRows)
 //    optManyLongArrays = optManyLongArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -496,7 +496,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyDouble = (colIndex: Int) => {
+//  protected val castNestedOptOptManyDouble = (colIndex: Int) => {
 //    val array = new Array[Option[Set[Double]]](maxRows)
 //    optManyDoubleArrays = optManyDoubleArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -511,7 +511,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyBoolean = (colIndex: Int) => {
+//  protected val castNestedOptOptManyBoolean = (colIndex: Int) => {
 //    val array = new Array[Option[Set[Boolean]]](maxRows)
 //    optManyBooleanArrays = optManyBooleanArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -526,7 +526,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyDate = (colIndex: Int) => {
+//  protected val castNestedOptOptManyDate = (colIndex: Int) => {
 //    val array = new Array[Option[Set[Date]]](maxRows)
 //    optManyDateArrays = optManyDateArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -541,7 +541,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyUUID = (colIndex: Int) => {
+//  protected val castNestedOptOptManyUUID = (colIndex: Int) => {
 //    val array = new Array[Option[Set[UUID]]](maxRows)
 //    optManyUUIDArrays = optManyUUIDArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -556,7 +556,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyURI = (colIndex: Int) => {
+//  protected val castNestedOptOptManyURI = (colIndex: Int) => {
 //    val array = new Array[Option[Set[URI]]](maxRows)
 //    optManyURIArrays = optManyURIArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -574,7 +574,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyBigInt = (colIndex: Int) => {
+//  protected val castNestedOptOptManyBigInt = (colIndex: Int) => {
 //    val array = new Array[Option[Set[BigInt]]](maxRows)
 //    optManyBigIntArrays = optManyBigIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -589,7 +589,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptManyBigDecimal = (colIndex: Int) => {
+//  protected val castNestedOptOptManyBigDecimal = (colIndex: Int) => {
 //    val array = new Array[Option[Set[BigDecimal]]](maxRows)
 //    optManyBigDecimalArrays = optManyBigDecimalArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -605,9 +605,9 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //  }
 //
 //
-//  // castOptNestedMap -----------------------------------------------------
+//  // castNestedOptMap -----------------------------------------------------
 //
-//  protected val castOptNestedMapString = (colIndex: Int) => {
+//  protected val castNestedOptMapString = (colIndex: Int) => {
 //    val array = new Array[Map[String, String]](maxRows)
 //    mapStringArrays = mapStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -623,7 +623,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapInt = (colIndex: Int) => {
+//  protected val castNestedOptMapInt = (colIndex: Int) => {
 //    val array = new Array[Map[String, Int]](maxRows)
 //    mapIntArrays = mapIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -639,7 +639,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapFloat = (colIndex: Int) => {
+//  protected val castNestedOptMapFloat = (colIndex: Int) => {
 //    val array = new Array[Map[String, Float]](maxRows)
 //    mapFloatArrays = mapFloatArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -655,7 +655,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapLong = (colIndex: Int) => {
+//  protected val castNestedOptMapLong = (colIndex: Int) => {
 //    val array = new Array[Map[String, Long]](maxRows)
 //    mapLongArrays = mapLongArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -671,7 +671,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapDouble = (colIndex: Int) => {
+//  protected val castNestedOptMapDouble = (colIndex: Int) => {
 //    val array = new Array[Map[String, Double]](maxRows)
 //    mapDoubleArrays = mapDoubleArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -687,7 +687,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapBoolean = (colIndex: Int) => {
+//  protected val castNestedOptMapBoolean = (colIndex: Int) => {
 //    val array = new Array[Map[String, Boolean]](maxRows)
 //    mapBooleanArrays = mapBooleanArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -703,7 +703,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapDate = (colIndex: Int) => {
+//  protected val castNestedOptMapDate = (colIndex: Int) => {
 //    val array = new Array[Map[String, Date]](maxRows)
 //    mapDateArrays = mapDateArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -719,7 +719,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapUUID = (colIndex: Int) => {
+//  protected val castNestedOptMapUUID = (colIndex: Int) => {
 //    val array = new Array[Map[String, UUID]](maxRows)
 //    mapUUIDArrays = mapUUIDArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -735,7 +735,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapURI = (colIndex: Int) => {
+//  protected val castNestedOptMapURI = (colIndex: Int) => {
 //    val array = new Array[Map[String, URI]](maxRows)
 //    mapURIArrays = mapURIArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -751,7 +751,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapBigInt = (colIndex: Int) => {
+//  protected val castNestedOptMapBigInt = (colIndex: Int) => {
 //    val array = new Array[Map[String, BigInt]](maxRows)
 //    mapBigIntArrays = mapBigIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -767,7 +767,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedMapBigDecimal = (colIndex: Int) => {
+//  protected val castNestedOptMapBigDecimal = (colIndex: Int) => {
 //    val array = new Array[Map[String, BigDecimal]](maxRows)
 //    mapBigDecimalArrays = mapBigDecimalArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -784,9 +784,9 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //  }
 //
 //
-//  // castOptNestedOptMap -----------------------------------------------------
+//  // castNestedOptOptMap -----------------------------------------------------
 //
-//  protected val castOptNestedOptMapString = (colIndex: Int) => {
+//  protected val castNestedOptOptMapString = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, String]]](maxRows)
 //    optMapStringArrays = optMapStringArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -804,7 +804,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapInt = (colIndex: Int) => {
+//  protected val castNestedOptOptMapInt = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, Int]]](maxRows)
 //    optMapIntArrays = optMapIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -822,7 +822,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapFloat = (colIndex: Int) => {
+//  protected val castNestedOptOptMapFloat = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, Float]]](maxRows)
 //    optMapFloatArrays = optMapFloatArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -840,7 +840,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapLong = (colIndex: Int) => {
+//  protected val castNestedOptOptMapLong = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, Long]]](maxRows)
 //    optMapLongArrays = optMapLongArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -858,7 +858,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapDouble = (colIndex: Int) => {
+//  protected val castNestedOptOptMapDouble = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, Double]]](maxRows)
 //    optMapDoubleArrays = optMapDoubleArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -876,7 +876,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapBoolean = (colIndex: Int) => {
+//  protected val castNestedOptOptMapBoolean = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, Boolean]]](maxRows)
 //    optMapBooleanArrays = optMapBooleanArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -894,7 +894,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapDate = (colIndex: Int) => {
+//  protected val castNestedOptOptMapDate = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, Date]]](maxRows)
 //    optMapDateArrays = optMapDateArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -912,7 +912,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapUUID = (colIndex: Int) => {
+//  protected val castNestedOptOptMapUUID = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, UUID]]](maxRows)
 //    optMapUUIDArrays = optMapUUIDArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -930,7 +930,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapURI = (colIndex: Int) => {
+//  protected val castNestedOptOptMapURI = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, URI]]](maxRows)
 //    optMapURIArrays = optMapURIArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -948,7 +948,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapBigInt = (colIndex: Int) => {
+//  protected val castNestedOptOptMapBigInt = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, BigInt]]](maxRows)
 //    optMapBigIntArrays = optMapBigIntArrays :+ array
 //    (it: jIterator[_], i: Int) =>
@@ -966,7 +966,7 @@ class CastOptNested(maxRows: Int) extends DataArrays
 //      }
 //  }
 //
-//  protected val castOptNestedOptMapBigDecimal = (colIndex: Int) => {
+//  protected val castNestedOptOptMapBigDecimal = (colIndex: Int) => {
 //    val array = new Array[Option[Map[String, BigDecimal]]](maxRows)
 //    optMapBigDecimalArrays = optMapBigDecimalArrays :+ array
 //    (it: jIterator[_], i: Int) =>

@@ -58,11 +58,10 @@ trait PackTypes extends PackBase with Helpers {
   }
   protected lazy val packOptOneString = (it: jIterator[_]) => {
     it.next match {
-      case "__none__" => end()
-      case v          =>
-        add(v.asInstanceOf[String])
-        end()
+      case "__none__" =>
+      case v          => add(v.asInstanceOf[String])
     }
+    end()
   }
 
   protected lazy val packOptOne = (it: jIterator[_]) => {

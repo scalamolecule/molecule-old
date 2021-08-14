@@ -7,26 +7,26 @@ import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap}
 import molecule.core.util.Helpers
 
 
-private[molecule] trait CastOptNested extends Helpers {
+private[molecule] trait CastNestedOpt extends Helpers {
 
   // One =======================================================================
 
-  protected def castOptNestedOneInt(it: jIterator[_]): Int =
+  protected def castNestedOptOneInt(it: jIterator[_]): Int =
     it.next.toString.toInt
 
-  protected def castOptNestedOneBigInt(it: jIterator[_]): BigInt =
+  protected def castNestedOptOneBigInt(it: jIterator[_]): BigInt =
     BigInt(it.next.toString)
 
-  protected def castOptNestedOneBigDecimal(it: jIterator[_]): BigDecimal =
+  protected def castNestedOptOneBigDecimal(it: jIterator[_]): BigDecimal =
     BigDecimal(it.next.asInstanceOf[jBigDec].toString)
 
-  protected def castOptNestedOne[T](it: jIterator[_]): T =
+  protected def castNestedOptOne[T](it: jIterator[_]): T =
     it.next.asInstanceOf[T]
 
-  protected def castOptNestedOneEnum(it: jIterator[_]): String =
+  protected def castNestedOptOneEnum(it: jIterator[_]): String =
     getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
 
-  protected def castOptNestedOneRefAttr(it: jIterator[_]): Long =
+  protected def castNestedOptOneRefAttr(it: jIterator[_]): Long =
   //    it.next.asInstanceOf[jLong].toLong
     it.next
       .asInstanceOf[jMap[_, _]].values().iterator().next
@@ -35,7 +35,7 @@ private[molecule] trait CastOptNested extends Helpers {
 
   // Many ======================================================================
 
-  protected def castOptNestedManyInt(it: jIterator[_]): Set[Int] = {
+  protected def castNestedOptManyInt(it: jIterator[_]): Set[Int] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[Int]
     while (it1.hasNext)
@@ -43,7 +43,7 @@ private[molecule] trait CastOptNested extends Helpers {
     set
   }
 
-  protected def castOptNestedManyBigInt(it: jIterator[_]): Set[BigInt] = {
+  protected def castNestedOptManyBigInt(it: jIterator[_]): Set[BigInt] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[BigInt]
     while (it1.hasNext)
@@ -51,7 +51,7 @@ private[molecule] trait CastOptNested extends Helpers {
     set
   }
 
-  protected def castOptNestedManyBigDecimal(it: jIterator[_]): Set[BigDecimal] = {
+  protected def castNestedOptManyBigDecimal(it: jIterator[_]): Set[BigDecimal] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[BigDecimal]
     while (it1.hasNext)
@@ -59,7 +59,7 @@ private[molecule] trait CastOptNested extends Helpers {
     set
   }
 
-  protected def castOptNestedMany[T](it: jIterator[_]): Set[T] = {
+  protected def castNestedOptMany[T](it: jIterator[_]): Set[T] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[T]
     while (it1.hasNext)
@@ -67,7 +67,7 @@ private[molecule] trait CastOptNested extends Helpers {
     set
   }
 
-  protected def castOptNestedManyEnum(it: jIterator[_]): Set[String] = {
+  protected def castNestedOptManyEnum(it: jIterator[_]): Set[String] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[String]
     while (it1.hasNext)
@@ -75,7 +75,7 @@ private[molecule] trait CastOptNested extends Helpers {
     set
   }
 
-  protected def castOptNestedManyRefAttr(it: jIterator[_]): Set[Long] = {
+  protected def castNestedOptManyRefAttr(it: jIterator[_]): Set[Long] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[Long]
     while (it1.hasNext)
@@ -89,28 +89,28 @@ private[molecule] trait CastOptNested extends Helpers {
 
   // Optional card one =========================================================
 
-  protected def castOptNestedOptOneInt(it: jIterator[_]): Option[Int] =
+  protected def castNestedOptOptOneInt(it: jIterator[_]): Option[Int] =
     it.next match {
       case null | "__none__" => Option.empty[Int]
       case v: jMap[_, _]     => Some(v.values.iterator.next.asInstanceOf[jLong].toInt)
       case v                 => Some(v.asInstanceOf[jLong].toInt)
     }
 
-  protected def castOptNestedOptOneLong(it: jIterator[_]): Option[Long] =
+  protected def castNestedOptOptOneLong(it: jIterator[_]): Option[Long] =
     it.next match {
       case null | "__none__" => Option.empty[Long]
       case v: jMap[_, _]     => Some(v.values.iterator.next.asInstanceOf[jLong].toLong)
       case v                 => Some(v.asInstanceOf[jLong].toLong)
     }
 
-  protected def castOptNestedOptOneDouble(it: jIterator[_]): Option[Double] =
+  protected def castNestedOptOptOneDouble(it: jIterator[_]): Option[Double] =
     it.next match {
       case null | "__none__" => Option.empty[Double]
       case v: jMap[_, _]     => Some(v.values.iterator.next.asInstanceOf[jDouble].toDouble)
       case v                 => Some(v.asInstanceOf[jDouble].toDouble)
     }
 
-  protected def castOptNestedOptOneURI(it: jIterator[_]): Option[URI] = it.next match {
+  protected def castNestedOptOptOneURI(it: jIterator[_]): Option[URI] = it.next match {
     case null | "__none__" => Option.empty[URI]
     case v: jMap[_, _]     => v.values.iterator.next match {
       case uri: URI => Some(uri)
@@ -119,28 +119,28 @@ private[molecule] trait CastOptNested extends Helpers {
     case v                 => Some(v.asInstanceOf[URI])
   }
 
-  protected def castOptNestedOptOneBigInt(it: jIterator[_]): Option[BigInt] =
+  protected def castNestedOptOptOneBigInt(it: jIterator[_]): Option[BigInt] =
     it.next match {
       case null | "__none__" => Option.empty[BigInt]
       case v: jMap[_, _]     => Some(BigInt(v.values.iterator.next.toString))
       case v                 => Some(BigInt(v.asInstanceOf[jBigInt].toString))
     }
 
-  protected def castOptNestedOptOneBigDecimal(it: jIterator[_]): Option[BigDecimal] =
+  protected def castNestedOptOptOneBigDecimal(it: jIterator[_]): Option[BigDecimal] =
     it.next match {
       case null | "__none__" => Option.empty[BigDecimal]
       case v: jMap[_, _]     => Some(BigDecimal(v.values.iterator.next.toString))
       case v                 => Some(BigDecimal(v.asInstanceOf[jBigDec].toString))
     }
 
-  protected def castOptNestedOptOne[T](it: jIterator[_]): Option[T] =
+  protected def castNestedOptOptOne[T](it: jIterator[_]): Option[T] =
     it.next match {
       case null | "__none__" => Option.empty[T]
       case v: jMap[_, _]     => Some(v.values.iterator.next.asInstanceOf[T])
       case v                 => Some(v.asInstanceOf[T])
     }
 
-  protected def castOptNestedOptOneEnum(it: jIterator[_]): Option[String] =
+  protected def castNestedOptOptOneEnum(it: jIterator[_]): Option[String] =
     it.next match {
       case null | "__none__" => Option.empty[String]
       case v: jMap[_, _]     => Some(getKwName(v.values.iterator.next.toString))
@@ -149,7 +149,7 @@ private[molecule] trait CastOptNested extends Helpers {
       )
     }
 
-  protected def castOptNestedOptOneRefAttr(it: jIterator[_]): Option[Long] =
+  protected def castNestedOptOptOneRefAttr(it: jIterator[_]): Option[Long] =
     it.next match {
       case null | "__none__" => Option.empty[Long]
       case v: jMap[_, _]     =>
@@ -173,7 +173,7 @@ private[molecule] trait CastOptNested extends Helpers {
 
   // Optional card many ========================================================
 
-  protected def castOptNestedOptManyInt(it: jIterator[_]): Option[Set[Int]] =
+  protected def castNestedOptOptManyInt(it: jIterator[_]): Option[Set[Int]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[Int]]
       case v: jMap[_, _]     =>
@@ -190,7 +190,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(set)
     }
 
-  protected def castOptNestedOptManyLong(it: jIterator[_]): Option[Set[Long]] =
+  protected def castNestedOptOptManyLong(it: jIterator[_]): Option[Set[Long]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[Long]]
       case v: jMap[_, _]     =>
@@ -207,7 +207,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(set)
     }
 
-  protected def castOptNestedOptManyDouble(it: jIterator[_]): Option[Set[Double]] =
+  protected def castNestedOptOptManyDouble(it: jIterator[_]): Option[Set[Double]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[Double]]
       case v: jMap[_, _]     =>
@@ -224,7 +224,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(set)
     }
 
-  protected def castOptNestedOptManyURI(it: jIterator[_]): Option[Set[URI]] = it.next match {
+  protected def castNestedOptOptManyURI(it: jIterator[_]): Option[Set[URI]] = it.next match {
     case null | "__none__" => Option.empty[Set[URI]]
     case v: jMap[_, _]     =>
       val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
@@ -246,7 +246,7 @@ private[molecule] trait CastOptNested extends Helpers {
       Some(set)
   }
 
-  protected def castOptNestedOptManyBigInt(it: jIterator[_]): Option[Set[BigInt]] =
+  protected def castNestedOptOptManyBigInt(it: jIterator[_]): Option[Set[BigInt]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[BigInt]]
       case v: jMap[_, _]     =>
@@ -263,7 +263,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(set)
     }
 
-  protected def castOptNestedOptManyBigDecimal(it: jIterator[_]): Option[Set[BigDecimal]] =
+  protected def castNestedOptOptManyBigDecimal(it: jIterator[_]): Option[Set[BigDecimal]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[BigDecimal]]
       case v: jMap[_, _]     =>
@@ -280,7 +280,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(set)
     }
 
-  protected def castOptNestedOptMany[T](it: jIterator[_]): Option[Set[T]] =
+  protected def castNestedOptOptMany[T](it: jIterator[_]): Option[Set[T]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[T]]
       case v: jMap[_, _]     =>
@@ -297,7 +297,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(set)
     }
 
-  protected def castOptNestedOptManyEnum(it: jIterator[_]): Option[Set[String]] =
+  protected def castNestedOptOptManyEnum(it: jIterator[_]): Option[Set[String]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[String]]
       case v: jMap[_, _]     =>
@@ -314,7 +314,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(set)
     }
 
-  protected def castOptNestedOptManyRefAttr(it: jIterator[_]): Option[Set[Long]] =
+  protected def castNestedOptOptManyRefAttr(it: jIterator[_]): Option[Set[Long]] =
     it.next match {
       case null | "__none__" => Option.empty[Set[Long]]
       case v: jMap[_, _]     =>
@@ -343,7 +343,7 @@ private[molecule] trait CastOptNested extends Helpers {
 
   // Map =======================================================================
 
-  protected def castOptNestedMapString(it: jIterator[_]): Map[String, String] = {
+  protected def castNestedOptMapString(it: jIterator[_]): Map[String, String] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, String]
     var pair = new Array[String](2)
@@ -354,7 +354,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapInt(it: jIterator[_]): Map[String, Int] = {
+  protected def castNestedOptMapInt(it: jIterator[_]): Map[String, Int] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, Int]
     var pair = new Array[String](2)
@@ -365,7 +365,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapBoolean(it: jIterator[_]): Map[String, Boolean] = {
+  protected def castNestedOptMapBoolean(it: jIterator[_]): Map[String, Boolean] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, Boolean]
     var pair = new Array[String](2)
@@ -376,7 +376,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapLong(it: jIterator[_]): Map[String, Long] = {
+  protected def castNestedOptMapLong(it: jIterator[_]): Map[String, Long] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, Long]
     var pair = new Array[String](2)
@@ -387,7 +387,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapDouble(it: jIterator[_]): Map[String, Double] = {
+  protected def castNestedOptMapDouble(it: jIterator[_]): Map[String, Double] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, Double]
     var pair = new Array[String](2)
@@ -398,7 +398,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapDate(it: jIterator[_]): Map[String, Date] = {
+  protected def castNestedOptMapDate(it: jIterator[_]): Map[String, Date] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, Date]
     var pair = new Array[String](2)
@@ -409,7 +409,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapUUID(it: jIterator[_]): Map[String, UUID] = {
+  protected def castNestedOptMapUUID(it: jIterator[_]): Map[String, UUID] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, UUID]
     var pair = new Array[String](2)
@@ -420,7 +420,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapURI(it: jIterator[_]): Map[String, URI] = {
+  protected def castNestedOptMapURI(it: jIterator[_]): Map[String, URI] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, URI]
     var pair = new Array[String](2)
@@ -431,7 +431,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapBigInt(it: jIterator[_]): Map[String, BigInt] = {
+  protected def castNestedOptMapBigInt(it: jIterator[_]): Map[String, BigInt] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, BigInt]
     var pair = new Array[String](2)
@@ -442,7 +442,7 @@ private[molecule] trait CastOptNested extends Helpers {
     map
   }
 
-  protected def castOptNestedMapBigDecimal(it: jIterator[_]): Map[String, BigDecimal] = {
+  protected def castNestedOptMapBigDecimal(it: jIterator[_]): Map[String, BigDecimal] = {
     val it1  = it.next.asInstanceOf[jList[_]].iterator
     var map  = Map.empty[String, BigDecimal]
     var pair = new Array[String](2)
@@ -456,7 +456,7 @@ private[molecule] trait CastOptNested extends Helpers {
 
   // Optional Map ==============================================================
 
-  protected def castOptNestedOptMapString(it: jIterator[_]): Option[Map[String, String]] =
+  protected def castNestedOptOptMapString(it: jIterator[_]): Option[Map[String, String]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, String]]
       case v: jMap[_, _]     =>
@@ -479,7 +479,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapInt(it: jIterator[_]): Option[Map[String, Int]] =
+  protected def castNestedOptOptMapInt(it: jIterator[_]): Option[Map[String, Int]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, Int]]
       case v: jMap[_, _]     =>
@@ -502,7 +502,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapLong(it: jIterator[_]): Option[Map[String, Long]] =
+  protected def castNestedOptOptMapLong(it: jIterator[_]): Option[Map[String, Long]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, Long]]
       case v: jMap[_, _]     =>
@@ -525,7 +525,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapDouble(it: jIterator[_]): Option[Map[String, Double]] =
+  protected def castNestedOptOptMapDouble(it: jIterator[_]): Option[Map[String, Double]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, Double]]
       case v: jMap[_, _]     =>
@@ -548,7 +548,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapBoolean(it: jIterator[_]): Option[Map[String, Boolean]] =
+  protected def castNestedOptOptMapBoolean(it: jIterator[_]): Option[Map[String, Boolean]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, Boolean]]
       case v: jMap[_, _]     =>
@@ -571,7 +571,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapDate(it: jIterator[_]): Option[Map[String, Date]] =
+  protected def castNestedOptOptMapDate(it: jIterator[_]): Option[Map[String, Date]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, Date]]
       case v: jMap[_, _]     =>
@@ -594,7 +594,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapUUID(it: jIterator[_]): Option[Map[String, UUID]] =
+  protected def castNestedOptOptMapUUID(it: jIterator[_]): Option[Map[String, UUID]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, UUID]]
       case v: jMap[_, _]     =>
@@ -617,7 +617,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapURI(it: jIterator[_]): Option[Map[String, URI]] =
+  protected def castNestedOptOptMapURI(it: jIterator[_]): Option[Map[String, URI]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, URI]]
       case v: jMap[_, _]     =>
@@ -640,7 +640,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapBigInt(it: jIterator[_]): Option[Map[String, BigInt]] =
+  protected def castNestedOptOptMapBigInt(it: jIterator[_]): Option[Map[String, BigInt]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, BigInt]]
       case v: jMap[_, _]     =>
@@ -663,7 +663,7 @@ private[molecule] trait CastOptNested extends Helpers {
         Some(map)
     }
 
-  protected def castOptNestedOptMapBigDecimal(it: jIterator[_]): Option[Map[String, BigDecimal]] =
+  protected def castNestedOptOptMapBigDecimal(it: jIterator[_]): Option[Map[String, BigDecimal]] =
     it.next match {
       case null | "__none__" => Option.empty[Map[String, BigDecimal]]
       case v: jMap[_, _]     =>

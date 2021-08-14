@@ -149,13 +149,13 @@ trait UnpackTypes extends Helpers {
     if (v0 == "◄") {
       Option.empty[Set[String]]
     } else {
-      buf.setLength(0)
+      bufString.clear()
       v = v0
       do {
         bufString.append(unpackOneString(v, vs))
         v = vs.next()
       } while (v != "◄")
-      Some(buf.toString)
+      Some(bufString.toSet)
     }
   }
 

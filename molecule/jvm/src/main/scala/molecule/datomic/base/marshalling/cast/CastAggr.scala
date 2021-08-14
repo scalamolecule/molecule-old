@@ -4,7 +4,7 @@ import java.lang.{Long => jLong}
 import java.net.URI
 import java.util.{Date, UUID, List => jList, Set => jSet}
 
-class CastAggr(maxRows: Int) extends CastOptNested(maxRows) {
+class CastAggr(maxRows: Int) extends CastNestedOpt(maxRows) {
 
 
   protected val castAggrInt = (colIndex: Int) => {

@@ -19,7 +19,7 @@ trait PackBase {
     sb.append("\n◄◄")
     ()
   }
-  def next(): Unit = {
+  def rowSeparator(): Unit = {
     // mark end of string/multi-value
     sb.append("\n-----------")
     ()

@@ -71,7 +71,7 @@ trait Conn extends ColOps with Serializations {
     query: Query,
     n: Int,
     indexes: Indexes,
-    isOptNested: Boolean,
+    isNestedOpt: Boolean,
     qr2tpl: QueryResult => Int => Tpl,
     packed2tpl: Iterator[String] => Tpl
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
@@ -84,20 +84,20 @@ trait Conn extends ColOps with Serializations {
     //    debug("js")
 
     // Fetch QueryResult with Ajax call via typed Sloth wire
-    val futResult = if (isOptNested) {
+    val futResult = if (isNestedOpt) {
       rpc.queryStr(
         connProxy, datalogQuery, rules, l, ll, lll, n, indexes
       ).map { packed =>
-                println(packed)
+//                println(packed)
         val vs          = packed.linesIterator
         val rowCountAll = vs.next().toInt
         val rowCount    = vs.next().toInt
         val queryMs     = vs.next().toLong
-        val buf         = new ListBuffer[Tpl]
+        val rows         = new ListBuffer[Tpl]
         while (vs.hasNext) {
-          buf.addOne(packed2tpl(vs))
+          rows.addOne(packed2tpl(vs))
         }
-        buf.toList
+        rows.toList
       }
     } else {
       rpc.query(

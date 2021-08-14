@@ -11,7 +11,7 @@ import molecule.core.macros.attrResolvers.CastAggr
   * variating cases. But we prioritize minimizing the macro-generated code as much as possible
   * to lower compile time overhead.
   */
-trait TypedCastHelpersAggr extends CastAggr with TypedCastHelpersOptNested { 
+trait TypedCastHelpersAggr extends CastAggr with TypedCastHelpersNestedOpt {
 
   // card one
 

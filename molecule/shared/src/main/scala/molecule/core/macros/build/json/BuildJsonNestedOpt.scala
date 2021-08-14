@@ -4,14 +4,14 @@ import molecule.core.macros.attrResolvers.JsonBase
 import molecule.core.macros.build.BuildBase
 import scala.reflect.macros.blackbox
 
-private[molecule] trait BuildJsonOptNested extends BuildBase with JsonBase {
+private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
   val c: blackbox.Context
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildJsonOptNested", 2, 1)
+  private lazy val xx = InspectMacro("BuildJsonNestedOpt", 2, 1)
 
-  def jsonOptNested(
+  def jsonNestedOpt(
     current: BuilderObj,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
@@ -50,7 +50,7 @@ private[molecule] trait BuildJsonOptNested extends BuildBase with JsonBase {
                   case last =>
                     val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
                     val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                    ..${jsonOptNested(nested, refIndexes, tacitIndexes, level + 1, tabs + 2)}
+                    ..${jsonNestedOpt(nested, refIndexes, tacitIndexes, level + 1, tabs + 2)}
                     sb.append(${indent(tabs + 1) + "]"})
                 }
               """
@@ -95,7 +95,7 @@ private[molecule] trait BuildJsonOptNested extends BuildBase with JsonBase {
                 case last       =>
                   val list = last.asInstanceOf[jList[Any]]
                   val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                  ..${jsonOptNested(last, refIndexes, tacitIndexes, level + 1, tabs + 2)}
+                  ..${jsonNestedOpt(last, refIndexes, tacitIndexes, level + 1, tabs + 2)}
                   sb.append(${indent(tabs + 1) + "]"})
               }
               sb.append(${indent(tabs) + "}"})

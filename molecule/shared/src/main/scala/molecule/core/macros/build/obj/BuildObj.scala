@@ -76,8 +76,8 @@ trait BuildObj extends BuildBase {
     }
   }
 
-  def objFlat(obj: BuilderObj, colIndex0: Int = -1, isOptNested: Boolean = false): (Tree, Int) = {
-    var colIndex = if (isOptNested && colIndex0 == -1) -1 else colIndex0
+  def objFlat(obj: BuilderObj, colIndex0: Int = -1, isNestedOpt: Boolean = false): (Tree, Int) = {
+    var colIndex = if (isNestedOpt && colIndex0 == -1) -1 else colIndex0
 
     def properties(nodes: List[BuilderNode]): List[Tree] = {
       var propNames = List.empty[String]
@@ -88,11 +88,11 @@ trait BuildObj extends BuildBase {
           if (!propNames.contains(prop)) {
             propNames = propNames :+ prop
             optAggr match {
-              case None if isOptNested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
+              case None if isNestedOpt => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
               case None                => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
 
               case Some(aggrTpe) if aggrTpe == tpe.toString() =>
-                if (isOptNested)
+                if (isNestedOpt)
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
                 else
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
@@ -113,7 +113,7 @@ trait BuildObj extends BuildBase {
           //          } else {
           //            tq"Product"
           //          }
-          //          val subObj     = q"tpl.productElement($colIndex).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
+          //          val subObj     = q"tpl.productElement($colIndex).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isNestedOpt)._1} )"
 
           val oneNestedProp    = props.length == 1
           val singleNestedType = props.head match {
@@ -124,11 +124,11 @@ trait BuildObj extends BuildBase {
             q"""
               tpl.productElement($colIndex).asInstanceOf[Seq[$singleNestedType]].map { v =>
                 val tpl = Tuple1(v)
-                ${objFlat(o, -1, isOptNested)._1}
+                ${objFlat(o, -1, isNestedOpt)._1}
               }
             """
           else
-            q"tpl.productElement($colIndex).asInstanceOf[Seq[Product]].map( tpl => ${objFlat(o, -1, isOptNested)._1} )"
+            q"tpl.productElement($colIndex).asInstanceOf[Seq[Product]].map( tpl => ${objFlat(o, -1, isNestedOpt)._1} )"
 
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init] = $subObj")
@@ -158,7 +158,7 @@ trait BuildObj extends BuildBase {
           }
 
         case o@BuilderObj(_, ref, _, props) =>
-          val (subObj, colIndexSub) = objFlat(o, colIndex, isOptNested)
+          val (subObj, colIndexSub) = objFlat(o, colIndex, isNestedOpt)
           colIndex = colIndexSub
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Init = $subObj")

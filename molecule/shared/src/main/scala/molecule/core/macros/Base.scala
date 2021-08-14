@@ -2,7 +2,7 @@ package molecule.core.macros
 
 import molecule.core.ast.elements._
 import molecule.core.macros.qr.CastArrays
-import molecule.core.macros.attrResolverTrees.{LambdaCastAggr, LambdaCastOptNested, LambdaCastTypes, LambdaJsonAggr, LambdaJsonOptNested, LambdaJsonTypes}
+import molecule.core.macros.attrResolverTrees.{LambdaCastAggr, LambdaCastNestedOpt, LambdaCastTypes, LambdaJsonAggr, LambdaJsonNestedOpt, LambdaJsonTypes}
 import molecule.core.marshalling.attrIndexes._
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
@@ -32,6 +32,7 @@ private[molecule] trait Base extends Dsl2Model {
         import molecule.datomic.base.ast.query._
         import molecule.datomic.base.transform.{Model2Query, QueryOptimizer}
         import molecule.datomic.base.facade.Conn
+        import scala.collection.mutable.ListBuffer
         import scala.concurrent.Future
      """
 

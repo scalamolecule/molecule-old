@@ -15,6 +15,20 @@ case class Rows2QueryResult(
   val rows                        = rowCollection.iterator
   var row: java.util.List[AnyRef] = _
   var i                           = 0
+  var levels = 0
+
+  def getAttrIndexes(indexNodes: List[IndexNode], acc: List[AttrIndex]): List[AttrIndex] = {
+    indexNodes.flatMap {
+      case ai: AttrIndex        => acc :+ ai
+      case Indexes(_, 2, attrs) =>
+        levels += 1
+        getAttrIndexes(attrs, acc)
+      case Indexes(_, _, attrs) => getAttrIndexes(attrs, acc)
+    }
+  }
+
+//  val flatIndexes = List.fill(levels)(AttrIndex("e", 3,3,)) getAttrIndexes(indexes.attrs, Nil)
+  val flatIndexes = getAttrIndexes(indexes.attrs, Nil)
 
   def get: QueryResult = {
     // Populate mutable arrays
@@ -219,7 +233,8 @@ case class Rows2QueryResult(
   }
 
   def getCastingLambda(colIndex: Int): (util.List[AnyRef], Int) => Unit = {
-    castLambdas(indexes.attrs(colIndex).asInstanceOf[AttrIndex].castIndex)(colIndex)
+//    castLambdas(indexes.attrs(colIndex).asInstanceOf[AttrIndex].castIndex)(colIndex)
+    castLambdas(flatIndexes(colIndex).castIndex)(colIndex)
   }
 
   // See indexes in cast.CastLambdas

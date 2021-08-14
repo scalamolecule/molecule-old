@@ -4,7 +4,7 @@ import java.lang.{Double => jDouble, Long => jLong}
 import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
 import java.net.URI
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap}
-import molecule.core.macros.attrResolvers.CastOptNested
+import molecule.core.macros.attrResolvers.CastNestedOpt
 import molecule.core.util.Helpers
 
 /** Core molecule interface override defining actions that can be called on molecules.
@@ -13,26 +13,26 @@ import molecule.core.util.Helpers
   * variating cases. But we prioritize minimizing the macro-generated code as much as possible
   * to lower compile time overhead.
   */
-trait TypedCastHelpersOptNested extends CastOptNested with Helpers { 
+trait TypedCastHelpersNestedOpt extends CastNestedOpt with Helpers { 
 
   // card one
 
-  protected override def castOptNestedOneInt(it: jIterator[_]): Int =
+  protected override def castNestedOptOneInt(it: jIterator[_]): Int =
     it.next.toString.toInt
 
-  protected override def castOptNestedOneBigInt(it: jIterator[_]): BigInt =
+  protected override def castNestedOptOneBigInt(it: jIterator[_]): BigInt =
     BigInt(it.next.toString)
 
-  protected override def castOptNestedOneBigDecimal(it: jIterator[_]): BigDecimal =
+  protected override def castNestedOptOneBigDecimal(it: jIterator[_]): BigDecimal =
     BigDecimal(it.next.asInstanceOf[jBigDec].toString)
 
-  protected override def castOptNestedOne[T](it: jIterator[_]): T =
+  protected override def castNestedOptOne[T](it: jIterator[_]): T =
     it.next.asInstanceOf[T]
 
-  protected override def castOptNestedOneEnum(it: jIterator[_]): String =
+  protected override def castNestedOptOneEnum(it: jIterator[_]): String =
     getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
 
-  protected override def castOptNestedOneRefAttr(it: jIterator[_]): Long =
+  protected override def castNestedOptOneRefAttr(it: jIterator[_]): Long =
     it.next
       .asInstanceOf[jMap[_, _]].values().iterator().next
       .asInstanceOf[jLong].toLong
@@ -40,7 +40,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
 
   // Many ===========================================================================================
 
-  protected override def castOptNestedManyInt(it: jIterator[_]): Set[Int] = {
+  protected override def castNestedOptManyInt(it: jIterator[_]): Set[Int] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[Int]
     while (it1.hasNext)
@@ -48,7 +48,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     set
   }
 
-  protected override def castOptNestedManyBigInt(it: jIterator[_]): Set[BigInt] = {
+  protected override def castNestedOptManyBigInt(it: jIterator[_]): Set[BigInt] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[BigInt]
     while (it1.hasNext)
@@ -56,7 +56,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     set
   }
 
-  protected override def castOptNestedManyBigDecimal(it: jIterator[_]): Set[BigDecimal] = {
+  protected override def castNestedOptManyBigDecimal(it: jIterator[_]): Set[BigDecimal] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[BigDecimal]
     while (it1.hasNext)
@@ -64,7 +64,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     set
   }
 
-  protected override def castOptNestedMany[T](it: jIterator[_]): Set[T] = {
+  protected override def castNestedOptMany[T](it: jIterator[_]): Set[T] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[T]
     while (it1.hasNext)
@@ -72,7 +72,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     set
   }
 
-  protected override def castOptNestedManyEnum(it: jIterator[_]): Set[String] = {
+  protected override def castNestedOptManyEnum(it: jIterator[_]): Set[String] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[String]
     while (it1.hasNext)
@@ -80,7 +80,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     set
   }
 
-  protected override def castOptNestedManyRefAttr(it: jIterator[_]): Set[Long] = {
+  protected override def castNestedOptManyRefAttr(it: jIterator[_]): Set[Long] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var set = Set.empty[Long]
     while (it1.hasNext)
@@ -93,43 +93,43 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
 
   // Optional card one ===========================================================================================
 
-  protected override def castOptNestedOptOneInt(it: jIterator[_]): Option[Int] =
+  protected override def castNestedOptOptOneInt(it: jIterator[_]): Option[Int] =
     it.next match {
       case "__none__" => Option.empty[Int]
       case v          => Some(v.asInstanceOf[jLong].toInt)
     }
 
-  protected override def castOptNestedOptOneLong(it: jIterator[_]): Option[Long] =
+  protected override def castNestedOptOptOneLong(it: jIterator[_]): Option[Long] =
     it.next match {
       case "__none__" => Option.empty[Long]
       case v          => Some(v.asInstanceOf[jLong].toLong)
     }
 
-  protected override def castOptNestedOptOneDouble(it: jIterator[_]): Option[Double] =
+  protected override def castNestedOptOptOneDouble(it: jIterator[_]): Option[Double] =
     it.next match {
       case "__none__" => Option.empty[Double]
       case v          => Some(v.asInstanceOf[jDouble].toDouble)
     }
 
-  protected override def castOptNestedOptOneBigInt(it: jIterator[_]): Option[BigInt] =
+  protected override def castNestedOptOptOneBigInt(it: jIterator[_]): Option[BigInt] =
     it.next match {
       case "__none__" => Option.empty[BigInt]
       case v          => Some(BigInt(v.asInstanceOf[jBigInt].toString))
     }
 
-  protected override def castOptNestedOptOneBigDecimal(it: jIterator[_]): Option[BigDecimal] =
+  protected override def castNestedOptOptOneBigDecimal(it: jIterator[_]): Option[BigDecimal] =
     it.next match {
       case "__none__" => Option.empty[BigDecimal]
       case v          => Some(BigDecimal(v.asInstanceOf[jBigDec].toString))
     }
 
-  protected override def castOptNestedOptOne[T](it: jIterator[_]): Option[T] =
+  protected override def castNestedOptOptOne[T](it: jIterator[_]): Option[T] =
     it.next match {
       case "__none__" => Option.empty[T]
       case v          => Some(v.asInstanceOf[T])
     }
 
-  protected override def castOptNestedOptOneEnum(it: jIterator[_]): Option[String] =
+  protected override def castNestedOptOptOneEnum(it: jIterator[_]): Option[String] =
     it.next match {
       case "__none__" => Option.empty[String]
       case v          => Some(
@@ -137,7 +137,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
       )
     }
 
-  protected override def castOptNestedOptOneRefAttr(it: jIterator[_]): Option[Long] =
+  protected override def castNestedOptOptOneRefAttr(it: jIterator[_]): Option[Long] =
     it.next match {
       case "__none__" => Option.empty[Long]
       case v          =>
@@ -150,7 +150,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
   // Optional card many ===========================================================================================
 
 
-  protected override def castOptNestedOptManyInt(it: jIterator[_]): Option[Set[Int]] =
+  protected override def castNestedOptOptManyInt(it: jIterator[_]): Option[Set[Int]] =
     it.next match {
       case "__none__" => Option.empty[Set[Int]]
       case v          =>
@@ -161,7 +161,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(set)
     }
 
-  protected override def castOptNestedOptManyLong(it: jIterator[_]): Option[Set[Long]] =
+  protected override def castNestedOptOptManyLong(it: jIterator[_]): Option[Set[Long]] =
     it.next match {
       case "__none__" => Option.empty[Set[Long]]
       case v          =>
@@ -172,7 +172,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(set)
     }
 
-  protected override def castOptNestedOptManyDouble(it: jIterator[_]): Option[Set[Double]] =
+  protected override def castNestedOptOptManyDouble(it: jIterator[_]): Option[Set[Double]] =
     it.next match {
       case "__none__" => Option.empty[Set[Double]]
       case v          =>
@@ -183,7 +183,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(set)
     }
 
-  protected override def castOptNestedOptManyBigInt(it: jIterator[_]): Option[Set[BigInt]] =
+  protected override def castNestedOptOptManyBigInt(it: jIterator[_]): Option[Set[BigInt]] =
     it.next match {
       case "__none__" => Option.empty[Set[BigInt]]
       case v          =>
@@ -194,7 +194,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(set)
     }
 
-  protected override def castOptNestedOptManyBigDecimal(it: jIterator[_]): Option[Set[BigDecimal]] =
+  protected override def castNestedOptOptManyBigDecimal(it: jIterator[_]): Option[Set[BigDecimal]] =
     it.next match {
       case "__none__" => Option.empty[Set[BigDecimal]]
       case v          =>
@@ -205,7 +205,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(set)
     }
 
-  protected override def castOptNestedOptMany[T](it: jIterator[_]): Option[Set[T]] =
+  protected override def castNestedOptOptMany[T](it: jIterator[_]): Option[Set[T]] =
     it.next match {
       case "__none__" => Option.empty[Set[T]]
       case v          =>
@@ -216,7 +216,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(set)
     }
 
-  protected override def castOptNestedOptManyEnum(it: jIterator[_]): Option[Set[String]] =
+  protected override def castNestedOptOptManyEnum(it: jIterator[_]): Option[Set[String]] =
     it.next match {
       case "__none__" => Option.empty[Set[String]]
       case v          =>
@@ -227,7 +227,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(set)
     }
 
-  protected override def castOptNestedOptManyRefAttr(it: jIterator[_]): Option[Set[Long]] =
+  protected override def castNestedOptOptManyRefAttr(it: jIterator[_]): Option[Set[Long]] =
     it.next match {
       case "__none__" => Option.empty[Set[Long]]
       case v          =>
@@ -243,7 +243,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
 
   // Map ===========================================================================================
 
-  protected override def castOptNestedMapString(it: jIterator[_]): Map[String, String] = {
+  protected override def castNestedOptMapString(it: jIterator[_]): Map[String, String] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, String]
     var pair  = new Array[String](2)
@@ -254,7 +254,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapInt(it: jIterator[_]): Map[String, Int] = {
+  protected override def castNestedOptMapInt(it: jIterator[_]): Map[String, Int] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, Int]
     var pair  = new Array[String](2)
@@ -265,7 +265,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapBoolean(it: jIterator[_]): Map[String, Boolean] = {
+  protected override def castNestedOptMapBoolean(it: jIterator[_]): Map[String, Boolean] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, Boolean]
     var pair  = new Array[String](2)
@@ -276,7 +276,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapLong(it: jIterator[_]): Map[String, Long] = {
+  protected override def castNestedOptMapLong(it: jIterator[_]): Map[String, Long] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, Long]
     var pair  = new Array[String](2)
@@ -287,7 +287,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapDouble(it: jIterator[_]): Map[String, Double] = {
+  protected override def castNestedOptMapDouble(it: jIterator[_]): Map[String, Double] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, Double]
     var pair  = new Array[String](2)
@@ -298,7 +298,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapDate(it: jIterator[_]): Map[String, Date] = {
+  protected override def castNestedOptMapDate(it: jIterator[_]): Map[String, Date] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, Date]
     var pair  = new Array[String](2)
@@ -309,7 +309,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapUUID(it: jIterator[_]): Map[String, UUID] = {
+  protected override def castNestedOptMapUUID(it: jIterator[_]): Map[String, UUID] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, UUID]
     var pair  = new Array[String](2)
@@ -320,7 +320,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapURI(it: jIterator[_]): Map[String, URI] = {
+  protected override def castNestedOptMapURI(it: jIterator[_]): Map[String, URI] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, URI]
     var pair  = new Array[String](2)
@@ -331,7 +331,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapBigInt(it: jIterator[_]): Map[String, BigInt] = {
+  protected override def castNestedOptMapBigInt(it: jIterator[_]): Map[String, BigInt] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, BigInt]
     var pair  = new Array[String](2)
@@ -342,7 +342,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
     map
   }
 
-  protected override def castOptNestedMapBigDecimal(it: jIterator[_]): Map[String, BigDecimal] = {
+  protected override def castNestedOptMapBigDecimal(it: jIterator[_]): Map[String, BigDecimal] = {
     val it1 = it.next.asInstanceOf[jList[_]].iterator
     var map = Map.empty[String, BigDecimal]
     var pair  = new Array[String](2)
@@ -356,7 +356,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
 
   // Optional Map ===========================================================================================
 
-  protected override def castOptNestedOptMapString(it: jIterator[_]): Option[Map[String, String]] =
+  protected override def castNestedOptOptMapString(it: jIterator[_]): Option[Map[String, String]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, String]]
       case v          =>
@@ -370,7 +370,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapInt(it: jIterator[_]): Option[Map[String, Int]] =
+  protected override def castNestedOptOptMapInt(it: jIterator[_]): Option[Map[String, Int]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, Int]]
       case v          =>
@@ -384,7 +384,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapBoolean(it: jIterator[_]): Option[Map[String, Boolean]] =
+  protected override def castNestedOptOptMapBoolean(it: jIterator[_]): Option[Map[String, Boolean]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, Boolean]]
       case v          =>
@@ -398,7 +398,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapLong(it: jIterator[_]): Option[Map[String, Long]] =
+  protected override def castNestedOptOptMapLong(it: jIterator[_]): Option[Map[String, Long]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, Long]]
       case v          =>
@@ -412,7 +412,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapDouble(it: jIterator[_]): Option[Map[String, Double]] =
+  protected override def castNestedOptOptMapDouble(it: jIterator[_]): Option[Map[String, Double]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, Double]]
       case v          =>
@@ -426,7 +426,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapDate(it: jIterator[_]): Option[Map[String, Date]] =
+  protected override def castNestedOptOptMapDate(it: jIterator[_]): Option[Map[String, Date]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, Date]]
       case v          =>
@@ -440,7 +440,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapUUID(it: jIterator[_]): Option[Map[String, UUID]] =
+  protected override def castNestedOptOptMapUUID(it: jIterator[_]): Option[Map[String, UUID]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, UUID]]
       case v          =>
@@ -454,7 +454,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapURI(it: jIterator[_]): Option[Map[String, URI]] =
+  protected override def castNestedOptOptMapURI(it: jIterator[_]): Option[Map[String, URI]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, URI]]
       case v          =>
@@ -468,7 +468,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapBigInt(it: jIterator[_]): Option[Map[String, BigInt]] =
+  protected override def castNestedOptOptMapBigInt(it: jIterator[_]): Option[Map[String, BigInt]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, BigInt]]
       case v          =>
@@ -482,7 +482,7 @@ trait TypedCastHelpersOptNested extends CastOptNested with Helpers {
         Some(map)
     }
 
-  protected override def castOptNestedOptMapBigDecimal(it: jIterator[_]): Option[Map[String, BigDecimal]] =
+  protected override def castNestedOptOptMapBigDecimal(it: jIterator[_]): Option[Map[String, BigDecimal]] =
     it.next match {
       case "__none__" => Option.empty[Map[String, BigDecimal]]
       case v          =>

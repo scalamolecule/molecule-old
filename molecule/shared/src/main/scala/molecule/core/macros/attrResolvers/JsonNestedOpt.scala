@@ -4,23 +4,23 @@ import java.lang.{Long => jLong}
 import java.util.{Date, Iterator => jIterator, List => jList, Map => jMap}
 
 
-private[molecule] trait JsonOptNested extends JsonBase {
+private[molecule] trait JsonNestedOpt extends JsonBase {
 
   // One ===========================================================================================
 
-  protected def jsonOptNestedOneQuoted(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
+  protected def jsonNestedOptOneQuoted(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
     quotedPair(sb, field, it.next.toString)
 
-  protected def jsonOptNestedOne(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
+  protected def jsonNestedOptOne(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
     pair(sb, field, it.next)
 
-  protected def jsonOptNestedOneToString(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
+  protected def jsonNestedOptOneToString(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
     pair(sb, field, it.next.toString)
 
-  protected def jsonOptNestedOneDate(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
+  protected def jsonNestedOptOneDate(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer =
     quotedPair(sb, field, date2str(it.next.asInstanceOf[Date]))
 
-  protected def jsonOptNestedOneAny(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = it.next match {
+  protected def jsonNestedOptOneAny(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = it.next match {
     case value: String         => quotedPair(sb, field, value)
     case value: Int            => pair(sb, field, value)
     case value: Float          => pair(sb, field, value)
@@ -35,12 +35,12 @@ private[molecule] trait JsonOptNested extends JsonBase {
     case valueOfUnknownType    => quotedPair(sb, field, valueOfUnknownType.toString)
   }
 
-  protected def jsonOptNestedOneEnum(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOneEnum(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     val enum = getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
     quotedPair(sb, field, enum)
   }
 
-  protected def jsonOptNestedOneRefAttr(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOneRefAttr(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     val refAttr = it.next
       .asInstanceOf[jMap[_, _]].values().iterator().next
       .asInstanceOf[jLong].toLong
@@ -50,7 +50,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   // Many ===========================================================================================
 
-  protected def jsonOptNestedManyQuoted(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptManyQuoted(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -64,7 +64,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonOptNestedMany(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptMany(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -78,7 +78,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonOptNestedManyToString(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptManyToString(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -92,7 +92,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonOptNestedManyDate(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptManyDate(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -106,7 +106,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonOptNestedManyEnum(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptManyEnum(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -120,7 +120,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     sb.append("]")
   }
 
-  protected def jsonOptNestedManyRefAttr(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptManyRefAttr(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": [")
     var next = false
@@ -138,42 +138,42 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   // Optional card one ===========================================================================================
 
-  protected def jsonOptNestedOptOneQuoted(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOptOneQuoted(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          => quotedPair(sb, field, v.toString)
     }
   }
 
-  protected def jsonOptNestedOptOne(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOptOne(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          => pair(sb, field, v)
     }
   }
 
-  protected def jsonOptNestedOptOneToString(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOptOneToString(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          => pair(sb, field, v.toString)
     }
   }
 
-  protected def jsonOptNestedOptOneDate(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOptOneDate(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          => quotedPair(sb, field, date2str(v.asInstanceOf[Date]))
     }
   }
 
-  protected def jsonOptNestedOptOneEnum(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOptOneEnum(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          => quotedPair(sb, field, getKwName(v.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
     }
   }
 
-  protected def jsonOptNestedOptOneRefAttr(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
+  protected def jsonNestedOptOptOneRefAttr(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -187,7 +187,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   // Optional card many ===========================================================================================
 
-  protected def jsonOptNestedOptManyQuoted(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptManyQuoted(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -205,7 +205,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     }
   }
 
-  protected def jsonOptNestedOptMany(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptMany(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -223,7 +223,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     }
   }
 
-  protected def jsonOptNestedOptManyToString(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptManyToString(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -241,7 +241,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     }
   }
 
-  protected def jsonOptNestedOptManyDate(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptManyDate(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -259,7 +259,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     }
   }
 
-  protected def jsonOptNestedOptManyRefAttr(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptManyRefAttr(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -280,7 +280,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     }
   }
 
-  protected def jsonOptNestedOptManyEnum(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptManyEnum(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -302,7 +302,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   // Map ===========================================================================================
 
-  protected def jsonOptNestedMapQuoted(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptMapQuoted(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": {")
     var next = false
@@ -320,7 +320,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     sb.append("}")
   }
 
-  protected def jsonOptNestedMap(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptMap(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     quote(sb, field)
     sb.append(": {")
     var next = false
@@ -341,7 +341,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   // Optional Map ===========================================================================================
 
-  protected def jsonOptNestedOptMapQuoted(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptMapQuoted(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>
@@ -363,7 +363,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     }
   }
 
-  protected def jsonOptNestedOptMap(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
+  protected def jsonNestedOptOptMap(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     it.next match {
       case "__none__" => pair(sb, field, "null")
       case v          =>

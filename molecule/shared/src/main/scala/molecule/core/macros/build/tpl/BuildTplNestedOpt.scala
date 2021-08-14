@@ -1,17 +1,17 @@
 package molecule.core.macros.build.tpl
 
-import molecule.core.macros.attrResolverTrees.LambdaCastOptNested
+import molecule.core.macros.attrResolverTrees.LambdaCastNestedOpt
 import molecule.core.macros.build.BuildBase
 import scala.reflect.macros.blackbox
 
-private[molecule] trait BuildTplOptNested extends LambdaCastOptNested with BuildBase {
+private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with BuildBase {
   val c: blackbox.Context
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildTplOptNested", 2, 2)
+  private lazy val xx = InspectMacro("BuildTplNestedOpt", 2, 2)
 
-  def tplOptNested(
+  def tplNestedOpt(
     current: BuilderObj,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
@@ -31,7 +31,7 @@ private[molecule] trait BuildTplOptNested extends LambdaCastOptNested with Build
                 case last =>
                   val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
                   val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                  ..${tplOptNested(nested, refIndexes, tacitIndexes, level + 1)}
+                  ..${tplNestedOpt(nested, refIndexes, tacitIndexes, level + 1)}
               }
             """
           )
@@ -62,7 +62,7 @@ private[molecule] trait BuildTplOptNested extends LambdaCastOptNested with Build
                     case last       =>
                       val list = last.asInstanceOf[jList[Any]]
                       val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                      ..${tplOptNested(last, refIndexes, tacitIndexes, level + 1)}
+                      ..${tplNestedOpt(last, refIndexes, tacitIndexes, level + 1)}
                   }
                 )
               )

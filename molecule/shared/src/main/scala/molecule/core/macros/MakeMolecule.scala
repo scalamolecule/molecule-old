@@ -9,7 +9,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //     private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  //  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+//    private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
   private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
@@ -20,8 +20,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       obj, indexes,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
-      isOptNested,
-      optNestedRefIndexes, optNestedTacitIndexes
+      isNestedOpt,
+      nestedOptRefIndexes, nestedOptTacitIndexes
       ) = getModel(dsl)
 
     val imports              = getImports(genericImports)
@@ -87,7 +87,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     }
 
 
-    def mkOptNested = {
+    def mkNestedOpt = {
       if (isJsPlatform) {
         val (arrays, lookups) = resolveIndexes(indexes, castss.length)
 
@@ -109,7 +109,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final override def packed2json(vs: Iterator[String]): String = ???
 
           final override lazy val indexes: Indexes = $indexes
-          final override lazy val isOptNested: Boolean = true
+          final override lazy val isNestedOpt: Boolean = true
         """
 
         val transformers =
@@ -118,7 +118,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         //          ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
         //          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
         //            $tpl
-        //            ${objFlat(obj, isOptNested = true)._1}
+        //            ${objFlat(obj, isNestedOpt = true)._1}
         //          }
         //          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
         //         """
@@ -127,16 +127,13 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         ////          ..{buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
         //          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
         //            $tpl
-        //            ${objFlat(obj, isOptNested = true)._1}
+        //            ${objFlat(obj, isNestedOpt = true)._1}
         //          }
         ////          ..{buildJsonNested(obj, nestedRefs, postJsons).get}
         //         """
           q"""
           ..$jsTransformers
          """
-
-        //        val jsOptNestedTupleClass = tq"${jsOptNestedTupleClassX(castss.size)}"
-        //        val jsOptNestedJsonClass  = tq"${jsOptNestedJsonClassX(castss.size)}"
 
         if (hasVariables) {
           q"""
@@ -148,8 +145,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         } else {
           //          q"""
           //            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-          //              with $jsOptNestedTupleClass[$ObjType, (..$TplTypes)]
-          //              with $jsOptNestedJsonClass[$ObjType, (..$TplTypes)] {
+          //              with $jsNestedOptTupleClass[$ObjType, (..$TplTypes)]
+          //              with $jsNestedOptJsonClass[$ObjType, (..$TplTypes)] {
           //              ..$transformers
           //            }
           //          """
@@ -169,34 +166,34 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         else
           q"lazy val tpl: Product = row2tpl(row)"
 
-        val optNestedJsonClass = tq"_root_.molecule.core.macros.nested.OptNestedJson"
+        val nestedOptJsonClass = tq"_root_.molecule.core.macros.nested.NestedOptJson"
 
         val transformers =
           q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
-            ${tplOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}.asInstanceOf[(..$TplTypes)]
+            ${tplNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}.asInstanceOf[(..$TplTypes)]
 
           final override def row2obj(row: jList[AnyRef]): $ObjType = {
             $tpl
-            ${objFlat(obj, isOptNested = true)._1}
+            ${objFlat(obj, isNestedOpt = true)._1}
           }
 
           final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
-            ${jsonOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}
+            ${jsonNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}
         """
 
         if (hasVariables) {
           q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
-            with $optNestedJsonClass[$ObjType, (..$TplTypes)] {
+            with $nestedOptJsonClass[$ObjType, (..$TplTypes)] {
             ..$transformers
           }
         """
         } else {
           q"""
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-            with $optNestedJsonClass[$ObjType, (..$TplTypes)] {
+            with $nestedOptJsonClass[$ObjType, (..$TplTypes)] {
             ..$transformers
           }
         """
@@ -239,7 +236,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
           final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
             $tpl
-            ${objFlat(obj, isOptNested = true)._1}
+            ${objFlat(obj, isNestedOpt = true)._1}
           }
           ..${buildJsonNested(obj, nestedRefs, postJsons).get}
          """
@@ -291,8 +288,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     val moleculeClass = if (castss.size == 1 || txMetaCompositesCount > 0)
       mkFlat
-    else if (isOptNested)
-      mkOptNested
+    else if (isNestedOpt)
+      mkNestedOpt
     else
       mkNested
 

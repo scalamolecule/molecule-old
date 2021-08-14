@@ -8,7 +8,7 @@ import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Builder classes of various arity of nested JSON. */
-trait OptNestedJson[Obj, Tpl] extends JsonBase { self: Molecule_0[Obj, Tpl] =>
+trait NestedOptJson[Obj, Tpl] extends JsonBase { self: Molecule_0[Obj, Tpl] =>
 
   final override def getJson(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     _inputThrowable.fold(

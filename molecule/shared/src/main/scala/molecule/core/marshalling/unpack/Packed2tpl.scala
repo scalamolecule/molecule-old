@@ -11,8 +11,7 @@ trait Packed2tpl extends Unpackers {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("Packed2tpl", 1)
-
+  private lazy val xx = InspectMacro("Packed2tpl", 2)
 
   def packed2tpl(
     typess: List[List[Tree]],

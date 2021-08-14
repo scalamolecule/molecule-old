@@ -158,13 +158,15 @@ object DatomicRpc extends MoleculeRpc
       //      val v        = it.next().get(0)
       //      println(s"v1: $v  ${v.getClass}")
 
+
       println("-------------------------")
       println(indexes)
       println("-------------------------")
       allRows.forEach(println)
 
-      val packed = OptNestedRows2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes).getPacked
-      println("DatomicRpc ####################" + packed)
+      val packed = NestedOptRows2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes).getPacked
+//      println("DatomicRpc ####################")
+//      println(packed)
 
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)

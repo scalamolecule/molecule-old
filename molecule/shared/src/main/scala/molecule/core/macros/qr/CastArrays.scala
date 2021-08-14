@@ -1,6 +1,6 @@
 package molecule.core.macros.qr
 
-import molecule.core.macros.build.tpl.BuildTplOptNested
+import molecule.core.macros.build.tpl.BuildTplNestedOpt
 import molecule.core.macros.attrResolverTrees.LambdaCastTypes
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox

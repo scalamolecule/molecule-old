@@ -20,8 +20,8 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
       obj, indexes,
       nestedRefs, hasVariables, txMetaCompositesCount,
       postTypes, postCasts, postJsons,
-      isOptNested,
-      optNestedRefIndexes, optNestedTacitIndexes
+      isNestedOpt,
+      nestedOptRefIndexes, nestedOptTacitIndexes
       ) = getModel(dsl)
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)

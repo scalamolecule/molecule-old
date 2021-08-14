@@ -20,7 +20,7 @@ abstract class Marshalling[Obj, Tpl](
 
   /** Indexes to resolve marshalling for each attribute value in a row. */
   protected lazy val indexes    : Indexes = ???
-  protected lazy val isOptNested: Boolean = false
+  protected lazy val isNestedOpt: Boolean = false
 
 
   // JVM ......................

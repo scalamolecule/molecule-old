@@ -225,18 +225,6 @@ private[molecule] trait TreeOps extends Liftables {
     case o => abort(s"Unsupported arity for NestedTuplesX: $o")
   }
 
-  def jsOptNestedTupleClassX(allLevels: Int): Tree = allLevels match {
-    case 1 => q""
-    case 2 => tq"_root_.molecule.core.macros.nested.JsOptNestedTuples.JsOptNestedTuples1"
-    case 3 => tq"_root_.molecule.core.macros.nested.JsOptNestedTuples.JsOptNestedTuples2"
-    case 4 => tq"_root_.molecule.core.macros.nested.JsOptNestedTuples.JsOptNestedTuples3"
-    case 5 => tq"_root_.molecule.core.macros.nested.JsOptNestedTuples.JsOptNestedTuples4"
-    case 6 => tq"_root_.molecule.core.macros.nested.JsOptNestedTuples.JsOptNestedTuples5"
-    case 7 => tq"_root_.molecule.core.macros.nested.JsOptNestedTuples.JsOptNestedTuples6"
-    case 8 => tq"_root_.molecule.core.macros.nested.JsOptNestedTuples.JsOptNestedTuples7"
-    case o => abort(s"Unsupported arity for NestedTuplesX: $o")
-  }
-
   def nestedJsonClassX(allLevels: Int): Tree = allLevels match {
     case 1 => q""
     case 2 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson1"
@@ -246,18 +234,6 @@ private[molecule] trait TreeOps extends Liftables {
     case 6 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson5"
     case 7 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson6"
     case 8 => tq"_root_.molecule.core.macros.nested.NestedJson.NestedJson7"
-    case o => abort(s"Unsupported arity for NestedJsonX: $o")
-  }
-
-  def jsOptNestedJsonClassX(allLevels: Int): Tree = allLevels match {
-    case 1 => q""
-    case 2 => tq"_root_.molecule.core.macros.nested.JsOptNestedJson.JsOptNestedJson1"
-    case 3 => tq"_root_.molecule.core.macros.nested.JsOptNestedJson.JsOptNestedJson2"
-    case 4 => tq"_root_.molecule.core.macros.nested.JsOptNestedJson.JsOptNestedJson3"
-    case 5 => tq"_root_.molecule.core.macros.nested.JsOptNestedJson.JsOptNestedJson4"
-    case 6 => tq"_root_.molecule.core.macros.nested.JsOptNestedJson.JsOptNestedJson5"
-    case 7 => tq"_root_.molecule.core.macros.nested.JsOptNestedJson.JsOptNestedJson6"
-    case 8 => tq"_root_.molecule.core.macros.nested.JsOptNestedJson.JsOptNestedJson7"
     case o => abort(s"Unsupported arity for NestedJsonX: $o")
   }
 

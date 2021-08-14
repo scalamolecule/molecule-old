@@ -53,7 +53,7 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJs(_query, -1, indexes, isOptNested, qr2tpl, packed2tpl)
+          conn.queryJs(_query, -1, indexes, isNestedOpt, qr2tpl, packed2tpl)
         } else {
           conn.query(_model, _query).map { jColl =>
             val it  = jColl.iterator
@@ -89,7 +89,7 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJs(_query, n, indexes, isOptNested, qr2tpl, packed2tpl)
+          conn.queryJs(_query, n, indexes, isNestedOpt, qr2tpl, packed2tpl)
         } else {
           if (n == -1) {
             get(futConn, ec)
