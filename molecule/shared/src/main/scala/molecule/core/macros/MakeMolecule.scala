@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //     private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-//    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+//  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -42,19 +42,21 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         } else {
           q"(..$lookups0)"
         }
+//        q"""
+//          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
+//            ..$arrays
+//            (i: Int) => $lookups
+//          }
+//          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+//          final override lazy val indexes: Indexes = $indexes
+//        """
         q"""
-          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-            ..$arrays
-            (i: Int) => $lookups
-          }
-          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
+          final override def packed2obj(vs: Iterator[String]): $ObjType = ???
+          final override def packed2json(vs: Iterator[String]): String = ???
+
           final override lazy val indexes: Indexes = $indexes
-        """
-        //              q"""
-        //                final override protected def packed2tpl(lines: Iterable[String]): (..$TplTypes) = ???
-        //                final override protected def packed2obj(lines: Iterable[String]): $ObjType = ???
-        //                final override protected def packed2json(lines: Iterable[String]): String = ???
-        //               """
+         """
 
       } else {
         q"""

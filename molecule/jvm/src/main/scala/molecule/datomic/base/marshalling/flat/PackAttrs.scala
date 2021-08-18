@@ -1,6 +1,6 @@
-package molecule.datomic.base.marshalling.nested
+package molecule.datomic.base.marshalling.flat
 
-import java.util.{Iterator => jIterator, List => jList}
+import java.util.{List => jList}
 
 
 trait PackAttrs extends PackTypes with PackAggr {

@@ -39,7 +39,7 @@ trait MoleculeRpc {
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
     indexes: Indexes,
-    levels: Int,
+    nestedLevels: Int,
     isNestedOpt: Boolean
   ): Future[String]
 

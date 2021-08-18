@@ -2,7 +2,7 @@ package molecule.datomic.base.marshalling
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream, StringReader}
 import java.util
-import java.util.{Collections, Date, List => jList, Set => jSet}
+import java.util.{Collections, Date, List => jList, Set => jSet, ArrayList => jArrayList}
 import datomic.Util
 import datomic.Util._
 import datomicClient.ClojureBridge
@@ -124,9 +124,9 @@ object DatomicRpc extends MoleculeRpc
     l: Seq[(Int, (String, String))],
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
-    maxRows: Int,
+    maxRows0: Int,
     indexes: Indexes,
-    levels: Int,
+    nestedLevels: Int,
     isNestedOpt: Boolean
   ): Future[String] = try {
     val log       = new log
@@ -138,7 +138,7 @@ object DatomicRpc extends MoleculeRpc
       allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
     } yield {
       val rowCountAll = allRows.size
-      val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
+      val maxRows     = if (maxRows0 == -1 || rowCountAll < maxRows0) rowCountAll else maxRows0
       val queryTime   = t.delta
       val space       = " " * (70 - datalogQuery.split('\n').last.length)
       val time        = qTime(queryTime)
@@ -161,6 +161,7 @@ object DatomicRpc extends MoleculeRpc
       //      val v        = it.next().get(0)
       //      println(s"v1: $v  ${v.getClass}")
 
+      //      val rows = new jArrayList(allRows).subList(0, maxRows)
 
       println("-------------------------")
       println(indexes)
@@ -168,12 +169,13 @@ object DatomicRpc extends MoleculeRpc
       allRows.forEach(println)
 
       val packed = if (isNestedOpt)
-        NestedOpt2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes).getPacked
+        NestedOpt2packed(indexes, allRows, maxRows).getPacked
+      else if (nestedLevels == 0)
+        Flat2packed(indexes, allRows, maxRows).getPacked
       else
-        Nested2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes, levels).getPacked
+        Nested2packed(indexes, allRows, nestedLevels).getPacked
 
-      println("DatomicRpc ####################")
-      println(packed)
+      println("###### DatomicRpc ####################" + packed)
 
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)

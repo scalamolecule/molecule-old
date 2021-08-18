@@ -1,4 +1,4 @@
-package molecule.datomic.base.marshalling.nested
+package molecule.datomic.base.marshalling.flat
 
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.exceptions.MoleculeException

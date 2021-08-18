@@ -1,7 +1,7 @@
 package molecule.datomic.base.marshalling
 
 
-/** Simple commands to build packed data as a line-delimited text
+/** Simple commands to build packed data as a line-delimited text.
   *
   * Simple special unicode markers are used to structure the data on the server side:
   *
@@ -45,34 +45,3 @@ trait PackBase {
     ()
   }
 }
-/*
-
-2
-2
-28
-
-A
-◄
-11
-12
-a
-◄
-◄
-120
-aa
-◄
-►
-7777
-8888
-
-B
-◄
-13
-◄
-b
-◄
-►
-7777
-8888
-
- */

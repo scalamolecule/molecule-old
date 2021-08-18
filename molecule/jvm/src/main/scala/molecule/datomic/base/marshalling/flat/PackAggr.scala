@@ -1,4 +1,4 @@
-package molecule.datomic.base.marshalling.nested
+package molecule.datomic.base.marshalling.flat
 
 import java.util.{Date, Iterator => jIterator, List => jList, Set => jSet}
 import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal

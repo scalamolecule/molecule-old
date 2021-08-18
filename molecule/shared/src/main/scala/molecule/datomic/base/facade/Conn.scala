@@ -71,9 +71,8 @@ trait Conn extends ColOps with Serializations {
     query: Query,
     n: Int,
     indexes: Indexes,
-    levels: Int,
+    nestedLevels: Int,
     isNestedOpt: Boolean,
-    qr2tpl: QueryResult => Int => Tpl,
     packed2tpl: Iterator[String] => Tpl
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
     val q2s          = Query2String(query)
@@ -82,14 +81,12 @@ trait Conn extends ColOps with Serializations {
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
     val futResult    = rpc.query2packed(
-      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, levels, isNestedOpt
+      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, nestedLevels, isNestedOpt
     ).map { packed =>
       //                println(packed)
-      val vs          = packed.linesIterator
-      val rowCountAll = vs.next().toInt
-      val rowCount    = vs.next().toInt
-      val queryMs     = vs.next().toLong
-      val rows        = new ListBuffer[Tpl]
+      val vs = packed.linesIterator
+      vs.next() // skip initial newline
+      val rows = new ListBuffer[Tpl]
       while (vs.hasNext) {
         rows.addOne(packed2tpl(vs))
       }

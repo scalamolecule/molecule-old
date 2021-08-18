@@ -1,23 +1,18 @@
 package molecule.datomic.base.marshalling
 
-import java.util.{Collection => jCollection, Iterator => jIterator, List => jList, Map => jMap}
 import java.lang.{Long => jLong}
-import java.util.{Collections, Date, UUID, Comparator => jComparator, ArrayList => jArrayList, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
+import java.util.{ArrayList => jArrayList, Collection => jCollection, Comparator => jComparator, Iterator => jIterator, List => jList}
 import molecule.core.marshalling.attrIndexes._
-import molecule.datomic.base.marshalling.nested.PackAttrs
+import molecule.datomic.base.marshalling.flat.PackAttrs
 
 case class Nested2packed(
-  rowCollection: jCollection[jList[AnyRef]],
-  rowCountAll: Int,
-  rowCount: Int,
-  queryMs: Long,
-  refIndexes: List[List[Int]],
-  tacitIndexes: List[List[Int]],
   indexes: Indexes,
+  rowCollection: jCollection[jList[AnyRef]],
   nestedLevels: Int
 ) extends jComparator[jList[AnyRef]] with PackAttrs {
 
   // Sort rows by entity ids for each level
+
   val sortedRows = new java.util.ArrayList(rowCollection)
   sortedRows.sort(this)
 
@@ -31,8 +26,6 @@ case class Nested2packed(
     result
   }
 
-  //  sortedRows.forEach(row => println(row))
-  //  println("------------------")
 
   // Mutable placeholders for fast iterations with minimal object allocation
 
@@ -74,12 +67,6 @@ case class Nested2packed(
 
 
   def getPacked: String = {
-    sb.append(
-      s"""$rowCountAll
-         |$rowCount
-         |$queryMs""".stripMargin
-    )
-
     if (!rowCollection.isEmpty) {
       packRows(indexes.attrs)
     }
@@ -129,7 +116,7 @@ case class Nested2packed(
 
   def packNested(attrs: List[IndexNode], level: Int): jList[_] => Unit = {
     attrs.size match {
-      //      case 1 => packNested1(attrs, top)
+      case 1  => packNested1(attrs, level)
       case 2  => packNested2(attrs, level)
       case 3  => packNested3(attrs, level)
       case 4  => packNested4(attrs, level)

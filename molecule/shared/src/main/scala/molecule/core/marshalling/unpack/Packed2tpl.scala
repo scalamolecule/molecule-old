@@ -56,7 +56,6 @@ trait Packed2tpl extends Unpackers {
               Nil
             } else {
               val buf = new ListBuffer[${nestedTypes(level)}]
-              first = true
               do {
                 buf.append((..$unpackers))
                 v = vs.next()
