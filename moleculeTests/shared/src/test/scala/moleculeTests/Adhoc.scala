@@ -6,7 +6,8 @@ import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
-import java.util.{Collections, Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
+import java.lang.{Long => jLong}
+import java.util.{Collections, Date, UUID, ArrayList => jArrayList, Comparator => jComparator, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.ast.elements._
 import molecule.core.marshalling.unpack.UnpackTypes
 import molecule.core.marshalling.attrIndexes._
@@ -19,7 +20,8 @@ import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
 
-object Adhoc extends AsyncTestSuite with Helpers with UnpackTypes {
+
+object Adhoc extends AsyncTestSuite with Helpers {
 
 
   lazy val tests = Tests {
@@ -30,9 +32,222 @@ object Adhoc extends AsyncTestSuite with Helpers with UnpackTypes {
         conn <- futConn
 
 
-        _ <- m(Ref1.str1.Nss * Ns.int.str).get.map(_ ==> List(
-          ("A", List((1, "a")))
+        //        _ <- m(Ref1.str1.Nss * Ns.int) insert List(
+        //          ("A", List(1, 2)),
+        //          ("B", List(3, 4))
+        //        )
+        //
+        //        //        _ <- m(Ref1.str1.Nss * Ns.int).inspectGet
+        //        //
+        //        //        _ <- m(Ref1.str1.Nss * Ns.int).get.map(_ ==> List(
+        //        //          ("A", List(1, 2)),
+        //        //          ("B", List(3, 4))
+        //        //        ))
+        //
+        //        data <- conn.qRaw(
+        //          """[:find  ?sort0 ?sort1 ?b ?d
+        //            | :where [?a :Ref1/str1 ?b]
+        //            |        [?a :Ref1/nss ?c]
+        //            |        [?c :Ns/int ?d]
+        //            |        [(identity ?a) ?sort0]
+        //            |        [(identity ?c) ?sort1]]""".stripMargin
+        //        )
+        //
+        //        _ = {
+        //          data.forEach(row => println(row))
+        //
+        //          object testing extends Nested2pack {
+        //            val rows = new java.util.ArrayList(data)
+        //            rows.sort(this)
+        //
+        //            val last = data.size
+        //            // todo sort rows
+        //            val it   = rows.iterator
+        //
+        //            row = it.next
+        //            do {
+        //              topRow = row
+        //              e0 = row.get(0)
+        //
+        //              // level 0
+        //              packOneString(row, 2)
+        //
+        //              // level 1
+        //              do {
+        //                packOne(row, 3)
+        //                if (it.hasNext)
+        //                  row = it.next
+        //                i += 1
+        //              } while (i < last && row.get(0) == e0)
+        //              // level 0 post
+        //            } while (i < last)
+        //          }
+        //          testing
+        //
+        //          println(sb)
+        //        }
+
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
+        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
+        //          ("B", List((Some(13), None, "b"))),
+        //          ("C", List((None, Some(14), "c"))),
+        //          ("D", List((None, None, "d"))),
+        //          ("E", List())
+        //        )
+        //
+        //        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).inspectGet
+        //        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 1),
+        //        //          ("B", List((Some(13), None, "b")), 1),
+        //        //          ("C", List((None, Some(14), "c")), 1),
+        //        //          ("D", List((None, None, "d")), 1),
+        //        //          ("E", List(), 1)
+        //        //        ))
+        //
+        //        data <- conn.qRaw(
+        //          """[:find  ?sort0 ?sort1 ?b
+        //            |        (pull ?c__1 [(limit :Ref1/int1 nil)])
+        //            |        (pull ?e__2 [(limit :Ref2/int2 nil)])
+        //            |        ?g ?i
+        //            | :where [?a :Ns/str ?b]
+        //            |        [?a :Ns/refs1 ?c]
+        //            |        [(identity ?c) ?c__1]
+        //            |        [?c :Ref1/ref2 ?e]
+        //            |        [(identity ?e) ?e__2]
+        //            |        [?e :Ref2/str2 ?g ?tx]
+        //            |        [?tx :Ref3/int3 ?i]
+        //            |        [(identity ?a) ?sort0]
+        //            |        [(identity ?c) ?sort1]]""".stripMargin
+        //        )
+        //
+        //        _ = {
+        //          data.forEach(row => println(row))
+        //
+        //          if (!data.isEmpty) {
+        //            val rows = new java.util.ArrayList(data)
+        //            val last = data.size
+        //            // todo sort rows
+        //            val it   = rows.iterator
+        //
+        //            row = it.next
+        //            do {
+        //              topRow = row
+        //              e0 = row.get(0)
+        //
+        //              // level 0
+        //              packOneString(row, 2)
+        //
+        //              // level 1
+        //              do {
+        //                packOptOne(row, 3)
+        //                packOptOne(row, 4)
+        //                packOneString(row, 5)
+        //                if (it.hasNext)
+        //                  row = it.next
+        //                i += 1
+        //              } while (i < last && row.get(0) == e0)
+        //
+        //              // level 0 post
+        //              packOne(topRow, 6)
+        //
+        //            } while (i < last)
+        //          }
+        //          println(sb)
+        //        }
+
+
+//        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)) insert List(
+//          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa"))),
+//          //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
+//          ("B", List((Some(13), None, "b"))),
+//          //          ("C", List((None, Some(14), "c"))),
+//          //          ("D", List((None, None, "d"))),
+//          //          ("E", List())
+//        )
+//
+//        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+//          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
+//          //                    ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+//          ("B", List((Some(13), None, "b")), 7777, 8888),
+//          //          ("C", List((None, Some(14), "c")), 7777, 8888),
+//          //          ("D", List((None, None, "d")), 7777, 8888),
+//          //          ("E", List(), 7777, 8888)
+//        ))
+//
+//        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+//          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
+//          //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+//          ("B", List((Some(13), None, "b")), 7777, 8888),
+//          //          ("C", List((None, Some(14), "c")), 7777, 8888),
+//          //          ("D", List((None, None, "d")), 7777, 8888),
+//          //          ("E", List(), 7777, 8888)
+//        ))
+
+
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).Tx(Ref3.int3_(7777)) insert List(
+          ("A", List(
+            (1, Some("a1"), List(
+              (11, Some("a11")),
+              (12, None)
+            )),
+            (2, None, List(
+              (21, Some("a21")),
+              (22, None)
+            )),
+            (3, Some("a3"), List()),
+            (4, None, List())
+          )),
+          ("B", List(
+            (5, Some("a5"), List(
+              (51, Some("a51")),
+              (52, None)
+            ))
+          )),
+          ("C", Nil)
+        )
+
+        _ <- Ns.str.Refs1.*?(Ref1.int1.str1$.Refs2.*?(Ref2.int2.str2$)).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+          ("A", List(
+            (1, Some("a1"), List(
+              (11, Some("a11")),
+              (12, None)
+            )),
+            (2, None, List(
+              (21, Some("a21")),
+              (22, None)
+            )),
+            (3, Some("a3"), List()),
+            (4, None, List())
+          ), 7777),
+          ("B", List(
+            (5, Some("a5"), List(
+              (51, Some("a51")),
+              (52, None)
+            ))
+          ), 7777),
+          ("C", Nil, 7777)
         ))
+
+        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+          ("A", List(
+            (1, Some("a1"), List(
+              (11, Some("a11")),
+              (12, None)
+            )),
+            (2, None, List(
+              (21, Some("a21")),
+              (22, None)
+            ))
+          ), 7777),
+          ("B", List(
+            (5, Some("a5"), List(
+              (51, Some("a51")),
+              (52, None)
+            ))
+          ), 7777)
+        ))
+
 
       } yield ()
     }

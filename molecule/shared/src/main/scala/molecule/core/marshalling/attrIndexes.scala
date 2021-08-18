@@ -11,7 +11,7 @@ object attrIndexes {
     castIndex: Int,
     arrayType: Int,
     arrayIndex: Int,
-    post: Boolean = false,
+    post: Boolean,
   ) extends IndexNode {
     override def toString: String = {
       s"""AttrIndex("$attr", $castIndex, $arrayType, $arrayIndex, $post)"""

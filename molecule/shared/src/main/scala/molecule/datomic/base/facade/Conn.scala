@@ -71,6 +71,7 @@ trait Conn extends ColOps with Serializations {
     query: Query,
     n: Int,
     indexes: Indexes,
+    levels: Int,
     isNestedOpt: Boolean,
     qr2tpl: QueryResult => Int => Tpl,
     packed2tpl: Iterator[String] => Tpl
@@ -80,41 +81,52 @@ trait Conn extends ColOps with Serializations {
     val p            = q2s.p
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
-
-    //    debug("js")
-
-    // Fetch QueryResult with Ajax call via typed Sloth wire
-    val futResult = if (isNestedOpt) {
-      rpc.queryStr(
-        connProxy, datalogQuery, rules, l, ll, lll, n, indexes
-      ).map { packed =>
-//                println(packed)
-        val vs          = packed.linesIterator
-        val rowCountAll = vs.next().toInt
-        val rowCount    = vs.next().toInt
-        val queryMs     = vs.next().toLong
-        val rows         = new ListBuffer[Tpl]
-        while (vs.hasNext) {
-          rows.addOne(packed2tpl(vs))
-        }
-        rows.toList
+    val futResult    = rpc.query2packed(
+      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, levels, isNestedOpt
+    ).map { packed =>
+      //                println(packed)
+      val vs          = packed.linesIterator
+      val rowCountAll = vs.next().toInt
+      val rowCount    = vs.next().toInt
+      val queryMs     = vs.next().toLong
+      val rows        = new ListBuffer[Tpl]
+      while (vs.hasNext) {
+        rows.addOne(packed2tpl(vs))
       }
-    } else {
-      rpc.query(
-        connProxy, datalogQuery, rules, l, ll, lll, n, indexes
-      ).map { qr =>
-        println("@@@@@@@@@ normal")
-        val maxRows  = if (n == -1) qr.maxRows else n
-        val rows     = new ListBuffer[Tpl]
-        val columns  = qr2tpl(qr) // macro generated transformer
-        var rowIndex = 0
-        while (rowIndex < maxRows) {
-          rows += columns(rowIndex)
-          rowIndex += 1
-        }
-        rows.toList
-      }
+      rows.toList
     }
+
+    //    val futResult = if (isNestedOpt) {
+    //      rpc.query2packed(
+    //        connProxy, datalogQuery, rules, l, ll, lll, n, indexes, levels, isNestedOpt
+    //      ).map { packed =>
+    //        //                println(packed)
+    //        val vs          = packed.linesIterator
+    //        val rowCountAll = vs.next().toInt
+    //        val rowCount    = vs.next().toInt
+    //        val queryMs     = vs.next().toLong
+    //        val rows        = new ListBuffer[Tpl]
+    //        while (vs.hasNext) {
+    //          rows.addOne(packed2tpl(vs))
+    //        }
+    //        rows.toList
+    //      }
+    //    } else {
+    //      rpc.query(
+    //        connProxy, datalogQuery, rules, l, ll, lll, n, indexes
+    //      ).map { qr =>
+    //        println("@@@@@@@@@ normal")
+    //        val maxRows  = if (n == -1) qr.maxRows else n
+    //        val rows     = new ListBuffer[Tpl]
+    //        val columns  = qr2tpl(qr) // macro generated transformer
+    //        var rowIndex = 0
+    //        while (rowIndex < maxRows) {
+    //          rows += columns(rowIndex)
+    //          rowIndex += 1
+    //        }
+    //        rows.toList
+    //      }
+    //    }
     if (connProxy.adhocDbView.isDefined) {
       // Reset adhoc db view
       updateAdhocDbView(None)

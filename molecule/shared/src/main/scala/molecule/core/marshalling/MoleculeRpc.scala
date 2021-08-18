@@ -30,7 +30,7 @@ trait MoleculeRpc {
     indexes: Indexes
   ): Future[QueryResult]
 
-  def queryStr(
+  def query2packed(
     connProxy: ConnProxy,
     datalogQuery: String,
     rules: Seq[String],
@@ -38,7 +38,9 @@ trait MoleculeRpc {
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    indexes: Indexes
+    indexes: Indexes,
+    levels: Int,
+    isNestedOpt: Boolean
   ): Future[String]
 
 

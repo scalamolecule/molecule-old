@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //     private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-//    private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-  private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+//    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -27,6 +27,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     val imports              = getImports(genericImports)
     val OutMoleculeTpe: Tree = molecule_o(TplTypes.size)
     val outMolecule          = TypeName(c.freshName("outMolecule$"))
+    lazy val levels               = castss.size
 
     def mkFlat = {
       val transformers = if (isJsPlatform) {
@@ -89,21 +90,29 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     def mkNestedOpt = {
       if (isJsPlatform) {
-        val (arrays, lookups) = resolveIndexes(indexes, castss.length)
+        val (arrays, lookups) = resolveIndexes(indexes, levels)
 
         val setters        = lookups.map(lookup => q"list.add($lookup.asInstanceOf[Any])")
         val jsTransformers =
+//          q"""
+//          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
+//            ..$arrays
+//            (i: Int) => {
+//              val list = new java.util.ArrayList[Any](${setters.length})
+//              ..$setters
+//              list
+//            }
+//          }
+//          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+//
+//          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
+//          final override def packed2obj(vs: Iterator[String]): $ObjType = ???
+//          final override def packed2json(vs: Iterator[String]): String = ???
+//
+//          final override lazy val indexes: Indexes = $indexes
+//          final override lazy val isNestedOpt: Boolean = true
+//        """
           q"""
-          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
-            ..$arrays
-            (i: Int) => {
-              val list = new java.util.ArrayList[Any](${setters.length})
-              ..$setters
-              list
-            }
-          }
-          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-
           final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
@@ -205,22 +214,36 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkNested = {
       val jsTransformers = if (isJsPlatform) {
         //        val (indexes, arrays, lookups) = resolveIndexes(flatIndexes0, castss.length)
-        val (arrays, lookups) = resolveIndexes(indexes, castss.length)
+        val (arrays, lookups) = resolveIndexes(indexes, levels)
 
         //        xx(3, indexes)
 
         val setters = lookups.map(lookup => q"list.add($lookup.asInstanceOf[AnyRef])")
+//        q"""
+//          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
+//            ..$arrays
+//            (i: Int) => {
+//              val list = new java.util.ArrayList[Any](${setters.length})
+//              ..$setters
+//              list
+//            }
+//          }
+//          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+//
+//          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
+//          final override def packed2obj(vs: Iterator[String]): $ObjType = ???
+//          final override def packed2json(vs: Iterator[String]): String = ???
+//
+//          final override lazy val indexes: Indexes = $indexes
+//          final override lazy val nestedLevels: Int = ${levels - 1}
+//        """
         q"""
-          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
-            ..$arrays
-            (i: Int) => {
-              val list = new java.util.ArrayList[Any](${setters.length})
-              ..$setters
-              list
-            }
-          }
-          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
+          final override def packed2obj(vs: Iterator[String]): $ObjType = ???
+          final override def packed2json(vs: Iterator[String]): String = ???
+
           final override lazy val indexes: Indexes = $indexes
+          final override lazy val nestedLevels: Int = ${levels - 1}
         """
       } else q""
 
@@ -231,18 +254,21 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"lazy val tpl: Product = tpl0"
 
       val transformers =
+//        q"""
+//          ..$jsTransformers
+//          ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
+//          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
+//            $tpl
+//            ${objFlat(obj, isNestedOpt = true)._1}
+//          }
+//          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
+//         """
         q"""
           ..$jsTransformers
-          ..${buildTplNested(castss, typess, TplTypes, postTypes, postCasts).get}
-          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
-            $tpl
-            ${objFlat(obj, isNestedOpt = true)._1}
-          }
-          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
          """
 
-      val nestedTupleClass = tq"${nestedTupleClassX(castss.size)}"
-      val nestedJsonClass  = tq"${nestedJsonClassX(castss.size)}"
+      val nestedTupleClass = tq"${nestedTupleClassX(levels)}"
+      val nestedJsonClass  = tq"${nestedJsonClassX(levels)}"
 
       if (isJsPlatform) {
         if (hasVariables) {
@@ -255,10 +281,15 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
             }
           """
         } else {
+//          q"""
+//            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
+//              with $nestedTupleClass[$ObjType, (..$TplTypes)]
+//              with $nestedJsonClass[$ObjType, (..$TplTypes)] {
+//              ..$transformers
+//            }
+//          """
           q"""
-            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-              with $nestedTupleClass[$ObjType, (..$TplTypes)]
-              with $nestedJsonClass[$ObjType, (..$TplTypes)] {
+            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
               ..$transformers
             }
           """
@@ -286,7 +317,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     }
 
 
-    val moleculeClass = if (castss.size == 1 || txMetaCompositesCount > 0)
+    val moleculeClass = if (levels == 1 || txMetaCompositesCount > 0)
       mkFlat
     else if (isNestedOpt)
       mkNestedOpt
@@ -304,6 +335,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     xx(7
       , obj
+      , indexes
       , t
       //      , model0
       //      , Model2Query(model0)._1

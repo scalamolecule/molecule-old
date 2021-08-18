@@ -191,7 +191,7 @@ object NestedJson {
 
         s"""{
            |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString()}
+           |    "${firstNs(_model)}": ${sb0.toString}
            |  }
            |}""".stripMargin
       }
@@ -260,7 +260,7 @@ object NestedJson {
 
         s"""{
            |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString()}
+           |    "${firstNs(_model)}": ${sb0.toString}
            |  }
            |}""".stripMargin
       }
@@ -337,7 +337,7 @@ object NestedJson {
 
         s"""{
            |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString()}
+           |    "${firstNs(_model)}": ${sb0.toString}
            |  }
            |}""".stripMargin
       }
@@ -423,7 +423,7 @@ object NestedJson {
 
         s"""{
            |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString()}
+           |    "${firstNs(_model)}": ${sb0.toString}
            |  }
            |}""".stripMargin
       }
@@ -519,7 +519,7 @@ object NestedJson {
 
         s"""{
            |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString()}
+           |    "${firstNs(_model)}": ${sb0.toString}
            |  }
            |}""".stripMargin
       }
@@ -626,7 +626,7 @@ object NestedJson {
 
         s"""{
            |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString()}
+           |    "${firstNs(_model)}": ${sb0.toString}
            |  }
            |}""".stripMargin
       }
@@ -745,7 +745,7 @@ object NestedJson {
 
         s"""{
            |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString()}
+           |    "${firstNs(_model)}": ${sb0.toString}
            |  }
            |}""".stripMargin
       }

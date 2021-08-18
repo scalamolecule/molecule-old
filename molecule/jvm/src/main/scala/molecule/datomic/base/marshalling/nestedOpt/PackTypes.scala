@@ -1,9 +1,10 @@
-package molecule.datomic.base.marshalling.pack
+package molecule.datomic.base.marshalling.nestedOpt
 
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
+import molecule.datomic.base.marshalling.PackBase
 
 
 trait PackTypes extends PackBase with Helpers {

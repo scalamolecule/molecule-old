@@ -19,8 +19,9 @@ abstract class Marshalling[Obj, Tpl](
 ) extends Molecule(model, queryData) with Helpers {
 
   /** Indexes to resolve marshalling for each attribute value in a row. */
-  protected lazy val indexes    : Indexes = ???
-  protected lazy val isNestedOpt: Boolean = false
+  protected lazy val indexes     : Indexes = ???
+  protected lazy val isNestedOpt : Boolean = false
+  protected lazy val nestedLevels: Int     = 0
 
 
   // JVM ......................

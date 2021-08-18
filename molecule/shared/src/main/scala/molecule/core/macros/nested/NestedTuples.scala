@@ -71,7 +71,8 @@ object NestedTuples {
 
   trait NestedTuples1[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+//    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final def get2(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- conn
         data <- if (conn.isJsPlatform)

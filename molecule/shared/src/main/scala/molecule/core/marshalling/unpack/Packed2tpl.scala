@@ -60,7 +60,7 @@ trait Packed2tpl extends Unpackers {
               do {
                 buf.append((..$unpackers))
                 v = vs.next()
-              } while (v != "◄")
+              } while (v != "►")
               buf.toList
             }
           }

@@ -106,6 +106,7 @@ object DatomicRpc extends MoleculeRpc
       //      println(s"v1: $v  ${v.getClass}")
       println(indexes)
       allRows.forEach(println)
+
       val queryResult = Rows2QueryResult(allRows, rowCountAll, rowCount, queryTime, indexes).get
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)
@@ -116,7 +117,7 @@ object DatomicRpc extends MoleculeRpc
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  def queryStr(
+  def query2packed(
     connProxy: ConnProxy,
     datalogQuery: String,
     rules: Seq[String],
@@ -124,7 +125,9 @@ object DatomicRpc extends MoleculeRpc
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows: Int,
-    indexes: Indexes
+    indexes: Indexes,
+    levels: Int,
+    isNestedOpt: Boolean
   ): Future[String] = try {
     val log       = new log
     val t         = TimerPrint("DatomicRpc")
@@ -164,9 +167,13 @@ object DatomicRpc extends MoleculeRpc
       println("-------------------------")
       allRows.forEach(println)
 
-      val packed = NestedOptRows2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes).getPacked
-//      println("DatomicRpc ####################")
-//      println(packed)
+      val packed = if (isNestedOpt)
+        NestedOpt2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes).getPacked
+      else
+        Nested2packed(allRows, rowCountAll, rowCount, queryTime, Nil, Nil, indexes, levels).getPacked
+
+      println("DatomicRpc ####################")
+      println(packed)
 
       // log("QueryResult: " + queryResult)
       //        log("Rows2QueryResult took " + t.ms)

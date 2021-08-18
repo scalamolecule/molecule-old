@@ -1,7 +1,8 @@
-package molecule.datomic.base.marshalling.pack
+package molecule.datomic.base.marshalling.nestedOpt
 
 import java.util.{Date, Iterator => jIterator, List => jList, Set => jSet}
 import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
+import molecule.datomic.base.marshalling.PackBase
 
 trait PackAggr extends PackBase {
 
