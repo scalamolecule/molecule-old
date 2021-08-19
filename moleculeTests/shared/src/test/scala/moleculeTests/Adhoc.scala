@@ -291,43 +291,46 @@ object Adhoc extends AsyncTestSuite with Helpers {
 //          (("B", 2), (22, None))
 //        ))
 
-//        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2$) insert List(
-//          (("A", 1), (11, Some("aa"))),
-//          (("B", 2), (22, None))
-//        )
+        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2) insert List(
+          (("A", 1), (11, "a")),
+          (("B", 2), (22, "b"))
+        )
 //        _ <- m(Ns.str.int + Ref2.int2.str2) inspectInsert List(
 //          (("A", 1), (11, "a")),
-//          (("B", 2), (22, "b"))
+////          (("B", 2), (22, "b"))
 //        )
 //        _ <- m(Ns.str.int + Ref2.int2.Ref3.str3) inspectInsert List(
 //          (("A", 1), (11, "a")),
 //          (("B", 2), (22, "b"))
 //        )
+
+//        _ <- m(Ns.str("A").Ref1.int1(1) + Ref2.int2(11).str2("a")).inspectSave
+
 //        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2) inspectInsert List(
 //          (("A", 1), (11, "a")),
-//          (("B", 2), (22, "b"))
+////          (("B", 2), (22, "b"))
 //        )
 //
 //        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2).inspectGet
 //
 ////        _ <- m(Ns.str.Refs1.int1.str1$ + Ref2.int2.str2$.Tx(Ref3.int3)).get.map(_.sortBy(_._1) ==> List(
-//        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
-//          (("A", 1), (11, "a")),
-//          (("B", 2), (22, "b"))
-//        ))
-
-
-
-        _ <- m(Ref2.int2.str2 + Ns.str.int) insert List(
-          ((1, "a"), ("aa", 11)),
-          ((2, "b"), ("bb", 22))
-        )
-
-
-        _ <- m(Ref2.int2.str2 + Ns.str.int).get.map(_.sorted ==> List(
-          ((1, "a"), ("aa", 11)),
-          ((2, "b"), ("bb", 22))
+        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+          (("A", 1), (11, "a")),
+          (("B", 2), (22, "b"))
         ))
+
+
+
+//        _ <- m(Ref2.int2.str2 + Ns.str.int) insert List(
+//          ((1, "a"), ("aa", 11)),
+//          ((2, "b"), ("bb", 22))
+//        )
+//
+//
+//        _ <- m(Ref2.int2.str2 + Ns.str.int).get.map(_.sorted ==> List(
+//          ((1, "a"), ("aa", 11)),
+//          ((2, "b"), ("bb", 22))
+//        ))
 
       } yield ()
     }

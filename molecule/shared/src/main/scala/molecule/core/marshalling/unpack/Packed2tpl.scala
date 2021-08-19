@@ -11,7 +11,7 @@ trait Packed2tpl extends Unpackers {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("Packed2tpl", 1)
+  private lazy val xx = InspectMacro("Packed2tpl", 2)
 
   def packed2tpl(
     typess: List[List[Tree]],
@@ -83,19 +83,18 @@ trait Packed2tpl extends Unpackers {
     }
 
     def unpackComposite = {
-      var i                                     = -1
-      val unpackers          : List[Tree]       = unpackerss.head
-      val compositeUnpackerss: List[List[Tree]] = typess.map { types =>
+      var i                   = -1
+      val unpackers           = unpackerss.head
+      val compositeUnpackerss = typess.map { types =>
         types.map { _ =>
           i += 1
           unpackers(i)
         }
       }
-
-      val ordinaryComposites = compositeUnpackerss.take(compositeUnpackerss.length - txMetaCompositesCount)
-      val txMetaComposites   = compositeUnpackerss.takeRight(txMetaCompositesCount)
-      val firstComposites    = ordinaryComposites.init
-      val lastComposite      = ordinaryComposites.last
+      val ordinaryComposites  = compositeUnpackerss.take(compositeUnpackerss.length - txMetaCompositesCount)
+      val txMetaComposites    = compositeUnpackerss.takeRight(txMetaCompositesCount)
+      val firstComposites     = ordinaryComposites.init
+      val lastComposite       = ordinaryComposites.last
 
       def compositeTuples(unpackerss: List[List[Tree]]): List[Tree] = unpackerss.flatMap {
         case Nil       => None

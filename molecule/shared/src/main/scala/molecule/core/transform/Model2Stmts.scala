@@ -1212,6 +1212,9 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
             case (arg, genStmt@Add("e", _, refNs: String, _)) if !refNs.startsWith("__") && eidV(stmts) =>
               matchDataStmt(stmts, genStmt.copy(e = "v"), arg, cur, next, forcedE, edgeB)
 
+            case (arg, genStmt@Add("ec", _, _, _)) if stmts.nonEmpty =>
+              matchDataStmt(stmts, genStmt, arg, cur, next, stmts.head.e, edgeB)
+
             case (arg, genStmt) =>
               matchDataStmt(stmts, genStmt, arg, cur, next, forcedE, edgeB)
           }
