@@ -143,31 +143,6 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
 
     def mkFlat = {
       val transformers = if (isJsPlatform) {
-        //        val (arrays, lookups0) = indexes.map {
-        //          // Generic `v` of type Any needs to be cast on JS side
-        //          case (colIndex, 11, arrayType, arrayIndex) =>
-        //            (dataArrays(arrayType)(colIndex, arrayIndex), q"castV(${TermName("a" + colIndex)}(i))")
-        //
-        //          case (colIndex, castIndex, arrayType, arrayIndex) =>
-        //            (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
-        //        }.unzip
-        //
-        //        val lookups = if (txMetaCompositesCount > 0) {
-        //          // Treat tx meta data as composite
-        //          val first = topLevelLookups(List(castss.head), lookups0)
-        //          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
-        //          q"(..$first, ..$last)"
-        //        } else {
-        //          q"(..$lookups0)"
-        //        }
-        //        q"""
-        //          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-        //            ..$arrays
-        //            (i: Int) => $lookups
-        //          }
-        //          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-        //          final override lazy val indexes: Indexes = $indexes
-        //        """
         q"""
           final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ???
           final override protected def packed2obj(vs: Iterator[String]): $ObjType = ???

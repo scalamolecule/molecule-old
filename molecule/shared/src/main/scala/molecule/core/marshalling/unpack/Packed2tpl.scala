@@ -31,13 +31,13 @@ trait Packed2tpl extends Unpackers {
 
     def setUnpacker(node: IndexNode, level: Int, i: Int): Unit = {
       node match {
-        case AttrIndex(_, _, castIndex, _, _, _) if level > 0 && i == 0 =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(v)(castIndex)
+        case AttrIndex(_, _, lambdaIndex, _) if level > 0 && i == 0 =>
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas(v)(lambdaIndex)
 
-        case AttrIndex(_, _, castIndex, _, _, _) =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(next)(castIndex)
+        case AttrIndex(_, _, lambdaIndex, _) =>
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas(next)(lambdaIndex)
 
-        case Indexes(_, 2, attrs) =>
+        case Indexes(_, true, attrs) =>
           unpackerss(level) = unpackerss(level) :+ q"${TermName("nested" + (level + 1))}"
           setUnpackers(attrs, level + 1, 0)
 

@@ -14,10 +14,7 @@ trait NestedOptJson[Obj, Tpl] extends JsonBase { self: Molecule_0[Obj, Tpl] =>
     _inputThrowable.fold(
       for {
         conn <- futConn
-        rows0 <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_query, -1, indexes, qr2list)
-        else
-          conn.query(_model, _query)
+        rows0 <- conn.query(_model, _query)
       } yield {
         val rows = rows0.asInstanceOf[jCollection[jList[AnyRef]]]
         val count = rows.size
@@ -49,13 +46,13 @@ trait NestedOptJson[Obj, Tpl] extends JsonBase { self: Molecule_0[Obj, Tpl] =>
           case _: Composite =>
             s"""{
                |  "data": {
-               |    "composite": [${sb.toString()}]
+               |    "composite": [${sb.toString}]
                |  }
                |}""".stripMargin
           case _            =>
             s"""{
                |  "data": {
-               |    "${firstNs(_model)}": [${sb.toString()}]
+               |    "${firstNs(_model)}": [${sb.toString}]
                |  }
                |}""".stripMargin
         }

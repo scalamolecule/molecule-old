@@ -71,17 +71,13 @@ object NestedTuples {
 
   trait NestedTuples1[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-//    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
-    final def get2(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -138,16 +134,13 @@ object NestedTuples {
 
   trait NestedTuples2[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -223,16 +216,13 @@ object NestedTuples {
 
   trait NestedTuples3[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -334,16 +324,13 @@ object NestedTuples {
 
   trait NestedTuples4[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -475,16 +462,13 @@ object NestedTuples {
 
   trait NestedTuples5[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -651,16 +635,13 @@ object NestedTuples {
 
   trait NestedTuples6[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -867,16 +848,13 @@ object NestedTuples {
 
   trait NestedTuples7[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def get(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
+    final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {

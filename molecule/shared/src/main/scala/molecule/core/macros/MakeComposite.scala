@@ -40,35 +40,6 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     //    val metaOffset         = ordinaryComposites.flatten.length
 
     val transformers = if (isJsPlatform) {
-      //      val (arrays, lookups0) = indexes.map {
-      //        case (colIndex, castIndex, arrayType, arrayIndex) =>
-      //          (dataArrays(arrayType)(colIndex, arrayIndex), q"${TermName("a" + colIndex)}(i)")
-      //      }.unzip
-      //
-      //      val lookups = if (txMetaCompositesCount > 0) {
-      //        val first = compositeLookups(firstComposites, lookups0)
-      //        val last  = topLevelLookups(List(lastComposite), lookups0, lastOffset) ++
-      //          compositeLookups(txMetaComposites, lookups0, metaOffset)
-      //        xx(1, castss, first, last)
-      //
-      //        (first, last) match {
-      //          case (Nil, last)   => q"(..$last)"
-      //          case (first, Nil)  => q"(..$first)"
-      //          case (first, last) => q"(..$first, (..$last))"
-      //        }
-      //
-      //      } else {
-      //        q"(..${compositeLookups(castss, lookups0)})"
-      //      }
-
-      //      q"""
-      //         final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-      //           ..$arrays
-      //           (i: Int) => $lookups
-      //         }
-      //         final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-      //         final override lazy val indexes: Indexes = $indexes
-      //       """
       q"""
           final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) =
           ${packed2tpl(typess, postTypes, indexes, true, txMetaCompositesCount)}

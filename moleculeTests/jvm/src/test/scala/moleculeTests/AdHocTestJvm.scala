@@ -23,7 +23,6 @@
 //import molecule.datomic.api.in1_out4.m
 //import molecule.datomic.base.facade.{Conn, TxReport}
 //import molecule.datomic.base.marshalling.DatomicRpc.{getCachedQueryExecutor, qTime, unmarshallInputs}
-//import molecule.datomic.base.marshalling.Rows2QueryResult
 //import molecule.datomic.peer.facade.Datomic_Peer._
 //import moleculeTests.setup.core.CoreData
 //import moleculeTests.tests.core.base.dsl.CoreTest._

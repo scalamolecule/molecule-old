@@ -31,25 +31,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     def mkFlat = {
       val transformers = if (isJsPlatform) {
-        //        val (indexes, arrays, lookups0) = resolveIndexesOLD(flatIndexes0, 0)
-//        val (arrays, lookups0) = resolveIndexes(indexes, 0)
-
-//        val lookups = if (txMetaCompositesCount > 0) {
-//          // Treat tx meta data as composite
-//          val first = topLevelLookups(List(castss.head), lookups0)
-//          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
-//          q"(..$first, ..$last)"
-//        } else {
-//          q"(..$lookups0)"
-//        }
-//        q"""
-//          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
-//            ..$arrays
-//            (i: Int) => $lookups
-//          }
-//          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-//          final override lazy val indexes: Indexes = $indexes
-//        """
         q"""
           final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
@@ -57,7 +38,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
           final override lazy val indexes: Indexes = $indexes
          """
-
       } else {
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplFlat(castss, txMetaCompositesCount)}
@@ -65,13 +45,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
         """
       }
-
-      //      val transformersX =
-      //        q"""
-      //          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplFlat(castss, txMetaCompositesCount)}
-      //          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-      //          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
-      //        """
 
       if (hasVariables) {
         q"""
@@ -92,28 +65,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     def mkNestedOpt = {
       if (isJsPlatform) {
-//        val (arrays, lookups) = resolveIndexes(indexes, levels)
-
-//        val setters        = lookups.map(lookup => q"list.add($lookup.asInstanceOf[Any])")
         val jsTransformers =
-//          q"""
-//          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
-//            ..$arrays
-//            (i: Int) => {
-//              val list = new java.util.ArrayList[Any](${setters.length})
-//              ..$setters
-//              list
-//            }
-//          }
-//          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-//
-//          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
-//          final override def packed2obj(vs: Iterator[String]): $ObjType = ???
-//          final override def packed2json(vs: Iterator[String]): String = ???
-//
-//          final override lazy val indexes: Indexes = $indexes
-//          final override lazy val isNestedOpt: Boolean = true
-//        """
           q"""
           final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
@@ -222,16 +174,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
 //        val setters = lookups.map(lookup => q"list.add($lookup.asInstanceOf[AnyRef])")
 //        q"""
-//          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
-//            ..$arrays
-//            (i: Int) => {
-//              val list = new java.util.ArrayList[Any](${setters.length})
-//              ..$setters
-//              list
-//            }
-//          }
-//          final override def qr2obj(qr: QueryResult): Int => $ObjType = ???
-//
 //          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
 //          final override def packed2obj(vs: Iterator[String]): $ObjType = ???
 //          final override def packed2json(vs: Iterator[String]): String = ???

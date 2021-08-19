@@ -69,17 +69,14 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     *
     * @group get
     * @param n    Number of rows returned
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return String of json
     */
-  def getJson(n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+  def getJson(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     _inputThrowable.fold(
       for {
-        conn <- conn
-        jColl0 <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_query, -1, indexes, qr2list)
-        else
-          conn.query(_model, _query)
+        conn <- futConn
+        jColl0 <- conn.query(_model, _query)
       } yield {
         val jColl = jColl0.asInstanceOf[jCollection[jList[AnyRef]]]
         val count = jColl.size()

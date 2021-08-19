@@ -20,9 +20,7 @@ trait TxBundles extends Helpers with Serializations {
     *     Ns.int.getInsertTx(List(5, 6)),
     *     Ns(e2).int(20).getUpdateTx
     *   ) map { bundleTx =>
-    *     Ns.int.getAsync map { queryResult =>
-    *       queryResult ==> List(3, 4, 5, 6, 20)
-    *     }
+    *     Ns.int.getAsync.map(_ ==> List(3, 4, 5, 6, 20))
     *   }
     * }}}
     *

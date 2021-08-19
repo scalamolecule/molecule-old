@@ -19,17 +19,6 @@ trait MoleculeRpc {
     stmtsData: (String, Set[String])
   ): Future[TxReportRPC] = transact(connProxy, stmtsData._1, stmtsData._2)
 
-  def query(
-    connProxy: ConnProxy,
-    datalogQuery: String,
-    rules: Seq[String],
-    l: Seq[(Int, (String, String))],
-    ll: Seq[(Int, Seq[(String, String)])],
-    lll: Seq[(Int, Seq[Seq[(String, String)]])],
-    maxRows: Int,
-    indexes: Indexes
-  ): Future[QueryResult]
-
   def query2packed(
     connProxy: ConnProxy,
     datalogQuery: String,

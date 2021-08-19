@@ -32,36 +32,29 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
         conn <- futConn
 
 
-//        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)) insert List(
-//          //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa"))),
-//          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
-//          ("B", List((Some(13), None, "b"))),
-//          //          ("C", List((None, Some(14), "c"))),
-//          //          ("D", List((None, None, "d"))),
-//          //          ("E", List())
-//        )
-//
-//
-//        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).inspectGet
-//        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).inspectGet
-//
-//        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
-//        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
-//        //          ("B", List((Some(13), None, "b")), 7777, 8888),
-//        ////          ("C", List((None, Some(14), "c")), 7777, 8888),
-//        ////          ("D", List((None, None, "d")), 7777, 8888),
-//        ////          ("E", List(), 7777, 8888)
-//        //        ))
-//
-//
-//        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
-//          //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
-//          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
-//          ("B", List((Some(13), None, "b")), 7777, 8888),
-//          //          ("C", List((None, Some(14), "c")), 7777, 8888),
-//          //          ("D", List((None, None, "d")), 7777, 8888),
-//          //          ("E", List(), 7777, 8888)
-//        ))
+        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)) insert List(
+          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
+          ("B", List((Some(13), None, "b"))),
+          ("C", List((None, Some(14), "c"))),
+          ("D", List((None, None, "d"))),
+          ("E", List())
+        )
+
+        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+          ("B", List((Some(13), None, "b")), 7777, 8888),
+          ("C", List((None, Some(14), "c")), 7777, 8888),
+          ("D", List((None, None, "d")), 7777, 8888),
+          ("E", List(), 7777, 8888)
+        ))
+
+        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+          ("B", List((Some(13), None, "b")), 7777, 8888),
+          ("C", List((None, Some(14), "c")), 7777, 8888),
+          ("D", List((None, None, "d")), 7777, 8888),
+          ("E", List(), 7777, 8888)
+        ))
 
         //        indexes = Indexes("Ns", 2, List(
         //          AttrIndex("X", "str", 0, 0, 1, false),
@@ -116,49 +109,48 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
         //        _ = packed ==> packedOpt
 
 
-
-        _ <- Ns.str.Refs1.int1.str1$.Ref2.int2.str2$.Tx(Ref3.int3_(7777)) insert List(
-          ("A", 1, Some("a"), 11, Some("aa")),
-          ("B", 2, None, 22, None)
-        )
-
-        _ <- Ns.str.Refs1.int1.str1$.Ref2.int2.str2$.Tx(Ref3.int3).inspectGet
-
-        //        _ <- Ns.str.Refs1.int1.str1$.Refs2.int2.str2$.Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //        _ <- Ns.str.Refs1.int1.str1$.Ref2.int2.str2$.Tx(Ref3.int3_(7777)) insert List(
         //          ("A", 1, Some("a"), 11, Some("aa")),
         //          ("B", 2, None, 22, None)
-        //        ))
-
-        indexes = Indexes("Ns", 2, List(
-          AttrIndex("Ns_str", "str", 0, 0, 0, true),
-          Indexes("Refs1", 1, List(
-            AttrIndex("Ref1_int1", "int1", 1, 1, 2, true),
-            AttrIndex("Ref1_str1", "str1$", 13, 10, 1, true),
-            Indexes("Ref2", 1, List(
-              AttrIndex("Ref2_int2", "int2", 1, 1, 1, true),
-              AttrIndex("Ref2_str2", "str2$", 13, 10, 0, true))))),
-          Indexes("Tx", 1, List(
-            Indexes("Ref3", 1, List(
-              AttrIndex("Ref3_int3", "int3", 1, 1, 0, true)))))))
-
-        rows <- conn.qRaw(
-          """[:find  ?b ?d
-            |        (pull ?c__2 [(limit :Ref1/str1 nil)])
-            |        ?g
-            |        (pull ?f__4 [(limit :Ref2/str2 nil)])
-            |        ?i
-            | :where [(identity ?c) ?c__2]
-            |        [(identity ?f) ?f__4]
-            |        [?a :Ns/str ?b]
-            |        [?a :Ns/refs1 ?c]
-            |        [?c :Ref1/int1 ?d]
-            |        [?c :Ref1/ref2 ?f]
-            |        [?f :Ref2/int2 ?g ?tx]
-            |        [?tx :Ref3/int3 ?i]]""".stripMargin
-        )
-        packed = Flat2packed(indexes, rows, 7).getPacked
-
-        _ = println(packed)
+        //        )
+        //
+        //        _ <- Ns.str.Refs1.int1.str1$.Ref2.int2.str2$.Tx(Ref3.int3).inspectGet
+        //
+        //        //        _ <- Ns.str.Refs1.int1.str1$.Refs2.int2.str2$.Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //        //          ("A", 1, Some("a"), 11, Some("aa")),
+        //        //          ("B", 2, None, 22, None)
+        //        //        ))
+        //
+        //        indexes = Indexes("Ns", false, List(
+        //          AttrIndex("Ns_str", "str", 0, true),
+        //          Indexes("Refs1", false, List(
+        //            AttrIndex("Ref1_int1", "int1", 1, true),
+        //            AttrIndex("Ref1_str1", "str1$", 13, true),
+        //            Indexes("Ref2", false, List(
+        //              AttrIndex("Ref2_int2", "int2", 1, true),
+        //              AttrIndex("Ref2_str2", "str2$", 13, true))))),
+        //          Indexes("Tx", false, List(
+        //            Indexes("Ref3", false, List(
+        //              AttrIndex("Ref3_int3", "int3", 1, true)))))))
+        //
+        //        rows <- conn.qRaw(
+        //          """[:find  ?b ?d
+        //            |        (pull ?c__2 [(limit :Ref1/str1 nil)])
+        //            |        ?g
+        //            |        (pull ?f__4 [(limit :Ref2/str2 nil)])
+        //            |        ?i
+        //            | :where [(identity ?c) ?c__2]
+        //            |        [(identity ?f) ?f__4]
+        //            |        [?a :Ns/str ?b]
+        //            |        [?a :Ns/refs1 ?c]
+        //            |        [?c :Ref1/int1 ?d]
+        //            |        [?c :Ref1/ref2 ?f]
+        //            |        [?f :Ref2/int2 ?g ?tx]
+        //            |        [?tx :Ref3/int3 ?i]]""".stripMargin
+        //        )
+        //        packed = Flat2packed(indexes, rows, 7).getPacked
+        //
+        //        _ = println(packed)
 
       } yield ()
     }

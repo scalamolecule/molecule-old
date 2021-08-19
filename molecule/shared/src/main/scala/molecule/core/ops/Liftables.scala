@@ -107,18 +107,18 @@ private[molecule] trait Liftables extends MacroHelpers {
   }
 
 
-  // Liftables for attribute indexes --------------------------------------------------------------
+  // Liftables for index nodes --------------------------------------------------------------
 
   implicit val liftAttrIndex: c.universe.Liftable[AttrIndex] = Liftable[AttrIndex] { i =>
-    q"AttrIndex(${i.cls}, ${i.attr}, ${i.castIndex}, ${i.arrayType}, ${i.arrayIndex}, ${i.post})"
+    q"AttrIndex(${i.cls}, ${i.attr}, ${i.lambdaIndex}, ${i.post})"
   }
 
-  implicit val liftAttrGroup: c.universe.Liftable[Indexes] = Liftable[Indexes] { r =>
+  implicit val liftIndexes: c.universe.Liftable[Indexes] = Liftable[Indexes] { r =>
     val attrs = r.attrs.map(attr => q"$attr")
-    q"Indexes(${r.ref}, ${r.card}, List(..$attrs))"
+    q"Indexes(${r.ref}, ${r.nested}, List(..$attrs))"
   }
 
-  implicit val liftAttrIndexes: c.universe.Liftable[IndexNode] = Liftable[IndexNode] {
+  implicit val liftIndexNode: c.universe.Liftable[IndexNode] = Liftable[IndexNode] {
     case attrIndex: AttrIndex => q"$attrIndex"
     case indexes: Indexes     => q"$indexes"
   }

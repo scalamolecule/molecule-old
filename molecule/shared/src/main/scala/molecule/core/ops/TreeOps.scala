@@ -27,10 +27,8 @@ private[molecule] trait TreeOps extends Liftables {
     case other            => other
   }
 
-  // (castIndex, arrayType) for looking up
-  // - cast lambda array index in CastLamdas and
-  // - data arrays index in CastArrays
-  var ii = (-1, -1)
+  // Index of currently processed lambda for JS resolutions
+  var lambdaIndex = -1
 
 
   implicit class richTree(val t: Tree) {

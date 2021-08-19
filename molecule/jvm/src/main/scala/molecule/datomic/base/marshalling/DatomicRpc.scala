@@ -1,8 +1,8 @@
 package molecule.datomic.base.marshalling
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream, StringReader}
+import java.io.StringReader
 import java.util
-import java.util.{Collections, Date, List => jList, Set => jSet, ArrayList => jArrayList}
+import java.util.{Collections, Date, List => jList, Set => jSet}
 import datomic.Util
 import datomic.Util._
 import datomicClient.ClojureBridge
@@ -13,7 +13,7 @@ import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
 import molecule.datomic.base.facade._
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
-import molecule.datomic.peer.facade.{Conn_Peer, Datomic_Peer}
+import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,76 +45,6 @@ object DatomicRpc extends MoleculeRpc
         txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
       )
     }
-  }
-
-
-  def serialize(value: Any): Array[Byte] = {
-    val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
-    val oos                           = new ObjectOutputStream(stream)
-    oos.writeObject(value)
-    oos.close()
-    stream.toByteArray
-  }
-
-  def deserialize(bytes: Array[Byte]): Any = {
-    val ois   = new ObjectInputStream(new ByteArrayInputStream(bytes))
-    val value = ois.readObject
-    ois.close()
-    value
-  }
-
-  def query(
-    connProxy: ConnProxy,
-    datalogQuery: String,
-    rules: Seq[String],
-    l: Seq[(Int, (String, String))],
-    ll: Seq[(Int, Seq[(String, String)])],
-    lll: Seq[(Int, Seq[Seq[(String, String)]])],
-    maxRows: Int,
-    indexes: Indexes
-  ): Future[QueryResult] = try {
-    val log       = new log
-    val t         = TimerPrint("DatomicRpc")
-    val inputs    = unmarshallInputs(l ++ ll ++ lll)
-    val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
-    for {
-      conn <- getConn(connProxy)
-      allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
-    } yield {
-      val rowCountAll = allRows.size
-      val rowCount    = if (maxRows == -1 || rowCountAll < maxRows) rowCountAll else maxRows
-      val queryTime   = t.delta
-      val space       = " " * (70 - datalogQuery.split('\n').last.length)
-      val time        = qTime(queryTime)
-      val timeRight   = " " * (8 - time.length) + time
-      log(datalogQuery + space + timeRight)
-      //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
-      log.print
-      //      log(s"\n---- Querying Datomic... --------------------")
-      //      log(datalogQuery)
-      //      log(qTime(queryTime) + "  " + datalogQuery)
-      //      log("connProxy uuid: " + connProxy.uuid)
-      //      log("Query time  : " + thousands(queryTime) + " ms")
-      //      log("rowCountAll : " + rowCountAll)
-      //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
-      //      log("rowCount    : " + rowCount)
-
-      //      val allRows2 = allRows
-      //      val it       = allRows2.iterator()
-      //      //            it.next()
-      //      val v        = it.next().get(0)
-      //      println(s"v1: $v  ${v.getClass}")
-      println(indexes)
-      allRows.forEach(println)
-
-      val queryResult = Rows2QueryResult(allRows, rowCountAll, rowCount, queryTime, indexes).get
-      // log("QueryResult: " + queryResult)
-      //        log("Rows2QueryResult took " + t.ms)
-      //        log("Sending data to client... Total server time: " + t.msTotal)
-      queryResult
-    }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
   }
 
   def query2packed(
@@ -177,8 +107,6 @@ object DatomicRpc extends MoleculeRpc
 
       println("###### DatomicRpc ####################" + packed)
 
-      // log("QueryResult: " + queryResult)
-      //        log("Rows2QueryResult took " + t.ms)
       //        log("Sending data to client... Total server time: " + t.msTotal)
       packed
     }

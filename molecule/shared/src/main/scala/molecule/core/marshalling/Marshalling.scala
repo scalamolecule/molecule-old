@@ -3,13 +3,12 @@ package molecule.core.marshalling
 import java.util.{UUID, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
-import molecule.core.macros.qr.CastArrays
 import molecule.core.marshalling.attrIndexes.Indexes
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
 
 
-/** Marshalling methods for casting raw row (server) / QueryResult (client) data.
+/** Marshalling methods
   *
   * Methods are implemented by macros for either JS or JVM platform
   */
@@ -39,25 +38,6 @@ abstract class Marshalling[Obj, Tpl](
 
 
   // JS ......................
-
-  /** QueryResult to object cast interface to be materialized by macro
-    *
-    * @param qr
-    * @return rowIndex => Obj
-    */
-  protected def qr2obj(qr: QueryResult): Int => Obj = ???
-
-
-  /** QueryResult to tuple cast interface to be materialized by macro
-    *
-    * @param qr
-    * @return rowIndex => Tpl
-    */
-  protected def qr2tpl(qr: QueryResult): Int => Tpl = ???
-
-
-  protected def qr2list(qr: QueryResult): Int => jList[Any] = ???
-
 
   protected def packed2tpl(vs: Iterator[String]): Tpl = ???
   protected def packed2obj(vs: Iterator[String]): Obj = ???

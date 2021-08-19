@@ -47,7 +47,6 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
         // Since we control the Molecule structure in the macros,
         // we know that the obj marshaller is always the third element:
         // constructor, row2tpl, row2obj ... or
-        // constructor, qr2tpl, qr2obj ...
         bodyElements(2)
       case other                                           =>
         abort(s"Unexpected tree for dynamic molecule body:\n$other\n" + showRaw(other))

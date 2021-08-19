@@ -75,11 +75,11 @@ case class Nested2packed(
 
   def packNode(node: IndexNode, level: Int): jList[_] => Unit = {
     node match {
-      case AttrIndex(_, _, castIndex, _, _, _) =>
+      case AttrIndex(_, _, lambdaIndex, _) =>
         colIndex += 1
-        packAttr(castIndex, colIndex)
+        packAttr(lambdaIndex, colIndex)
 
-      case Indexes(_, 2, attrs) =>
+      case Indexes(_, true, attrs) =>
         packNested(attrs, level + 1)
 
       case Indexes(_, _, attrs) =>

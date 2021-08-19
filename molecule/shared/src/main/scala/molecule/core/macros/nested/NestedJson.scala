@@ -138,16 +138,13 @@ object NestedJson {
 
   trait NestedJson1[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -200,16 +197,13 @@ object NestedJson {
 
   trait NestedJson2[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -269,16 +263,13 @@ object NestedJson {
 
   trait NestedJson3[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -346,16 +337,13 @@ object NestedJson {
 
   trait NestedJson4[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -432,16 +420,13 @@ object NestedJson {
 
   trait NestedJson5[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -528,16 +513,13 @@ object NestedJson {
 
   trait NestedJson6[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {
@@ -635,16 +617,13 @@ object NestedJson {
 
   trait NestedJson7[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
-        conn <- conn
-        data <- if (conn.isJsPlatform)
-          conn.queryFlatJs(_nestedQuery.get, -1, indexes, qr2list)
-        else
-          conn.query(_model, _nestedQuery.get)
+        conn <- futConn
+        data <- conn.query(_model, _nestedQuery.get)
       } yield {
         resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data).asInstanceOf[java.util.ArrayList[jList[AnyRef]]]
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
         val last                                     = rows.size
 
         if (last == 0) {

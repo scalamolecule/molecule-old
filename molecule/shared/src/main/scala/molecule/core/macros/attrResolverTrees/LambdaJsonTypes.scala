@@ -116,10 +116,8 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
   val jsonEnum: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     if (t.card == 1) {
-      ii = (0, 0)
       (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
     } else {
-      ii = (24, 20)
       (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
     }
   }
@@ -127,10 +125,8 @@ private[molecule] trait LambdaJsonTypes extends TreeOps {
   val jsonOptEnum: richTree => (Int, Int) => Tree = (t: richTree) => {
     val field = t.nameClean
     if (t.card == 1) {
-      ii = (12, 10)
       (colIndex: Int, _: Int) => q"jsonOptOneEnum(sb, $field, row, $colIndex)"
     } else {
-      ii = (35, 30)
       (colIndex: Int, tabs: Int) => q"jsonOptManyEnum(sb, $field, row, $colIndex, $tabs)"
     }
   }
