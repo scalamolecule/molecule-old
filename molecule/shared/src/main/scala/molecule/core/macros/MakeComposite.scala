@@ -70,9 +70,13 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       //         final override lazy val indexes: Indexes = $indexes
       //       """
       q"""
-          final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ???
+          final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) =
+          ${packed2tpl(typess, postTypes, indexes, true, txMetaCompositesCount)}
+
           final override protected def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override protected def packed2json(vs: Iterator[String]): String = ???
+
+          final override lazy val indexes: Indexes = $indexes
        """
     } else {
       q"""
@@ -100,7 +104,12 @@ class MakeComposite(val c: blackbox.Context) extends Base {
         new $outMolecule
       """
     }
-    xx(6, t)
+    xx(6
+      , model0
+      , t
+      , packed2tpl(typess, postTypes, indexes, true, txMetaCompositesCount)
+      , tplComposite(castss, txMetaCompositesCount)
+    )
     t
   }
 

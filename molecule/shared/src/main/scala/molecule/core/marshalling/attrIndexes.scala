@@ -7,6 +7,7 @@ object attrIndexes {
   sealed trait IndexNode
 
   case class AttrIndex(
+    cls: String,
     attr: String,
     castIndex: Int,
     arrayType: Int,
@@ -14,7 +15,7 @@ object attrIndexes {
     post: Boolean,
   ) extends IndexNode {
     override def toString: String = {
-      s"""AttrIndex("$attr", $castIndex, $arrayType, $arrayIndex, $post)"""
+      s"""AttrIndex("$cls", "$attr", $castIndex, $arrayType, $arrayIndex, $post)"""
     }
   }
 

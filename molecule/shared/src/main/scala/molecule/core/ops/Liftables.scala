@@ -110,7 +110,7 @@ private[molecule] trait Liftables extends MacroHelpers {
   // Liftables for attribute indexes --------------------------------------------------------------
 
   implicit val liftAttrIndex: c.universe.Liftable[AttrIndex] = Liftable[AttrIndex] { i =>
-    q"AttrIndex(${i.attr}, ${i.castIndex}, ${i.arrayType}, ${i.arrayIndex}, ${i.post})"
+    q"AttrIndex(${i.cls}, ${i.attr}, ${i.castIndex}, ${i.arrayType}, ${i.arrayIndex}, ${i.post})"
   }
 
   implicit val liftAttrGroup: c.universe.Liftable[Indexes] = Liftable[Indexes] { r =>

@@ -12,16 +12,16 @@ private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with Build
   private lazy val xx = InspectMacro("BuildTplNestedOpt", 2, 2)
 
   def tplNestedOpt(
-    current: BuilderObj,
+    current: Obj,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     level: Int = 0
   ): Tree = {
 
-    def properties(nodes: List[BuilderNode]): Seq[Tree] = {
+    def properties(nodes: List[Node]): Seq[Tree] = {
       nodes.flatMap {
-        case attr: BuilderProp                       => Seq(attr.cast(42)) // colIndex not used here
-        case nested@BuilderObj(_, _, 2, nestedProps) =>
+        case attr: Prop                       => Seq(attr.cast(42)) // colIndex not used here
+        case nested@Obj(_, _, 2, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper = isDeeper(nested)
           Seq(
@@ -36,7 +36,7 @@ private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with Build
             """
           )
 
-        case ref: BuilderObj => properties(ref.props)
+        case ref: Obj => properties(ref.props)
       }
     }
 
@@ -48,7 +48,7 @@ private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with Build
 
     } else {
       current.props.last match {
-        case last@BuilderObj(_, _, 2, nestedProps) =>
+        case last@Obj(_, _, 2, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper = isDeeper(last)
           q"""

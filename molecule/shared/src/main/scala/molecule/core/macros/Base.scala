@@ -81,38 +81,38 @@ private[molecule] trait Base extends Dsl2Model {
   }
 
 
-  def resolveIndexes(
-    indexes: Indexes,
-    nestedLevels: Int
-  ): (List[c.universe.Tree], List[c.universe.Tree]) = {
-    var colIndex = -1
-    var arrays   = List.empty[c.universe.Tree]
-    var lookups  = List.empty[c.universe.Tree]
-
-    def recurse(indexes: Indexes): Unit = {
-      // Nested eid indexes
-      (0 until nestedLevels).toList.foreach { i =>
-        colIndex += 1
-        arrays = arrays :+ dataArrays(2)(colIndex, colIndex)
-        lookups = lookups :+ q"${TermName("a" + colIndex)}(i)"
-      }
-      // Data
-      indexes.attrs.foreach {
-        case AttrIndex(_, castIndex, arrayType, arrayIndex, _) =>
-          colIndex += 1
-          arrays = arrays :+ dataArrays(arrayType)(colIndex, arrayIndex)
-          val lookup = if (castIndex == 11)
-            q"castV(${TermName("a" + colIndex)}(i))"
-          else
-            q"${TermName("a" + colIndex)}(i)"
-          lookups = lookups :+ lookup
-
-        case ii: Indexes => recurse(ii)
-      }
-    }
-    recurse(indexes)
-    (arrays, lookups)
-  }
+  //  def resolveIndexes(
+  //    indexes: Indexes,
+  //    nestedLevels: Int
+  //  ): (List[c.universe.Tree], List[c.universe.Tree]) = {
+  //    var colIndex = -1
+  //    var arrays   = List.empty[c.universe.Tree]
+  //    var lookups  = List.empty[c.universe.Tree]
+  //
+  //    def recurse(indexes: Indexes): Unit = {
+  //      // Nested eid indexes
+  //      (0 until nestedLevels).toList.foreach { i =>
+  //        colIndex += 1
+  //        arrays = arrays :+ dataArrays(2)(colIndex, colIndex)
+  //        lookups = lookups :+ q"${TermName("a" + colIndex)}(i)"
+  //      }
+  //      // Data
+  //      indexes.attrs.foreach {
+  //        case AttrIndex(_, _, castIndex, arrayType, arrayIndex, _) =>
+  //          colIndex += 1
+  //          arrays = arrays :+ dataArrays(arrayType)(colIndex, arrayIndex)
+  //          val lookup = if (castIndex == 11)
+  //            q"castV(${TermName("a" + colIndex)}(i))"
+  //          else
+  //            q"${TermName("a" + colIndex)}(i)"
+  //          lookups = lookups :+ lookup
+  //
+  //        case ii: Indexes => recurse(ii)
+  //      }
+  //    }
+  //    recurse(indexes)
+  //    (arrays, lookups)
+  //  }
 
 
   //  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
@@ -130,20 +130,20 @@ private[molecule] trait Base extends Dsl2Model {
   //    subTuples
   //  }
 
-  def compositeLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): Seq[Tree] = {
-    var i              = -1 + offset
-    var subTupleFields = Seq.empty[Tree]
-    val subTuples      = castss.flatMap {
-      case Nil   => None
-      case casts =>
-        subTupleFields = casts.map { _ =>
-          i += 1
-          lookups(i)
-        }
-        Some(q"(..$subTupleFields)")
-    }
-    subTuples
-  }
+  //  def compositeLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): Seq[Tree] = {
+  //    var i              = -1 + offset
+  //    var subTupleFields = Seq.empty[Tree]
+  //    val subTuples      = castss.flatMap {
+  //      case Nil   => None
+  //      case casts =>
+  //        subTupleFields = casts.map { _ =>
+  //          i += 1
+  //          lookups(i)
+  //        }
+  //        Some(q"(..$subTupleFields)")
+  //    }
+  //    subTuples
+  //  }
 
   //  def compositeJsons(jsonss: List[List[(Int, Int) => Tree]]): ListBuffer[Tree] = {
   //    var fieldIndex = -1

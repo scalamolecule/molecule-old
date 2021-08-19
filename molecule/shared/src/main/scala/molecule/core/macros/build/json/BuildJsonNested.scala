@@ -13,33 +13,33 @@ trait BuildJsonNested extends BuildBase with JsonBase {
   private lazy val xx = InspectMacro("BuildJsonNested", 10)
 
   case class buildJsonNested(
-    obj: BuilderObj,
+    obj: Obj,
     nestedRef: List[String],
     postJsons: List[(Int, Int) => Tree]
   ) {
     // Filter out post props since we handle those with postJsons
-    val objWithoutPostProps = obj.copy(props = obj.props.foldLeft(List.empty[BuilderNode], false) {
-      case ((acc, true), _)                     => (acc, true)
-      case ((acc, _), o@BuilderObj(_, _, 2, _)) => (acc :+ o, true)
-      case ((acc, _), node)                     => (acc :+ node, false)
+    val objWithoutPostProps = obj.copy(props = obj.props.foldLeft(List.empty[Node], false) {
+      case ((acc, true), _)              => (acc, true)
+      case ((acc, _), o@Obj(_, _, 2, _)) => (acc :+ o, true)
+      case ((acc, _), node)              => (acc :+ node, false)
     }._1)
 
     // Object for each level
-    val (objs, exitDepths, initTabs): (Seq[BuilderObj], Seq[Int], Seq[Int]) = {
-      def recurse(obj: BuilderObj, depth: Int): (Seq[BuilderObj], Seq[Int], Seq[Int]) = obj.props.zipWithIndex.foldLeft(
+    val (objs, exitDepths, initTabs): (Seq[Obj], Seq[Int], Seq[Int]) = {
+      def recurse(obj: Obj, depth: Int): (Seq[Obj], Seq[Int], Seq[Int]) = obj.props.zipWithIndex.foldLeft(
         Seq(obj.copy(props = Nil)), Seq(0), Seq(0)
       ) {
         case ((objs, depths, tabs), (node, i)) =>
           val last = i == obj.props.size - 1
           node match {
-            case p: BuilderProp =>
+            case p: Prop =>
               (
                 objs.init :+ objs.last.copy(props = objs.last.props :+ p),
                 depths.init :+ depth,
                 tabs
               )
 
-            case o@BuilderObj(_, _, 2, _) =>
+            case o@Obj(_, _, 2, _) =>
               val (nestedObjs, nestedDepths, nestedTabs) = recurse(o, 0) // Start over for next level
               (
                 objs ++ nestedObjs,
@@ -48,7 +48,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
               )
 
             // First namespace that has been back-reffed to
-            case o: BuilderObj if !last =>
+            case o: Obj if !last =>
               val (refObjs, refDepths, refTabs) = recurse(o, depth + 1)
               (
                 (objs.init :+ objs.last.copy(props = objs.last.props :+ refObjs.head)) ++ refObjs.tail,
@@ -56,7 +56,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
                 (tabs.init :+ tabs.last + refTabs.head) ++ refTabs.tail.map(_ + tabs.last + 1)
               )
 
-            case o: BuilderObj =>
+            case o: Obj =>
               val (refObjs, refDepths, refTabs) = recurse(o, depth + 1)
               if (refObjs.head.props.nonEmpty) {
                 (
@@ -92,7 +92,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
 
     def branchPairs(level: Int): Tree = {
       val exitDepth = exitDepths(level)
-      def recurse(obj: BuilderObj, depth: Int, tabs: Int, nestedAdded: Boolean = false): Seq[Tree] = {
+      def recurse(obj: Obj, depth: Int, tabs: Int, nestedAdded: Boolean = false): Seq[Tree] = {
         var next  = false
         val nodes = obj.props
         if (nodes.isEmpty) {
@@ -112,7 +112,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
             }
 
             node match {
-              case p: BuilderProp =>
+              case p: Prop =>
                 colIndex += 1
                 val nested =
                   if (nestedAdded) {
@@ -127,7 +127,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
                   } else Nil
                 newLine ++ Seq(p.json(colIndex, tabs + 1)) ++ nested
 
-              case o: BuilderObj if depth == exitDepth =>
+              case o: Obj if depth == exitDepth =>
                 newLine ++ Seq(
                   q"""quote(sb, ${o.ref})""",
                   q"""sb.append(${": {" + indent(tabs + 2)})""",
@@ -141,7 +141,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
                   } else Nil
                   ) ++ Seq(q"""sb.append(nested)""")
 
-              case o: BuilderObj =>
+              case o: Obj =>
                 newLine ++ Seq(
                   q"""quote(sb, ${o.ref})""",
                   q"""sb.append(${": {" + indent(tabs + 2)})""",

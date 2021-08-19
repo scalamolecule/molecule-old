@@ -12,7 +12,7 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
   private lazy val xx = InspectMacro("BuildJsonNestedOpt", 2, 1)
 
   def jsonNestedOpt(
-    current: BuilderObj,
+    current: Obj,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     level: Int = 0,
@@ -22,7 +22,7 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
       q"""sb.append(${"," + indent(tabs + 1)})"""
     )
 
-    def properties(nodes: List[BuilderNode]): Seq[Tree] = {
+    def properties(nodes: List[Node]): Seq[Tree] = {
       var next  = false
       var props = List.empty[String]
       nodes.flatMap { node =>
@@ -31,14 +31,14 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
           Nil
         }
         node match {
-          case BuilderProp(_, prop, _, _, json, _) =>
+          case Prop(_, prop, _, _, json, _) =>
             // Only generate 1 property, even if attribute is repeated in molecule
             if (props.contains(prop)) Nil else {
               props = props :+ prop
               newLine :+ json(42, tabs) // colIndex not used
             }
 
-          case nested@BuilderObj(_, ref, 2, nestedProps) =>
+          case nested@Obj(_, ref, 2, nestedProps) =>
             val propCount = getPropCount(nestedProps)
             val deeper    = isDeeper(nested)
             newLine ++ Seq(
@@ -56,7 +56,7 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
               """
             )
 
-          case ref: BuilderObj => properties(ref.props)
+          case ref: Obj => properties(ref.props)
         }
       }
     }
@@ -78,7 +78,7 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
 
     } else {
       current.props.last match {
-        case last@BuilderObj(_, ref, 2, nestedProps) =>
+        case last@Obj(_, ref, 2, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper    = isDeeper(last)
           q"""

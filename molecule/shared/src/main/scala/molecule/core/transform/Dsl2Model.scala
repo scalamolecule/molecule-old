@@ -78,7 +78,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       Model,
       List[List[Tree]],
       List[List[Int => Tree]],
-      BuilderObj,
+      Obj,
       Indexes,
       List[String],
       Boolean,
@@ -122,7 +122,7 @@ private[molecule] trait Dsl2Model extends TreeOps
     var castss        : List[List[Int => Tree]] = List(List.empty[Int => Tree])
 
     var arrayIndexes: Map[Int, Int] = Map.empty[Int, Int]
-    var obj         : BuilderObj    = BuilderObj("", "", 0, Nil)
+    var obj         : Obj           = Obj("", "", 0, Nil)
     var objLevel    : Int           = 0
     var indexes     : Indexes       = Indexes("", 0, Nil)
 
@@ -154,10 +154,10 @@ private[molecule] trait Dsl2Model extends TreeOps
         }
     }
 
-    def mkAttrIndex(attr: String) = {
+    def mkAttrIndex(cls: String, attr: String) = {
       val (castIndex, arrayType) = ii
       arrayIndexes = arrayIndexes + (arrayType -> (arrayIndexes.getOrElse(arrayType, -1) + 1))
-      indexes = addAttrIndex(indexes, AttrIndex(attr, castIndex, arrayType, arrayIndexes(arrayType), post), objLevel)
+      indexes = addAttrIndex(indexes, AttrIndex(cls, attr, castIndex, arrayType, arrayIndexes(arrayType), post), objLevel)
       ii = (-1, -1)
     }
 
@@ -165,8 +165,9 @@ private[molecule] trait Dsl2Model extends TreeOps
       val aggrTpe       = aggr.map(_._2.toString)
       val objBefore     = obj
       val indexesBefore = indexes
-      obj = addNode(obj, BuilderProp(t.nsFull + "_" + t.name.replace('$', '_'), t.name, tpe, cast, json, aggrTpe), objLevel)
-      mkAttrIndex(t.name)
+      val cls = t.nsFull + "_" + t.name.replace('$', '_')
+      obj = addNode(obj, Prop(cls, t.name, tpe, cast, json, aggrTpe), objLevel)
+      mkAttrIndex(cls, t.name)
       xx(803, t.name, objBefore, obj, indexesBefore, indexes)
     }
 
@@ -342,20 +343,20 @@ private[molecule] trait Dsl2Model extends TreeOps
       val nsCls = ns + "_"
 
       // Prepend namespace in obj
-      val (newBuilderNodes, newAttrIndexes): (List[BuilderNode], List[IndexNode]) = if (objCompositesCount > 0) {
+      val (newBuilderNodes, newAttrIndexes): (List[Node], List[IndexNode]) = if (objCompositesCount > 0) {
         val (props, compositeProps) = obj.props.splitAt(obj.props.length - objCompositesCount)
         val (attrs, compositeAttrs) = indexes.attrs.splitAt(indexes.attrs.length - objCompositesCount)
 
-        val newBuilderNodes: List[BuilderNode] = compositeProps.head match {
-          case BuilderObj("Tx_", _, _, _) =>
+        val newBuilderNodes: List[Node] = compositeProps.head match {
+          case Obj("Tx_", _, _, _) =>
             // Reset obj composites count
             objCompositesCount = 0
-            List(BuilderObj(nsCls, ns, 1, props ++ compositeProps))
+            List(Obj(nsCls, ns, 1, props ++ compositeProps))
 
-          case compositeObj@BuilderObj(compositeCls, _, _, _) if sameNs && nsCls == compositeCls =>
+          case compositeObj@Obj(compositeCls, _, _, _) if sameNs && nsCls == compositeCls =>
             compositeObj.copy(props = props ++ compositeObj.props) :: compositeProps.tail
 
-          case _ => BuilderObj(nsCls, ns, 1, props) :: compositeProps
+          case _ => Obj(nsCls, ns, 1, props) :: compositeProps
         }
 
         val newAttrIndexes: List[IndexNode] = compositeAttrs.head match {
@@ -373,8 +374,8 @@ private[molecule] trait Dsl2Model extends TreeOps
         xx(631, attrs, compositeAttrs, newAttrIndexes)
         (newBuilderNodes, newAttrIndexes)
       } else {
-        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(BuilderObj(nsCls, ns, 1, obj.props))), sameNs)
-        (List(BuilderObj(nsCls, ns, 1, obj.props)), List(Indexes(ns, 1, indexes.attrs)))
+        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(Obj(nsCls, ns, 1, obj.props))), sameNs)
+        (List(Obj(nsCls, ns, 1, obj.props)), List(Indexes(ns, 1, indexes.attrs)))
       }
 
       obj = obj.copy(props = newBuilderNodes)
@@ -466,7 +467,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
       } else if (attrStr.head == '_') {
         xx(134, attrStr.tail)
-        obj = addNode(obj, BuilderObj("", "", 0, Nil), objLevel)
+        obj = addNode(obj, Obj("", "", 0, Nil), objLevel)
         indexes = addAttrIndex(indexes, Indexes("", 0, Nil), objLevel)
         objLevel += 1
         xx(151, obj)
@@ -480,7 +481,7 @@ private[molecule] trait Dsl2Model extends TreeOps
         if (objCompositesCount > 0) {
           val (props, compositeProps) = obj.props.splitAt(obj.props.length - objCompositesCount)
           val (attrs, compositeAttrs) = indexes.attrs.splitAt(indexes.attrs.length - objCompositesCount)
-          val newProps                = BuilderObj(refCls, refName, 1, props) :: compositeProps
+          val newProps                = Obj(refCls, refName, 1, props) :: compositeProps
           val newAttrs                = Indexes(refName, 1, attrs) :: compositeAttrs
           obj = obj.copy(props = newProps)
           indexes = indexes.copy(attrs = newAttrs)
@@ -488,10 +489,10 @@ private[molecule] trait Dsl2Model extends TreeOps
 
         } else if (txMetaDataDone) {
           obj.props.last match {
-            case txMetaObj@BuilderObj("Tx_", _, _, _) =>
-              obj = obj.copy(props = List(BuilderObj(refCls, refName, 1, obj.props.init), txMetaObj))
-            case _                                    =>
-              obj = obj.copy(props = List(BuilderObj(refCls, refName, 1, obj.props)))
+            case txMetaObj@Obj("Tx_", _, _, _) =>
+              obj = obj.copy(props = List(Obj(refCls, refName, 1, obj.props.init), txMetaObj))
+            case _                             =>
+              obj = obj.copy(props = List(Obj(refCls, refName, 1, obj.props)))
           }
           indexes.attrs.last match {
             case txMetaAttrIndex@Indexes("Tx", _, _) =>
@@ -747,15 +748,16 @@ private[molecule] trait Dsl2Model extends TreeOps
                 false
               )
               // Have to add node manually since nsFull is resolved in a special way
-              val newProp = BuilderProp(
-                nsFull + "_" + attrStr,
+              val cls = nsFull + "_" + attrStr
+              val newProp = Prop(
+                cls,
                 attrStr,
                 tq"${TypeName(tpeStr)}",
                 castKeyedMapAttr(tpeStr),
                 jsonKeyedMapAttr(tpeStr, attrStr)
               )
               obj = addNode(obj, newProp, objLevel)
-              mkAttrIndex(attrStr)
+              mkAttrIndex(cls, attrStr)
             }
             traverseElement(prev1, p, Atom(nsFull, mapAttr.toString, tpeStr, 4, VarValue, None, Nil, Seq(extract(q"$key").toString)))
         }
@@ -887,8 +889,9 @@ private[molecule] trait Dsl2Model extends TreeOps
                 false
               )
               if (genericAttr.nonEmpty) {
-                val newProp = BuilderProp(
-                  "Datom_" + genericAttr,
+                val cls = "Datom_" + genericAttr
+                val newProp = Prop(
+                  cls,
                   genericAttr,
                   tq"${TypeName(tpe)}",
                   castOneAttr("Int"),
@@ -896,7 +899,7 @@ private[molecule] trait Dsl2Model extends TreeOps
                   optAggrTpe = Some("Int")
                 )
                 obj = addNode(obj, newProp, objLevel)
-                mkAttrIndex(genericAttr)
+                mkAttrIndex(cls, genericAttr)
               }
               traverseElement(prev, t, Generic(t.nsFull2, attrStr, genericType, value))
             } else {
@@ -909,15 +912,16 @@ private[molecule] trait Dsl2Model extends TreeOps
                 false
               )
               if (genericAttr.nonEmpty) {
-                val newProp = BuilderProp(
-                  "Datom_" + genericAttr,
+                val cls = "Datom_" + genericAttr
+                val newProp = Prop(
+                  cls,
                   genericAttr,
                   tq"${TypeName(tpe)}",
                   castOneAttr(tpe),
                   jsonOneAttr(tpe, attrStr)
                 )
                 obj = addNode(obj, newProp, objLevel)
-                mkAttrIndex(genericAttr)
+                mkAttrIndex(cls, genericAttr)
               }
               xx(242, t, t.nsFull, t.name, obj)
               traverseElement(prev, t, Generic(t.nsFull, attrStr, genericType, value))
@@ -1046,7 +1050,7 @@ private[molecule] trait Dsl2Model extends TreeOps
             false
           )
           // Have to add node manually since nsFull is resolved in a special way
-          val newProp = BuilderProp(
+          val newProp = Prop(
             nsFull + "_" + attrStr,
             attrStr,
             tq"${TypeName(tpeStr)}",
@@ -1217,10 +1221,10 @@ private[molecule] trait Dsl2Model extends TreeOps
       // park post props
       val postProps = obj.props
       val postAttrs = indexes.attrs
-      obj = BuilderObj("", "", 0, Nil)
+      obj = Obj("", "", 0, Nil)
       indexes = Indexes("", 0, Nil)
       val nestedElems   = nestedElements(q"$prev.$manyRef", refNext, nestedTree)
-      val nestedObj     = BuilderObj(nsFull + "__" + manyRef, manyRef.toString, 2, obj.props)
+      val nestedObj     = Obj(nsFull + "__" + manyRef, manyRef.toString, 2, obj.props)
       val nestedIndexes = Indexes(manyRef.toString, 2, indexes.attrs)
       obj = obj.copy(props = nestedObj +: postProps)
       indexes = indexes.copy(attrs = nestedIndexes +: postAttrs)
@@ -1831,7 +1835,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     // Set outer objects ref and card
 
-    def streamlineObj(element: Element): (BuilderObj, Indexes) = element match {
+    def streamlineObj(element: Element): (Obj, Indexes) = element match {
       case Atom(nsFull, _, _, _, _, _, _, _) =>
         (obj.copy(ref = nsFull, card = 2), indexes.copy(ref = nsFull, card = 2))
       case Bond(nsFull, _, _, _, _)          =>

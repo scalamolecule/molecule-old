@@ -35,7 +35,7 @@ case class NestedOpt2packed(
 
   def packNode(node: IndexNode, top: Boolean = false): jIterator[_] => Unit = {
     node match {
-      case AttrIndex(_, castIndex, _, _, _) =>
+      case AttrIndex(_, _, castIndex, _, _, _) =>
         packAttr(castIndex)
 
       case Indexes(_, 2, attrs) =>

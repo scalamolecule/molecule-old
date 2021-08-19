@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.composite
 
+import molecule.datomic.api.in3_out11.m
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
@@ -168,6 +169,21 @@ object CompositeRef extends AsyncTestSuite {
         _ <- m(Ref2.int2.str2 + Ns.refs1).get.map(_ ==> List(
           ((1, "a"), Set(r1)),
           ((2, "b"), Set(r2))
+        ))
+      } yield ()
+    }
+
+
+    "Ref in first group" - core { implicit conn =>
+      for {
+        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2) insert List(
+          (("A", 1), (11, "a")),
+          (("B", 2), (22, "b"))
+        )
+
+        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+          (("A", 1), (11, "a")),
+          (("B", 2), (22, "b"))
         ))
       } yield ()
     }

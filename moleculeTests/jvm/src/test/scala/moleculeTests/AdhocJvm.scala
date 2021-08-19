@@ -64,17 +64,17 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
 //        ))
 
         //        indexes = Indexes("Ns", 2, List(
-        //          AttrIndex("str", 0, 0, 1, false),
+        //          AttrIndex("X", "str", 0, 0, 1, false),
         //          Indexes("Refs1", 2, List(
-        //            AttrIndex("int1$", 14, 11, 1, false),
+        //            AttrIndex("X", "int1$", 14, 11, 1, false),
         //            Indexes("Ref2", 1, List(
-        //              AttrIndex("int2$", 14, 11, 0, false),
-        //              AttrIndex("str2", 0, 0, 0, false))))),
+        //              AttrIndex("X", "int2$", 14, 11, 0, false),
+        //              AttrIndex("X", "str2", 0, 0, 0, false))))),
         //          Indexes("Tx", 1, List(
         //            Indexes("Ref3", 1, List(
-        //              AttrIndex("int3", 1, 1, 0, true),
+        //              AttrIndex("X", "int3", 1, 1, 0, true),
         //              Indexes("Ref4", 1, List(
-        //                AttrIndex("int4", 1, 1, 0, true)))))))))
+        //                AttrIndex("X", "int4", 1, 1, 0, true)))))))))
         //
         //        rows <- conn.qRaw(
         //          """[:find  ?sort0 ?sort1 ?b
@@ -93,7 +93,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
         //            |        [(identity ?a) ?sort0]
         //            |        [(identity ?c) ?sort1]]""".stripMargin
         //        )
-        //        packed = Nested2packed(rows, 7, 7, 7L, Nil, Nil, indexes, 1).getPacked
+        //        packed = Nested2packed(indexes, rows, 1).getPacked
         //
         //        rowsOpt <- conn.qRaw(
         //          """[:find  ?b
@@ -109,7 +109,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
         //            |        [?tx :Ref3/ref4 ?d]
         //            |        [?d :Ref4/int4 ?e]]""".stripMargin
         //        )
-        //        packedOpt = NestedOpt2packed(rowsOpt, 7, 7, 7L, Nil, Nil, indexes).getPacked
+        //        packedOpt = NestedOpt2packed(indexes, rowsOpt, 7).getPacked
         //
         //        _ = println("=========================================\n" + packed)
         //        _ = println("=========================================\n" + packedOpt)
@@ -130,16 +130,16 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
         //        ))
 
         indexes = Indexes("Ns", 2, List(
-          AttrIndex("str", 0, 0, 0, true),
+          AttrIndex("Ns_str", "str", 0, 0, 0, true),
           Indexes("Refs1", 1, List(
-            AttrIndex("int1", 1, 1, 2, true),
-            AttrIndex("str1$", 13, 10, 1, true),
+            AttrIndex("Ref1_int1", "int1", 1, 1, 2, true),
+            AttrIndex("Ref1_str1", "str1$", 13, 10, 1, true),
             Indexes("Ref2", 1, List(
-              AttrIndex("int2", 1, 1, 1, true),
-              AttrIndex("str2$", 13, 10, 0, true))))),
+              AttrIndex("Ref2_int2", "int2", 1, 1, 1, true),
+              AttrIndex("Ref2_str2", "str2$", 13, 10, 0, true))))),
           Indexes("Tx", 1, List(
             Indexes("Ref3", 1, List(
-              AttrIndex("int3", 1, 1, 0, true)))))))
+              AttrIndex("Ref3_int3", "int3", 1, 1, 0, true)))))))
 
         rows <- conn.qRaw(
           """[:find  ?b ?d
@@ -156,7 +156,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
             |        [?f :Ref2/int2 ?g ?tx]
             |        [?tx :Ref3/int3 ?i]]""".stripMargin
         )
-        packed = Flat2packed(rows, 7, 7, 7L, Nil, Nil, indexes, 1).getPacked
+        packed = Flat2packed(indexes, rows, 7).getPacked
 
         _ = println(packed)
 

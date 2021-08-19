@@ -11,14 +11,14 @@ trait BuildJson extends BuildBase with JsonBase {
 
   private lazy val xx = InspectMacro("BuildJson", 10)
 
-  def jsonFlat(obj: BuilderObj, colIndex0: Int = -1, level: Int = 0): (Tree, Int) = {
+  def jsonFlat(obj: Obj, colIndex0: Int = -1, level: Int = 0): (Tree, Int) = {
     var colIndex    = colIndex0
     val tabs        = level + 1
     val newLineCode = Seq(
       q"""sb.append(${"," + indent(tabs)})"""
     )
 
-    def properties(nodes: List[BuilderNode]): Seq[Tree] = {
+    def properties(nodes: List[Node]): Seq[Tree] = {
       var next  = false
       var props = List.empty[String]
       nodes.flatMap { node =>
@@ -27,7 +27,7 @@ trait BuildJson extends BuildBase with JsonBase {
           Nil
         }
         val trees   = node match {
-          case BuilderProp(_, prop, _, _, json, _) =>
+          case Prop(_, prop, _, _, json, _) =>
             colIndex += 1
             // Only generate 1 property, even if attribute is repeated in molecule
             if (props.contains(prop)) Nil else {
@@ -35,7 +35,7 @@ trait BuildJson extends BuildBase with JsonBase {
               newLine :+ json(colIndex, tabs)
             }
 
-          case refObj@BuilderObj(_, ref, _, _) =>
+          case refObj@Obj(_, ref, _, _) =>
             val (subObj, colIndexSub) = jsonFlat(refObj, colIndex, level + 1)
             colIndex = colIndexSub
             newLine ++ Seq(

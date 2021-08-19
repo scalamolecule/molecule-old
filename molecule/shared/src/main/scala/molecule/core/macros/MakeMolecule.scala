@@ -32,16 +32,16 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkFlat = {
       val transformers = if (isJsPlatform) {
         //        val (indexes, arrays, lookups0) = resolveIndexesOLD(flatIndexes0, 0)
-        val (arrays, lookups0) = resolveIndexes(indexes, 0)
+//        val (arrays, lookups0) = resolveIndexes(indexes, 0)
 
-        val lookups = if (txMetaCompositesCount > 0) {
-          // Treat tx meta data as composite
-          val first = topLevelLookups(List(castss.head), lookups0)
-          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
-          q"(..$first, ..$last)"
-        } else {
-          q"(..$lookups0)"
-        }
+//        val lookups = if (txMetaCompositesCount > 0) {
+//          // Treat tx meta data as composite
+//          val first = topLevelLookups(List(castss.head), lookups0)
+//          val last  = compositeLookups(castss.tail, lookups0, castss.head.length)
+//          q"(..$first, ..$last)"
+//        } else {
+//          q"(..$lookups0)"
+//        }
 //        q"""
 //          final override def qr2tpl(qr: QueryResult): Int => (..$TplTypes) = {
 //            ..$arrays
@@ -92,9 +92,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     def mkNestedOpt = {
       if (isJsPlatform) {
-        val (arrays, lookups) = resolveIndexes(indexes, levels)
+//        val (arrays, lookups) = resolveIndexes(indexes, levels)
 
-        val setters        = lookups.map(lookup => q"list.add($lookup.asInstanceOf[Any])")
+//        val setters        = lookups.map(lookup => q"list.add($lookup.asInstanceOf[Any])")
         val jsTransformers =
 //          q"""
 //          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
@@ -216,11 +216,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkNested = {
       val jsTransformers = if (isJsPlatform) {
         //        val (indexes, arrays, lookups) = resolveIndexes(flatIndexes0, castss.length)
-        val (arrays, lookups) = resolveIndexes(indexes, levels)
+//        val (arrays, lookups) = resolveIndexes(indexes, levels)
 
         //        xx(3, indexes)
 
-        val setters = lookups.map(lookup => q"list.add($lookup.asInstanceOf[AnyRef])")
+//        val setters = lookups.map(lookup => q"list.add($lookup.asInstanceOf[AnyRef])")
 //        q"""
 //          final override def qr2list(qr: QueryResult): Int => jList[Any] = {
 //            ..$arrays

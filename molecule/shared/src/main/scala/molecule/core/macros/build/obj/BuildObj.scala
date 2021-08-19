@@ -11,16 +11,16 @@ trait BuildObj extends BuildBase {
 
   private lazy val xx = InspectMacro("BuildObj", 1, 900)
 
-  def classes(nodes: List[BuilderNode]): List[Tree] = {
+  def classes(nodes: List[Node]): List[Tree] = {
     var prevClasses = List.empty[String]
     nodes.flatMap {
-      case BuilderProp(cls, _, _, _, _, _) =>
+      case Prop(cls, _, _, _, _, _) =>
         if (!prevClasses.contains(cls)) {
           prevClasses = prevClasses :+ cls
           Some(tq"${TypeName(cls)}")
         } else None
 
-      case BuilderObj(cls, _, 2, props) => classes(props) match {
+      case Obj(cls, _, 2, props) => classes(props) match {
         case Nil                                                                    => Some(tq"${TypeName(cls)}[Seq[Init]]")
         case List(a)                                                                => Some(tq"${TypeName(cls)}[Seq[Init with $a]]")
         case List(a, b)                                                             => Some(tq"${TypeName(cls)}[Seq[Init with $a with $b]]")
@@ -47,7 +47,7 @@ trait BuildObj extends BuildBase {
         case _                                                                      => None
       }
 
-      case BuilderObj(cls, _, _, props) => classes(props) match {
+      case Obj(cls, _, _, props) => classes(props) match {
         case Nil                                                                    => Some(tq"${TypeName(cls)}[Init]")
         case List(a)                                                                => Some(tq"${TypeName(cls)}[Init with $a]")
         case List(a, b)                                                             => Some(tq"${TypeName(cls)}[Init with $a with $b]")
@@ -76,13 +76,13 @@ trait BuildObj extends BuildBase {
     }
   }
 
-  def objFlat(obj: BuilderObj, colIndex0: Int = -1, isNestedOpt: Boolean = false): (Tree, Int) = {
+  def objFlat(obj: Obj, colIndex0: Int = -1, isNestedOpt: Boolean = false): (Tree, Int) = {
     var colIndex = if (isNestedOpt && colIndex0 == -1) -1 else colIndex0
 
-    def properties(nodes: List[BuilderNode]): List[Tree] = {
+    def properties(nodes: List[Node]): List[Tree] = {
       var propNames = List.empty[String]
       val propDefs  = nodes.flatMap {
-        case BuilderProp(_, prop, tpe, cast, _, optAggr) =>
+        case Prop(_, prop, tpe, cast, _, optAggr) =>
           colIndex += 1
           // Only generate 1 property, even if attribute is repeated in molecule
           if (!propNames.contains(prop)) {
@@ -103,7 +103,7 @@ trait BuildObj extends BuildBase {
             }
           } else None
 
-        case o@BuilderObj(_, ref, 2, props) =>
+        case o@Obj(_, ref, 2, props) =>
           colIndex += 1
           //          val productTpe = if (props.length == 1) {
           //            props.head match {
@@ -117,8 +117,8 @@ trait BuildObj extends BuildBase {
 
           val oneNestedProp    = props.length == 1
           val singleNestedType = props.head match {
-            case BuilderProp(_, _, tpe, _, _, _) => tq"$tpe"
-            case _: BuilderObj                   => tq"Product"
+            case Prop(_, _, tpe, _, _, _) => tq"$tpe"
+            case _: Obj                   => tq"Product"
           }
           val subObj           = if (oneNestedProp)
             q"""
@@ -157,7 +157,7 @@ trait BuildObj extends BuildBase {
             case _                                                                      => None
           }
 
-        case o@BuilderObj(_, ref, _, props) =>
+        case o@Obj(_, ref, _, props) =>
           val (subObj, colIndexSub) = objFlat(o, colIndex, isNestedOpt)
           colIndex = colIndexSub
           classes(props) match {
