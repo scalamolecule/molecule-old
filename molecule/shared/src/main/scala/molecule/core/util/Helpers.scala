@@ -57,6 +57,23 @@ trait Helpers extends DateHandling {
     case v                                  => v.toString
   }
 
+  // Generic `v` of type Any needs to be cast on JS side
+  protected def castV(s: String): Any = {
+    val v = s.drop(10)
+    s.take(10) match {
+      case "String    " => v
+      case "Integer   " => v.toInt
+      case "Long      " => v.toLong
+      case "Double    " => v.toDouble
+      case "Boolean   " => v.toBoolean
+      case "Date      " => str2date(v)
+      case "UUID      " => UUID.fromString(v)
+      case "URI       " => new java.net.URI(v)
+      case "BigInteger" => BigInt(v)
+      case "BigDecimal" => BigDecimal(v)
+    }
+  }
+
   final def os(opt: Option[Set[_]]): String =
     if (opt.isEmpty) "None" else s"""Some(${opt.get.map(cast)})"""
 

@@ -32,17 +32,10 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     val OutMoleculeTpe = molecule_o(TplTypes.size)
     val outMolecule    = TypeName(c.freshName("compositeOutMolecule$"))
 
-    //    val ordinaryComposites = castss.take(castss.length - txMetaCompositesCount)
-    //    val txMetaComposites   = castss.takeRight(txMetaCompositesCount)
-    //    val firstComposites    = ordinaryComposites.init
-    //    val lastComposite      = ordinaryComposites.last
-    //    val lastOffset         = firstComposites.flatten.length
-    //    val metaOffset         = ordinaryComposites.flatten.length
-
     val transformers = if (isJsPlatform) {
       q"""
           final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) =
-          ${packed2tpl(typess, postTypes, indexes, true, txMetaCompositesCount)}
+            ${packed2tpl(typess, postTypes, indexes, true, txMetaCompositesCount)}
 
           final override protected def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override protected def packed2json(vs: Iterator[String]): String = ???

@@ -115,20 +115,20 @@ trait Unpackers extends TreeOps with UnpackTypes {
     case 95 => q"unpackOptMapBigInt($v, vs)" //               castOptApplyMapBigInt
     case 96 => q"unpackOptMapBigDecimal($v, vs)" //           castOptApplyMapBigDecimal
 
-    case 97  => q"unpackString($v, vs)" //                    castKeyedMapString
-    case 98  => q"unpackInt($v)" //                           castKeyedMapInt
-    case 99  => q"unpackLong($v)" //                          castKeyedMapLong
-    case 100 => q"unpackDouble($v)" //                        castKeyedMapDouble
-    case 101 => q"unpackBoolean($v)" //                       castKeyedMapBoolean
-    case 102 => q"unpackDate($v)" //                          castKeyedMapDate
-    case 103 => q"unpackUUID($v)" //                          castKeyedMapUUID
-    case 104 => q"unpackURI($v)" //                           castKeyedMapURI
-    case 105 => q"unpackBigInt($v)" //                        castKeyedMapBigInt
-    case 106 => q"unpackBigDecimal($v)" //                    castKeyedMapBigDecimal
-    case 107 => q"unpackAny($v)" //                           castKeyedMapAny
+    case 97  => q"unpackOneString($v, vs)" //                    castKeyedMapString
+    case 98  => q"unpackOneInt($v)" //                           castKeyedMapInt
+    case 99  => q"unpackOneLong($v)" //                          castKeyedMapLong
+    case 100 => q"unpackOneDouble($v)" //                        castKeyedMapDouble
+    case 101 => q"unpackOneBoolean($v)" //                       castKeyedMapBoolean
+    case 102 => q"unpackOneDate($v)" //                          castKeyedMapDate
+    case 103 => q"unpackOneUUID($v)" //                          castKeyedMapUUID
+    case 104 => q"unpackOneURI($v)" //                           castKeyedMapURI
+    case 105 => q"unpackOneBigInt($v)" //                        castKeyedMapBigInt
+    case 106 => q"unpackOneBigDecimal($v)" //                    castKeyedMapBigDecimal
+    case 107 => q"unpackOneAny($v)" //                           castKeyedMapAny
 
-    case 108 => q"unpackInt($v)" //                           castAggrInt
-    case 109 => q"unpackDouble($v)" //                        castAggrDouble
+    case 108 => q"unpackOneInt($v)" //                           castAggrInt
+    case 109 => q"unpackOneDouble($v)" //                        castAggrDouble
 
     case 110 => q"unpackListString($v, vs)" //                castAggrOneListString
     case 111 => q"unpackListInt($v, vs)" //                   castAggrOneListInt

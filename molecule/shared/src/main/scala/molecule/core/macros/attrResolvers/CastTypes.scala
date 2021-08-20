@@ -8,7 +8,7 @@ import molecule.core.util.Helpers
 
 /** Cast methods for converting raw data to Obj or Tpl
   */
-private[molecule] trait CastTypes extends Helpers {
+trait CastTypes extends Helpers {
 
   // One ===========================================================================================
 

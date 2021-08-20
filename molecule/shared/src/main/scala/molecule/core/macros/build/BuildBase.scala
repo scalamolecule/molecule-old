@@ -22,24 +22,24 @@ trait BuildBase extends TreeOps {
     optAggrTpe: Option[String] = None
   ) extends Node {
     override def toString: String = {
-      s"""BuilderProp("$cls", "$prop", "$tpe", <cast>, <json>, $optAggrTpe)"""
+      s"""Prop("$cls", "$prop", "$tpe", <cast>, <json>, $optAggrTpe)"""
     }
   }
 
   case class Obj(
     cls: String,
     ref: String,
-    card: Int,
+    nested: Boolean,
     props: List[Node]
   ) extends Node {
     override def toString: String = {
       def draw(nodes: Seq[Node], indent: Int): Seq[String] = {
         val s = "  " * indent
         nodes map {
-          case Obj(cls, ref, card, props) =>
-            s"""|${s}BuilderObj("$cls", "$ref", $card, List(
+          case Obj(cls, ref, nested, props) =>
+            s"""|${s}Obj("$cls", "$ref", $nested, List(
                 |${draw(props, indent + 1).mkString(s",\n")}))""".stripMargin
-          case prop                       => s + prop
+          case prop                         => s + prop
         }
       }
       draw(Seq(this), 0).head
@@ -47,14 +47,14 @@ trait BuildBase extends TreeOps {
   }
 
   def isDeeper(obj: Obj) = obj.props.last match {
-    case Obj(_, _, 2, _) => true
-    case _               => false
+    case Obj(_, _, true, _) => true
+    case _                  => false
   }
 
   def getPropCount(nodes: List[Node]): Int = nodes.foldLeft(0) {
-    case (acc, _: Prop)                => acc + 1
-    case (acc, Obj(_, _, 1, refProps)) => acc + getPropCount(refProps)
-    case (acc, _: Obj)                 => acc // ignore nested - handled in macros
+    case (acc, _: Prop)                    => acc + 1
+    case (acc, Obj(_, _, false, refProps)) => acc + getPropCount(refProps)
+    case (acc, _: Obj)                     => acc // ignore nested - handled in macros
   }
 
   def addNode(obj: Obj, node: Node, level: Int): Obj = {
@@ -143,20 +143,20 @@ trait BuildBase extends TreeOps {
   }
 
 
-  def addRef(obj: Obj, refCls: String, refName: String, card: Int, level: Int): Obj = {
+  def addRef(obj: Obj, refCls: String, refName: String, nested: Boolean, level: Int): Obj = {
     val newProps = level match {
       case 0 =>
-        List(Obj(refCls, refName, card, obj.props))
+        List(Obj(refCls, refName, nested, obj.props))
 
       case 1 =>
         val obj1  = obj.props.head.asInstanceOf[Obj]
-        val obj1a = obj1.copy(cls = refCls, ref = refName, card = card)
+        val obj1a = obj1.copy(cls = refCls, ref = refName, nested = nested)
         obj1a :: obj.props.tail
 
       case 2 =>
         val obj1  = obj.props.head.asInstanceOf[Obj]
         val obj2  = obj1.props.head.asInstanceOf[Obj]
-        val obj2a = obj2.copy(cls = refCls, ref = refName, card = card)
+        val obj2a = obj2.copy(cls = refCls, ref = refName, nested = nested)
         val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
         obj1a :: obj.props.tail
 
@@ -164,7 +164,7 @@ trait BuildBase extends TreeOps {
         val obj1  = obj.props.head.asInstanceOf[Obj]
         val obj2  = obj1.props.head.asInstanceOf[Obj]
         val obj3  = obj2.props.head.asInstanceOf[Obj]
-        val obj3a = obj3.copy(cls = refCls, ref = refName, card = card)
+        val obj3a = obj3.copy(cls = refCls, ref = refName, nested = nested)
         val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
         val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
         obj1a :: obj.props.tail
@@ -174,7 +174,7 @@ trait BuildBase extends TreeOps {
         val obj2  = obj1.props.head.asInstanceOf[Obj]
         val obj3  = obj2.props.head.asInstanceOf[Obj]
         val obj4  = obj3.props.head.asInstanceOf[Obj]
-        val obj4a = obj4.copy(cls = refCls, ref = refName, card = card)
+        val obj4a = obj4.copy(cls = refCls, ref = refName, nested = nested)
         val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
         val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
         val obj1a = obj1.copy(props = obj2a :: obj1.props.tail)
@@ -186,7 +186,7 @@ trait BuildBase extends TreeOps {
         val obj3  = obj2.props.head.asInstanceOf[Obj]
         val obj4  = obj3.props.head.asInstanceOf[Obj]
         val obj5  = obj4.props.head.asInstanceOf[Obj]
-        val obj5a = obj5.copy(cls = refCls, ref = refName, card = card)
+        val obj5a = obj5.copy(cls = refCls, ref = refName, nested = nested)
         val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
         val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
         val obj2a = obj2.copy(props = obj3a :: obj2.props.tail)
@@ -200,7 +200,7 @@ trait BuildBase extends TreeOps {
         val obj4  = obj3.props.head.asInstanceOf[Obj]
         val obj5  = obj4.props.head.asInstanceOf[Obj]
         val obj6  = obj5.props.head.asInstanceOf[Obj]
-        val obj6a = obj6.copy(cls = refCls, ref = refName, card = card)
+        val obj6a = obj6.copy(cls = refCls, ref = refName, nested = nested)
         val obj5a = obj5.copy(props = obj6a :: obj5.props.tail)
         val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)
         val obj3a = obj3.copy(props = obj4a :: obj3.props.tail)
@@ -216,7 +216,7 @@ trait BuildBase extends TreeOps {
         val obj5  = obj4.props.head.asInstanceOf[Obj]
         val obj6  = obj5.props.head.asInstanceOf[Obj]
         val obj7  = obj6.props.head.asInstanceOf[Obj]
-        val obj7a = obj7.copy(cls = refCls, ref = refName, card = card)
+        val obj7a = obj7.copy(cls = refCls, ref = refName, nested = nested)
         val obj6a = obj6.copy(props = obj7a :: obj6.props.tail)
         val obj5a = obj5.copy(props = obj6a :: obj5.props.tail)
         val obj4a = obj4.copy(props = obj5a :: obj4.props.tail)

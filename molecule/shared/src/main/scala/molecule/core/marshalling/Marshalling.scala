@@ -17,47 +17,17 @@ abstract class Marshalling[Obj, Tpl](
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
 ) extends Molecule(model, queryData) with Helpers {
 
-  /** Indexes to resolve marshalling for each attribute value in a row. */
   protected lazy val indexes     : Indexes = ???
   protected lazy val isNestedOpt : Boolean = false
   protected lazy val nestedLevels: Int     = 0
 
-
-  // JVM ......................
-
-  /** Adds row as json to a mutable StringBuffer for fast build-up. Built by macro */
+  // jvm
   protected def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
-
-
-  /** Row to object cast interface to be materialized by macro */
   protected def row2obj(row: jList[AnyRef]): Obj = ???
-
-
-  /** Row to tuple cast interface to be materialized by macro */
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
 
-
-  // JS ......................
-
+  // js
   protected def packed2tpl(vs: Iterator[String]): Tpl = ???
   protected def packed2obj(vs: Iterator[String]): Obj = ???
   protected def packed2json(vs: Iterator[String]): String = ???
-
-
-  // Generic `v` of type Any needs to be cast on JS side
-  protected def castV(s: String): Any = {
-    val v = s.drop(10)
-    s.take(10) match {
-      case "String    " => v
-      case "Integer   " => v.toInt
-      case "Long      " => v.toLong
-      case "Double    " => v.toDouble
-      case "Boolean   " => v.toBoolean
-      case "Date      " => str2date(v)
-      case "UUID      " => UUID.fromString(v)
-      case "URI       " => new java.net.URI(v)
-      case "BigInteger" => BigInt(v)
-      case "BigDecimal" => BigDecimal(v)
-    }
-  }
 }

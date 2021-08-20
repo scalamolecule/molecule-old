@@ -20,7 +20,7 @@ trait BuildObj extends BuildBase {
           Some(tq"${TypeName(cls)}")
         } else None
 
-      case Obj(cls, _, 2, props) => classes(props) match {
+      case Obj(cls, _, true, props) => classes(props) match {
         case Nil                                                                    => Some(tq"${TypeName(cls)}[Seq[Init]]")
         case List(a)                                                                => Some(tq"${TypeName(cls)}[Seq[Init with $a]]")
         case List(a, b)                                                             => Some(tq"${TypeName(cls)}[Seq[Init with $a with $b]]")
@@ -103,7 +103,7 @@ trait BuildObj extends BuildBase {
             }
           } else None
 
-        case o@Obj(_, ref, 2, props) =>
+        case o@Obj(_, ref, true, props) =>
           colIndex += 1
           //          val productTpe = if (props.length == 1) {
           //            props.head match {

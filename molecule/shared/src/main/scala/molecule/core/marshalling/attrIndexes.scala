@@ -18,6 +18,7 @@ object attrIndexes {
   }
 
   case class Indexes(
+    cls: String,
     ref: String,
     nested: Boolean,
     attrs: List[IndexNode]
@@ -26,8 +27,8 @@ object attrIndexes {
       def draw(attrs: Seq[IndexNode], indent: Int): Seq[String] = {
         val s = "  " * indent
         attrs map {
-          case Indexes(ref, card, attrs) =>
-            s"""|${s}Indexes("$ref", $card, List(
+          case Indexes(cls, ref, nested, attrs) =>
+            s"""|${s}Indexes("$cls", "$ref", $nested, List(
                 |${draw(attrs, indent + 1).mkString(s",\n")}))""".stripMargin
 
           case attrIndex => s + attrIndex
@@ -130,20 +131,20 @@ object attrIndexes {
   }
 
 
-  def addIndexes(indexes: Indexes, refName: String, nested: Boolean, level: Int): Indexes = {
+  def addIndexes(indexes: Indexes, cls: String, ref: String, nested: Boolean, level: Int): Indexes = {
     val newAttrs = level match {
       case 0 =>
-        List(Indexes(refName, nested, indexes.attrs))
+        List(Indexes(cls, ref, nested, indexes.attrs))
 
       case 1 =>
         val indexes1  = indexes.attrs.head.asInstanceOf[Indexes]
-        val indexes1a = indexes1.copy(ref = refName, nested = nested)
+        val indexes1a = indexes1.copy(cls = cls, ref = ref, nested = nested)
         indexes1a :: indexes.attrs.tail
 
       case 2 =>
         val indexes1  = indexes.attrs.head.asInstanceOf[Indexes]
         val indexes2  = indexes1.attrs.head.asInstanceOf[Indexes]
-        val indexes2a = indexes2.copy(ref = refName, nested = nested)
+        val indexes2a = indexes2.copy(cls = cls, ref = ref, nested = nested)
         val indexes1a = indexes1.copy(attrs = indexes2a :: indexes1.attrs.tail)
         indexes1a :: indexes.attrs.tail
 
@@ -151,7 +152,7 @@ object attrIndexes {
         val indexes1  = indexes.attrs.head.asInstanceOf[Indexes]
         val indexes2  = indexes1.attrs.head.asInstanceOf[Indexes]
         val indexes3  = indexes2.attrs.head.asInstanceOf[Indexes]
-        val indexes3a = indexes3.copy(ref = refName, nested = nested)
+        val indexes3a = indexes3.copy(cls = cls, ref = ref, nested = nested)
         val indexes2a = indexes2.copy(attrs = indexes3a :: indexes2.attrs.tail)
         val indexes1a = indexes1.copy(attrs = indexes2a :: indexes1.attrs.tail)
         indexes1a :: indexes.attrs.tail
@@ -161,7 +162,7 @@ object attrIndexes {
         val indexes2  = indexes1.attrs.head.asInstanceOf[Indexes]
         val indexes3  = indexes2.attrs.head.asInstanceOf[Indexes]
         val indexes4  = indexes3.attrs.head.asInstanceOf[Indexes]
-        val indexes4a = indexes4.copy(ref = refName, nested = nested)
+        val indexes4a = indexes4.copy(cls = cls, ref = ref, nested = nested)
         val indexes3a = indexes3.copy(attrs = indexes4a :: indexes3.attrs.tail)
         val indexes2a = indexes2.copy(attrs = indexes3a :: indexes2.attrs.tail)
         val indexes1a = indexes1.copy(attrs = indexes2a :: indexes1.attrs.tail)
@@ -173,7 +174,7 @@ object attrIndexes {
         val indexes3  = indexes2.attrs.head.asInstanceOf[Indexes]
         val indexes4  = indexes3.attrs.head.asInstanceOf[Indexes]
         val indexes5  = indexes4.attrs.head.asInstanceOf[Indexes]
-        val indexes5a = indexes5.copy(ref = refName, nested = nested)
+        val indexes5a = indexes5.copy(cls = cls, ref = ref, nested = nested)
         val indexes4a = indexes4.copy(attrs = indexes5a :: indexes4.attrs.tail)
         val indexes3a = indexes3.copy(attrs = indexes4a :: indexes3.attrs.tail)
         val indexes2a = indexes2.copy(attrs = indexes3a :: indexes2.attrs.tail)
@@ -187,7 +188,7 @@ object attrIndexes {
         val indexes4  = indexes3.attrs.head.asInstanceOf[Indexes]
         val indexes5  = indexes4.attrs.head.asInstanceOf[Indexes]
         val indexes6  = indexes5.attrs.head.asInstanceOf[Indexes]
-        val indexes6a = indexes6.copy(ref = refName, nested = nested)
+        val indexes6a = indexes6.copy(cls = cls, ref = ref, nested = nested)
         val indexes5a = indexes5.copy(attrs = indexes6a :: indexes5.attrs.tail)
         val indexes4a = indexes4.copy(attrs = indexes5a :: indexes4.attrs.tail)
         val indexes3a = indexes3.copy(attrs = indexes4a :: indexes3.attrs.tail)
@@ -203,7 +204,7 @@ object attrIndexes {
         val indexes5  = indexes4.attrs.head.asInstanceOf[Indexes]
         val indexes6  = indexes5.attrs.head.asInstanceOf[Indexes]
         val indexes7  = indexes6.attrs.head.asInstanceOf[Indexes]
-        val indexes7a = indexes7.copy(ref = refName, nested = nested)
+        val indexes7a = indexes7.copy(cls = cls, ref = ref, nested = nested)
         val indexes6a = indexes6.copy(attrs = indexes7a :: indexes6.attrs.tail)
         val indexes5a = indexes5.copy(attrs = indexes6a :: indexes5.attrs.tail)
         val indexes4a = indexes4.copy(attrs = indexes5a :: indexes4.attrs.tail)

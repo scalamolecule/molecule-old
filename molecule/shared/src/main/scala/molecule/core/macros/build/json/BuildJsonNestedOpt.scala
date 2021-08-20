@@ -38,7 +38,7 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
               newLine :+ json(42, tabs) // colIndex not used
             }
 
-          case nested@Obj(_, ref, 2, nestedProps) =>
+          case nested@Obj(_, ref, true, nestedProps) =>
             val propCount = getPropCount(nestedProps)
             val deeper    = isDeeper(nested)
             newLine ++ Seq(
@@ -78,7 +78,7 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
 
     } else {
       current.props.last match {
-        case last@Obj(_, ref, 2, nestedProps) =>
+        case last@Obj(_, ref, true, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper    = isDeeper(last)
           q"""

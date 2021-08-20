@@ -32,7 +32,7 @@ case class Flat2packed(
         colIndex += 1
         packAttr(lambdaIndex, colIndex)
 
-      case Indexes(_, _, attrs) =>
+      case Indexes(_, _, _, attrs) =>
         packRef(attrs, level)
     }
   }

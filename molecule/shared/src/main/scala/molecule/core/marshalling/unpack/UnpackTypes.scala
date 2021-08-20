@@ -3,7 +3,6 @@ package molecule.core.marshalling.unpack
 import java.net.URI
 import java.util.{Date, UUID}
 import molecule.core.util.Helpers
-import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
 
 trait UnpackTypes extends Helpers {

@@ -19,9 +19,9 @@ trait BuildJsonNested extends BuildBase with JsonBase {
   ) {
     // Filter out post props since we handle those with postJsons
     val objWithoutPostProps = obj.copy(props = obj.props.foldLeft(List.empty[Node], false) {
-      case ((acc, true), _)              => (acc, true)
-      case ((acc, _), o@Obj(_, _, 2, _)) => (acc :+ o, true)
-      case ((acc, _), node)              => (acc :+ node, false)
+      case ((acc, true), _)                 => (acc, true)
+      case ((acc, _), o@Obj(_, _, true, _)) => (acc :+ o, true)
+      case ((acc, _), node)                 => (acc :+ node, false)
     }._1)
 
     // Object for each level
@@ -39,7 +39,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
                 tabs
               )
 
-            case o@Obj(_, _, 2, _) =>
+            case o@Obj(_, _, true, _) =>
               val (nestedObjs, nestedDepths, nestedTabs) = recurse(o, 0) // Start over for next level
               (
                 objs ++ nestedObjs,

@@ -38,13 +38,13 @@ case class NestedOpt2packed(
       case AttrIndex(_, _, lambdaIndex, _) =>
         packAttr(lambdaIndex)
 
-      case Indexes(_, true, attrs) =>
+      case Indexes(_, _, true, attrs) =>
         packNested(attrs)
 
-      case Indexes(_, _, attrs) if top =>
+      case Indexes(_, _, _, attrs) if top =>
         packTopRef(attrs)
 
-      case Indexes(_, _, attrs) =>
+      case Indexes(_, _, _, attrs) =>
         packRef(attrs)
     }
   }

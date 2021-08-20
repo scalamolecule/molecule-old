@@ -5,7 +5,7 @@ import java.util.{List => jList}
 
 trait PackAttrs extends PackTypes with PackAggr {
 
-  def packAttr(i: Int, colIndex: Int): jList[_] => Unit = i match {
+  def packAttr(lambdaIndex: Int, colIndex: Int): jList[_] => Unit = lambdaIndex match {
     case 0   => packOneString(colIndex) //                  castOneString
     case 1   => packOne(colIndex) //                        castOneInt
     case 2   => packOne(colIndex) //                        castOneInt

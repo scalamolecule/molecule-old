@@ -8,6 +8,7 @@ import utest._
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.{Collections, Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.ast.elements._
+import molecule.core.dsl.base.Init
 import molecule.datomic.base.marshalling.{Flat2packed, Nested2packed, NestedOpt2packed}
 import molecule.core.marshalling.unpack.UnpackTypes
 import molecule.core.marshalling.attrIndexes._
@@ -19,8 +20,9 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
+import molecule.core.macros.attrResolvers.CastTypes
 
-object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
+object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes with CastTypes {
 
 
   lazy val tests = Tests {
@@ -31,30 +33,83 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
+//        _ <- Ns.int(0).str("x").Ref1.int1(1).save
+//
+//        //        _ <- Ns.int.str.Ref1.int1.inspectGet
+//        _ <- Ns.int.str.Ref1.int1.getObj.map { o =>
+//
+//          // The above molecule and object getter generates the following code:
+//          val obj = new Ns_int with Ns_str with Ns__Ref1[Ref1_int1] {
+//            override lazy val int: Int    = 0
+//            override lazy val str: String = "x"
+//            override def Ref1: Ref1_int1 = new Ref1_int1 {
+//              override lazy val int1: Int = 1
+//            }
+//          }
+//
+//          // This way, we get type inference in the IDE and can access the data
+//          // as named object properties, even in referenced namespaces:
+//
+//
+//          // todo: check that all lines are checked
+//          o.int ==> 0
+//          o.str ==> "x"
+//          o.Ref1.int1 ==> 1
+//        }
+//
+//        indexes = Indexes("Ns", "Ns", false, List(
+//          AttrIndex("Ns_int", "int", 1, true),
+//          AttrIndex("Ns_str", "str", 0, true),
+//          Indexes("Ref1", "Ref1", false, List(
+//            AttrIndex("Ref1_int1", "int1", 1, true)))))
+//
+//        rows <- conn.qRaw(
+//          """[:find  ?b ?c ?e
+//            | :where [?a :Ns/int ?b]
+//            |        [?a :Ns/str ?c]
+//            |        [?a :Ns/ref1 ?d]
+//            |        [?d :Ref1/int1 ?e]]""".stripMargin
+//        )
+//        packed = Flat2packed(indexes, rows, 1).getPacked
+//        _ = println(packed)
+//        _ = {
+//          def row2obj(row: jList[AnyRef]): Init with Ns_int with Ns_str with Ns__Ref1[Init with Ref1_int1] = {
+//            new Init with Ns_int with Ns_str with Ns__Ref1[Init with Ref1_int1] {
+//              final override lazy val int: Int    = castOneInt(row, 0)
+//              final override lazy val str: String = castOne[String](row, 1)
+//              final override def Ref1: Init with Ref1_int1 =
+//                new Init with Ref1_int1 {
+//                  final override lazy val int1: Int = castOneInt(row, 2)
+//                }
+//            }
+//          }
+//        }
 
-        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)) insert List(
-          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
-          ("B", List((Some(13), None, "b"))),
-          ("C", List((None, Some(14), "c"))),
-          ("D", List((None, None, "d"))),
-          ("E", List())
-        )
 
-        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
-          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
-          ("B", List((Some(13), None, "b")), 7777, 8888),
-          ("C", List((None, Some(14), "c")), 7777, 8888),
-          ("D", List((None, None, "d")), 7777, 8888),
-          ("E", List(), 7777, 8888)
-        ))
 
-        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
-          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
-          ("B", List((Some(13), None, "b")), 7777, 8888),
-          ("C", List((None, Some(14), "c")), 7777, 8888),
-          ("D", List((None, None, "d")), 7777, 8888),
-          ("E", List(), 7777, 8888)
-        ))
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)) insert List(
+        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
+        //          ("B", List((Some(13), None, "b"))),
+        //          ("C", List((None, Some(14), "c"))),
+        //          ("D", List((None, None, "d"))),
+        //          ("E", List())
+        //        )
+        //
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+        //          ("B", List((Some(13), None, "b")), 7777, 8888),
+        //          ("C", List((None, Some(14), "c")), 7777, 8888),
+        //          ("D", List((None, None, "d")), 7777, 8888),
+        //          ("E", List(), 7777, 8888)
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+        //          ("B", List((Some(13), None, "b")), 7777, 8888),
+        //          ("C", List((None, Some(14), "c")), 7777, 8888),
+        //          ("D", List((None, None, "d")), 7777, 8888),
+        //          ("E", List(), 7777, 8888)
+        //        ))
 
         //        indexes = Indexes("Ns", 2, List(
         //          AttrIndex("X", "str", 0, 0, 1, false),

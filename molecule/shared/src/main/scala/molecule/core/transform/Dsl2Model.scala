@@ -118,9 +118,9 @@ private[molecule] trait Dsl2Model extends TreeOps
     var typess        : List[List[Tree]]        = List(List.empty[Tree])
     var castss        : List[List[Int => Tree]] = List(List.empty[Int => Tree])
 
-    var obj     : Obj     = Obj("", "", 0, Nil)
+    var obj     : Obj     = Obj("", "", false, Nil)
     var objLevel: Int     = 0
-    var indexes : Indexes = Indexes("", false, Nil)
+    var indexes : Indexes = Indexes("", "", false, Nil)
 
     var tx        : String       = ""
     var nestedRefs: List[String] = List.empty[String]
@@ -177,7 +177,6 @@ private[molecule] trait Dsl2Model extends TreeOps
         case Some((_, aggrTpe)) => aggrTpe
         case None               => getType(t)
       })
-
 
       if (post) {
         postTypes = tpe :: postTypes
@@ -345,31 +344,31 @@ private[molecule] trait Dsl2Model extends TreeOps
           case Obj("Tx_", _, _, _) =>
             // Reset obj composites count
             objCompositesCount = 0
-            List(Obj(nsCls, ns, 1, props ++ compositeProps))
+            List(Obj(nsCls, ns, false, props ++ compositeProps))
 
           case compositeObj@Obj(compositeCls, _, _, _) if sameNs && nsCls == compositeCls =>
             compositeObj.copy(props = props ++ compositeObj.props) :: compositeProps.tail
 
-          case _ => Obj(nsCls, ns, 1, props) :: compositeProps
+          case _ => Obj(nsCls, ns, false, props) :: compositeProps
         }
 
         val newAttrIndexes: List[IndexNode] = compositeAttrs.head match {
-          case Indexes("Tx", _, _) =>
+          case Indexes("Tx", _, _, _) =>
             // Reset obj composites count
             objCompositesCount = 0
-            List(Indexes(ns, false, attrs ++ compositeAttrs))
+            List(Indexes(nsCls, ns, false, attrs ++ compositeAttrs))
 
-          case compositeIndexes@Indexes(indexNs, _, _) if sameNs && ns == indexNs =>
+          case compositeIndexes@Indexes(indexNs, _, _, _) if sameNs && ns == indexNs =>
             compositeIndexes.copy(attrs = attrs ++ compositeIndexes.attrs) :: compositeAttrs.tail
 
-          case _ => Indexes(ns, false, attrs) :: compositeAttrs
+          case _ => Indexes(nsCls, ns, false, attrs) :: compositeAttrs
         }
 
         xx(631, attrs, compositeAttrs, newAttrIndexes)
         (newBuilderNodes, newAttrIndexes)
       } else {
-        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(Obj(nsCls, ns, 1, obj.props))), sameNs)
-        (List(Obj(nsCls, ns, 1, obj.props)), List(Indexes(ns, false, indexes.attrs)))
+        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(Obj(nsCls, ns, false, obj.props))), sameNs)
+        (List(Obj(nsCls, ns, false, obj.props)), List(Indexes(nsCls, ns, false, indexes.attrs)))
       }
 
       obj = obj.copy(props = newBuilderNodes)
@@ -461,8 +460,8 @@ private[molecule] trait Dsl2Model extends TreeOps
 
       } else if (attrStr.head == '_') {
         xx(134, attrStr.tail)
-        obj = addNode(obj, Obj("", "", 0, Nil), objLevel)
-        indexes = addAttrIndex(indexes, Indexes("", false, Nil), objLevel)
+        obj = addNode(obj, Obj("", "", false, Nil), objLevel)
+        indexes = addAttrIndex(indexes, Indexes("", "", false, Nil), objLevel)
         objLevel += 1
         xx(151, obj)
         traverseElement(prev, p, ReBond(attrStr.tail))
@@ -475,8 +474,8 @@ private[molecule] trait Dsl2Model extends TreeOps
         if (objCompositesCount > 0) {
           val (props, compositeProps) = obj.props.splitAt(obj.props.length - objCompositesCount)
           val (attrs, compositeAttrs) = indexes.attrs.splitAt(indexes.attrs.length - objCompositesCount)
-          val newProps                = Obj(refCls, refName, 1, props) :: compositeProps
-          val newAttrs                = Indexes(refName, false, attrs) :: compositeAttrs
+          val newProps                = Obj(refCls, refName, false, props) :: compositeProps
+          val newAttrs                = Indexes(refCls, refName, false, attrs) :: compositeAttrs
           obj = obj.copy(props = newProps)
           indexes = indexes.copy(attrs = newAttrs)
           xx(152, props, compositeProps, newProps, obj)
@@ -484,23 +483,23 @@ private[molecule] trait Dsl2Model extends TreeOps
         } else if (txMetaDataDone) {
           obj.props.last match {
             case txMetaObj@Obj("Tx_", _, _, _) =>
-              obj = obj.copy(props = List(Obj(refCls, refName, 1, obj.props.init), txMetaObj))
+              obj = obj.copy(props = List(Obj(refCls, refName, false, obj.props.init), txMetaObj))
             case _                             =>
-              obj = obj.copy(props = List(Obj(refCls, refName, 1, obj.props)))
+              obj = obj.copy(props = List(Obj(refCls, refName, false, obj.props)))
           }
           indexes.attrs.last match {
-            case txMetaAttrIndex@Indexes("Tx", _, _) =>
-              indexes = indexes.copy(attrs = List(Indexes(refName, false, indexes.attrs.init), txMetaAttrIndex))
+            case txMetaAttrIndex@Indexes("Tx", _, _, _) =>
+              indexes = indexes.copy(attrs = List(Indexes(refCls, refName, false, indexes.attrs.init), txMetaAttrIndex))
             case _                                   =>
-              indexes = indexes.copy(attrs = List(Indexes(refName, false, indexes.attrs)))
+              indexes = indexes.copy(attrs = List(Indexes(refCls, refName, false, indexes.attrs)))
           }
           objLevel = 0
           xx(153, objLevel, isComposite, refCls, obj)
 
         } else {
           val objBefore = obj
-          obj = addRef(obj, refCls, refName, t.card, objLevel)
-          indexes = addIndexes(indexes, refName, false, objLevel)
+          obj = addRef(obj, refCls, refName, false, objLevel)
+          indexes = addIndexes(indexes, refCls, refName, false, objLevel)
 
           xx(804, refName, objBefore, objLevel, obj)
 
@@ -624,8 +623,9 @@ private[molecule] trait Dsl2Model extends TreeOps
         case "v"    => castGeneric("Any", NoValue)
         case "a"    => castGeneric("String", NoValue)
         case "Self" =>
-          obj = addRef(obj, t.nsFull + "_", t.nsFull, 1, objLevel)
-          indexes = addIndexes(indexes, t.nsFull, false, objLevel)
+          val cls = t.nsFull + "_"
+          obj = addRef(obj, cls, t.nsFull, false, objLevel)
+          indexes = addIndexes(indexes, cls, t.nsFull, false, objLevel)
           objLevel = (objLevel - 1).max(0)
           traverseElement(prev, p, Self)
         case tx     =>
@@ -982,13 +982,14 @@ private[molecule] trait Dsl2Model extends TreeOps
         if (txMetaCompositesCount == 0) {
           // Start non-composite tx meta data with namespace
           // (composite data is already namespaced)
-          obj = addRef(obj, ns + "_", ns, 1, objLevel)
-          indexes = addIndexes(indexes, ns, false, objLevel)
+          val cls = ns + "_"
+          obj = addRef(obj, cls, ns, false, objLevel)
+          indexes = addIndexes(indexes, cls, ns, false, objLevel)
           objLevel = (objLevel - 1).max(0)
         }
         // Treat tx meta data as referenced data
-        obj = addRef(obj, "Tx_", "Tx", 1, objLevel)
-        indexes = addIndexes(indexes, "Tx", false, objLevel)
+        obj = addRef(obj, "Tx_", "Tx", false, objLevel)
+        indexes = addIndexes(indexes, "Tx_","Tx", false, objLevel)
         objLevel = (objLevel - 1).max(0)
         txMetaDataStarted = false
         if (txMetaCompositesCount > 0) {
@@ -1044,15 +1045,16 @@ private[molecule] trait Dsl2Model extends TreeOps
             false
           )
           // Have to add node manually since nsFull is resolved in a special way
+          val cls = nsFull + "_" + attrStr
           val newProp = Prop(
-            nsFull + "_" + attrStr,
+            cls,
             attrStr,
             tq"${TypeName(tpeStr)}",
             castKeyedMapAttr(tpeStr),
             jsonKeyedMapAttr(tpeStr, attrStr)
           )
           obj = addNode(obj, newProp, objLevel)
-          indexes = addIndexes(indexes, attrStr, false, objLevel)
+          indexes = addIndexes(indexes, cls, attrStr, false, objLevel)
           xx(421, obj)
         }
         traverseElement(prev, richTree(prev),
@@ -1215,11 +1217,12 @@ private[molecule] trait Dsl2Model extends TreeOps
       // park post props
       val postProps = obj.props
       val postAttrs = indexes.attrs
-      obj = Obj("", "", 0, Nil)
-      indexes = Indexes("", false, Nil)
+      obj = Obj("", "", false, Nil)
+      indexes = Indexes("", "", false, Nil)
       val nestedElems   = nestedElements(q"$prev.$manyRef", refNext, nestedTree)
-      val nestedObj     = Obj(nsFull + "__" + manyRef, manyRef.toString, 2, obj.props)
-      val nestedIndexes = Indexes(manyRef.toString, true, indexes.attrs)
+      val cls = nsFull + "__" + manyRef
+      val nestedObj     = Obj(cls, manyRef.toString, true, obj.props)
+      val nestedIndexes = Indexes(cls, manyRef.toString, true, indexes.attrs)
       obj = obj.copy(props = nestedObj +: postProps)
       indexes = indexes.copy(attrs = nestedIndexes +: postAttrs)
       xx(560, prev, manyRef, nestedTree, nsFull, parentNs, nestedRefs, nestedElems, postProps, obj)
@@ -1827,19 +1830,19 @@ private[molecule] trait Dsl2Model extends TreeOps
       markTacitIndexes(elements, 0)
     }
 
-    // Set outer objects ref and card
+    // Set outer objects ref and nested status
 
     def streamline(element: Element): (Obj, Indexes) = element match {
       case Atom(nsFull, _, _, _, _, _, _, _) =>
-        (obj.copy(ref = nsFull, card = 2), indexes.copy(ref = nsFull, nested = false))
+        (obj.copy(ref = nsFull, nested = false), indexes.copy(cls = nsFull, nested = false))
       case Bond(nsFull, _, _, _, _)          =>
-        (obj.copy(ref = nsFull, card = 2), indexes.copy(ref = nsFull, nested = false))
+        (obj.copy(ref = nsFull, nested = false), indexes.copy(cls = nsFull, nested = false))
       case Generic(nsFull, _, _, _)          =>
-        (obj.copy(ref = nsFull, card = 2), indexes.copy(ref = nsFull, nested = false))
+        (obj.copy(ref = nsFull, nested = false), indexes.copy(cls = nsFull, nested = false))
       case Composite(elements)               =>
         streamline(elements.head)
       case Nested(Bond(ns, _, _, _, _), _)   =>
-        (obj.copy(ref = ns, card = 2), indexes.copy(ref = ns, nested = true))
+        (obj.copy(ref = ns, nested = true), indexes.copy(cls = ns, nested = true))
       case other                             =>
         throw MoleculeException("Unexpected first model element: " + other)
     }

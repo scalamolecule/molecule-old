@@ -1,12 +1,10 @@
 package molecule.core.marshalling.unpack
 
 import molecule.core.marshalling.attrIndexes._
-import molecule.core.ops.TreeOps
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.blackbox
 
-trait Packed2tpl extends Unpackers {
+trait Packed2obj extends Unpackers {
   val c: blackbox.Context
 
   import c.universe._
@@ -116,7 +114,7 @@ trait Packed2tpl extends Unpackers {
       }
     }
 
-    val tree = if (composite || txMetaCompositesCount != 0) unpackComposite else unpackNested
+    val tree = if (composite) unpackComposite else unpackNested
 
     xx(1
       , indexes

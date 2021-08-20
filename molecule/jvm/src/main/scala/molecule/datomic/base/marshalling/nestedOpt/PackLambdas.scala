@@ -5,7 +5,7 @@ import java.util.{Iterator => jIterator}
 
 trait PackLambdas extends PackTypes with PackAggr {
 
-  def packAttr(i: Int): jIterator[_] => Unit = i match {
+  def packAttr(lambdaIndex: Int): jIterator[_] => Unit = lambdaIndex match {
     case 0   => packOneString //                  castOneString
     case 1   => packOne //                        castOneInt
     case 2   => packOne //                        castOneInt

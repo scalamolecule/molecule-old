@@ -115,7 +115,7 @@ private[molecule] trait Liftables extends MacroHelpers {
 
   implicit val liftIndexes: c.universe.Liftable[Indexes] = Liftable[Indexes] { r =>
     val attrs = r.attrs.map(attr => q"$attr")
-    q"Indexes(${r.ref}, ${r.nested}, List(..$attrs))"
+    q"Indexes(${r.cls}, ${r.ref}, ${r.nested}, List(..$attrs))"
   }
 
   implicit val liftIndexNode: c.universe.Liftable[IndexNode] = Liftable[IndexNode] {
