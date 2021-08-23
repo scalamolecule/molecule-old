@@ -7,34 +7,33 @@ import scala.collection.mutable.ListBuffer
 
 trait UnpackTypes extends Helpers {
 
-  protected lazy val buf = new StringBuffer
+  private lazy val buf = new StringBuffer
 
-  protected lazy val bufString     = new ListBuffer[String]
-  protected lazy val bufInt        = new ListBuffer[Int]
-  protected lazy val bufLong       = new ListBuffer[Long]
-  protected lazy val bufDouble     = new ListBuffer[Double]
-  protected lazy val bufBoolean    = new ListBuffer[Boolean]
-  protected lazy val bufDate       = new ListBuffer[Date]
-  protected lazy val bufUUID       = new ListBuffer[UUID]
-  protected lazy val bufURI        = new ListBuffer[URI]
-  protected lazy val bufBigInt     = new ListBuffer[BigInt]
-  protected lazy val bufBigDecimal = new ListBuffer[BigDecimal]
+  private lazy val bufString     = new ListBuffer[String]
+  private lazy val bufInt        = new ListBuffer[Int]
+  private lazy val bufLong       = new ListBuffer[Long]
+  private lazy val bufDouble     = new ListBuffer[Double]
+  private lazy val bufBoolean    = new ListBuffer[Boolean]
+  private lazy val bufDate       = new ListBuffer[Date]
+  private lazy val bufUUID       = new ListBuffer[UUID]
+  private lazy val bufURI        = new ListBuffer[URI]
+  private lazy val bufBigInt     = new ListBuffer[BigInt]
+  private lazy val bufBigDecimal = new ListBuffer[BigDecimal]
 
-  protected lazy val mapString     = new ListBuffer[(String, String)]
-  protected lazy val mapInt        = new ListBuffer[(String, Int)]
-  protected lazy val mapLong       = new ListBuffer[(String, Long)]
-  protected lazy val mapDouble     = new ListBuffer[(String, Double)]
-  protected lazy val mapBoolean    = new ListBuffer[(String, Boolean)]
-  protected lazy val mapDate       = new ListBuffer[(String, Date)]
-  protected lazy val mapUUID       = new ListBuffer[(String, UUID)]
-  protected lazy val mapURI        = new ListBuffer[(String, URI)]
-  protected lazy val mapBigInt     = new ListBuffer[(String, BigInt)]
-  protected lazy val mapBigDecimal = new ListBuffer[(String, BigDecimal)]
+  private lazy val mapString     = new ListBuffer[(String, String)]
+  private lazy val mapInt        = new ListBuffer[(String, Int)]
+  private lazy val mapLong       = new ListBuffer[(String, Long)]
+  private lazy val mapDouble     = new ListBuffer[(String, Double)]
+  private lazy val mapBoolean    = new ListBuffer[(String, Boolean)]
+  private lazy val mapDate       = new ListBuffer[(String, Date)]
+  private lazy val mapUUID       = new ListBuffer[(String, UUID)]
+  private lazy val mapURI        = new ListBuffer[(String, URI)]
+  private lazy val mapBigInt     = new ListBuffer[(String, BigInt)]
+  private lazy val mapBigDecimal = new ListBuffer[(String, BigDecimal)]
 
-  var pair = new Array[String](2)
-
-  protected var first = true
+  protected var pair  = new Array[String](2)
   protected var v     = ""
+  protected var first = true
 
 
   protected lazy val unpackOneString = (v0: String, vs: Iterator[String]) => {

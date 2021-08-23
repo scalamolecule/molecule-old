@@ -114,7 +114,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 //        sharedTests + "/core/build",
 //        sharedTests + "/core/json",
 //        sharedTests + "/core/nested",
-        sharedTests + "/core/obj",
+//        sharedTests + "/core/obj",
 
 
 //        sharedTests + "/core/transaction",

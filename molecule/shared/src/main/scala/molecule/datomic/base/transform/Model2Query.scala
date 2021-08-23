@@ -21,6 +21,8 @@ object Model2Query extends Helpers {
   var nestedEntityVars   : List[Var]   = List.empty[Var]
   var nestedLevel        : Int         = 1
   var _model             : Model       = null
+  var txMeta             : Boolean     = false
+  var txMetaComposite    : Boolean     = false
   val datomGeneric                     = Seq("e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
 
   def abort(msg: String): Nothing = throw Model2QueryException(msg)
@@ -168,6 +170,7 @@ object Model2Query extends Helpers {
 
   def makeTxMetaData(model: Model, query0: Query, txMetaData: TxMetaData, w: String, prevNs: String, prevAttr: String, prevRefNs: String)
   : (Query, String, String, String, String, String) = {
+    txMeta = true
     // Ensure tx variable is present in previous DataClause
     val (query, txV)                                 = {
       val (cls1, txV) = query0.wh.clauses.foldRight(Seq.empty[Clause], "") {
@@ -251,14 +254,24 @@ object Model2Query extends Helpers {
 
   def makeComposite(model: Model, query: Query, composite: Composite, e: String, v0: String, prevNs: String, prevAttr: String, prevRefNs: String)
   : (Query, String, String, String, String, String) = {
+    if (txMeta)
+      txMetaComposite = true
+
     def getFirstEid(clauses: Seq[Clause]): String = clauses.head match {
       case DataClause(_, Var(compositeEid), KW(nsFull, _, _), _, _, _) if nsFull != "db" => compositeEid
       case _: Funct                                                                      => getFirstEid(clauses.tail)
       case other                                                                         =>
         abort(s"Unexpected first clause of composite query: " + other + "\n" + query.wh.clauses.mkString("\n"))
     }
-    val eid: String = if (e == "tx") "tx" else if (query.wh.clauses.isEmpty) e else getFirstEid(query.wh.clauses)
-    val v           = if (query.wh.clauses.nonEmpty) {
+
+    val eid: String = if (e == "tx" || txMetaComposite)
+      "tx"
+    else if (query.wh.clauses.isEmpty)
+      e
+    else
+      getFirstEid(query.wh.clauses)
+
+    val v = if (query.wh.clauses.nonEmpty) {
       query.wh.clauses.last match {
         case DataClause(_, _, _, Var(`v0`), _, _) => nextChar(v0, 1)
         case _                                    => v0

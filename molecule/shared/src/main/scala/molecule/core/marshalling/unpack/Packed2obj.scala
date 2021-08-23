@@ -68,7 +68,7 @@ trait Packed2obj extends Unpackers {
               buf.toList
             }
           }
-       """
+        """
       }
       val nested = unpackerss.zipWithIndex.tail.map {
         case (unpackers, level) => mkNested(level, unpackers)
@@ -76,8 +76,8 @@ trait Packed2obj extends Unpackers {
       q"""{
           ..$nested
           (..${unpackerss.head})
-         }
-       """
+        }
+      """
     }
 
     def unpackComposite = {
@@ -114,7 +114,7 @@ trait Packed2obj extends Unpackers {
       }
     }
 
-    val tree = if (composite) unpackComposite else unpackNested
+    val tree = if (composite || txMetaCompositesCount != 0) unpackComposite else unpackNested
 
     xx(1
       , indexes

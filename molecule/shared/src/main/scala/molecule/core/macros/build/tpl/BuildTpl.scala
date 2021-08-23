@@ -22,13 +22,13 @@ trait BuildTpl extends TreeOps { self: BuildTplComposite =>
     castss: List[List[Int => Tree]],
     txMetaCompositesCount: Int
   ): Tree = {
-    if (txMetaCompositesCount > 0) {
+    if (txMetaCompositesCount == 0) {
+      q"(..${topLevel(castss)})"
+    } else {
       // Treat tx meta data as composite
       val first = topLevel(List(castss.head))
       val last  = compositeCasts(castss.tail, castss.head.length)
       q"(..$first, ..$last)"
-    } else {
-      q"(..${topLevel(castss)})"
     }
   }
 }

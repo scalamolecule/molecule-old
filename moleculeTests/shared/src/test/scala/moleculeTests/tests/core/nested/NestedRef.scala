@@ -319,24 +319,24 @@ object NestedRef extends AsyncTestSuite {
     }
 
 
-    "Post attributes after nested" - core { implicit conn =>
-      for {
-        _ <- Ns.double.str.Refs1.*(Ref1.int1).insert(1.1, "a", Seq(11, 12))
-
-        _ <- Ns.double.str.Refs1.*(Ref1.int1).get.map(_.head ==> (1.1, "a", Seq(11, 12)))
-
-        // Note how we jump back to the namespace (`Ns`) _before_ the nested ns (`Ref1`)
-        _ <- Ns.double.Refs1.*(Ref1.int1).str.get.map(_.head ==> (1.1, Seq(11, 12), "a"))
-      } yield ()
-
-      // todo?
-      //  "Multiple nested?" - core { implicit conn =>
-      //
-      //    Ns.str.Refs1.*(Ref1.int1).Parents.*(Ref1.int1).insert("a", Seq(11, 12), Seq(21, 22))
-      //
-      //    Ns.str.Refs1.*(Ref1.int1).Parents.*(Ref1.int1).get.map(_.head ==> ("a", Seq(11, 12), Seq(21, 22)))
-      //    } yield ()
-    }
+    //    "Post attributes after nested" - core { implicit conn =>
+    //      for {
+    //        _ <- Ns.double.str.Refs1.*(Ref1.int1).insert(1.1, "a", Seq(11, 12))
+    //
+    //        _ <- Ns.double.str.Refs1.*(Ref1.int1).get.map(_.head ==> (1.1, "a", Seq(11, 12)))
+    //
+    //        // Note how we jump back to the namespace (`Ns`) _before_ the nested ns (`Ref1`)
+    //        _ <- Ns.double.Refs1.*(Ref1.int1).str.get.map(_.head ==> (1.1, Seq(11, 12), "a"))
+    //      } yield ()
+    //
+    //      // todo?
+    //      //  "Multiple nested?" - core { implicit conn =>
+    //      //
+    //      //    Ns.str.Refs1.*(Ref1.int1).Parents.*(Ref1.int1).insert("a", Seq(11, 12), Seq(21, 22))
+    //      //
+    //      //    Ns.str.Refs1.*(Ref1.int1).Parents.*(Ref1.int1).get.map(_.head ==> ("a", Seq(11, 12), Seq(21, 22)))
+    //      //    } yield ()
+    //    }
 
 
     "Applied eid" - core { implicit conn =>
@@ -351,29 +351,16 @@ object NestedRef extends AsyncTestSuite {
     "Unrelated nested" - core { implicit conn =>
       expectCompileError("m(Ns.int.Refs1 * Ref2.int2)",
         "molecule.core.transform.exception.Dsl2ModelException: " +
-        "`Refs1` can only nest to `Ref1`. Found: `Ref2`"
+          "`Refs1` can only nest to `Ref1`. Found: `Ref2`"
       )
     }
 
-
-    "With tx meta data" - core { implicit conn =>
-      for {
-        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
-          ("A", List((Some(11), Some(12), "a"))),
-          ("B", List((Some(13), None, "b"))),
-          ("C", List((None, Some(14), "c"))),
-          ("D", List((None, None, "d"))),
-          ("E", List())
-        )
-
-        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
-          ("A", List((Some(11), Some(12), "a")), 1),
-          ("B", List((Some(13), None, "b")), 1),
-          ("C", List((None, Some(14), "c")), 1),
-          ("D", List((None, None, "d")), 1),
-          ("E", List(), 1)
-        ))
-      } yield ()
-    }
+    // todo
+//    "No post attributes except tx meta data" - core { implicit conn =>
+//      expectCompileError("m(Ns.double.Refs1.*(Ref1.int1).str)",
+//        "molecule.core.transform.exception.Dsl2ModelException: " +
+//          "Only Tx meta data allowed after nested structure. Found: `str`"
+//      )
+//    }
   }
 }

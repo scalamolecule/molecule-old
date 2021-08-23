@@ -61,9 +61,10 @@ private[molecule] trait Dsl2Model extends TreeOps
   import c.universe._
 
   //    private lazy val xx = InspectMacro("Dsl2Model", 133, 143)
-  //    private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
-  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
+      private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
+//  private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
   //  private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
@@ -97,7 +98,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     var txMetaDataStarted       : Boolean = false
     var txMetaDataDone          : Boolean = false
-    var txMetaCompositesCount   : Int     = 0
+    var txMetas                 : Int     = 0
     var objCompositesCount      : Int     = 0
     var isComposite             : Boolean = false
     var collectCompositeElements: Boolean = false
@@ -107,6 +108,7 @@ private[molecule] trait Dsl2Model extends TreeOps
     var postCasts: List[Int => Tree]        = List.empty[Int => Tree]
     var postJsons: List[(Int, Int) => Tree] = List.empty[(Int, Int) => Tree]
 
+    var levels          : Int     = 1
     var isNestedOptCheck: Boolean = false
     var isNestedOpt     : Boolean = dsl.toString.contains(".*?[")
 
@@ -114,9 +116,13 @@ private[molecule] trait Dsl2Model extends TreeOps
     var nestedOptRefIndexes  : List[List[Int]] = List(List.empty[Int])
     var nestedOptTacitIndexes: List[List[Int]] = List(List.empty[Int])
 
-    var genericImports: List[Tree]              = List(q"import molecule.core.generic.Datom._")
-    var typess        : List[List[Tree]]        = List(List.empty[Tree])
-    var castss        : List[List[Int => Tree]] = List(List.empty[Int => Tree])
+    var genericImports: List[Tree] = List(q"import molecule.core.generic.Datom._")
+
+    var typess: List[List[Tree]]        = List(List.empty[Tree])
+    var castss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
+
+    var txTypess: List[List[Tree]]        = List(List.empty[Tree])
+    var txCastss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
 
     var obj     : Obj     = Obj("", "", false, Nil)
     var objLevel: Int     = 0
@@ -324,7 +330,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     def levelCompositeObj(subCompositeElements: Seq[Element], sameNs: Boolean = false): Unit = {
       xx(630, subCompositeElements, sameNs, objCompositesCount)
-      val err   = "Unexpectedly couldn't find ns in sub composite:\n  " + subCompositeElements.mkString("\n  ")
+      lazy val err = "Unexpectedly couldn't find ns in sub composite:\n  " + subCompositeElements.mkString("\n  ")
       val ns    = subCompositeElements.collectFirst {
         case Atom(ns, _, _, _, _, _, _, _) => ns
         case Bond(nsFull, _, _, _, _)      => nsFull
@@ -386,22 +392,26 @@ private[molecule] trait Dsl2Model extends TreeOps
       collectCompositeElements = false
       xx(621, prev, subCompositeElements, typess, castss, obj, sameNs)
 
-      if (txMetaDataStarted) {
-        txMetaCompositesCount = if (txMetaCompositesCount == 0) 2 else txMetaCompositesCount + 1
-      }
 
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
 
+      if (txMetaDataStarted) {
+        txMetas = if (txMetas == 0) 2 else txMetas + 1
+
+        txTypess = List.empty[Tree] :: txTypess
+        txCastss = List.empty[Int => Tree] :: txCastss
+      }
+
       // Make composite in obj
       levelCompositeObj(subCompositeElements, sameNs)
       objCompositesCount += 1
 
-      xx(622, prev, subCompositeElements, typess, castss, txMetaCompositesCount, obj, sameNs, objCompositesCount)
+      xx(622, prev, subCompositeElements, typess, castss, txMetas, obj, sameNs, objCompositesCount)
       val elements = traverseElements(prev, p, subCompositeElements, sameNs)
       collectCompositeElements = true
-      xx(623, prev, subCompositeElements, typess, castss, elements, txMetaCompositesCount, obj, sameNs)
+      xx(623, prev, subCompositeElements, typess, castss, elements, txMetas, obj, sameNs)
       elements
     }
 
@@ -490,7 +500,7 @@ private[molecule] trait Dsl2Model extends TreeOps
           indexes.attrs.last match {
             case txMetaAttrIndex@Indexes("Tx", _, _, _) =>
               indexes = indexes.copy(attrs = List(Indexes(refCls, refName, false, indexes.attrs.init), txMetaAttrIndex))
-            case _                                   =>
+            case _                                      =>
               indexes = indexes.copy(attrs = List(Indexes(refCls, refName, false, indexes.attrs)))
           }
           objLevel = 0
@@ -979,7 +989,7 @@ private[molecule] trait Dsl2Model extends TreeOps
             case Bond(nsFull, _, _, _, _)      => nsFull
           } getOrElse abort(err)
         } getOrElse abort(err)
-        if (txMetaCompositesCount == 0) {
+        if (txMetas == 0) {
           // Start non-composite tx meta data with namespace
           // (composite data is already namespaced)
           val cls = ns + "_"
@@ -989,16 +999,16 @@ private[molecule] trait Dsl2Model extends TreeOps
         }
         // Treat tx meta data as referenced data
         obj = addRef(obj, "Tx_", "Tx", false, objLevel)
-        indexes = addIndexes(indexes, "Tx_","Tx", false, objLevel)
+        indexes = addIndexes(indexes, "Tx_", "Tx", false, objLevel)
         objLevel = (objLevel - 1).max(0)
         txMetaDataStarted = false
-        if (txMetaCompositesCount > 0) {
+        if (txMetas != 0) {
           // Start new level
           typess = List.empty[Tree] :: typess
           castss = List.empty[Int => Tree] :: castss
         }
         txMetaDataDone = true
-        xx(310, "Tx", prev, txMolecule, txMetaData, typess, castss, txMetaCompositesCount, objCompositesCount, ns, obj)
+        xx(310, "Tx", prev, txMolecule, txMetaData, typess, castss, txMetas, objCompositesCount, ns, obj)
         traverseElement(prev, p, txMetaData)
 
       case q"$prev.e.apply[..$types]($nested)" if !p.isRef =>
@@ -1045,7 +1055,7 @@ private[molecule] trait Dsl2Model extends TreeOps
             false
           )
           // Have to add node manually since nsFull is resolved in a special way
-          val cls = nsFull + "_" + attrStr
+          val cls     = nsFull + "_" + attrStr
           val newProp = Prop(
             cls,
             attrStr,
@@ -1220,7 +1230,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       obj = Obj("", "", false, Nil)
       indexes = Indexes("", "", false, Nil)
       val nestedElems   = nestedElements(q"$prev.$manyRef", refNext, nestedTree)
-      val cls = nsFull + "__" + manyRef
+      val cls           = nsFull + "__" + manyRef
       val nestedObj     = Obj(cls, manyRef.toString, true, obj.props)
       val nestedIndexes = Indexes(cls, manyRef.toString, true, indexes.attrs)
       obj = obj.copy(props = nestedObj +: postProps)
@@ -1860,8 +1870,8 @@ private[molecule] trait Dsl2Model extends TreeOps
     }
     //    xx(801, elements)
     //    xx(801, elements, types, casts)
-    xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetaCompositesCount, postTypes, postCasts, post)
-    xx(802, obj, indexes, typess, postTypes)
+    xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetas, postTypes, postCasts, post)
+    xx(802, obj, indexes, typess, castss, txMetas, postTypes, postCasts)
 
 
     // Return checked model
@@ -1870,7 +1880,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       Model(VerifyRawModel(elements, false)),
       typess, castss,
       obj, indexes,
-      nestedRefs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetas,
       postTypes, postCasts, postJsons,
       isNestedOpt,
       nestedOptRefIndexes, nestedOptTacitIndexes

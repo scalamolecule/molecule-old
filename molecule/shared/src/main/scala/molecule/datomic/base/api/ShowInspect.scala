@@ -64,7 +64,6 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
             collect {
               case e@Generic(_, attr, _, _) if attr != "args_" && attr != "range" => e
             }
-          //        _model.elements.zipWithIndex.map {
           dataElements.zipWithIndex.map {
             case (Generic(_, "e", _, _), i)         => print(p("E", pE)); pad += pE + 3; i -> pE
             case (Generic(_, "a", _, _), i)         => print(p("A", pA)); pad += pA + 3; i -> pA
@@ -317,22 +316,22 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
 
     def data(): Future[Unit] = conn.flatMap { conn =>
-      val query = _rawNestedQuery.getOrElse(_query)
+      val rawQuery = _rawNestedQuery.getOrElse(_rawQuery)
       try {
         // Also do Model2Query transformation at runtime to be able to inspect it.
         // Note though that input variables are only bound in the macro at compile
         // time and are therefore not present in this runtime process.
         Model2Query(_model)
 
-        val ins = QueryOps(query).inputs
+        val ins = QueryOps(rawQuery).inputs
         val db  = conn.db
-        conn._query(_model, query, Some(db)).map { res =>
+        conn._query(_model, rawQuery, Some(db)).map { res =>
           val rows = resolve(res.asScala.take(500))
 
-          val rulesOut: String = if (query.i.rules.isEmpty)
+          val rulesOut: String = if (rawQuery.i.rules.isEmpty)
             "none\n\n"
           else
-            "[\n " + query.i.rules.map(Query2String(query).p(_)).mkString("\n ") + "\n]\n\n"
+            "[\n " + rawQuery.i.rules.map(Query2String(rawQuery).p(_)).mkString("\n ") + "\n]\n\n"
 
           val inputs: String = if (ins.isEmpty)
             "none\n\n"
@@ -341,11 +340,29 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
           val outs = rows.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1.mkString("[", "  ", "]")}").mkString("\n")
 
+          // print both raw and optimized
+          //      val query    = _nestedQuery.getOrElse(_query)
+          //          println(
+          //            "\n--------------------------------------------------------------------------\n" +
+          //              _model + "\n\n\n" +
+          //              "RAW -------------------\n\n" +
+          //              rawQuery + "\n\n" +
+          //              rawQuery.datalog + "\n\n\n" +
+          //              "OPTIMIZED -------------\n\n" +
+          //              query + "\n\n" +
+          //              query.datalog + "\n\n" +
+          //              "RULES: " + rulesOut +
+          //              "INPUTS: " + inputs +
+          //              "OUTPUTS:\n" + outs + "\n(showing up to 500 rows)" +
+          //              "\n--------------------------------------------------------------------------\n"
+          //          )
+
+          // Usually we want to analyse the raw query only
           println(
             "\n--------------------------------------------------------------------------\n" +
               _model + "\n\n" +
-              query + "\n\n" +
-              query.datalog + "\n\n" +
+              rawQuery + "\n\n" +
+              rawQuery.datalog + "\n\n" +
               "RULES: " + rulesOut +
               "INPUTS: " + inputs +
               "OUTPUTS:\n" + outs + "\n(showing up to 500 rows)" +
@@ -353,7 +370,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
           )
         }
       } catch {
-        case NonFatal(exc) => Future.failed(QueryException(exc, _model, query))
+        case NonFatal(exc) => Future.failed(QueryException(exc, _model, rawQuery))
       }
     }
 

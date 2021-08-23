@@ -158,118 +158,256 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        }
 
 
-//        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)) insert List(
-//          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa"))),
-//          //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
-//          ("B", List((Some(13), None, "b"))),
-//          //          ("C", List((None, Some(14), "c"))),
-//          //          ("D", List((None, None, "d"))),
-//          //          ("E", List())
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)) insert List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa"))),
+        //          //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa"))),
+        //          ("B", List((Some(13), None, "b"))),
+        //          //          ("C", List((None, Some(14), "c"))),
+        //          //          ("D", List((None, None, "d"))),
+        //          //          ("E", List())
+        //        )
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
+        //          //                    ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+        //          ("B", List((Some(13), None, "b")), 7777, 8888),
+        //          //          ("C", List((None, Some(14), "c")), 7777, 8888),
+        //          //          ("D", List((None, None, "d")), 7777, 8888),
+        //          //          ("E", List(), 7777, 8888)
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
+        //          //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
+        //          ("B", List((Some(13), None, "b")), 7777, 8888),
+        //          //          ("C", List((None, Some(14), "c")), 7777, 8888),
+        //          //          ("D", List((None, None, "d")), 7777, 8888),
+        //          //          ("E", List(), 7777, 8888)
+        //        ))
+
+
+        //        _ = m(Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(7777).Ref4.int4_(8888)))
+        //        _ = m(Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4_(7777) + Ref3.int3_(8888)))
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4_(7777) + Ref3.int3_(8888)) insert List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa"))),
+        //          ("B", List((Some(13), None, "b"))),
+        //          ("C", List((None, Some(14), "c"))),
+        //          ("D", List((None, None, "d"))),
+        //          ("E", List())
+        //        )
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
+        //          ("B", List((Some(13), None, "b")), 7777, 8888),
+        //          ("C", List((None, Some(14), "c")), 7777, 8888),
+        //          ("D", List((None, None, "d")), 7777, 8888),
+        //          ("E", List(), 7777, 8888)
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
+        //          ("B", List((Some(13), None, "b")), 7777, 8888),
+        //          ("C", List((None, Some(14), "c")), 7777, 8888),
+        //          ("D", List((None, None, "d")), 7777, 8888),
+        //        ))
+
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).int.inspectGet
+        //        _ <- Ns.double.Refs1.*(Ref1.int1).str.inspectGet
+
+
+        //        _ = m(Ns.int(0) + Ref1.int1(1).Ref2.int2(2).Tx(Ref3.int3(3) + Ref4.int4(4)))
+        //        _ = m(Ns.str.Refs1.*(Ref1.int1).bool)
+        //        _ = m(Ns.str.Refs1.*(Ref1.int1).Tx(Ref4.int4))
+
+        //        _ = m(Ns.str + Ref1.int1.Tx(Ref3.int3.Ref4.int4))
+
+        //        _ = m(Ns.str + Ref1.int1)
+        //        _ = m(Ns.str + Ref1.int1.Tx(Ref3.int3))
+        //        _ = m(Ns.str + Ref1.int1.Tx(Ref3.int3.str3))
+        //        _ = m(Ns.str + Ref1.int1.Tx(Ref3.int3 + Ref4.int4))
+        //        _ = m(Ns.str + Ref1.int1.Tx(Ref3.int3.str3 + Ref4.int4))
+        //        _ = m(Ns.str + Ref1.int1.Tx(Ref3.int3 + Ref4.int4.str4))
+        //        _ = m(Ns.str + Ref1.int1.Tx(Ref3.int3.str3 + Ref4.int4.str4))
+        //        _ = m(Ns.str_ + Ref1.int1.Tx(Ref3.int3.str3 + Ref4.int4.str4))
+        //
+        //        _ = m(Ns.int.str + Ref1.str1.int1)
+        //        _ = m(Ns.int.str + Ref1.str1.int1.Tx(Ref3.int3))
+        //        _ = m(Ns.int.str + Ref1.str1.int1.Tx(Ref3.int3.str3))
+        //        _ = m(Ns.int.str + Ref1.str1.int1.Tx(Ref3.int3 + Ref4.int4))
+        //        _ = m(Ns.int.str + Ref1.str1.int1.Tx(Ref3.int3.str3 + Ref4.int4))
+        //        _ = m(Ns.int.str + Ref1.str1.int1.Tx(Ref3.int3 + Ref4.int4.str4))
+        //        _ = m(Ns.int.str + Ref1.str1.int1.Tx(Ref3.int3.str3 + Ref4.int4.str4))
+
+        //        _ = m(Ns.str.Refs1.*(Ref1.int1).Tx(Ref3.int3.Ref4.int4))
+        //        _ = {
+        //          //          val a1: Future[List[(String, Seq[Int], Int, Int)]]                     = m(Ns.str.Refs1.*(Ref1.int1).Tx(Ref3.int3 + Ref4.int4)).get
+        //          //          val a2: Future[List[(String, Seq[Int], (Int, String), Int)]] = m(Ns.str.Refs1.*(Ref1.int1).Tx(Ref3.int3.str3 + Ref4.int4)).get
+        //          //          val a3: Future[List[(String, Seq[Int], Int, (Int, String))]]           = m(Ns.str.Refs1.*(Ref1.int1).Tx(Ref3.int3 + Ref4.int4.str4)).get
+        //          //          val a4: Future[List[(String, Seq[Int], (Int, String), (Int, String))]] = m(Ns.str.Refs1.*(Ref1.int1).Tx(Ref3.int3.str3 + Ref4.int4.str4)).get
+        //        }
+
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3)).Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true)) insert List(
+//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil))),
+//          ("B", Nil)
 //        )
+//        /*
+//        List(
+//  list(
+//    Add(TempId(":db.part/user", 1),:Ns/str,A,Card(1)),
 //
-//        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
-//          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
-//          //                    ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
-//          ("B", List((Some(13), None, "b")), 7777, 8888),
-//          //          ("C", List((None, Some(14), "c")), 7777, 8888),
-//          //          ("D", List((None, None, "d")), 7777, 8888),
-//          //          ("E", List(), 7777, 8888)
-//        ))
+//    Add(TempId(":db.part/user", 1),:Ns/refs1,TempId(":db.part/user", 5),Card(2)),
+//    Add(TempId(":db.part/user", 5),:Ref1/int1,1,Card(1)),
+//    Add(TempId(":db.part/user", 5),:Ref1/ref2,TempId(":db.part/user", 7),Card(1)),
+//    Add(TempId(":db.part/user", 7),:Ref2/int2,2,Card(1)),
+//    Add(TempId(":db.part/user", 7),:Ref2/str2,a,Card(1)),
+//    Add(TempId(":db.part/user", 7),:Ref2/refs3,TempId(":db.part/user", 8),Card(2)),
+//    Add(TempId(":db.part/user", 8),:Ref3/int3,3,Card(1)),
+//    Add(TempId(":db.part/user", 7),:Ref2/refs3,TempId(":db.part/user", 9),Card(2)),
+//    Add(TempId(":db.part/user", 9),:Ref3/int3,4,Card(1)),
 //
-//        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3.Ref4.int4).get.map(_.sortBy(_._1) ==> List(
-//          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, 8888),
-//          //          ("A", List((Some(11), Some(12), "a"), (Some(110), Some(120), "aa")), 7777, 8888),
-//          ("B", List((Some(13), None, "b")), 7777, 8888),
-//          //          ("C", List((None, Some(14), "c")), 7777, 8888),
-//          //          ("D", List((None, None, "d")), 7777, 8888),
-//          //          ("E", List(), 7777, 8888)
-//        ))
+//    Add(TempId(":db.part/user", 1),:Ns/refs1,TempId(":db.part/user", 6),Card(2)),
+//    Add(TempId(":db.part/user", 6),:Ref1/int1,11,Card(1)),
+//    Add(TempId(":db.part/user", 6),:Ref1/ref2,TempId(":db.part/user", 10),Card(1)),
+//    Add(TempId(":db.part/user", 10),:Ref2/int2,22,Card(1)),
+//    Add(TempId(":db.part/user", 10),:Ref2/str2,aa,Card(1)),
+//
+//    Add(datomic.tx,:Ref2/str2,b,Card(1)),
+//    Add(datomic.tx,:Ref2/int2,5,Card(1)),
+//    Add(datomic.tx,:Ref2/ref3,TempId(":db.part/user", 4),Card(1)),
+//    Add(TempId(":db.part/user", 4),:Ref3/str3,c,Card(1)),
+//    Add(datomic.tx,:Ns/int,6,Card(1)),
+//    Add(datomic.tx,:Ns/bool,true,Card(1))),
+//
+//  list(
+//    Add(TempId(":db.part/user", 2),:Ns/str,B,Card(1)),
+//    Add(datomic.tx,:Ref2/str2,b,Card(1)),
+//    Add(datomic.tx,:Ref2/int2,5,Card(1)),
+//    Add(datomic.tx,:Ref2/ref3,TempId(":db.part/user", 3),Card(1)),
+//    Add(TempId(":db.part/user", 3),:Ref3/str3,c,Card(1)),
+//    Add(datomic.tx,:Ns/int,6,Card(1)),
+//    Add(datomic.tx,:Ns/bool,true,Card(1))))
+//         */
+//        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3)).Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
+//        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
+//        //          ("B", Nil)
+//        //        ))
+//        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3)).Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).inspectGet
 //
 //
-//        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).Tx(Ref3.int3_(7777)) insert List(
-//          ("A", List(
-//            (1, Some("a1"), List(
-//              (11, Some("a11")),
-//              (12, None)
-//            )),
-//            (2, None, List(
-//              (21, Some("a21")),
-//              (22, None)
-//            )),
-//            (3, Some("a3"), List()),
-//            (4, None, List())
-//          )),
-//          ("B", List(
-//            (5, Some("a5"), List(
-//              (51, Some("a51")),
-//              (52, None)
-//            ))
-//          )),
-//          ("C", Nil)
-//        )
-//
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.str1$.Refs2.*?(Ref2.int2.str2$)).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
-//          ("A", List(
-//            (1, Some("a1"), List(
-//              (11, Some("a11")),
-//              (12, None)
-//            )),
-//            (2, None, List(
-//              (21, Some("a21")),
-//              (22, None)
-//            )),
-//            (3, Some("a3"), List()),
-//            (4, None, List())
-//          ), 7777),
-//          ("B", List(
-//            (5, Some("a5"), List(
-//              (51, Some("a51")),
-//              (52, None)
-//            ))
-//          ), 7777),
-//          ("C", Nil, 7777)
-//        ))
-//
-//        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
-//          ("A", List(
-//            (1, Some("a1"), List(
-//              (11, Some("a11")),
-//              (12, None)
-//            )),
-//            (2, None, List(
-//              (21, Some("a21")),
-//              (22, None)
-//            ))
-//          ), 7777),
-//          ("B", List(
-//            (5, Some("a5"), List(
-//              (51, Some("a51")),
-//              (52, None)
-//            ))
-//          ), 7777)
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3)).Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), (7, true))
 //        ))
 
 
+        //                _ = m(Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4_(7777) + Ref3.int3_(8888).str3_("meta")))
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4_(7777) + Ref3.int3_(8888).str3_("meta")) insert List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa"))),
+        //          ("B", List((Some(13), None, "b"))),
+        //          ("C", List((None, Some(14), "c"))),
+        //          ("D", List((None, None, "d"))),
+        //          ("E", List())
+        //        )
+
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3.str3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, (8888, "meta")),
+        //          ("B", List((Some(13), None, "b")), 7777, (8888, "meta")),
+        //          ("C", List((None, Some(14), "c")), 7777, (8888, "meta")),
+        //          ("D", List((None, None, "d")), 7777, (8888, "meta")),
+        //          ("E", List(), 7777, (8888, "meta"))
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3.str3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, (8888, "meta")),
+        //          ("B", List((Some(13), None, "b")), 7777, (8888, "meta")),
+        //          ("C", List((None, Some(14), "c")), 7777, (8888, "meta")),
+        //          ("D", List((None, None, "d")), 7777, (8888, "meta")),
+        //        ))
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).Tx(Ref3.int3_(7777)) insert List(
+        //          ("A", List(
+        //            (1, Some("a1"), List(
+        //              (11, Some("a11")),
+        //              (12, None)
+        //            )),
+        //            (2, None, List(
+        //              (21, Some("a21")),
+        //              (22, None)
+        //            )),
+        //            (3, Some("a3"), List()),
+        //            (4, None, List())
+        //          )),
+        //          ("B", List(
+        //            (5, Some("a5"), List(
+        //              (51, Some("a51")),
+        //              (52, None)
+        //            ))
+        //          )),
+        //          ("C", Nil)
+        //        )
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1.str1$.Refs2.*?(Ref2.int2.str2$)).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List(
+        //            (1, Some("a1"), List(
+        //              (11, Some("a11")),
+        //              (12, None)
+        //            )),
+        //            (2, None, List(
+        //              (21, Some("a21")),
+        //              (22, None)
+        //            )),
+        //            (3, Some("a3"), List()),
+        //            (4, None, List())
+        //          ), 7777),
+        //          ("B", List(
+        //            (5, Some("a5"), List(
+        //              (51, Some("a51")),
+        //              (52, None)
+        //            ))
+        //          ), 7777),
+        //          ("C", Nil, 7777)
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.str1$.Refs2.*(Ref2.int2.str2$)).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List(
+        //            (1, Some("a1"), List(
+        //              (11, Some("a11")),
+        //              (12, None)
+        //            )),
+        //            (2, None, List(
+        //              (21, Some("a21")),
+        //              (22, None)
+        //            ))
+        //          ), 7777),
+        //          ("B", List(
+        //            (5, Some("a5"), List(
+        //              (51, Some("a51")),
+        //              (52, None)
+        //            ))
+        //          ), 7777)
+        //        ))
 
 
-//        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2) insert List(
-//          (("A", 1), (11, "a")),
-//          (("B", 2), (22, "b"))
-//        )
-//        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
-//          (("A", 1), (11, "a")),
-//          (("B", 2), (22, "b"))
-//        ))
+        //        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2) insert List(
+        //          (("A", 1), (11, "a")),
+        //          (("B", 2), (22, "b"))
+        //        )
+        //        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+        //          (("A", 1), (11, "a")),
+        //          (("B", 2), (22, "b"))
+        //        ))
 
-//        _ <- m(Ref2.int2.str2 + Ns.str.int) insert List(
-//          ((1, "a"), ("aa", 11)),
-//          ((2, "b"), ("bb", 22))
-//        )
-//
-//        _ <- m(Ref2.int2.str2 + Ns.str.int).get.map(_.sorted ==> List(
-//          ((1, "a"), ("aa", 11)),
-//          ((2, "b"), ("bb", 22))
-//        ))
+        //        _ <- m(Ref2.int2.str2 + Ns.str.int) insert List(
+        //          ((1, "a"), ("aa", 11)),
+        //          ((2, "b"), ("bb", 22))
+        //        )
+        //
+        //        _ <- m(Ref2.int2.str2 + Ns.str.int).get.map(_.sorted ==> List(
+        //          ((1, "a"), ("aa", 11)),
+        //          ((2, "b"), ("bb", 22))
+        //        ))
 
       } yield ()
     }
