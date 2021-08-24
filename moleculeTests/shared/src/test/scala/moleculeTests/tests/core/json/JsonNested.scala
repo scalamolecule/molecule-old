@@ -17,7 +17,8 @@ object JsonNested extends AsyncTestSuite {
       for {
         _ <- Ns.str.Refs1 * Ref1.int1 insert List(
           ("a", List(1)),
-          ("b", List(2, 3))
+          ("b", List(2, 3)),
+          ("c", Nil)
         )
 
         // Flat
@@ -42,6 +43,38 @@ object JsonNested extends AsyncTestSuite {
             |        "Refs1": {
             |          "int1": 3
             |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        // NestedOpt
+        _ <- Ns.str.Refs1.*?(Ref1.int1).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          },
+            |          {
+            |            "int1": 3
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "str": "c",
+            |        "Refs1": []
             |      }
             |    ]
             |  }

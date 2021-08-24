@@ -36,6 +36,8 @@ trait BuildBase extends TreeOps {
       def draw(nodes: Seq[Node], indent: Int): Seq[String] = {
         val s = "  " * indent
         nodes map {
+          case Obj(cls, ref, nested, Nil) =>
+            s"""|${s}Obj("$cls", "$ref", $nested, Nil)""".stripMargin
           case Obj(cls, ref, nested, props) =>
             s"""|${s}Obj("$cls", "$ref", $nested, List(
                 |${draw(props, indent + 1).mkString(s",\n")}))""".stripMargin

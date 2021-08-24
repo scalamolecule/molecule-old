@@ -68,7 +68,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     * quoted when necessary. Nested data becomes json objects etc.
     *
     * @group get
-    * @param n    Number of rows returned
+    * @param n       Number of rows returned
     * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return String of json
     */
@@ -76,39 +76,30 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       for {
         conn <- futConn
-        jColl0 <- conn.query(_model, _query)
+        jColl <- conn.query(_model, _query)
       } yield {
-        val jColl = jColl0.asInstanceOf[jCollection[jList[AnyRef]]]
         val count = jColl.size()
         val rows  = jColl.iterator()
         val sb    = new StringBuffer()
         var next  = false
-        count match {
-          case 0 =>
+        if (count == 0) {
           // Empty result set
-
-          case _ if n == -1 => {
-            // All rows
-            while (rows.hasNext) {
-              if (next) sb.append(",") else next = true
-              sb.append("\n      {\n        ")
-              row2json(sb, rows.next)
-              sb.append("\n      }")
-            }
-            sb.append("\n    ")
+        } else if (n == -1) {
+          // All rows
+          while (rows.hasNext) {
+            if (next) sb.append(",") else next = true
+            row2json(sb, rows.next)
           }
-
-          case _ =>
-            // n rows
-            var i = 0
-            while (rows.hasNext && i < n) {
-              if (next) sb.append(",") else next = true
-              sb.append("\n      {\n        ")
-              row2json(sb, rows.next)
-              sb.append("\n      }")
-              i += 1
-            }
-            sb.append("\n    ")
+          sb.append("\n    ")
+        } else {
+          // n rows
+          var i = 0
+          while (rows.hasNext && i < n) {
+            if (next) sb.append(",") else next = true
+            row2json(sb, rows.next)
+            i += 1
+          }
+          sb.append("\n    ")
         }
 
         _model.elements.head match {

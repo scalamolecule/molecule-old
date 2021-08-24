@@ -9,9 +9,26 @@ trait BuildJson extends BuildBase with JsonBase {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildJson", 10)
+  private lazy val xx = InspectMacro("BuildJson", 2)
 
-  def jsonFlat(obj: Obj, colIndex0: Int = -1, level: Int = 0): (Tree, Int) = {
+  def jsonFlat(obj: Obj): Tree = {
+    val tree = if (hasSameNss(obj)) {
+      q"""throw MoleculeException(
+        "Please compose multiple same-name namespaces with `++` instead of `+` to access property values."
+      )"""
+    } else {
+      q"""{
+        sb.append("\n      {\n        ")
+        ..${resolve(obj)._1}
+        sb.append("\n      }")
+      }"""
+    }
+
+    xx(1, obj, tree)
+    tree
+  }
+
+  def resolve(obj: Obj, colIndex0: Int = -1, level: Int = 0): (Tree, Int) = {
     var colIndex    = colIndex0
     val tabs        = level + 1
     val newLineCode = Seq(
@@ -36,7 +53,7 @@ trait BuildJson extends BuildBase with JsonBase {
             }
 
           case refObj@Obj(_, ref, _, _) =>
-            val (subObj, colIndexSub) = jsonFlat(refObj, colIndex, level + 1)
+            val (subObj, colIndexSub) = resolve(refObj, colIndex, level + 1)
             colIndex = colIndexSub
             newLine ++ Seq(
               q"""quote(sb, $ref)""",
@@ -49,13 +66,7 @@ trait BuildJson extends BuildBase with JsonBase {
       }
     }
 
-    val tree = if (hasSameNss(obj)) {
-      q"""throw MoleculeException(
-            "Please compose multiple same-name namespaces with `++` instead of `+` to access property values."
-          )"""
-    } else {
-      q"{ ..${properties(obj.props)} }"
-    }
+    val tree = q"{ ..${properties(obj.props)} }"
 
     xx(1, obj, tree)
     (tree, colIndex)

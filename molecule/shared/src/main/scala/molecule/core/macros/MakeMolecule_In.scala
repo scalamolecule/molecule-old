@@ -23,7 +23,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
       genericImports, model0,
       typess, castss,
       obj, indexes,
-      nestedRefs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetas,
       postTypes, postCasts, postJsons,
       isNestedOpt,
       nestedOptRefIndexes, nestedOptTacitIndexes
@@ -51,7 +51,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
           with $nestedTupleClass[$ObjType, (..$TplTypes)]
           with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-          ..${buildTplNested(castss, typess, TplTypes, postCasts).get}
+          ..${buildTplNested(castss, typess, TplTypes, postCasts, txMetas).get}
           ..${buildJsonNested(obj, nestedRefs, postJsons).get}
         }
         new $outMolecule
@@ -150,7 +150,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
          """
 
       } else {
-        val casts = if (txMetaCompositesCount > 0) {
+        val casts = if (txMetas > 0) {
           // Treat tx meta data as composite
           q"(..${topLevel(List(castss.head))}, ..${compositeCasts(castss.tail, castss.head.length)})"
         } else {
@@ -248,7 +248,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
       }
     }
 
-    val moleculeClass = if (flat || txMetaCompositesCount > 0)
+    val moleculeClass = if (flat || txMetas > 0)
       mkFlat
     else
       mkNested

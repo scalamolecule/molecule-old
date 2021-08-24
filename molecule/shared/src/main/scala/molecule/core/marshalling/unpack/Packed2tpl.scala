@@ -12,8 +12,8 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
 
   import c.universe._
 
-//  private lazy val xx = InspectMacro("Packed2tpl", 1, mkError = true)
-    private lazy val xx = InspectMacro("Packed2tpl", 5)
+  //  private lazy val xx = InspectMacro("Packed2tpl", 1, mkError = true)
+  private lazy val xx = InspectMacro("Packed2tpl", 2)
 
   def packed2tpl(
     typess: List[List[Tree]],
@@ -47,13 +47,16 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
       case (types, (acc, level))             => (tq"(..$types, List[${acc.head}])" +: acc, level - 1)
     }._1
 
-    def resolveTxGroups(txCompositeGroups: Seq[IndexNode]): Seq[Seq[Tree]] = {
+    def resolveTxGroups(txCompositeGroups: Seq[IndexNode]): Seq[Tree] = {
       def resolve(nodes: Seq[IndexNode], acc: Seq[Tree]): Seq[Tree] = nodes.flatMap {
         case AttrIndex(_, _, lambdaIndex, _) => acc :+ unpackLambdas(next)(lambdaIndex)
         case Indexes(_, _, _, nodes)         => resolve(nodes, acc)
       }
       txCompositeGroups.collect {
         case Indexes(_, _, _, nodes) => resolve(nodes, Nil)
+      }.flatMap {
+        case Nil     => None
+        case txGroup => Some(q"(..$txGroup)")
       }
     }
 
@@ -70,8 +73,7 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
           setUnpackers(attrs, level + 1, 0)
 
         case Indexes("Tx_", _, _, txGroups) if txMetas != 0 =>
-          val txMetaLambas = resolveTxGroups(txGroups).map(txGroup => q"(..$txGroup)")
-          unpackerss(level) = unpackerss(level) ++ txMetaLambas
+          unpackerss(level) = unpackerss(level) ++ resolveTxGroups(txGroups)
 
         case Indexes(_, _, _, attrs) =>
           setUnpackers(attrs, level, i + 1)

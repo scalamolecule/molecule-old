@@ -211,43 +211,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes with CastTy
           ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil))),
           ("B", Nil)
         )
-        /*
-        List(
-  list(
-    Add(TempId(":db.part/user", 1),:Ns/str,A,Card(1)),
 
-    Add(TempId(":db.part/user", 1),:Ns/refs1,TempId(":db.part/user", 5),Card(2)),
-    Add(TempId(":db.part/user", 5),:Ref1/int1,1,Card(1)),
-    Add(TempId(":db.part/user", 5),:Ref1/ref2,TempId(":db.part/user", 7),Card(1)),
-    Add(TempId(":db.part/user", 7),:Ref2/int2,2,Card(1)),
-    Add(TempId(":db.part/user", 7),:Ref2/str2,a,Card(1)),
-    Add(TempId(":db.part/user", 7),:Ref2/refs3,TempId(":db.part/user", 8),Card(2)),
-    Add(TempId(":db.part/user", 8),:Ref3/int3,3,Card(1)),
-    Add(TempId(":db.part/user", 7),:Ref2/refs3,TempId(":db.part/user", 9),Card(2)),
-    Add(TempId(":db.part/user", 9),:Ref3/int3,4,Card(1)),
-
-    Add(TempId(":db.part/user", 1),:Ns/refs1,TempId(":db.part/user", 6),Card(2)),
-    Add(TempId(":db.part/user", 6),:Ref1/int1,11,Card(1)),
-    Add(TempId(":db.part/user", 6),:Ref1/ref2,TempId(":db.part/user", 10),Card(1)),
-    Add(TempId(":db.part/user", 10),:Ref2/int2,22,Card(1)),
-    Add(TempId(":db.part/user", 10),:Ref2/str2,aa,Card(1)),
-
-    Add(datomic.tx,:Ref2/str2,b,Card(1)),
-    Add(datomic.tx,:Ref2/int2,5,Card(1)),
-    Add(datomic.tx,:Ref2/ref3,TempId(":db.part/user", 4),Card(1)),
-    Add(TempId(":db.part/user", 4),:Ref3/str3,c,Card(1)),
-    Add(datomic.tx,:Ns/int,6,Card(1)),
-    Add(datomic.tx,:Ns/bool,true,Card(1))),
-
-  list(
-    Add(TempId(":db.part/user", 2),:Ns/str,B,Card(1)),
-    Add(datomic.tx,:Ref2/str2,b,Card(1)),
-    Add(datomic.tx,:Ref2/int2,5,Card(1)),
-    Add(datomic.tx,:Ref2/ref3,TempId(":db.part/user", 3),Card(1)),
-    Add(TempId(":db.part/user", 3),:Ref3/str3,c,Card(1)),
-    Add(datomic.tx,:Ns/int,6,Card(1)),
-    Add(datomic.tx,:Ns/bool,true,Card(1))))
-         */
         //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3)).Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
         //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
         //          ("B", Nil)

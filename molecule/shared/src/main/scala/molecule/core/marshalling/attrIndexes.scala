@@ -27,6 +27,8 @@ object attrIndexes {
       def draw(attrs: Seq[IndexNode], indent: Int): Seq[String] = {
         val s = "  " * indent
         attrs map {
+          case Indexes(cls, ref, nested, Nil) =>
+            s"""|${s}Indexes("$cls", "$ref", $nested, Nil)""".stripMargin
           case Indexes(cls, ref, nested, attrs) =>
             s"""|${s}Indexes("$cls", "$ref", $nested, List(
                 |${draw(attrs, indent + 1).mkString(s",\n")}))""".stripMargin

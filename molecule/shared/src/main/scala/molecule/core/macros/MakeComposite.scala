@@ -23,7 +23,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       genericImports, model0,
       typess, castss,
       obj, indexes,
-      nestedRefs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetas,
       postTypes, postCasts, postJsons,
       isNestedOpt,
       nestedOptRefIndexes, nestedOptTacitIndexes
@@ -35,7 +35,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     val transformers = if (isJsPlatform) {
       q"""
           final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) =
-            ${packed2tpl(typess, postTypes, indexes, true, txMetaCompositesCount)}
+            ${packed2tpl(typess, postTypes, indexes, true, txMetas)}
 
           final override protected def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override protected def packed2json(vs: Iterator[String]): String = ???
@@ -44,9 +44,9 @@ class MakeComposite(val c: blackbox.Context) extends Base {
        """
     } else {
       q"""
-          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetaCompositesCount)}
+          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetas)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
+          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${resolve(obj)._1}
         """
     }
 

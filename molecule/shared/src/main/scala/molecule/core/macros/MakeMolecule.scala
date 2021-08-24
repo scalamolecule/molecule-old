@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //       private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-  //    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+//  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+      private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -45,7 +45,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplFlat(castss, txMetas)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
+          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)}
         """
       }
 
@@ -122,8 +122,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       else
         q"lazy val tpl: Product = row2tpl(row)"
 
-      val nestedOptJsonClass = tq"_root_.molecule.core.macros.nested.NestedOptJson"
-
       val transformers =
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
@@ -141,15 +139,13 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       if (hasVariables) {
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel))
-            with $nestedOptJsonClass[$ObjType, (..$TplTypes)] {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
           }
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)})
-            with $nestedOptJsonClass[$ObjType, (..$TplTypes)] {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
             ..$transformers
           }
         """

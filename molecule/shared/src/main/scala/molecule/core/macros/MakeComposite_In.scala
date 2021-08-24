@@ -18,7 +18,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
       genericImports, model0,
       typess, castss,
       obj, indexes,
-      nestedRefs, hasVariables, txMetaCompositesCount,
+      nestedRefs, hasVariables, txMetas,
       postTypes, postCasts, postJsons,
       isNestedOpt,
       nestedOptRefIndexes, nestedOptTacitIndexes
@@ -29,9 +29,9 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
     val inputMolecule    = TypeName(c.freshName("compositeInputMolecule$"))
     val outMolecule      = TypeName(c.freshName("compositeOutMolecule$"))
 
-    val casts = if (txMetaCompositesCount > 0) {
-      val ordinaryComposites = castss.take(castss.length - txMetaCompositesCount)
-      val txMetaComposites   = castss.takeRight(txMetaCompositesCount)
+    val casts = if (txMetas > 0) {
+      val ordinaryComposites = castss.take(castss.length - txMetas)
+      val txMetaComposites   = castss.takeRight(txMetas)
       val firstComposites    = ordinaryComposites.init
       val lastComposite      = ordinaryComposites.last
       val lastOffset         = firstComposites.flatten.length
@@ -68,7 +68,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
+              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${resolve(obj)._1}
             }
             new $outMolecule
           }
@@ -88,7 +88,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
+              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${resolve(obj)._1}
             }
             new $outMolecule
           }
@@ -109,7 +109,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
               final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
-              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)._1}
+              final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${resolve(obj)._1}
             }
             new $outMolecule
           }
