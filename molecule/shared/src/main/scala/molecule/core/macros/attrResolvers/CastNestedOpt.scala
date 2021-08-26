@@ -7,7 +7,7 @@ import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap}
 import molecule.core.util.Helpers
 
 
-private[molecule] trait CastNestedOpt extends Helpers {
+trait CastNestedOpt extends Helpers {
 
   // One =======================================================================
 

@@ -20,9 +20,10 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
-import molecule.core.macros.attrResolvers.CastTypes
+import molecule.core.macros.attrResolvers.{CastNestedOpt, CastTypes, JsonBase}
 
-object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes with CastTypes {
+object AdhocJvm extends AsyncTestSuite with Helpers
+  with UnpackTypes with CastTypes with CastNestedOpt with JsonBase {
 
 
   lazy val tests = Tests {
@@ -206,23 +207,296 @@ object AdhocJvm extends AsyncTestSuite with Helpers with UnpackTypes with CastTy
         //
         //        _ = println(packed)
 
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-          .Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true)) insert List(
+        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+          .Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true))) insert List(
           ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil))),
           ("B", Nil)
         )
 
-        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3)).Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
-        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
+//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
+//          ("B", Nil, ("b", 5, "c"), (6, true))
+//        ))
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), (6, true))
+//        ))
+//
+//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), 6),
+//          ("B", Nil, ("b", 5, "c"), 6)
+//        ))
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), 6)
+//        ))
+//
+//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int_.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c")),
+//          ("B", Nil, ("b", 5, "c"))
+//        ))
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int_.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"))
+//        ))
+//
+//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3_ + Ns.int.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5), 6),
+//          ("B", Nil, ("b", 5), 6)
+//        ))
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3_ + Ns.int.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5), 6)
+//        ))
+//
+//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+//          .Tx(Ref2.str2.int2_.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", "c"), 6),
+//          ("B", Nil, ("b", "c"), 6)
+//        ))
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+//          .Tx(Ref2.str2.int2_.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4))), ("b", "c"), 6)
+//        ))
+//
+//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), "b", 5, "c"),
+//          ("B", Nil, "b", 5, "c")
+//        ))
+//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+//          .Tx(Ref2.str2.int2.Ref3.str3).get.map(_ ==> List(
+//          ("A", List((1, 2, "a", List(3, 4))), "b", 5, "c")
+//        ))
+
+
+
+        /*
+
+
+
+         */
+
+        //                _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2)) insert List(
+        //                  ("A", List((1, "a", List(3, 4)), (11, "aa", Nil))),
+        //                  ("B", Nil)
+        //                )
+        //                rows <- conn.qRaw(
+        //                  """[:find  ?b
+        //                    |        (pull ?a__1 [
+        //                    |          {(:Ns/refs1 :limit nil) [
+        //                    |            (:Ref1/int1 :limit nil)
+        //                    |            (:Ref1/str1 :limit nil)
+        //                    |            {(:Ref1/refs2 :limit nil :default "__none__") [
+        //                    |              (:Ref2/int2 :limit nil)]}]}])
+        //                    | :where [?a :Ns/str ?b]
+        //                    |        [(identity ?a) ?a__1]]""".stripMargin
+        //                )
+        //
+        //                _ <- Ns.str.Refs1.*?(Ref1.int1.str1.Refs2.*?(Ref2.int2)).inspectGet
+
+        //
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.str2.Refs3.*(Ref3.int3)) insert List(
+        //          ("A", List((1, "a", List(3, 4)), (11, "aa", Nil))),
         //          ("B", Nil)
-        //        ))
-        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3)).Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).inspectGet
+        //        )
+        //
+        //        rows <- conn.qRaw(
+        //          """[:find  ?b
+        //            |        (pull ?a__1 [
+        //            |          {(:Ns/refs1 :limit nil) [
+        //            |            (:Ref1/int1 :limit nil)
+        //            |            {(:Ref1/ref2 :limit nil :default "__none__") [
+        //            |              (:Ref2/str2 :limit nil)
+        //            |              {(:Ref2/refs3 :limit nil :default "__none__") [
+        //            |                (:Ref3/int3 :limit nil)]}]}]}])
+        //            | :where [?a :Ns/str ?b]
+        //            |        [(identity ?a) ?a__1]]""".stripMargin
+        //        )
+        ////        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.str2.Refs3.*?(Ref3.int3)).inspectGet
+        //
+        //                _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.str2.Refs3.*?(Ref3.int3)).get.map(_ ==> List(
+        //                  ("A", List((1, "a", List(3, 4)), (11, "aa", Nil))),
+        //                  ("B", Nil)
+        //                ))
 
 
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
-          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), (6, true))
-        ))
+        //        it = rows.iterator
+        //        //        _ = it.next
+        //        row = it.next
+        //        _ = println(row)
+        //        _ = {
+        //          val it  = row.iterator();
+        //          //          val res = scala.Tuple2(
+        //          //            castNestedOptOne[String](it),
+        //          //            it.next match {
+        //          //              case null     =>
+        //          //                Nil
+        //          //              case (last@_) =>
+        //          //                val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
+        //          //                val it   = extractFlatValues(list, 2, List(), List(), true);
+        //          //                //                val it   = extractFlatValues(list, 2, List(1), List(), false);
+        //          //                val buf  = new scala.collection.mutable.ListBuffer[Any]();
+        //          //                while (it.hasNext) {
+        //          //                  buf.addOne(scala.Tuple3(
+        //          //                    castNestedOptOneInt(it),
+        //          //                    castNestedOptOne[String](it),
+        //          //                    it.next match {
+        //          //                      case "__none__" => Nil
+        //          //                      case last       =>
+        //          //                        val list = last.asInstanceOf[jList[Any]];
+        //          //                        val it   = extractFlatValues(list, 1, List(), List(), false);
+        //          //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
+        //          //                        while (it.hasNext) {
+        //          //                          buf.addOne(castNestedOptOneInt(it));
+        //          //                        }
+        //          //                        buf.toList
+        //          //                    }
+        //          //                  ))
+        //          //                }
+        //          //                buf.toList
+        //          //            }
+        //          //          )
+        //          //          val res0 = scala.Tuple2(
+        //          //            castNestedOptOne[String](it),
+        //          //            it.next match {
+        //          //              case null     =>
+        //          //                Nil
+        //          //              case (last@_) =>
+        //          //                val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
+        //          //                val it   = extractFlatValues(list, 2, List(1), List(), false);
+        //          //                val buf  = new scala.collection.mutable.ListBuffer[Any]();
+        //          //                while (it.hasNext) {
+        //          //                  buf.addOne(scala.Tuple3(
+        //          //                    castNestedOptOneInt(it),
+        //          //                    castNestedOptOne[String](it),
+        //          //                    it.next match {
+        //          //                      case null             => Nil
+        //          //                      case last: jMap[_, _] =>
+        //          //                        val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
+        //          //                        val it   = extractFlatValues(list, 1, List(), List(), false);
+        //          //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
+        //          //                        while (it.hasNext) {
+        //          //                          buf.addOne(castNestedOptOneInt(it));
+        //          //                        }
+        //          //                        buf.toList
+        //          //                    }
+        //          //                  ))
+        //          //                }
+        //          //                buf.toList
+        //          //            }
+        //          //          )
+        //          val res = scala.Tuple2(
+        //            castNestedOptOne[String](it),
+        //            it.next match {
+        //              case null     =>
+        //                Nil
+        //              case (last@_) =>
+        //                val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
+        //                val it   = extractFlatValues(list, 2, List(1), List(), true);
+        //                val buf  = new scala.collection.mutable.ListBuffer[Any]();
+        //                while (it.hasNext) {
+        //                  buf.addOne(scala.Tuple3(
+        //                    castNestedOptOneInt(it),
+        //                    castNestedOptOne[String](it),
+        //                    it.next match {
+        //                      case "__none__" => Nil
+        //                      case last       =>
+        //                        val list = last.asInstanceOf[jList[Any]];
+        //                        val it   = extractFlatValues(list, 1, List(), List(), false);
+        //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
+        //                        while (it.hasNext) {
+        //                          buf.addOne(castNestedOptOneInt(it));
+        //                        }
+        //                        buf.toList
+        //
+        //                      //                      case null => Nil
+        //                      //                      case last: jMap[_, _] =>
+        //                      //                        val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
+        //                      //                        val it   = extractFlatValues(list, 1, List(), List(), false);
+        //                      //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
+        //                      //                        while (it.hasNext) {
+        //                      //                          buf.addOne(castNestedOptOneInt(it));
+        //                      //                        }
+        //                      //                        buf.toList
+        //                    }
+        //                  ))
+        //                }
+        //                buf.toList
+        //            }
+        //          )
+        //          println("RESULT ############################\n" + res)
+        //        }
+
+
+        /*
+Obj("", "Ns", false, List(
+  Prop("Ns_str", "str", "String", <cast>, <json>, None),
+  Obj("Ns__Refs1", "Refs1", true, List(
+    Prop("Ref1_int1", "int1", "Int", <cast>, <json>, None),
+    Obj("Ref1__Ref2", "Ref2", false, List(
+      Prop("Ref2_str2", "str2", "String", <cast>, <json>, None),
+      Obj("Ref2__Refs3", "Refs3", true, List(
+        Prop("Ref3_int3", "int3", "Int", <cast>, <json>, None)))))))))
+
+1: [A  {
+  :Ns/refs1 [
+    {
+      :Ref1/int1 1,
+      :Ref1/ref2 {
+        :Ref2/str2 "a",
+        :Ref2/refs3 [{:Ref3/int3 3} {:Ref3/int3 4}]
+      }
+    } {
+      :Ref1/int1 11,
+      :Ref1/ref2 {
+        :Ref2/str2 "aa",
+        :Ref2/refs3 "__none__"}}]}]
+2: [B  null]
+
+{
+  val it = row.iterator();
+  scala.Tuple2(castNestedOptOne[String](it), it.next match {
+    case null => Nil
+    case (last @ _) => {
+      val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
+      val it = extractFlatValues(list, 2, List(1), List(), false);
+      val buf = new scala.collection.mutable.ListBuffer[Any]();
+      while$1(){
+        if (it.hasNext)
+          {
+            buf.addOne(scala.Tuple3(castNestedOptOneInt(it), castNestedOptOne[String](it), it.next match {
+              case null => Nil
+              case (last @ _) => {
+                val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
+                val it = extractFlatValues(list, 1, List(), List(), false);
+                val buf = new scala.collection.mutable.ListBuffer[Any]();
+                while$2(){
+                  if (it.hasNext)
+                    {
+                      buf.addOne(castNestedOptOneInt(it));
+                      while$2()
+                    }
+                  else
+                    ()
+                };
+                buf.toList
+              }
+            }));
+            while$1()
+          }
+        else
+          ()
+      };
+      buf.toList
+    }
+  })
+}
+ */
 
       } yield ()
     }

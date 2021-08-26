@@ -62,9 +62,10 @@ private[molecule] trait Dsl2Model extends TreeOps
 
   //    private lazy val xx = InspectMacro("Dsl2Model", 133, 143)
   //  private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
-      private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
-  //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
-//  private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
+        private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+//  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 623, 623, mkError = true)
   //  private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
@@ -121,8 +122,8 @@ private[molecule] trait Dsl2Model extends TreeOps
     var typess: List[List[Tree]]        = List(List.empty[Tree])
     var castss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
 
-    var txTypess: List[List[Tree]]        = List(List.empty[Tree])
-    var txCastss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
+    //    var txTypess: List[List[Tree]]        = List(List.empty[Tree])
+    //    var txCastss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
 
     var obj     : Obj     = Obj("", "", false, Nil)
     var objLevel: Int     = 0
@@ -184,18 +185,26 @@ private[molecule] trait Dsl2Model extends TreeOps
         case None               => getType(t)
       })
 
-      if (post) {
-        postTypes = tpe :: postTypes
-        postCasts = cast :: postCasts
+      //      if (post) {
+      //        postTypes = tpe :: postTypes
+      //        postCasts = cast :: postCasts
+      //        postJsons = json :: postJsons
+      //        if (doAddProp)
+      //          addProp(t, tpe, cast, json, optAggr)
+      //      } else {
+      //        typess = (tpe :: typess.head) :: typess.tail
+      //        castss = (cast :: castss.head) :: castss.tail
+      //        if (doAddProp)
+      //          addProp(t, tpe, cast, json, optAggr)
+      //      }
+
+      if (post)
         postJsons = json :: postJsons
-        if (doAddProp)
-          addProp(t, tpe, cast, json, optAggr)
-      } else {
-        typess = (tpe :: typess.head) :: typess.tail
-        castss = (cast :: castss.head) :: castss.tail
-        if (doAddProp)
-          addProp(t, tpe, cast, json, optAggr)
-      }
+
+      typess = (tpe :: typess.head) :: typess.tail
+      castss = (cast :: castss.head) :: castss.tail
+      if (doAddProp)
+        addProp(t, tpe, cast, json, optAggr)
     }
 
     def addLambdas(
@@ -204,16 +213,23 @@ private[molecule] trait Dsl2Model extends TreeOps
       json: richTree => (Int, Int) => Tree
     ): Unit = {
       if (t.name.last != '_') {
-        if (post) {
-          postTypes = getType(t) :: postTypes
-          postCasts = cast(t) :: postCasts
+        //        if (post) {
+        //          postTypes = getType(t) :: postTypes
+        //          postCasts = cast(t) :: postCasts
+        //          postJsons = json(t) :: postJsons
+        //          addProp(t, getType(t), cast(t), json(t))
+        //        } else {
+        //          typess = (getType(t) :: typess.head) :: typess.tail
+        //          castss = (cast(t) :: castss.head) :: castss.tail
+        //          addProp(t, getType(t), cast(t), json(t))
+        //        }
+
+        if (post)
           postJsons = json(t) :: postJsons
-          addProp(t, getType(t), cast(t), json(t))
-        } else {
-          typess = (getType(t) :: typess.head) :: typess.tail
-          castss = (cast(t) :: castss.head) :: castss.tail
-          addProp(t, getType(t), cast(t), json(t))
-        }
+
+        typess = (getType(t) :: typess.head) :: typess.tail
+        castss = (cast(t) :: castss.head) :: castss.tail
+        addProp(t, getType(t), cast(t), json(t))
       }
     }
 
@@ -392,17 +408,12 @@ private[molecule] trait Dsl2Model extends TreeOps
       collectCompositeElements = false
       xx(621, prev, subCompositeElements, typess, castss, obj, sameNs)
 
-
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
 
-      if (txMetaDataStarted) {
+      if (txMetaDataStarted)
         txMetas = if (txMetas == 0) 2 else txMetas + 1
-
-        txTypess = List.empty[Tree] :: txTypess
-        txCastss = List.empty[Int => Tree] :: txCastss
-      }
 
       // Make composite in obj
       levelCompositeObj(subCompositeElements, sameNs)
@@ -989,41 +1000,54 @@ private[molecule] trait Dsl2Model extends TreeOps
             case Bond(nsFull, _, _, _, _)      => nsFull
           } getOrElse abort(err)
         } getOrElse abort(err)
+
         if (txMetas == 0) {
           // Start non-composite tx meta data with namespace
-          // (composite data is already namespaced)
+          // (composites would have set txMetas to 2 or more and is already namespaced)
           val cls = ns + "_"
           obj = addRef(obj, cls, ns, false, objLevel)
           indexes = addIndexes(indexes, cls, ns, false, objLevel)
           objLevel = (objLevel - 1).max(0)
         }
+
         // Treat tx meta data as referenced data
         obj = addRef(obj, "Tx_", "Tx", false, objLevel)
         indexes = addIndexes(indexes, "Tx_", "Tx", false, objLevel)
         objLevel = (objLevel - 1).max(0)
         txMetaDataStarted = false
-        if (txMetas != 0) {
-          // Start new level
-          typess = List.empty[Tree] :: typess
-          castss = List.empty[Int => Tree] :: castss
-        }
+        //        if (txMetas != 0) {
+        //        if (castss.head.nonEmpty) {
+        // Start new level
+        typess = List.empty[Tree] :: typess
+        castss = List.empty[Int => Tree] :: castss
+
+        if (txMetas == 0)
+          txMetas = 1
+        //        }
         txMetaDataDone = true
         xx(310, "Tx", prev, txMolecule, txMetaData, typess, castss, txMetas, objCompositesCount, ns, obj)
         traverseElement(prev, p, txMetaData)
 
-      case q"$prev.e.apply[..$types]($nested)" if !p.isRef =>
+      case q"$prev.e.apply[..$types]($nested)"
+        if !p.isRef
+      =>
         xx(320, "e")
         Seq(Nested(Bond("", "", "", 2), Generic("", "e", "datom", EntValue) +: resolve(q"$nested")))
 
-      case q"$prev.e_.apply[..$types]($nested)" if !p.isRef =>
+      case q"$prev.e_.apply[..$types]($nested)"
+        if !p.isRef
+      =>
         xx(330, "e_")
         Seq(Nested(Bond("", "", "", 2), resolve(q"$nested")))
 
-      case q"$prev.$manyRef.apply[..$types]($nested)" if !q"$prev.$manyRef".isRef =>
+      case q"$prev.$manyRef.apply[..$types]($nested)"
+        if !q"$prev.$manyRef".isRef
+      =>
         xx(340, manyRef, nested)
         Seq(Nested(Bond("", "", "", 2), nestedElements(q"$prev.$manyRef", manyRef.toString, q"$nested")))
 
-      case q"$prev.$manyRef.apply[..$types]($nested)" =>
+      case q"$prev.$manyRef.apply[..$types]($nested)"
+      =>
         xx(350, manyRef, nested)
         traverseElement(prev, p, nested1(prev, p, manyRef, nested))
     }

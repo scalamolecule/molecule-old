@@ -2,9 +2,7 @@ package molecule.core.marshalling.unpack
 
 import molecule.core.macros.build.tpl.BuildTplComposite
 import molecule.core.marshalling.attrIndexes._
-import molecule.core.ops.TreeOps
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.blackbox
 
 trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
@@ -17,33 +15,25 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
 
   def packed2tpl(
     typess: List[List[Tree]],
-    postTypes: List[Tree],
     indexes: Indexes,
-    composite: Boolean = false,
-    txMetas: Int = 0
+    txMetas: Int,
+    composite: Boolean = false
   ): Tree = {
     val v          = q"v"
     val next       = q"vs.next()"
     val levels     = typess.size - txMetas
     val unpackerss = mutable.Seq.fill(typess.size)(List.empty[Tree])
-    //    val unpackerss = mutable.Seq.fill(levels)(List.empty[Tree])
 
-
-    def compositeCasts(typess: List[List[Tree]], offset: Int = 0): Seq[Tree] = {
-      typess.flatMap {
-        case Nil   => None
-        case types => Some(q"(..$types)")
-      }
+    def compositeCasts(typess: List[List[Tree]]): Seq[Tree] = typess.flatMap {
+      case Nil   => None
+      case types => Some(q"(..$types)")
     }
 
-    val txMetaComposites = typess.takeRight(txMetas)
-    val metaOffset       = typess.take(levels).flatten.length
-    val txMetaData       = compositeCasts(txMetaComposites, levels + metaOffset)
-
-    val typess1 = typess.take(levels)
-
-    val nestedTypes = typess1.init.foldRight(List(tq"(..${typess1.last})"), levels - 2) {
-      case (types, (acc, 0)) if txMetas != 0 => (tq"(..$types, List[${acc.head}], ..$txMetaData)" +: acc, -1)
+    val typess1              = typess.take(levels)
+    val txMetaTypes          = typess.takeRight(txMetas)
+    val txMetaCompositeTypes = compositeCasts(txMetaTypes)
+    val nestedTypes          = typess1.init.foldRight(List(tq"(..${typess1.last})"), levels - 2) {
+      case (types, (acc, 0)) if txMetas != 0 => (tq"(..$types, List[${acc.head}], ..$txMetaCompositeTypes)" +: acc, -1)
       case (types, (acc, level))             => (tq"(..$types, List[${acc.head}])" +: acc, level - 1)
     }._1
 
@@ -161,7 +151,7 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
       , "----------"
       , nestedTypes
       , unpackerss.toList
-      , txMetaData
+      , txMetaCompositeTypes
       , tree
     )
     tree

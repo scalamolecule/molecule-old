@@ -51,8 +51,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
           with $nestedTupleClass[$ObjType, (..$TplTypes)]
           with $nestedJsonClass[$ObjType, (..$TplTypes)] {
-          ..${buildTplNested(castss, typess, TplTypes, postCasts, txMetas).get}
-          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
+          ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
+          ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
         }
         new $outMolecule
       """

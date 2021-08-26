@@ -33,9 +33,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkFlat = {
       val transformers = if (isJsPlatform) {
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) =
-            ${packed2tpl(typess, postTypes, indexes, false, txMetas)}
-
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, indexes, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
@@ -75,7 +73,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       //            $tpl
       //            ${objFlat(obj, isNestedOpt = true)._1}
       //          }
-      //          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
+      //          ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
       //         """
       //          q"""
       //          ..$jsTransformers
@@ -84,7 +82,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       //            $tpl
       //            ${objFlat(obj, isNestedOpt = true)._1}
       //          }
-      ////          ..{buildJsonNested(obj, nestedRefs, postJsons).get}
+      ////          ..{buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
       //         """
       //        q"""
       //          ..$jsTransformers
@@ -92,7 +90,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
       val transformers =
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, postTypes, indexes)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, indexes, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
@@ -123,14 +121,21 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"lazy val tpl: Product = row2tpl(row)"
 
       val transformers =
+//        q"""
+//          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
+//            ${tplNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}.asInstanceOf[(..$TplTypes)]
+//
+//          final override def row2obj(row: jList[AnyRef]): $ObjType = {
+//            $tpl
+//            ${objFlat(obj, isNestedOpt = true)._1}
+//          }
+//
+//          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
+//            ${jsonNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}
+//        """
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
             ${tplNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}.asInstanceOf[(..$TplTypes)]
-
-          final override def row2obj(row: jList[AnyRef]): $ObjType = {
-            $tpl
-            ${objFlat(obj, isNestedOpt = true)._1}
-          }
 
           final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
             ${jsonNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}
@@ -156,9 +161,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkNested = if (isJsPlatform) {
       val transformers =
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) =
-            ${packed2tpl(typess, postTypes, indexes, false, txMetas)}
-
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, indexes, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
@@ -197,11 +200,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       //            $tpl
       //            ${objFlat(obj, isNestedOpt = true)._1}
       //          }
-      //          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
+      //          ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
       //         """
         q"""
-          ..${buildTplNested(castss, typess, TplTypes, postCasts, txMetas).get}
-          ..${buildJsonNested(obj, nestedRefs, postJsons).get}
+          ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
+          ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
          """
       if (hasVariables) {
         q"""

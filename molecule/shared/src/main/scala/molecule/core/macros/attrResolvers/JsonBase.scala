@@ -4,7 +4,7 @@ import java.util.{Collection => jCollection, Iterator => jIterator, List => jLis
 import molecule.core.util.Helpers;
 
 
-private[molecule] trait JsonBase extends Helpers {
+trait JsonBase extends Helpers {
 
 
   // Shamelessly adopted from lift-json:
@@ -151,8 +151,14 @@ private[molecule] trait JsonBase extends Helpers {
           testList.clear()
           i = 0
           def addValues(vs: jCollection[Any]): Unit = vs.forEach {
-            case ref: jMap[_, _] => addValues(ref.asInstanceOf[jMap[Any, Any]].values())
-            case v               => i += 1; testList.add(v)
+            case ref: jMap[_, _]  =>
+              addValues(ref.asInstanceOf[jMap[Any, Any]].values())
+            case "__none__"       =>
+              testList.add("__none__")
+            case nested: jList[_] =>
+              testList.add(nested)
+            case v                =>
+              i += 1; testList.add(v)
           }
           addValues(vs)
           //          println("-- 3 -------")
@@ -175,11 +181,11 @@ private[molecule] trait JsonBase extends Helpers {
             case "__none__" if tacitIndexes.contains(i) =>
               // tacit value missing
               i += 1
-            case v if tacitIndexes.contains(i) =>
+            case v if tacitIndexes.contains(i)          =>
               // tacit value exists
               i += 1
               presentValues += 1
-            case v =>
+            case v                                      =>
               i += 1
               presentValues += 1
               testList.add(v)

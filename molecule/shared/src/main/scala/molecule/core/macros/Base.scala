@@ -13,7 +13,7 @@ private[molecule] trait Base extends Dsl2Model {
   def getImports(genericImports: List[Tree]) =
     q"""
         import java.net.URI
-        import java.util.{Collections, Date, UUID, List=>jList, Map=>jMap, Iterator=>jIterator, Set=>jSet}
+        import java.util.{Collections, Date, UUID, List => jList, Map => jMap, Iterator => jIterator, Set => jSet}
         import molecule.core.ast.elements._
         import molecule.core.composition._
         import molecule.core.dsl.base.Init

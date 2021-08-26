@@ -36,7 +36,7 @@ trait BuildBase extends TreeOps {
       def draw(nodes: Seq[Node], indent: Int): Seq[String] = {
         val s = "  " * indent
         nodes map {
-          case Obj(cls, ref, nested, Nil) =>
+          case Obj(cls, ref, nested, Nil)   =>
             s"""|${s}Obj("$cls", "$ref", $nested, Nil)""".stripMargin
           case Obj(cls, ref, nested, props) =>
             s"""|${s}Obj("$cls", "$ref", $nested, List(
@@ -48,9 +48,15 @@ trait BuildBase extends TreeOps {
     }
   }
 
-  def isDeeper(obj: Obj) = obj.props.last match {
-    case Obj(_, _, true, _) => true
-    case _                  => false
+  def isDeeper(obj: Obj) = {
+    def test(props: Seq[Node]): Boolean = {
+      props.last match {
+        case Obj(_, _, true, _) => true
+        case Obj(_, _, _, refs) => test(refs)
+        case _                  => false
+      }
+    }
+    test(obj.props)
   }
 
   def getPropCount(nodes: List[Node]): Int = nodes.foldLeft(0) {

@@ -2,6 +2,7 @@ package molecule.core.macros.build.json
 
 import molecule.core.macros.attrResolvers.JsonBase
 import molecule.core.macros.build.BuildBase
+import molecule.core.macros.build.tpl.{BuildTpl, BuildTplComposite}
 import scala.reflect.macros.blackbox
 
 
@@ -15,6 +16,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
   case class buildJsonNested(
     obj: Obj,
     nestedRef: List[String],
+    txMetas: Int,
     postJsons: List[(Int, Int) => Tree]
   ) {
     // Filter out post props since we handle those with postJsons
@@ -76,13 +78,13 @@ trait BuildJsonNested extends BuildBase with JsonBase {
       }
       recurse(objWithoutPostProps, 0)
     }
-    xx(4
+    xx(2
       , obj
       , objWithoutPostProps
       , objs.mkString("\n---\n")
       , exitDepths
       , initTabs
-      //      , postJsons
+      , postJsons
     )
 
     val levelCount = objs.size
@@ -159,6 +161,35 @@ trait BuildJsonNested extends BuildBase with JsonBase {
         q"""(nested: StringBuffer) => { sb.append(nested) }"""
     }
 
+    def branch0untilXX(subLevels: () => Tree): Tree = {
+      val subBranches = subLevels()
+      if (txMetas == 0) {
+        q"""
+         final override def jsonBranch0(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..${branchPairs(0)}}, ${nestedRef.head}, leaf)
+         ..$subBranches
+       """
+      } else {
+        // Ensure that post fields are last (run branchPairs2 first so that mutable colIndex increments orderly)
+        val pre       = branchPairs(0)
+        val postProps = postJsons.flatMap { portJsonLambda =>
+          colIndex += 1
+          Seq(
+            q"""sb.append(${"," + indent(1)})""",
+            q"""${portJsonLambda(colIndex, 0)}"""
+          )
+        }
+
+        //        val txMetaComposites = castss.takeRight(txMetas)
+        //        val metaOffset       = castss.take(levels).flatten.length
+        //        val txMetaData       = compositeCasts(txMetaComposites, levels + metaOffset)
+
+
+        q"""
+         final override def jsonBranch0(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..$pre}, ${nestedRef.head}, leaf, {..$postProps})
+         ..$subBranches
+       """
+      }
+    }
     def branch0until(subLevels: () => Tree): Tree = if (postJsons.isEmpty) {
       q"""
          final override def jsonBranch0(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..${branchPairs(0)}}, ${nestedRef.head}, leaf)
@@ -183,52 +214,52 @@ trait BuildJsonNested extends BuildBase with JsonBase {
 
     lazy val level1: () => Tree = () =>
       q"""
-         final override def jsonLeaf1(sb: StringBuffer, row: java.util.List[AnyRef]): StringBuffer = leaf(${initTabs(1)}, sb, {..${branchPairs(1)}})
+         final override def jsonLeaf1(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = leaf(${initTabs(1)}, sb, {..${branchPairs(1)}})
        """
     lazy val level2: () => Tree = () =>
       q"""
-         final override def jsonBranch1(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, ${branchPairs(1)}, ${nestedRef(1)}, leaf)
-         final override def jsonLeaf2(sb: StringBuffer, row: java.util.List[AnyRef]): StringBuffer = leaf(${initTabs(2)}, sb, {..${branchPairs(2)}})
+         final override def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, ${branchPairs(1)}, ${nestedRef(1)}, leaf)
+         final override def jsonLeaf2(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = leaf(${initTabs(2)}, sb, {..${branchPairs(2)}})
        """
     lazy val level3: () => Tree = () =>
       q"""
-         final override def jsonBranch1(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonLeaf3(sb: StringBuffer, row: java.util.List[AnyRef]): StringBuffer = leaf(${initTabs(3)}, sb, {..${branchPairs(3)}})
+         final override def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
+         final override def jsonBranch2(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
+         final override def jsonLeaf3(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = leaf(${initTabs(3)}, sb, {..${branchPairs(3)}})
        """
     lazy val level4: () => Tree = () =>
       q"""
-         final override def jsonBranch1(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonLeaf4(sb: StringBuffer, row: java.util.List[AnyRef]): StringBuffer = leaf(${initTabs(4)}, sb, {..${branchPairs(4)}})
+         final override def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
+         final override def jsonBranch2(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
+         final override def jsonBranch3(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
+         final override def jsonLeaf4(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = leaf(${initTabs(4)}, sb, {..${branchPairs(4)}})
        """
     lazy val level5: () => Tree = () =>
       q"""
-         final override def jsonBranch1(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonBranch4(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
-         final override def jsonLeaf5(sb: StringBuffer, row: java.util.List[AnyRef]): StringBuffer = leaf(${initTabs(5)}, sb, {..${branchPairs(5)}})
+         final override def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
+         final override def jsonBranch2(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
+         final override def jsonBranch3(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
+         final override def jsonBranch4(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
+         final override def jsonLeaf5(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = leaf(${initTabs(5)}, sb, {..${branchPairs(5)}})
        """
     lazy val level6: () => Tree = () =>
       q"""
-         final override def jsonBranch1(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonBranch4(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
-         final override def jsonBranch5(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(5, ${initTabs(5)}, ${initTabs(6)}, sb, {..${branchPairs(5)}}, ${nestedRef(5)}, leaf)
-         final override def jsonLeaf6(sb: StringBuffer, row: java.util.List[AnyRef]): StringBuffer = leaf(${initTabs(6)}, sb, {..${branchPairs(6)}})
+         final override def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
+         final override def jsonBranch2(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
+         final override def jsonBranch3(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
+         final override def jsonBranch4(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
+         final override def jsonBranch5(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(5, ${initTabs(5)}, ${initTabs(6)}, sb, {..${branchPairs(5)}}, ${nestedRef(5)}, leaf)
+         final override def jsonLeaf6(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = leaf(${initTabs(6)}, sb, {..${branchPairs(6)}})
        """
     lazy val level7: () => Tree = () =>
       q"""
-         final override def jsonBranch1(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
-         final override def jsonBranch2(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
-         final override def jsonBranch3(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
-         final override def jsonBranch4(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
-         final override def jsonBranch5(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(5, ${initTabs(5)}, ${initTabs(6)}, sb, {..${branchPairs(5)}}, ${nestedRef(5)}, leaf)
-         final override def jsonBranch6(sb: StringBuffer, row: java.util.List[AnyRef], leaf: StringBuffer): StringBuffer = branch(6, ${initTabs(6)}, ${initTabs(7)}, sb, {..${branchPairs(6)}}, ${nestedRef(6)}, leaf)
-         final override def jsonLeaf7(sb: StringBuffer, row: java.util.List[AnyRef]): StringBuffer = leaf(${initTabs(7)}, sb, {..${branchPairs(7)}})
+         final override def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(1, ${initTabs(1)}, ${initTabs(2)}, sb, {..${branchPairs(1)}}, ${nestedRef(1)}, leaf)
+         final override def jsonBranch2(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(2, ${initTabs(2)}, ${initTabs(3)}, sb, {..${branchPairs(2)}}, ${nestedRef(2)}, leaf)
+         final override def jsonBranch3(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(3, ${initTabs(3)}, ${initTabs(4)}, sb, {..${branchPairs(3)}}, ${nestedRef(3)}, leaf)
+         final override def jsonBranch4(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(4, ${initTabs(4)}, ${initTabs(5)}, sb, {..${branchPairs(4)}}, ${nestedRef(4)}, leaf)
+         final override def jsonBranch5(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(5, ${initTabs(5)}, ${initTabs(6)}, sb, {..${branchPairs(5)}}, ${nestedRef(5)}, leaf)
+         final override def jsonBranch6(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(6, ${initTabs(6)}, ${initTabs(7)}, sb, {..${branchPairs(6)}}, ${nestedRef(6)}, leaf)
+         final override def jsonLeaf7(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = leaf(${initTabs(7)}, sb, {..${branchPairs(7)}})
        """
 
     def get: Tree = objs.size match {
