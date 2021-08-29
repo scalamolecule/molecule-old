@@ -104,26 +104,27 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
 
-    // Temporarily limit number of tests to be compiled (comment out to test all)
-    unmanagedSources / excludeFilter := {
-      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-      val allowed     = Seq(
-        //        sharedTests + "/core/time",
-//        sharedTests + "/core/attr",
-//        sharedTests + "/core/attrMap",
-//        sharedTests + "/core/build",
-//        sharedTests + "/core/json",
-//        sharedTests + "/core/nested",
-//        sharedTests + "/core/obj",
-
-
-//        sharedTests + "/core/transaction",
-        sharedTests + "/Adhoc.scala",
-      )
-      new SimpleFileFilter(f =>
-        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-      )
-    },
+//    // Temporarily limit number of tests to be compiled (comment out to test all)
+//    unmanagedSources / excludeFilter := {
+//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+//      val allowed     = Seq(
+//        //        sharedTests + "/core/time",
+////        sharedTests + "/core/attr",
+////        sharedTests + "/core/attrMap",
+////        sharedTests + "/core/build",
+////        sharedTests + "/core/json",
+////        sharedTests + "/core/nested",
+////        sharedTests + "/core/obj",
+//        sharedTests + "/core/txMetaData",
+//
+//
+////        sharedTests + "/core/transaction",
+//        sharedTests + "/Adhoc.scala",
+//      )
+//      new SimpleFileFilter(f =>
+//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+//      )
+//    },
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,

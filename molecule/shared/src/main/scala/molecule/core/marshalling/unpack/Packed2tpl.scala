@@ -24,14 +24,14 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
     val levels     = typess.size - txMetas
     val unpackerss = mutable.Seq.fill(typess.size)(List.empty[Tree])
 
-    def compositeCasts(typess: List[List[Tree]]): Seq[Tree] = typess.flatMap {
+    def compositeTypes(typess: List[List[Tree]]): Seq[Tree] = typess.flatMap {
       case Nil   => None
       case types => Some(q"(..$types)")
     }
 
     val typess1              = typess.take(levels)
     val txMetaTypes          = typess.takeRight(txMetas)
-    val txMetaCompositeTypes = compositeCasts(txMetaTypes)
+    val txMetaCompositeTypes = compositeTypes(txMetaTypes)
     val nestedTypes          = typess1.init.foldRight(List(tq"(..${typess1.last})"), levels - 2) {
       case (types, (acc, 0)) if txMetas != 0 => (tq"(..$types, List[${acc.head}], ..$txMetaCompositeTypes)" +: acc, -1)
       case (types, (acc, level))             => (tq"(..$types, List[${acc.head}])" +: acc, level - 1)

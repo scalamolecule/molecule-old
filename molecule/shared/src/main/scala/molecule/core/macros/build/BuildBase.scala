@@ -62,7 +62,7 @@ trait BuildBase extends TreeOps {
   def getPropCount(nodes: List[Node]): Int = nodes.foldLeft(0) {
     case (acc, _: Prop)                    => acc + 1
     case (acc, Obj(_, _, false, refProps)) => acc + getPropCount(refProps)
-    case (acc, _: Obj)                     => acc // ignore nested - handled in macros
+    case (acc, nested: Obj)                => acc + 1 // nested counting as 1 prop
   }
 
   def addNode(obj: Obj, node: Node, level: Int): Obj = {

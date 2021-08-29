@@ -64,8 +64,8 @@ private[molecule] trait Dsl2Model extends TreeOps
   //  private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
         private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
 //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 623, 623, mkError = true)
+//    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
+//    private lazy val xx = InspectMacro("Dsl2Model", 521, 521, mkError = true)
   //  private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
@@ -1199,9 +1199,13 @@ private[molecule] trait Dsl2Model extends TreeOps
 
 
     def resolveNested(prev: Tree, p: richTree, manyRef: TermName, nested: Tree): Seq[Element] = {
-      xx(521, post, prev, manyRef, nested, obj)
+      xx(521, post, prev, manyRef, nested, obj, castss, txMetas, txMetaDataDone)
       if (isNestedOpt)
         abort("Optional nested structure can't be mixed with mandatory nested structure.")
+
+      if (castss.head.nonEmpty && !txMetaDataDone)
+        abort("Attributes after nested structure not allowed (only Tx meta data is allowed).")
+
       // From now on, elements are part of nested structure
       // Transfer any tempJson lambdas to postJson lambdas
       post = false
@@ -1884,14 +1888,14 @@ private[molecule] trait Dsl2Model extends TreeOps
     obj = obj1
     indexes = indexes1
 
-    if (post) {
-      // no nested, so transfer
-      typess = List(postTypes)
-      castss = List(postCasts)
-      postTypes = Nil
-      postCasts = Nil
-      postJsons = Nil
-    }
+//    if (post) {
+//      // no nested, so transfer
+//      typess = List(postTypes)
+//      castss = List(postCasts)
+//      postTypes = Nil
+//      postCasts = Nil
+//      postJsons = Nil
+//    }
     //    xx(801, elements)
     //    xx(801, elements, types, casts)
     xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetas, postTypes, postCasts, post)

@@ -233,17 +233,6 @@ object EdgeManySelfUpdate extends AsyncTestSuite {
               "\n  Person ... name(Joe, Liz)"
         }
 
-        // As with save molecules nesting is not allowed in update molecules
-        _ <- Person(ann).Knows.*(Knows.weight(4)).name("Joe").update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Knows`."
-        }
-
-        _ <- Person(ann).Knows.*(Knows.weight(4)).e(42L).update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Knows`."
-        }
-
         _ <- Person(ann).Knows.*(Knows.weight(4).Person.name("Joe")).update.recover {
           case VerifyModelException(err) =>
             err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Knows`."

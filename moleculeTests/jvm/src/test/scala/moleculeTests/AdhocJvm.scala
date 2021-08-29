@@ -21,6 +21,8 @@ import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
 import molecule.core.macros.attrResolvers.{CastNestedOpt, CastTypes, JsonBase}
+import molecule.datomic.api.out4.m
+
 
 object AdhocJvm extends AsyncTestSuite with Helpers
   with UnpackTypes with CastTypes with CastNestedOpt with JsonBase {
@@ -207,72 +209,190 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //
         //        _ = println(packed)
 
-        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-          .Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true))) insert List(
-          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil))),
-          ("B", Nil)
+
+        //        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3_(1)) insert List(
+        //          ("A", List((Some(11), Some(12), "a"))),
+        //          ("B", List((Some(13), None, "b"))),
+        //          ("C", List((None, Some(14), "c"))),
+        //          ("D", List((None, None, "d"))),
+        //          ("E", List())
+        //        )
+
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).inspectGet
+
+        //        rows <- conn.qRaw(
+        //          """[:find  ?b
+        //            |        (pull ?a__1 [
+        //            |          {(:Ns/refs1 :limit nil) [
+        //            |            (:Ref1/int1 :limit nil :default "__none__")
+        //            |            {(:Ref1/ref2 :limit nil :default "__none__") [
+        //            |              (:Ref2/int2 :limit nil :default "__none__")
+        //            |              (:Ref2/str2 :limit nil)]}]}]) ?c
+        //            | :where [?a :Ns/str ?b ?tx]
+        //            |        [(identity ?a) ?a__1]
+        //            |        [?tx :Ref3/int3 ?c]]""".stripMargin)
+        //
+        //        row = rows.iterator.next
+        //        sub = row.get(1)
+        //        list = sub.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[jList[Any]]
+        //        it = extractFlatValues(list, 3, List(1), List(), false)
+        //        _ = {
+        //          println(rows)
+        //          println("---")
+        //          println(sub)
+        //          println("---")
+        //          println(list)
+        //          println("---")
+        //          println(it.hasNext)
+        //          while(it.hasNext){
+        //            println(it.next)
+        //          }
+        ////          it.forEachRemaining(v => println(v))
+        ////          println(it.next)
+        //        }
+
+
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        //          ("A", List((Some(11), Some(12), "a")), 1),
+        //          ("B", List((Some(13), None, "b")), 1),
+        //          ("C", List((None, Some(14), "c")), 1),
+        //          ("D", List((None, None, "d")), 1),
+        //          ("E", List(), 1)
+        //        ))
+
+        _ <- (Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str_("Tx meta data"))) insert Seq(
+          ((1, "a"), ("aa", 11)),
+          ((2, "b"), ("bb", 22))
         )
 
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
-//          ("B", Nil, ("b", 5, "c"), (6, true))
-//        ))
-//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), (6, true))
-//        ))
+//        _ = {
+//          val model = Model(List(
+//            Composite(List(
+//              Atom("Ref2", "int2", "Int", 1, VarValue, None, Seq(), Seq()),
+//              Atom("Ref2", "str2", "String", 1, VarValue, None, Seq(), Seq()))),
+//            Composite(List(
+//              Atom("Ref1", "str1", "String", 1, VarValue, None, Seq(), Seq()),
+//              Atom("Ref1", "int1", "Int", 1, VarValue, None, Seq(), Seq()),
+//              TxMetaData(List(
+//                Atom("Ns", "str", "String", 1, VarValue, None, Seq(), Seq())))))))
 //
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), 6),
-//          ("B", Nil, ("b", 5, "c"), 6)
-//        ))
-//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), 6)
-//        ))
-//
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int_.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c")),
-//          ("B", Nil, ("b", 5, "c"))
-//        ))
-//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int_.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"))
-//        ))
-//
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3_ + Ns.int.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5), 6),
-//          ("B", Nil, ("b", 5), 6)
-//        ))
-//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3_ + Ns.int.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4))), ("b", 5), 6)
-//        ))
-//
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-//          .Tx(Ref2.str2.int2_.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", "c"), 6),
-//          ("B", Nil, ("b", "c"), 6)
-//        ))
-//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-//          .Tx(Ref2.str2.int2_.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4))), ("b", "c"), 6)
-//        ))
-//
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), "b", 5, "c"),
-//          ("B", Nil, "b", 5, "c")
-//        ))
-//        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
-//          .Tx(Ref2.str2.int2.Ref3.str3).get.map(_ ==> List(
-//          ("A", List((1, 2, "a", List(3, 4))), "b", 5, "c")
-//        ))
+//          val query = Model2Query(model)
+//          println(query)
+//        }
 
+//        _ <- m(Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str)).inspectGet
+
+        _ <- m(Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str)).get.map(_.sorted ==> List(
+          ((1, "a"), ("aa", 11, "Tx meta data")),
+          ((2, "b"), ("bb", 22, "Tx meta data"))
+        ))
+
+
+        /*
+1: [A  {:Ns/refs1 [{:Ref1/int1 11, :Ref1/ref2 {:Ref2/int2 12, :Ref2/str2 "a"}}]}  1]
+2: [B  {:Ns/refs1 [{:Ref1/int1 13, :Ref1/ref2 {:Ref2/int2 "__none__", :Ref2/str2 "b"}}]}  1]
+3: [C  {:Ns/refs1 [{:Ref1/int1 "__none__", :Ref1/ref2 {:Ref2/int2 14, :Ref2/str2 "c"}}]}  1]
+4: [D  {:Ns/refs1 [{:Ref1/int1 "__none__", :Ref1/ref2 {:Ref2/int2 "__none__", :Ref2/str2 "d"}}]}  1]
+5: [E  null  1]
+         */
+
+        //        _ <- m(Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3_(1))) insert List(
+        //          (true, List("a", "b")),
+        //          (false, Nil)
+        //        )
+
+        //        _ <- Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
+        //          (true, List("a", "b"), 1)
+        //        ))
+        //
+        //        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
+        //          (true, List("a", "b"), 1),
+        //          (false, Nil, 1)
+        //        ))
+
+
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1)
+        //          .Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true))) insert List(
+        //          ("A", List(1, 11)),
+        //          ("B", Nil)
+        //        )
+
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2)
+        //          .Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true))) insert List(
+        //          ("A", List((1, 2), (11, 22))),
+        //          ("B", Nil)
+        //        )
+
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))) insert List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil))),
+        //          ("B", Nil)
+        //        )
+
+        //        _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+        //          .Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true))) insert List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil))),
+        //          ("B", Nil)
+        //        )
+
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
+        //          ("B", Nil, ("b", 5, "c"), (6, true))
+        //        ))
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), (6, true))
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), 6),
+        //          ("B", Nil, ("b", 5, "c"), 6)
+        //        ))
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"), 6)
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int_.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c")),
+        //          ("B", Nil, ("b", 5, "c"))
+        //        ))
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int_.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4))), ("b", 5, "c"))
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3_ + Ns.int.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5), 6),
+        //          ("B", Nil, ("b", 5), 6)
+        //        ))
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3_ + Ns.int.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4))), ("b", 5), 6)
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+        //          .Tx(Ref2.str2.int2_.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", "c"), 6),
+        //          ("B", Nil, ("b", "c"), 6)
+        //        ))
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+        //          .Tx(Ref2.str2.int2_.Ref3.str3 + Ns.int.bool_).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4))), ("b", "c"), 6)
+        //        ))
+        //
+        //        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), "b", 5, "c"),
+        //          ("B", Nil, "b", 5, "c")
+        //        ))
+        //        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
+        //          .Tx(Ref2.str2.int2.Ref3.str3).get.map(_ ==> List(
+        //          ("A", List((1, 2, "a", List(3, 4))), "b", 5, "c")
+        //        ))
 
 
         /*

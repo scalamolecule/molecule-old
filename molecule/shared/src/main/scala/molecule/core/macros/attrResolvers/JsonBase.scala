@@ -6,7 +6,6 @@ import molecule.core.util.Helpers;
 
 trait JsonBase extends Helpers {
 
-
   // Shamelessly adopted from lift-json:
   // https://github.com/lift/framework/blob/db05d863c290c5fd1081a7632263433153fc9fe3/core/json/src/main/scala/net/liftweb/json/JsonAST.scala#L813-L883
 
@@ -119,7 +118,7 @@ trait JsonBase extends Helpers {
           vs = row.asInstanceOf[jMap[Any, Any]].values()
           //          println("-- 1 ------- " + vs.size + "  " + propCount)
           //          vs.forEach(v => println(v))
-          if (deeper && vs.size() - 1 == propCount || !deeper && vs.size() == propCount)
+          if (vs.size() == propCount)
             flatValues.addAll(vs)
         }
 
@@ -154,14 +153,15 @@ trait JsonBase extends Helpers {
             case ref: jMap[_, _]  =>
               addValues(ref.asInstanceOf[jMap[Any, Any]].values())
             case "__none__"       =>
-              testList.add("__none__")
+              i += 1; testList.add("__none__")
             case nested: jList[_] =>
+              i += 1;
               testList.add(nested)
             case v                =>
               i += 1; testList.add(v)
           }
           addValues(vs)
-          //          println("-- 3 -------")
+          //          println(s"-- 3 ------- $i  $propCount")
           //          testList.forEach(v => println(v))
           if (i == propCount)
             flatValues.addAll(testList)

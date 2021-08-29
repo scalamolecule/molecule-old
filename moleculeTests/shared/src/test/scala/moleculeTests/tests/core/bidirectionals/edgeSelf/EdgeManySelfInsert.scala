@@ -41,15 +41,6 @@ object EdgeManySelfInsert extends AsyncTestSuite {
           _ <- knownBy("Joe").get.map(_.head ==> List((8, "Ann")))
         } yield ()
       }
-
-      "nested edge only not allowed" - bidirectional { implicit conn =>
-        // Can't save nested edges without including target entity
-        (Person.name.Knows.*(Knows.weight).name insert List(("Ben", List(7, 8), "Joe"))).recover {
-          case VerifyModelException(err) =>
-            err ==> s"[noNestedEdgesWithoutTarget]  Nested edge ns `Knows` should link to " +
-              s"target ns within the nested group of attributes."
-        }
-      }
     }
 
     "base + edge/target" - {

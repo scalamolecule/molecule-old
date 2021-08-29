@@ -34,6 +34,8 @@ object Model2Query extends Helpers {
     nestedEntityClauses = Nil
     nestedLevel = 1
     _model = model
+    txMeta = false
+    txMetaComposite = false
 
     // Resolve elements
     val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) {

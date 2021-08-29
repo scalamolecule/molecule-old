@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //       private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-//  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-      private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+  //  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+  private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -121,25 +121,25 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"lazy val tpl: Product = row2tpl(row)"
 
       val transformers =
-//        q"""
-//          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
-//            ${tplNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}.asInstanceOf[(..$TplTypes)]
-//
-//          final override def row2obj(row: jList[AnyRef]): $ObjType = {
-//            $tpl
-//            ${objFlat(obj, isNestedOpt = true)._1}
-//          }
-//
-//          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
-//            ${jsonNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}
-//        """
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
             ${tplNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}.asInstanceOf[(..$TplTypes)]
 
+          final override def row2obj(row: jList[AnyRef]): $ObjType = {
+            $tpl
+            ${objFlat(obj, isNestedOpt = true)._1}
+          }
+
           final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
             ${jsonNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}
         """
+      //        q"""
+      //          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
+      //            ${tplNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}.asInstanceOf[(..$TplTypes)]
+      //
+      //          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
+      //            ${jsonNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}
+      //        """
 
       if (hasVariables) {
         q"""
@@ -194,18 +194,18 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
         q"lazy val tpl: Product = tpl0"
 
       val transformers =
-      //        q"""
-      //          ..${buildTplNested(castss, typess, TplTypes, postCasts, txMetas).get}
-      //          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
-      //            $tpl
-      //            ${objFlat(obj, isNestedOpt = true)._1}
-      //          }
-      //          ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
-      //         """
         q"""
           ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
+          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = {
+            $tpl
+            ${objFlat(obj, isNestedOpt = true)._1}
+          }
           ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
          """
+      //        q"""
+      //          ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
+      //          ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
+      //         """
       if (hasVariables) {
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})

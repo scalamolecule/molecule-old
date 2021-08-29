@@ -50,9 +50,9 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           .commonInterests
           .commonLicences
           .commonScores
-          .CoreQuality.name._Loves
-          .InCommon.*(Quality.name)
-          .Person.name
+          .CoreQuality.name
+          ._Loves.Person.name
+          ._Loves.InCommon.*(Quality.name)
           .get.map(_ ==> List(
           ("Ann"
             , 7
@@ -61,8 +61,9 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
             , Set("climbing", "flying")
             , Map("baseball" -> 9, "golf" -> 7)
             , "Love"
+            , "Ben"
             , List("Patience", "Humor")
-            , "Ben"),
+          ),
           ("Ben"
             , 7
             , "atWork"
@@ -70,8 +71,9 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
             , Set("climbing", "flying")
             , Map("baseball" -> 9, "golf" -> 7)
             , "Love"
+            , "Ann"
             , List("Patience", "Humor")
-            , "Ann")
+          )
         ))
       } yield ()
     }

@@ -339,15 +339,7 @@ Obj("", "Ns", false, List(
 }
  */
 
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.str2.Refs3.*(Ref3.int3)) insert List(
-          ("A", List((1, "a", List(3, 4)), (11, "aa", Nil))),
-          ("B", Nil)
-        )
-//        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.str2.Refs3.*?(Ref3.int3)).inspectGet
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.str2.Refs3.*?(Ref3.int3)).get.map(_ ==> List(
-          ("A", List((1, "a", List(3, 4)), (11, "aa", Nil))),
-          ("B", Nil)
-        ))
+
 
 /*
 Obj("", "Ns", false, List(

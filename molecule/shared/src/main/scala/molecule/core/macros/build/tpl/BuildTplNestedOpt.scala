@@ -18,6 +18,7 @@ private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with Build
     level: Int = 0
   ): Tree = {
 
+
     def properties(nodes: List[Node]): Seq[Tree] = {
       nodes.flatMap {
         case attr: Prop                          => Seq(attr.cast(42)) // colIndex not used here
@@ -71,7 +72,6 @@ private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with Build
        """
 
     } else {
-
       current.props.last match {
         case last@Obj(_, _, nested, _) if nested || isDeeper(last) =>
           val (props, nestedObj) = if (nested) {

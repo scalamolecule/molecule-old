@@ -51,8 +51,8 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           .commonLicences
           .commonScores
           .CoreQuality.name._Knows
-          .InCommon.*(Quality.name)
           .Person.name
+          ._Knows.InCommon.*(Quality.name)
           .get.map(_ ==> List(
           ("Ann"
             , 7
@@ -61,8 +61,9 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
             , Set("climbing", "flying")
             , Map("baseball" -> 9, "golf" -> 7)
             , "Love"
+            , "Ben"
             , List("Patience", "Humor")
-            , "Ben"),
+          ),
           ("Ben"
             , 7
             , "atWork"
@@ -70,8 +71,9 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
             , Set("climbing", "flying")
             , Map("baseball" -> 9, "golf" -> 7)
             , "Love"
+            , "Ann"
             , List("Patience", "Humor")
-            , "Ann")
+          )
         ))
       } yield ()
     }

@@ -1546,53 +1546,6 @@ object JsonNested extends AsyncTestSuite {
     }
 
 
-    "Post attributes after nested" - core { implicit conn =>
-      for {
-        _ <- Ns.int.str.Refs1.*(Ref1.int1).insert(1, "a", Seq(11, 12))
-
-        _ <- Ns.int.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 1,
-            |        "str": "a",
-            |        "Refs1": [
-            |          {
-            |            "int1": 11
-            |          },
-            |          {
-            |            "int1": 12
-            |          }
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-
-        _ <- Ns.int.Refs1.*(Ref1.int1).str.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 1,
-            |        "Refs1": [
-            |          {
-            |            "int1": 11
-            |          },
-            |          {
-            |            "int1": 12
-            |          }
-            |        ],
-            |        "str": "a"
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-      } yield ()
-    }
-
-
     "Implicit initial namespace" - core { implicit conn =>
       for {
         List(ref1a, _, _, _, _, _) <- Ref1.str1.Refs2.*(Ref2.str2).insert(List(

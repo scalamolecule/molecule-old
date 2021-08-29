@@ -355,6 +355,14 @@ object NestedRef extends AsyncTestSuite {
       )
     }
 
+
+    "Post attributes not allowed" - core { implicit conn =>
+      expectCompileError("m(Ns.int.Refs1.*(Ref1.int1).str)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Attributes after nested structure not allowed (only Tx meta data is allowed)."
+      )
+    }
+
     // todo
 //    "No post attributes except tx meta data" - core { implicit conn =>
 //      expectCompileError("m(Ns.double.Refs1.*(Ref1.int1).str)",

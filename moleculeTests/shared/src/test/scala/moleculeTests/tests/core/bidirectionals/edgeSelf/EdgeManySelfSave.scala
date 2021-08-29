@@ -17,11 +17,6 @@ object EdgeManySelfSave extends AsyncTestSuite {
 
       "no nesting in save molecules" - bidirectional { implicit conn =>
         for {
-          _ <- Person.name("Ann").Knows.*(Knows.weight(7)).name("Ben").save.recover {
-            case VerifyModelException(err) =>
-              err ==> s"[noNested]  Nested data structures not allowed in save molecules"
-          }
-
           // Insert entities, each having one or more connected entities with relationship properties
           tx <- Person.name.insert("Ben")
           ben = tx.eid

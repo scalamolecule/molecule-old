@@ -52,8 +52,8 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           .commonLicences
           .commonScores
           .CoreQuality.name._CloseTo
-          .InCommon.*(Quality.name)
           .Animal.name
+          ._CloseTo.InCommon.*(Quality.name)
           .get.map(_ ==> List(
           ("Ann"
             , 7
@@ -62,8 +62,9 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
             , Set("climbing", "flying")
             , Map("baseball" -> 9, "golf" -> 7)
             , "Love"
+            , "Rex"
             , List("Patience", "Humor")
-            , "Rex")
+          )
         ))
 
         // Animal -> Person
@@ -75,8 +76,8 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           .commonLicences
           .commonScores
           .CoreQuality.name._CloseTo
-          .InCommon.*(Quality.name)
           .Person.name
+          ._CloseTo.InCommon.*(Quality.name)
           .get.map(_ ==> List(
           ("Rex"
             , 7
@@ -85,8 +86,9 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
             , Set("climbing", "flying")
             , Map("baseball" -> 9, "golf" -> 7)
             , "Love"
+            , "Ann"
             , List("Patience", "Humor")
-            , "Ann")
+          )
         ))
       } yield ()
     }
@@ -265,8 +267,8 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, rex, ann, annRex, rexAnn) <- testData
 
           // Current value
-          _ <- Person.name_("Ann").CloseTo.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List((Seq("Patience", "Humor"), "Rex")))
-          _ <- Animal.name_("Rex").CloseTo.InCommon.*(Quality.name).Person.name.get.map(_ ==> List((Seq("Patience", "Humor"), "Ann")))
+          _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List(("Rex", Seq("Patience", "Humor"))))
+          _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List(("Ann", Seq("Patience", "Humor"))))
 
           // As with card-one references we have two choices to change referenced value(s)
 
@@ -276,8 +278,8 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           _ <- Quality(humor).name("Funny").update
 
           // Same references, new value(s)
-          _ <- Person.name_("Ann").CloseTo.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List((Seq("Waiting ability", "Funny"), "Rex")))
-          _ <- Animal.name_("Rex").CloseTo.InCommon.*(Quality.name).Person.name.get.map(_ ==> List((Seq("Waiting ability", "Funny"), "Ann")))
+          _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List(("Rex", Seq("Waiting ability", "Funny"))))
+          _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List(("Ann", Seq("Waiting ability", "Funny"))))
 
 
           // 2. Update reference(s)
@@ -287,43 +289,43 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
 
           // replace
           _ <- CloseTo(annRex).inCommon.replace(humor -> sporty).update
-          _ <- Person.name_("Ann").CloseTo.InCommon.*(Quality.name).Animal.name.get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List((Seq("Sporty", "Waiting ability"), "Rex"))
+          _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(
+            _.map(p => (p._1.sorted, p._2)) ==> List(("Rex", Seq("Waiting ability", "Sporty")))
           )
 
-          _ <- Animal.name_("Rex").CloseTo.InCommon.*(Quality.name).Person.name.get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List((Seq("Sporty", "Waiting ability"), "Ann"))
+          _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(
+            _.map(p => (p._1.sorted, p._2)) ==> List(("Ann", Seq("Waiting ability", "Sporty")))
           )
 
           // remove
           _ <- CloseTo(annRex).inCommon.retract(patience).update
-          _ <- Person.name_("Ann").CloseTo.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List((Seq("Sporty"), "Rex")))
-          _ <- Animal.name_("Rex").CloseTo.InCommon.*(Quality.name).Person.name.get.map(_ ==> List((Seq("Sporty"), "Ann")))
+          _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List(("Rex", Seq("Sporty"))))
+          _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List(("Ann", Seq("Sporty"))))
 
           // add
           _ <- CloseTo(annRex).inCommon.assert(patience).update
-          _ <- Person.name_("Ann").CloseTo.InCommon.*(Quality.name).Animal.name.get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List((Seq("Sporty", "Waiting ability"), "Rex"))
+          _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(
+            _.map(p => (p._1.sorted, p._2)) ==> List(("Rex", Seq("Waiting ability", "Sporty")))
           )
 
-          _ <- Animal.name_("Rex").CloseTo.InCommon.*(Quality.name).Person.name.get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List((Seq("Sporty", "Waiting ability"), "Ann"))
+          _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(
+            _.map(p => (p._1.sorted, p._2)) ==> List(("Ann", Seq("Waiting ability", "Sporty")))
           )
 
           // Apply new values
           _ <- CloseTo(annRex).inCommon(sporty, humor).update
-          _ <- Person.name_("Ann").CloseTo.InCommon.*(Quality.name).Animal.name.get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List((Seq("Funny", "Sporty"), "Rex"))
+          _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(
+            _.map(p => (p._1.sorted, p._2)) ==> List(("Rex", Seq("Funny", "Sporty")))
           )
 
-          _ <- Animal.name_("Rex").CloseTo.InCommon.*(Quality.name).Person.name.get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List((Seq("Funny", "Sporty"), "Ann"))
+          _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(
+            _.map(p => (p._1.sorted, p._2)) ==> List(("Ann", Seq("Funny", "Sporty")))
           )
 
           // Retract all references
           _ <- CloseTo(annRex).inCommon().update
-          _ <- Person.name_("Ann").CloseTo.InCommon.*(Quality.name).Animal.name.get.map(_ ==> List())
-          _ <- Animal.name_("Rex").CloseTo.InCommon.*(Quality.name).Person.name.get.map(_ ==> List())
+          _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List())
+          _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(_ ==> List())
 
         } yield ()
       }
