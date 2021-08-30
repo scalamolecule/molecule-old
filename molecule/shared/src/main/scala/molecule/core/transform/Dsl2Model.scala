@@ -61,11 +61,11 @@ private[molecule] trait Dsl2Model extends TreeOps
   import c.universe._
 
   //    private lazy val xx = InspectMacro("Dsl2Model", 133, 143)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
-        private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
-//  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
-//    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
-//    private lazy val xx = InspectMacro("Dsl2Model", 521, 521, mkError = true)
+  //    private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
+  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
+  //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
+  //    private lazy val xx = InspectMacro("Dsl2Model", 521, 521, mkError = true)
   //  private lazy val xx = InspectMacro("Dsl2Model", 2, 800)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
@@ -82,8 +82,6 @@ private[molecule] trait Dsl2Model extends TreeOps
       List[String],
       Boolean,
       Int,
-      List[Tree],
-      List[Int => Tree],
       List[(Int, Int) => Tree],
       Boolean,
       List[List[Int]],
@@ -105,11 +103,8 @@ private[molecule] trait Dsl2Model extends TreeOps
     var collectCompositeElements: Boolean = false
 
     var post     : Boolean                  = true
-    var postTypes: List[Tree]               = List.empty[Tree]
-    var postCasts: List[Int => Tree]        = List.empty[Int => Tree]
     var postJsons: List[(Int, Int) => Tree] = List.empty[(Int, Int) => Tree]
 
-    var levels          : Int     = 1
     var isNestedOptCheck: Boolean = false
     var isNestedOpt     : Boolean = dsl.toString.contains(".*?[")
 
@@ -121,9 +116,6 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     var typess: List[List[Tree]]        = List(List.empty[Tree])
     var castss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
-
-    //    var txTypess: List[List[Tree]]        = List(List.empty[Tree])
-    //    var txCastss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
 
     var obj     : Obj     = Obj("", "", false, Nil)
     var objLevel: Int     = 0
@@ -566,7 +558,7 @@ private[molecule] trait Dsl2Model extends TreeOps
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr$) {
-        xx(143, t.tpeS, typess, postTypes, nestedOptLevel, isNestedOpt)
+        xx(143, t.tpeS, typess, nestedOptLevel, isNestedOpt)
         if (isNestedOpt)
           addLambdas(t, castNestedOptOptAttr, jsonNestedOptOptAttr)
         else
@@ -1015,16 +1007,15 @@ private[molecule] trait Dsl2Model extends TreeOps
         indexes = addIndexes(indexes, "Tx_", "Tx", false, objLevel)
         objLevel = (objLevel - 1).max(0)
         txMetaDataStarted = false
-        //        if (txMetas != 0) {
-        //        if (castss.head.nonEmpty) {
+
         // Start new level
         typess = List.empty[Tree] :: typess
         castss = List.empty[Int => Tree] :: castss
-
         if (txMetas == 0)
           txMetas = 1
-        //        }
         txMetaDataDone = true
+        objCompositesCount = 0
+
         xx(310, "Tx", prev, txMolecule, txMetaData, typess, castss, txMetas, objCompositesCount, ns, obj)
         traverseElement(prev, p, txMetaData)
 
@@ -1888,18 +1879,18 @@ private[molecule] trait Dsl2Model extends TreeOps
     obj = obj1
     indexes = indexes1
 
-//    if (post) {
-//      // no nested, so transfer
-//      typess = List(postTypes)
-//      castss = List(postCasts)
-//      postTypes = Nil
-//      postCasts = Nil
-//      postJsons = Nil
-//    }
+    //    if (post) {
+    //      // no nested, so transfer
+    //      typess = List(postTypes)
+    //      castss = List(postCasts)
+    //      postTypes = Nil
+    //      postCasts = Nil
+    //      postJsons = Nil
+    //    }
     //    xx(801, elements)
     //    xx(801, elements, types, casts)
-    xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetas, postTypes, postCasts, post)
-    xx(802, obj, indexes, typess, castss, txMetas, postTypes, postCasts)
+    xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetas, post)
+    xx(802, obj, indexes, typess, castss, txMetas)
 
 
     // Return checked model
@@ -1909,7 +1900,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       typess, castss,
       obj, indexes,
       nestedRefs, hasVariables, txMetas,
-      postTypes, postCasts, postJsons,
+      postJsons,
       isNestedOpt,
       nestedOptRefIndexes, nestedOptTacitIndexes
     )

@@ -78,30 +78,6 @@ private[molecule] trait BuildTplNested extends BuildBase { self: BuildTplComposi
               ..$subBranches
             """
       }
-
-      //      if (txMetas == 0) {
-      //        q"""
-      //          final override def tplBranch0(row: jList[AnyRef], subBranches: List[Any]): (..$TplTypes) = (..$preFields, subBranches.asInstanceOf[$t1])
-      //          ..$subBranches
-      //        """
-      //      } else {
-      //        val txMetaComposites = castss.takeRight(txMetas)
-      //        val metaOffset       = castss.take(levels).flatten.length
-      //        val txMetaData       = compositeCasts(txMetaComposites, levels + metaOffset)
-      //
-      //        xx(2, txMetas, levels, metaOffset, typess, castss, txMetaData)
-      //
-      //        if (txMetaData.isEmpty)
-      //          q"""
-      //            final override def tplBranch0(row: jList[AnyRef], subBranches: List[Any]): (..$TplTypes) = (..$preFields, subBranches.asInstanceOf[$t1])
-      //            ..$subBranches
-      //          """
-      //        else
-      //          q"""
-      //            final override def tplBranch0(row: jList[AnyRef], subBranches: List[Any]): (..$TplTypes) = (..$preFields, subBranches.asInstanceOf[$t1], ..$txMetaData)
-      //            ..$subBranches
-      //          """
-      //      }
     }
 
     lazy val level1: () => Tree = () =>

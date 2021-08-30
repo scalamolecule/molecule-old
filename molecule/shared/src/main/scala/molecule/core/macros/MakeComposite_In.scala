@@ -19,7 +19,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
       typess, castss,
       obj, indexes,
       nestedRefs, hasVariables, txMetas,
-      postTypes, postCasts, postJsons,
+      postJsons,
       isNestedOpt,
       nestedOptRefIndexes, nestedOptTacitIndexes
       )                  = getModel(dsl)
@@ -66,7 +66,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
-              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
               final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)}
             }
             new $outMolecule
@@ -86,7 +86,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
-              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
               final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)}
             }
             new $outMolecule
@@ -107,7 +107,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
             }
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
-              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
               final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)}
             }
             new $outMolecule

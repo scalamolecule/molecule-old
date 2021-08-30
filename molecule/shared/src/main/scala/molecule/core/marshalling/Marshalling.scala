@@ -22,9 +22,9 @@ abstract class Marshalling[Obj, Tpl](
   protected lazy val nestedLevels: Int     = 0
 
   // jvm
-  protected def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
-  protected def row2obj(row: jList[AnyRef]): Obj = ???
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
+  protected def row2obj(row: jList[AnyRef]): Obj = ???
+  protected def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
 
   // js
   protected def packed2tpl(vs: Iterator[String]): Tpl = ???

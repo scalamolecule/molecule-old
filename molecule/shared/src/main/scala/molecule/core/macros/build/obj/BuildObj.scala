@@ -9,7 +9,7 @@ trait BuildObj extends BuildBase {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildObj", 1, 900)
+  private lazy val xx = InspectMacro("BuildObj", 1)
 
   def classes(nodes: List[Node]): List[Tree] = {
     var prevClasses = List.empty[String]
@@ -76,8 +76,21 @@ trait BuildObj extends BuildBase {
     }
   }
 
-  def objFlat(obj: Obj, colIndex0: Int = -1, isNestedOpt: Boolean = false): (Tree, Int) = {
-    var colIndex = if (isNestedOpt && colIndex0 == -1) -1 else colIndex0
+  def objTree(obj: Obj, tplOpt: Option[Tree] = None): Tree = {
+    tplOpt match {
+      case Some(tpl) =>
+        q"""{
+            val tpl: Product = $tpl
+            ${resolve(obj, -1, true)._1}
+          }
+        """
+      case None      =>
+        q"{${resolve(obj, -1, false)._1} }"
+    }
+  }
+
+  def resolve(obj: Obj, colIndex0: Int, nested: Boolean): (Tree, Int) = {
+    var colIndex = if (nested && colIndex0 == -1) -1 else colIndex0
 
     def properties(nodes: List[Node]): List[Tree] = {
       var propNames = List.empty[String]
@@ -88,11 +101,11 @@ trait BuildObj extends BuildBase {
           if (!propNames.contains(prop)) {
             propNames = propNames :+ prop
             optAggr match {
-              case None if isNestedOpt => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
-              case None                => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
+              case None if nested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
+              case None           => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
 
               case Some(aggrTpe) if aggrTpe == tpe.toString() =>
-                if (isNestedOpt)
+                if (nested)
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
                 else
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
@@ -105,16 +118,6 @@ trait BuildObj extends BuildBase {
 
         case o@Obj(_, ref, true, props) =>
           colIndex += 1
-          //          val productTpe = if (props.length == 1) {
-          //            props.head match {
-          //              case BuilderProp(_, _, tpe, _, _, _) => tq"Tuple1[$tpe]"
-          //              case BuilderObj(_, _, _, _)          => tq"Tuple1[Product]"
-          //            }
-          //          } else {
-          //            tq"Product"
-          //          }
-          //          val subObj     = q"tpl.productElement($colIndex).asInstanceOf[Seq[$productTpe]].map( tpl => ${objFlat(o, -1, isNestedOpt)._1} )"
-
           val oneNestedProp    = props.length == 1
           val singleNestedType = props.head match {
             case Prop(_, _, tpe, _, _, _) => tq"$tpe"
@@ -124,11 +127,11 @@ trait BuildObj extends BuildBase {
             q"""
               tpl.productElement($colIndex).asInstanceOf[Seq[$singleNestedType]].map { v =>
                 val tpl = Tuple1(v)
-                ${objFlat(o, -1, isNestedOpt)._1}
+                ${resolve(o, -1, nested)._1}
               }
             """
           else
-            q"tpl.productElement($colIndex).asInstanceOf[Seq[Product]].map( tpl => ${objFlat(o, -1, isNestedOpt)._1} )"
+            q"tpl.productElement($colIndex).asInstanceOf[Seq[Product]].map( tpl => ${resolve(o, -1, nested)._1} )"
 
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init] = $subObj")
@@ -158,7 +161,7 @@ trait BuildObj extends BuildBase {
           }
 
         case o@Obj(_, ref, _, props) =>
-          val (subObj, colIndexSub) = objFlat(o, colIndex, isNestedOpt)
+          val (subObj, colIndexSub) = resolve(o, colIndex, nested)
           colIndex = colIndexSub
           classes(props) match {
             case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Init = $subObj")

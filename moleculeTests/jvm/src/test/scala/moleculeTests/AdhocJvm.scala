@@ -21,7 +21,6 @@ import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
 import molecule.core.macros.attrResolvers.{CastNestedOpt, CastTypes, JsonBase}
-import molecule.datomic.api.out4.m
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
@@ -30,11 +29,25 @@ object AdhocJvm extends AsyncTestSuite with Helpers
 
   lazy val tests = Tests {
 
-
     "core" - core { implicit futConn =>
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
+
+        _ <- m(Ref1.str1.Nss * Ns.int.str$) insert List(
+          ("A", List((1, Some("a")), (2, None))),
+          ("B", List())
+        )
+
+        // Getting the first object only
+        _ <- m(Ref1.str1.Nss * Ns.int.str$).getObj.collect { case o =>
+          o.str1 ==> "A"
+          o.Nss(0).int ==> 1
+          o.Nss(0).str$ ==> Some("a")
+          o.Nss(1).int ==> 2
+          o.Nss(1).str$ ==> None
+        }
+
 
         //        _ <- Ns.int(0).str("x").Ref1.int1(1).save
         //
@@ -260,41 +273,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          ("E", List(), 1)
         //        ))
 
-        _ <- (Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str_("Tx meta data"))) insert Seq(
-          ((1, "a"), ("aa", 11)),
-          ((2, "b"), ("bb", 22))
-        )
-
-//        _ = {
-//          val model = Model(List(
-//            Composite(List(
-//              Atom("Ref2", "int2", "Int", 1, VarValue, None, Seq(), Seq()),
-//              Atom("Ref2", "str2", "String", 1, VarValue, None, Seq(), Seq()))),
-//            Composite(List(
-//              Atom("Ref1", "str1", "String", 1, VarValue, None, Seq(), Seq()),
-//              Atom("Ref1", "int1", "Int", 1, VarValue, None, Seq(), Seq()),
-//              TxMetaData(List(
-//                Atom("Ns", "str", "String", 1, VarValue, None, Seq(), Seq())))))))
-//
-//          val query = Model2Query(model)
-//          println(query)
-//        }
-
-//        _ <- m(Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str)).inspectGet
-
-        _ <- m(Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str)).get.map(_.sorted ==> List(
-          ((1, "a"), ("aa", 11, "Tx meta data")),
-          ((2, "b"), ("bb", 22, "Tx meta data"))
-        ))
-
-
-        /*
-1: [A  {:Ns/refs1 [{:Ref1/int1 11, :Ref1/ref2 {:Ref2/int2 12, :Ref2/str2 "a"}}]}  1]
-2: [B  {:Ns/refs1 [{:Ref1/int1 13, :Ref1/ref2 {:Ref2/int2 "__none__", :Ref2/str2 "b"}}]}  1]
-3: [C  {:Ns/refs1 [{:Ref1/int1 "__none__", :Ref1/ref2 {:Ref2/int2 14, :Ref2/str2 "c"}}]}  1]
-4: [D  {:Ns/refs1 [{:Ref1/int1 "__none__", :Ref1/ref2 {:Ref2/int2 "__none__", :Ref2/str2 "d"}}]}  1]
-5: [E  null  1]
-         */
 
         //        _ <- m(Ns.bool.Refs1.*(Ref1.str1).Tx(Ref3.int3_(1))) insert List(
         //          (true, List("a", "b")),
@@ -393,14 +371,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          .Tx(Ref2.str2.int2.Ref3.str3).get.map(_ ==> List(
         //          ("A", List((1, 2, "a", List(3, 4))), "b", 5, "c")
         //        ))
-
-
-        /*
-
-
-
-         */
-
+        //
         //                _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2)) insert List(
         //                  ("A", List((1, "a", List(3, 4)), (11, "aa", Nil))),
         //                  ("B", Nil)
@@ -551,72 +522,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          )
         //          println("RESULT ############################\n" + res)
         //        }
-
-
-        /*
-Obj("", "Ns", false, List(
-  Prop("Ns_str", "str", "String", <cast>, <json>, None),
-  Obj("Ns__Refs1", "Refs1", true, List(
-    Prop("Ref1_int1", "int1", "Int", <cast>, <json>, None),
-    Obj("Ref1__Ref2", "Ref2", false, List(
-      Prop("Ref2_str2", "str2", "String", <cast>, <json>, None),
-      Obj("Ref2__Refs3", "Refs3", true, List(
-        Prop("Ref3_int3", "int3", "Int", <cast>, <json>, None)))))))))
-
-1: [A  {
-  :Ns/refs1 [
-    {
-      :Ref1/int1 1,
-      :Ref1/ref2 {
-        :Ref2/str2 "a",
-        :Ref2/refs3 [{:Ref3/int3 3} {:Ref3/int3 4}]
-      }
-    } {
-      :Ref1/int1 11,
-      :Ref1/ref2 {
-        :Ref2/str2 "aa",
-        :Ref2/refs3 "__none__"}}]}]
-2: [B  null]
-
-{
-  val it = row.iterator();
-  scala.Tuple2(castNestedOptOne[String](it), it.next match {
-    case null => Nil
-    case (last @ _) => {
-      val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
-      val it = extractFlatValues(list, 2, List(1), List(), false);
-      val buf = new scala.collection.mutable.ListBuffer[Any]();
-      while$1(){
-        if (it.hasNext)
-          {
-            buf.addOne(scala.Tuple3(castNestedOptOneInt(it), castNestedOptOne[String](it), it.next match {
-              case null => Nil
-              case (last @ _) => {
-                val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]];
-                val it = extractFlatValues(list, 1, List(), List(), false);
-                val buf = new scala.collection.mutable.ListBuffer[Any]();
-                while$2(){
-                  if (it.hasNext)
-                    {
-                      buf.addOne(castNestedOptOneInt(it));
-                      while$2()
-                    }
-                  else
-                    ()
-                };
-                buf.toList
-              }
-            }));
-            while$1()
-          }
-        else
-          ()
-      };
-      buf.toList
-    }
-  })
-}
- */
 
       } yield ()
     }

@@ -18,7 +18,6 @@ private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with Build
     level: Int = 0
   ): Tree = {
 
-
     def properties(nodes: List[Node]): Seq[Tree] = {
       nodes.flatMap {
         case attr: Prop                          => Seq(attr.cast(42)) // colIndex not used here

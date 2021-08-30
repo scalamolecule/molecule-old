@@ -24,7 +24,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
       typess, castss,
       obj, indexes,
       nestedRefs, hasVariables, txMetas,
-      postTypes, postCasts, postJsons,
+      postJsons,
       isNestedOpt,
       nestedOptRefIndexes, nestedOptTacitIndexes
       )                  = getModel(dsl)
@@ -33,16 +33,16 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     val OutMoleculeTpe   = molecule_o(TplTypes.size)
     val inputMolecule    = TypeName(c.freshName("inputMolecule$"))
     val outMolecule      = TypeName(c.freshName("outMolecule$"))
-    val flat             = castss.size == 1
-    val nestedTupleClass = tq"${nestedTupleClassX(castss.size)}"
-    val nestedJsonClass  = tq"${nestedJsonClassX(castss.size)}"
+    lazy val flat             = castss.size == 1
+    lazy val nestedTupleClass = tq"${nestedTupleClassX(castss.size)}"
+    lazy val nestedJsonClass  = tq"${nestedJsonClassX(castss.size)}"
 
     // Methods for applying separate lists of input
-    lazy val outMoleculeFlat =
+    lazy val outMoleculeFlat   =
       q"""
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
-          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
         }
         new $outMolecule
       """
@@ -158,7 +158,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         }
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = $casts
-          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objFlat(obj)._1}
+          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
         """
       }
 
