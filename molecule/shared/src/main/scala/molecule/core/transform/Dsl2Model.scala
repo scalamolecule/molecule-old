@@ -50,16 +50,15 @@ private[molecule] trait Dsl2Model extends TreeOps
 
   with JsonTypes
   with JsonAggr
-  with JsonOptNested
-  {
+  with JsonOptNested {
 
   val c: blackbox.Context
 
   import c.universe._
 
   //      private lazy val xx = InspectMacro("Dsl2Model", 101, 900, mkError = true)
-//  private lazy val xx = InspectMacro("Dsl2Model", 10, 900)
-      private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 10, 900)
+  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
   //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
   //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
 
@@ -111,8 +110,8 @@ private[molecule] trait Dsl2Model extends TreeOps
     var typess: List[List[Tree]]        = List(List.empty[Tree])
     var castss: List[List[Int => Tree]] = List(List.empty[Int => Tree])
 
-    var obj     : Obj     = Obj("", "", false, Nil)
-    var objLevel: Int     = 0
+    var obj     : Obj = Obj("", "", false, Nil)
+    var objLevel: Int = 0
 
     var tx        : String       = ""
     var nestedRefs: List[String] = List.empty[String]
@@ -149,11 +148,11 @@ private[molecule] trait Dsl2Model extends TreeOps
       group0: Option[String],
       optAggr: Option[(String, Tree)],
     ): Unit = {
-      val aggrTpe       = optAggr.map(_._2.toString)
-      val objBefore     = obj
-      val cls           = t.nsFull + "_" + t.name.replace('$', '_')
-      val baseTpe       = baseTpe0.getOrElse(t.tpeS)
-      val group         = group0 match {
+      val aggrTpe   = optAggr.map(_._2.toString)
+      val objBefore = obj
+      val cls       = t.nsFull + "_" + t.name.replace('$', '_')
+      val baseTpe   = baseTpe0.getOrElse(t.tpeS)
+      val group     = group0 match {
         case None             => t.name.last match {
           case '$' => t.card match {
             case 1 => "OptOne"
@@ -1189,9 +1188,9 @@ private[molecule] trait Dsl2Model extends TreeOps
       // park post props
       val postProps = obj.props
       obj = Obj("", "", false, Nil)
-      val nestedElems   = nestedElements(q"$prev.$manyRef", refNext, nestedTree)
-      val cls           = nsFull + "__" + manyRef
-      val nestedObj     = Obj(cls, manyRef.toString, true, obj.props)
+      val nestedElems = nestedElements(q"$prev.$manyRef", refNext, nestedTree)
+      val cls         = nsFull + "__" + manyRef
+      val nestedObj   = Obj(cls, manyRef.toString, true, obj.props)
       obj = obj.copy(props = nestedObj +: postProps)
       xx(560, prev, manyRef, nestedTree, nsFull, parentNs, nestedRefs, nestedElems, postProps, obj)
       Nested(Bond(nsFull, refAttr + opt, refNext, 2, bi(q"$prev.$manyRef", richTree(q"$prev.$manyRef"))), nestedElems)
@@ -1287,7 +1286,7 @@ private[molecule] trait Dsl2Model extends TreeOps
           case _         =>
             val tpe    = TypeName(if (tpeStr == "ref") "Long" else tpeStr)
             val propFn = attr + "_" + aggrFn
-            xx(83, aggrType, lambdaIndex)
+            xx(83, aggrType)
             t.card match {
               case 2 => aggrType match {
                 case "int" =>
@@ -1352,7 +1351,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
               case _ => aggrType match {
                 case "int" =>
-                  xx(84, aggrType, lambdaIndex)
+                  xx(84, aggrType)
                   addSpecific(
                     t,
                     castOneAttr("Int"),
@@ -1421,7 +1420,7 @@ private[molecule] trait Dsl2Model extends TreeOps
                   )
               }
             }
-            xx(85, aggrType, lambdaIndex)
+            xx(85, aggrType)
         }
         standard = true
         aggrType = ""

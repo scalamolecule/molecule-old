@@ -27,10 +27,6 @@ private[molecule] trait TreeOps extends Liftables {
     case other            => other
   }
 
-  // Index of currently processed lambda for JS resolutions
-  var lambdaIndex = -10
-
-
   implicit class richTree(val t: Tree) {
     lazy val tpe_         : Type           = if (t == null) abort("[molecule.ops.TreeOps.richTree] Can't handle null.") else c.typecheck(t).tpe
     lazy val at           : att            = att(t)
