@@ -19,11 +19,11 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     val (
       genericImports, model0,
       typess, castss,
-      obj, indexes,
+      obj,
       nestedRefs, hasVariables, txMetas,
       postJsons,
-      isNestedOpt,
-      nestedOptRefIndexes, nestedOptTacitIndexes
+      isOptNested,
+      optNestedRefIndexes, optNestedTacitIndexes
       )                = getModel(dsl)
     val imports        = getImports(genericImports)
     val OutMoleculeTpe = molecule_o(TplTypes.size)
@@ -31,11 +31,11 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
     val transformers = if (isJsPlatform) {
       q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, indexes, txMetas, true)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas, true)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
-          final override lazy val indexes: Indexes = $indexes
+          final override lazy val obj: nodes.Obj = $obj
        """
     } else {
       q"""

@@ -1,6 +1,6 @@
 package molecule.core.marshalling.unpack
 
-import molecule.core.marshalling.attrIndexes._
+import molecule.core.marshalling.nodes._
 import scala.collection.mutable
 import scala.reflect.macros.blackbox
 
@@ -14,7 +14,7 @@ trait Packed2obj extends Unpackers {
   def packed2tpl(
     typess: List[List[Tree]],
     postTypes: List[Tree],
-    indexes: Indexes,
+    obj: Obj,
     composite: Boolean = false,
     txMetaCompositesCount: Int = 0
   ): Tree = {
@@ -27,29 +27,29 @@ trait Packed2obj extends Unpackers {
       case (types, (acc, level))                   => (tq"(..$types, List[${acc.head}])" +: acc, level - 1)
     }._1
 
-    def setUnpacker(node: IndexNode, level: Int, i: Int): Unit = {
+    def setUnpacker(node: Node, level: Int, i: Int): Unit = {
       node match {
-        case AttrIndex(_, _, lambdaIndex, _) if level > 0 && i == 0 =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(v)(lambdaIndex)
+        case Prop(_, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, v)
 
-        case AttrIndex(_, _, lambdaIndex, _) =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(next)(lambdaIndex)
+        case Prop(_, _, baseTpe, _, group, _) =>
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, next)
 
-        case Indexes(_, _, true, attrs) =>
+        case Obj(_, _, true, props) =>
           unpackerss(level) = unpackerss(level) :+ q"${TermName("nested" + (level + 1))}"
-          setUnpackers(attrs, level + 1, 0)
+          setUnpackers(props, level + 1, 0)
 
-        case Indexes(_, _, _, attrs) =>
-          setUnpackers(attrs, level, i + 1)
+        case Obj(_, _, _, props) =>
+          setUnpackers(props, level, i + 1)
       }
     }
 
-    def setUnpackers(nodes: Seq[IndexNode], level: Int, i: Int): Unit = {
+    def setUnpackers(nodes: Seq[Node], level: Int, i: Int): Unit = {
       nodes.zipWithIndex.foreach { case (node, j) => setUnpacker(node, level, i + j) }
     }
 
     // Recursively set unpackers
-    setUnpackers(indexes.attrs, 0, 0)
+    setUnpackers(obj.props, 0, 0)
 
 
     def unpackNested = {
@@ -117,7 +117,7 @@ trait Packed2obj extends Unpackers {
     val tree = if (composite || txMetaCompositesCount != 0) unpackComposite else unpackNested
 
     xx(1
-      , indexes
+      , obj
       , tree
     )
     tree

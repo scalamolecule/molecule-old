@@ -1,4 +1,4 @@
-package molecule.datomic.base.marshalling.flat
+package molecule.datomic.base.marshalling.packers
 
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.exceptions.MoleculeException
@@ -6,7 +6,7 @@ import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
 import molecule.datomic.base.marshalling.PackBase
 
-trait PackTypes extends PackBase with Helpers {
+trait PackFlatTypes extends PackBase with Helpers {
 
   // packOne -------------------------------------------------------
   protected lazy val packOneString = (colIndex: Int) => (row: jList[_]) => {

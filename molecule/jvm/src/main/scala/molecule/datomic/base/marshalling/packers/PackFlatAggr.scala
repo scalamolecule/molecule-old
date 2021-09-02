@@ -1,10 +1,10 @@
-package molecule.datomic.base.marshalling.flat
+package molecule.datomic.base.marshalling.packers
 
 import java.util.{Date, Iterator => jIterator, List => jList, Set => jSet}
 import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
 import molecule.datomic.base.marshalling.PackBase
 
-trait PackAggr extends PackBase {
+trait PackFlatAggr extends PackBase {
 
   protected val packAggrInt    = (colIndex: Int) => (row: jList[_]) => add(row.get(colIndex).toString)
   protected val packAggrDouble = (colIndex: Int) => (row: jList[_]) => add(row.get(colIndex).toString)

@@ -9,9 +9,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import java.util.{Collections, Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.ast.elements._
 import molecule.core.dsl.base.Init
-import molecule.datomic.base.marshalling.{Flat2packed, Nested2packed, NestedOpt2packed}
+import molecule.datomic.base.marshalling._
 import molecule.core.marshalling.unpack.UnpackTypes
-import molecule.core.marshalling.attrIndexes._
 import molecule.core.util.Helpers
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,12 +19,12 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
-import molecule.core.macros.attrResolvers.{CastNestedOpt, CastTypes, JsonBase}
+import molecule.core.macros.attrResolvers.{CastOptNested, CastTypes, JsonBase}
 import molecule.datomic.api.out4.m
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
-  with UnpackTypes with CastTypes with CastNestedOpt with JsonBase {
+  with UnpackTypes with CastTypes with CastOptNested with JsonBase {
 
 
   lazy val tests = Tests {
@@ -159,7 +158,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //            |        [?tx :Ref3/ref4 ?d]
         //            |        [?d :Ref4/int4 ?e]]""".stripMargin
         //        )
-        //        packedOpt = NestedOpt2packed(indexes, rowsOpt, 7).getPacked
+        //        packedOpt = OptNested2packed(indexes, rowsOpt, 7).getPacked
         //
         //        _ = println("=========================================\n" + packed)
         //        _ = println("=========================================\n" + packedOpt)
@@ -410,7 +409,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //        _ = {
         //          val it  = row.iterator();
         //          //          val res = scala.Tuple2(
-        //          //            castNestedOptOne[String](it),
+        //          //            castOptNestedOne[String](it),
         //          //            it.next match {
         //          //              case null     =>
         //          //                Nil
@@ -421,8 +420,8 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          //                val buf  = new scala.collection.mutable.ListBuffer[Any]();
         //          //                while (it.hasNext) {
         //          //                  buf.addOne(scala.Tuple3(
-        //          //                    castNestedOptOneInt(it),
-        //          //                    castNestedOptOne[String](it),
+        //          //                    castOptNestedOneInt(it),
+        //          //                    castOptNestedOne[String](it),
         //          //                    it.next match {
         //          //                      case "__none__" => Nil
         //          //                      case last       =>
@@ -430,7 +429,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          //                        val it   = extractFlatValues(list, 1, List(), List(), false);
         //          //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
         //          //                        while (it.hasNext) {
-        //          //                          buf.addOne(castNestedOptOneInt(it));
+        //          //                          buf.addOne(castOptNestedOneInt(it));
         //          //                        }
         //          //                        buf.toList
         //          //                    }
@@ -440,7 +439,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          //            }
         //          //          )
         //          //          val res0 = scala.Tuple2(
-        //          //            castNestedOptOne[String](it),
+        //          //            castOptNestedOne[String](it),
         //          //            it.next match {
         //          //              case null     =>
         //          //                Nil
@@ -450,8 +449,8 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          //                val buf  = new scala.collection.mutable.ListBuffer[Any]();
         //          //                while (it.hasNext) {
         //          //                  buf.addOne(scala.Tuple3(
-        //          //                    castNestedOptOneInt(it),
-        //          //                    castNestedOptOne[String](it),
+        //          //                    castOptNestedOneInt(it),
+        //          //                    castOptNestedOne[String](it),
         //          //                    it.next match {
         //          //                      case null             => Nil
         //          //                      case last: jMap[_, _] =>
@@ -459,7 +458,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          //                        val it   = extractFlatValues(list, 1, List(), List(), false);
         //          //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
         //          //                        while (it.hasNext) {
-        //          //                          buf.addOne(castNestedOptOneInt(it));
+        //          //                          buf.addOne(castOptNestedOneInt(it));
         //          //                        }
         //          //                        buf.toList
         //          //                    }
@@ -469,7 +468,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          //            }
         //          //          )
         //          val res = scala.Tuple2(
-        //            castNestedOptOne[String](it),
+        //            castOptNestedOne[String](it),
         //            it.next match {
         //              case null     =>
         //                Nil
@@ -479,8 +478,8 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //                val buf  = new scala.collection.mutable.ListBuffer[Any]();
         //                while (it.hasNext) {
         //                  buf.addOne(scala.Tuple3(
-        //                    castNestedOptOneInt(it),
-        //                    castNestedOptOne[String](it),
+        //                    castOptNestedOneInt(it),
+        //                    castOptNestedOne[String](it),
         //                    it.next match {
         //                      case "__none__" => Nil
         //                      case last       =>
@@ -488,7 +487,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //                        val it   = extractFlatValues(list, 1, List(), List(), false);
         //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
         //                        while (it.hasNext) {
-        //                          buf.addOne(castNestedOptOneInt(it));
+        //                          buf.addOne(castOptNestedOneInt(it));
         //                        }
         //                        buf.toList
         //
@@ -498,7 +497,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //                      //                        val it   = extractFlatValues(list, 1, List(), List(), false);
         //                      //                        val buf  = new scala.collection.mutable.ListBuffer[Any]();
         //                      //                        while (it.hasNext) {
-        //                      //                          buf.addOne(castNestedOptOneInt(it));
+        //                      //                          buf.addOne(castOptNestedOneInt(it));
         //                      //                        }
         //                      //                        buf.toList
         //                    }

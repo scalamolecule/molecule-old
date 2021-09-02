@@ -8,26 +8,26 @@ private[molecule] trait ResolverJsonTypes extends TreeOps {
 
   import c.universe._
 
-  def getResolverJsonTypes(group: String, baseType: String, field: String): (Int, Int) => Tree = group match {
-    case "One"                  => jsonOneAttr(baseType, field)
-    case "OptOne"               => jsonOptOneAttr(baseType, field)
-    case "Many"                 => jsonManyAttr(baseType, field)
-    case "OptMany"              => jsonOptManyAttr(baseType, field)
-    case "Map"                  => jsonMapAttr_(baseType, field)
-    case "OptMap"               => jsonOptMapAttr_(baseType, field)
-    case "OptApplyOne"          => jsonOptApplyOneAttr(baseType, field)
-    case "OptApplyMany"         => jsonOptApplyManyAttr(baseType, field)
-    case "OptApplyMap"          => jsonOptApplyMapAttr_(baseType, field)
-    case "KeyedMap"             => jsonKeyedMapAttr(baseType, field)
-    case "AggrOneList"          => jsonAggrOneList(baseType, field)
-    case "AggrManyList"         => jsonAggrManyList(baseType, field)
-    case "AggrOneListDistinct"  => jsonAggrOneListDistinct(baseType, field)
-    case "AggrManyListDistinct" => jsonAggrManyListDistinct(baseType, field)
-    case "AggrOneListRand"      => jsonAggrOneListRand(baseType, field)
-    case "AggrManyListRand"     => jsonAggrManyListRand(baseType, field)
-    case "AggrSingleSample"     => jsonAggrSingleSample(baseType, field)
-    case "AggrOneSingle"        => jsonAggrOneSingle(baseType, field)
-    case "AggrManySingle"       => jsonAggrManySingle(baseType, field)
+  def getResolverJsonTypes(group: String, baseTpe: String, field: String): (Int, Int) => Tree = group match {
+    case "One"                  => jsonOneAttr(baseTpe, field)
+    case "OptOne"               => jsonOptOneAttr(baseTpe, field)
+    case "Many"                 => jsonManyAttr(baseTpe, field)
+    case "OptMany"              => jsonOptManyAttr(baseTpe, field)
+    case "Map"                  => jsonMapAttr_(baseTpe, field)
+    case "OptMap"               => jsonOptMapAttr_(baseTpe, field)
+    case "OptApplyOne"          => jsonOptApplyOneAttr(baseTpe, field)
+    case "OptApplyMany"         => jsonOptApplyManyAttr(baseTpe, field)
+    case "OptApplyMap"          => jsonOptApplyMapAttr_(baseTpe, field)
+    case "KeyedMap"             => jsonKeyedMapAttr(baseTpe, field)
+    case "AggrOneList"          => jsonAggrOneList(baseTpe, field)
+    case "AggrManyList"         => jsonAggrManyList(baseTpe, field)
+    case "AggrOneListDistinct"  => jsonAggrOneListDistinct(baseTpe, field)
+    case "AggrManyListDistinct" => jsonAggrManyListDistinct(baseTpe, field)
+    case "AggrOneListRand"      => jsonAggrOneListRand(baseTpe, field)
+    case "AggrManyListRand"     => jsonAggrManyListRand(baseTpe, field)
+    case "AggrSingleSample"     => jsonAggrSingleSample(baseTpe, field)
+    case "AggrOneSingle"        => jsonAggrOneSingle(baseTpe, field)
+    case "AggrManySingle"       => jsonAggrManySingle(baseTpe, field)
   }
 
 

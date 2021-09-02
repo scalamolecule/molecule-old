@@ -8,26 +8,26 @@ private[molecule] trait ResolverCastTypes extends TreeOps {
 
   import c.universe._
 
-  def getResolverCastTypes(group: String, baseType: String): Int => Tree = group match {
-    case "One"                  => castOneAttr(baseType)
-    case "OptOne"               => castOptOneAttr(baseType)
-    case "Many"                 => castManyAttr(baseType)
-    case "OptMany"              => castOptManyAttr(baseType)
-    case "Map"                  => castMapAttr_(baseType)
-    case "OptMap"               => castOptMapAttr_(baseType)
-    case "OptApplyOne"          => castOptApplyOneAttr(baseType)
-    case "OptApplyMany"         => castOptApplyManyAttr(baseType)
-    case "OptApplyMap"          => castOptApplyMapAttr_(baseType)
-    case "KeyedMap"             => castKeyedMapAttr(baseType)
-    case "AggrOneList"          => castAggrOneList(baseType)
-    case "AggrManyList"         => castAggrManyList(baseType)
-    case "AggrOneListDistinct"  => castAggrOneListDistinct(baseType)
-    case "AggrManyListDistinct" => castAggrManyListDistinct(baseType)
-    case "AggrOneListRand"      => castAggrOneListRand(baseType)
-    case "AggrManyListRand"     => castAggrManyListRand(baseType)
-    case "AggrSingleSample"     => castAggrSingleSample(baseType)
-    case "AggrOneSingle"        => castAggrOneSingle(baseType)
-    case "AggrManySingle"       => castAggrManySingle(baseType)
+  def getResolverCastTypes(group: String, baseTpe: String): Int => Tree = group match {
+    case "One"                  => castOneAttr(baseTpe)
+    case "OptOne"               => castOptOneAttr(baseTpe)
+    case "Many"                 => castManyAttr(baseTpe)
+    case "OptMany"              => castOptManyAttr(baseTpe)
+    case "Map"                  => castMapAttr_(baseTpe)
+    case "OptMap"               => castOptMapAttr_(baseTpe)
+    case "OptApplyOne"          => castOptApplyOneAttr(baseTpe)
+    case "OptApplyMany"         => castOptApplyManyAttr(baseTpe)
+    case "OptApplyMap"          => castOptApplyMapAttr_(baseTpe)
+    case "KeyedMap"             => castKeyedMapAttr(baseTpe)
+    case "AggrOneList"          => castAggrOneList(baseTpe)
+    case "AggrManyList"         => castAggrManyList(baseTpe)
+    case "AggrOneListDistinct"  => castAggrOneListDistinct(baseTpe)
+    case "AggrManyListDistinct" => castAggrManyListDistinct(baseTpe)
+    case "AggrOneListRand"      => castAggrOneListRand(baseTpe)
+    case "AggrManyListRand"     => castAggrManyListRand(baseTpe)
+    case "AggrSingleSample"     => castAggrSingleSample(baseTpe)
+    case "AggrOneSingle"        => castAggrOneSingle(baseTpe)
+    case "AggrManySingle"       => castAggrManySingle(baseTpe)
   }
 
   lazy val castAttr: richTree => Int => Tree = (t: richTree) =>

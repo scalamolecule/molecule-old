@@ -1,18 +1,18 @@
 package molecule.core.macros.build.json
 
-import molecule.core.macros.attrResolverTrees.ResolverJsonNestedOpt
+import molecule.core.macros.attrResolverTrees.ResolverJsonOptNested
 import molecule.core.macros.attrResolvers.JsonBase
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-private[molecule] trait BuildJsonNestedOpt extends ResolverJsonNestedOpt with JsonBase {
+private[molecule] trait BuildJsonOptNested extends ResolverJsonOptNested with JsonBase {
   val c: blackbox.Context
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildJsonNestedOpt", 2, 1)
+  private lazy val xx = InspectMacro("BuildJsonOptNested", 2, 1)
 
-  def jsonNestedOpt(
+  def jsonOptNested(
     current: Obj,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
@@ -36,7 +36,7 @@ private[molecule] trait BuildJsonNestedOpt extends ResolverJsonNestedOpt with Js
             // Only generate 1 property, even if attribute is repeated in molecule
             if (props.contains(prop)) Nil else {
               props = props :+ prop
-              newLine :+ getResolverJsonNestedOpt(group, baseTpe, prop)(-10, tabs) // colIndex not used
+              newLine :+ getResolverJsonOptNested(group, baseTpe, prop)(-10, tabs) // colIndex not used
             }
 
           case nested@Obj(_, ref, true, nestedProps) =>
@@ -51,7 +51,7 @@ private[molecule] trait BuildJsonNestedOpt extends ResolverJsonNestedOpt with Js
                   case last =>
                     val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
                     val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                    ..${jsonNestedOpt(nested, refIndexes, tacitIndexes, level + 1, tabs + 2)}
+                    ..${jsonOptNested(nested, refIndexes, tacitIndexes, level + 1, tabs + 2)}
                     sb.append(${indent(tabs + 1) + "]"})
                 }
               """
@@ -96,7 +96,7 @@ private[molecule] trait BuildJsonNestedOpt extends ResolverJsonNestedOpt with Js
                 case last       =>
                   val list = last.asInstanceOf[jList[Any]]
                   val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                  ..${jsonNestedOpt(last, refIndexes, tacitIndexes, level + 1, tabs + 2)}
+                  ..${jsonOptNested(last, refIndexes, tacitIndexes, level + 1, tabs + 2)}
                   sb.append(${indent(tabs + 1) + "]"})
               }
               sb.append(${indent(tabs) + "}"})

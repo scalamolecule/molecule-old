@@ -1,17 +1,17 @@
 package molecule.core.macros.build.tpl
 
-import molecule.core.macros.attrResolverTrees.ResolverCastNestedOpt
+import molecule.core.macros.attrResolverTrees.ResolverCastOptNested
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-private[molecule] trait BuildTplNestedOpt extends ResolverCastNestedOpt {
+private[molecule] trait BuildTplOptNested extends ResolverCastOptNested {
   val c: blackbox.Context
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildTplNestedOpt", 10)
+  private lazy val xx = InspectMacro("BuildTplOptNested", 10)
 
-  def tplNestedOpt(
+  def tplOptNested(
     current: Obj,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
@@ -20,7 +20,7 @@ private[molecule] trait BuildTplNestedOpt extends ResolverCastNestedOpt {
 
     def properties(nodes: List[Node]): Seq[Tree] = {
       nodes.flatMap {
-        case Prop(_, _, baseTpe, _, group, _) => Seq(getResolverCastNestedOpt(group, baseTpe)(-10)) // colIndex not used with iterator
+        case Prop(_, _, baseTpe, _, group, _) => Seq(getResolverCastOptNested(group, baseTpe)(-10)) // colIndex not used with iterator
         case nested@Obj(_, _, true, nestedProps)       =>
           val propCount = getPropCount(nestedProps)
           val deeper    = isDeeper(nested)
@@ -32,7 +32,7 @@ private[molecule] trait BuildTplNestedOpt extends ResolverCastNestedOpt {
                 case last =>
                   val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
                   val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                  ..${tplNestedOpt(nested, refIndexes, tacitIndexes, level + 1)}
+                  ..${tplOptNested(nested, refIndexes, tacitIndexes, level + 1)}
               }
             """
           )
@@ -100,7 +100,7 @@ private[molecule] trait BuildTplNestedOpt extends ResolverCastNestedOpt {
                     case last       =>
                       val list = last.asInstanceOf[jList[Any]]
                       val it = extractFlatValues(list, $nestedPropCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
-                      ..${tplNestedOpt(nestedObj, refIndexes, tacitIndexes, level + 1)}
+                      ..${tplOptNested(nestedObj, refIndexes, tacitIndexes, level + 1)}
                   }
                 )
               )

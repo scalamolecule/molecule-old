@@ -17,10 +17,10 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     val (
       genericImports, model0,
       typess, castss,
-      obj, indexes,
+      obj,
       nestedRefs, hasVariables, txMetas,
       postJsons,
-      isNestedOpt,
+      isOptNested,
       refIndexes, tacitIndexes
       ) = getModel(dsl)
 
@@ -33,11 +33,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkFlat = {
       val transformers = if (isJsPlatform) {
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, indexes, txMetas)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
-          final override lazy val indexes: Indexes = $indexes
+          final override lazy val obj: nodes.Obj = $obj
          """
       } else {
         q"""
@@ -64,15 +64,15 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     }
 
 
-    def mkNestedOpt = if (isJsPlatform) {
+    def mkOptNested = if (isJsPlatform) {
       val transformers =
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, indexes, txMetas)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
-          final override lazy val indexes: Indexes = $indexes
-          final override lazy val isNestedOpt: Boolean = true
+          final override lazy val obj: nodes.Obj = $obj
+          final override lazy val isOptNested: Boolean = true
         """
       if (hasVariables) {
         q"""
@@ -97,20 +97,20 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       val transformers =
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
-            ${tplNestedOpt(obj, refIndexes, tacitIndexes)}.asInstanceOf[(..$TplTypes)]
+            ${tplOptNested(obj, refIndexes, tacitIndexes)}.asInstanceOf[(..$TplTypes)]
 
           final override def row2obj(row: jList[AnyRef]): $ObjType =
             ${objTree(obj, tpl)}
 
           final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
-            ${jsonNestedOpt(obj, refIndexes, tacitIndexes)}
+            ${jsonOptNested(obj, refIndexes, tacitIndexes)}
         """
       //        q"""
       //          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
-      //            ${tplNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}.asInstanceOf[(..$TplTypes)]
+      //            ${tplOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}.asInstanceOf[(..$TplTypes)]
       //
       //          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
-      //            ${jsonNestedOpt(obj, nestedOptRefIndexes, nestedOptTacitIndexes)}
+      //            ${jsonOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}
       //        """
 
       if (hasVariables) {
@@ -133,11 +133,11 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkNested = if (isJsPlatform) {
       val transformers =
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, indexes, txMetas)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
-          final override lazy val indexes: Indexes = $indexes
+          final override lazy val obj: nodes.Obj = $obj
           final override lazy val nestedLevels: Int = ${levels - 1}
         """
       if (hasVariables) {
@@ -195,8 +195,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     //    val moleculeClass = if (levels == 1 || txMetas > 0)
     val moleculeClass = if (levels == 1)
       mkFlat
-    else if (isNestedOpt)
-      mkNestedOpt
+    else if (isOptNested)
+      mkOptNested
     else
       mkNested
 

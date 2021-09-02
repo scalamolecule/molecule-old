@@ -1,7 +1,7 @@
 package molecule.core.marshalling.unpack
 
 import molecule.core.macros.build.tpl.BuildTplComposite
-import molecule.core.marshalling.attrIndexes._
+import molecule.core.marshalling.nodes._
 import scala.collection.mutable
 import scala.reflect.macros.blackbox
 
@@ -15,7 +15,7 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
 
   def packed2tpl(
     typess: List[List[Tree]],
-    indexes: Indexes,
+    obj: Obj,
     txMetas: Int,
     composite: Boolean = false
   ): Tree = {
@@ -37,45 +37,45 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
       case (types, (acc, level))             => (tq"(..$types, List[${acc.head}])" +: acc, level - 1)
     }._1
 
-    def resolveTxGroups(txCompositeGroups: Seq[IndexNode]): Seq[Tree] = {
-      def resolve(nodes: Seq[IndexNode], acc: Seq[Tree]): Seq[Tree] = nodes.flatMap {
-        case AttrIndex(_, _, lambdaIndex, _) => acc :+ unpackLambdas(next)(lambdaIndex)
-        case Indexes(_, _, _, nodes)         => resolve(nodes, acc)
+    def resolveTxGroups(txCompositeGroups: Seq[Node]): Seq[Tree] = {
+      def resolve(nodes: Seq[Node], acc: Seq[Tree]): Seq[Tree] = nodes.flatMap {
+        case Prop(_, _, baseTpe, _, group, _) => acc :+ unpackLambdas2(group, baseTpe, v)
+        case Obj(_, _, _, nodes)         => resolve(nodes, acc)
       }
       txCompositeGroups.collect {
-        case Indexes(_, _, _, nodes) => resolve(nodes, Nil)
+        case Obj(_, _, _, nodes) => resolve(nodes, Nil)
       }.flatMap {
         case Nil     => None
         case txGroup => Some(q"(..$txGroup)")
       }
     }
 
-    def setUnpacker(node: IndexNode, level: Int, i: Int): Unit = {
+    def setUnpacker(node: Node, level: Int, i: Int): Unit = {
       node match {
-        case AttrIndex(_, _, lambdaIndex, _) if level > 0 && i == 0 =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(v)(lambdaIndex)
+        case Prop(_, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, v)
 
-        case AttrIndex(_, _, lambdaIndex, _) =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(next)(lambdaIndex)
+        case Prop(_, _, baseTpe, _, group, _) =>
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, next)
 
-        case Indexes(_, _, true, attrs) =>
+        case Obj(_, _, true, props) =>
           unpackerss(level) = unpackerss(level) :+ q"${TermName("nested" + (level + 1))}"
-          setUnpackers(attrs, level + 1, 0)
+          setUnpackers(props, level + 1, 0)
 
-        case Indexes("Tx_", _, _, txGroups) if txMetas != 0 =>
+        case Obj("Tx_", _, _, txGroups)  if txMetas != 0 =>
           unpackerss(level) = unpackerss(level) ++ resolveTxGroups(txGroups)
 
-        case Indexes(_, _, _, attrs) =>
-          setUnpackers(attrs, level, i + 1)
+        case Obj(_, _, _, props) =>
+          setUnpackers(props, level, i + 1)
       }
     }
 
-    def setUnpackers(nodes: Seq[IndexNode], level: Int, i: Int): Unit = {
+    def setUnpackers(nodes: Seq[Node], level: Int, i: Int): Unit = {
       nodes.zipWithIndex.foreach { case (node, j) => setUnpacker(node, level, i + j) }
     }
 
     // Recursively set unpackers
-    setUnpackers(indexes.attrs, 0, 0)
+    setUnpackers(obj.props, 0, 0)
 
 
     def unpackNested = {
@@ -145,7 +145,7 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
     xx(1
       , levels
       , txMetas
-      , indexes
+      , obj
       , typess
       , typess1
       , "----------"

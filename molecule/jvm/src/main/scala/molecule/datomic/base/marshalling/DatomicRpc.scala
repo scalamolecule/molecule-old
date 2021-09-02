@@ -8,7 +8,7 @@ import datomic.Util._
 import datomicClient.ClojureBridge
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
-import molecule.core.marshalling.attrIndexes.Indexes
+import molecule.core.marshalling.nodes.Obj
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
 import molecule.datomic.base.facade._
@@ -55,9 +55,9 @@ object DatomicRpc extends MoleculeRpc
     ll: Seq[(Int, Seq[(String, String)])],
     lll: Seq[(Int, Seq[Seq[(String, String)]])],
     maxRows0: Int,
-    indexes: Indexes,
+    obj: Obj,
     nestedLevels: Int,
-    isNestedOpt: Boolean
+    isOptNested: Boolean
   ): Future[String] = try {
     val log       = new log
     val t         = TimerPrint("DatomicRpc")
@@ -94,16 +94,16 @@ object DatomicRpc extends MoleculeRpc
       //      val rows = new jArrayList(allRows).subList(0, maxRows)
 
       println("-------------------------")
-      println(indexes)
+      println(obj)
       println("-------------------------")
       allRows.forEach(println)
 
-      val packed = if (isNestedOpt)
-        NestedOpt2packed(indexes, allRows, maxRows).getPacked
+      val packed = if (isOptNested)
+        OptNested2packed(obj, allRows, maxRows).getPacked
       else if (nestedLevels == 0)
-        Flat2packed(indexes, allRows, maxRows).getPacked
+        Flat2packed(obj, allRows, maxRows).getPacked
       else
-        Nested2packed(indexes, allRows, nestedLevels).getPacked
+        Nested2packed(obj, allRows, nestedLevels).getPacked
 
       println("###### DatomicRpc ####################" + packed)
 

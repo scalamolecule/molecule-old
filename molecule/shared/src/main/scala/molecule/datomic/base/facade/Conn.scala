@@ -1,11 +1,10 @@
 package molecule.datomic.base.facade
 
 import java.io.Reader
-import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.marshalling._
-import molecule.core.marshalling.attrIndexes.Indexes
+import molecule.core.marshalling.nodes.Obj
 import molecule.core.ops.ColOps
 import molecule.core.transform.Model2Stmts
 import molecule.datomic.base.api.DatomicEntity
@@ -70,9 +69,9 @@ trait Conn extends ColOps with Serializations {
   private[molecule] def queryJs[Tpl](
     query: Query,
     n: Int,
-    indexes: Indexes,
+    obj: Obj,
     nestedLevels: Int,
-    isNestedOpt: Boolean,
+    isOptNested: Boolean,
     packed2tpl: Iterator[String] => Tpl
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
     val q2s          = Query2String(query)
@@ -81,7 +80,7 @@ trait Conn extends ColOps with Serializations {
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
     val futResult    = rpc.query2packed(
-      connProxy, datalogQuery, rules, l, ll, lll, n, indexes, nestedLevels, isNestedOpt
+      connProxy, datalogQuery, rules, l, ll, lll, n, obj, nestedLevels, isOptNested
     ).map { packed =>
       //                println(packed)
       val vs = packed.linesIterator

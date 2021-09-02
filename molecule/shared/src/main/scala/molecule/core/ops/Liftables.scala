@@ -4,7 +4,7 @@ import java.net.URI
 import java.util.{Date, UUID}
 import molecule.core.ast.elements._
 import molecule.core.macros.MacroHelpers
-import molecule.core.marshalling.attrIndexes._
+import molecule.core.marshalling.nodes._
 import molecule.core.ops.exception.LiftablesException
 import molecule.datomic.base.ast.query.{NestedAttrs, _}
 import scala.collection.immutable.HashSet
@@ -107,20 +107,20 @@ private[molecule] trait Liftables extends MacroHelpers {
   }
 
 
-  // Liftables for index nodes --------------------------------------------------------------
+  // Liftables for nodes --------------------------------------------------------------
 
-  implicit val liftAttrIndex: c.universe.Liftable[AttrIndex] = Liftable[AttrIndex] { i =>
-    q"AttrIndex(${i.cls}, ${i.attr}, ${i.lambdaIndex}, ${i.post})"
+  implicit val liftProp: c.universe.Liftable[Prop] = Liftable[Prop] { p =>
+    q"Prop(${p.cls}, ${p.prop}, ${p.baseTpe}, ${p.card}, ${p.group}, ${p.optAggrTpe})"
   }
 
-  implicit val liftIndexes: c.universe.Liftable[Indexes] = Liftable[Indexes] { r =>
-    val attrs = r.attrs.map(attr => q"$attr")
-    q"Indexes(${r.cls}, ${r.ref}, ${r.nested}, List(..$attrs))"
+  implicit val liftObj: c.universe.Liftable[Obj] = Liftable[Obj] { o =>
+    val props = o.props.map(prop => q"$prop")
+    q"Obj(${o.cls}, ${o.ref}, ${o.nested}, List(..$props))"
   }
 
-  implicit val liftIndexNode: c.universe.Liftable[IndexNode] = Liftable[IndexNode] {
-    case attrIndex: AttrIndex => q"$attrIndex"
-    case indexes: Indexes     => q"$indexes"
+  implicit val liftNode: c.universe.Liftable[Node] = Liftable[Node] {
+    case prop: Prop => q"$prop"
+    case obj: Obj   => q"$obj"
   }
 
 

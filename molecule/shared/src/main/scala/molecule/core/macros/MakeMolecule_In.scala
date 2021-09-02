@@ -21,11 +21,11 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     val (
       genericImports, model0,
       typess, castss,
-      obj, indexes,
+      obj,
       nestedRefs, hasVariables, txMetas,
       postJsons,
-      isNestedOpt,
-      nestedOptRefIndexes, nestedOptTacitIndexes
+      isOptNested,
+      optNestedRefIndexes, optNestedTacitIndexes
       )                  = getModel(dsl)
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, TplTypes.size)

@@ -1,4 +1,4 @@
-package molecule.datomic.base.marshalling.nestedOpt
+package molecule.datomic.base.marshalling.packers
 
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.exceptions.MoleculeException
@@ -7,19 +7,18 @@ import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
 import molecule.datomic.base.marshalling.PackBase
 
 
-trait PackTypes extends PackBase with Helpers {
+trait PackOptNestedTypes extends PackBase with Helpers {
 
   // packOne -------------------------------------------------------
-  protected lazy val packOneString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOneString = (it: jIterator[_]) => {
     add(it.next.asInstanceOf[String])
     end()
   }
 
-  protected lazy val packOne     = (it: jIterator[_]) => add(it.next.toString)
-  protected lazy val packOneDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
+  protected lazy val packOptNestedOneDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String with appended type to be packed on JS side
-  protected lazy val packOneAny = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOneAny = (it: jIterator[_]) => {
     val prefixed = it.next match {
       case s: java.lang.String      => "String    " + s
       case i: java.lang.Integer     => "Integer   " + i.toString
@@ -42,11 +41,12 @@ trait PackTypes extends PackBase with Helpers {
     add(prefixed)
   }
 
+  protected lazy val packOptNestedOne_ = (it: jIterator[_]) => add(it.next.toString)
 
 
   // packOptOne -------------------------------------------------------
 
-  protected lazy val packOptOneEnum   = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneEnum = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(
@@ -57,7 +57,7 @@ trait PackTypes extends PackBase with Helpers {
       )
     }
   }
-  protected lazy val packOptOneString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          => add(v.asInstanceOf[String])
@@ -65,21 +65,21 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptOne = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOne_ = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(v.toString)
     }
   }
 
-  protected lazy val packOptOneDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(date2strLocal(v.asInstanceOf[Date]))
     }
   }
 
-  protected lazy val packOptOneRefAttr = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneRefAttr = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          =>
@@ -98,14 +98,14 @@ trait PackTypes extends PackBase with Helpers {
 
   // packMany -------------------------------------------------------
 
-  protected lazy val packManyEnum = (it: jIterator[_]) => {
+  protected lazy val packOptNestedManyEnum = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(vs.next.toString)
     end()
   }
 
-  protected lazy val packManyString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedManyString = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
       add(vs.next.toString)
@@ -114,14 +114,14 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packMany = (it: jIterator[_]) => {
+  protected lazy val packOptNestedMany_ = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(vs.next.toString)
     end()
   }
 
-  protected lazy val packManyDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedManyDate = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(date2strLocal(vs.next.asInstanceOf[Date]))
@@ -131,7 +131,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptMany -------------------------------------------------------
 
-  protected lazy val packOptManyEnum = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyEnum = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -142,7 +142,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptManyString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -155,7 +155,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptMany = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptMany_ = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -166,7 +166,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptManyDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -177,7 +177,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptManyRefAttr = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyRefAttr = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -198,7 +198,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packMap -------------------------------------------------------
 
-  protected lazy val packMapString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedMapString = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
       add(vs.next.toString)
@@ -207,7 +207,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packMap = (it: jIterator[_]) => {
+  protected lazy val packOptNestedMap_ = (it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
       add(vs.next.toString)
@@ -217,7 +217,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptMap -------------------------------------------------------
 
-  protected lazy val packOptMapString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptMapString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -230,7 +230,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptMap = (it: jIterator[_]) => {
+  protected lazy val packOptMap_ = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -244,7 +244,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptApplyOne -------------------------------------------------------
 
-  protected lazy val packOptApplyOneString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyOneString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -253,14 +253,14 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptApplyOne = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyOne_ = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(v.toString)
     }
   }
 
-  protected lazy val packOptApplyOneDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyOneDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(date2strLocal(v.asInstanceOf[Date]))
@@ -271,7 +271,7 @@ trait PackTypes extends PackBase with Helpers {
 
   // packOptApplyMany -------------------------------------------------------
 
-  protected lazy val packOptApplyManyString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyManyString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -284,7 +284,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptApplyMany = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMany_ = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -295,7 +295,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptApplyManyDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyManyDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -309,7 +309,7 @@ trait PackTypes extends PackBase with Helpers {
 
   //  packOptApplyMap -------------------------------------------------------
 
-  protected lazy val packOptApplyMapString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMapString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -322,7 +322,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptApplyMap = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMap_ = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -333,7 +333,7 @@ trait PackTypes extends PackBase with Helpers {
     end()
   }
 
-  protected lazy val packOptApplyMapDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMapDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case v          =>
@@ -347,13 +347,13 @@ trait PackTypes extends PackBase with Helpers {
 
   //  packKeyedMap -------------------------------------------------------
 
-  protected lazy val packKeyedMapString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedKeyedMapString = (it: jIterator[_]) => {
     add(it.next.toString)
     end()
   }
 
-  protected lazy val packKeyedMap     = (it: jIterator[_]) => add(it.next.toString)
-  protected lazy val packKeyedMapDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
+  protected lazy val packOptNestedKeyedMap_    = (it: jIterator[_]) => add(it.next.toString)
+  protected lazy val packOptNestedKeyedMapDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String}
   protected lazy val packKeyedMapAny = (it: jIterator[_]) => {

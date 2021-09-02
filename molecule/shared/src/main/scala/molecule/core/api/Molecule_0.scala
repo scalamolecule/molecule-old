@@ -159,11 +159,11 @@ abstract class Molecule_0[Obj, Tpl](
 ) extends Marshalling[Obj, Tpl](model, queryData)
   with CastTypes
   with CastAggr
-  with CastNestedOpt
+  with CastOptNested
 
   with JsonTypes
   with JsonAggr
-  with JsonNestedOpt
+  with JsonOptNested
 
   with UnpackTypes
 

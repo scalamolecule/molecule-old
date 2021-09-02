@@ -1,9 +1,8 @@
 package molecule.core.marshalling
 
-import java.util.{UUID, List => jList}
+import java.util.{List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
-import molecule.core.marshalling.attrIndexes.Indexes
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
 
@@ -17,9 +16,9 @@ abstract class Marshalling[Obj, Tpl](
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
 ) extends Molecule(model, queryData) with Helpers {
 
-  protected lazy val indexes     : Indexes = ???
-  protected lazy val isNestedOpt : Boolean = false
-  protected lazy val nestedLevels: Int     = 0
+  protected lazy val obj         : nodes.Obj = ???
+  protected lazy val isOptNested : Boolean   = false
+  protected lazy val nestedLevels: Int       = 0
 
   // jvm
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
