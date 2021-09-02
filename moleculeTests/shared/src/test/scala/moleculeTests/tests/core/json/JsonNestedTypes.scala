@@ -105,7 +105,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |}""".stripMargin)
 
         _ <- Ns.date.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
@@ -137,7 +137,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.uri.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
@@ -282,7 +282,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |}""".stripMargin)
 
         _ <- Ns.dates.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
@@ -320,7 +320,7 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- if (system == SystemPeerServer) {
           Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
-            s"""{
+            """{
                |  "data": {
                |    "Ns": [
                |      {
@@ -339,7 +339,7 @@ object JsonNestedTypes extends AsyncTestSuite {
                |}""".stripMargin)
         } else {
           Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
-            s"""{
+            """{
                |  "data": {
                |    "Ns": [
                |      {
@@ -359,7 +359,7 @@ object JsonNestedTypes extends AsyncTestSuite {
         }
 
         _ <- Ns.enums.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
@@ -527,7 +527,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |}""".stripMargin)
 
         _ <- Ns.dateMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
@@ -564,7 +564,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.uriMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
@@ -643,7 +643,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "str": null,
+            |        "str$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -652,7 +652,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 1,
-            |        "str": "",
+            |        "str$": "",
             |        "Refs1": [
             |          {
             |            "int1": 2
@@ -661,7 +661,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 1,
-            |        "str": "c",
+            |        "str$": "c",
             |        "Refs1": [
             |          {
             |            "int1": 3
@@ -678,7 +678,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "long": 2,
-            |        "int": null,
+            |        "int$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -687,7 +687,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "long": 2,
-            |        "int": 2,
+            |        "int$": 2,
             |        "Refs1": [
             |          {
             |            "int1": 2
@@ -704,7 +704,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 3,
-            |        "long": null,
+            |        "long$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -713,7 +713,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 3,
-            |        "long": 20,
+            |        "long$": 20,
             |        "Refs1": [
             |          {
             |            "int1": 2
@@ -730,7 +730,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 5,
-            |        "double": null,
+            |        "double$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -739,7 +739,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 5,
-            |        "double": 2.0,
+            |        "double$": 2.0,
             |        "Refs1": [
             |          {
             |            "int1": 2
@@ -756,7 +756,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 6,
-            |        "bool": null,
+            |        "bool$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -765,7 +765,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 6,
-            |        "bool": true,
+            |        "bool$": true,
             |        "Refs1": [
             |          {
             |            "int1": 2
@@ -774,7 +774,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 6,
-            |        "bool": false,
+            |        "bool$": false,
             |        "Refs1": [
             |          {
             |            "int1": 3
@@ -786,30 +786,30 @@ object JsonNestedTypes extends AsyncTestSuite {
             |}""".stripMargin)
 
         _ <- Ns.int(7).date$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 7,
-             |        "date": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 7,
-             |        "date": "2002-01-01",
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 7,
+            |        "date$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 7,
+            |        "date$": "2002-01-01",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(8).uuid$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
@@ -817,7 +817,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 8,
-             |        "uuid": null,
+             |        "uuid$$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -826,7 +826,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 8,
-             |        "uuid": "$uuid2",
+             |        "uuid$$": "$uuid2",
              |        "Refs1": [
              |          {
              |            "int1": 2
@@ -838,12 +838,12 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.int(9).uri$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
              |        "int": 9,
-             |        "uri": null,
+             |        "uri$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -852,7 +852,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 9,
-             |        "uri": "uri2",
+             |        "uri$": "uri2",
              |        "Refs1": [
              |          {
              |            "int1": 2
@@ -864,82 +864,82 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.int(10).enum$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 10,
-             |        "enum": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 10,
-             |        "enum": "enum2",
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 10,
+            |        "enum$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 10,
+            |        "enum$": "enum2",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(11).bigInt$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 11,
-             |        "bigInt": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 11,
-             |        "bigInt": 2,
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 11,
+            |        "bigInt$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 11,
+            |        "bigInt$": 2,
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(12).bigDec$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 12,
-             |        "bigDec": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 12,
-             |        "bigDec": 2.0,
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 12,
+            |        "bigDec$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 12,
+            |        "bigDec$": 2.0,
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -964,7 +964,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "strs": null,
+            |        "strs$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -973,7 +973,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 1,
-            |        "strs": [
+            |        "strs$": [
             |          "",
             |          "b"
             |        ],
@@ -993,7 +993,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "long": 2,
-            |        "ints": null,
+            |        "ints$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1002,7 +1002,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "long": 2,
-            |        "ints": [
+            |        "ints$": [
             |          1,
             |          2
             |        ],
@@ -1022,7 +1022,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 3,
-            |        "longs": null,
+            |        "longs$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1031,7 +1031,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 3,
-            |        "longs": [
+            |        "longs$": [
             |          21,
             |          22
             |        ],
@@ -1051,7 +1051,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 5,
-            |        "doubles": null,
+            |        "doubles$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1060,7 +1060,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 5,
-            |        "doubles": [
+            |        "doubles$": [
             |          1.0,
             |          2.0
             |        ],
@@ -1092,7 +1092,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 6,
-            |        "bools": null,
+            |        "bools$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1101,7 +1101,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 6,
-            |        "bools": [
+            |        "bools$": [
             |          false,
             |          true
             |        ],
@@ -1116,33 +1116,33 @@ object JsonNestedTypes extends AsyncTestSuite {
             |}""".stripMargin)
 
         _ <- Ns.int(7).dates$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 7,
-             |        "dates": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 7,
-             |        "dates": [
-             |          "2001-07-01",
-             |          "2002-01-01"
-             |        ],
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 7,
+            |        "dates$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 7,
+            |        "dates$": [
+            |          "2001-07-01",
+            |          "2002-01-01"
+            |        ],
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(8).uuids$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
@@ -1150,7 +1150,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 8,
-             |        "uuids": null,
+             |        "uuids$$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -1159,7 +1159,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 8,
-             |        "uuids": [
+             |        "uuids$$": [
              |          "$uuid1",
              |          "$uuid2"
              |        ],
@@ -1174,12 +1174,12 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.int(9).uris$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
              |        "int": 9,
-             |        "uris": null,
+             |        "uris$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -1188,7 +1188,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 9,
-             |        "uris": [
+             |        "uris$": [
              |          "uri1",
              |          "uri2"
              |        ],
@@ -1203,12 +1203,12 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.int(10).enums$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
              |        "int": 10,
-             |        "enums": null,
+             |        "enums$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -1217,7 +1217,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 10,
-             |        "enums": [
+             |        "enums$": [
              |          "enum1",
              |          "enum2"
              |        ],
@@ -1232,12 +1232,12 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.int(11).bigInts$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
              |        "int": 11,
-             |        "bigInts": null,
+             |        "bigInts$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -1246,7 +1246,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 11,
-             |        "bigInts": [
+             |        "bigInts$": [
              |          1,
              |          2
              |        ],
@@ -1261,12 +1261,12 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.int(12).bigDecs$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ns": [
              |      {
              |        "int": 12,
-             |        "bigDecs": null,
+             |        "bigDecs$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -1275,7 +1275,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 12,
-             |        "bigDecs": [
+             |        "bigDecs$": [
              |          1.0,
              |          2.0
              |        ],
@@ -1311,7 +1311,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "strMap": null,
+            |        "strMap$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1320,7 +1320,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 1,
-            |        "strMap": {
+            |        "strMap$": {
             |          "a": "A",
             |          "b": "B"
             |        },
@@ -1340,7 +1340,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "long": 2,
-            |        "intMap": null,
+            |        "intMap$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1349,7 +1349,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "long": 2,
-            |        "intMap": {
+            |        "intMap$": {
             |          "a": 1,
             |          "b": 2
             |        },
@@ -1369,7 +1369,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 3,
-            |        "longMap": null,
+            |        "longMap$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1378,7 +1378,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 3,
-            |        "longMap": {
+            |        "longMap$": {
             |          "a": 1,
             |          "b": 2
             |        },
@@ -1398,7 +1398,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 5,
-            |        "doubleMap": null,
+            |        "doubleMap$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1407,7 +1407,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 5,
-            |        "doubleMap": {
+            |        "doubleMap$": {
             |          "a": 1.0,
             |          "b": 2.0
             |        },
@@ -1427,7 +1427,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 6,
-            |        "boolMap": null,
+            |        "boolMap$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -1436,7 +1436,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 6,
-            |        "boolMap": {
+            |        "boolMap$": {
             |          "a": true,
             |          "b": false
             |        },
@@ -1451,33 +1451,33 @@ object JsonNestedTypes extends AsyncTestSuite {
             |}""".stripMargin)
 
         _ <- Ns.int(7).dateMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 7,
-             |        "dateMap": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 7,
-             |        "dateMap": {
-             |          "a": "2001-07-01",
-             |          "b": "2002-01-01"
-             |        },
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 7,
+            |        "dateMap$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 7,
+            |        "dateMap$": {
+            |          "a": "2001-07-01",
+            |          "b": "2002-01-01"
+            |        },
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(8).uuidMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
@@ -1485,7 +1485,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 8,
-             |        "uuidMap": null,
+             |        "uuidMap$$": null,
              |        "Refs1": [
              |          {
              |            "int1": 1
@@ -1494,7 +1494,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 8,
-             |        "uuidMap": {
+             |        "uuidMap$$": {
              |          "a": "$uuid1",
              |          "b": "$uuid2"
              |        },
@@ -1509,91 +1509,91 @@ object JsonNestedTypes extends AsyncTestSuite {
              |}""".stripMargin)
 
         _ <- Ns.int(9).uriMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 9,
-             |        "uriMap": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 9,
-             |        "uriMap": {
-             |          "a": "uri1",
-             |          "b": "uri2"
-             |        },
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 9,
+            |        "uriMap$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 9,
+            |        "uriMap$": {
+            |          "a": "uri1",
+            |          "b": "uri2"
+            |        },
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(11).bigIntMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 11,
-             |        "bigIntMap": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 11,
-             |        "bigIntMap": {
-             |          "a": 1,
-             |          "b": 2
-             |        },
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 11,
+            |        "bigIntMap$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 11,
+            |        "bigIntMap$": {
+            |          "a": 1,
+            |          "b": 2
+            |        },
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(12).bigDecMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 12,
-             |        "bigDecMap": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 12,
-             |        "bigDecMap": {
-             |          "a": 1.0,
-             |          "b": 2.0
-             |        },
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 12,
+            |        "bigDecMap$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 12,
+            |        "bigDecMap$": {
+            |          "a": 1.0,
+            |          "b": 2.0
+            |        },
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
   }

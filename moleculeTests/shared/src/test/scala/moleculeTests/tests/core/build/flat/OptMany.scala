@@ -43,11 +43,11 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "strs": null
+            |        "strs$": null
             |      },
             |      {
             |        "int": 2,
-            |        "strs": [
+            |        "strs$": [
             |          "a"
             |        ]
             |      }
@@ -61,7 +61,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "strs": null
+            |        "strs$": null
             |      }
             |    ]
             |  }
@@ -73,7 +73,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "strs": [
+            |        "strs$": [
             |          "a"
             |        ]
             |      }
@@ -117,11 +117,11 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "ints": null
+            |        "ints$": null
             |      },
             |      {
             |        "int": 2,
-            |        "ints": [
+            |        "ints$": [
             |          20
             |        ]
             |      }
@@ -135,7 +135,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "ints": null
+            |        "ints$": null
             |      }
             |    ]
             |  }
@@ -147,7 +147,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "ints": [
+            |        "ints$": [
             |          20
             |        ]
             |      }
@@ -191,11 +191,11 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "longs": null
+            |        "longs$": null
             |      },
             |      {
             |        "int": 2,
-            |        "longs": [
+            |        "longs$": [
             |          20
             |        ]
             |      }
@@ -209,7 +209,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "longs": null
+            |        "longs$": null
             |      }
             |    ]
             |  }
@@ -221,7 +221,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "longs": [
+            |        "longs$": [
             |          20
             |        ]
             |      }
@@ -265,11 +265,11 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "doubles": null
+            |        "doubles$": null
             |      },
             |      {
             |        "int": 2,
-            |        "doubles": [
+            |        "doubles$": [
             |          2.2
             |        ]
             |      }
@@ -283,7 +283,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "doubles": null
+            |        "doubles$": null
             |      }
             |    ]
             |  }
@@ -295,7 +295,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "doubles": [
+            |        "doubles$": [
             |          2.2
             |        ]
             |      }
@@ -339,11 +339,11 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "bools": null
+            |        "bools$": null
             |      },
             |      {
             |        "int": 2,
-            |        "bools": [
+            |        "bools$": [
             |          false
             |        ]
             |      }
@@ -357,7 +357,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "bools": null
+            |        "bools$": null
             |      }
             |    ]
             |  }
@@ -369,7 +369,7 @@ object OptMany extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "bools": [
+            |        "bools$": [
             |          false
             |        ]
             |      }
@@ -408,48 +408,48 @@ object OptMany extends AsyncTestSuite {
         }
 
         _ <- Ns.int.dates$.getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 1,
-             |        "dates": null
-             |      },
-             |      {
-             |        "int": 2,
-             |        "dates": [
-             |          "2001-07-01"
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "dates$": null
+            |      },
+            |      {
+            |        "int": 2,
+            |        "dates$": [
+            |          "2001-07-01"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int.dates$(None).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 1,
-             |        "dates": null
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "dates$": null
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int.dates$(Some(Set(date1))).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 2,
-             |        "dates": [
-             |          "2001-07-01"
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 2,
+            |        "dates$": [
+            |          "2001-07-01"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -487,11 +487,11 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uuids": null
+             |        "uuids$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "uuids": [
+             |        "uuids$$": [
              |          "$uuid1"
              |        ]
              |      }
@@ -505,7 +505,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uuids": null
+             |        "uuids$$": null
              |      }
              |    ]
              |  }
@@ -517,7 +517,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "uuids": [
+             |        "uuids$$": [
              |          "$uuid1"
              |        ]
              |      }
@@ -561,11 +561,11 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uris": null
+             |        "uris$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "uris": [
+             |        "uris$$": [
              |          "$uri1"
              |        ]
              |      }
@@ -579,7 +579,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uris": null
+             |        "uris$$": null
              |      }
              |    ]
              |  }
@@ -591,7 +591,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "uris": [
+             |        "uris$$": [
              |          "$uri1"
              |        ]
              |      }
@@ -604,9 +604,9 @@ object OptMany extends AsyncTestSuite {
 
     "BigInt" - core { implicit conn =>
       for {
-        _ <- Ns.int.bigInts$ insert  List((1, None), (2, Some(Set(bigInt1))))
+        _ <- Ns.int.bigInts$ insert List((1, None), (2, Some(Set(bigInt1))))
 
-        _ <- Ns.int.bigInts$.get.map(_ ==>  List((1, None), (2, Some(Set(bigInt1)))))
+        _ <- Ns.int.bigInts$.get.map(_ ==> List((1, None), (2, Some(Set(bigInt1)))))
         _ <- Ns.int.bigInts$(None).get.map(_ ==> List((1, None)))
         _ <- Ns.int.bigInts$(Some(Set(bigInt1))).get.map(_ ==> List((2, Some(Set(bigInt1)))))
 
@@ -635,11 +635,11 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigInts": null
+             |        "bigInts$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "bigInts": [
+             |        "bigInts$$": [
              |          $bigInt1
              |        ]
              |      }
@@ -653,7 +653,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigInts": null
+             |        "bigInts$$": null
              |      }
              |    ]
              |  }
@@ -665,7 +665,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "bigInts": [
+             |        "bigInts$$": [
              |          $bigInt1
              |        ]
              |      }
@@ -678,9 +678,9 @@ object OptMany extends AsyncTestSuite {
 
     "BigDecimal" - core { implicit conn =>
       for {
-        _ <- Ns.int.bigDecs$ insert  List((1, None), (2, Some(Set(bigDec1))))
+        _ <- Ns.int.bigDecs$ insert List((1, None), (2, Some(Set(bigDec1))))
 
-        _ <- Ns.int.bigDecs$.get.map(_ ==>  List((1, None), (2, Some(Set(bigDec1)))))
+        _ <- Ns.int.bigDecs$.get.map(_ ==> List((1, None), (2, Some(Set(bigDec1)))))
         _ <- Ns.int.bigDecs$(None).get.map(_ ==> List((1, None)))
         _ <- Ns.int.bigDecs$(Some(Set(bigDec1))).get.map(_ ==> List((2, Some(Set(bigDec1)))))
 
@@ -709,11 +709,11 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigDecs": null
+             |        "bigDecs$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "bigDecs": [
+             |        "bigDecs$$": [
              |          $bigDec1
              |        ]
              |      }
@@ -727,7 +727,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigDecs": null
+             |        "bigDecs$$": null
              |      }
              |    ]
              |  }
@@ -739,7 +739,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "bigDecs": [
+             |        "bigDecs$$": [
              |          $bigDec1
              |        ]
              |      }
@@ -783,11 +783,11 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "enums": null
+             |        "enums$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "enums": [
+             |        "enums$$": [
              |          "$enum1"
              |        ]
              |      }
@@ -801,7 +801,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "enums": null
+             |        "enums$$": null
              |      }
              |    ]
              |  }
@@ -813,7 +813,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "enums": [
+             |        "enums$$": [
              |          "$enum1"
              |        ]
              |      }
@@ -858,11 +858,11 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "refs1": null
+             |        "refs1$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "refs1": [
+             |        "refs1$$": [
              |          $refId
              |        ]
              |      }
@@ -876,7 +876,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "refs1": null
+             |        "refs1$$": null
              |      }
              |    ]
              |  }
@@ -888,7 +888,7 @@ object OptMany extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "refs1": [
+             |        "refs1$$": [
              |          $refId
              |        ]
              |      }

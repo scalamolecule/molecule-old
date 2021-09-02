@@ -1,11 +1,9 @@
 package molecule.core.macros.build.tpl
 
-import molecule.core.macros.build.BuildBase
-import molecule.core.transform.Dsl2Model
 import scala.reflect.macros.blackbox
 
 
-private[molecule] trait BuildTplNested extends BuildBase { self: BuildTplComposite with BuildTpl =>
+private[molecule] trait BuildTplNested { self: BuildTplComposite with BuildTpl =>
   val c: blackbox.Context
 
   import c.universe._

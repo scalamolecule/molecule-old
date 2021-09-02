@@ -1,28 +1,30 @@
-package molecule.core.macros.build
+package molecule.core.marshalling
 
-import molecule.core.ops.TreeOps
-import scala.reflect.macros.blackbox
-import java.util.{Collection => jCollection, Iterator => jIterator, List => jList, Map => jMap}
+import boopickle.Default._
+import scala.annotation.tailrec
 
 
-trait BuildBase extends TreeOps {
-  val c: blackbox.Context
-
-  import c.universe._
-
-  private lazy val xx = InspectMacro("BuildBase", 1, 900)
+object nodes {
 
   sealed trait Node
+
+  object Node {
+    implicit val nodesPickler = compositePickler[Node]
+    nodesPickler
+      .addConcreteType[Prop]
+      .addConcreteType[Obj]
+  }
+
   case class Prop(
     cls: String,
     prop: String,
-    tpe: Tree,
-    cast: Int => Tree,
-    json: (Int, Int) => Tree,
+    baseTpe: String,
+    card: Int,
+    group: String,
     optAggrTpe: Option[String] = None
   ) extends Node {
     override def toString: String = {
-      s"""Prop("$cls", "$prop", "$tpe", <cast>, <json>, $optAggrTpe)"""
+      s"""Prop("$cls", "$prop", "$baseTpe", $card, "$group", $optAggrTpe)"""
     }
   }
 
@@ -49,6 +51,7 @@ trait BuildBase extends TreeOps {
   }
 
   def isDeeper(obj: Obj) = {
+    @tailrec
     def test(props: Seq[Node]): Boolean = {
       props.last match {
         case Obj(_, _, true, _) => true
@@ -64,6 +67,7 @@ trait BuildBase extends TreeOps {
     case (acc, Obj(_, _, false, refProps)) => acc + getPropCount(refProps)
     case (acc, nested: Obj)                => acc + 1 // nested counting as 1 prop
   }
+
 
   def addNode(obj: Obj, node: Node, level: Int): Obj = {
     val newProps = level match {

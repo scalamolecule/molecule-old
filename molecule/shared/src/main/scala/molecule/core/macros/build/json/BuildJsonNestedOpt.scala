@@ -1,10 +1,11 @@
 package molecule.core.macros.build.json
 
+import molecule.core.macros.attrResolverTrees.ResolverJsonNestedOpt
 import molecule.core.macros.attrResolvers.JsonBase
-import molecule.core.macros.build.BuildBase
+import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
+private[molecule] trait BuildJsonNestedOpt extends ResolverJsonNestedOpt with JsonBase {
   val c: blackbox.Context
 
   import c.universe._
@@ -31,11 +32,11 @@ private[molecule] trait BuildJsonNestedOpt extends BuildBase with JsonBase {
           Nil
         }
         node match {
-          case Prop(_, prop, _, _, json, _) =>
+          case Prop(_, prop, baseTpe, _, group, _) =>
             // Only generate 1 property, even if attribute is repeated in molecule
             if (props.contains(prop)) Nil else {
               props = props :+ prop
-              newLine :+ json(42, tabs) // colIndex not used
+              newLine :+ getResolverJsonNestedOpt(group, baseTpe, prop)(-10, tabs) // colIndex not used
             }
 
           case nested@Obj(_, ref, true, nestedProps) =>

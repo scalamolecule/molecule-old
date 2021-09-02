@@ -45,11 +45,11 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "str": null
+            |        "str$": null
             |      },
             |      {
             |        "int": 2,
-            |        "str": "a"
+            |        "str$": "a"
             |      }
             |    ]
             |  }
@@ -61,7 +61,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "str": null
+            |        "str$": null
             |      }
             |    ]
             |  }
@@ -73,7 +73,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "str": "a"
+            |        "str$": "a"
             |      }
             |    ]
             |  }
@@ -115,11 +115,11 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "long": 1,
-            |        "int": null
+            |        "int$": null
             |      },
             |      {
             |        "long": 2,
-            |        "int": 20
+            |        "int$": 20
             |      }
             |    ]
             |  }
@@ -131,7 +131,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "long": 1,
-            |        "int": null
+            |        "int$": null
             |      }
             |    ]
             |  }
@@ -143,7 +143,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "long": 2,
-            |        "int": 20
+            |        "int$": 20
             |      }
             |    ]
             |  }
@@ -185,11 +185,11 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "long": null
+            |        "long$": null
             |      },
             |      {
             |        "int": 2,
-            |        "long": 20
+            |        "long$": 20
             |      }
             |    ]
             |  }
@@ -201,7 +201,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "long": null
+            |        "long$": null
             |      }
             |    ]
             |  }
@@ -213,7 +213,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "long": 20
+            |        "long$": 20
             |      }
             |    ]
             |  }
@@ -255,11 +255,11 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "double": null
+            |        "double$": null
             |      },
             |      {
             |        "int": 2,
-            |        "double": 2.2
+            |        "double$": 2.2
             |      }
             |    ]
             |  }
@@ -271,7 +271,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "double": null
+            |        "double$": null
             |      }
             |    ]
             |  }
@@ -283,7 +283,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "double": 2.2
+            |        "double$": 2.2
             |      }
             |    ]
             |  }
@@ -325,11 +325,11 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "bool": null
+            |        "bool$": null
             |      },
             |      {
             |        "int": 2,
-            |        "bool": false
+            |        "bool$": false
             |      }
             |    ]
             |  }
@@ -341,7 +341,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "bool": null
+            |        "bool$": null
             |      }
             |    ]
             |  }
@@ -353,7 +353,7 @@ object OptOne extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "bool": false
+            |        "bool$": false
             |      }
             |    ]
             |  }
@@ -390,44 +390,44 @@ object OptOne extends AsyncTestSuite {
         }
 
         _ <- Ns.int.date$.getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 1,
-             |        "date": null
-             |      },
-             |      {
-             |        "int": 2,
-             |        "date": "2001-07-01"
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "date$": null
+            |      },
+            |      {
+            |        "int": 2,
+            |        "date$": "2001-07-01"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int.date$(None).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 1,
-             |        "date": null
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "date$": null
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int.date$(Some(date1)).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 2,
-             |        "date": "2001-07-01"
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 2,
+            |        "date$": "2001-07-01"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -465,11 +465,11 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uuid": null
+             |        "uuid$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "uuid": "$uuid1"
+             |        "uuid$$": "$uuid1"
              |      }
              |    ]
              |  }
@@ -481,7 +481,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uuid": null
+             |        "uuid$$": null
              |      }
              |    ]
              |  }
@@ -493,7 +493,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "uuid": "$uuid1"
+             |        "uuid$$": "$uuid1"
              |      }
              |    ]
              |  }
@@ -535,11 +535,11 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uri": null
+             |        "uri$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "uri": "$uri1"
+             |        "uri$$": "$uri1"
              |      }
              |    ]
              |  }
@@ -551,7 +551,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "uri": null
+             |        "uri$$": null
              |      }
              |    ]
              |  }
@@ -563,7 +563,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "uri": "$uri1"
+             |        "uri$$": "$uri1"
              |      }
              |    ]
              |  }
@@ -605,11 +605,11 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigInt": null
+             |        "bigInt$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "bigInt": $bigInt1
+             |        "bigInt$$": $bigInt1
              |      }
              |    ]
              |  }
@@ -621,7 +621,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigInt": null
+             |        "bigInt$$": null
              |      }
              |    ]
              |  }
@@ -633,7 +633,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "bigInt": $bigInt1
+             |        "bigInt$$": $bigInt1
              |      }
              |    ]
              |  }
@@ -675,11 +675,11 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigDec": null
+             |        "bigDec$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "bigDec": $bigDec1
+             |        "bigDec$$": $bigDec1
              |      }
              |    ]
              |  }
@@ -691,7 +691,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "bigDec": null
+             |        "bigDec$$": null
              |      }
              |    ]
              |  }
@@ -703,7 +703,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "bigDec": $bigDec1
+             |        "bigDec$$": $bigDec1
              |      }
              |    ]
              |  }
@@ -745,11 +745,11 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "enum": null
+             |        "enum$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "enum": "$enum1"
+             |        "enum$$": "$enum1"
              |      }
              |    ]
              |  }
@@ -761,7 +761,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "enum": null
+             |        "enum$$": null
              |      }
              |    ]
              |  }
@@ -773,7 +773,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "enum": "$enum1"
+             |        "enum$$": "$enum1"
              |      }
              |    ]
              |  }
@@ -816,11 +816,11 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "ref1": null
+             |        "ref1$$": null
              |      },
              |      {
              |        "int": 2,
-             |        "ref1": $refId
+             |        "ref1$$": $refId
              |      }
              |    ]
              |  }
@@ -832,7 +832,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 1,
-             |        "ref1": null
+             |        "ref1$$": null
              |      }
              |    ]
              |  }
@@ -844,7 +844,7 @@ object OptOne extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 2,
-             |        "ref1": $refId
+             |        "ref1$$": $refId
              |      }
              |    ]
              |  }

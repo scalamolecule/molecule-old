@@ -1,12 +1,13 @@
 package molecule.core.macros.build.json
 
+import molecule.core.macros.attrResolverTrees.ResolverJsonTypes
 import molecule.core.macros.attrResolvers.JsonBase
-import molecule.core.macros.build.BuildBase
 import molecule.core.macros.build.tpl.{BuildTpl, BuildTplComposite}
+import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
 
-trait BuildJsonNested extends BuildBase with JsonBase {
+trait BuildJsonNested extends JsonBase with ResolverJsonTypes {
   val c: blackbox.Context
 
   import c.universe._
@@ -114,7 +115,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
             }
 
             node match {
-              case p: Prop =>
+              case Prop(_, prop, baseTpe, _, group, _) =>
                 colIndex += 1
                 val nested =
                   if (nestedAdded) {
@@ -127,7 +128,7 @@ trait BuildJsonNested extends BuildBase with JsonBase {
                       q"""sb.append(nested)"""
                     )
                   } else Nil
-                newLine ++ Seq(p.json(colIndex, tabs + 1)) ++ nested
+                newLine ++ Seq(getResolverJsonTypes(group, baseTpe, prop)(colIndex, tabs + 1)) ++ nested
 
               case o: Obj if depth == exitDepth =>
                 newLine ++ Seq(

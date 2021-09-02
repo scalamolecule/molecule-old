@@ -324,13 +324,13 @@ object JsonNested extends AsyncTestSuite {
             |        "str": "a",
             |        "Refs1": [
             |          {
-            |            "int1": 1,
+            |            "int1$": 1,
             |            "Ref2": {
             |              "int2": 10
             |            }
             |          },
             |          {
-            |            "int1": null,
+            |            "int1$": null,
             |            "Ref2": {
             |              "int2": 20
             |            }
@@ -341,7 +341,7 @@ object JsonNested extends AsyncTestSuite {
             |        "str": "b",
             |        "Refs1": [
             |          {
-            |            "int1": 3,
+            |            "int1$": 3,
             |            "Ref2": {
             |              "int2": 30
             |            }
@@ -390,7 +390,7 @@ object JsonNested extends AsyncTestSuite {
             |      {
             |        "str": "a",
             |        "Refs1": {
-            |          "int1": 2,
+            |          "int1$": 2,
             |          "Refs2": [
             |            {
             |              "int2": 20
@@ -401,7 +401,7 @@ object JsonNested extends AsyncTestSuite {
             |      {
             |        "str": "b",
             |        "Refs1": {
-            |          "int1": null,
+            |          "int1$": null,
             |          "Refs2": [
             |            {
             |              "int2": 10
@@ -486,7 +486,7 @@ object JsonNested extends AsyncTestSuite {
             |      {
             |        "str": "a",
             |        "Ref1": {
-            |          "int1": 2,
+            |          "int1$": 2,
             |          "Refs2": [
             |            {
             |              "int2": 20
@@ -497,7 +497,7 @@ object JsonNested extends AsyncTestSuite {
             |      {
             |        "str": "b",
             |        "Ref1": {
-            |          "int1": null,
+            |          "int1$": null,
             |          "Refs2": [
             |            {
             |              "int2": 10

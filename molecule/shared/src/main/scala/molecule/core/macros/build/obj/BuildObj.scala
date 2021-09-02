@@ -1,15 +1,17 @@
 package molecule.core.macros.build.obj
 
-import molecule.core.macros.build.BuildBase
+import molecule.core.macros.attrResolverTrees.ResolverCastTypes
+import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
 
-trait BuildObj extends BuildBase {
+trait BuildObj extends ResolverCastTypes {
   val c: blackbox.Context
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildObj", 1)
+    private lazy val xx = InspectMacro("BuildObj", 1)
+//  private lazy val xx = InspectMacro("BuildObj", 1, mkError = true)
 
   def classes(nodes: List[Node]): List[Tree] = {
     var prevClasses = List.empty[String]
@@ -85,7 +87,30 @@ trait BuildObj extends BuildBase {
           }
         """
       case None      =>
-        q"{${resolve(obj, -1, false)._1} }"
+        q"{ ${resolve(obj, -1, false)._1} }"
+    }
+  }
+
+  def getTpe(p: Prop): Tree = {
+    val typeName = TypeName(p.baseTpe match {
+      case "ref"  => "Long"
+      case "enum" => "String"
+      case t      => t
+    })
+    if (p.prop.last == '$') {
+      p.card match {
+        case 1 => tq"Option[$typeName]"
+        case 2 => tq"Option[Set[$typeName]]"
+        case 3 => tq"Option[Map[String, $typeName]]"
+        case 4 => tq"Option[$typeName]"
+      }
+    } else {
+      p.card match {
+        case 1 => tq"$typeName"
+        case 2 => tq"Set[$typeName]"
+        case 3 => tq"Map[String, $typeName]"
+        case 4 => tq"$typeName"
+      }
     }
   }
 
@@ -95,20 +120,22 @@ trait BuildObj extends BuildBase {
     def properties(nodes: List[Node]): List[Tree] = {
       var propNames = List.empty[String]
       val propDefs  = nodes.flatMap {
-        case Prop(_, prop, tpe, cast, _, optAggr) =>
+        case p@Prop(_, prop, baseTpe, card, group, optAggrTpe) =>
+          val tpe = getTpe(p)
+//          xx(1, prop, baseTpe, tpe, optAggrTpe)
           colIndex += 1
           // Only generate 1 property, even if attribute is repeated in molecule
           if (!propNames.contains(prop)) {
             propNames = propNames :+ prop
-            optAggr match {
+            optAggrTpe match {
               case None if nested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
-              case None           => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
+              case None           => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${getResolverCastTypes(group, baseTpe)(colIndex)}")
 
-              case Some(aggrTpe) if aggrTpe == tpe.toString() =>
+              case Some(aggrTpe) if aggrTpe == tpe.toString =>
                 if (nested)
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
                 else
-                  Some(q"final override lazy val ${TermName(prop)}: $tpe = ${cast(colIndex)}")
+                  Some(q"final override lazy val ${TermName(prop)}: $tpe = ${getResolverCastTypes(group, baseTpe)(colIndex)}")
 
               case Some(aggrTpe) =>
                 val err = s"""Object property `$prop` not available since the aggregate changes its type to `$aggrTpe`. Please use tuple output instead to access aggregate value."""
@@ -120,7 +147,7 @@ trait BuildObj extends BuildBase {
           colIndex += 1
           val oneNestedProp    = props.length == 1
           val singleNestedType = props.head match {
-            case Prop(_, _, tpe, _, _, _) => tq"$tpe"
+            case p@Prop(_, _, _, _, _, _) => getTpe(p)
             case _: Obj                   => tq"Product"
           }
           val subObj           = if (oneNestedProp)

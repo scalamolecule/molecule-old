@@ -104,11 +104,11 @@ object NestedAttrs1 extends AsyncTestSuite {
             |        "Nss": [
             |          {
             |            "int": 1,
-            |            "str": "a"
+            |            "str$": "a"
             |          },
             |          {
             |            "int": 2,
-            |            "str": null
+            |            "str$": null
             |          }
             |        ]
             |      }
@@ -158,11 +158,11 @@ object NestedAttrs1 extends AsyncTestSuite {
             |        "Nss": [
             |          {
             |            "int": 1,
-            |            "str": "a"
+            |            "str$": "a"
             |          },
             |          {
             |            "int": 2,
-            |            "str": null
+            |            "str$": null
             |          }
             |        ]
             |      },

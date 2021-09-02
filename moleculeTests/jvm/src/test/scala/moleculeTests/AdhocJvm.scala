@@ -21,6 +21,7 @@ import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
 import molecule.core.macros.attrResolvers.{CastNestedOpt, CastTypes, JsonBase}
+import molecule.datomic.api.out4.m
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
@@ -33,20 +34,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
-
-        _ <- m(Ref1.str1.Nss * Ns.int.str$) insert List(
-          ("A", List((1, Some("a")), (2, None))),
-          ("B", List())
-        )
-
-        // Getting the first object only
-        _ <- m(Ref1.str1.Nss * Ns.int.str$).getObj.collect { case o =>
-          o.str1 ==> "A"
-          o.Nss(0).int ==> 1
-          o.Nss(0).str$ ==> Some("a")
-          o.Nss(1).int ==> 2
-          o.Nss(1).str$ ==> None
-        }
 
 
         //        _ <- Ns.int(0).str("x").Ref1.int1(1).save

@@ -2,7 +2,7 @@ package molecule.core.api
 
 import molecule.core.ast.elements._
 import molecule.core.macros.MakeMoleculeDynamic
-import molecule.core.macros.attrResolvers.{CastAggr, CastNestedOpt, CastTypes, JsonAggr, JsonNested, JsonNestedOpt, JsonTypes}
+import molecule.core.macros.attrResolvers._
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.marshalling.unpack.UnpackTypes
@@ -164,7 +164,6 @@ abstract class Molecule_0[Obj, Tpl](
   with JsonTypes
   with JsonAggr
   with JsonNestedOpt
-  with JsonNested
 
   with UnpackTypes
 

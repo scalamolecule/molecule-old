@@ -1,10 +1,11 @@
 package molecule.core.macros.build.json
 
+import molecule.core.macros.attrResolverTrees.ResolverJsonTypes
 import molecule.core.macros.attrResolvers.JsonBase
-import molecule.core.macros.build.BuildBase
+import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-trait BuildJson extends BuildBase with JsonBase {
+trait BuildJson extends JsonBase with ResolverJsonTypes {
   val c: blackbox.Context
 
   import c.universe._
@@ -44,12 +45,12 @@ trait BuildJson extends BuildBase with JsonBase {
           Nil
         }
         val trees   = node match {
-          case Prop(_, prop, _, _, json, _) =>
+          case Prop(_, prop, baseTpe, _, group, _) =>
             colIndex += 1
             // Only generate 1 property, even if attribute is repeated in molecule
             if (props.contains(prop)) Nil else {
               props = props :+ prop
-              newLine :+ json(colIndex, tabs)
+              newLine :+ getResolverJsonTypes(group, baseTpe, prop)(colIndex, tabs)
             }
 
           case refObj@Obj(_, ref, _, _) =>

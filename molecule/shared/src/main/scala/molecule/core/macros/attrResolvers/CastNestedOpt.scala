@@ -27,7 +27,6 @@ trait CastNestedOpt extends Helpers {
     getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
 
   protected def castNestedOptOneRefAttr(it: jIterator[_]): Long =
-  //    it.next.asInstanceOf[jLong].toLong
     it.next
       .asInstanceOf[jMap[_, _]].values().iterator().next
       .asInstanceOf[jLong].toLong

@@ -8,7 +8,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //         private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
+  //  private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
 //  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
     private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
@@ -160,10 +160,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
       val nestedTupleClass = tq"${nestedTupleClassX(levels)}"
       val nestedJsonClass  = tq"${nestedJsonClassX(levels)}"
-
-      lazy val tpl = Some(if (TplTypes.length == 1) q"Tuple1(tpl0)" else q"tpl0")
-
-      val transformers =
+      val tpl              = Some(if (TplTypes.length == 1) q"Tuple1(tpl0)" else q"tpl0")
+      val transformers     =
         q"""
           ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
           ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
@@ -213,7 +211,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
     xx(7
       , obj
-      , indexes
+      //      , indexes
       , t
       //      , model0
       //      , Model2Query(model0)._1

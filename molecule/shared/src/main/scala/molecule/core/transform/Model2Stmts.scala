@@ -513,7 +513,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
         }
       }
 
-      case edgeA => {
+      case edgeA =>
         val edgeB    = otherEdgeId getOrElse err("valueStmts:biEdgeRef", "Missing id of other edge.")
         val addStmts = Seq(
           // Interlink edge entities so that we later know which other one to update
@@ -529,7 +529,6 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
         } else {
           Future(addStmts)
         }
-      }
     }
 
 

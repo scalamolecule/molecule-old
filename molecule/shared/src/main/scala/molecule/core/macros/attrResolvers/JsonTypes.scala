@@ -137,6 +137,36 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
+  protected def jsonOptOneEnum(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
+    val value = row.get(colIndex)
+    if (value == null) {
+      pair(sb, field, "null")
+    } else {
+      quotedPair(sb, field,
+        getKwName(value.asInstanceOf[jMap[String, AnyRef]].values.iterator.next
+          .asInstanceOf[jMap[_, _]].values.iterator.next.toString)
+      )
+    }
+  }
+
+  protected def jsonOptOneRefAttr(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
+    val value = row.get(colIndex)
+    if (value == null) {
+      pair(sb, field, "null")
+    } else {
+      var done = false
+      // Hack to avoid looking up map by clojure Keyword - there must be a better way...
+      value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.asInstanceOf[jMap[_, _]].forEach {
+        case _ if done                        =>
+        case (k, v) if k.toString == ":db/id" =>
+          done = true
+          pair(sb, field, v.asInstanceOf[jLong].toLong)
+        case _                                =>
+      }
+      sb
+    }
+  }
+
   // ----------------------------------------------
 
   protected def jsonOptApplyOneQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
@@ -254,8 +284,54 @@ private[molecule] trait JsonTypes extends JsonBase {
     }
   }
 
-  // ------------------------------
+  protected def jsonOptManyEnum(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
+    val value = row.get(colIndex)
+    if (value == null) {
+      pair(sb, field, "null")
+    } else {
+      quote(sb, field)
+      sb.append(": [")
+      var next = false
+      val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+      while (it.hasNext) {
+        if (next) sb.append(",") else next = true
+        sb.append(indent(tabs + 1))
+        quote(sb, getKwName(it.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
+      }
+      if (next) sb.append(indent(tabs))
+      sb.append("]")
+    }
+  }
 
+  protected def jsonOptManyRefAttr(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
+    val value = row.get(colIndex)
+    if (value == null) {
+      pair(sb, field, "null")
+    } else {
+      quote(sb, field)
+      sb.append(": [")
+      var next = false
+      val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+      // Hack to avoid looking up map by clojure Keyword (not available on JS platform)
+      // - there must be a better way...
+      while (it.hasNext) {
+        if (next) sb.append(",") else next = true
+        sb.append(indent(tabs + 1))
+        var done = false
+        it.next.asInstanceOf[jMap[_, _]].forEach {
+          case _ if done                        =>
+          case (k, v) if k.toString == ":db/id" =>
+            done = true
+            sb.append(v.asInstanceOf[jLong].toLong)
+          case _                                =>
+        }
+      }
+      if (next) sb.append(indent(tabs))
+      sb.append("]")
+    }
+  }
+
+  // ------------------------------
 
   protected def jsonOptApplyManyQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
     val value = row.get(colIndex)
@@ -327,89 +403,6 @@ private[molecule] trait JsonTypes extends JsonBase {
         if (next) sb.append(",") else next = true
         sb.append(indent(tabs + 1))
         quote(sb, date2str(it.next.asInstanceOf[Date]))
-      }
-      if (next) sb.append(indent(tabs))
-      sb.append("]")
-    }
-  }
-
-
-  // Optional ref attr ===========================================================================================
-
-  protected def jsonOptOneRefAttr(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
-    val value = row.get(colIndex)
-    if (value == null) {
-      pair(sb, field, "null")
-    } else {
-      var done = false
-      // Hack to avoid looking up map by clojure Keyword - there must be a better way...
-      value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.asInstanceOf[jMap[_, _]].forEach {
-        case _ if done                        =>
-        case (k, v) if k.toString == ":db/id" =>
-          done = true
-          pair(sb, field, v.asInstanceOf[jLong].toLong)
-        case _                                =>
-      }
-      sb
-    }
-  }
-
-  protected def jsonOptManyRefAttr(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
-    val value = row.get(colIndex)
-    if (value == null) {
-      pair(sb, field, "null")
-    } else {
-      quote(sb, field)
-      sb.append(": [")
-      var next = false
-      val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-      // Hack to avoid looking up map by clojure Keyword (not available on JS platform)
-      // - there must be a better way...
-      while (it.hasNext) {
-        if (next) sb.append(",") else next = true
-        sb.append(indent(tabs + 1))
-        var done = false
-        it.next.asInstanceOf[jMap[_, _]].forEach {
-          case _ if done                        =>
-          case (k, v) if k.toString == ":db/id" =>
-            done = true
-            sb.append(v.asInstanceOf[jLong].toLong)
-          case _                                =>
-        }
-      }
-      if (next) sb.append(indent(tabs))
-      sb.append("]")
-    }
-  }
-
-
-  // Enum opt ===========================================================================================
-
-  protected def jsonOptOneEnum(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
-    val value = row.get(colIndex)
-    if (value == null) {
-      pair(sb, field, "null")
-    } else {
-      quotedPair(sb, field,
-        getKwName(value.asInstanceOf[jMap[String, AnyRef]].values.iterator.next
-          .asInstanceOf[jMap[_, _]].values.iterator.next.toString)
-      )
-    }
-  }
-
-  protected def jsonOptManyEnum(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {
-    val value = row.get(colIndex)
-    if (value == null) {
-      pair(sb, field, "null")
-    } else {
-      quote(sb, field)
-      sb.append(": [")
-      var next = false
-      val it         = value.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-      while (it.hasNext) {
-        if (next) sb.append(",") else next = true
-        sb.append(indent(tabs + 1))
-        quote(sb, getKwName(it.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
       }
       if (next) sb.append(indent(tabs))
       sb.append("]")

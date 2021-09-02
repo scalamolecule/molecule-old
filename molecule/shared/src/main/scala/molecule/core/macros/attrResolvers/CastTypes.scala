@@ -127,6 +127,31 @@ trait CastTypes extends Helpers {
     case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next.asInstanceOf[T])
   }
 
+  protected def castOptOneEnum(row: jList[_], colIndex: Int): Option[String] = row.get(colIndex) match {
+    case null => Option.empty[String]
+    case v    =>
+      Some(
+        getKwName(
+          v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next
+            .asInstanceOf[jMap[_, _]].values.iterator.next.toString
+        )
+      )
+  }
+
+  protected def castOptOneRefAttr(row: jList[_], colIndex: Int): Option[Long] = row.get(colIndex) match {
+    case null => Option.empty[Long]
+    case v    =>
+      var id   = 0L
+      var done = false
+      // Hack to avoid looking up map by clojure Keyword - there must be a better way...
+      v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.asInstanceOf[jMap[_, _]].forEach {
+        case _ if done                        =>
+        case (k, v) if k.toString == ":db/id" => done = true; id = v.asInstanceOf[jLong].toLong
+        case _                                =>
+      }
+      Some(id)
+  }
+
   // ----------------------------------------------
 
   protected def castOptApplyOneInt(row: jList[_], colIndex: Int): Option[Int] = row.get(colIndex) match {
@@ -242,6 +267,33 @@ trait CastTypes extends Helpers {
       Some(set)
   }
 
+  protected def castOptManyEnum(row: jList[_], colIndex: Int): Option[Set[String]] = row.get(colIndex) match {
+    case null => Option.empty[Set[String]]
+    case v    =>
+      val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+      var set = Set.empty[String]
+      while (it.hasNext)
+        set += getKwName(it.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)
+      Some(set)
+  }
+
+  protected def castOptManyRefAttr(row: jList[_], colIndex: Int): Option[Set[Long]] = row.get(colIndex) match {
+    case null => Option.empty[Set[Long]]
+    case v    =>
+      val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+      var set = Set.empty[Long]
+      // Hack to avoid looking up map by clojure Keyword - there must be a better way...
+      while (it.hasNext) {
+        var done = false
+        it.next.asInstanceOf[jMap[_, _]].forEach {
+          case _ if done                        =>
+          case (k, v) if k.toString == ":db/id" => done = true; set += v.asInstanceOf[jLong].toLong
+          case _                                =>
+        }
+      }
+      Some(set)
+  }
+
   // ------------------------------
 
   protected def castOptApplyManyInt(row: jList[_], colIndex: Int): Option[Set[Int]] = row.get(colIndex) match {
@@ -314,64 +366,6 @@ trait CastTypes extends Helpers {
       var set = Set.empty[T]
       while (it.hasNext)
         set += it.next.asInstanceOf[T]
-      Some(set)
-  }
-
-
-  // Optional ref attr ===========================================================================================
-
-  protected def castOptOneRefAttr(row: jList[_], colIndex: Int): Option[Long] = row.get(colIndex) match {
-    case null => Option.empty[Long]
-    case v    =>
-      var id   = 0L
-      var done = false
-      // Hack to avoid looking up map by clojure Keyword - there must be a better way...
-      v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.asInstanceOf[jMap[_, _]].forEach {
-        case _ if done                        =>
-        case (k, v) if k.toString == ":db/id" => done = true; id = v.asInstanceOf[jLong].toLong
-        case _                                =>
-      }
-      Some(id)
-  }
-
-  protected def castOptManyRefAttr(row: jList[_], colIndex: Int): Option[Set[Long]] = row.get(colIndex) match {
-    case null => Option.empty[Set[Long]]
-    case v    =>
-      val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-      var set = Set.empty[Long]
-      // Hack to avoid looking up map by clojure Keyword - there must be a better way...
-      while (it.hasNext) {
-        var done = false
-        it.next.asInstanceOf[jMap[_, _]].forEach {
-          case _ if done                        =>
-          case (k, v) if k.toString == ":db/id" => done = true; set += v.asInstanceOf[jLong].toLong
-          case _                                =>
-        }
-      }
-      Some(set)
-  }
-
-
-  // Enum ===========================================================================================
-
-  protected def castOptOneEnum(row: jList[_], colIndex: Int): Option[String] = row.get(colIndex) match {
-    case null => Option.empty[String]
-    case v    =>
-      Some(
-        getKwName(
-          v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next
-            .asInstanceOf[jMap[_, _]].values.iterator.next.toString
-        )
-      )
-  }
-
-  protected def castOptManyEnum(row: jList[_], colIndex: Int): Option[Set[String]] = row.get(colIndex) match {
-    case null => Option.empty[Set[String]]
-    case v    =>
-      val it  = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-      var set = Set.empty[String]
-      while (it.hasNext)
-        set += getKwName(it.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)
       Some(set)
   }
 

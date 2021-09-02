@@ -1,10 +1,10 @@
 package molecule.core.macros.build.tpl
 
-import molecule.core.macros.attrResolverTrees.LambdaCastNestedOpt
-import molecule.core.macros.build.BuildBase
+import molecule.core.macros.attrResolverTrees.ResolverCastNestedOpt
+import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with BuildBase {
+private[molecule] trait BuildTplNestedOpt extends ResolverCastNestedOpt {
   val c: blackbox.Context
 
   import c.universe._
@@ -20,8 +20,8 @@ private[molecule] trait BuildTplNestedOpt extends LambdaCastNestedOpt with Build
 
     def properties(nodes: List[Node]): Seq[Tree] = {
       nodes.flatMap {
-        case attr: Prop                          => Seq(attr.cast(42)) // colIndex not used here
-        case nested@Obj(_, _, true, nestedProps) =>
+        case Prop(_, _, baseTpe, _, group, _) => Seq(getResolverCastNestedOpt(group, baseTpe)(-10)) // colIndex not used with iterator
+        case nested@Obj(_, _, true, nestedProps)       =>
           val propCount = getPropCount(nestedProps)
           val deeper    = isDeeper(nested)
           xx(2, level, current, nested, deeper)

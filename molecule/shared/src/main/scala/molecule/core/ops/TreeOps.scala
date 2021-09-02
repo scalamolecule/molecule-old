@@ -28,7 +28,7 @@ private[molecule] trait TreeOps extends Liftables {
   }
 
   // Index of currently processed lambda for JS resolutions
-  var lambdaIndex = -1
+  var lambdaIndex = -10
 
 
   implicit class richTree(val t: Tree) {

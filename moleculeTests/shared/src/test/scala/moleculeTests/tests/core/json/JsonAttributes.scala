@@ -499,15 +499,15 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "str": null
+            |        "str$": null
             |      },
             |      {
             |        "int": 1,
-            |        "str": ""
+            |        "str$": ""
             |      },
             |      {
             |        "int": 1,
-            |        "str": "c"
+            |        "str$": "c"
             |      }
             |    ]
             |  }
@@ -519,11 +519,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "long": 2,
-            |        "int": null
+            |        "int$": null
             |      },
             |      {
             |        "long": 2,
-            |        "int": 2
+            |        "int$": 2
             |      }
             |    ]
             |  }
@@ -535,11 +535,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 3,
-            |        "long": null
+            |        "long$": null
             |      },
             |      {
             |        "int": 3,
-            |        "long": 20
+            |        "long$": 20
             |      }
             |    ]
             |  }
@@ -551,11 +551,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 4,
-            |        "double": null
+            |        "double$": null
             |      },
             |      {
             |        "int": 4,
-            |        "double": 2.2
+            |        "double$": 2.2
             |      }
             |    ]
             |  }
@@ -567,11 +567,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 5,
-            |        "bool": null
+            |        "bool$": null
             |      },
             |      {
             |        "int": 5,
-            |        "bool": true
+            |        "bool$": true
             |      }
             |    ]
             |  }
@@ -583,11 +583,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 6,
-            |        "date": null
+            |        "date$": null
             |      },
             |      {
             |        "int": 6,
-            |        "date": "2002-01-01"
+            |        "date$": "2002-01-01"
             |      }
             |    ]
             |  }
@@ -599,11 +599,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 7,
-             |        "uuid": null
+             |        "uuid$$": null
              |      },
              |      {
              |        "int": 7,
-             |        "uuid": "$uuid2"
+             |        "uuid$$": "$uuid2"
              |      }
              |    ]
              |  }
@@ -615,11 +615,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 8,
-             |        "uri": null
+             |        "uri$$": null
              |      },
              |      {
              |        "int": 8,
-             |        "uri": "$uri2"
+             |        "uri$$": "$uri2"
              |      }
              |    ]
              |  }
@@ -631,11 +631,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 9,
-            |        "enum": null
+            |        "enum$": null
             |      },
             |      {
             |        "int": 9,
-            |        "enum": "enum2"
+            |        "enum$": "enum2"
             |      }
             |    ]
             |  }
@@ -647,11 +647,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 10,
-             |        "bigInt": null
+             |        "bigInt$$": null
              |      },
              |      {
              |        "int": 10,
-             |        "bigInt": $bigInt2
+             |        "bigInt$$": $bigInt2
              |      }
              |    ]
              |  }
@@ -663,11 +663,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 11,
-             |        "bigDec": null
+             |        "bigDec$$": null
              |      },
              |      {
              |        "int": 11,
-             |        "bigDec": $bigDec2
+             |        "bigDec$$": $bigDec2
              |      }
              |    ]
              |  }
@@ -696,11 +696,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "strs": null
+            |        "strs$": null
             |      },
             |      {
             |        "int": 1,
-            |        "strs": [
+            |        "strs$": [
             |          "",
             |          "b"
             |        ]
@@ -715,11 +715,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "ints": null
+            |        "ints$": null
             |      },
             |      {
             |        "int": 2,
-            |        "ints": [
+            |        "ints$": [
             |          1,
             |          2
             |        ]
@@ -734,11 +734,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 3,
-            |        "longs": null
+            |        "longs$": null
             |      },
             |      {
             |        "int": 3,
-            |        "longs": [
+            |        "longs$": [
             |          1,
             |          2
             |        ]
@@ -753,11 +753,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 4,
-            |        "doubles": null
+            |        "doubles$": null
             |      },
             |      {
             |        "int": 4,
-            |        "doubles": [
+            |        "doubles$": [
             |          1.1,
             |          2.2
             |        ]
@@ -773,11 +773,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 5,
-            |        "bools": null
+            |        "bools$": null
             |      },
             |      {
             |        "int": 5,
-            |        "bools": [
+            |        "bools$": [
             |          false,
             |          true
             |        ]
@@ -792,11 +792,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 6,
-            |        "dates": null
+            |        "dates$": null
             |      },
             |      {
             |        "int": 6,
-            |        "dates": [
+            |        "dates$": [
             |          "2001-07-01",
             |          "2002-01-01"
             |        ]
@@ -811,11 +811,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 7,
-             |        "uuids": null
+             |        "uuids$$": null
              |      },
              |      {
              |        "int": 7,
-             |        "uuids": [
+             |        "uuids$$": [
              |          "$uuid1",
              |          "$uuid2"
              |        ]
@@ -830,11 +830,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 8,
-             |        "uris": null
+             |        "uris$$": null
              |      },
              |      {
              |        "int": 8,
-             |        "uris": [
+             |        "uris$$": [
              |          "$uri1",
              |          "$uri2"
              |        ]
@@ -849,11 +849,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 9,
-            |        "enums": null
+            |        "enums$": null
             |      },
             |      {
             |        "int": 9,
-            |        "enums": [
+            |        "enums$": [
             |          "enum1",
             |          "enum2"
             |        ]
@@ -868,11 +868,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 10,
-             |        "bigInts": null
+             |        "bigInts$$": null
              |      },
              |      {
              |        "int": 10,
-             |        "bigInts": [
+             |        "bigInts$$": [
              |          $bigInt1,
              |          $bigInt2
              |        ]
@@ -887,11 +887,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 11,
-             |        "bigDecs": null
+             |        "bigDecs$$": null
              |      },
              |      {
              |        "int": 11,
-             |        "bigDecs": [
+             |        "bigDecs$$": [
              |          $bigDec1,
              |          $bigDec2
              |        ]
@@ -922,11 +922,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 1,
-            |        "strMap": null
+            |        "strMap$": null
             |      },
             |      {
             |        "int": 1,
-            |        "strMap": {
+            |        "strMap$": {
             |          "a": "A",
             |          "b": "B"
             |        }
@@ -941,11 +941,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 2,
-            |        "intMap": null
+            |        "intMap$": null
             |      },
             |      {
             |        "int": 2,
-            |        "intMap": {
+            |        "intMap$": {
             |          "a": 1,
             |          "b": 2
             |        }
@@ -960,11 +960,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 3,
-            |        "longMap": null
+            |        "longMap$": null
             |      },
             |      {
             |        "int": 3,
-            |        "longMap": {
+            |        "longMap$": {
             |          "a": 1,
             |          "b": 2
             |        }
@@ -979,11 +979,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 4,
-            |        "doubleMap": null
+            |        "doubleMap$": null
             |      },
             |      {
             |        "int": 4,
-            |        "doubleMap": {
+            |        "doubleMap$": {
             |          "a": 1.1,
             |          "b": 2.2
             |        }
@@ -998,11 +998,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 5,
-            |        "boolMap": null
+            |        "boolMap$": null
             |      },
             |      {
             |        "int": 5,
-            |        "boolMap": {
+            |        "boolMap$": {
             |          "a": true,
             |          "b": false
             |        }
@@ -1017,11 +1017,11 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "int": 6,
-            |        "dateMap": null
+            |        "dateMap$": null
             |      },
             |      {
             |        "int": 6,
-            |        "dateMap": {
+            |        "dateMap$": {
             |          "a": "2001-07-01",
             |          "b": "2002-01-01"
             |        }
@@ -1036,11 +1036,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 7,
-             |        "uuidMap": null
+             |        "uuidMap$$": null
              |      },
              |      {
              |        "int": 7,
-             |        "uuidMap": {
+             |        "uuidMap$$": {
              |          "a": "$uuid1",
              |          "b": "$uuid2"
              |        }
@@ -1055,11 +1055,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 8,
-             |        "uriMap": null
+             |        "uriMap$$": null
              |      },
              |      {
              |        "int": 8,
-             |        "uriMap": {
+             |        "uriMap$$": {
              |          "a": "$uri1",
              |          "b": "$uri2"
              |        }
@@ -1074,11 +1074,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 9,
-             |        "bigIntMap": null
+             |        "bigIntMap$$": null
              |      },
              |      {
              |        "int": 9,
-             |        "bigIntMap": {
+             |        "bigIntMap$$": {
              |          "a": $bigInt1,
              |          "b": $bigInt2
              |        }
@@ -1093,11 +1093,11 @@ object JsonAttributes extends AsyncTestSuite {
              |    "Ns": [
              |      {
              |        "int": 10,
-             |        "bigDecMap": null
+             |        "bigDecMap$$": null
              |      },
              |      {
              |        "int": 10,
-             |        "bigDecMap": {
+             |        "bigDecMap$$": {
              |          "a": $bigDec1,
              |          "b": $bigDec2
              |        }

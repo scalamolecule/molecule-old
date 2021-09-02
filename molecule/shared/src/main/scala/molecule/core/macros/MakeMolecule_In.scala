@@ -1,6 +1,5 @@
 package molecule.core.macros
 
-import molecule.core.macros.attrResolverTrees.LambdaCastAggr
 import molecule.core.ops.{Liftables, TreeOps}
 import molecule.core.transform.Dsl2Model
 import molecule.datomic.base.transform.Model2Query

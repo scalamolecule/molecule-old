@@ -259,6 +259,24 @@ private[molecule] trait JsonNestedOpt extends JsonBase {
     }
   }
 
+  protected def jsonNestedOptOptManyEnum(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
+    it0.next match {
+      case "__none__" => pair(sb, field, "null")
+      case v          =>
+        quote(sb, field)
+        sb.append(": [")
+        var next = false
+        val vs         = v.asInstanceOf[jList[_]].iterator
+        while (vs.hasNext) {
+          if (next) sb.append(", ") else next = true
+          sb.append(indent(tabs + 1))
+          quote(sb, getKwName(vs.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
+        }
+        if (next) sb.append(indent(tabs))
+        sb.append("]")
+    }
+  }
+
   protected def jsonNestedOptOptManyRefAttr(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
       case "__none__" => pair(sb, field, "null")
@@ -274,24 +292,6 @@ private[molecule] trait JsonNestedOpt extends JsonBase {
             .asInstanceOf[jMap[_, _]].values().iterator().next
             .asInstanceOf[jLong].toLong
           sb.append(refAttr)
-        }
-        if (next) sb.append(indent(tabs))
-        sb.append("]")
-    }
-  }
-
-  protected def jsonNestedOptOptManyEnum(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
-    it0.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
-        quote(sb, field)
-        sb.append(": [")
-        var next = false
-        val vs         = v.asInstanceOf[jList[_]].iterator
-        while (vs.hasNext) {
-          if (next) sb.append(", ") else next = true
-          sb.append(indent(tabs + 1))
-          quote(sb, getKwName(vs.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
         }
         if (next) sb.append(indent(tabs))
         sb.append("]")

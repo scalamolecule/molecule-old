@@ -1,11 +1,10 @@
 package molecule.core.macros.build.tpl
 
-import molecule.core.macros.build.BuildBase
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
 
-trait BuildTplComposite extends TreeOps { self: BuildTpl with BuildBase =>
+trait BuildTplComposite extends TreeOps { self: BuildTpl =>
   val c: blackbox.Context
 
   import c.universe._
