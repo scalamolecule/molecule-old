@@ -20,7 +20,7 @@ import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
 import molecule.core.macros.attrResolvers.{CastOptNested, CastTypes, JsonBase}
-import molecule.datomic.api.out4.m
+import molecule.core.marshalling.nodes._
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
@@ -112,37 +112,45 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //                  ("E", List(), 7777, 8888)
         //                ))
 
-        //        indexes = Indexes("Ns", 2, List(
-        //          AttrIndex("X", "str", 0, 0, 1, false),
-        //          Indexes("Refs1", 2, List(
-        //            AttrIndex("X", "int1$", 14, 11, 1, false),
-        //            Indexes("Ref2", 1, List(
-        //              AttrIndex("X", "int2$", 14, 11, 0, false),
-        //              AttrIndex("X", "str2", 0, 0, 0, false))))),
-        //          Indexes("Tx", 1, List(
-        //            Indexes("Ref3", 1, List(
-        //              AttrIndex("X", "int3", 1, 1, 0, true),
-        //              Indexes("Ref4", 1, List(
-        //                AttrIndex("X", "int4", 1, 1, 0, true)))))))))
-        //
-        //        rows <- conn.qRaw(
-        //          """[:find  ?sort0 ?sort1 ?b
-        //            |        (pull ?c__1 [(limit :Ref1/int1 nil)])
-        //            |        (pull ?e__2 [(limit :Ref2/int2 nil)])
-        //            |        ?g ?i ?k
-        //            | :where [?a :Ns/str ?b]
-        //            |        [?a :Ns/refs1 ?c]
-        //            |        [(identity ?c) ?c__1]
-        //            |        [?c :Ref1/ref2 ?e]
-        //            |        [(identity ?e) ?e__2]
-        //            |        [?e :Ref2/str2 ?g ?tx]
-        //            |        [?tx :Ref3/int3 ?i]
-        //            |        [?tx :Ref3/ref4 ?j]
-        //            |        [?j :Ref4/int4 ?k]
-        //            |        [(identity ?a) ?sort0]
-        //            |        [(identity ?c) ?sort1]]""".stripMargin
-        //        )
-        //        packed = Nested2packed(indexes, rows, 1).getPacked
+        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1$) insert List(
+          (10, List((1, Some(Set("a", "b"))), (2, None))),
+          (20, List())
+        )
+
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).get.map(_.sortBy(_._1) ==> List(
+//          (10, List((1, Some(Set("a", "b"))), (2, None))),
+//          (20, List())
+//        ))
+
+        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).inspectGet
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).inspectGet
+
+
+
+        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).get.map(_.sortBy(_._1) ==> List(
+          (10, List((1, Set("a", "b")))),
+          (20, List())
+        ))
+
+        obj = Obj("", "Ns", false, List(
+          Prop("Ns_int", "int", "Int", 1, "One", None),
+          Obj("Ns__Refs1", "Refs1", true, List(
+            Prop("Ref1_int1", "int1", "Int", 1, "One", None),
+            Prop("Ref1_strs1", "strs1", "String", 2, "Many", None)))))
+
+        rows <- conn.qRaw(
+          """[:find  ?b
+            |        (pull ?a__1 [
+            |          {(:Ns/refs1 :limit nil) [
+            |            (:Ref1/int1 :limit nil :default "__none__")
+            |            (:Ref1/strs1 :limit nil :default "__none__")]}])
+            | :where [?a :Ns/int ?b]
+            |        [(identity ?a) ?a__1]]""".stripMargin
+        )
+        _ = rows.forEach(row => println(row))
+
+        packed = OptNested2packed(obj, rows).getPacked
+
         //
         //        rowsOpt <- conn.qRaw(
         //          """[:find  ?b

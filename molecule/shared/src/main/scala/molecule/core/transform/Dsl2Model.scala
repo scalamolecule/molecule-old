@@ -16,7 +16,7 @@ import molecule.core.macros.build.json._
 import molecule.core.macros.build.obj.BuildObj
 import molecule.core.macros.build.tpl._
 import molecule.core.marshalling.nodes._
-import molecule.core.marshalling.unpack.{Packed2tpl, UnpackTypes}
+import molecule.core.marshalling.unpack._
 import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
@@ -24,18 +24,20 @@ import scala.reflect.macros.blackbox
 import scala.util.{Try => Check}
 
 private[molecule] trait Dsl2Model extends TreeOps
-  with BuildTpl
+  with BuildTplFlat
   with BuildTplComposite
   with BuildTplNested
   with BuildTplOptNested
 
   with BuildObj
 
-  with BuildJson
+  with BuildJsonFlat
   with BuildJsonNested
   with BuildJsonOptNested
 
-  with Packed2tpl
+  with Packed2tplFlat
+  with Packed2tplNested
+  with Packed2tplComposite
   with UnpackTypes
 
   with ResolverCastTypes

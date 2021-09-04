@@ -1,6 +1,7 @@
 package molecule.datomic.base.marshalling.packers
 
 import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
+import clojure.lang.Keyword
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
@@ -46,7 +47,7 @@ trait PackOptNestedTypes extends PackBase with Helpers {
 
   // packOptOne -------------------------------------------------------
 
-  protected lazy val packOptNestedOptOneEnum = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneEnum   = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
       case v          => add(
@@ -82,86 +83,88 @@ trait PackOptNestedTypes extends PackBase with Helpers {
   protected lazy val packOptNestedOptOneRefAttr = (it: jIterator[_]) => {
     it.next match {
       case "__none__" => end()
-      case v          =>
-        var id   = ""
-        var done = false
-        // Hack to avoid looking up map by clojure Keyword - there must be a better way...
-        v.asInstanceOf[jMap[_, _]].forEach {
-          case _ if done                        =>
-          case (k, v) if k.toString == ":db/id" => done = true; id = v.toString
-          case _                                =>
-        }
-        add(id)
+      case v          => add(v.asInstanceOf[Keyword].getName)
+      //        var id   = ""
+      //        var done = false
+      //        // Hack to avoid looking up map by clojure Keyword - there must be a better way...
+      //        v.asInstanceOf[jMap[_, _]].forEach {
+      //          case _ if done                        =>
+      //          case (k, v) if k.toString == ":db/id" => done = true; id = v.toString
+      //          case _                                =>
+      //        }
+      //        add(id)
     }
   }
 
 
   // packMany -------------------------------------------------------
 
-  protected lazy val packOptNestedManyEnum = (it: jIterator[_]) => {
-    val vs = it.next.asInstanceOf[jSet[_]].iterator
-    while (vs.hasNext)
-      add(vs.next.toString)
-    end()
-  }
+  //  protected lazy val packOptNestedManyEnum = (it: jIterator[_]) => {
+  ////    val vs = it.next.asInstanceOf[jList[_]].iterator
+  ////    while (vs.hasNext)
+  ////      add(vs.next.toString)
+  //    it.next.asInstanceOf[jList[_]].forEach(v => add(v.toString))
+  //    end()
+  //  }
 
   protected lazy val packOptNestedManyString = (it: jIterator[_]) => {
-    val vs = it.next.asInstanceOf[jSet[_]].iterator
-    while (vs.hasNext) {
-      add(vs.next.toString)
+    //    val vs = it.next.asInstanceOf[jList[_]].iterator
+    //    while (vs.hasNext) {
+    //      add(vs.next.toString)
+    //      end()
+    //    }
+    it.next.asInstanceOf[jList[_]].forEach { v =>
+      add(v.toString)
       end()
     }
     end()
   }
 
-  protected lazy val packOptNestedMany_ = (it: jIterator[_]) => {
-    val vs = it.next.asInstanceOf[jSet[_]].iterator
-    while (vs.hasNext)
-      add(vs.next.toString)
+  protected lazy val packOptNestedManyDate = (it: jIterator[_]) => {
+    //    val vs = it.next.asInstanceOf[jList[_]].iterator
+    //    while (vs.hasNext)
+    //      add(date2strLocal(vs.next.asInstanceOf[Date]))
+    it.next.asInstanceOf[jList[_]].forEach(v => add(date2strLocal(v.asInstanceOf[Date])))
     end()
   }
 
-  protected lazy val packOptNestedManyDate = (it: jIterator[_]) => {
-    val vs = it.next.asInstanceOf[jSet[_]].iterator
-    while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
+  protected lazy val packOptNestedMany_ = (it: jIterator[_]) => {
+    //    val vs = it.next.asInstanceOf[jList[_]].iterator
+    //    while (vs.hasNext)
+    //      add(vs.next.toString)
+    it.next.asInstanceOf[jList[_]].forEach(v => add(v.toString))
     end()
   }
 
 
   // packOptMany -------------------------------------------------------
 
-  protected lazy val packOptNestedOptManyEnum = (it: jIterator[_]) => {
-    it.next match {
-      case "__none__" =>
-      case v          =>
-        val vs = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-        while (vs.hasNext)
-          add(vs.next.toString)
-    }
-    end()
-  }
+  //  protected lazy val packOptNestedOptManyEnum = (it: jIterator[_]) => {
+  //    it.next match {
+  //      case "__none__" =>
+  //      case vs         =>
+  //        //        val vs = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+  ////        val vs = v.asInstanceOf[jList[_]].iterator
+  ////        while (vs.hasNext)
+  ////          add(vs.next.toString)
+  //        vs.asInstanceOf[jList[_]].forEach(v => add(v.toString))
+  //    }
+  //    end()
+  //  }
 
   protected lazy val packOptNestedOptManyString = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case v          =>
-        val vs = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-        while (vs.hasNext) {
-          add(vs.next.toString)
+      case vs         =>
+        //        val vs = v.asInstanceOf[jList[_]].iterator
+        //        while (vs.hasNext) {
+        //          add(vs.next.toString)
+        //          end()
+        //        }
+        vs.asInstanceOf[jList[_]].forEach { v =>
+          add(v.toString)
           end()
         }
-    }
-    end()
-  }
-
-  protected lazy val packOptNestedOptMany_ = (it: jIterator[_]) => {
-    it.next match {
-      case "__none__" =>
-      case v          =>
-        val vs = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-        while (vs.hasNext)
-          add(vs.next.toString)
     }
     end()
   }
@@ -169,10 +172,11 @@ trait PackOptNestedTypes extends PackBase with Helpers {
   protected lazy val packOptNestedOptManyDate = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case v          =>
-        val vs = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-        while (vs.hasNext)
-          add(date2strLocal(vs.next.asInstanceOf[Date]))
+      case vs         =>
+        //        val vs = v.asInstanceOf[jList[_]].iterator
+        //        while (vs.hasNext)
+        //          add(date2strLocal(vs.next.asInstanceOf[Date]))
+        vs.asInstanceOf[jList[_]].forEach(v => add(date2strLocal(v.asInstanceOf[Date])))
     }
     end()
   }
@@ -180,17 +184,32 @@ trait PackOptNestedTypes extends PackBase with Helpers {
   protected lazy val packOptNestedOptManyRefAttr = (it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case v          =>
-        val vs = v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
-        // Hack to avoid looking up map by clojure Keyword - there must be a better way...
-        while (vs.hasNext) {
-          var done = false
-          it.next.asInstanceOf[jMap[_, _]].forEach {
-            case _ if done                        =>
-            case (k, v) if k.toString == ":db/id" => done = true; add(v.toString)
-            case _                                =>
-          }
-        }
+      case vs         =>
+        //        v.asInstanceOf[jList[_]].forEach(v => println(v))
+        //        val vs = v.asInstanceOf[jList[_]].iterator
+        //        while (vs.hasNext) {
+        //          //        // Hack to avoid looking up map by clojure Keyword - there must be a better way...
+        //          //          var done = false
+        //          //          it.next.asInstanceOf[jMap[_, _]].forEach {
+        //          //            case _ if done                        =>
+        //          //            case (k, v) if k.toString == ":db/id" => done = true; add(v.toString)
+        //          //            case _                                =>
+        //          //          }
+        //          add(vs.next.asInstanceOf[Keyword].getName)
+        //        }
+        vs.asInstanceOf[jList[_]].forEach(v => add(v.asInstanceOf[Keyword].getName))
+    }
+    end()
+  }
+
+  protected lazy val packOptNestedOptMany_ = (it: jIterator[_]) => {
+    it.next match {
+      case "__none__" =>
+      case vs         =>
+        //        val vs = v.asInstanceOf[jList[_]].iterator
+        //        while (vs.hasNext)
+        //          add(vs.next.toString)
+        vs.asInstanceOf[jList[_]].forEach(v => add(v.toString))
     }
     end()
   }

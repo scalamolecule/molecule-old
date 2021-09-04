@@ -3,7 +3,7 @@ package molecule.core.macros.build.tpl
 import scala.reflect.macros.blackbox
 
 
-private[molecule] trait BuildTplNested { self: BuildTplComposite with BuildTpl =>
+private[molecule] trait BuildTplNested { self: BuildTplComposite with BuildTplFlat =>
   val c: blackbox.Context
 
   import c.universe._

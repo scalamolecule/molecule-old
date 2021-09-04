@@ -7,17 +7,21 @@ import molecule.datomic.base.marshalling.packers.ResolveFlat
 case class Flat2packed(
   obj: Obj,
   rows: jCollection[jList[AnyRef]],
-  maxRows: Int
+  maxRows: Int = -1
 ) extends ResolveFlat {
 
   def getPacked: String = {
     if (!rows.isEmpty) {
       val packRow: jList[_] => Unit = packRef(obj.props, 0)
-      val rowIterator               = rows.iterator()
-      var i                         = 0
-      while (rowIterator.hasNext && i != maxRows) {
-        packRow(rowIterator.next)
-        i += 1
+      if (maxRows == -1) {
+        rows.forEach(row => packRow(row))
+      } else {
+        val rowIterator = rows.iterator()
+        var i           = 0
+        while (rowIterator.hasNext && i != maxRows) {
+          packRow(rowIterator.next)
+          i += 1
+        }
       }
     }
     sb.substring(1)
@@ -30,7 +34,7 @@ case class Flat2packed(
     node match {
       case Prop(_, _, baseTpe, _, group, _) =>
         colIndex += 1
-        packFlatAttr2(group, baseTpe, colIndex)
+        packFlatAttr(group, baseTpe, colIndex)
 
       case Obj(_, _, _, props) =>
         packRef(props, level)

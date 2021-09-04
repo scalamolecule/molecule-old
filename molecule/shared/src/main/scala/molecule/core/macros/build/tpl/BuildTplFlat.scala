@@ -4,7 +4,7 @@ import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
 
-trait BuildTpl extends TreeOps {
+trait BuildTplFlat extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._
@@ -18,7 +18,7 @@ trait BuildTpl extends TreeOps {
     }
   }
 
-  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): Seq[Tree] = {
+  def compositeCasts(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
     var i = -1 + offset
     castss.flatMap {
       case Nil   => None

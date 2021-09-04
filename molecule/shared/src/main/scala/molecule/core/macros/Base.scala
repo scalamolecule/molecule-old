@@ -20,6 +20,7 @@ private[molecule] trait Base extends Dsl2Model {
         import molecule.core.exceptions.MoleculeException
         ..$genericImports
         import molecule.core.marshalling.MoleculeRpc
+        import molecule.core.marshalling.nodes
         import molecule.core.marshalling.nodes._
         import molecule.core.ops.ModelOps._
         import molecule.datomic.base.ast.query._

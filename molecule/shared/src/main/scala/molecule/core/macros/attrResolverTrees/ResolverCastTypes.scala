@@ -45,8 +45,8 @@ private[molecule] trait ResolverCastTypes extends TreeOps {
     case "BigInt"     => (colIndex: Int) => q"castOneBigInt(row, $colIndex)"
     case "BigDecimal" => (colIndex: Int) => q"castOneBigDecimal(row, $colIndex)"
     case "Any"        => (colIndex: Int) => q"row.get($colIndex)"
-    case "enum"       =>  (colIndex: Int) => q"row.get($colIndex).asInstanceOf[String]"
-    case "ref"        =>  (colIndex: Int) => q"castOne[Long](row, $colIndex)"
+    case "enum"       => (colIndex: Int) => q"row.get($colIndex).asInstanceOf[String]"
+    case "ref"        => (colIndex: Int) => q"castOne[Long](row, $colIndex)"
   }
 
   lazy val castManyAttr: String => Int => Tree = {

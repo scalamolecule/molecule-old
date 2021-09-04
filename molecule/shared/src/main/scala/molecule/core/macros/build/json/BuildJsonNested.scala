@@ -2,7 +2,7 @@ package molecule.core.macros.build.json
 
 import molecule.core.macros.attrResolverTrees.ResolverJsonTypes
 import molecule.core.macros.attrResolvers.JsonBase
-import molecule.core.macros.build.tpl.{BuildTpl, BuildTplComposite}
+import molecule.core.macros.build.tpl.{BuildTplFlat, BuildTplComposite}
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 

@@ -31,7 +31,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
     val transformers = if (isJsPlatform) {
       q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas, true)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplComposite(obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 

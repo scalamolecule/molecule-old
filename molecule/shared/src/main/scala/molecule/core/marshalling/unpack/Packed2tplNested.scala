@@ -5,19 +5,18 @@ import molecule.core.marshalling.nodes._
 import scala.collection.mutable
 import scala.reflect.macros.blackbox
 
-trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
+trait Packed2tplNested extends Unpackers { self: BuildTplComposite =>
   val c: blackbox.Context
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("Packed2tpl", 1, mkError = true)
-  private lazy val xx = InspectMacro("Packed2tpl", 2)
+//  private lazy val xx = InspectMacro("Packed2tplNested", 1, mkError = true)
+    private lazy val xx = InspectMacro("Packed2tplNested", 1)
 
-  def packed2tpl(
+  def packed2tplNested(
     typess: List[List[Tree]],
     obj: Obj,
-    txMetas: Int,
-    composite: Boolean = false
+    txMetas: Int
   ): Tree = {
     val v          = q"v"
     val next       = q"vs.next()"
@@ -39,8 +38,8 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
 
     def resolveTxGroups(txCompositeGroups: Seq[Node]): Seq[Tree] = {
       def resolve(nodes: Seq[Node], acc: Seq[Tree]): Seq[Tree] = nodes.flatMap {
-        case Prop(_, _, baseTpe, _, group, _) => acc :+ unpackLambdas2(group, baseTpe, v)
-        case Obj(_, _, _, nodes)         => resolve(nodes, acc)
+        case Prop(_, _, baseTpe, _, group, _) => acc :+ unpackLambdas(group, baseTpe, next)
+        case Obj(_, _, _, nodes)              => resolve(nodes, acc)
       }
       txCompositeGroups.collect {
         case Obj(_, _, _, nodes) => resolve(nodes, Nil)
@@ -53,16 +52,16 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
     def setUnpacker(node: Node, level: Int, i: Int): Unit = {
       node match {
         case Prop(_, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, v)
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas(group, baseTpe, v)
 
         case Prop(_, _, baseTpe, _, group, _) =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, next)
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas(group, baseTpe, next)
 
         case Obj(_, _, true, props) =>
           unpackerss(level) = unpackerss(level) :+ q"${TermName("nested" + (level + 1))}"
           setUnpackers(props, level + 1, 0)
 
-        case Obj("Tx_", _, _, txGroups)  if txMetas != 0 =>
+        case Obj("Tx_", _, _, txGroups) if txMetas != 0 =>
           unpackerss(level) = unpackerss(level) ++ resolveTxGroups(txGroups)
 
         case Obj(_, _, _, props) =>
@@ -78,7 +77,7 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
     setUnpackers(obj.props, 0, 0)
 
 
-    def unpackNested = {
+    def nested = {
       def mkNested(level: Int, unpackers: Seq[Tree]): c.universe.Tree = {
         q"""
           def ${TermName("nested" + level)} = {
@@ -99,48 +98,27 @@ trait Packed2tpl extends Unpackers { self: BuildTplComposite =>
       val nested = unpackerss.take(levels).zipWithIndex.tail.map {
         case (unpackers, level) => mkNested(level, unpackers)
       }
-      q"""{
-          ..$nested
-          (..${unpackerss.head})
-         }
-       """
+      val tree =
+        q"""{
+            ..$nested
+            (..${unpackerss.head})
+          }
+        """
+      xx(1, typess, typess1, obj, unpackerss, tree)
+
+      tree
     }
 
-    def unpackComposite = {
-      var i                   = -1
-      val unpackers           = unpackerss.head
-      val compositeUnpackerss = typess.map { types =>
-        types.map { _ =>
-          i += 1
-          unpackers(i)
-        }
-      }
-      val ordinaryComposites  = compositeUnpackerss.take(compositeUnpackerss.length - txMetas)
-      val txMetaComposites    = compositeUnpackerss.takeRight(txMetas)
-      val firstComposites     = ordinaryComposites.init
-      val lastComposite       = ordinaryComposites.last
 
-      def compositeTuples(unpackerss: List[List[Tree]]): List[Tree] = unpackerss.flatMap {
-        case Nil       => None
-        case unpackers => Some(q"(..$unpackers)")
-      }
+    def nestedTxComposite: Tree = {
 
-      if (txMetas > 0) {
-        val first = compositeTuples(firstComposites)
-        val last  = lastComposite ++ compositeTuples(txMetaComposites)
-
-        //      z(1, model0, types, castss, first, last)
-        (first, last) match {
-          case (Nil, last)   => q"(..$last)"
-          case (first, Nil)  => q"(..$first)"
-          case (first, last) => q"(..$first, (..$last))"
-        }
-      } else {
-        q"(..${compositeTuples(compositeUnpackerss)})"
-      }
+      q""
     }
 
-    val tree = if (composite) unpackComposite else unpackNested
+
+
+//    val tree = if (txMetas <= 1) nested else nestedTxComposite
+    val tree = if (txMetas <= 1) nested else nested
 
     xx(1
       , levels

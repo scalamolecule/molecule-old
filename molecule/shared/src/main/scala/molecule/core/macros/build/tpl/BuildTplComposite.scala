@@ -4,7 +4,7 @@ import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
 
-trait BuildTplComposite extends TreeOps { self: BuildTpl =>
+trait BuildTplComposite extends TreeOps { self: BuildTplFlat =>
   val c: blackbox.Context
 
   import c.universe._

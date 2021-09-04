@@ -82,7 +82,7 @@ trait Conn extends ColOps with Serializations {
     val futResult    = rpc.query2packed(
       connProxy, datalogQuery, rules, l, ll, lll, n, obj, nestedLevels, isOptNested
     ).map { packed =>
-      //                println(packed)
+      //      println("`" + packed + "`")
       val vs = packed.linesIterator
       vs.next() // skip initial newline
       val rows = new ListBuffer[Tpl]

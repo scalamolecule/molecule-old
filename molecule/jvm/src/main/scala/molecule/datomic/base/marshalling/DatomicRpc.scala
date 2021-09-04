@@ -105,7 +105,7 @@ object DatomicRpc extends MoleculeRpc
       else
         Nested2packed(obj, allRows, nestedLevels).getPacked
 
-      println("###### DatomicRpc ####################" + packed)
+      println("###### DatomicRpc #########################################" + packed)
 
       //        log("Sending data to client... Total server time: " + t.msTotal)
       packed

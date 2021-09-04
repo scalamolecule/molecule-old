@@ -5,7 +5,7 @@ import java.util.{Iterator => jIterator}
 
 trait ResolveOptNested extends PackOptNestedTypes with PackOptNestedAggr {
 
-  def packOptNestedAttr2(group: String, baseTpe: String): jIterator[_] => Unit = group match {
+  def packOptNestedAttr(group: String, baseTpe: String): jIterator[_] => Unit = group match {
     case "One"                  => packOneAttr(baseTpe)
     case "OptOne"               => packOptOneAttr(baseTpe)
     case "Many"                 => packManyAttr(baseTpe)
@@ -45,14 +45,14 @@ trait ResolveOptNested extends PackOptNestedTypes with PackOptNestedAggr {
   def packManyAttr(baseTpe: String): jIterator[_] => Unit = baseTpe match {
     case "String" => packOptNestedManyString
     case "Date"   => packOptNestedManyDate
-    case "enum"   => packOptNestedManyEnum
+//    case "enum"   => packOptNestedManyEnum
     case _        => packOptNestedMany_
   }
 
   def packOptManyAttr(baseTpe: String): jIterator[_] => Unit = baseTpe match {
     case "String" => packOptNestedOptManyString
     case "Date"   => packOptNestedOptManyDate
-    case "enum"   => packOptNestedOptManyEnum
+//    case "enum"   => packOptNestedOptManyEnum
     case "ref"    => packOptNestedOptManyRefAttr
     case _        => packOptNestedOptMany_
   }

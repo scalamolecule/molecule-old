@@ -6,7 +6,7 @@ import java.util.{List => jList}
 trait ResolveFlat extends PackFlatTypes with PackFlatAggr {
 
 
-  def packFlatAttr2(group: String, baseTpe: String, colIndex: Int): jList[_] => Unit = group match {
+  def packFlatAttr(group: String, baseTpe: String, colIndex: Int): jList[_] => Unit = group match {
     case "One"                  => packOneAttr(baseTpe, colIndex)
     case "OptOne"               => packOptOneAttr(baseTpe, colIndex)
     case "Many"                 => packManyAttr(baseTpe, colIndex)

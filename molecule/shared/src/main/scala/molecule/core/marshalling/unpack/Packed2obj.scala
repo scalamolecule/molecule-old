@@ -30,10 +30,10 @@ trait Packed2obj extends Unpackers {
     def setUnpacker(node: Node, level: Int, i: Int): Unit = {
       node match {
         case Prop(_, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, v)
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas(group, baseTpe, v)
 
         case Prop(_, _, baseTpe, _, group, _) =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas2(group, baseTpe, next)
+          unpackerss(level) = unpackerss(level) :+ unpackLambdas(group, baseTpe, next)
 
         case Obj(_, _, true, props) =>
           unpackerss(level) = unpackerss(level) :+ q"${TermName("nested" + (level + 1))}"

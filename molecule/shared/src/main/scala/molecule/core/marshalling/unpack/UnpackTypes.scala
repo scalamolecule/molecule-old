@@ -53,6 +53,7 @@ trait UnpackTypes extends Helpers {
     buf.toString
   }
 
+  protected lazy val unpackOneEnum       = (v: String) => v
   protected lazy val unpackOneInt        = (v: String) => v.toInt
   protected lazy val unpackOneLong       = (v: String) => v.toLong
   protected lazy val unpackOneDouble     = (v: String) => v.toDouble
@@ -132,6 +133,7 @@ trait UnpackTypes extends Helpers {
     buf.toSet
   }
 
+  protected lazy val unpackManyEnum       = (v: String, vs: Iterator[String]) => unpackMany(v, vs, bufString, unpackOneEnum)
   protected lazy val unpackManyInt        = (v: String, vs: Iterator[String]) => unpackMany(v, vs, bufInt, unpackOneInt)
   protected lazy val unpackManyLong       = (v: String, vs: Iterator[String]) => unpackMany(v, vs, bufLong, unpackOneLong)
   protected lazy val unpackManyDouble     = (v: String, vs: Iterator[String]) => unpackMany(v, vs, bufDouble, unpackOneDouble)
@@ -157,6 +159,7 @@ trait UnpackTypes extends Helpers {
     }
   }
 
+  protected lazy val unpackOptManyEnum       = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[String]] else Some(unpackMany(v, vs, bufString, unpackOneEnum))
   protected lazy val unpackOptManyInt        = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[Int]] else Some(unpackMany(v, vs, bufInt, unpackOneInt))
   protected lazy val unpackOptManyLong       = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[Long]] else Some(unpackMany(v, vs, bufLong, unpackOneLong))
   protected lazy val unpackOptManyDouble     = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[Double]] else Some(unpackMany(v, vs, bufDouble, unpackOneDouble))

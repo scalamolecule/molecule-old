@@ -35,11 +35,15 @@ trait CastOptNested extends Helpers {
   // Many ======================================================================
 
   protected def castOptNestedManyInt(it: jIterator[_]): Set[Int] = {
-    val it1 = it.next.asInstanceOf[jList[_]].iterator
-    var set = Set.empty[Int]
-    while (it1.hasNext)
-      set += it1.next.asInstanceOf[jLong].toInt
-    set
+    it.next match {
+      case "__none__" => Set.empty[Int]
+      case vs         =>
+        val it1 = vs.asInstanceOf[jList[_]].iterator
+        var set = Set.empty[Int]
+        while (it1.hasNext)
+          set += it1.next.asInstanceOf[jLong].toInt
+        set
+    }
   }
 
   protected def castOptNestedManyBigInt(it: jIterator[_]): Set[BigInt] = {
@@ -59,11 +63,15 @@ trait CastOptNested extends Helpers {
   }
 
   protected def castOptNestedMany[T](it: jIterator[_]): Set[T] = {
-    val it1 = it.next.asInstanceOf[jList[_]].iterator
-    var set = Set.empty[T]
-    while (it1.hasNext)
-      set += it1.next.asInstanceOf[T]
-    set
+    it.next match {
+      case "__none__" => Set.empty[T]
+      case vs         =>
+        val it1 = vs.asInstanceOf[jList[_]].iterator
+        var set = Set.empty[T]
+        while (it1.hasNext)
+          set += it1.next.asInstanceOf[T]
+        set
+    }
   }
 
   protected def castOptNestedManyEnum(it: jIterator[_]): Set[String] = {
@@ -143,7 +151,7 @@ trait CastOptNested extends Helpers {
     it.next match {
       case null | "__none__" => Option.empty[String]
       case v: jMap[_, _]     => Some(getKwName(v.values.iterator.next.toString))
-      case v => Some(
+      case v                 => Some(
         getKwName(v.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
       )
     }

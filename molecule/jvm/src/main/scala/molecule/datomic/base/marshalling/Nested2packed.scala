@@ -56,6 +56,7 @@ case class Nested2packed(
     case 6 => () => e5
     case 7 => () => e6
   }
+
   def setCurEid(level: Int) = level match {
     case 1 => (e: AnyRef) => e1 = e
     case 2 => (e: AnyRef) => e2 = e
@@ -64,7 +65,6 @@ case class Nested2packed(
     case 5 => (e: AnyRef) => e5 = e
     case 6 => (e: AnyRef) => e6 = e
   }
-
 
   def getPacked: String = {
     if (!rowCollection.isEmpty) {
@@ -77,7 +77,7 @@ case class Nested2packed(
     node match {
       case Prop(_, _, baseTpe, _, group, _) =>
         colIndex += 1
-        packFlatAttr2(group, baseTpe, colIndex)
+        packFlatAttr(group, baseTpe, colIndex)
 
       case Obj(_, _, true, props) =>
         packNested(props, level + 1)

@@ -7,7 +7,7 @@ import molecule.datomic.base.marshalling.packers.ResolveOptNested
 case class OptNested2packed(
   obj: Obj,
   rowCollection: jCollection[jList[AnyRef]],
-  maxRows: Int
+  maxRows: Int = -1
 ) extends ResolveOptNested {
 
   def getList(nestedData: Any): jList[Any] = {
@@ -16,11 +16,6 @@ case class OptNested2packed(
     else
       nestedData.asInstanceOf[jMap[String, Any]].values().iterator.next.asInstanceOf[jList[Any]]
   }
-
-  // Mutable placeholders for fast iterations with minimal object allocation
-  var i                  = 0
-  var it: jIterator[Any] = null
-
 
   def getPacked: String = {
     if (!rowCollection.isEmpty) {
@@ -36,7 +31,7 @@ case class OptNested2packed(
   def packNode(node: Node, top: Boolean = false): jIterator[_] => Unit = {
     node match {
       case Prop(_, _, baseTpe, _, group, _) =>
-        packOptNestedAttr2(group, baseTpe)
+        packOptNestedAttr(group, baseTpe)
 
       case Obj(_, _, true, props) =>
         packNested(props)
@@ -131,15 +126,28 @@ case class OptNested2packed(
   }
 
 
+  // Mutable placeholders for fast iterations with minimal object allocation
+  var i                  = 0
+  var it: jIterator[Any] = null
+
   def packNested1(attrs: List[Node], top: Boolean): jIterator[_] => Unit = {
     val pack0 = packNode(attrs.head, top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            // Iterator on top level is immutable to not be affected by nested iterators assigned to mutable `it`
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            // Iterator on top level is immutable to not be affected by nested iterators assigned to mutable `it`
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -157,18 +165,26 @@ case class OptNested2packed(
     val pack0 = packNode(attrs.head, top)
     val pack1 = packNode(attrs(1), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          // Iterator on top level is immutable to not be affected by nested iterators assigned to mutable `it`
-          val it = rows.next.asInstanceOf[jList[Any]].iterator()
-          pack0(it)
-          pack1(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator()
+            pack0(it)
+            pack1(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" =>
+            nil()
           case nestedData        =>
             val list = getList(nestedData)
             list.forEach { chunk =>
@@ -185,15 +201,23 @@ case class OptNested2packed(
     val pack1 = packNode(attrs(1), top)
     val pack2 = packNode(attrs(2), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          i += 1
-          //          rowSeparator()
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -215,15 +239,25 @@ case class OptNested2packed(
     val pack2 = packNode(attrs(2), top)
     val pack3 = packNode(attrs(3), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -247,16 +281,27 @@ case class OptNested2packed(
     val pack3 = packNode(attrs(3), top)
     val pack4 = packNode(attrs(4), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -282,17 +327,29 @@ case class OptNested2packed(
     val pack4 = packNode(attrs(4), top)
     val pack5 = packNode(attrs(5), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -320,18 +377,31 @@ case class OptNested2packed(
     val pack5 = packNode(attrs(5), top)
     val pack6 = packNode(attrs(6), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -361,19 +431,33 @@ case class OptNested2packed(
     val pack6 = packNode(attrs(6), top)
     val pack7 = packNode(attrs(7), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -405,20 +489,35 @@ case class OptNested2packed(
     val pack7 = packNode(attrs(7), top)
     val pack8 = packNode(attrs(8), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -452,21 +551,37 @@ case class OptNested2packed(
     val pack8 = packNode(attrs(8), top)
     val pack9 = packNode(attrs(9), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -502,22 +617,39 @@ case class OptNested2packed(
     val pack9  = packNode(attrs(9), top)
     val pack10 = packNode(attrs(10), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -555,23 +687,41 @@ case class OptNested2packed(
     val pack10 = packNode(attrs(10), top)
     val pack11 = packNode(attrs(11), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -611,24 +761,43 @@ case class OptNested2packed(
     val pack11 = packNode(attrs(11), top)
     val pack12 = packNode(attrs(12), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -670,25 +839,45 @@ case class OptNested2packed(
     val pack12 = packNode(attrs(12), top)
     val pack13 = packNode(attrs(13), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -732,26 +921,47 @@ case class OptNested2packed(
     val pack13 = packNode(attrs(13), top)
     val pack14 = packNode(attrs(14), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -797,27 +1007,49 @@ case class OptNested2packed(
     val pack14 = packNode(attrs(14), top)
     val pack15 = packNode(attrs(15), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          pack15(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -865,28 +1097,51 @@ case class OptNested2packed(
     val pack15 = packNode(attrs(15), top)
     val pack16 = packNode(attrs(16), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          pack15(it)
-          pack16(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -936,29 +1191,53 @@ case class OptNested2packed(
     val pack16 = packNode(attrs(16), top)
     val pack17 = packNode(attrs(17), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          pack15(it)
-          pack16(it)
-          pack17(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -1010,30 +1289,55 @@ case class OptNested2packed(
     val pack17 = packNode(attrs(17), top)
     val pack18 = packNode(attrs(18), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          pack15(it)
-          pack16(it)
-          pack17(it)
-          pack18(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -1087,31 +1391,57 @@ case class OptNested2packed(
     val pack18 = packNode(attrs(18), top)
     val pack19 = packNode(attrs(19), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          pack15(it)
-          pack16(it)
-          pack17(it)
-          pack18(it)
-          pack19(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+            pack19(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+            pack19(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -1167,32 +1497,59 @@ case class OptNested2packed(
     val pack19 = packNode(attrs(19), top)
     val pack20 = packNode(attrs(20), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          pack15(it)
-          pack16(it)
-          pack17(it)
-          pack18(it)
-          pack19(it)
-          pack20(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+            pack19(it)
+            pack20(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+            pack19(it)
+            pack20(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {
@@ -1250,33 +1607,61 @@ case class OptNested2packed(
     val pack20 = packNode(attrs(20), top)
     val pack21 = packNode(attrs(21), top)
     if (top)
-      (rows: jIterator[_]) =>
-        while (rows.hasNext && i != maxRows) {
-          val it = rows.next.asInstanceOf[jList[Any]].iterator
-          pack0(it)
-          pack1(it)
-          pack2(it)
-          pack3(it)
-          pack4(it)
-          pack5(it)
-          pack6(it)
-          pack7(it)
-          pack8(it)
-          pack9(it)
-          pack10(it)
-          pack11(it)
-          pack12(it)
-          pack13(it)
-          pack14(it)
-          pack15(it)
-          pack16(it)
-          pack17(it)
-          pack18(it)
-          pack19(it)
-          pack20(it)
-          pack21(it)
-          i += 1
-        }
+      if (maxRows == -1)
+        (rows: jIterator[_]) =>
+          while (rows.hasNext) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+            pack19(it)
+            pack20(it)
+            pack21(it)
+          }
+      else
+        (rows: jIterator[_]) =>
+          while (rows.hasNext && i != maxRows) {
+            val it = rows.next.asInstanceOf[jList[Any]].iterator
+            pack0(it)
+            pack1(it)
+            pack2(it)
+            pack3(it)
+            pack4(it)
+            pack5(it)
+            pack6(it)
+            pack7(it)
+            pack8(it)
+            pack9(it)
+            pack10(it)
+            pack11(it)
+            pack12(it)
+            pack13(it)
+            pack14(it)
+            pack15(it)
+            pack16(it)
+            pack17(it)
+            pack18(it)
+            pack19(it)
+            pack20(it)
+            pack21(it)
+            i += 1
+          }
     else
       (vs: jIterator[_]) =>
         vs.next match {

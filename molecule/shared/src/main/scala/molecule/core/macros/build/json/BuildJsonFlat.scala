@@ -5,7 +5,7 @@ import molecule.core.macros.attrResolvers.JsonBase
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-trait BuildJson extends JsonBase with ResolverJsonTypes {
+trait BuildJsonFlat extends JsonBase with ResolverJsonTypes {
   val c: blackbox.Context
 
   import c.universe._

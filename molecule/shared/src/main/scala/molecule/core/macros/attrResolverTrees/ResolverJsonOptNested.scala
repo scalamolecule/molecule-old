@@ -18,7 +18,6 @@ private[molecule] trait ResolverJsonOptNested extends TreeOps {
     case "OptApplyOne"  => jsonOptNestedOptOneAttr(baseTpe, field)
     case "OptApplyMany" => jsonOptNestedOptManyAttr(baseTpe, field)
     case "OptApplyMap"  => jsonOptNestedOptMapAttr_(baseTpe, field)
-    //    case "KeyedMap"     => jsonOptNestedKeyedMapAttr(baseType, field)
   }
 
 
@@ -180,7 +179,6 @@ private[molecule] trait ResolverJsonOptNested extends TreeOps {
       case "URI"        => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
       case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, it)"
       case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, it)"
-      //      case "Any"        => (_: Int, _: Int) => q"jsonOptNestedOneAny(sb, $field, it)"
     }
   }
 }

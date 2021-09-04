@@ -9,8 +9,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //  private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-//  private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-    private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+    private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+//  private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -33,7 +33,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkFlat = {
       val transformers = if (isJsPlatform) {
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplFlat(obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
@@ -67,7 +67,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkOptNested = if (isJsPlatform) {
       val transformers =
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplNested(typess, obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
@@ -92,26 +92,17 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     } else {
       // jvm platform
 
-      val tpl = Some(if (TplTypes.length == 1) q"Tuple1(row2tpl(row))" else q"row2tpl(row)")
-
+      val tpl          = Some(if (TplTypes.length == 1) q"Tuple1(row2tpl(row))" else q"row2tpl(row)")
       val transformers =
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
             ${tplOptNested(obj, refIndexes, tacitIndexes)}.asInstanceOf[(..$TplTypes)]
 
-          final override def row2obj(row: jList[AnyRef]): $ObjType =
-            ${objTree(obj, tpl)}
+          final override def row2obj(row: jList[AnyRef]): $ObjType =${objTree(obj, tpl)}
 
           final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
             ${jsonOptNested(obj, refIndexes, tacitIndexes)}
         """
-      //        q"""
-      //          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
-      //            ${tplOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}.asInstanceOf[(..$TplTypes)]
-      //
-      //          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
-      //            ${jsonOptNested(obj, optNestedRefIndexes, optNestedTacitIndexes)}
-      //        """
 
       if (hasVariables) {
         q"""
@@ -133,7 +124,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     def mkNested = if (isJsPlatform) {
       val transformers =
         q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tpl(typess, obj, txMetas)}
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplNested(typess, obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
           final override def packed2json(vs: Iterator[String]): String = ???
 
@@ -167,10 +158,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
           final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = ${objTree(obj, tpl)}
          """
-      //              q"""
-      //                ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
-      //                ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
-      //               """
+
       if (hasVariables) {
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
