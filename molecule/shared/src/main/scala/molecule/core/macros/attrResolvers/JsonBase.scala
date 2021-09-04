@@ -91,120 +91,123 @@ trait JsonBase extends Helpers {
   def indent(tabs: Int): String = "\n" + "  " * (3 + tabs)
 
   def extractFlatValues(
-    nestedRows: jList[Any],
     propCount: Int,
     refIndexes: List[Int],
     tacitIndexes: List[Int],
     deeper: Boolean = false
-  ): jIterator[Any] = {
-    val rowCount             = nestedRows.size()
-    val flatValues           = new java.util.ArrayList[Any](rowCount * propCount)
-    val nonTacitIndexes      = (0 until propCount).diff(tacitIndexes)
-    var testArray            = new Array[AnyRef](propCount)
-    val testList             = new java.util.ArrayList[Any](propCount)
-    var vs: jCollection[Any] = null
-    var i                    = 0
-
-    //    println("================================")
-    //    println("nestedRows      : " + nestedRows)
-    //    println("propCount       : " + propCount)
-    //    println("refIndexes      : " + refIndexes)
-    //    println("tacitIndexes    : " + tacitIndexes)
-    //    println("deeper          : " + deeper)
-
+  ): jList[Any] => jIterator[Any] = {
     (refIndexes.isEmpty, tacitIndexes.isEmpty) match {
       case (true, true) =>
-        nestedRows.forEach { row =>
-          vs = row.asInstanceOf[jMap[Any, Any]].values()
-          //          println("-- 1 ------- " + vs.size + "  " + propCount)
-          //          vs.forEach(v => println(v))
-          if (vs.size() == propCount)
-            flatValues.addAll(vs)
-        }
+        (nestedRows: jList[Any]) =>
+          val flatValues           = new java.util.ArrayList[Any](nestedRows.size() * propCount)
+          var vs: jCollection[Any] = null
+          nestedRows.forEach { row =>
+            vs = row.asInstanceOf[jMap[Any, Any]].values()
+            //            println("-- 1 ------- " + vs.size + "  " + propCount)
+            //            vs.forEach(v => println(v))
+            if (vs.size() == propCount) {
+              flatValues.addAll(vs)
+            }
+          }
+          flatValues.iterator
 
       case (true, false) =>
-        nestedRows.forEach { row =>
-          vs = row.asInstanceOf[jMap[Any, Any]].values()
-          testArray = vs.toArray
-          // Skip all values on this level if some tacit value is missing
-          val valid: Boolean = tacitIndexes.collectFirst {
-            case i if testArray(i) == "__none__" => true
-          }.isEmpty
-          //          println("-- 2 ------- " + valid)
-          //          vs.forEach(v => println(v))
-          if (valid) {
-            // Get non-tacit values only
-            nonTacitIndexes.foreach { j =>
-              flatValues.add(testArray(j))
-            }
-            if (deeper) {
-              // add last
-              flatValues.add(testArray(vs.size() - 1))
+        (nestedRows: jList[Any]) =>
+          val flatValues           = new java.util.ArrayList[Any](nestedRows.size() * propCount)
+          val nonTacitIndexes      = (0 until propCount).diff(tacitIndexes)
+          var testArray            = new Array[AnyRef](propCount)
+          var vs: jCollection[Any] = null
+          nestedRows.forEach { row =>
+            vs = row.asInstanceOf[jMap[Any, Any]].values()
+            testArray = vs.toArray
+            // Skip all values on this level if some tacit value is missing
+            val valid: Boolean = tacitIndexes.collectFirst {
+              case i if testArray(i) == "__none__" => true
+            }.isEmpty
+            //            println("-- 2 ------- " + valid)
+            //            vs.forEach(v => println(v))
+            if (valid) {
+              // Get non-tacit values only
+              nonTacitIndexes.foreach { j =>
+                flatValues.add(testArray(j))
+              }
+              if (deeper) {
+                // add last
+                flatValues.add(testArray(vs.size() - 1))
+              }
             }
           }
-        }
+          flatValues.iterator
 
       case (false, true) =>
-        nestedRows.forEach { row =>
-          vs = row.asInstanceOf[jMap[Any, Any]].values()
-          testList.clear()
-          i = 0
-          def addValues(vs: jCollection[Any]): Unit = vs.forEach {
-            case ref: jMap[_, _]  =>
-              addValues(ref.asInstanceOf[jMap[Any, Any]].values())
-            case "__none__"       =>
-              i += 1; testList.add("__none__")
-            case nested: jList[_] =>
-              i += 1;
-              testList.add(nested)
-            case v                =>
-              i += 1; testList.add(v)
+        (nestedRows: jList[Any]) =>
+          val flatValues           = new java.util.ArrayList[Any](nestedRows.size() * propCount)
+          val testList             = new java.util.ArrayList[Any](propCount)
+          var vs: jCollection[Any] = null
+          nestedRows.forEach { row =>
+            vs = row.asInstanceOf[jMap[Any, Any]].values()
+            testList.clear()
+            var i = 0
+            def addValues(vs: jCollection[Any]): Unit = vs.forEach {
+              case ref: jMap[_, _]  =>
+                addValues(ref.asInstanceOf[jMap[Any, Any]].values())
+              case "__none__"       =>
+                i += 1; testList.add("__none__")
+              case nested: jList[_] =>
+                i += 1;
+                testList.add(nested)
+              case v                =>
+                i += 1; testList.add(v)
+            }
+            addValues(vs)
+            //            println(s"-- 3 ------- $i  $propCount")
+            //            testList.forEach(v => println(v))
+            if (i == propCount) {
+              flatValues.addAll(testList)
+            }
           }
-          addValues(vs)
-          //          println(s"-- 3 ------- $i  $propCount")
-          //          testList.forEach(v => println(v))
-          if (i == propCount)
-            flatValues.addAll(testList)
-        }
+          flatValues.iterator
 
       case (false, false) =>
-        val ok = (presentValues: Int) => presentValues == propCount + tacitIndexes.size
-        nestedRows.forEach { row =>
-          vs = row.asInstanceOf[jMap[Any, Any]].values()
-          testList.clear()
-          var presentValues = 0
-          i = 0
-          def addValues(vs: jCollection[Any]): Unit = vs.forEach {
-            case ref: jMap[_, _]                        =>
-              //              println(s"-  -  -  " + ref.asInstanceOf[jMap[Any, Any]].values())
-              addValues(ref.asInstanceOf[jMap[Any, Any]].values())
-            case "__none__" if tacitIndexes.contains(i) =>
-              // tacit value missing
-              i += 1
-            case v if tacitIndexes.contains(i)          =>
-              // tacit value exists
-              i += 1
-              presentValues += 1
-            case v                                      =>
-              i += 1
-              presentValues += 1
-              testList.add(v)
+        (nestedRows: jList[Any]) =>
+          val flatValues           = new java.util.ArrayList[Any](nestedRows.size() * propCount)
+          val testList             = new java.util.ArrayList[Any](propCount)
+          val ok                   = (presentValues: Int) => presentValues == propCount + tacitIndexes.size
+          var vs: jCollection[Any] = null
+          nestedRows.forEach { row =>
+            vs = row.asInstanceOf[jMap[Any, Any]].values()
+            testList.clear()
+            var presentValues = 0
+            var i             = 0
+            def addValues(vs: jCollection[Any]): Unit = vs.forEach {
+              case ref: jMap[_, _]                        =>
+                //              println(s"-  -  -  " + ref.asInstanceOf[jMap[Any, Any]].values())
+                addValues(ref.asInstanceOf[jMap[Any, Any]].values())
+              case "__none__" if tacitIndexes.contains(i) =>
+                // tacit value missing
+                i += 1
+              case v if tacitIndexes.contains(i)          =>
+                // tacit value exists
+                i += 1
+                presentValues += 1
+              case v                                      =>
+                i += 1
+                presentValues += 1
+                testList.add(v)
+            }
+            addValues(vs)
+            val ok1 = ok(presentValues)
+            //            println("-- 4 ------- " + presentValues + "  " + ok1)
+            //            vs.forEach(v => println(v))
+            //            println("-------")
+            //            testList.forEach(v => println(v))
+            if (ok1) {
+              flatValues.addAll(testList)
+            }
           }
-          addValues(vs)
-          val ok1 = ok(presentValues)
-          //          println("-- 4 ------- " + presentValues + "  " + ok1)
-          //          vs.forEach(v => println(v))
-          //          println("-------")
-          //          testList.forEach(v => println(v))
-          if (ok1)
-            flatValues.addAll(testList)
-        }
+          flatValues.iterator
     }
-
     //    println("-------------------------------")
     //    flatValues.forEach(v => println(v))
-
-    flatValues.iterator
   }
-
 }

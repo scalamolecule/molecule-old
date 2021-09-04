@@ -30,17 +30,10 @@ case class OptNested2packed(
 
   def packNode(node: Node, top: Boolean = false): jIterator[_] => Unit = {
     node match {
-      case Prop(_, _, baseTpe, _, group, _) =>
-        packOptNestedAttr(group, baseTpe)
-
-      case Obj(_, _, true, props) =>
-        packNested(props)
-
-      case Obj(_, _, _, props) if top =>
-        packTopRef(props)
-
-      case Obj(_, _, _, props) =>
-        packRef(props)
+      case Prop(_, _, baseTpe, _, group, _) => packOptNestedAttr(group, baseTpe)
+      case Obj(_, _, true, props)           => packNested(props)
+      case Obj(_, _, _, props) if top       => packTopRef(props)
+      case Obj(_, _, _, props)              => packRef(props)
     }
   }
 
@@ -127,8 +120,10 @@ case class OptNested2packed(
 
 
   // Mutable placeholders for fast iterations with minimal object allocation
-  var i                  = 0
-  var it: jIterator[Any] = null
+  var i                      = 0
+  var list: jCollection[Any] = null
+  var it  : jIterator[Any]   = null
+
 
   def packNested1(attrs: List[Node], top: Boolean): jIterator[_] => Unit = {
     val pack0 = packNode(attrs.head, top)
@@ -154,8 +149,12 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              // Only add values if all mandatory values are present (empty Sets not in Datomic output)
+              if (list.size == 1) {
+                it = list.iterator
+                pack0(it)
+              }
             }
             next()
         }
@@ -186,11 +185,13 @@ case class OptNested2packed(
           case null | "__none__" =>
             nil()
           case nestedData        =>
-            val list = getList(nestedData)
-            list.forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
+            getList(nestedData).forEach { chunk =>
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 2) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+              }
             }
             next()
         }
@@ -224,10 +225,13 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 3) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+              }
             }
             next()
         }
@@ -264,11 +268,14 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 4) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+              }
             }
             next()
         }
@@ -308,12 +315,15 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 5) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+              }
             }
             next()
         }
@@ -356,13 +366,16 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 6) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+              }
             }
             next()
         }
@@ -408,14 +421,17 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 7) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+              }
             }
             next()
         }
@@ -464,15 +480,18 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 8) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+              }
             }
             next()
         }
@@ -524,16 +543,19 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 9) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+              }
             }
             next()
         }
@@ -588,17 +610,20 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 10) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+              }
             }
             next()
         }
@@ -656,18 +681,21 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 11) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+              }
             }
             next()
         }
@@ -728,19 +756,22 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 12) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+              }
             }
             next()
         }
@@ -804,20 +835,23 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 13) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+              }
             }
             next()
         }
@@ -884,21 +918,24 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 14) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+              }
             }
             next()
         }
@@ -968,22 +1005,25 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 15) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+              }
             }
             next()
         }
@@ -1056,23 +1096,26 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
-              pack15(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 16) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+                pack15(it)
+              }
             }
             next()
         }
@@ -1148,24 +1191,27 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
-              pack15(it)
-              pack16(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 17) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+                pack15(it)
+                pack16(it)
+              }
             }
             next()
         }
@@ -1244,25 +1290,28 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
-              pack15(it)
-              pack16(it)
-              pack17(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 18) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+                pack15(it)
+                pack16(it)
+                pack17(it)
+              }
             }
             next()
         }
@@ -1344,26 +1393,29 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
-              pack15(it)
-              pack16(it)
-              pack17(it)
-              pack18(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 19) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+                pack15(it)
+                pack16(it)
+                pack17(it)
+                pack18(it)
+              }
             }
             next()
         }
@@ -1448,27 +1500,30 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
-              pack15(it)
-              pack16(it)
-              pack17(it)
-              pack18(it)
-              pack19(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 20) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+                pack15(it)
+                pack16(it)
+                pack17(it)
+                pack18(it)
+                pack19(it)
+              }
             }
             next()
         }
@@ -1556,28 +1611,31 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
-              pack15(it)
-              pack16(it)
-              pack17(it)
-              pack18(it)
-              pack19(it)
-              pack20(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 21) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+                pack15(it)
+                pack16(it)
+                pack17(it)
+                pack18(it)
+                pack19(it)
+                pack20(it)
+              }
             }
             next()
         }
@@ -1668,29 +1726,32 @@ case class OptNested2packed(
           case null | "__none__" => nil()
           case nestedData        =>
             getList(nestedData).forEach { chunk =>
-              it = chunk.asInstanceOf[jMap[String, Any]].values.iterator()
-              pack0(it)
-              pack1(it)
-              pack2(it)
-              pack3(it)
-              pack4(it)
-              pack5(it)
-              pack6(it)
-              pack7(it)
-              pack8(it)
-              pack9(it)
-              pack10(it)
-              pack11(it)
-              pack12(it)
-              pack13(it)
-              pack14(it)
-              pack15(it)
-              pack16(it)
-              pack17(it)
-              pack18(it)
-              pack19(it)
-              pack20(it)
-              pack21(it)
+              list = chunk.asInstanceOf[jMap[String, Any]].values
+              if (list.size == 22) {
+                it = list.iterator
+                pack0(it)
+                pack1(it)
+                pack2(it)
+                pack3(it)
+                pack4(it)
+                pack5(it)
+                pack6(it)
+                pack7(it)
+                pack8(it)
+                pack9(it)
+                pack10(it)
+                pack11(it)
+                pack12(it)
+                pack13(it)
+                pack14(it)
+                pack15(it)
+                pack16(it)
+                pack17(it)
+                pack18(it)
+                pack19(it)
+                pack20(it)
+                pack21(it)
+              }
             }
             next()
         }

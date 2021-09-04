@@ -50,7 +50,7 @@ private[molecule] trait BuildJsonOptNested extends ResolverJsonOptNested with Js
                   case null => sb.append("]")
                   case last =>
                     val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
-                    val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
+                    val it = extractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)(list)
                     ..${jsonOptNested(nested, refIndexes, tacitIndexes, level + 1, tabs + 2)}
                     sb.append(${indent(tabs + 1) + "]"})
                 }
@@ -82,8 +82,10 @@ private[molecule] trait BuildJsonOptNested extends ResolverJsonOptNested with Js
         case last@Obj(_, ref, true, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper    = isDeeper(last)
+          val extractor = TermName("extract" + level)
           q"""
             var next = false
+            val $extractor = extractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
             while (it.hasNext) {
               if (next) sb.append(",") else next = true
               sb.append(${indent(tabs) + "{" + indent(tabs + 1)})
@@ -94,15 +96,14 @@ private[molecule] trait BuildJsonOptNested extends ResolverJsonOptNested with Js
               it.next match {
                 case "__none__" => sb.append("]")
                 case last       =>
-                  val list = last.asInstanceOf[jList[Any]]
-                  val it = extractFlatValues(list, $propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
+                  val it = $extractor(last.asInstanceOf[jList[Any]])
                   ..${jsonOptNested(last, refIndexes, tacitIndexes, level + 1, tabs + 2)}
                   sb.append(${indent(tabs + 1) + "]"})
               }
               sb.append(${indent(tabs) + "}"})
             }
           """
-        case _                                       =>
+        case _                                   =>
           q"""
             var next = false
             while (it.hasNext) {

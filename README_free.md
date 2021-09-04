@@ -78,6 +78,10 @@ Using sbt is about twice as fast and therefore preferable when running all tests
 
 Remember to ctrl-c the sbt process when switching back to testing in IDE to avoid process locks.
 
+## Test JS
+
+(First run "warm up" before actual run - todo avoidable?)
+
 
 ## Further info
 

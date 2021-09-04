@@ -8,9 +8,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-    private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
-//  private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
+  //    private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
+//      private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+  private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
@@ -64,8 +64,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
     }
 
 
-    def mkOptNested = if (isJsPlatform) {
-      val transformers =
+    def mkOptNested = {
+      val transformers = if (isJsPlatform) {
         q"""
           final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplNested(typess, obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
@@ -74,36 +74,18 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final override lazy val obj: nodes.Obj = $obj
           final override lazy val isOptNested: Boolean = true
         """
-      if (hasVariables) {
-        q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel)) {
-            ..$transformers
-          }
-        """
       } else {
-        q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
-            ..$transformers
-          }
-        """
-      }
-
-    } else {
-      // jvm platform
-
-      val tpl          = Some(if (TplTypes.length == 1) q"Tuple1(row2tpl(row))" else q"row2tpl(row)")
-      val transformers =
+        val tpl = Some(if (TplTypes.length == 1) q"Tuple1(row2tpl(row))" else q"row2tpl(row)")
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) =
             ${tplOptNested(obj, refIndexes, tacitIndexes)}.asInstanceOf[(..$TplTypes)]
 
-          final override def row2obj(row: jList[AnyRef]): $ObjType =${objTree(obj, tpl)}
+          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj, tpl)}
 
           final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer =
             ${jsonOptNested(obj, refIndexes, tacitIndexes)}
         """
-
+      }
       if (hasVariables) {
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})

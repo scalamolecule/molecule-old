@@ -37,30 +37,29 @@ object Adhoc extends AsyncTestSuite with Helpers {
         )
 
 //        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1$).get.map(_ ==> List(
-//          (1, List((1, Some(Set("a", "b"))), (2, None))),
+//          (10, List((1, Some(Set("a", "b"))), (2, None))),
 //        ))
 //        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1).get.map(_ ==> List(
-//          (1, List((1, Set("a", "b")))),
+//          (10, List((1, Set("a", "b")))),
 //        ))
 //        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1_).get.map(_ ==> List(
-//          (1, List(1)),
+//          (10, List(1)),
 //        ))
-
+//
 //        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).get.map(_.sortBy(_._1) ==> List(
 //          (10, List((1, Some(Set("a", "b"))), (2, None))),
 //          (20, List())
 //        ))
-//        _ <- m(Ns.int.Refs1 *? Ref1.int1.str1).inspectGet
-        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).inspectGet
-
-        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).get.map(_.sortBy(_._1) ==> List(
-          (10, List((1, Set("a", "b")))),
-          (20, List())
-        ))
-//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1_).get.map(_.sortBy(_._1) ==> List(
-//          (10, List(1)),
+//
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).get.map(_.sortBy(_._1) ==> List(
+//          (10, List((1, Set("a", "b")))),
 //          (20, List())
 //        ))
+
+        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1_).get.map(_.sortBy(_._1) ==> List(
+          (10, List(1)),
+          (20, List())
+        ))
 
       } yield ()
     }

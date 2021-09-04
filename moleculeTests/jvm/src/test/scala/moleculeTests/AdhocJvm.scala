@@ -112,44 +112,89 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //                  ("E", List(), 7777, 8888)
         //                ))
 
-        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1$) insert List(
-          (10, List((1, Some(Set("a", "b"))), (2, None))),
-          (20, List())
+        _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2$) insert List(
+          ("a", List((10, Some("a")), (20, None))),
+          ("b", List())
         )
 
-//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).get.map(_.sortBy(_._1) ==> List(
-//          (10, List((1, Some(Set("a", "b"))), (2, None))),
-//          (20, List())
-//        ))
 
-        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).inspectGet
-//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).inspectGet
-
-
-
-        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).get.map(_.sortBy(_._1) ==> List(
-          (10, List((1, Set("a", "b")))),
-          (20, List())
+        _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2_).inspectGet
+        _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2_).get.map(_.sortBy(_._1) ==> List(
+          ("a", List(10)),
+          ("b", List())
         ))
 
-        obj = Obj("", "Ns", false, List(
-          Prop("Ns_int", "int", "Int", 1, "One", None),
-          Obj("Ns__Refs1", "Refs1", true, List(
-            Prop("Ref1_int1", "int1", "Int", 1, "One", None),
-            Prop("Ref1_strs1", "strs1", "String", 2, "Many", None)))))
 
-        rows <- conn.qRaw(
-          """[:find  ?b
-            |        (pull ?a__1 [
-            |          {(:Ns/refs1 :limit nil) [
-            |            (:Ref1/int1 :limit nil :default "__none__")
-            |            (:Ref1/strs1 :limit nil :default "__none__")]}])
-            | :where [?a :Ns/int ?b]
-            |        [(identity ?a) ?a__1]]""".stripMargin
-        )
-        _ = rows.forEach(row => println(row))
-
-        packed = OptNested2packed(obj, rows).getPacked
+//        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1$) insert List(
+//          (10, List((1, Some(Set("a", "b"))), (2, None))),
+//          (20, List())
+//        )
+//
+////        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).get.map(_.sortBy(_._1) ==> List(
+////          (10, List((1, Some(Set("a", "b"))), (2, None))),
+////          (20, List())
+////        ))
+//
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).inspectGet
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).inspectGet
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1_).inspectGet
+//
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).get.map(_.sortBy(_._1) ==> List(
+//          (10, List((1, Set("a", "b")))),
+//          (20, List())
+//        ))
+//
+//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1_).get.map(_.sortBy(_._1) ==> List(
+//          (10, List(1)),
+//          (20, List())
+//        ))
+//
+//        obj_ = Obj("", "Ns", false, List(
+//          Prop("Ns_int", "int", "Int", 1, "One", None),
+//          Obj("Ns__Refs1", "Refs1", true, List(
+//            Prop("Ref1_int1", "int1", "Int", 1, "One", None),
+//            Prop("Ref1_strs1", "strs1_", "String", 2, "Many", None)
+//          ))))
+//
+//        obj = Obj("", "Ns", false, List(
+//          Prop("Ns_int", "int", "Int", 1, "One", None),
+//          Obj("Ns__Refs1", "Refs1", true, List(
+//            Prop("Ref1_int1", "int1", "Int", 1, "One", None)
+//          ))))
+//
+//        rows_ <- conn.qRaw(
+//          """[:find  ?b
+//            |        (pull ?a__1 [
+//            |          {(:Ns/refs1 :limit nil) [
+//            |            (:Ref1/int1 :limit nil)
+//            |            (:Ref1/strs1 :limit nil)]}])
+//            | :where [?a :Ns/int ?b]
+//            |        [(identity ?a) ?a__1]]""".stripMargin)
+//
+//        rows <- conn.qRaw(
+//          """[:find  ?b
+//            |        (pull ?a__1 [
+//            |          {(:Ns/refs1 :limit nil) [
+//            |            (:Ref1/int1 :limit nil)
+//            |            (:Ref1/strs1 :limit nil :default "__none__")]}])
+//            | :where [?a :Ns/int ?b]
+//            |        [(identity ?a) ?a__1]]""".stripMargin)
+//
+////        extract = extractFlatValues(2, Nil, Nil)
+//        _ = rows_.forEach{row =>
+//          println(row)
+////          val last = row.get(1)
+////          val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
+////          println(list)
+////
+////          val it = extractFlatValues(list, 2, Nil, Nil)
+////
+////          println(it.asScala.toList)
+////          println("-----------")
+//        }
+//
+//        packed = OptNested2packed(obj, rows_).getPacked
+//        _ = println(packed)
 
         //
         //        rowsOpt <- conn.qRaw(
