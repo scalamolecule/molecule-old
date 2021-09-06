@@ -2,6 +2,7 @@ package molecule.core.marshalling.convert
 
 import java.net.URI
 import java.util.{Date, UUID}
+import molecule.core.ast.elements.{Card, GenericValue}
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn
@@ -64,10 +65,12 @@ object Stmts2Edn extends Helpers {
       buf.append('"')
     }
 
-    def value(attr: String, v: Any): Unit = {
+    def value(attr: String, v: Any, gv: GenericValue): Unit = {
       val s = v.toString
-      if (attrMap.isEmpty) {
-        v match {
+      gv match {
+        case Card(3) => quote(s) // map type is always a String
+
+        case _ if attrMap.isEmpty => v match {
           case Enum(prefix, enum) => buf.append(prefix + enum)
           case _: String          => quote(s)
           case TempId(part, i)    => buf.append(s"#db/id[$part $i]")
@@ -84,8 +87,8 @@ object Stmts2Edn extends Helpers {
             s"Unexpected value `$v` of type ${v.getClass}."
           )
         }
-      } else {
-        (attrMap(attr)._2, v) match {
+
+        case _ => (attrMap(attr)._2, v) match {
           case ("String", Enum(prefix, enum))          => buf.append(prefix + enum)
           case ("String", _)                           => quote(s)
           case ("Long" | "ref", TempId(part, i))       => buf.append(s"#db/id[$part $i]")
@@ -93,11 +96,14 @@ object Stmts2Edn extends Helpers {
           case ("Double", _)                           => buf.append(s + (if (s.contains('.')) "" else ".0"))
           case ("Date", d: Date)                       => buf.append("#inst \"" + date2datomicStr(d) + "\"")
           case ("UUID", _)                             => buf.append("#uuid \"" + v + "\"")
-          case ("URI", _)                              => uriAttrs = uriAttrs + attr; buf.append(s)
+          case ("URI", _)                              => uriAttrs = uriAttrs + attr;
+            buf.append(s)
           case ("BigInt", _)                           => buf.append(s + "N")
           case ("BigDecimal", _)                       => buf.append(s + (if (s.contains('.')) "M" else ".0M"))
           case (tpe, _)                                => throw new IllegalArgumentException(
-            s"Unexpected $tpe value of type ${v.getClass}: " + v
+            s"Unexpected $tpe value of type ${
+              v.getClass
+            }: " + v
           )
         }
       }
@@ -110,24 +116,24 @@ object Stmts2Edn extends Helpers {
     }
 
     def addStmt(stmt: Statement): Unit = stmt match {
-      case Add(e, a, v, _) =>
+      case Add(e, a, v, gv) =>
         buf.append(s"[:db/add ${eid(e)} $a ")
-        value(a, v)
+        value(a, v, gv)
         buf.append("]")
 
-      case Retract(e, a, v, _) =>
+      case Retract(e, a, v, gv) =>
         buf.append(s"[:db/retract ${eid(e)} $a ")
-        value(a, v)
+        value(a, v, gv)
         buf.append("]")
 
       case RetractEntity(e) =>
         buf.append(s"[:db/retractEntity ${eid(e)}]")
 
-      case Cas(e, a, oldV, v, _) =>
+      case Cas(e, a, oldV, v, gv) =>
         buf.append(s"[:db.fn/cas ${eid(e)} $a ")
-        value(a, oldV)
+        value(a, oldV, gv)
         buf.append(" ")
-        value(a, v)
+        value(a, v, gv)
         buf.append("]")
     }
 

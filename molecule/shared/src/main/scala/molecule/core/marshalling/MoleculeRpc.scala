@@ -28,7 +28,9 @@ trait MoleculeRpc {
     maxRows: Int,
     obj : Obj,
     nestedLevels: Int,
-    isOptNested: Boolean
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]]
   ): Future[String]
 
 

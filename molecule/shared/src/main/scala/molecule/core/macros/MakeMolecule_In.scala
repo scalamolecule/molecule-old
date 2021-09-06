@@ -145,7 +145,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         q"""
           final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ???
           final override protected def packed2obj(vs: Iterator[String]): $ObjType = ???
-          final override protected def packed2json(vs: Iterator[String]): String = ???
+          final override protected def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ???
          """
 
       } else {

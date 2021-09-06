@@ -3,7 +3,7 @@ package molecule.core.macros.nested
 import java.lang.{Long => jLong}
 import java.util.{List => jList}
 import molecule.core.api.Molecule_0
-import molecule.core.macros.attrResolvers.JsonBase
+import molecule.core.macros.rowAttr.JsonBase
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 

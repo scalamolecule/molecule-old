@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers {
   connProxy = connProxy0
 
-  def ???(i: Int) : Nothing = throw MoleculeException(s"Unexpected method $i call on JS side in Conn_Js")
+  def ???(i: Int) : Nothing = throw MoleculeException(s"Unexpected method call ($i) on JS side in Conn_Js")
 
   val isJsPlatform: Boolean = true
 

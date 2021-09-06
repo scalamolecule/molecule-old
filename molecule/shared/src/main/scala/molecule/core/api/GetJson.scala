@@ -1,8 +1,6 @@
 package molecule.core.api
 
-import java.util.{List => jList, Collection => jCollection}
-import molecule.core.ast.elements.{Atom, Bond, Composite}
-import molecule.core.exceptions.MoleculeException
+import molecule.core.ast.elements.Composite
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.util.JavaUtil
@@ -57,6 +55,21 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     getJson(-1)(conn, ec)
 
 
+  private def outerJson(json: String): String = _model.elements.head match {
+    case _: Composite =>
+      s"""{
+         |  "data": {
+         |    "composite": [$json]
+         |  }
+         |}""".stripMargin
+    case _            =>
+      s"""{
+         |  "data": {
+         |    "${firstNs(_model)}": [$json]
+         |  }
+         |}""".stripMargin
+  }
+
   /** Get json data for n rows matching molecule
     * {{{
     *   Person.name.age.getJson(1) ===
@@ -74,47 +87,45 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     */
   def getJson(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     _inputThrowable.fold(
-      for {
-        conn <- futConn
-        jColl <- conn.query(_model, _query)
-      } yield {
-        val count = jColl.size()
-        val rows  = jColl.iterator()
-        val sb    = new StringBuffer()
-        var next  = false
-        if (count == 0) {
-          // Empty result set
-        } else if (n == -1) {
-          // All rows
-          while (rows.hasNext) {
-            if (next) sb.append(",") else next = true
-            row2json(sb, rows.next)
+      futConn.flatMap { conn =>
+        val sb = new StringBuffer()
+        if (conn.isJsPlatform) {
+          conn.queryJsJson(
+            _nestedQuery.getOrElse(_query), n,
+            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+          ).map { packed =>
+            val lines = packed.linesIterator
+            lines.next() // skip first empty line
+            val sb1 = packed2json(lines, sb)
+            sb1.append("\n    ")
+            outerJson(sb1.toString)
           }
-          sb.append("\n    ")
         } else {
-          // n rows
-          var i = 0
-          while (rows.hasNext && i < n) {
-            if (next) sb.append(",") else next = true
-            row2json(sb, rows.next)
-            i += 1
+          conn.query(_model, _query).map { jColl =>
+            val count = jColl.size()
+            val rows  = jColl.iterator()
+            var next  = false
+            if (count == 0) {
+              // Empty result set
+            } else if (n == -1) {
+              // All rows
+              while (rows.hasNext) {
+                if (next) sb.append(",") else next = true
+                row2json(rows.next, sb)
+              }
+              sb.append("\n    ")
+            } else {
+              // n rows
+              var i = 0
+              while (rows.hasNext && i < n) {
+                if (next) sb.append(",") else next = true
+                row2json(rows.next, sb)
+                i += 1
+              }
+              sb.append("\n    ")
+            }
+            outerJson(sb.toString)
           }
-          sb.append("\n    ")
-        }
-
-        _model.elements.head match {
-          case _: Composite =>
-            s"""{
-               |  "data": {
-               |    "composite": [${sb.toString}]
-               |  }
-               |}""".stripMargin
-          case _            =>
-            s"""{
-               |  "data": {
-               |    "${firstNs(_model)}": [${sb.toString}]
-               |  }
-               |}""".stripMargin
         }
       }
     )(Future.failed) // Pass on exception from input failure

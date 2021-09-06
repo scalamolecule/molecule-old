@@ -10,13 +10,11 @@ import molecule.core.generic.Log._
 import molecule.core.generic.Schema._
 import molecule.core.generic.VAET._
 import molecule.core.generic._
-import molecule.core.macros.attrResolverTrees._
-import molecule.core.macros.attrResolvers._
-import molecule.core.macros.build.json._
-import molecule.core.macros.build.obj.BuildObj
-import molecule.core.macros.build.tpl._
+import molecule.core.macros.rowAttr._
+import molecule.core.macros.rowExtractors._
 import molecule.core.marshalling.nodes._
-import molecule.core.marshalling.unpack._
+import molecule.core.marshalling.packAttr.UnpackTypes
+import molecule.core.marshalling.packExtractors.{Packed2jsonFlat, _}
 import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
@@ -24,26 +22,29 @@ import scala.reflect.macros.blackbox
 import scala.util.{Try => Check}
 
 private[molecule] trait Dsl2Model extends TreeOps
-  with BuildTplFlat
-  with BuildTplComposite
-  with BuildTplNested
-  with BuildTplOptNested
+  with Row2tplFlat
+  with Row2tplComposite
+  with Row2tplNested
+  with Row2tplOptNested
 
-  with BuildObj
+  with Row2obj
 
-  with BuildJsonFlat
-  with BuildJsonNested
-  with BuildJsonOptNested
+  with Row2jsonFlat
+  with Row2jsonNested
+  with Row2jsonOptNested
 
   with Packed2tplFlat
   with Packed2tplNested
   with Packed2tplComposite
   with UnpackTypes
 
+  with Packed2jsonFlat
+
   with ResolverCastTypes
   with ResolverCastOptNested
 
   with ResolverJsonTypes
+  with ResolverJsonTypesV
   with ResolverJsonOptNested
 
   with CastTypes
@@ -80,7 +81,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       List[(Int, Int) => Tree],
       Boolean,
       List[List[Int]],
-      List[List[Int]],
+      List[List[Int]]
     ) = {
 
     lazy val mandatoryGeneric = Seq("e", "tx", "t", "txInstant", "op", "a", "v", "Self")

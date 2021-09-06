@@ -66,31 +66,26 @@ trait Conn extends ColOps with Serializations {
     println(s"$p  ${connProxy.testDbStatus}  ${connProxy.testDbView}   " + suffix)
   }
 
-  private[molecule] def queryJs[Tpl](
+  private def getRaw(
     query: Query,
     n: Int,
     obj: Obj,
     nestedLevels: Int,
     isOptNested: Boolean,
-    packed2tpl: Iterator[String] => Tpl
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future {
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]]
+  ): Future[String] = {
     val q2s          = Query2String(query)
     val datalogQuery = q2s.multiLine(60)
     val p            = q2s.p
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
-    val futResult    = rpc.query2packed(
-      connProxy, datalogQuery, rules, l, ll, lll, n, obj, nestedLevels, isOptNested
-    ).map { packed =>
-      //      println("`" + packed + "`")
-      val vs = packed.linesIterator
-      vs.next() // skip initial newline
-      val rows = new ListBuffer[Tpl]
-      while (vs.hasNext) {
-        rows.addOne(packed2tpl(vs))
-      }
-      rows.toList
-    }
+    rpc.query2packed(
+      connProxy, datalogQuery, rules, l, ll, lll, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+    )
+  }
+
+  private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext) = Future {
     if (connProxy.adhocDbView.isDefined) {
       // Reset adhoc db view
       updateAdhocDbView(None)
@@ -101,6 +96,76 @@ trait Conn extends ColOps with Serializations {
     }
     futResult
   }.flatten
+
+  private def queryJs[T](
+    query: Query,
+    n: Int,
+    obj: Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]],
+    packed2T: Iterator[String] => T,
+  )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
+    getRaw(query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes).map { packed =>
+      //      val packed0 =
+      //        """
+      //          |a
+      //          |◄
+      //          |12
+      //          |aa
+      //          |◄
+      //          |◄◄""".stripMargin
+      //      println("@@@ " + packed0 + " @@@")
+      //      println("@@@ " + packed + " @@@")
+
+      val vs = packed.linesIterator
+      vs.next() // skip initial newline
+      val rows = new ListBuffer[T]
+      while (vs.hasNext) {
+        rows.addOne(packed2T(vs))
+      }
+      rows.toList
+    }
+  )
+
+  private[molecule] def queryJsTpl[Tpl](
+    query: Query,
+    n: Int,
+    obj: Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]],
+    packed2tpl: Iterator[String] => Tpl,
+  )(implicit ec: ExecutionContext): Future[List[Tpl]] = queryJs(
+    query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+  )
+
+  private[molecule] def queryJsObj[Obj](
+    query: Query,
+    n: Int,
+    obj: nodes.Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]],
+    packed2obj: Iterator[String] => Obj,
+  )(implicit ec: ExecutionContext): Future[List[Obj]] = queryJs(
+    query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
+  )
+
+  private[molecule] def queryJsJson(
+    query: Query,
+    n: Int,
+    obj: nodes.Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]]
+  )(implicit ec: ExecutionContext): Future[String] = withDbView(
+    getRaw(query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
+  )
 
 
   /** Flag to indicate if live database is used */

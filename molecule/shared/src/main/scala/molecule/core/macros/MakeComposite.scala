@@ -33,7 +33,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       q"""
           final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplComposite(obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ???
-          final override def packed2json(vs: Iterator[String]): String = ???
+          final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ???
 
           final override lazy val obj: nodes.Obj = $obj
        """
@@ -41,7 +41,7 @@ class MakeComposite(val c: blackbox.Context) extends Base {
       q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetas)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-          final override def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ${jsonFlat(obj)}
+          final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
         """
     }
 

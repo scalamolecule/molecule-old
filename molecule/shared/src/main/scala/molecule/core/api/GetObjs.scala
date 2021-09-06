@@ -41,13 +41,16 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * }}}
     *
     * @group getAsync
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
-  def getObjs(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
-    conn.flatMap { conn =>
+  def getObjs(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
+    futConn.flatMap { conn =>
       if (conn.isJsPlatform) {
-        Future.failed(new IllegalArgumentException("Please fetch `List`s of objects with `get` instead."))
+        conn.queryJsObj(
+          _nestedQuery.getOrElse(_query), -1,
+          obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
+        )
       } else {
         conn.query(_model, _query).map { jColl =>
           val it  = jColl.iterator
@@ -72,36 +75,40 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     *
     * @group get
     * @param n    Int Number of rows returned
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
-  def getObjs(n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
-    conn.flatMap { conn2 =>
-      if (conn2.isJsPlatform) {
-        Future.failed(new IllegalArgumentException("Please fetch `List`s of objects with `get` instead."))
-      } else if (n == -1) {
-        getObjs(conn, ec)
+  def getObjs(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
+    futConn.flatMap { conn =>
+      if (conn.isJsPlatform) {
+        conn.queryJsObj(
+          _nestedQuery.getOrElse(_query), n,
+          obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
+        )
       } else {
-        conn2.query(_model, _query).map { jColl =>
-          val size = jColl.size
-          val max  = if (size < n) size else n
-          if (max == 0) {
-            List.empty[Obj]
-          } else {
-            val it  = jColl.iterator
-            val buf = new ListBuffer[Obj]
-            var i   = 0
-            while (it.hasNext && i < max) {
-              buf += row2obj(it.next)
-              i += 1
+        if (n == -1) {
+          getObjs(futConn, ec)
+        } else {
+          conn.query(_model, _query).map { jColl =>
+            val size = jColl.size
+            val max  = if (size < n) size else n
+            if (max == 0) {
+              List.empty[Obj]
+            } else {
+              val it  = jColl.iterator
+              val buf = new ListBuffer[Obj]
+              var i   = 0
+              while (it.hasNext && i < max) {
+                buf += row2obj(it.next)
+                i += 1
+              }
+              buf.toList
             }
-            buf.toList
           }
         }
       }
     }
   }
-
 
   /** Convenience method to get head of list of objects matching molecule.
     * {{{

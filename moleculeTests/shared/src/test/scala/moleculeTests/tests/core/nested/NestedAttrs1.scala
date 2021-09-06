@@ -217,6 +217,7 @@ object NestedAttrs1 extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Enum" - core { implicit conn =>
       for {
         _ <- m(Ref1.str1.Nss * Ns.int.enum$) insert List(

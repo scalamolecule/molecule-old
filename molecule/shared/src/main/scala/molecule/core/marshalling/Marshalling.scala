@@ -16,17 +16,19 @@ abstract class Marshalling[Obj, Tpl](
   queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
 ) extends Molecule(model, queryData) with Helpers {
 
-  protected lazy val obj         : nodes.Obj = ???
-  protected lazy val isOptNested : Boolean   = false
-  protected lazy val nestedLevels: Int       = 0
+  protected lazy val obj         : nodes.Obj       = ???
+  protected lazy val isOptNested : Boolean         = false
+  protected lazy val nestedLevels: Int             = 0
+  protected lazy val refIndexes  : List[List[Int]] = List(List.empty[Int])
+  protected lazy val tacitIndexes: List[List[Int]] = List(List.empty[Int])
 
   // jvm
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
   protected def row2obj(row: jList[AnyRef]): Obj = ???
-  protected def row2json(sb: StringBuffer, row: jList[AnyRef]): StringBuffer = ???
+  protected def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ???
 
   // js
   protected def packed2tpl(vs: Iterator[String]): Tpl = ???
   protected def packed2obj(vs: Iterator[String]): Obj = ???
-  protected def packed2json(vs: Iterator[String]): String = ???
+  protected def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ???
 }

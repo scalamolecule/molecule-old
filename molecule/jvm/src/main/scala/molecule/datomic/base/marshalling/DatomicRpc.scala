@@ -57,7 +57,9 @@ object DatomicRpc extends MoleculeRpc
     maxRows0: Int,
     obj: Obj,
     nestedLevels: Int,
-    isOptNested: Boolean
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]]
   ): Future[String] = try {
     val log       = new log
     val t         = TimerPrint("DatomicRpc")
@@ -99,7 +101,7 @@ object DatomicRpc extends MoleculeRpc
       allRows.forEach(println)
 
       val packed = if (isOptNested)
-        OptNested2packed(obj, allRows, maxRows).getPacked
+        OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked
       else if (nestedLevels == 0)
         Flat2packed(obj, allRows, maxRows).getPacked
       else

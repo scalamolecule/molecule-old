@@ -2,10 +2,11 @@ package molecule.core.api
 
 import molecule.core.ast.elements._
 import molecule.core.macros.MakeMoleculeDynamic
-import molecule.core.macros.attrResolvers._
+import molecule.core.macros.rowAttr.{CastAggr, CastOptNested, CastTypes, JsonAggr, JsonOptNested, JsonTypes}
+import molecule.core.macros.rowAttr.attrResolvers._
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.unpack.UnpackTypes
+import molecule.core.marshalling.packAttr.UnpackTypes
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers

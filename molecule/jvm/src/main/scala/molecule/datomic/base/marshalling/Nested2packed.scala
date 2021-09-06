@@ -3,13 +3,13 @@ package molecule.datomic.base.marshalling
 import java.lang.{Long => jLong}
 import java.util.{ArrayList => jArrayList, Collection => jCollection, Comparator => jComparator, Iterator => jIterator, List => jList}
 import molecule.core.marshalling.nodes._
-import molecule.datomic.base.marshalling.packers.ResolveFlat
+import molecule.datomic.base.marshalling.packers.ResolverFlat
 
 case class Nested2packed(
   obj: Obj,
   rowCollection: jCollection[jList[AnyRef]],
   nestedLevels: Int
-) extends jComparator[jList[AnyRef]] with ResolveFlat {
+) extends jComparator[jList[AnyRef]] with ResolverFlat {
 
   // Sort rows by entity ids for each level
 

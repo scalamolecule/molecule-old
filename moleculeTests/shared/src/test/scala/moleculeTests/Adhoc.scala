@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import java.lang.{Long => jLong}
 import java.util.{Collections, Date, UUID, ArrayList => jArrayList, Comparator => jComparator, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.ast.elements._
-import molecule.core.marshalling.unpack.UnpackTypes
+import molecule.core.marshalling.packAttr.UnpackTypes
 import molecule.core.util.Helpers
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,35 +31,20 @@ object Adhoc extends AsyncTestSuite with Helpers {
         conn <- futConn
 
 
-        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1$) insert List(
-          (10, List((1, Some(Set("a", "b"))), (2, None))),
-          (20, List())
-        )
+        _ <- Ns.str insert "a"
 
-//        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1$).get.map(_ ==> List(
-//          (10, List((1, Some(Set("a", "b"))), (2, None))),
-//        ))
-//        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1).get.map(_ ==> List(
-//          (10, List((1, Set("a", "b")))),
-//        ))
-//        _ <- m(Ns.int.Refs1 * Ref1.int1.strs1_).get.map(_ ==> List(
-//          (10, List(1)),
-//        ))
-//
-//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1$).get.map(_.sortBy(_._1) ==> List(
-//          (10, List((1, Some(Set("a", "b"))), (2, None))),
-//          (20, List())
-//        ))
-//
-//        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1).get.map(_.sortBy(_._1) ==> List(
-//          (10, List((1, Set("a", "b")))),
-//          (20, List())
-//        ))
+        _ <- Ns.str.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a"
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
-        _ <- m(Ns.int.Refs1 *? Ref1.int1.strs1_).get.map(_.sortBy(_._1) ==> List(
-          (10, List(1)),
-          (20, List())
-        ))
+
 
       } yield ()
     }

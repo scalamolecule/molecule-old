@@ -132,31 +132,31 @@ object NestedRef extends AsyncTestSuite {
     "Intermediate references without attributes" - core { implicit conn =>
       for {
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2$) insert List(
-          ("a", List((10, Some("a")), (20, None))),
-          ("b", List())
+          ("A", List((10, Some("a")), (20, None))),
+          ("B", List())
         )
 
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2$).get.map(_ ==> List(
-          ("a", List((10, Some("a")), (20, None))),
+          ("A", List((10, Some("a")), (20, None))),
         ))
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2).get.map(_ ==> List(
-          ("a", List((10, "a"))),
+          ("A", List((10, "a"))),
         ))
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2.str2_).get.map(_ ==> List(
-          ("a", List(10)),
+          ("A", List(10)),
         ))
 
         _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2$).get.map(_.sortBy(_._1) ==> List(
-          ("a", List((10, Some("a")), (20, None))),
-          ("b", List())
+          ("A", List((10, Some("a")), (20, None))),
+          ("B", List())
         ))
         _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
-          ("a", List((10, "a"))),
-          ("b", List())
+          ("A", List((10, "a"))),
+          ("B", List())
         ))
         _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2_).get.map(_.sortBy(_._1) ==> List(
-          ("a", List(10)),
-          ("b", List())
+          ("A", List(10)),
+          ("B", List())
         ))
       } yield ()
     }
@@ -265,11 +265,7 @@ object NestedRef extends AsyncTestSuite {
         _ <- m(Ns.str.Refs1.int1$.Refs2 *? Ref2.int2).get.map(_.sortBy(_._1) ==> List(
           ("a", Some(1), List(1)),
           ("b", None, List(2)),
-          ("c", Some(3), List()),
-
-          // Note that since Ref1.int1 is not asserted,
-          // neither is then any ref to Ref2 possible
-          // ("d", None, List()),
+          ("c", Some(3), List())
         ))
         _ <- m(Ns.str.Refs1.int1.Refs2 *? Ref2.int2).get.map(_.sortBy(_._1) ==> List(
           ("a", 1, List(1)),
@@ -283,6 +279,25 @@ object NestedRef extends AsyncTestSuite {
           ("a", List(1)),
           ("b", List(2)),
           ("c", List()),
+        ))
+      } yield ()
+    }
+
+
+    "Opt Date before nested" - core { implicit conn =>
+      for {
+        _ <- m(Ns.date$.Refs1.int1.Refs2 * Ref2.int2) insert List(
+          (Some(date1), 10, List(1, 2)),
+          (Some(date2), 20, List(3)),
+          (None, 30, List()),
+          (Some(date4), 40, List()),
+        )
+
+        _ <- m(Ns.date$.Refs1.int1.Refs2 *? Ref2.int2).get.map(_.sortBy(_._2) ==> List(
+          (Some(date1), 10, List(1, 2)),
+          (Some(date2), 20, List(3)),
+          (None, 30, List()),
+          (Some(date4), 40, List())
         ))
       } yield ()
     }
@@ -317,27 +332,6 @@ object NestedRef extends AsyncTestSuite {
         ))
       } yield ()
     }
-
-
-    //    "Post attributes after nested" - core { implicit conn =>
-    //      for {
-    //        _ <- Ns.double.str.Refs1.*(Ref1.int1).insert(1.1, "a", Seq(11, 12))
-    //
-    //        _ <- Ns.double.str.Refs1.*(Ref1.int1).get.map(_.head ==> (1.1, "a", Seq(11, 12)))
-    //
-    //        // Note how we jump back to the namespace (`Ns`) _before_ the nested ns (`Ref1`)
-    //        _ <- Ns.double.Refs1.*(Ref1.int1).str.get.map(_.head ==> (1.1, Seq(11, 12), "a"))
-    //      } yield ()
-    //
-    //      // todo?
-    //      //  "Multiple nested?" - core { implicit conn =>
-    //      //
-    //      //    Ns.str.Refs1.*(Ref1.int1).Parents.*(Ref1.int1).insert("a", Seq(11, 12), Seq(21, 22))
-    //      //
-    //      //    Ns.str.Refs1.*(Ref1.int1).Parents.*(Ref1.int1).get.map(_.head ==> ("a", Seq(11, 12), Seq(21, 22)))
-    //      //    } yield ()
-    //    }
-
 
     "Applied eid" - core { implicit conn =>
       for {
