@@ -1,10 +1,10 @@
 package molecule.core.macros.rowExtractors
 
-import molecule.core.macros.rowAttr.{JsonBase, ResolverJsonOptNested}
+import molecule.core.macros.rowAttr.{JsonBase, RowValue2jsonOptNested}
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-private[molecule] trait Row2jsonOptNested extends ResolverJsonOptNested with JsonBase {
+private[molecule] trait Row2jsonOptNested extends RowValue2jsonOptNested with JsonBase {
   val c: blackbox.Context
 
   import c.universe._
@@ -35,7 +35,7 @@ private[molecule] trait Row2jsonOptNested extends ResolverJsonOptNested with Jso
             // Only generate 1 property, even if attribute is repeated in molecule
             if (props.contains(prop)) Nil else {
               props = props :+ prop
-              newLine :+ getResolverJsonOptNested(group, baseTpe, prop)(-10, tabs) // colIndex not used
+              newLine :+ getRowValue2jsonOptNestedLambda(group, baseTpe, prop)(-10, tabs) // colIndex not used
             }
 
           case nested@Obj(_, ref, true, nestedProps) =>

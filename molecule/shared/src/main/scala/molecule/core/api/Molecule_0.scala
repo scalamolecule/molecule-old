@@ -3,10 +3,9 @@ package molecule.core.api
 import molecule.core.ast.elements._
 import molecule.core.macros.MakeMoleculeDynamic
 import molecule.core.macros.rowAttr.{CastAggr, CastOptNested, CastTypes, JsonAggr, JsonOptNested, JsonTypes}
-import molecule.core.macros.rowAttr.attrResolvers._
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.packAttr.UnpackTypes
+import molecule.core.marshalling.unpackAttr.{String2cast, String2json}
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers
@@ -166,7 +165,8 @@ abstract class Molecule_0[Obj, Tpl](
   with JsonAggr
   with JsonOptNested
 
-  with UnpackTypes
+  with String2cast
+  with String2json
 
   with GetTpls[Obj, Tpl]
   with GetObjs[Obj, Tpl]
@@ -312,6 +312,11 @@ abstract class Molecule_0[Obj, Tpl](
       if (conn.isJsPlatform) {
         for {
           insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
+          //          _ = {
+          //            insertStmts foreach println
+          //            println("------------")
+          //            println(Stmts2Edn(insertStmts, conn))
+          //          }
           result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(insertStmts, conn))
         } yield result
       } else {
@@ -338,8 +343,8 @@ abstract class Molecule_0[Obj, Tpl](
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  // Update ====================================================================
 
+  // Update ====================================================================
 
   /** Asynchronously update entity with data applied to molecule attributes.
     * Returns `Future` with [[molecule.datomic.base.facade.TxReport TxReport]] having info about

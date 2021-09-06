@@ -8,15 +8,9 @@ private[molecule] trait JsonTypes extends JsonBase {
 
   // One ===========================================================================================
 
-  protected def jsonOneQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer =
-    json_OneQuoted(sb, field, row.get(colIndex))
-
-  protected def json_OneQuoted(sb: StringBuffer, field: String, v: Any): StringBuffer = {
-    quotedPair(sb, field, v.toString)
+  protected def jsonOneQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
+    quotedPair(sb, field, row.get(colIndex).toString)
   }
-//  protected def jsonOneQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
-//    quotedPair(sb, field, row.get(colIndex).toString)
-//  }
 
   protected def jsonOne(sb: StringBuffer, field: String, row: jList[_], colIndex: Int): StringBuffer = {
     pair(sb, field, row.get(colIndex))
@@ -58,7 +52,8 @@ private[molecule] trait JsonTypes extends JsonBase {
       sb.append(indent(tabs + 1))
       quote(sb, it.next.toString)
     }
-    if (next) sb.append(indent(tabs))
+//    if (next)
+      sb.append(indent(tabs))
     sb.append("]")
   }
 
@@ -72,7 +67,8 @@ private[molecule] trait JsonTypes extends JsonBase {
       sb.append(indent(tabs + 1))
       sb.append(it.next)
     }
-    if (next) sb.append(indent(tabs))
+//    if (next)
+      sb.append(indent(tabs))
     sb.append("]")
   }
 
@@ -86,7 +82,8 @@ private[molecule] trait JsonTypes extends JsonBase {
       sb.append(indent(tabs + 1))
       sb.append(it.next.toString)
     }
-    if (next) sb.append(indent(tabs))
+//    if (next)
+      sb.append(indent(tabs))
     sb.append("]")
   }
 
@@ -100,7 +97,8 @@ private[molecule] trait JsonTypes extends JsonBase {
       sb.append(indent(tabs + 1))
       quote(sb, date2str(it.next.asInstanceOf[Date]))
     }
-    if (next) sb.append(indent(tabs))
+//    if (next)
+      sb.append(indent(tabs))
     sb.append("]")
   }
 

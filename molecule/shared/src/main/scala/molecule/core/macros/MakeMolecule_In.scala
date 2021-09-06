@@ -35,6 +35,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     lazy val flat             = castss.size == 1
     lazy val nestedTupleClass = tq"${nestedTupleClassX(castss.size)}"
     lazy val nestedJsonClass  = tq"${nestedJsonClassX(castss.size)}"
+    lazy val levels           = castss.size - txMetas
+    lazy val jsTpl            = Some(if (TplTypes.length == 1) q"Tuple1(packed2tpl(vs))" else q"packed2tpl(vs)")
+    lazy val jvmTpl           = Some(if (TplTypes.length == 1) q"Tuple1(row2tpl(row))" else q"row2tpl(row)")
 
     // Methods for applying separate lists of input
     lazy val outMoleculeFlat   =
@@ -143,9 +146,11 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     def mkFlat = {
       val transformers = if (isJsPlatform) {
         q"""
-          final override protected def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ???
-          final override protected def packed2obj(vs: Iterator[String]): $ObjType = ???
-          final override protected def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ???
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplFlat(obj, txMetas)}
+          final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
+          final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
+
+          final override lazy val obj: nodes.Obj = $obj
          """
 
       } else {

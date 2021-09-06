@@ -76,13 +76,18 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
     def p(v: Any): Any = v match {
       case f: Float              => f.toString.toDouble
       case _ if prefix.isDefined => Enum(prefix.get, v.toString)
-      case bd: BigDecimal        => bd + 0.0 // ensure decimal digits
+      case bd: BigDecimal        =>
+        // ensure decimal digits // here we want a typed BidDecimal - might fail on JS
+        bd + 0.0
       case _                     => v
     }
 
     def d(v: Any) = v match {
-      case d: Date => date2str(d)
-      case other   => other
+      case d: Date        => date2str(d)
+      case bd: BigDecimal =>
+        // ensure decimal digits on JS platform
+        if (bd.isWhole) s"${bd.toBigInt}.0" else bd
+      case other          => other
     }
 
     def attrValues(id: Any, attr: String): Future[Seq[AnyRef]] = {

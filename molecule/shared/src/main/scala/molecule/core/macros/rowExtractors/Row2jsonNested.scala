@@ -1,11 +1,11 @@
 package molecule.core.macros.rowExtractors
 
-import molecule.core.macros.rowAttr.{JsonBase, ResolverJsonTypes}
+import molecule.core.macros.rowAttr.{JsonBase, RowValue2json}
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
 
-trait Row2jsonNested extends JsonBase with ResolverJsonTypes {
+trait Row2jsonNested extends JsonBase with RowValue2json {
   val c: blackbox.Context
 
   import c.universe._
@@ -126,7 +126,7 @@ trait Row2jsonNested extends JsonBase with ResolverJsonTypes {
                       q"""sb.append(nested)"""
                     )
                   } else Nil
-                newLine ++ Seq(getResolverJsonTypes(group, baseTpe, prop)(colIndex, tabs + 1)) ++ nested
+                newLine ++ Seq(getRowValue2jsonLambda(group, baseTpe, prop)(colIndex, tabs + 1)) ++ nested
 
               case o: Obj if depth == exitDepth =>
                 newLine ++ Seq(

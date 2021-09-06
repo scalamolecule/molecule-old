@@ -13,8 +13,8 @@ import molecule.core.generic._
 import molecule.core.macros.rowAttr._
 import molecule.core.macros.rowExtractors._
 import molecule.core.marshalling.nodes._
-import molecule.core.marshalling.packAttr.UnpackTypes
-import molecule.core.marshalling.packExtractors.{Packed2jsonFlat, _}
+import molecule.core.marshalling.unpackAttr.{String2cast, PackedValue2json}
+import molecule.core.marshalling.unpackers.{Packed2jsonFlat, _}
 import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
@@ -36,16 +36,16 @@ private[molecule] trait Dsl2Model extends TreeOps
   with Packed2tplFlat
   with Packed2tplNested
   with Packed2tplComposite
-  with UnpackTypes
+  with String2cast
 
   with Packed2jsonFlat
 
-  with ResolverCastTypes
-  with ResolverCastOptNested
+  with RowValue2cast
+  with RowValue2castOptNested
 
-  with ResolverJsonTypes
-  with ResolverJsonTypesV
-  with ResolverJsonOptNested
+  with RowValue2json
+  with PackedValue2json
+  with RowValue2jsonOptNested
 
   with CastTypes
   with CastAggr

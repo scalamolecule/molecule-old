@@ -19,15 +19,14 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
-import molecule.core.macros.rowAttr.attrResolvers.JsonBase
 import molecule.core.marshalling.nodes._
-import molecule.core.marshalling.packAttr.UnpackTypes
+import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.datomic.api.out4.m
 import scala.jdk.CollectionConverters._
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
-  with UnpackTypes with CastTypes with CastOptNested with JsonBase {
+  with String2cast with CastTypes with CastOptNested with JsonBase {
 
 
   lazy val tests = Tests {
@@ -38,128 +37,88 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         conn <- futConn
 
 
-        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2$.str2) insert List(
-          ("a", List((Some(11), Some(12), "aa"))),
-          //          ("b", List((Some(13), None, "bb"))),
-          //          ("c", List((None, Some(14), "cc"))),
-          //          ("d", List())
-        )
 
-        //        _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2_.str2).get.map(_ ==> List(
-        //          ("a", List((Some(11), "aa"))),
-        //          ("c", List((None, "cc"))),
-        //        ))
-        //        _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2_.str2).get.map(_ ==> List(
-        //          ("a", List((11, "aa"))),
-        //        ))
-                _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2$.str2).get.map(_ ==> List(
-                  ("a", List((Some(12), "aa"))),
-                  ("b", List((None, "bb"))),
-                ))
-        //        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2.str2).get.map(_ ==> List(
-        //          ("a", List((12, "aa"))),
-        //        ))
-        //        _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2_.str2).get.map(_ ==> List(
-        //          ("a", List("aa")),
-        //        ))
+        //        obj = Obj("", "Ns", false, List(
+        //          Prop("Ns_str", "str", "String", 1, "One", None),
+        //          Obj("Ns__Refs1", "Refs1", true, List(
+        //            Obj("Ref1__Ref2", "Ref2", false, List(
+        //              Prop("Ref2_int2_", "int2$", "Int", 1, "OptOne", None),
+        //              Prop("Ref2_str2", "str2", "String", 1, "One", None)))))))
+        //
+        //        rows <- conn.qRaw(
+        //          """[:find  ?sort0 ?sort1 ?b
+        //            |        (pull ?e__1 [(limit :Ref2/int2 nil)])
+        //            |        ?g
+        //            | :where [(identity ?e) ?e__1]
+        //            |        [(identity ?a) ?sort0]
+        //            |        [(identity ?c) ?sort1]
+        //            |        [?a :Ns/str ?b]
+        //            |        [?a :Ns/refs1 ?c]
+        //            |        [?c :Ref1/int1 ?d]
+        //            |        [?c :Ref1/ref2 ?e]
+        //            |        [?e :Ref2/str2 ?g]]""".stripMargin)
+        //
+        //        _ = rows.forEach { row =>
+        //          println(row)
+        //          //          val last = row.get(1)
+        //          //          val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
+        //          //          val it = extractFlatValues(2, Nil, List(1))(list)
+        //          //          println("----------- " + row.get(0))
+        //          //          println(list)
+        //          //          println(it.asScala.toList)
+        //        }
+        //
+        //        //        packed = OptNested2packed(obj, rows, -1, List(Nil, Nil), List(Nil, List(1))).getPacked
+        //        //        packed = OptNested2packed(obj, rows, -1, List(Nil, Nil, Nil), List(Nil, Nil, Nil)).getPacked
+        //        //        packed = OptNested2packed(obj, rows, -1, List(Nil, List(1)), List(Nil, Nil)).getPacked
+        //
+        //        packed = Nested2packed(obj, rows, 1).getPacked
+        //        _ = println(packed)
+        //
+        //
+        //        vs = packed.linesIterator
+        //        _ = vs.next()
+        //        res = {
+        //          def nested1 = {
+        //            v = vs.next()
+        //            if (v == "◄◄") {
+        //              Nil
+        //            } else {
+        //              val buf    = new ListBuffer[(Option[Int], String)]()
+        //              do {
+        //                buf.append((
+        //                  unpackOptOneInt(v),
+        //                  unpackOneString(vs.next(), vs)
+        //                ))
+        //                v = vs.next()
+        //              } while (v != "►")
+        //              buf.toList
+        //            }
+        //          }
+        //          (
+        //            unpackOneString(vs.next(), vs),
+        //            nested1
+        //          )
+        //        }
+        //        _ = println(res)
 
-        //        _ <- m(Ns.str.Refs1 *? Ref1.int1$.Ref2.int2_.str2).get.map(_.sortBy(_._1) ==> List(
-        //          ("a", List((Some(11), "aa"))),
-        //          ("b", List()),
-        //          ("c", List((None, "cc"))),
-        //          ("d", List())
-        //        ))
-        //        _ <- m(Ns.str.Refs1 *? Ref1.int1.Ref2.int2_.str2).get.map(_.sortBy(_._1) ==> List(
-        //          ("a", List((11, "aa"))),
-        //          ("b", List()),
-        //          ("c", List()),
-        //          ("d", List())
-        //        ))
-        //        _ <- m(Ns.str.Refs1 *? Ref1.int1_.Ref2.int2$.str2).get.map(_.sortBy(_._1) ==> List(
-        //          ("a", List((Some(12), "aa"))),
-        //          ("b", List((None, "bb"))),
-        //          ("c", List()),
-        //          ("d", List())
-        //        ))
-        //        _ <- m(Ns.str.Refs1 *? Ref1.int1_.Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
-        //          ("a", List((12, "aa"))),
-        //          ("b", List()),
-        //          ("c", List()),
-        //          ("d", List())
-        //        ))
-        //        _ <- m(Ns.str.Refs1 *? Ref1.int1_.Ref2.int2_.str2).get.map(_.sortBy(_._1) ==> List(
-        //          ("a", List("aa")),
-        //          ("b", List()),
-        //          ("c", List()),
-        //          ("d", List())
-        //        ))
-
-
-
-        obj = Obj("", "Ns", false, List(
-          Prop("Ns_str", "str", "String", 1, "One", None),
-          Obj("Ns__Refs1", "Refs1", true, List(
-            Obj("Ref1__Ref2", "Ref2", false, List(
-              Prop("Ref2_int2_", "int2$", "Int", 1, "OptOne", None),
-              Prop("Ref2_str2", "str2", "String", 1, "One", None)))))))
-
-        rows <- conn.qRaw(
-          """[:find  ?sort0 ?sort1 ?b
-            |        (pull ?e__1 [(limit :Ref2/int2 nil)])
-            |        ?g
-            | :where [(identity ?e) ?e__1]
-            |        [(identity ?a) ?sort0]
-            |        [(identity ?c) ?sort1]
-            |        [?a :Ns/str ?b]
-            |        [?a :Ns/refs1 ?c]
-            |        [?c :Ref1/int1 ?d]
-            |        [?c :Ref1/ref2 ?e]
-            |        [?e :Ref2/str2 ?g]]""".stripMargin)
-
-        _ = rows.forEach { row =>
-          println(row)
-          //          val last = row.get(1)
-          //          val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
-          //          val it = extractFlatValues(2, Nil, List(1))(list)
-          //          println("----------- " + row.get(0))
-          //          println(list)
-          //          println(it.asScala.toList)
-        }
-
-        //        packed = OptNested2packed(obj, rows, -1, List(Nil, Nil), List(Nil, List(1))).getPacked
-        //        packed = OptNested2packed(obj, rows, -1, List(Nil, Nil, Nil), List(Nil, Nil, Nil)).getPacked
-        //        packed = OptNested2packed(obj, rows, -1, List(Nil, List(1)), List(Nil, Nil)).getPacked
-
-        packed = Nested2packed(obj, rows, 1).getPacked
-        _ = println(packed)
+        _ <- Ns.bigDecMap inspectInsert Map("a" -> bigDec1, "b" -> bigDec2)
+        _ <- Ns.bigDecMap insert Map("a" -> bigDec1, "b" -> bigDec2)
 
 
-        vs = packed.linesIterator
-        _ = vs.next()
-        res = {
-          def nested1 = {
-            v = vs.next()
-            if (v == "◄◄") {
-              Nil
-            } else {
-              val buf = new ListBuffer[(Option[Int], String)]()
-              do {
-                buf.append((
-//                  unpackOptOneInt(vs.next()),
-                  unpackOptOneInt(v),
-                  unpackOneString(vs.next(), vs)
-                ))
-                v = vs.next()
-              } while (v != "►")
-              buf.toList
-            }
-          }
-          (
-            unpackOneString(vs.next(), vs),
-            nested1
-          )
-        }
-        _ = println(res)
+        _ <- Ns.bigDecMap.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "bigDecMap": {
+            |          "b": 2.0,
+            |          "a": 1.0
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
 
         //

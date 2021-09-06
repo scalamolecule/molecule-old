@@ -88,23 +88,30 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJson(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     _inputThrowable.fold(
       futConn.flatMap { conn =>
-        val sb = new StringBuffer()
+        val sb   = new StringBuffer()
+        var next = false
         if (conn.isJsPlatform) {
           conn.queryJsJson(
             _nestedQuery.getOrElse(_query), n,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
           ).map { packed =>
-            val lines = packed.linesIterator
-            lines.next() // skip first empty line
-            val sb1 = packed2json(lines, sb)
-            sb1.append("\n    ")
-            outerJson(sb1.toString)
+            if (packed.isEmpty) {
+              outerJson("")
+            } else {
+              val lines = packed.linesIterator
+              lines.next() // skip first empty line
+              while (lines.hasNext) {
+                if (next) sb.append(",") else next = true
+                packed2json(lines, sb)
+              }
+              sb.append("\n    ")
+              outerJson(sb.toString)
+            }
           }
         } else {
           conn.query(_model, _query).map { jColl =>
             val count = jColl.size()
             val rows  = jColl.iterator()
-            var next  = false
             if (count == 0) {
               // Empty result set
             } else if (n == -1) {

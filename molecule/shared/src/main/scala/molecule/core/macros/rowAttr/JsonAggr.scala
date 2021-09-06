@@ -10,6 +10,7 @@ import java.util.{Date, List => jList, Set => jSet}
   */
 private[molecule] trait JsonAggr extends JsonBase {
 
+
   // One List --------------------------------------
 
   protected def jsonAggrOneListQuoted(sb: StringBuffer, field: String, row: jList[_], colIndex: Int, tabs: Int): StringBuffer = {

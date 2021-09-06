@@ -1,11 +1,11 @@
 package molecule.core.macros.rowExtractors
 
-import molecule.core.macros.rowAttr.ResolverCastTypes
+import molecule.core.macros.rowAttr.RowValue2cast
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
 
-trait Row2obj extends ResolverCastTypes {
+trait Row2obj extends RowValue2cast {
   val c: blackbox.Context
 
   import c.universe._
@@ -129,13 +129,13 @@ trait Row2obj extends ResolverCastTypes {
             propNames = propNames :+ prop
             optAggrTpe match {
               case None if nested => Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
-              case None           => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${getResolverCastTypes(group, baseTpe)(colIndex)}")
+              case None           => Some(q"final override lazy val ${TermName(prop)}: $tpe = ${getRowValue2castLambda(group, baseTpe)(colIndex)}")
 
               case Some(aggrTpe) if aggrTpe == tpe.toString =>
                 if (nested)
                   Some(q"final override lazy val ${TermName(prop)}: $tpe = tpl.productElement($colIndex).asInstanceOf[$tpe]")
                 else
-                  Some(q"final override lazy val ${TermName(prop)}: $tpe = ${getResolverCastTypes(group, baseTpe)(colIndex)}")
+                  Some(q"final override lazy val ${TermName(prop)}: $tpe = ${getRowValue2castLambda(group, baseTpe)(colIndex)}")
 
               case Some(aggrTpe) =>
                 val err = s"""Object property `$prop` not available since the aggregate changes its type to `$aggrTpe`. Please use tuple output instead to access aggregate value."""

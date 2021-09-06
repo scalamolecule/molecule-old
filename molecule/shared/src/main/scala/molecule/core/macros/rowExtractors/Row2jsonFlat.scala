@@ -1,10 +1,10 @@
 package molecule.core.macros.rowExtractors
 
-import molecule.core.macros.rowAttr.{JsonBase, ResolverJsonTypes}
+import molecule.core.macros.rowAttr.{JsonBase, RowValue2json}
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-trait Row2jsonFlat extends JsonBase with ResolverJsonTypes {
+trait Row2jsonFlat extends JsonBase with RowValue2json {
   val c: blackbox.Context
 
   import c.universe._
@@ -49,7 +49,7 @@ trait Row2jsonFlat extends JsonBase with ResolverJsonTypes {
             // Only generate 1 property, even if attribute is repeated in molecule
             if (props.contains(prop)) Nil else {
               props = props :+ prop
-              newLine :+ getResolverJsonTypes(group, baseTpe, prop)(colIndex, tabs)
+              newLine :+ getRowValue2jsonLambda(group, baseTpe, prop)(colIndex, tabs)
             }
 
           case refObj@Obj(_, ref, _, _) =>

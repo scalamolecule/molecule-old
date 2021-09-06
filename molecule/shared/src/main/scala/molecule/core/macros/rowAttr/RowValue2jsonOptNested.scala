@@ -3,12 +3,12 @@ package molecule.core.macros.rowAttr
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-private[molecule] trait ResolverJsonOptNested extends TreeOps {
+private[molecule] trait RowValue2jsonOptNested extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._
 
-  def getResolverJsonOptNested(group: String, baseTpe: String, field: String): (Int, Int) => Tree = group match {
+  def getRowValue2jsonOptNestedLambda(group: String, baseTpe: String, field: String): (Int, Int) => Tree = group match {
     case "One"          => jsonOptNestedOneAttr(baseTpe, field)
     case "OptOne"       => jsonOptNestedOptOneAttr(baseTpe, field)
     case "Many"         => jsonOptNestedManyAttr(baseTpe, field)

@@ -1,16 +1,17 @@
-package molecule.core.marshalling.packExtractors
+package molecule.core.marshalling.unpackers
 
-import molecule.core.macros.rowAttr.{JsonBase, ResolverJsonTypesV}
+import molecule.core.macros.rowAttr.JsonBase
 import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.unpackAttr.PackedValue2json
 import scala.reflect.macros.blackbox
 
-trait Packed2jsonFlat extends JsonBase with ResolverJsonTypesV {
+trait Packed2jsonFlat extends JsonBase with PackedValue2json {
   val c: blackbox.Context
 
   import c.universe._
 
   //  private lazy val xx = InspectMacro("Packed2jsonFlat", 1, mkError = true)
-  private lazy val xx = InspectMacro("Packed2jsonFlat", 1)
+  private lazy val xx = InspectMacro("Packed2jsonFlat", 10)
 
   //  def packed2tplFlatX(obj: Obj, txMetas: Int): Tree = {
   //    val next = q"vs.next()"
@@ -77,8 +78,7 @@ trait Packed2jsonFlat extends JsonBase with ResolverJsonTypesV {
               // Only generate 1 property, even if attribute is repeated in molecule
               if (props.contains(prop)) Nil else {
                 props = props :+ prop
-                newLine :+ getResolverJson_Types(group, baseTpe, prop, nextValue, tabs)
-//                newLine :+ q"""quotedPair(sb, "str", $nextValue)"""
+                newLine :+ getPackedValue2json(group, baseTpe, prop, nextValue, tabs)
               }
 
             case refObj@Obj(_, ref, _, _) =>

@@ -3,12 +3,12 @@ package molecule.core.macros.rowAttr
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-private[molecule] trait ResolverCastOptNested extends TreeOps {
+private[molecule] trait RowValue2castOptNested extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._
 
-  def getResolverCastOptNested(group: String, baseTpe: String): Int => Tree = group match {
+  def getRowValue2castOptNestedLambda(group: String, baseTpe: String): Int => Tree = group match {
     case "One"          => castOptNestedOneAttr(baseTpe)
     case "OptOne"       => castOptNestedOptOneAttr(baseTpe)
     case "Many"         => castOptNestedManyAttr(baseTpe)

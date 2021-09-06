@@ -1,14 +1,14 @@
-package molecule.core.marshalling.packAttr
+package molecule.core.marshalling.unpackAttr
 
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-trait Unpackers extends TreeOps with UnpackTypes {
+trait PackedValue2cast extends TreeOps with String2cast {
   val c: blackbox.Context
 
   import c.universe._
 
-  def unpackLambdas(group: String, baseTpe: String, v: Tree): Tree = group match {
+  def getPackedValue2cast(group: String, baseTpe: String, v: Tree): Tree = group match {
     case "One" | "KeyedMap" | "AggrSingleSample" | "AggrOneSingle"    => unpackOneAttr(baseTpe, v)
     case "OptOne" | "OptApplyOne"                                     => unpackOptOneAttr(baseTpe, v)
     case "Many" | "AggrManySingle"                                    => unpackManyAttr(baseTpe, v)

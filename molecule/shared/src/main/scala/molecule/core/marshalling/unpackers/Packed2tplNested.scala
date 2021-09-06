@@ -1,12 +1,12 @@
-package molecule.core.marshalling.packExtractors
+package molecule.core.marshalling.unpackers
 
 import molecule.core.macros.rowExtractors.Row2tplComposite
 import molecule.core.marshalling.nodes._
-import molecule.core.marshalling.packAttr.Unpackers
+import molecule.core.marshalling.unpackAttr.PackedValue2cast
 import scala.collection.mutable
 import scala.reflect.macros.blackbox
 
-trait Packed2tplNested extends Unpackers { self: Row2tplComposite =>
+trait Packed2tplNested extends PackedValue2cast { self: Row2tplComposite =>
   val c: blackbox.Context
 
   import c.universe._
@@ -39,7 +39,7 @@ trait Packed2tplNested extends Unpackers { self: Row2tplComposite =>
 
     def resolveTxGroups(txCompositeGroups: Seq[Node]): Seq[Tree] = {
       def resolve(nodes: Seq[Node], acc: Seq[Tree]): Seq[Tree] = nodes.flatMap {
-        case Prop(_, _, baseTpe, _, group, _) => acc :+ unpackLambdas(group, baseTpe, next)
+        case Prop(_, _, baseTpe, _, group, _) => acc :+ getPackedValue2cast(group, baseTpe, next)
         case Obj(_, _, _, nodes)              => resolve(nodes, acc)
       }
       txCompositeGroups.collect {
@@ -53,10 +53,10 @@ trait Packed2tplNested extends Unpackers { self: Row2tplComposite =>
     def setUnpacker(node: Node, level: Int, i: Int): Unit = {
       node match {
         case Prop(prop, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(group, baseTpe, v)
+          unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, v)
 
         case Prop(prop, _, baseTpe, _, group, _) =>
-          unpackerss(level) = unpackerss(level) :+ unpackLambdas(group, baseTpe, next)
+          unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, next)
 
         case Obj(_, _, true, props) =>
           unpackerss(level) = unpackerss(level) :+ q"${TermName("nested" + (level + 1))}"

@@ -651,7 +651,7 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 10,
-             |        "bigInt$$": $bigInt2
+             |        "bigInt$$": 2
              |      }
              |    ]
              |  }
@@ -667,7 +667,7 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 11,
-             |        "bigDec$$": $bigDec2
+             |        "bigDec$$": 2.0
              |      }
              |    ]
              |  }
@@ -873,8 +873,8 @@ object JsonAttributes extends AsyncTestSuite {
              |      {
              |        "int": 10,
              |        "bigInts$$": [
-             |          $bigInt1,
-             |          $bigInt2
+             |          1,
+             |          2
              |        ]
              |      }
              |    ]
@@ -892,8 +892,8 @@ object JsonAttributes extends AsyncTestSuite {
              |      {
              |        "int": 11,
              |        "bigDecs$$": [
-             |          $bigDec1,
-             |          $bigDec2
+             |          1.0,
+             |          2.0
              |        ]
              |      }
              |    ]
@@ -1079,8 +1079,8 @@ object JsonAttributes extends AsyncTestSuite {
              |      {
              |        "int": 9,
              |        "bigIntMap$$": {
-             |          "a": $bigInt1,
-             |          "b": $bigInt2
+             |          "a": 1,
+             |          "b": 2
              |        }
              |      }
              |    ]
@@ -1098,8 +1098,8 @@ object JsonAttributes extends AsyncTestSuite {
              |      {
              |        "int": 10,
              |        "bigDecMap$$": {
-             |          "a": $bigDec1,
-             |          "b": $bigDec2
+             |          "a": 1.0,
+             |          "b": 2.0
              |        }
              |      }
              |    ]

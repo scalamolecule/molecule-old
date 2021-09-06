@@ -1,10 +1,10 @@
 package molecule.core.macros.rowExtractors
 
-import molecule.core.macros.rowAttr.ResolverCastOptNested
+import molecule.core.macros.rowAttr.RowValue2castOptNested
 import molecule.core.marshalling.nodes._
 import scala.reflect.macros.blackbox
 
-private[molecule] trait Row2tplOptNested extends ResolverCastOptNested {
+private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
   val c: blackbox.Context
 
   import c.universe._
@@ -20,7 +20,7 @@ private[molecule] trait Row2tplOptNested extends ResolverCastOptNested {
 
     def properties(nodes: List[Node]): Seq[Tree] = {
       nodes.flatMap {
-        case Prop(_, _, baseTpe, _, group, _)    => Seq(getResolverCastOptNested(group, baseTpe)(-10)) // colIndex not used with iterator
+        case Prop(_, _, baseTpe, _, group, _)    => Seq(getRowValue2castOptNestedLambda(group, baseTpe)(-10)) // colIndex not used with iterator
         case nested@Obj(_, _, true, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper    = isDeeper(nested)

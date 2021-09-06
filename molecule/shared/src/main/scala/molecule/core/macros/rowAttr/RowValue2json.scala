@@ -3,12 +3,12 @@ package molecule.core.macros.rowAttr
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-private[molecule] trait ResolverJsonTypes extends TreeOps {
+private[molecule] trait RowValue2json extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._
 
-  def getResolverJsonTypes(group: String, baseTpe: String, field: String): (Int, Int) => Tree = group match {
+  def getRowValue2jsonLambda(group: String, baseTpe: String, field: String): (Int, Int) => Tree = group match {
     case "One"                  => jsonOneAttr(baseTpe, field)
     case "OptOne"               => jsonOptOneAttr(baseTpe, field)
     case "Many"                 => jsonManyAttr(baseTpe, field)

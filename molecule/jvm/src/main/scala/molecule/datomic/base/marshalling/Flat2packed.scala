@@ -24,7 +24,6 @@ case class Flat2packed(
         }
       }
     }
-    sb.substring(1)
     sb.toString
   }
 
