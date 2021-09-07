@@ -16,6 +16,8 @@ import scala.concurrent.Future
 
 trait AsyncTestSuiteImpl {
 
+  val isJsPlatform_ = false
+
   def coreImpl[T](func: Future[Conn] => T): T = func(Datomic_Peer.recreateDbFrom(CoreTestSchema))
   def bidirectionalImpl[T](func: Future[Conn] => T): T = func(Datomic_Peer.recreateDbFrom(BidirectionalSchema))
   def partitionImpl[T](func: Future[Conn] => T): T = func(Datomic_Peer.recreateDbFrom(PartitionTestSchema))

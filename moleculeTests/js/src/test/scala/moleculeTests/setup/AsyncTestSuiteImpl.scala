@@ -19,6 +19,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait AsyncTestSuiteImpl {
 
+  val isJsPlatform_ = true
+
   def inMem(schemaTransaction: SchemaTransaction): Future[Conn_Js] = Future(facade.Conn_Js(
     DatomicInMemProxy(
       schemaTransaction.datomicPeer,

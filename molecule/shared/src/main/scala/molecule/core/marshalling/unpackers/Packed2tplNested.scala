@@ -6,7 +6,7 @@ import molecule.core.marshalling.unpackAttr.PackedValue2cast
 import scala.collection.mutable
 import scala.reflect.macros.blackbox
 
-trait Packed2tplNested extends PackedValue2cast { self: Row2tplComposite =>
+trait Packed2tplNested extends PackedValue2cast {
   val c: blackbox.Context
 
   import c.universe._
@@ -14,11 +14,8 @@ trait Packed2tplNested extends PackedValue2cast { self: Row2tplComposite =>
   //  private lazy val xx = InspectMacro("Packed2tplNested", 1, mkError = true)
   private lazy val xx = InspectMacro("Packed2tplNested", 7, 6)
 
-  def packed2tplNested(
-    typess: List[List[Tree]],
-    obj: Obj,
-    txMetas: Int
-  ): Tree = {
+
+  def packed2tplNested(typess: List[List[Tree]], obj: Obj, txMetas: Int): Tree = {
     val v          = q"v"
     val next       = q"vs.next()"
     val levels     = typess.size - txMetas
@@ -52,10 +49,11 @@ trait Packed2tplNested extends PackedValue2cast { self: Row2tplComposite =>
 
     def setUnpacker(node: Node, level: Int, i: Int): Unit = {
       node match {
-        case Prop(prop, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
+        case Prop(_, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
+          // First prop on each sub level takes the `v` from before the loop
           unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, v)
 
-        case Prop(prop, _, baseTpe, _, group, _) =>
+        case Prop(_, _, baseTpe, _, group, _) =>
           unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, next)
 
         case Obj(_, _, true, props) =>
@@ -78,9 +76,8 @@ trait Packed2tplNested extends PackedValue2cast { self: Row2tplComposite =>
     // Recursively set unpackers
     setUnpackers(obj.props, 0, 0)
 
-
-    def nested = {
-      def mkNested(level: Int, unpackers: Seq[Tree]): c.universe.Tree = {
+    val tree = {
+      def mkNested(level: Int, unpackers: Seq[Tree]): Tree = {
         q"""
           def ${TermName("nested" + level)} = {
             v = vs.next()
@@ -97,29 +94,19 @@ trait Packed2tplNested extends PackedValue2cast { self: Row2tplComposite =>
           }
         """
       }
-      val nested = unpackerss.take(levels).zipWithIndex.tail.map {
+      val nestedResolvers = unpackerss.take(levels).zipWithIndex.tail.map {
         case (unpackers, level) => mkNested(level, unpackers)
       }
-      val tree   =
+
+      val tree =
         q"""{
-            ..$nested
+            ..$nestedResolvers
             (..${unpackerss.head})
           }
         """
       xx(6, typess, typess1, obj, unpackerss, tree)
-
       tree
     }
-
-
-    def nestedTxComposite: Tree = {
-
-      q""
-    }
-
-
-    //    val tree = if (txMetas <= 1) nested else nestedTxComposite
-    val tree = if (txMetas <= 1) nested else nested
 
     xx(7
       , levels

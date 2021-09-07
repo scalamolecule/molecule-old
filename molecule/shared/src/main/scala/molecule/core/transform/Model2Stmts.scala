@@ -83,10 +83,10 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
     }
 
     def d(v: Any) = v match {
-      case d: Date        => date2str(d)
-      case bd: BigDecimal =>
-        // ensure decimal digits on JS platform
-        if (bd.isWhole) s"${bd.toBigInt}.0" else bd
+      case d: Date => date2str(d)
+      // ensure decimal digits on JS platform
+      case d: Double      => if (attrInfo(a)._2 == "Double" && d.isWhole) s"${d.toLong}.0" else d
+      case bd: BigDecimal => if (bd.isWhole) s"${bd.toBigInt}.0" else bd
       case other          => other
     }
 

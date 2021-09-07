@@ -21,7 +21,6 @@ import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
 import molecule.core.marshalling.nodes._
 import molecule.core.marshalling.unpackAttr.String2cast
-import molecule.datomic.api.out4.m
 import scala.jdk.CollectionConverters._
 
 
@@ -37,6 +36,37 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         conn <- futConn
 
 
+        _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(
+          ("a", List(1)),
+          ("b", List(2, 3))
+        )
+
+        // Flat
+        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 2
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         //        obj = Obj("", "Ns", false, List(
         //          Prop("Ns_str", "str", "String", 1, "One", None),
@@ -101,24 +131,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         //          )
         //        }
         //        _ = println(res)
-
-        _ <- Ns.bigDecMap inspectInsert Map("a" -> bigDec1, "b" -> bigDec2)
-        _ <- Ns.bigDecMap insert Map("a" -> bigDec1, "b" -> bigDec2)
-
-
-        _ <- Ns.bigDecMap.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "bigDecMap": {
-            |          "b": 2.0,
-            |          "a": 1.0
-            |        }
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
 
 
         //

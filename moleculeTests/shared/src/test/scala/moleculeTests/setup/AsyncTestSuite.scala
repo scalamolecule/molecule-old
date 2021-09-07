@@ -6,6 +6,7 @@ import moleculeTests.setup.core.CoreData
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 
 trait AsyncTestSuite extends TestSuite with CoreData
@@ -13,6 +14,8 @@ trait AsyncTestSuite extends TestSuite with CoreData
   with AsyncTestSuiteImpl {
 
   var system: System = SystemPeer
+  val isJsPlatform: Boolean = isJsPlatform_
+
 
   def core[T](func: Future[Conn] => T): T = coreImpl(func)
   def bidirectional[T](func: Future[Conn] => T): T = bidirectionalImpl(func)

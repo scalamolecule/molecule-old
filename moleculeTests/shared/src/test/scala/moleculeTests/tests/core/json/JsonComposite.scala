@@ -421,7 +421,7 @@ object JsonComposite extends AsyncTestSuite {
              |        },
              |        "Ns": {
              |          "refs1": [
-             |            17592186045454
+             |            $r1a
              |          ]
              |        }
              |      },
@@ -432,7 +432,7 @@ object JsonComposite extends AsyncTestSuite {
              |        },
              |        "Ns": {
              |          "refs1": [
-             |            17592186045456
+             |            $r1b
              |          ]
              |        }
              |      }

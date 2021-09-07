@@ -39,6 +39,7 @@ private[molecule] trait Dsl2Model extends TreeOps
   with String2cast
 
   with Packed2jsonFlat
+  with Packed2jsonNested
 
   with RowValue2cast
   with RowValue2castOptNested

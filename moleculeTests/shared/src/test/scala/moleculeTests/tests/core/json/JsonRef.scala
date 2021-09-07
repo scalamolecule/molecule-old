@@ -47,96 +47,59 @@ object JsonRef extends AsyncTestSuite {
         )
 
         // Flat
-        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "int1": 1
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 2
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 3
-            |        }
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-
-        // Nested
-        _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": [
-            |          {
-            |            "int1": 1
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": [
-            |          {
-            |            "int1": 2
-            |          },
-            |          {
-            |            "int1": 3
-            |          }
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-      } yield ()
-    }
-
-
-    "Ref card 2" - core { implicit conn =>
-      for {
-        _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(
-          ("a", List(1)),
-          ("b", List(2, 3))
-        )
-
-        // Flat
-        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "int1": 1
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 2
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 3
-            |        }
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
+        // (order is not guaranteed)
+        _ <- Ns.str.Refs1.int1.getJson.map(_ ==> {
+          if (isJsPlatform)
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "str": "b",
+              |        "Refs1": {
+              |          "int1": 2
+              |        }
+              |      },
+              |      {
+              |        "str": "a",
+              |        "Refs1": {
+              |          "int1": 1
+              |        }
+              |      },
+              |      {
+              |        "str": "b",
+              |        "Refs1": {
+              |          "int1": 3
+              |        }
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin
+          else
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "str": "a",
+              |        "Refs1": {
+              |          "int1": 1
+              |        }
+              |      },
+              |      {
+              |        "str": "b",
+              |        "Refs1": {
+              |          "int1": 2
+              |        }
+              |      },
+              |      {
+              |        "str": "b",
+              |        "Refs1": {
+              |          "int1": 3
+              |        }
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin
+        })
 
         // Nested
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
@@ -174,28 +137,49 @@ object JsonRef extends AsyncTestSuite {
         List(_, refA, _, refB) <- Ns.int.Ref1.str1 insert List(
           (1, "a"),
           (2, "b")
-        ) map(_.eids)
+        ) map (_.eids)
 
         // Ref namespace
-        _ <- Ns.int.Ref1.str1.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 1,
-            |        "Ref1": {
-            |          "str1": "a"
-            |        }
-            |      },
-            |      {
-            |        "int": 2,
-            |        "Ref1": {
-            |          "str1": "b"
-            |        }
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
+        _ <- Ns.int.Ref1.str1.getJson.map(_ ==> {
+          if (isJsPlatform)
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "int": 2,
+              |        "Ref1": {
+              |          "str1": "b"
+              |        }
+              |      },
+              |      {
+              |        "int": 1,
+              |        "Ref1": {
+              |          "str1": "a"
+              |        }
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin
+          else
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "int": 1,
+              |        "Ref1": {
+              |          "str1": "a"
+              |        }
+              |      },
+              |      {
+              |        "int": 2,
+              |        "Ref1": {
+              |          "str1": "b"
+              |        }
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin
+        })
 
 
         // Ref attr

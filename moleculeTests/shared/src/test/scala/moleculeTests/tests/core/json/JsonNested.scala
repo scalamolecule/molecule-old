@@ -22,31 +22,45 @@ object JsonNested extends AsyncTestSuite {
         )
 
         // Flat
-        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "int1": 1
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 2
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 3
-            |        }
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
+        _ <- Ns.str.Refs1.int1.getJson.map { result =>
+          val orderings  = List(
+            ("a", "b", "b", 1, 2, 3),
+            ("b", "a", "b", 2, 1, 3),
+          )
+          val variations = orderings.map {
+            case (a, b, c, d, e, f) =>
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      {
+                 |        "str": "$a",
+                 |        "Refs1": {
+                 |          "int1": $d
+                 |        }
+                 |      },
+                 |      {
+                 |        "str": "$b",
+                 |        "Refs1": {
+                 |          "int1": $e
+                 |        }
+                 |      },
+                 |      {
+                 |        "str": "$c",
+                 |        "Refs1": {
+                 |          "int1": $f
+                 |        }
+                 |      }
+                 |    ]
+                 |  }
+                 |}""".stripMargin
+          }
+          if (!variations.contains(result)) {
+            variations foreach println
+            println("------ result: -------")
+            println(result)
+          }
+          variations.contains(result) ==> true
+        }
 
         // NestedOpt
         _ <- Ns.str.Refs1.*?(Ref1.int1).getJson.map(_ ==>
@@ -914,462 +928,496 @@ object JsonNested extends AsyncTestSuite {
 
 
         // Ordering only stable with Peer
-        _ <- if (system == SystemPeer) {
-          for {
-            // Semi-nested A
-            _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "str": "a",
-                |        "Refs1": [
-                |          {
-                |            "int1": 1,
-                |            "Refs2": {
-                |              "int2": 11
-                |            }
-                |          },
-                |          {
-                |            "int1": 1,
-                |            "Refs2": {
-                |              "int2": 12
-                |            }
-                |          },
-                |          {
-                |            "int1": 2,
-                |            "Refs2": {
-                |              "int2": 22
-                |            }
-                |          },
-                |          {
-                |            "int1": 2,
-                |            "Refs2": {
-                |              "int2": 21
-                |            }
-                |          }
-                |        ]
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": [
-                |          {
-                |            "int1": 3,
-                |            "Refs2": {
-                |              "int2": 32
-                |            }
-                |          },
-                |          {
-                |            "int1": 3,
-                |            "Refs2": {
-                |              "int2": 31
-                |            }
-                |          },
-                |          {
-                |            "int1": 4,
-                |            "Refs2": {
-                |              "int2": 41
-                |            }
-                |          },
-                |          {
-                |            "int1": 4,
-                |            "Refs2": {
-                |              "int2": 42
-                |            }
-                |          }
-                |        ]
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
+        //        _ <- if (system == SystemPeer) {
+        //          for {
 
-            // Semi-nested A without intermediary attr `int1`
-            _ <- Ns.str.Refs1.*(Ref1.Refs2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "str": "a",
-                |        "Refs1": [
-                |          {
-                |            "Refs2": {
-                |              "int2": 11
-                |            }
-                |          },
-                |          {
-                |            "Refs2": {
-                |              "int2": 12
-                |            }
-                |          },
-                |          {
-                |            "Refs2": {
-                |              "int2": 22
-                |            }
-                |          },
-                |          {
-                |            "Refs2": {
-                |              "int2": 21
-                |            }
-                |          }
-                |        ]
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": [
-                |          {
-                |            "Refs2": {
-                |              "int2": 31
-                |            }
-                |          },
-                |          {
-                |            "Refs2": {
-                |              "int2": 32
-                |            }
-                |          },
-                |          {
-                |            "Refs2": {
-                |              "int2": 41
-                |            }
-                |          },
-                |          {
-                |            "Refs2": {
-                |              "int2": 42
-                |            }
-                |          }
-                |        ]
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
+        // Semi-nested A
+        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.int2).getJson.map { result =>
+          val orderings  = List(
+            (11, 12, 22, 21, 32, 31, 42, 41),
+            (11, 12, 22, 21, 32, 31, 41, 42),
+            (12, 11, 22, 21, 32, 31, 42, 41),
+            (12, 11, 21, 22, 32, 31, 41, 42),
+          )
+          val variations = orderings.map {
+            case (a, b, c, d, e, f, g, h) =>
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      {
+                 |        "str": "a",
+                 |        "Refs1": [
+                 |          {
+                 |            "int1": 1,
+                 |            "Refs2": {
+                 |              "int2": $a
+                 |            }
+                 |          },
+                 |          {
+                 |            "int1": 1,
+                 |            "Refs2": {
+                 |              "int2": $b
+                 |            }
+                 |          },
+                 |          {
+                 |            "int1": 2,
+                 |            "Refs2": {
+                 |              "int2": $c
+                 |            }
+                 |          },
+                 |          {
+                 |            "int1": 2,
+                 |            "Refs2": {
+                 |              "int2": $d
+                 |            }
+                 |          }
+                 |        ]
+                 |      },
+                 |      {
+                 |        "str": "b",
+                 |        "Refs1": [
+                 |          {
+                 |            "int1": 3,
+                 |            "Refs2": {
+                 |              "int2": $e
+                 |            }
+                 |          },
+                 |          {
+                 |            "int1": 3,
+                 |            "Refs2": {
+                 |              "int2": $f
+                 |            }
+                 |          },
+                 |          {
+                 |            "int1": 4,
+                 |            "Refs2": {
+                 |              "int2": $g
+                 |            }
+                 |          },
+                 |          {
+                 |            "int1": 4,
+                 |            "Refs2": {
+                 |              "int2": $h
+                 |            }
+                 |          }
+                 |        ]
+                 |      }
+                 |    ]
+                 |  }
+                 |}""".stripMargin
+          }
+          if (!variations.contains(result)) {
+            variations foreach println
+            println("------ result: -------")
+            println(result)
+          }
+          variations.contains(result) ==> true
+        }
 
 
-            // Semi-nested B
-            _ <- Ns.str.Refs1.int1.Refs2.*(Ref2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "int1": 1,
-                |          "Refs2": [
-                |            {
-                |              "int2": 11
-                |            },
-                |            {
-                |              "int2": 12
-                |            }
-                |          ]
-                |        }
-                |      },
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "int1": 2,
-                |          "Refs2": [
-                |            {
-                |              "int2": 21
-                |            },
-                |            {
-                |              "int2": 22
-                |            }
-                |          ]
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "int1": 3,
-                |          "Refs2": [
-                |            {
-                |              "int2": 31
-                |            },
-                |            {
-                |              "int2": 32
-                |            }
-                |          ]
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "int1": 4,
-                |          "Refs2": [
-                |            {
-                |              "int2": 41
-                |            },
-                |            {
-                |              "int2": 42
-                |            }
-                |          ]
-                |        }
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
+        // Semi-nested A without intermediary attr `int1`
+        _ <- Ns.str.Refs1.*(Ref1.Refs2.int2).getJson.map { result =>
+          val orderings  = List(
+            (12, 11, 22, 21, 32, 31, 41, 42),
+            (11, 12, 22, 21, 31, 32, 41, 42),
+            (11, 12, 22, 21, 32, 31, 42, 41),
+            (11, 12, 21, 22, 32, 31, 42, 41),
+          )
+          val variations = orderings.map {
+            case (a, b, c, d, e, f, g, h) =>
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      {
+                 |        "str": "a",
+                 |        "Refs1": [
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $a
+                 |            }
+                 |          },
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $b
+                 |            }
+                 |          },
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $c
+                 |            }
+                 |          },
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $d
+                 |            }
+                 |          }
+                 |        ]
+                 |      },
+                 |      {
+                 |        "str": "b",
+                 |        "Refs1": [
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $e
+                 |            }
+                 |          },
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $f
+                 |            }
+                 |          },
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $g
+                 |            }
+                 |          },
+                 |          {
+                 |            "Refs2": {
+                 |              "int2": $h
+                 |            }
+                 |          }
+                 |        ]
+                 |      }
+                 |    ]
+                 |  }
+                 |}""".stripMargin
+          }
+          if (!variations.contains(result)) {
+            variations foreach println
+            println("------ result: -------")
+            println(result)
+          }
+          variations.contains(result) ==> true
+        }
 
 
-            // Semi-nested B without intermediary attr `int1`
-            _ <- Ns.str.Refs1.Refs2.*(Ref2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "Refs2": [
-                |            {
-                |              "int2": 11
-                |            },
-                |            {
-                |              "int2": 12
-                |            },
-                |            {
-                |              "int2": 21
-                |            },
-                |            {
-                |              "int2": 22
-                |            }
-                |          ]
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "Refs2": [
-                |            {
-                |              "int2": 31
-                |            },
-                |            {
-                |              "int2": 32
-                |            },
-                |            {
-                |              "int2": 41
-                |            },
-                |            {
-                |              "int2": 42
-                |            }
-                |          ]
-                |        }
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
+        // Semi-nested B
+        _ <- Ns.str.Refs1.int1.Refs2.*(Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "int2": 11
+            |            },
+            |            {
+            |              "int2": 12
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 2,
+            |          "Refs2": [
+            |            {
+            |              "int2": 21
+            |            },
+            |            {
+            |              "int2": 22
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3,
+            |          "Refs2": [
+            |            {
+            |              "int2": 31
+            |            },
+            |            {
+            |              "int2": 32
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 4,
+            |          "Refs2": [
+            |            {
+            |              "int2": 41
+            |            },
+            |            {
+            |              "int2": 42
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
 
-            // Tacit filter
-            _ <- m(Ns.str_("a").Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "Refs1": {
-                |          "int1": 1,
-                |          "Refs2": [
-                |            {
-                |              "int2": 11
-                |            },
-                |            {
-                |              "int2": 12
-                |            }
-                |          ]
-                |        }
-                |      },
-                |      {
-                |        "Refs1": {
-                |          "int1": 2,
-                |          "Refs2": [
-                |            {
-                |              "int2": 21
-                |            },
-                |            {
-                |              "int2": 22
-                |            }
-                |          ]
-                |        }
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
-
-            // Tacit filters
-            _ <- m(Ns.str_("a").Refs1.int1_(2).Refs2 * Ref2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "Refs1": {
-                |          "Refs2": [
-                |            {
-                |              "int2": 21
-                |            },
-                |            {
-                |              "int2": 22
-                |            }
-                |          ]
-                |        }
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
+        // Semi-nested B without intermediary attr `int1`
+        _ <- Ns.str.Refs1.Refs2.*(Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 11
+            |            },
+            |            {
+            |              "int2": 12
+            |            },
+            |            {
+            |              "int2": 21
+            |            },
+            |            {
+            |              "int2": 22
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 31
+            |            },
+            |            {
+            |              "int2": 32
+            |            },
+            |            {
+            |              "int2": 41
+            |            },
+            |            {
+            |              "int2": 42
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
 
-            // Flat
-            _ <- m(Ns.str.Refs1.int1.Refs2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "int1": 2,
-                |          "Refs2": {
-                |            "int2": 21
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "int1": 2,
-                |          "Refs2": {
-                |            "int2": 22
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "int1": 4,
-                |          "Refs2": {
-                |            "int2": 42
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "int1": 4,
-                |          "Refs2": {
-                |            "int2": 41
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "int1": 1,
-                |          "Refs2": {
-                |            "int2": 12
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "int1": 1,
-                |          "Refs2": {
-                |            "int2": 11
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "int1": 3,
-                |          "Refs2": {
-                |            "int2": 31
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "int1": 3,
-                |          "Refs2": {
-                |            "int2": 32
-                |          }
-                |        }
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
+        // Tacit filter
+        _ <- m(Ns.str_("a").Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": [
+            |            {
+            |              "int2": 11
+            |            },
+            |            {
+            |              "int2": 12
+            |            }
+            |          ]
+            |        }
+            |      },
+            |      {
+            |        "Refs1": {
+            |          "int1": 2,
+            |          "Refs2": [
+            |            {
+            |              "int2": 21
+            |            },
+            |            {
+            |              "int2": 22
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        // Tacit filters
+        _ <- m(Ns.str_("a").Refs1.int1_(2).Refs2 * Ref2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "Refs1": {
+            |          "Refs2": [
+            |            {
+            |              "int2": 21
+            |            },
+            |            {
+            |              "int2": 22
+            |            }
+            |          ]
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
 
-            // Flat without intermediary attr `int1`
-            res <- m(Ns.str.Refs1.Refs2.int2).getJson.map(_ ==>
-              """{
-                |  "data": {
-                |    "Ns": [
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 21
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 22
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 41
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 42
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 11
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "a",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 12
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 31
-                |          }
-                |        }
-                |      },
-                |      {
-                |        "str": "b",
-                |        "Refs1": {
-                |          "Refs2": {
-                |            "int2": 32
-                |          }
-                |        }
-                |      }
-                |    ]
-                |  }
-                |}""".stripMargin)
-          } yield res
-        } else Future.unit
+        // Flat
+        _ <- m(Ns.str.Refs1.int1.Refs2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 2,
+            |          "Refs2": {
+            |            "int2": 21
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 2,
+            |          "Refs2": {
+            |            "int2": 22
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 4,
+            |          "Refs2": {
+            |            "int2": 42
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 4,
+            |          "Refs2": {
+            |            "int2": 41
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": {
+            |            "int2": 12
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": {
+            |            "int2": 11
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3,
+            |          "Refs2": {
+            |            "int2": 31
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3,
+            |          "Refs2": {
+            |            "int2": 32
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+
+        // Flat without intermediary attr `int1`
+        res <- m(Ns.str.Refs1.Refs2.int2).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 21
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 22
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 41
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 42
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 11
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 12
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 31
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 32
+            |          }
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+        //          } yield res
+        //        } else Future.unit
       } yield ()
     }
 

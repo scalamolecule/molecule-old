@@ -28,11 +28,12 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     val imports        = getImports(genericImports)
     val OutMoleculeTpe = molecule_o(TplTypes.size)
     val outMolecule    = TypeName(c.freshName("compositeOutMolecule$"))
+    lazy val jsTpl  = Some(if (TplTypes.length == 1) q"Tuple1(packed2tpl(vs))" else q"packed2tpl(vs)")
 
     val transformers = if (isJsPlatform) {
       q"""
           final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplComposite(obj, txMetas)}
-          final override def packed2obj(vs: Iterator[String]): $ObjType = ???
+          final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
           final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
 
           final override lazy val obj: nodes.Obj = $obj
