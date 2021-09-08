@@ -35,7 +35,8 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
-
+        _ <- Ns.int(1).save
+        _ <- m(Ns.int(?))(1).get.map(_ ==> List(1))
 
 
         //        obj = Obj("", "Ns", false, List(

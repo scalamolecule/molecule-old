@@ -146,7 +146,7 @@ trait String2cast extends Helpers {
 
 
   protected lazy val unpackOptManyString     = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[String]] else Some(unpackManyString(v, vs))
-  protected lazy val unpackOptManyEnum       = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[String]] else Some(unpackManyString(v, vs))
+  protected lazy val unpackOptManyEnum       = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[String]] else Some(unpackManyEnum(v, vs))
   protected lazy val unpackOptManyInt        = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[Int]] else Some(unpackManyInt(v, vs))
   protected lazy val unpackOptManyLong       = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[Long]] else Some(unpackManyLong(v, vs))
   protected lazy val unpackOptManyDouble     = (v: String, vs: Iterator[String]) => if (v == "◄") Option.empty[Set[Double]] else Some(unpackManyDouble(v, vs))

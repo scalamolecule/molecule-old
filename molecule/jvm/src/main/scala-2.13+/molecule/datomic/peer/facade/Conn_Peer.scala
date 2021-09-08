@@ -328,6 +328,15 @@ case class Conn_Peer(
         val first           = if (query.i.rules.isEmpty) Seq(adhocDb) else Seq(adhocDb, rules)
         val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
         val allInputs       = first ++ inputsEvaluated
+
+
+
+
+
+
+
+
+
         val result          = Peer.q(query.toMap, allInputs: _*)
 
         //        val row = result.iterator.next

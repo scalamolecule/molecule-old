@@ -14,8 +14,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
   import c.universe._
 
   //   private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8, mkError = true)
-  private lazy val xx = InspectMacro("MakeMolecule_In", 9, 8)
-  //    private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8)
+  //  private lazy val xx = InspectMacro("MakeMolecule_In", 9, 8)
+  private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8)
 
   private[this] final def generateInputMolecule(dsl: Tree, ObjType: Type, InTypes: Type*)(TplTypes: Type*): Tree = {
     val (
@@ -40,7 +40,18 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     lazy val jvmTpl           = Some(if (TplTypes.length == 1) q"Tuple1(row2tpl(row))" else q"row2tpl(row)")
 
     // Methods for applying separate lists of input
-    lazy val outMoleculeFlat   =
+    lazy val outMoleculeFlat = if (isJsPlatform) {
+      q"""
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplFlat(obj, txMetas)}
+          final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
+          final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
+
+          final override lazy val obj: nodes.Obj = $obj
+        }
+        new $outMolecule
+      """
+    } else {
       q"""
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
@@ -49,17 +60,34 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         }
         new $outMolecule
       """
-    lazy val outMoleculeNested =
+    }
+
+    lazy val outMoleculeNested = if (isJsPlatform) {
+      q"""
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested) {
+          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplNested(typess, obj, txMetas)}
+          final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
+          final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonNested(levels, obj, txMetas)}
+
+          final override lazy val obj: nodes.Obj = $obj
+          final override lazy val nestedLevels: Int = ${levels - 1}
+        }
+        new $outMolecule
+      """
+    } else {
+      val tpl = Some(if (TplTypes.length == 1) q"Tuple1(tpl0)" else q"tpl0")
       q"""
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryDataNested)
           with $nestedTupleClass[$ObjType, (..$TplTypes)]
           with $nestedJsonClass[$ObjType, (..$TplTypes)] {
           ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
           ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
+          final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = ${objTree(obj, tpl)}
           final override lazy val nestedLevels: Int = ${levels - 1}
         }
         new $outMolecule
       """
+    }
 
     val applySeqs = InTypes match {
       case Seq(it1) => q"" // no extra

@@ -61,9 +61,9 @@ object DatomicRpc extends MoleculeRpc
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]]
   ): Future[String] = try {
-    val log       = new log
-    val t         = TimerPrint("DatomicRpc")
-    val inputs    = unmarshallInputs(l ++ ll ++ lll)
+    val log    = new log
+    val t      = TimerPrint("DatomicRpc")
+    val inputs = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
     for {
       conn <- getConn(connProxy)
@@ -75,9 +75,11 @@ object DatomicRpc extends MoleculeRpc
       val space       = " " * (70 - datalogQuery.split('\n').last.length)
       val time        = qTime(queryTime)
       val timeRight   = " " * (8 - time.length) + time
+
+      log("###### DatomicRpc #########################################")
       log(datalogQuery + space + timeRight)
+      if(allInputs.nonEmpty) log(allInputs.mkString("Inputs:\n", "\n", ""))
       //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
-      log.print
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
       //      log(qTime(queryTime) + "  " + datalogQuery)
@@ -95,10 +97,10 @@ object DatomicRpc extends MoleculeRpc
 
       //      val rows = new jArrayList(allRows).subList(0, maxRows)
 
-      println("-------------------------")
-      println(obj)
-      println("-------------------------")
-      allRows.forEach(println)
+      log("-------------------------------")
+      log(obj.toString)
+      log("-------------------------------")
+      allRows.forEach(row => log(row.toString))
 
       val packed = if (isOptNested)
         OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked
@@ -107,8 +109,8 @@ object DatomicRpc extends MoleculeRpc
       else
         Nested2packed(obj, allRows, nestedLevels).getPacked
 
-      println("###### DatomicRpc #########################################" + packed)
-
+      log("-------------------------------" + packed)
+      log.print
       //        log("Sending data to client... Total server time: " + t.msTotal)
       packed
     }
@@ -280,23 +282,20 @@ object DatomicRpc extends MoleculeRpc
     " " * indents + thousands(queryTime) + " ms"
   }
 
-  private def unmarshallInputs(lists: Seq[(Int, AnyRef)]): Seq[Object] = {
+  private def unmarshallInputs(lists: Seq[(Int, Any)]): Seq[Object] = {
     lists.sortBy(_._1).map(_._2).map {
-      case l: Seq[_] => Util.list(l.map {
-        case l2: Seq[_] =>
-          Util.list(l2.map(v => cast(v.asInstanceOf[(String, String)])): _*)
+      case l: Seq[_] =>
+        Util.list(l.collect {
+          case l2: Seq[_] =>
+            Util.list(l2.collect {
+              case (tpe: String, v: String) => castRightOfPair(tpe, v)
+            }: _*)
 
-        case pair@(_: String, _: String) =>
-          cast(pair.asInstanceOf[(String, String)])
+          case (tpe: String, v: String) => castRightOfPair(tpe, v)
+        }: _*)
 
-        case _ => throw MoleculeException("Unexpected input values")
-      }: _*)
-
-      case pair@(_: String, _: String) =>
-        cast(pair)
-
-      case _ =>
-        throw MoleculeException("Unexpected input values")
+      case (tpe: String, v: String) => castRightOfPair(tpe, v)
+      case _                        => throw MoleculeException("Unexpected input values")
     }
   }
 
@@ -305,17 +304,19 @@ object DatomicRpc extends MoleculeRpc
   // to be transferred with autowire/boopickle, we cast all input variable values
   // as String on the client and then cast them back to their original type here
   // and pass them as Object's to Datomic.
-  def cast(pair: (String, String)): Object = pair match {
-    case ("String", v)     => v.asInstanceOf[Object]
-    case ("Int", v)        => v.toInt.asInstanceOf[Object]
-    case ("Long", v)       => v.toLong.asInstanceOf[Object]
-    case ("Double", v)     => v.toDouble.asInstanceOf[Object]
-    case ("BigInt", v)     => BigInt.apply(v).asInstanceOf[Object]
-    case ("BigDecimal", v) => BigDecimal(v).asInstanceOf[Object]
-    case ("Boolean", v)    => v.toBoolean.asInstanceOf[Object]
-    case ("Date", v)       => str2date(v).asInstanceOf[Object]
-    case ("UUID", v)       => java.util.UUID.fromString(v).asInstanceOf[Object]
-    case ("URI", v)        => new java.net.URI(v).asInstanceOf[Object]
-    case _                 => throw MoleculeException("Unexpected input pair to cast: " + pair)
+  def castRightOfPair(tpe: String, v: String): Object = {
+    (tpe, v) match {
+      case ("String", v)     => v.asInstanceOf[Object]
+      case ("Int", v)        => v.toInt.asInstanceOf[Object]
+      case ("Long", v)       => v.toLong.asInstanceOf[Object]
+      case ("Double", v)     => v.toDouble.asInstanceOf[Object]
+      case ("BigInt", v)     => BigInt.apply(v).asInstanceOf[Object]
+      case ("BigDecimal", v) => BigDecimal(v).asInstanceOf[Object]
+      case ("Boolean", v)    => v.toBoolean.asInstanceOf[Object]
+      case ("Date", v)       => str2date(v).asInstanceOf[Object]
+      case ("UUID", v)       => java.util.UUID.fromString(v).asInstanceOf[Object]
+      case ("URI", v)        => new java.net.URI(v).asInstanceOf[Object]
+      case _                 => throw MoleculeException(s"Unexpected input pair to cast: ($tpe, $v)")
+    }
   }
 }

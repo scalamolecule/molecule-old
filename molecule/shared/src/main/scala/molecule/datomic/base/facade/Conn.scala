@@ -85,26 +85,6 @@ trait Conn extends ColOps with Serializations {
     )
   }
 
-//  private def getRaw(
-//    query: Either[Query, String],
-//    n: Int,
-//    obj: Obj,
-//    nestedLevels: Int,
-//    isOptNested: Boolean,
-//    refIndexes: List[List[Int]],
-//    tacitIndexes: List[List[Int]]
-//  ): Future[String] = {
-//    val datalogQuery = query.getOrElse{q => Query2String(q).multiLine(60)
-//    }
-//    val q2s          = Query2String(query)
-//    val datalogQuery = q2s.multiLine(60)
-//    val p            = q2s.p
-//    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-//    val (l, ll, lll) = marshallInputs(query)
-//    rpc.query2packed(
-//      connProxy, datalogQuery, rules, l, ll, lll, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
-//    )
-//  }
 
   private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext) = Future {
     if (connProxy.adhocDbView.isDefined) {
@@ -130,24 +110,29 @@ trait Conn extends ColOps with Serializations {
     packed2T: Iterator[String] => T,
   )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
     jsGetRaw(query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes).map { packed =>
-      //      val packed0 =
-      //        """
-      //          |a
-      //          |◄
-      //          |12
-      //          |aa
-      //          |◄
-      //          |◄◄""".stripMargin
-      //      println("@@@ " + packed0 + " @@@")
-      //      println("@@@ " + packed + " @@@")
+      if (packed.isEmpty) {
+        println("======= Empty result set =======")
+        List.empty[T]
+      } else {
+        //      val packed0 =
+        //        """
+        //          |a
+        //          |◄
+        //          |12
+        //          |aa
+        //          |◄
+        //          |◄◄""".stripMargin
+        //      println("@@@ " + packed0 + " @@@")
+        //      println("@@@ " + packed + " @@@")
 
-      val vs = packed.linesIterator
-      vs.next() // skip initial newline
-      val rows = new ListBuffer[T]
-      while (vs.hasNext) {
-        rows.addOne(packed2T(vs))
+        val vs = packed.linesIterator
+        vs.next() // skip initial newline
+        val rows = new ListBuffer[T]
+        while (vs.hasNext) {
+          rows.addOne(packed2T(vs))
+        }
+        rows.toList
       }
-      rows.toList
     }
   )
 
