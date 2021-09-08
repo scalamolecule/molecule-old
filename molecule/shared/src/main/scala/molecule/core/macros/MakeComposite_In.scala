@@ -12,63 +12,53 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
+  //   private lazy val xx = InspectMacro("MakeComposite_In", 9, mkError = true)
+  private lazy val xx = InspectMacro("MakeComposite_In", 90)
+
   private[this] final def generateComposite_In_Molecule(dsl: Tree, ObjType: Type, InTypes: Type*)(OutTypes: Type*): Tree = {
-    val (
-      genericImports, model0,
-      typess, castss,
-      obj,
-      nestedRefs, hasVariables, txMetas,
-      postJsons,
-      isOptNested,
-      optNestedRefIndexes, optNestedTacitIndexes
-      )                  = getModel(dsl)
+    val (genericImports, model0, _, castss, obj, _, hasVariables, txMetas, _, _, _, _) = getModel(dsl)
+
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
     val OutMoleculeTpe   = molecule_o(OutTypes.size)
     val inputMolecule    = TypeName(c.freshName("compositeInputMolecule$"))
     val outMolecule      = TypeName(c.freshName("compositeOutMolecule$"))
 
-    val casts = if (txMetas == 0) {
-      q"(..${compositeCasts(castss)})"
 
-    } else {
-      val ordinaryComposites = castss.take(castss.length - txMetas)
-      val txMetaComposites   = castss.takeRight(txMetas)
-      val firstComposites    = ordinaryComposites.init
-      val lastComposite      = ordinaryComposites.last
-      val lastOffset         = firstComposites.flatten.length
-      val metaOffset         = ordinaryComposites.flatten.length
-      val first              = compositeCasts(firstComposites)
-      val txCasts            = compositeCasts(txMetaComposites, metaOffset)
-      val last               = topLevel(List(lastComposite), lastOffset) ++ txCasts
-      (first, last) match {
-        case (Nil, last)   => q"(..$last)"
-        case (first, Nil)  => q"(..$first)"
-        case (first, last) => q"(..$first, (..$last))"
-      }
+    def getApplyValues(outMoleculeClass: Tree) = {
+      q"""
+        def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
+                             (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
+          val queryData: (Query, String, Option[Throwable]) = args0 match {
+            case Right(args) =>
+              bindValues(_query, args) match {
+                case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                case Left(exc)         => (_query, "", Some(exc))
+              }
+            case Left(exc)   => (_query, "", Some(exc))
+          }
+          $outMoleculeClass
+          new $outMolecule
+        }
+      """
     }
 
-    // Methods for applying separate lists of input
-    val applySeqs = InTypes match {
-      case Seq(it1) => q"" // no extra
+    def getApplySeq(outMoleculeClass: Tree) = InTypes match {
+      case Seq(it1) => EmptyTree // no extra
 
       case Seq(it1, it2) =>
         q"""
           def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2])])
                              (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
-              val queryData: (Query, String, Option[Throwable]) = args0 match {
-                case Right(args) =>
-                  bindSeqs(_query, args._1, args._2) match {
-                    case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
-                    case Left(exc)         => (_query, "", Some(exc))
-                  }
-                case Left(exc)   => (_query, "", Some(exc))
-              }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
-              final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
-              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-              final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+            val queryData: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindSeqs(_query, args._1, args._2) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
+                }
+              case Left(exc)   => (_query, "", Some(exc))
             }
+            $outMoleculeClass
             new $outMolecule
           }
         """
@@ -77,66 +67,85 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
         q"""
           def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2], Seq[$it3])])
                              (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
-              val queryData: (Query, String, Option[Throwable]) = args0 match {
-                case Right(args) =>
-                  bindSeqs(_query, args._1, args._2, args._3) match {
-                    case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
-                    case Left(exc)         => (_query, "", Some(exc))
-                  }
-                case Left(exc)   => (_query, "", Some(exc))
-              }
-              final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
-              final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
-              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-              final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
-            }
-            new $outMolecule
-          }
-        """
-    }
-
-    val body =
-      q"""
-          def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
-                               (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
             val queryData: (Query, String, Option[Throwable]) = args0 match {
               case Right(args) =>
-                bindValues(_query, args) match {
+                bindSeqs(_query, args._1, args._2, args._3) match {
                   case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
                   case Left(exc)         => (_query, "", Some(exc))
                 }
               case Left(exc)   => (_query, "", Some(exc))
             }
-            final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
-              final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
-              final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-              final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
-            }
+            $outMoleculeClass
             new $outMolecule
           }
-          $applySeqs
-      """
+        """
+    }
 
-    if (hasVariables) {
+    val outMoleculeClass = if (isJsPlatform) {
+      val jsTpl = Some(if (OutTypes.length == 1) q"Tuple1(packed2tpl(vs))" else q"packed2tpl(vs)")
       q"""
-        ..$imports
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
+          final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplComposite(obj, txMetas)}
+          final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
+          final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
+          final override lazy val obj: nodes.Obj = $obj
+        }
+      """
+    } else {
+      val casts = if (txMetas == 0) {
+        q"(..${compositeCasts(castss)})"
+      } else {
+        val ordinaryComposites = castss.take(castss.length - txMetas)
+        val txMetaComposites   = castss.takeRight(txMetas)
+        val firstComposites    = ordinaryComposites.init
+        val lastComposite      = ordinaryComposites.last
+        val lastOffset         = firstComposites.flatten.length
+        val metaOffset         = ordinaryComposites.flatten.length
+        val first              = compositeCasts(firstComposites)
+        val txCasts            = compositeCasts(txMetaComposites, metaOffset)
+        val last               = topLevel(List(lastComposite), lastOffset) ++ txCasts
+        (first, last) match {
+          case (Nil, last)   => q"(..$last)"
+          case (first, Nil)  => q"(..$first)"
+          case (first, last) => q"(..$first, (..$last))"
+        }
+      }
+      q"""
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
+          final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
+          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
+          final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+        }
+      """
+    }
+
+    val inputMoleculeClass = if (hasVariables) {
+      q"""
         private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
           _resolvedModel, Model2Query(_resolvedModel)
         ) {
-          ..$body
+          ${getApplyValues(outMoleculeClass)}
+          ${getApplySeq(outMoleculeClass)}
         }
-        new $inputMolecule
       """
     } else {
       q"""
-        ..$imports
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes]($model0, ${Model2Query(model0)}) {
-          ..$body
+          ${getApplyValues(outMoleculeClass)}
+          ${getApplySeq(outMoleculeClass)}
         }
-        new $inputMolecule
       """
     }
+
+    val tree =
+      q"""
+        ..$imports
+        ..$inputMoleculeClass
+        new $inputMolecule
+      """
+    xx(9, tree)
+    tree
   }
 
 

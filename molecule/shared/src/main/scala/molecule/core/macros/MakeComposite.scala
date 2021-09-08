@@ -10,47 +10,38 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //    private lazy val xx = InspectMacro("MakeComposite", 1, 9, mkError = true)
-//    private lazy val xx = InspectMacro("MakeComposite", 1, 9)
-  private lazy val xx = InspectMacro("MakeComposite", 9, 8)
+  //      private lazy val xx = InspectMacro("MakeComposite", 9, mkError = true)
+  private lazy val xx = InspectMacro("MakeComposite", 80)
 
 
-  private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, TplTypes: Type*): Tree = {
-    val (
-      genericImports, model0,
-      typess, castss,
-      obj,
-      nestedRefs, hasVariables, txMetas,
-      postJsons,
-      isOptNested,
-      optNestedRefIndexes, optNestedTacitIndexes
-      )                = getModel(dsl)
+  private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, OutTypes: Type*): Tree = {
+    val (genericImports, model0, _, castss, obj, _, hasVariables, txMetas, _, _, _, _) = getModel(dsl)
+
     val imports        = getImports(genericImports)
-    val OutMoleculeTpe = molecule_o(TplTypes.size)
+    val OutMoleculeTpe = molecule_o(OutTypes.size)
     val outMolecule    = TypeName(c.freshName("compositeOutMolecule$"))
-    lazy val jsTpl  = Some(if (TplTypes.length == 1) q"Tuple1(packed2tpl(vs))" else q"packed2tpl(vs)")
 
     val transformers = if (isJsPlatform) {
+      val jsTpl = Some(if (OutTypes.length == 1) q"Tuple1(packed2tpl(vs))" else q"packed2tpl(vs)")
       q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$TplTypes) = ${packed2tplComposite(obj, txMetas)}
+          final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplComposite(obj, txMetas)}
           final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
           final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
-
           final override lazy val obj: nodes.Obj = $obj
        """
     } else {
       q"""
-          final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = ${tplComposite(castss, txMetas)}
+          final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplComposite(castss, txMetas)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
           final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
         """
     }
 
-    val t = if (hasVariables) {
+    val tree = if (hasVariables) {
       q"""
         ..$imports
         private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
-        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_resolvedModel, Model2Query(_resolvedModel)) {
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
           ..$transformers
         }
         new $outMolecule
@@ -58,17 +49,14 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     } else {
       q"""
         ..$imports
-        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes]($model0, ${Model2Query(model0)}) {
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)}) {
           ..$transformers
         }
         new $outMolecule
       """
     }
-    xx(6
-      , model0
-      , t
-    )
-    t
+    xx(8, txMetas, obj, tree)
+    tree
   }
 
   // Composite molecules ....................................................

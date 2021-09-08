@@ -15,6 +15,7 @@ import molecule.datomic.base.facade.Conn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
+import molecule.datomic.api.out6.m
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.tests.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
@@ -31,6 +32,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
         conn <- futConn
 
 
+//        _ <- m(Ref2.int2 + Ref2.str2_).get.map(_.sorted ==> List(1, 2, 3))
 
       } yield ()
     }

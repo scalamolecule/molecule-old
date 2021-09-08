@@ -15,7 +15,7 @@ trait Packed2tplComposite extends PackedValue2cast { self: Row2tplComposite =>
   private lazy val xx = InspectMacro("Packed2tplComposite", 10)
 
   def packed2tplComposite(obj: Obj, txMetas: Int): Tree = {
-    val next       = q"vs.next()"
+    val next = q"vs.next()"
 
     def composite: Tree = {
       val compositeTuples = {
@@ -23,7 +23,10 @@ trait Packed2tplComposite extends PackedValue2cast { self: Row2tplComposite =>
           case Prop(_, _, baseTpe, _, group, _) => acc :+ getPackedValue2cast(group, baseTpe, next)
           case Obj(_, _, _, props)              => props.flatMap(prop => resolve(prop, acc))
         }
-        obj.props.map(compositeGroup => q"(..${resolve(compositeGroup, Nil)})")
+        obj.props.map(compositeGroup => resolve(compositeGroup, Nil)).flatMap {
+          case Nil       => None
+          case unpackers => Some(q"(..$unpackers)")
+        }
       }
       xx(1, obj, txMetas, compositeTuples)
       q"(..$compositeTuples)"

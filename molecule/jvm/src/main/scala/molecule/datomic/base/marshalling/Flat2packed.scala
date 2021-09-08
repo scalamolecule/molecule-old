@@ -142,7 +142,7 @@ case class Flat2packed(
       case 98  => packRef98(attrs, level)
       case 99  => packRef99(attrs, level)
       case 100 => packRef100(attrs, level)
-      case n   => throw new RuntimeException("Exceeding number of attributes: " + n)
+      case n   => throw new RuntimeException("[Flat2packed] Exceeding number of attributes: " + n)
     }
   }
 
