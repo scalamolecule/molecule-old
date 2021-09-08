@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait NestedBase[Obj, Tpl]
   extends jComparator[jList[AnyRef]] { self: Molecule_0[Obj, Tpl] =>
 
-  val levels = _nestedQuery.fold(0)(_.f.outputs.size - _query.f.outputs.size)
+  val levels = nestedLevels + 1
 
 
   protected var row    : jList[AnyRef] = new jArrayList[AnyRef]()

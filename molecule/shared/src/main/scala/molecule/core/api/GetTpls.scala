@@ -54,7 +54,7 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
           conn.queryJsTpl(
-            _nestedQuery.getOrElse(_query), -1,
+            _query, _datalog, -1,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           )
         } else {
@@ -93,7 +93,7 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
           conn.queryJsTpl(
-            _nestedQuery.getOrElse(_query), n,
+            _query, _datalog, n,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           )
         } else {

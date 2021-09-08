@@ -1,8 +1,6 @@
 package moleculeTests.tests.core.nested
 
-import molecule.datomic.api.in3_out11.m
 import molecule.datomic.api.out6._
-import moleculeTests.Adhoc.core
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
 import utest._
@@ -225,7 +223,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.enum$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.enum$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some("enum1")), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.enum).get.map(_ ==> List(
@@ -258,7 +256,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.str.int$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.str.int$).get.map(_.sortBy(_._1) ==> List(
           ("A", List(("a", Some(10)), ("aa", None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.str.int).get.map(_ ==> List(
@@ -291,7 +289,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.long$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.long$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(10L)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.long).get.map(_ ==> List(
@@ -323,7 +321,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.ref1$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.ref1$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(42L)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.ref1).get.map(_ ==> List(
@@ -356,7 +354,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.double$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.double$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(1.1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.double).get.map(_ ==> List(
@@ -389,7 +387,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.bool$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.bool$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(true)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.bool).get.map(_ ==> List(
@@ -422,7 +420,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.date$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.date$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(date1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.date).get.map(_ ==> List(
@@ -455,7 +453,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.uuid$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.uuid$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(uuid1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.uuid).get.map(_ ==> List(
@@ -488,7 +486,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.uri$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.uri$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(uri1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.uri).get.map(_ ==> List(
@@ -521,7 +519,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.bigInt$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.bigInt$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(bigInt1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.bigInt).get.map(_ ==> List(
@@ -554,7 +552,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.bigDec$).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.bigDec$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some(bigDec1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.bigDec).get.map(_ ==> List(

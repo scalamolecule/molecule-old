@@ -89,6 +89,14 @@ trait Helpers extends DateHandling {
     }.mkString("Seq(", ", ", ")")
 
 
+  final def untupled(rawData: Iterable[Seq[Any]]): Iterable[Seq[Any]] = {
+    if (this.toString.contains("compositeOutMolecule")) {
+      rawData.map(_ flatMap tupleToSeq)
+    } else {
+      rawData
+    }
+  }
+
   final protected def tupleToSeq(arg: Any): Seq[Any] = arg match {
     case l: Seq[_]  => l
     case Some(v)    => Seq(v)

@@ -67,8 +67,6 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     xx(6
       , model0
       , t
-//      , packed2tpl(typess, postTypes, indexes, true, txMetaCompositesCount)
-//      , tplComposite(castss, txMetaCompositesCount)
     )
     t
   }

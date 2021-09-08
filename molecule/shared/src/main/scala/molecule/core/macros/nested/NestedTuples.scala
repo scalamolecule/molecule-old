@@ -74,7 +74,7 @@ object NestedTuples {
     final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- conn.query(_model, _query)
       } yield {
         resetCastVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -137,7 +137,7 @@ object NestedTuples {
     final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- conn.query(_model, _query)
       } yield {
         resetCastVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -219,7 +219,7 @@ object NestedTuples {
     final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- conn.query(_model, _query)
       } yield {
         resetCastVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -327,7 +327,7 @@ object NestedTuples {
     final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- conn.query(_model, _query)
       } yield {
         resetCastVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -465,7 +465,7 @@ object NestedTuples {
     final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- conn.query(_model, _query)
       } yield {
         resetCastVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -638,7 +638,7 @@ object NestedTuples {
     final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- conn.query(_model, _query)
       } yield {
         resetCastVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -851,7 +851,7 @@ object NestedTuples {
     final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[OuterTpl]] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _nestedQuery.get)
+        data <- conn.query(_model, _query)
       } yield {
         resetCastVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)

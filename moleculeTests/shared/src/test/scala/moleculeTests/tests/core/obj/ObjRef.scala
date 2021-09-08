@@ -218,13 +218,13 @@ object ObjRef extends AsyncTestSuite with Helpers {
           // Self-join to other Person (same namespace)
           p1.Person.name ==> "Ben"
 
-          p2.name ==> "Joe"
-          p2.Likes.beverage ==> "Coffee"
-          p2.Person.name ==> "Ben"
-
-          p3.name ==> "Liz"
-          p3.Likes.beverage ==> "Tea"
+          p3.name ==> "Joe"
+          p3.Likes.beverage ==> "Coffee"
           p3.Person.name ==> "Ben"
+
+          p2.name ==> "Liz"
+          p2.Likes.beverage ==> "Tea"
+          p2.Person.name ==> "Ben"
         }
 
         _ <- Person

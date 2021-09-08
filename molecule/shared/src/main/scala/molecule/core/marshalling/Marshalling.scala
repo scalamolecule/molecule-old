@@ -11,10 +11,8 @@ import molecule.datomic.base.ast.query.Query
   *
   * Methods are implemented by macros for either JS or JVM platform
   */
-abstract class Marshalling[Obj, Tpl](
-  model: Model,
-  queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
-) extends Molecule(model, queryData) with Helpers {
+abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Option[Throwable]))
+  extends Molecule(model, queryData) with Helpers {
 
   protected lazy val obj         : nodes.Obj       = ???
   protected lazy val isOptNested : Boolean         = false

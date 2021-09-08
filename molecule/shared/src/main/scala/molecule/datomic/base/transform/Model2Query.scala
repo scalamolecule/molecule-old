@@ -28,7 +28,7 @@ object Model2Query extends Helpers {
   def abort(msg: String): Nothing = throw Model2QueryException(msg)
 
 
-  def apply(model: Model): (Query, Option[Query], Query, Option[Query], Option[Throwable]) = {
+  def apply(model: Model): (Query, String, Option[Throwable]) = {
 
     // reset on each apply
     nestedEntityClauses = Nil
@@ -54,16 +54,17 @@ object Model2Query extends Helpers {
       query2.copy(wi = With(nonRedundantWithVars))
     }
 
-    // Resolve nested
-    val query3nested: Option[Query] = if (nestedEntityClauses.nonEmpty) Some(
+    // Add entity ids for nested resolution if necessary
+    val query4: Query = if (nestedEntityClauses.nonEmpty) {
       query3.copy(
         f = Find(nestedEntityVars ++ query2.f.outputs),
         wh = Where(query2.wh.clauses ++ nestedEntityClauses)
       )
-    ) else None
+    } else query3
 
-    // Optimize
-    (QueryOptimizer(query3), query3nested.map(QueryOptimizer.apply), query3, query3nested, None) // todo: handle exceptions!?
+    val datalog = Query2String(QueryOptimizer(query4)).multiLine(60)
+
+    (query4, datalog, None) // todo: handle exceptions!?
   }
 
 

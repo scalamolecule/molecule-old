@@ -97,11 +97,11 @@ trait JsonBase extends Helpers {
     deeper: Boolean = false
   ): jCollection[Any] => jIterator[Any] = {
 
-    println("================================")
-    println("propCount       : " + propCount)
-    println("refIndexes      : " + refIndexes)
-    println("tacitIndexes    : " + tacitIndexes)
-    println("deeper          : " + deeper)
+    //    println("================================")
+    //    println("propCount       : " + propCount)
+    //    println("refIndexes      : " + refIndexes)
+    //    println("tacitIndexes    : " + tacitIndexes)
+    //    println("deeper          : " + deeper)
 
 
     (refIndexes.isEmpty, tacitIndexes.isEmpty) match {
@@ -111,15 +111,15 @@ trait JsonBase extends Helpers {
           var vs: jCollection[Any] = null
           nestedRows.forEach { row =>
             vs = row.asInstanceOf[jMap[Any, Any]].values()
-            println(s"-- 1 ------- ${vs.size}  $propCount  $deeper")
-            vs.forEach(v => println(v))
+            //            println(s"-- 1 ------- ${vs.size}  $propCount  $deeper")
+            //            vs.forEach(v => println(v))
             if (vs.size() == propCount) {
               flatValues.addAll(vs)
             }
           }
-          println("====================")
-          flatValues.forEach(v => println(v))
-          println("--------------------")
+          //          println("====================")
+          //          flatValues.forEach(v => println(v))
+          //          println("--------------------")
           flatValues.iterator
 
       case (true, false) =>
@@ -135,8 +135,8 @@ trait JsonBase extends Helpers {
             val valid: Boolean = tacitIndexes.collectFirst {
               case i if testArray(i) == "__none__" => true
             }.isEmpty
-            println(s"-- 2 ------- $valid  $deeper")
-            vs.forEach(v => println(v))
+            //            println(s"-- 2 ------- $valid  $deeper")
+            //            vs.forEach(v => println(v))
             if (valid) {
               // Get non-tacit values only
               nonTacitIndexes.foreach { j =>
@@ -148,9 +148,9 @@ trait JsonBase extends Helpers {
               }
             }
           }
-          println("====================")
-          flatValues.forEach(v => println(v))
-          println("--------------------")
+          //          println("====================")
+          //          flatValues.forEach(v => println(v))
+          //          println("--------------------")
           flatValues.iterator
 
       case (false, true) =>
@@ -176,8 +176,8 @@ trait JsonBase extends Helpers {
                 testList.add(v)
             }
             addValues(vs)
-            println(s"-- 3 ------- $i  $propCount")
-            testList.forEach(v => println(v))
+            //            println(s"-- 3 ------- $i  $propCount")
+            //            testList.forEach(v => println(v))
             if (i == propCount) {
               flatValues.addAll(testList)
             }
@@ -185,11 +185,11 @@ trait JsonBase extends Helpers {
             //              flatValues.add("__none__")
             //            }
           }
-//          if (flatValues.isEmpty)
-//            flatValues.add("__none__")
-          println("====================")
-          flatValues.forEach(v => println(v))
-          println("--------------------")
+          //          if (flatValues.isEmpty)
+          //            flatValues.add("__none__")
+          //          println("====================")
+          //          flatValues.forEach(v => println(v))
+          //          println("--------------------")
           flatValues.iterator
 
       case (false, false) =>
@@ -221,17 +221,17 @@ trait JsonBase extends Helpers {
             }
             addValues(vs)
             val ok1 = ok(presentValues)
-            println(s"-- 4 ------- $presentValues  $ok1")
-            vs.forEach(v => println(v))
+            //            println(s"-- 4 ------- $presentValues  $ok1")
+            //            vs.forEach(v => println(v))
             //            println("-------")
             //            testList.forEach(v => println(v))
             if (ok1) {
               flatValues.addAll(testList)
             }
           }
-          println("====================")
-          flatValues.forEach(v => println(v))
-          println("--------------------")
+          //          println("====================")
+          //          flatValues.forEach(v => println(v))
+          //          println("--------------------")
           flatValues.iterator
     }
   }

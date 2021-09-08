@@ -45,23 +45,25 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjs(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
-    futConn.flatMap { conn =>
-      if (conn.isJsPlatform) {
-        conn.queryJsObj(
-          _nestedQuery.getOrElse(_query), -1,
-          obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
-        )
-      } else {
-        conn.query(_model, _query).map { jColl =>
-          val it  = jColl.iterator
-          val buf = new ListBuffer[Obj]
-          while (it.hasNext) {
-            buf += row2obj(it.next)
+    _inputThrowable.fold(
+      futConn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          conn.queryJsObj(
+            _query, _datalog, -1,
+            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
+          )
+        } else {
+          conn.query(_model, _query).map { jColl =>
+            val it  = jColl.iterator
+            val buf = new ListBuffer[Obj]
+            while (it.hasNext) {
+              buf += row2obj(it.next)
+            }
+            buf.toList
           }
-          buf.toList
         }
       }
-    }
+    )(Future.failed) // Pass on exception from input failure
   }
 
   /** Get `Future` with `List` of n rows as objects matching molecule.
@@ -74,40 +76,42 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     * }}}
     *
     * @group get
-    * @param n    Int Number of rows returned
+    * @param n       Int Number of rows returned
     * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
     */
   def getObjs(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
-    futConn.flatMap { conn =>
-      if (conn.isJsPlatform) {
-        conn.queryJsObj(
-          _nestedQuery.getOrElse(_query), n,
-          obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
-        )
-      } else {
-        if (n == -1) {
-          getObjs(futConn, ec)
+    _inputThrowable.fold(
+      futConn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          conn.queryJsObj(
+            _query, _datalog, n,
+            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
+          )
         } else {
-          conn.query(_model, _query).map { jColl =>
-            val size = jColl.size
-            val max  = if (size < n) size else n
-            if (max == 0) {
-              List.empty[Obj]
-            } else {
-              val it  = jColl.iterator
-              val buf = new ListBuffer[Obj]
-              var i   = 0
-              while (it.hasNext && i < max) {
-                buf += row2obj(it.next)
-                i += 1
+          if (n == -1) {
+            getObjs(futConn, ec)
+          } else {
+            conn.query(_model, _query).map { jColl =>
+              val size = jColl.size
+              val max  = if (size < n) size else n
+              if (max == 0) {
+                List.empty[Obj]
+              } else {
+                val it  = jColl.iterator
+                val buf = new ListBuffer[Obj]
+                var i   = 0
+                while (it.hasNext && i < max) {
+                  buf += row2obj(it.next)
+                  i += 1
+                }
+                buf.toList
               }
-              buf.toList
             }
           }
         }
       }
-    }
+    )(Future.failed) // Pass on exception from input failure
   }
 
   /** Convenience method to get head of list of objects matching molecule.

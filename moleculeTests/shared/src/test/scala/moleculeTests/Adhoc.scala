@@ -22,6 +22,10 @@ import scala.util.control.NonFatal
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
+  val l: Either[String, Int] = Left("hej")
+  val r: Either[String, Int] = Right(7)
+
+//  val a: Either.LeftProjection[String, Int] = l.left.get
 
   lazy val tests = Tests {
 
@@ -30,35 +34,22 @@ object Adhoc extends AsyncTestSuite with Helpers {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
-        _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2) insert List(("a", 1, List(Set(2, 3))))
-
-        _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Ref1": {
-            |          "int1": 1,
-            |          "Refs2": [
-            |            {
-            |              "ints2": [
-            |                3,
-            |                2
-            |              ]
-            |            }
-            |          ]
-            |        }
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
 
 
       } yield ()
     }
 
-
+/*
+List(
+  (1,a,enum1,List(
+    (11,aa,enum11,List((111,aaa,enum21))),
+    (12,ab,enum12,List((123,abc,enum22), (122,abb,enum21))),
+    (11,aa,enum11,List((112,aab,enum22)))))) !=
+List(
+  (1,a,enum1,List(
+    (11,aa,enum11,List((111,aaa,enum21), (112,aab,enum22))),
+     (12,ab,enum12,List((122,abb,enum21), (123,abc,enum22))))))
+ */
     //    "adhoc" - products { implicit conn =>
     //      import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
     //

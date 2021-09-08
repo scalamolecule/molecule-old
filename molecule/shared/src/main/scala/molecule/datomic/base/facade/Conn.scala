@@ -66,8 +66,9 @@ trait Conn extends ColOps with Serializations {
     println(s"$p  ${connProxy.testDbStatus}  ${connProxy.testDbView}   " + suffix)
   }
 
-  private def getRaw(
+  private def jsGetRaw(
     query: Query,
+    datalog: String,
     n: Int,
     obj: Obj,
     nestedLevels: Int,
@@ -76,14 +77,34 @@ trait Conn extends ColOps with Serializations {
     tacitIndexes: List[List[Int]]
   ): Future[String] = {
     val q2s          = Query2String(query)
-    val datalogQuery = q2s.multiLine(60)
     val p            = q2s.p
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
     val (l, ll, lll) = marshallInputs(query)
     rpc.query2packed(
-      connProxy, datalogQuery, rules, l, ll, lll, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+      connProxy, datalog, rules, l, ll, lll, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
     )
   }
+
+//  private def getRaw(
+//    query: Either[Query, String],
+//    n: Int,
+//    obj: Obj,
+//    nestedLevels: Int,
+//    isOptNested: Boolean,
+//    refIndexes: List[List[Int]],
+//    tacitIndexes: List[List[Int]]
+//  ): Future[String] = {
+//    val datalogQuery = query.getOrElse{q => Query2String(q).multiLine(60)
+//    }
+//    val q2s          = Query2String(query)
+//    val datalogQuery = q2s.multiLine(60)
+//    val p            = q2s.p
+//    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+//    val (l, ll, lll) = marshallInputs(query)
+//    rpc.query2packed(
+//      connProxy, datalogQuery, rules, l, ll, lll, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+//    )
+//  }
 
   private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext) = Future {
     if (connProxy.adhocDbView.isDefined) {
@@ -99,6 +120,7 @@ trait Conn extends ColOps with Serializations {
 
   private def queryJs[T](
     query: Query,
+    datalog: String,
     n: Int,
     obj: Obj,
     nestedLevels: Int,
@@ -107,7 +129,7 @@ trait Conn extends ColOps with Serializations {
     tacitIndexes: List[List[Int]],
     packed2T: Iterator[String] => T,
   )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
-    getRaw(query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes).map { packed =>
+    jsGetRaw(query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes).map { packed =>
       //      val packed0 =
       //        """
       //          |a
@@ -131,6 +153,7 @@ trait Conn extends ColOps with Serializations {
 
   private[molecule] def queryJsTpl[Tpl](
     query: Query,
+    datalog: String,
     n: Int,
     obj: Obj,
     nestedLevels: Int,
@@ -139,11 +162,12 @@ trait Conn extends ColOps with Serializations {
     tacitIndexes: List[List[Int]],
     packed2tpl: Iterator[String] => Tpl,
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = queryJs(
-    query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+    query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
   )
 
   private[molecule] def queryJsObj[Obj](
     query: Query,
+    datalog: String,
     n: Int,
     obj: nodes.Obj,
     nestedLevels: Int,
@@ -152,11 +176,12 @@ trait Conn extends ColOps with Serializations {
     tacitIndexes: List[List[Int]],
     packed2obj: Iterator[String] => Obj,
   )(implicit ec: ExecutionContext): Future[List[Obj]] = queryJs(
-    query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
+    query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
   )
 
   private[molecule] def queryJsJson(
     query: Query,
+    datalog: String,
     n: Int,
     obj: nodes.Obj,
     nestedLevels: Int,
@@ -164,7 +189,7 @@ trait Conn extends ColOps with Serializations {
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]]
   )(implicit ec: ExecutionContext): Future[String] = withDbView(
-    getRaw(query, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
+    jsGetRaw(query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
   )
 
 

@@ -4,7 +4,6 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.tests.core.base.dsl.CoreTest._
-import moleculeTests.tests.core.nested.NestedAttrs1.core
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

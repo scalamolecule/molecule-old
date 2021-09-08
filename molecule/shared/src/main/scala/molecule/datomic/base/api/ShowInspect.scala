@@ -1,7 +1,9 @@
 package molecule.datomic.base.api
 
 import java.util.{Date, Collection => jCollection, List => jList, Map => jMap, Set => jSet}
+import molecule.core.api.Molecule
 import molecule.core.marshalling.convert.Stmts2Edn
+import molecule.datomic.base.ast.query.Placeholder
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 //import clojure.lang.{PersistentHashSet, PersistentVector}
@@ -26,7 +28,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * Call a inspect method on a molecule to see the internal transformations and
   * produced transaction statements or sample data.
   * */
-trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
+trait ShowInspect[Obj, Tpl] {
+  self: Molecule =>
+//  self: Molecule_0[Obj, Tpl] =>
 
 
   /** Inspect call to `get` on a molecule (without affecting the db).
@@ -316,22 +320,21 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
 
     def data(): Future[Unit] = conn.flatMap { conn =>
-      val rawQuery = _rawNestedQuery.getOrElse(_rawQuery)
       try {
-        // Also do Model2Query transformation at runtime to be able to inspect it.
-        // Note though that input variables are only bound in the macro at compile
+        // Also do Model2Query transformation at runtime to be able to debug it.
+        // Note though that input variables are bound in the macro at compile
         // time and are therefore not present in this runtime process.
         Model2Query(_model)
 
-        val ins = QueryOps(rawQuery).inputs
+        val ins = QueryOps(_query).inputs
         val db  = conn.db
-        conn._query(_model, rawQuery, Some(db)).map { res =>
+        conn._query(_model, _query, Some(db)).map { res =>
           val rows = resolve(res.asScala.take(500))
 
-          val rulesOut: String = if (rawQuery.i.rules.isEmpty)
+          val rulesOut: String = if (_query.i.rules.isEmpty)
             "none\n\n"
           else
-            "[\n " + rawQuery.i.rules.map(Query2String(rawQuery).p(_)).mkString("\n ") + "\n]\n\n"
+            "[\n " + _query.i.rules.map(Query2String(_query).p(_)).mkString("\n ") + "\n]\n\n"
 
           val inputs: String = if (ins.isEmpty)
             "none\n\n"
@@ -361,8 +364,8 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
           println(
             "\n--------------------------------------------------------------------------\n" +
               _model + "\n\n" +
-              rawQuery + "\n\n" +
-              rawQuery.datalog + "\n\n" +
+              _query + "\n\n" +
+              _query.datalog + "\n\n" +
               "RULES: " + rulesOut +
               "INPUTS: " + inputs +
               "OUTPUTS:\n" + outs + "\n(showing up to 500 rows)" +
@@ -370,7 +373,7 @@ trait ShowInspect[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
           )
         }
       } catch {
-        case NonFatal(exc) => Future.failed(QueryException(exc, _model, rawQuery))
+        case NonFatal(exc) => Future.failed(QueryException(exc, _model, _query))
       }
     }
 

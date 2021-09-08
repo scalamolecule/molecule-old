@@ -92,7 +92,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         var next = false
         if (conn.isJsPlatform) {
           conn.queryJsJson(
-            _nestedQuery.getOrElse(_query), n,
+            _query, _datalog, n,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
           ).map { packed =>
             if (packed.isEmpty) {

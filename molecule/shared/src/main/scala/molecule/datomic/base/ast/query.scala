@@ -54,6 +54,8 @@ object query  {
     }
   }
 
+  object EmptyQuery extends Query(Find(Nil), With(Nil), In(Nil), Where(Nil))
+
   case class Find(outputs: Seq[Output]) extends QueryExpr
   case class With(variables: Seq[String]) extends QueryExpr
   case class In(inputs: Seq[Input], rules: Seq[Rule] = Seq(), ds: Seq[DataSource] = Seq(DS)) extends QueryExpr

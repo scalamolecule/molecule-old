@@ -45,7 +45,7 @@ import scala.util.control.NonFatal
   */
 abstract class InputMolecule(
   model: Model,
-  queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
+  queryData: (Query, String, Option[Throwable])
 ) extends Molecule(model, queryData) {
 
   protected def resolveOr[I1](or: Or[I1]): Either[Throwable, Seq[I1]] = {

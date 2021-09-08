@@ -56,12 +56,13 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
         q"""
           def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2])])
                              (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
-              val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Right(args) => bindSeqs(_rawQuery, args._1, args._2) match {
-                  case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-                }
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
+              val queryData: (Query, String, Option[Throwable]) = args0 match {
+                case Right(args) =>
+                  bindSeqs(_query, args._1, args._2) match {
+                    case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                    case Left(exc)         => (_query, "", Some(exc))
+                  }
+                case Left(exc)   => (_query, "", Some(exc))
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
@@ -76,12 +77,13 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
         q"""
           def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2], Seq[$it3])])
                              (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
-              val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Right(args) => bindSeqs(_rawQuery, args._1, args._2, args._3) match {
-                  case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-                }
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
+              val queryData: (Query, String, Option[Throwable]) = args0 match {
+                case Right(args) =>
+                  bindSeqs(_query, args._1, args._2, args._3) match {
+                    case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                    case Left(exc)         => (_query, "", Some(exc))
+                  }
+                case Left(exc)   => (_query, "", Some(exc))
               }
               final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
@@ -97,12 +99,13 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
       q"""
           def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
                                (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$OutTypes] = {
-            val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-              case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-              case Right(args) => bindValues(_rawQuery, args) match {
-                case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-              }
+            val queryData: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindValues(_query, args) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
+                }
+              case Left(exc)   => (_query, "", Some(exc))
             }
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
               final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
@@ -119,8 +122,7 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
         ..$imports
         private val _resolvedModel: Model = resolveIdentifiers($model0, ${mapIdentifiers(model0.elements).toMap})
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
-          _resolvedModel,
-          Model2Query(_resolvedModel)
+          _resolvedModel, Model2Query(_resolvedModel)
         ) {
           ..$body
         }

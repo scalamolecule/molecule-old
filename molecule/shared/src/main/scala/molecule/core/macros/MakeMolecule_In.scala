@@ -15,7 +15,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
 
   //   private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8, mkError = true)
   private lazy val xx = InspectMacro("MakeMolecule_In", 9, 8)
-  //  private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8)
+  //    private lazy val xx = InspectMacro("MakeMolecule_In", 1, 8)
 
   private[this] final def generateInputMolecule(dsl: Tree, ObjType: Type, InTypes: Type*)(TplTypes: Type*): Tree = {
     val (
@@ -45,6 +45,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = (..${topLevel(castss)})
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
+          final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
         }
         new $outMolecule
       """
@@ -55,6 +56,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
           with $nestedJsonClass[$ObjType, (..$TplTypes)] {
           ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
           ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
+          final override lazy val nestedLevels: Int = ${levels - 1}
         }
         new $outMolecule
       """
@@ -62,85 +64,70 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
     val applySeqs = InTypes match {
       case Seq(it1) => q"" // no extra
 
-      case Seq(it1, it2) =>
-        if (flat) {
-          q"""
-            def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2])])
-                               (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Right(args) => bindSeqs(_rawQuery, args._1, args._2) match {
-                  case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
+      case Seq(it1, it2) => if (flat) {
+        q"""
+          def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2])])
+                             (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
+            val queryData: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindSeqs(_query, args._1, args._2) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
                 }
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-              }
-              ..$outMoleculeFlat
+              case Left(exc)   => (_query, "", Some(exc))
             }
-          """
-        } else {
-          q"""
-            def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2])])
-                               (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryDataNested: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Right(args) => bindSeqs(_rawQuery, args._1, args._2) match {
-                  case Right(boundRawQuery) => bindSeqs(_rawNestedQuery.get, args._1, args._2) match {
-                    case Right(boundRawNestedQuery) => (
-                      QueryOptimizer(boundRawQuery),
-                      Some(QueryOptimizer(boundRawNestedQuery)),
-                      boundRawQuery,
-                      Some(boundRawNestedQuery),
-                      None
-                    )
-                    case Left(exc)                  => (_rawQuery, None, _rawQuery, None, Some(exc))
-                  }
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
+            ..$outMoleculeFlat
+          }
+        """
+      } else {
+        q"""
+          def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2])])
+                             (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
+            val queryDataNested: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindSeqs(_query, args._1, args._2) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
                 }
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-              }
-              ..$outMoleculeNested
+              case Left(exc)   => (_query, "", Some(exc))
             }
-          """
-        }
+            ..$outMoleculeNested
+          }
+        """
+      }
 
-      case Seq(it1, it2, it3) =>
-        if (flat) {
-          q"""
-            def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2], Seq[$it3])])
-                               (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Right(args) => bindSeqs(_rawQuery, args._1, args._2, args._3) match {
-                  case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
+
+      case Seq(it1, it2, it3) => if (flat) {
+        q"""
+          def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2], Seq[$it3])])
+                             (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
+            val queryData: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindSeqs(_query, args._1, args._2, args._3) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
                 }
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-              }
-              ..$outMoleculeFlat
+              case Left(exc)   => (_query, "", Some(exc))
             }
-          """
-        } else {
-          q"""
-            def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2], Seq[$it3])])
-                               (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-              val queryDataNested: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-                case Right(args) => bindSeqs(_rawQuery, args._1, args._2, args._3) match {
-                  case Right(boundRawQuery) => bindSeqs(_rawNestedQuery.get, args._1, args._2, args._3) match {
-                    case Right(boundRawNestedQuery) => (
-                      QueryOptimizer(boundRawQuery),
-                      Some(QueryOptimizer(boundRawNestedQuery)),
-                      boundRawQuery,
-                      Some(boundRawNestedQuery),
-                      None
-                    )
-                    case Left(exc)                  => (_rawQuery, None, _rawQuery, None, Some(exc))
-                  }
-                  case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
+            ..$outMoleculeFlat
+          }
+        """
+      } else {
+        q"""
+          def outMoleculeSeqs(args0: Either[Throwable, (Seq[$it1], Seq[$it2], Seq[$it3])])
+                             (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
+            val queryDataNested: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindSeqs(_query, args._1, args._2, args._3) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
                 }
-                case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-              }
-              ..$outMoleculeNested
+              case Left(exc)   => (_query, "", Some(exc))
             }
-          """
-        }
+            ..$outMoleculeNested
+          }
+        """
+      }
     }
 
     def mkFlat = {
@@ -163,6 +150,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$TplTypes) = $casts
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
+          final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
         """
       }
 
@@ -170,12 +158,13 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         q"""
           def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
                                (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-            val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-              case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-              case Right(args) => bindValues(_rawQuery, args) match {
-                case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-                case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-              }
+            val queryData: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindValues(_query, args) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
+                }
+              case Left(exc)   => (_query, "", Some(exc))
             }
             final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$TplTypes](_model, queryData) {
               ..$transformers
@@ -211,21 +200,13 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         q"""
           def outMoleculeValues(args0: Either[Throwable, Seq[(..$InTypes)]])
                                (implicit conn: Future[Conn]): $OutMoleculeTpe[$ObjType, ..$TplTypes] = {
-            val queryDataNested: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-              case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-              case Right(args) => bindValues(_rawQuery, args) match {
-                case Right(boundRawQuery) => bindValues(_rawNestedQuery.get, args) match {
-                  case Right(boundRawNestedQuery) => (
-                    QueryOptimizer(boundRawQuery),
-                    Some(QueryOptimizer(boundRawNestedQuery)),
-                    boundRawQuery,
-                    Some(boundRawNestedQuery),
-                    None
-                  )
-                  case Left(exc)                  => (_rawQuery, None, _rawQuery, None, Some(exc))
+            val queryDataNested: (Query, String, Option[Throwable]) = args0 match {
+              case Right(args) =>
+                bindValues(_query, args) match {
+                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Left(exc)         => (_query, "", Some(exc))
                 }
-                case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-              }
+              case Left(exc)   => (_query, "", Some(exc))
             }
             ..$outMoleculeNested
           }
@@ -268,9 +249,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
         }
       """
 
-    xx(7
-      , model0
-      , obj
+    xx(8
+      //      , model0
+      //      , obj
       , t
     )
     t

@@ -8,8 +8,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //    private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
-  //      private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
+//      private lazy val xx = InspectMacro("MakeMolecule", 1, 8, mkError = true)
+//        private lazy val xx = InspectMacro("MakeMolecule", 2, 8)
   private lazy val xx = InspectMacro("MakeMolecule", 9, 7)
 
 
@@ -114,7 +114,6 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonNested(levels, obj, txMetas)}
 
           final override lazy val obj: nodes.Obj = $obj
-          final override lazy val nestedLevels: Int = ${levels - 1}
         """
       if (hasVariables) {
         q"""
@@ -142,6 +141,7 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           ..${buildTplNested(castss, typess, TplTypes, txMetas).get}
           ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
           final override def outerTpl2obj(tpl0: (..$TplTypes)): $ObjType = ${objTree(obj, tpl)}
+          final override lazy val nestedLevels: Int = ${levels - 1}
          """
 
       if (hasVariables) {
@@ -183,7 +183,8 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       """
 
     xx(7
-      , obj
+      , levels
+//      , obj
       //      , indexes
       , t
       //      , model0

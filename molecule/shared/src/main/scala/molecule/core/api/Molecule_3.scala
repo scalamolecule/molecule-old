@@ -62,7 +62,7 @@ import scala.util.control.NonFatal
   */
 abstract class Molecule_3[Obj, I1, I2, I3](
   model: Model,
-  queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])
+  queryData: (Query, String, Option[Throwable])
 ) extends InputMolecule(model, queryData) {
 
   protected def resolveOr3(or: Or3[I1, I2, I3]): Either[Throwable, Seq[(I1, I2, I3)]] = {
@@ -495,7 +495,7 @@ abstract class Molecule_3[Obj, I1, I2, I3](
 /** Implementations of input molecules awaiting 3 inputs, output arity 1-22 */
 object Molecule_3 {
 
-  abstract class Molecule_3_01[Obj, I1, I2, I3, A](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_01[Obj, I1, I2, I3, A](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_01[Obj, A] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_01[Obj, A] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_01[Obj, A] = outMoleculeValues(resolveOr3(or))
@@ -537,7 +537,7 @@ object Molecule_3 {
 //    }
   }
 
-  abstract class Molecule_3_02[Obj, I1, I2, I3, A, B](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_02[Obj, I1, I2, I3, A, B](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_02[Obj, A, B] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_02[Obj, A, B] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_02[Obj, A, B] = outMoleculeValues(resolveOr3(or))
@@ -549,7 +549,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_02[Obj, A, B]
   }
 
-  abstract class Molecule_3_03[Obj, I1, I2, I3, A, B, C](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_03[Obj, I1, I2, I3, A, B, C](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_03[Obj, A, B, C] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_03[Obj, A, B, C] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_03[Obj, A, B, C] = outMoleculeValues(resolveOr3(or))
@@ -561,7 +561,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_03[Obj, A, B, C]
   }
 
-  abstract class Molecule_3_04[Obj, I1, I2, I3, A, B, C, D](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_04[Obj, I1, I2, I3, A, B, C, D](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_04[Obj, A, B, C, D] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_04[Obj, A, B, C, D] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_04[Obj, A, B, C, D] = outMoleculeValues(resolveOr3(or))
@@ -573,7 +573,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_04[Obj, A, B, C, D]
   }
 
-  abstract class Molecule_3_05[Obj, I1, I2, I3, A, B, C, D, E](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_05[Obj, I1, I2, I3, A, B, C, D, E](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_05[Obj, A, B, C, D, E] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_05[Obj, A, B, C, D, E] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_05[Obj, A, B, C, D, E] = outMoleculeValues(resolveOr3(or))
@@ -585,7 +585,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_05[Obj, A, B, C, D, E]
   }
 
-  abstract class Molecule_3_06[Obj, I1, I2, I3, A, B, C, D, E, F](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_06[Obj, I1, I2, I3, A, B, C, D, E, F](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_06[Obj, A, B, C, D, E, F] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_06[Obj, A, B, C, D, E, F] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_06[Obj, A, B, C, D, E, F] = outMoleculeValues(resolveOr3(or))
@@ -597,7 +597,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_06[Obj, A, B, C, D, E, F]
   }
 
-  abstract class Molecule_3_07[Obj, I1, I2, I3, A, B, C, D, E, F, G](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_07[Obj, I1, I2, I3, A, B, C, D, E, F, G](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_07[Obj, A, B, C, D, E, F, G] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_07[Obj, A, B, C, D, E, F, G] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_07[Obj, A, B, C, D, E, F, G] = outMoleculeValues(resolveOr3(or))
@@ -609,7 +609,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_07[Obj, A, B, C, D, E, F, G]
   }
 
-  abstract class Molecule_3_08[Obj, I1, I2, I3, A, B, C, D, E, F, G, H](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_08[Obj, I1, I2, I3, A, B, C, D, E, F, G, H](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_08[Obj, A, B, C, D, E, F, G, H] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_08[Obj, A, B, C, D, E, F, G, H] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_08[Obj, A, B, C, D, E, F, G, H] = outMoleculeValues(resolveOr3(or))
@@ -621,7 +621,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_08[Obj, A, B, C, D, E, F, G, H]
   }
 
-  abstract class Molecule_3_09[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_09[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_09[Obj, A, B, C, D, E, F, G, H, I] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_09[Obj, A, B, C, D, E, F, G, H, I] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_09[Obj, A, B, C, D, E, F, G, H, I] = outMoleculeValues(resolveOr3(or))
@@ -633,7 +633,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_09[Obj, A, B, C, D, E, F, G, H, I]
   }
 
-  abstract class Molecule_3_10[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_10[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_10[Obj, A, B, C, D, E, F, G, H, I, J] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_10[Obj, A, B, C, D, E, F, G, H, I, J] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_10[Obj, A, B, C, D, E, F, G, H, I, J] = outMoleculeValues(resolveOr3(or))
@@ -645,7 +645,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_10[Obj, A, B, C, D, E, F, G, H, I, J]
   }
 
-  abstract class Molecule_3_11[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_11[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_11[Obj, A, B, C, D, E, F, G, H, I, J, K] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_11[Obj, A, B, C, D, E, F, G, H, I, J, K] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_11[Obj, A, B, C, D, E, F, G, H, I, J, K] = outMoleculeValues(resolveOr3(or))
@@ -657,7 +657,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_11[Obj, A, B, C, D, E, F, G, H, I, J, K]
   }
 
-  abstract class Molecule_3_12[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_12[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_12[Obj, A, B, C, D, E, F, G, H, I, J, K, L] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_12[Obj, A, B, C, D, E, F, G, H, I, J, K, L] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_12[Obj, A, B, C, D, E, F, G, H, I, J, K, L] = outMoleculeValues(resolveOr3(or))
@@ -669,7 +669,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_12[Obj, A, B, C, D, E, F, G, H, I, J, K, L]
   }
 
-  abstract class Molecule_3_13[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_13[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_13[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_13[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_13[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M] = outMoleculeValues(resolveOr3(or))
@@ -681,7 +681,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_13[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M]
   }
 
-  abstract class Molecule_3_14[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_14[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_14[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_14[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_14[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N] = outMoleculeValues(resolveOr3(or))
@@ -693,7 +693,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_14[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N]
   }
 
-  abstract class Molecule_3_15[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_15[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_15[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_15[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_15[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = outMoleculeValues(resolveOr3(or))
@@ -705,7 +705,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_15[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]
   }
 
-  abstract class Molecule_3_16[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_16[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_16[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_16[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_16[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P] = outMoleculeValues(resolveOr3(or))
@@ -717,7 +717,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_16[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]
   }
 
-  abstract class Molecule_3_17[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_17[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_17[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_17[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_17[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q] = outMoleculeValues(resolveOr3(or))
@@ -729,7 +729,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_17[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q]
   }
 
-  abstract class Molecule_3_18[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_18[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_18[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_18[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_18[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R] = outMoleculeValues(resolveOr3(or))
@@ -741,7 +741,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_18[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R]
   }
 
-  abstract class Molecule_3_19[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_19[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_19[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_19[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_19[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S] = outMoleculeValues(resolveOr3(or))
@@ -753,7 +753,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_19[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S]
   }
 
-  abstract class Molecule_3_20[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_20[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_20[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_20[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_20[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T] = outMoleculeValues(resolveOr3(or))
@@ -765,7 +765,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_20[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]
   }
 
-  abstract class Molecule_3_21[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_21[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_21[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_21[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_21[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U] = outMoleculeValues(resolveOr3(or))
@@ -777,7 +777,7 @@ object Molecule_3 {
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_21[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U]
   }
 
-  abstract class Molecule_3_22[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](model: Model, queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
+  abstract class Molecule_3_22[Obj, I1, I2, I3, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {
     def apply(i1: I1, i2: I2, i3: I3)                  (implicit conn: Future[Conn]): Molecule_0_22[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = outMoleculeValues(Right(Seq((i1, i2, i3))))
     def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)  (implicit conn: Future[Conn]): Molecule_0_22[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = outMoleculeValues(Right(tpl +: tpls))
     def apply(or: Or3[I1, I2, I3])                     (implicit conn: Future[Conn]): Molecule_0_22[Obj, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V] = outMoleculeValues(resolveOr3(or))
