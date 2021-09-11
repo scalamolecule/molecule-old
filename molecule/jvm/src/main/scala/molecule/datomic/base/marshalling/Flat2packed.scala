@@ -10,9 +10,11 @@ case class Flat2packed(
   maxRows: Int = -1
 ) extends ResolverFlat {
 
+  val sb = new StringBuffer()
+
   def getPacked: String = {
     if (!rows.isEmpty) {
-      val packRow: jList[_] => Unit = packRef(obj.props, 0)
+      val packRow: jList[_] => StringBuffer = packRef(obj.props, 0)
       if (maxRows == -1) {
         rows.forEach(row => packRow(row))
       } else {
@@ -29,18 +31,18 @@ case class Flat2packed(
 
   private var colIndex = -1
 
-  def packAttr(node: Node, level: Int): jList[_] => Unit = {
+  def packAttr(node: Node, level: Int): jList[_] => StringBuffer = {
     node match {
       case Prop(_, _, baseTpe, _, group, _) =>
         colIndex += 1
-        packFlatAttr(group, baseTpe, colIndex)
+        packFlatAttr(sb, group, baseTpe, colIndex)
 
       case Obj(_, _, _, props) =>
         packRef(props, level)
     }
   }
 
-  def packRef(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     attrs.size match {
       case 1   => packRef1(attrs, level)
       case 2   => packRef2(attrs, level)
@@ -146,13 +148,13 @@ case class Flat2packed(
     }
   }
 
-  def packRef1(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef1(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     (row: jList[_]) =>
       pack0(row)
   }
 
-  def packRef2(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef2(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     (row: jList[_]) =>
@@ -160,7 +162,7 @@ case class Flat2packed(
       pack1(row)
   }
 
-  def packRef3(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef3(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -170,7 +172,7 @@ case class Flat2packed(
       pack2(row)
   }
 
-  def packRef4(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef4(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -182,7 +184,7 @@ case class Flat2packed(
       pack3(row)
   }
 
-  def packRef5(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef5(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -196,7 +198,7 @@ case class Flat2packed(
       pack4(row)
   }
 
-  def packRef6(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef6(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -212,7 +214,7 @@ case class Flat2packed(
       pack5(row)
   }
 
-  def packRef7(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef7(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -230,7 +232,7 @@ case class Flat2packed(
       pack6(row)
   }
 
-  def packRef8(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef8(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -250,7 +252,7 @@ case class Flat2packed(
       pack7(row)
   }
 
-  def packRef9(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef9(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -272,7 +274,7 @@ case class Flat2packed(
       pack8(row)
   }
 
-  def packRef10(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef10(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packAttr(attrs.head, level)
     val pack1 = packAttr(attrs(1), level)
     val pack2 = packAttr(attrs(2), level)
@@ -296,7 +298,7 @@ case class Flat2packed(
       pack9(row)
   }
 
-  def packRef11(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef11(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -322,7 +324,7 @@ case class Flat2packed(
       pack10(row)
   }
 
-  def packRef12(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef12(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -350,7 +352,7 @@ case class Flat2packed(
       pack11(row)
   }
 
-  def packRef13(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef13(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -380,7 +382,7 @@ case class Flat2packed(
       pack12(row)
   }
 
-  def packRef14(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef14(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -412,7 +414,7 @@ case class Flat2packed(
       pack13(row)
   }
 
-  def packRef15(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef15(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -446,7 +448,7 @@ case class Flat2packed(
       pack14(row)
   }
 
-  def packRef16(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef16(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -482,7 +484,7 @@ case class Flat2packed(
       pack15(row)
   }
 
-  def packRef17(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef17(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -520,7 +522,7 @@ case class Flat2packed(
       pack16(row)
   }
 
-  def packRef18(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef18(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -560,7 +562,7 @@ case class Flat2packed(
       pack17(row)
   }
 
-  def packRef19(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef19(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -602,7 +604,7 @@ case class Flat2packed(
       pack18(row)
   }
 
-  def packRef20(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef20(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -646,7 +648,7 @@ case class Flat2packed(
       pack19(row)
   }
 
-  def packRef21(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef21(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -692,7 +694,7 @@ case class Flat2packed(
       pack20(row)
   }
 
-  def packRef22(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef22(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -740,7 +742,7 @@ case class Flat2packed(
       pack21(row)
   }
 
-  def packRef23(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef23(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -790,7 +792,7 @@ case class Flat2packed(
       pack22(row)
   }
 
-  def packRef24(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef24(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -842,7 +844,7 @@ case class Flat2packed(
       pack23(row)
   }
 
-  def packRef25(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef25(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -896,7 +898,7 @@ case class Flat2packed(
       pack24(row)
   }
 
-  def packRef26(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef26(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -952,7 +954,7 @@ case class Flat2packed(
       pack25(row)
   }
 
-  def packRef27(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef27(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1010,7 +1012,7 @@ case class Flat2packed(
       pack26(row)
   }
 
-  def packRef28(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef28(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1070,7 +1072,7 @@ case class Flat2packed(
       pack27(row)
   }
 
-  def packRef29(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef29(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1132,7 +1134,7 @@ case class Flat2packed(
       pack28(row)
   }
 
-  def packRef30(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef30(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1196,7 +1198,7 @@ case class Flat2packed(
       pack29(row)
   }
 
-  def packRef31(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef31(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1262,7 +1264,7 @@ case class Flat2packed(
       pack30(row)
   }
 
-  def packRef32(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef32(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1330,7 +1332,7 @@ case class Flat2packed(
       pack31(row)
   }
 
-  def packRef33(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef33(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1400,7 +1402,7 @@ case class Flat2packed(
       pack32(row)
   }
 
-  def packRef34(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef34(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1472,7 +1474,7 @@ case class Flat2packed(
       pack33(row)
   }
 
-  def packRef35(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef35(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1546,7 +1548,7 @@ case class Flat2packed(
       pack34(row)
   }
 
-  def packRef36(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef36(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1622,7 +1624,7 @@ case class Flat2packed(
       pack35(row)
   }
 
-  def packRef37(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef37(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1700,7 +1702,7 @@ case class Flat2packed(
       pack36(row)
   }
 
-  def packRef38(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef38(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1780,7 +1782,7 @@ case class Flat2packed(
       pack37(row)
   }
 
-  def packRef39(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef39(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1862,7 +1864,7 @@ case class Flat2packed(
       pack38(row)
   }
 
-  def packRef40(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef40(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -1946,7 +1948,7 @@ case class Flat2packed(
       pack39(row)
   }
 
-  def packRef41(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef41(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2032,7 +2034,7 @@ case class Flat2packed(
       pack40(row)
   }
 
-  def packRef42(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef42(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2120,7 +2122,7 @@ case class Flat2packed(
       pack41(row)
   }
 
-  def packRef43(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef43(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2210,7 +2212,7 @@ case class Flat2packed(
       pack42(row)
   }
 
-  def packRef44(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef44(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2302,7 +2304,7 @@ case class Flat2packed(
       pack43(row)
   }
 
-  def packRef45(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef45(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2396,7 +2398,7 @@ case class Flat2packed(
       pack44(row)
   }
 
-  def packRef46(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef46(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2492,7 +2494,7 @@ case class Flat2packed(
       pack45(row)
   }
 
-  def packRef47(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef47(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2590,7 +2592,7 @@ case class Flat2packed(
       pack46(row)
   }
 
-  def packRef48(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef48(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2690,7 +2692,7 @@ case class Flat2packed(
       pack47(row)
   }
 
-  def packRef49(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef49(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2792,7 +2794,7 @@ case class Flat2packed(
       pack48(row)
   }
 
-  def packRef50(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef50(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -2896,7 +2898,7 @@ case class Flat2packed(
       pack49(row)
   }
 
-  def packRef51(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef51(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3002,7 +3004,7 @@ case class Flat2packed(
       pack50(row)
   }
 
-  def packRef52(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef52(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3110,7 +3112,7 @@ case class Flat2packed(
       pack51(row)
   }
 
-  def packRef53(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef53(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3220,7 +3222,7 @@ case class Flat2packed(
       pack52(row)
   }
 
-  def packRef54(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef54(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3332,7 +3334,7 @@ case class Flat2packed(
       pack53(row)
   }
 
-  def packRef55(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef55(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3446,7 +3448,7 @@ case class Flat2packed(
       pack54(row)
   }
 
-  def packRef56(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef56(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3562,7 +3564,7 @@ case class Flat2packed(
       pack55(row)
   }
 
-  def packRef57(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef57(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3680,7 +3682,7 @@ case class Flat2packed(
       pack56(row)
   }
 
-  def packRef58(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef58(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3800,7 +3802,7 @@ case class Flat2packed(
       pack57(row)
   }
 
-  def packRef59(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef59(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -3922,7 +3924,7 @@ case class Flat2packed(
       pack58(row)
   }
 
-  def packRef60(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef60(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4046,7 +4048,7 @@ case class Flat2packed(
       pack59(row)
   }
 
-  def packRef61(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef61(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4172,7 +4174,7 @@ case class Flat2packed(
       pack60(row)
   }
 
-  def packRef62(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef62(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4300,7 +4302,7 @@ case class Flat2packed(
       pack61(row)
   }
 
-  def packRef63(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef63(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4430,7 +4432,7 @@ case class Flat2packed(
       pack62(row)
   }
 
-  def packRef64(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef64(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4562,7 +4564,7 @@ case class Flat2packed(
       pack63(row)
   }
 
-  def packRef65(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef65(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4696,7 +4698,7 @@ case class Flat2packed(
       pack64(row)
   }
 
-  def packRef66(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef66(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4832,7 +4834,7 @@ case class Flat2packed(
       pack65(row)
   }
 
-  def packRef67(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef67(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -4970,7 +4972,7 @@ case class Flat2packed(
       pack66(row)
   }
 
-  def packRef68(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef68(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -5110,7 +5112,7 @@ case class Flat2packed(
       pack67(row)
   }
 
-  def packRef69(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef69(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -5252,7 +5254,7 @@ case class Flat2packed(
       pack68(row)
   }
 
-  def packRef70(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef70(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -5396,7 +5398,7 @@ case class Flat2packed(
       pack69(row)
   }
 
-  def packRef71(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef71(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -5542,7 +5544,7 @@ case class Flat2packed(
       pack70(row)
   }
 
-  def packRef72(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef72(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -5690,7 +5692,7 @@ case class Flat2packed(
       pack71(row)
   }
 
-  def packRef73(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef73(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -5840,7 +5842,7 @@ case class Flat2packed(
       pack72(row)
   }
 
-  def packRef74(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef74(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -5992,7 +5994,7 @@ case class Flat2packed(
       pack73(row)
   }
 
-  def packRef75(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef75(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -6146,7 +6148,7 @@ case class Flat2packed(
       pack74(row)
   }
 
-  def packRef76(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef76(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -6302,7 +6304,7 @@ case class Flat2packed(
       pack75(row)
   }
 
-  def packRef77(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef77(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -6460,7 +6462,7 @@ case class Flat2packed(
       pack76(row)
   }
 
-  def packRef78(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef78(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -6620,7 +6622,7 @@ case class Flat2packed(
       pack77(row)
   }
 
-  def packRef79(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef79(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -6782,7 +6784,7 @@ case class Flat2packed(
       pack78(row)
   }
 
-  def packRef80(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef80(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -6946,7 +6948,7 @@ case class Flat2packed(
       pack79(row)
   }
 
-  def packRef81(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef81(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -7112,7 +7114,7 @@ case class Flat2packed(
       pack80(row)
   }
 
-  def packRef82(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef82(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -7280,7 +7282,7 @@ case class Flat2packed(
       pack81(row)
   }
 
-  def packRef83(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef83(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -7450,7 +7452,7 @@ case class Flat2packed(
       pack82(row)
   }
 
-  def packRef84(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef84(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -7622,7 +7624,7 @@ case class Flat2packed(
       pack83(row)
   }
 
-  def packRef85(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef85(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -7796,7 +7798,7 @@ case class Flat2packed(
       pack84(row)
   }
 
-  def packRef86(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef86(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -7972,7 +7974,7 @@ case class Flat2packed(
       pack85(row)
   }
 
-  def packRef87(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef87(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -8150,7 +8152,7 @@ case class Flat2packed(
       pack86(row)
   }
 
-  def packRef88(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef88(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -8330,7 +8332,7 @@ case class Flat2packed(
       pack87(row)
   }
 
-  def packRef89(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef89(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -8512,7 +8514,7 @@ case class Flat2packed(
       pack88(row)
   }
 
-  def packRef90(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef90(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -8696,7 +8698,7 @@ case class Flat2packed(
       pack89(row)
   }
 
-  def packRef91(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef91(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -8882,7 +8884,7 @@ case class Flat2packed(
       pack90(row)
   }
 
-  def packRef92(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef92(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -9070,7 +9072,7 @@ case class Flat2packed(
       pack91(row)
   }
 
-  def packRef93(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef93(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -9260,7 +9262,7 @@ case class Flat2packed(
       pack92(row)
   }
 
-  def packRef94(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef94(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -9452,7 +9454,7 @@ case class Flat2packed(
       pack93(row)
   }
 
-  def packRef95(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef95(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -9646,7 +9648,7 @@ case class Flat2packed(
       pack94(row)
   }
 
-  def packRef96(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef96(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -9842,7 +9844,7 @@ case class Flat2packed(
       pack95(row)
   }
 
-  def packRef97(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef97(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -10040,7 +10042,7 @@ case class Flat2packed(
       pack96(row)
   }
 
-  def packRef98(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef98(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -10240,7 +10242,7 @@ case class Flat2packed(
       pack97(row)
   }
 
-  def packRef99(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef99(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)
@@ -10442,7 +10444,7 @@ case class Flat2packed(
       pack98(row)
   }
 
-  def packRef100(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef100(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packAttr(attrs.head, level)
     val pack1  = packAttr(attrs(1), level)
     val pack2  = packAttr(attrs(2), level)

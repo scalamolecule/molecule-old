@@ -12,15 +12,15 @@ trait PackOptNestedTypes extends PackBase with Helpers {
 
   // packOne -------------------------------------------------------
 
-  protected lazy val packOptNestedOneString = (it: jIterator[_]) => {
-    add(it.next.asInstanceOf[String])
-    end()
+  protected lazy val packOptNestedOneString = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.asInstanceOf[String])
+    end(sb)
   }
 
-  protected lazy val packOptNestedOneDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
+  protected lazy val packOptNestedOneDate = (sb: StringBuffer, it: jIterator[_]) => add(sb, date2strLocal(it.next.asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String with appended type to be packed on JS side
-  protected lazy val packOptNestedOneAny = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOneAny = (sb: StringBuffer, it: jIterator[_]) => {
     val prefixed = it.next match {
       case s: java.lang.String      => "String    " + s
       case i: java.lang.Integer     => "Int       " + i.toString
@@ -36,213 +36,213 @@ trait PackOptNestedTypes extends PackBase with Helpers {
       case other                    =>
         throw MoleculeException(s"Unexpected generic `v` $other of type " + other.getClass)
     }
-    add(prefixed)
+    add(sb, prefixed)
   }
 
-  protected lazy val packOptNestedOneEnum = (it: jIterator[_]) => {
-    add(it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
+  protected lazy val packOptNestedOneEnum = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
   }
 
-  protected lazy val packOptNestedOneRefAttr = (it: jIterator[_]) => {
-    //    add(it.next.asInstanceOf[Keyword].getName)
-    add(it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
+  protected lazy val packOptNestedOneRefAttr = (sb: StringBuffer, it: jIterator[_]) => {
+    //    add(sb, it.next.asInstanceOf[Keyword].getName)
+    add(sb, it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
   }
 
-  protected lazy val packOptNestedOne_ = (it: jIterator[_]) =>
-    add(it.next.toString)
+  protected lazy val packOptNestedOne_ = (sb: StringBuffer, it: jIterator[_]) =>
+    add(sb, it.next.toString)
 
 
   // packOptOne -------------------------------------------------------
 
-  protected lazy val packOptNestedOptOneString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneString = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case null | "__none__" =>
-      case v: jMap[_, _]     => add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[String])
-      case v                 => add(v.asInstanceOf[String])
+      case v: jMap[_, _]     => add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[String])
+      case v                 => add(sb, v.asInstanceOf[String])
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptOneDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneDate = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
-      case null | "__none__" => end()
-      case v: jMap[_, _]     => add(date2strLocal(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Date]))
-      case d: Date           => add(date2strLocal(d))
-    }
-  }
-
-  protected lazy val packOptNestedOptOneEnum = (it: jIterator[_]) => {
-    it.next match {
-      case null | "__none__" => end()
-      case v: jMap[_, _]     => add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
-      case v                 => add(v.asInstanceOf[Keyword].getName)
+      case null | "__none__" => end(sb)
+      case v: jMap[_, _]     => add(sb, date2strLocal(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Date]))
+      case d: Date           => add(sb, date2strLocal(d))
     }
   }
 
-  protected lazy val packOptNestedOptOneRefAttr = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneEnum = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
-      case null | "__none__" => end()
-      case v: jMap[_, _]     => add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
-      case v                 => add(v.toString)
+      case null | "__none__" => end(sb)
+      case v: jMap[_, _]     => add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
+      case v                 => add(sb, v.asInstanceOf[Keyword].getName)
     }
   }
 
-  protected lazy val packOptNestedOptOne_ = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptOneRefAttr = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
-      case null | "__none__" => end()
-      case v: jMap[_, _]     => add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
-      case v                 => add(v.toString)
+      case null | "__none__" => end(sb)
+      case v: jMap[_, _]     => add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
+      case v                 => add(sb, v.toString)
+    }
+  }
+
+  protected lazy val packOptNestedOptOne_ = (sb: StringBuffer, it: jIterator[_]) => {
+    it.next match {
+      case null | "__none__" => end(sb)
+      case v: jMap[_, _]     => add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
+      case v                 => add(sb, v.toString)
     }
   }
 
 
   // packMany -------------------------------------------------------
 
-  protected lazy val packOptNestedManyString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedManyString = (sb: StringBuffer, it: jIterator[_]) => {
     it.next.asInstanceOf[jList[_]].forEach { v =>
-      add(v.toString)
-      end()
+      add(sb, v.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedManyDate = (it: jIterator[_]) => {
-    it.next.asInstanceOf[jList[_]].forEach(v => add(date2strLocal(v.asInstanceOf[Date])))
-    end()
+  protected lazy val packOptNestedManyDate = (sb: StringBuffer, it: jIterator[_]) => {
+    it.next.asInstanceOf[jList[_]].forEach(v => add(sb, date2strLocal(v.asInstanceOf[Date])))
+    end(sb)
   }
 
-  protected lazy val packOptNestedManyEnum = (it: jIterator[_]) => {
+  protected lazy val packOptNestedManyEnum = (sb: StringBuffer, it: jIterator[_]) => {
     it.next.asInstanceOf[jList[_]].forEach(v =>
-      add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
+      add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
     )
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedManyRefAttr = (it: jIterator[_]) => {
+  protected lazy val packOptNestedManyRefAttr = (sb: StringBuffer, it: jIterator[_]) => {
     it.next.asInstanceOf[jList[_]].forEach(v =>
-      add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
+      add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
     )
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedMany_ = (it: jIterator[_]) => {
-    it.next.asInstanceOf[jList[_]].forEach(v => add(v.toString))
-    end()
+  protected lazy val packOptNestedMany_ = (sb: StringBuffer, it: jIterator[_]) => {
+    it.next.asInstanceOf[jList[_]].forEach(v => add(sb, v.toString))
+    end(sb)
   }
 
 
   // packOptMany -------------------------------------------------------
 
-  protected lazy val packOptNestedOptManyString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyString = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case vs         => vs.asInstanceOf[jList[_]].forEach { v =>
-        add(v.toString)
-        end()
+        add(sb, v.toString)
+        end(sb)
       }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptManyDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyDate = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case vs         => vs.asInstanceOf[jList[_]].forEach(v => add(date2strLocal(v.asInstanceOf[Date])))
+      case vs         => vs.asInstanceOf[jList[_]].forEach(v => add(sb, date2strLocal(v.asInstanceOf[Date])))
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptManyEnum = (it: jIterator[_]) => {
-    it.next match {
-      case "__none__" =>
-      case vs         => vs.asInstanceOf[jList[_]].forEach(v =>
-        add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
-      )
-    }
-    end()
-  }
-
-  protected lazy val packOptNestedOptManyRefAttr = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyEnum = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case vs         => vs.asInstanceOf[jList[_]].forEach(v =>
-        add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
+        add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
       )
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptMany_ = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptManyRefAttr = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case vs         => vs.asInstanceOf[jList[_]].forEach(v => add(v.toString))
+      case vs         => vs.asInstanceOf[jList[_]].forEach(v =>
+        add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
+      )
     }
-    end()
+    end(sb)
+  }
+
+  protected lazy val packOptNestedOptMany_ = (sb: StringBuffer, it: jIterator[_]) => {
+    it.next match {
+      case "__none__" =>
+      case vs         => vs.asInstanceOf[jList[_]].forEach(v => add(sb, v.toString))
+    }
+    end(sb)
   }
 
 
   // packMap -------------------------------------------------------
 
-  protected lazy val packOptNestedMapString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedMapString = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedMap_ = (it: jIterator[_]) => {
+  protected lazy val packOptNestedMap_ = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
 
   // packOptMap -------------------------------------------------------
 
-  protected lazy val packOptNestedOptMapString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptMapString = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case vs         => vs.asInstanceOf[jList[_]].forEach { v =>
-        add(v.toString)
-        end()
+        add(sb, v.toString)
+        end(sb)
       }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptMap_ = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptMap_ = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case vs         => vs.asInstanceOf[jList[_]].forEach(v => add(v.toString))
+      case vs         => vs.asInstanceOf[jList[_]].forEach(v => add(sb, v.toString))
     }
-    end()
+    end(sb)
   }
 
 
   // packOptApplyOne -------------------------------------------------------
 
-  protected lazy val packOptNestedOptApplyOneString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyOneString = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case v          => add(v.asInstanceOf[String])
+      case v          => add(sb, v.asInstanceOf[String])
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptApplyOne_ = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyOne_ = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
-      case "__none__" => end()
-      case v          => add(v.toString)
+      case "__none__" => end(sb)
+      case v          => add(sb, v.toString)
     }
   }
 
-  protected lazy val packOptNestedOptApplyOneDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyOneDate = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
-      case "__none__" => end()
-      case v          => add(date2strLocal(v.asInstanceOf[Date]))
+      case "__none__" => end(sb)
+      case v          => add(sb, date2strLocal(v.asInstanceOf[Date]))
     }
   }
 
@@ -250,80 +250,80 @@ trait PackOptNestedTypes extends PackBase with Helpers {
 
   // packOptApplyMany -------------------------------------------------------
 
-  protected lazy val packOptNestedOptApplyManyString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyManyString = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case vs         => vs.asInstanceOf[jSet[_]].forEach { v =>
-        add(v.toString)
-        end()
+        add(sb, v.toString)
+        end(sb)
       }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptApplyMany_ = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMany_ = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(v.toString))
+      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(sb, v.toString))
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptApplyManyDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyManyDate = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(date2strLocal(v.asInstanceOf[Date])))
+      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(sb, date2strLocal(v.asInstanceOf[Date])))
     }
-    end()
+    end(sb)
   }
 
 
   //  packOptApplyMap -------------------------------------------------------
 
-  protected lazy val packOptNestedOptApplyMapString = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMapString = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
       case vs         => vs.asInstanceOf[jSet[_]].forEach { v =>
-        add(v.toString)
-        end()
+        add(sb, v.toString)
+        end(sb)
       }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptApplyMap_ = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMap_ = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(v.toString))
+      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(sb, v.toString))
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptNestedOptApplyMapDate = (it: jIterator[_]) => {
+  protected lazy val packOptNestedOptApplyMapDate = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case "__none__" =>
-      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(date2strLocal(v.asInstanceOf[Date])))
+      case vs         => vs.asInstanceOf[jSet[_]].forEach(v => add(sb, date2strLocal(v.asInstanceOf[Date])))
     }
-    end()
+    end(sb)
   }
 
 
   //  packKeyedMap -------------------------------------------------------
 
-  protected lazy val packOptNestedKeyedMapString = (it: jIterator[_]) => {
-    add(it.next.toString)
-    end()
+  protected lazy val packOptNestedKeyedMapString = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.toString)
+    end(sb)
   }
 
-  protected lazy val packOptNestedKeyedMap_    = (it: jIterator[_]) => add(it.next.toString)
-  protected lazy val packOptNestedKeyedMapDate = (it: jIterator[_]) => add(date2strLocal(it.next.asInstanceOf[Date]))
+  protected lazy val packOptNestedKeyedMap_    = (sb: StringBuffer, it: jIterator[_]) => add(sb, it.next.toString)
+  protected lazy val packOptNestedKeyedMapDate = (sb: StringBuffer, it: jIterator[_]) => add(sb, date2strLocal(it.next.asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String}
-  protected lazy val packKeyedMapAny = (it: jIterator[_]) => {
+  protected lazy val packKeyedMapAny = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
-      case s: String => add(s); end()
-      case d: Date   => add(date2strLocal(d))
-      case other     => add(other.toString)
+      case s: String => add(sb, s); end(sb)
+      case d: Date   => add(sb, date2strLocal(d))
+      case other     => add(sb, other.toString)
     }
   }
 }

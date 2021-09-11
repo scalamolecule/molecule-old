@@ -11,16 +11,16 @@ trait PackFlatTypes extends PackBase with Helpers {
 
   // packOne -------------------------------------------------------
 
-  protected lazy val packOneString = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).asInstanceOf[String])
-    end()
+  protected lazy val packOneString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).asInstanceOf[String])
+    end(sb)
   }
 
-  protected lazy val packOneDate = (colIndex: Int) => (row: jList[_]) =>
-    add(date2strLocal(row.get(colIndex).asInstanceOf[Date]))
+  protected lazy val packOneDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
+    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String with appended type to be packed on JS side
-  protected lazy val packOneAny = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOneAny = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val prefixed = row.get(colIndex) match {
       case s: java.lang.String      => "String    " + s
       case i: java.lang.Integer     => "Int       " + i.toString
@@ -36,43 +36,43 @@ trait PackFlatTypes extends PackBase with Helpers {
       case other                    =>
         throw MoleculeException(s"Unexpected generic `v` $other of type " + other.getClass)
     }
-    add(prefixed)
+    add(sb, prefixed)
   }
 
-  protected lazy val packOneRefAttr = (colIndex: Int) => (row: jList[_]) =>
-    add(
+  protected lazy val packOneRefAttr = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
+    add(sb,
       row.get(colIndex).toString
 //      row.get(colIndex).asInstanceOf[Keyword].getName
 //      row.get(colIndex).asInstanceOf[jMap[String, Any]].values.iterator.next.toString
     )
 
-  protected lazy val packOne = (colIndex: Int) => (row: jList[_]) =>
-    add(row.get(colIndex).toString)
+  protected lazy val packOne = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
+    add(sb, row.get(colIndex).toString)
 
 
   // packOptOne -------------------------------------------------------
 
-  protected lazy val packOptOneString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptOneString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
-      case v    => add(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[String])
+      case v    => add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[String])
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptOneDate = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptOneDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case null => end()
-      case v    => add(
+      case null => end(sb)
+      case v    => add(sb,
         date2strLocal(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Date])
       )
     }
   }
 
-  protected lazy val packOptOneEnum = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptOneEnum = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case null => end()
-      case v    => add(
+      case null => end(sb)
+      case v    => add(sb,
         v.asInstanceOf[jMap[String, Any]].values.iterator.next
           .asInstanceOf[jMap[String, Any]].values.iterator.next
           .asInstanceOf[Keyword].getName
@@ -80,183 +80,183 @@ trait PackFlatTypes extends PackBase with Helpers {
     }
   }
 
-  protected lazy val packOptOneRefAttr = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptOneRefAttr = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case null => end()
-      case v    => add(
+      case null => end(sb)
+      case v    => add(sb,
         v.asInstanceOf[jMap[String, Any]].values.iterator.next
           .asInstanceOf[jMap[String, Any]].values.iterator.next.toString
       )
     }
   }
 
-  protected lazy val packOptOne = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptOne = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case null => end()
+      case null => end(sb)
       case v    =>
-        add(v.asInstanceOf[jMap[String, Any]].values.iterator().next.toString)
+        add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator().next.toString)
     }
   }
 
 
   // packMany -------------------------------------------------------
 
-  protected lazy val packManyString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packManyString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex).asInstanceOf[jSet[_]].forEach { v =>
-      add(v.toString)
-      end()
+      add(sb, v.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packManyDate = (colIndex: Int) => (row: jList[_]) => {
-    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(date2strLocal(v.asInstanceOf[Date])))
-    end()
+  protected lazy val packManyDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(sb, date2strLocal(v.asInstanceOf[Date])))
+    end(sb)
   }
 
-  protected lazy val packManyEnum = (colIndex: Int) => (row: jList[_]) => {
-    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(v.toString))
-    end()
+  protected lazy val packManyEnum = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(sb, v.toString))
+    end(sb)
   }
 
-  protected lazy val packManyRefAttr = (colIndex: Int) => (row: jList[_]) => {
-    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(v.toString))
-    end()
+  protected lazy val packManyRefAttr = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(sb, v.toString))
+    end(sb)
   }
 
-  protected lazy val packMany = (colIndex: Int) => (row: jList[_]) => {
-    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(v.toString))
-    end()
+  protected lazy val packMany = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(sb, v.toString))
+    end(sb)
   }
 
 
   // packOptMany -------------------------------------------------------
 
-  protected lazy val packOptManyString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptManyString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext) {
-          add(it.next.toString)
-          end()
+          add(sb, it.next.toString)
+          end(sb)
         }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptManyDate = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptManyDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext)
-          add(date2strLocal(it.next.asInstanceOf[Date]))
+          add(sb, date2strLocal(it.next.asInstanceOf[Date]))
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptManyEnum = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptManyEnum = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext)
-          add(it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
+          add(sb, it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptManyRefAttr = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptManyRefAttr = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext)
-          add(it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
+          add(sb, it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.toString)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptMany = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptMany = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext)
-          add(it.next.toString)
+          add(sb, it.next.toString)
     }
-    end()
+    end(sb)
   }
 
 
   // packMap -------------------------------------------------------
 
-  protected lazy val packMapString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packMapString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val it = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (it.hasNext) {
-      add(it.next.toString)
-      end()
+      add(sb, it.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packMap = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packMap = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val it = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (it.hasNext)
-      add(it.next.toString)
-    end()
+      add(sb, it.next.toString)
+    end(sb)
   }
 
 
   // packOptMap -------------------------------------------------------
 
-  protected lazy val packOptMapString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptMapString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext) {
-          add(it.next.toString)
-          end()
+          add(sb, it.next.toString)
+          end(sb)
         }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptMap = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptMap = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext)
-          add(it.next.toString)
+          add(sb, it.next.toString)
     }
-    end()
+    end(sb)
   }
 
 
   // packOptApplyOne -------------------------------------------------------
 
-  protected lazy val packOptApplyOneString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyOneString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
-      case v    => add(v.asInstanceOf[String])
+      case v    => add(sb, v.asInstanceOf[String])
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptApplyOne = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyOne = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case null => end()
-      case v    => add(v.toString)
+      case null => end(sb)
+      case v    => add(sb, v.toString)
     }
   }
 
-  protected lazy val packOptApplyOneDate = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyOneDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case null => end()
-      case v    => add(date2strLocal(v.asInstanceOf[Date]))
+      case null => end(sb)
+      case v    => add(sb, date2strLocal(v.asInstanceOf[Date]))
     }
   }
 
@@ -264,96 +264,96 @@ trait PackFlatTypes extends PackBase with Helpers {
 
   // packOptApplyMany -------------------------------------------------------
 
-  protected lazy val packOptApplyManyString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyManyString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext) {
-          add(it.next.toString)
-          end()
+          add(sb, it.next.toString)
+          end(sb)
         }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptApplyMany = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyMany = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext)
-          add(it.next.toString)
+          add(sb, it.next.toString)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptApplyManyDate = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyManyDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext)
-          add(date2strLocal(it.next.asInstanceOf[Date]))
+          add(sb, date2strLocal(it.next.asInstanceOf[Date]))
     }
-    end()
+    end(sb)
   }
 
 
   //  packOptApplyMap -------------------------------------------------------
 
-  protected lazy val packOptApplyMapString = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyMapString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext) {
-          add(it.next.toString)
-          end()
+          add(sb, it.next.toString)
+          end(sb)
         }
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptApplyMap = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyMap = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext)
-          add(it.next.toString)
+          add(sb, it.next.toString)
     }
-    end()
+    end(sb)
   }
 
-  protected lazy val packOptApplyMapDate = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packOptApplyMapDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null =>
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext)
-          add(date2strLocal(it.next.asInstanceOf[Date]))
+          add(sb, date2strLocal(it.next.asInstanceOf[Date]))
     }
-    end()
+    end(sb)
   }
 
 
   //  packKeyedMap -------------------------------------------------------
 
-  protected lazy val packKeyedMapString = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).toString)
-    end()
+  protected lazy val packKeyedMapString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).toString)
+    end(sb)
   }
 
-  protected lazy val packKeyedMap     = (colIndex: Int) => (row: jList[_]) => add(row.get(colIndex).toString)
-  protected lazy val packKeyedMapDate = (colIndex: Int) => (row: jList[_]) => add(date2strLocal(row.get(colIndex).asInstanceOf[Date]))
+  protected lazy val packKeyedMap     = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
+  protected lazy val packKeyedMapDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
 
   // Generic `v` attribute value converted to String}
-  protected lazy val packKeyedMapAny = (colIndex: Int) => (row: jList[_]) => {
+  protected lazy val packKeyedMapAny = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case s: String => add(s); end()
-      case d: Date   => add(date2strLocal(d))
-      case other     => add(other.toString)
+      case s: String => add(sb, s); end(sb)
+      case d: Date   => add(sb, date2strLocal(d))
+      case other     => add(sb, other.toString)
     }
   }
 }

@@ -6,210 +6,210 @@ import molecule.datomic.base.marshalling.PackBase
 
 trait PackFlatAggr extends PackBase {
 
-  protected val packAggrInt    = (colIndex: Int) => (row: jList[_]) => add(row.get(colIndex).toString)
-  protected val packAggrDouble = (colIndex: Int) => (row: jList[_]) => add(row.get(colIndex).toString)
+  protected val packAggrInt    = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
+  protected val packAggrDouble = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
 
   // packAggrOneList -----------------------------------------------------
 
-  protected val packAggrOneListString = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packAggrOneList = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneList = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packAggrOneListDate = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrManyList -----------------------------------------------------
 
-  protected val packAggrManyListString = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packAggrManyList = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyList = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packAggrManyListDate = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
 
   // packAggrOneListDistinct -----------------------------------------------------
 
-  protected val packAggrOneListDistinctString = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListDistinctString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packAggrOneListDistinct = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListDistinct = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packAggrOneListDistinctDate = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListDistinctDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrManyListDistinct -----------------------------------------------------
 
-  protected val packAggrManyListDistinctString = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListDistinctString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packAggrManyListDistinct = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListDistinct = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packAggrManyListDistinctDate = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListDistinctDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrOneListRand -----------------------------------------------------
 
-  protected val packAggrOneListRandString = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListRandString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packAggrOneListRand = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListRand = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packAggrOneListRandDate = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrOneListRandDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrManyListRand -----------------------------------------------------
 
-  protected val packAggrManyListRandString = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListRandString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packAggrManyListRand = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListRand = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packAggrManyListRandDate = (colIndex: Int) => (row: jList[_]) => {
+  protected val packAggrManyListRandDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrSingleSample -----------------------------------------------------
 
-  protected val packAggrSingleSampleString = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
-    end()
+  protected val packAggrSingleSampleString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
+    end(sb)
   }
 
-  protected val packAggrSingleSample = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.toString)
+  protected val packAggrSingleSample = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.toString)
   }
 
-  protected val packAggrSingleSampleDate = (colIndex: Int) => (row: jList[_]) => {
-    add(date2strLocal(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
+  protected val packAggrSingleSampleDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
 
   // packAggrOneSingle -----------------------------------------------------
 
-  protected val packAggrOneSingleString = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
-    end()
+  protected val packAggrOneSingleString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
+    end(sb)
   }
 
-  protected val packAggrOneSingle = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.toString)
+  protected val packAggrOneSingle = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.toString)
   }
 
-  protected val packAggrOneSingleDate = (colIndex: Int) => (row: jList[_]) => {
-    add(date2strLocal(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
+  protected val packAggrOneSingleDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
 
   // packAggrManySingle -----------------------------------------------------
 
-  protected val packAggrManySingleString = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).asInstanceOf[String])
-    end()
+  protected val packAggrManySingleString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).asInstanceOf[String])
+    end(sb)
   }
 
-  protected val packAggrManySingle = (colIndex: Int) => (row: jList[_]) => {
-    add(row.get(colIndex).toString)
+  protected val packAggrManySingle = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, row.get(colIndex).toString)
   }
 
-  protected val packAggrManySingleDate = (colIndex: Int) => (row: jList[_]) => {
-    add(date2strLocal(row.get(colIndex).asInstanceOf[Date]))
+  protected val packAggrManySingleDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
   }
 }

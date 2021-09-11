@@ -18,12 +18,8 @@ import molecule.datomic.base.facade.Conn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
-import molecule.datomic.api.out3.transactFn
-import molecule.datomic.api.out6.m
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
-import moleculeTests.tests.core.runtime.EntityList.{uri1, uri2, uuid1, uuid2}
-import moleculeTests.tests.core.runtime.EntityMap.{bigDec1, bigDec2, bigInt1, bigInt2, date1, date2, enum1, enum2, uri1, uri2, uuid1, uuid2}
 import scala.util.control.NonFatal
 
 

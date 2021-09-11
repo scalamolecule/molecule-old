@@ -6,210 +6,210 @@ import molecule.datomic.base.marshalling.PackBase
 
 trait PackOptNestedAggr extends PackBase {
 
-  protected val packAggrInt    = (it: jIterator[_]) => add(it.next.toString)
-  protected val packAggrDouble = (it: jIterator[_]) => add(it.next.toString)
+  protected val packAggrInt    = (sb: StringBuffer, it: jIterator[_]) => add(sb, it.next.toString)
+  protected val packAggrDouble = (sb: StringBuffer, it: jIterator[_]) => add(sb, it.next.toString)
 
   // packAggrOneList -----------------------------------------------------
 
-  protected val packOptNestedAggrOneListString = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListString = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packOptNestedAggrOneList_ = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneList_ = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packOptNestedAggrOneListDate = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrManyList -----------------------------------------------------
 
-  protected val packOptNestedAggrManyListString = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListString = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packOptNestedAggrManyList_ = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyList_ = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packOptNestedAggrManyListDate = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
 
   // packAggrOneListDistinct -----------------------------------------------------
 
-  protected val packOptNestedAggrOneListDistinctString = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListDistinctString = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packOptNestedAggrOneListDistinct_ = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListDistinct_ = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packOptNestedAggrOneListDistinctDate = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListDistinctDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrManyListDistinct -----------------------------------------------------
 
-  protected val packOptNestedAggrManyListDistinctString = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListDistinctString = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packOptNestedAggrManyListDistinct_ = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListDistinct_ = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packOptNestedAggrManyListDistinctDate = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListDistinctDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrOneListRand -----------------------------------------------------
 
-  protected val packOptNestedAggrOneListRandString = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListRandString = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packOptNestedAggrOneListRand_ = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListRand_ = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packOptNestedAggrOneListRandDate = (it: jIterator[_]) => {
+  protected val packOptNestedAggrOneListRandDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrManyListRand -----------------------------------------------------
 
-  protected val packOptNestedAggrManyListRandString = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListRandString = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
-      add(vs.next.toString)
-      end()
+      add(sb, vs.next.toString)
+      end(sb)
     }
-    end()
+    end(sb)
   }
 
-  protected val packOptNestedAggrManyListRand_ = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListRand_ = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(vs.next.toString)
-    end()
+      add(sb, vs.next.toString)
+    end(sb)
   }
 
-  protected val packOptNestedAggrManyListRandDate = (it: jIterator[_]) => {
+  protected val packOptNestedAggrManyListRandDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(date2strLocal(vs.next.asInstanceOf[Date]))
-    end()
+      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+    end(sb)
   }
 
 
   // packAggrSingleSample -----------------------------------------------------
 
-  protected val packOptNestedAggrSingleSampleString = (it: jIterator[_]) => {
-    add(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
-    end()
+  protected val packOptNestedAggrSingleSampleString = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
+    end(sb)
   }
 
-  protected val packOptNestedAggrSingleSample_ = (it: jIterator[_]) => {
-    add(it.next.asInstanceOf[jList[_]].iterator.next.toString)
+  protected val packOptNestedAggrSingleSample_ = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.asInstanceOf[jList[_]].iterator.next.toString)
   }
 
-  protected val packOptNestedAggrSingleSampleDate = (it: jIterator[_]) => {
-    add(date2strLocal(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
+  protected val packOptNestedAggrSingleSampleDate = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, date2strLocal(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
 
   // packAggrOneSingle -----------------------------------------------------
 
-  protected val packOptNestedAggrOneSingleString = (it: jIterator[_]) => {
-    add(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
-    end()
+  protected val packOptNestedAggrOneSingleString = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
+    end(sb)
   }
 
-  protected val packOptNestedAggrOneSingle_ = (it: jIterator[_]) => {
-    add(it.next.asInstanceOf[jList[_]].iterator.next.toString)
+  protected val packOptNestedAggrOneSingle_ = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.asInstanceOf[jList[_]].iterator.next.toString)
   }
 
-  protected val packOptNestedAggrOneSingleDate = (it: jIterator[_]) => {
-    add(date2strLocal(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
+  protected val packOptNestedAggrOneSingleDate = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, date2strLocal(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
 
   // packAggrManySingle -----------------------------------------------------
 
-  protected val packOptNestedAggrManySingleString = (it: jIterator[_]) => {
-    add(it.next.asInstanceOf[String])
-    end()
+  protected val packOptNestedAggrManySingleString = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.asInstanceOf[String])
+    end(sb)
   }
 
-  protected val packOptNestedAggrManySingle_ = (it: jIterator[_]) => {
-    add(it.next.toString)
+  protected val packOptNestedAggrManySingle_ = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, it.next.toString)
   }
 
-  protected val packOptNestedAggrManySingleDate = (it: jIterator[_]) => {
-    add(date2strLocal(it.next.asInstanceOf[Date]))
+  protected val packOptNestedAggrManySingleDate = (sb: StringBuffer, it: jIterator[_]) => {
+    add(sb, date2strLocal(it.next.asInstanceOf[Date]))
   }
 }

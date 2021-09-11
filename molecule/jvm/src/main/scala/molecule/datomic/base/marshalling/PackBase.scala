@@ -1,6 +1,5 @@
 package molecule.datomic.base.marshalling
 
-
 /** Simple commands to build packed data as a line-delimited text.
   *
   * Simple special unicode markers are used to structure the data on the server side:
@@ -19,29 +18,23 @@ package molecule.datomic.base.marshalling
   */
 trait PackBase {
 
-  val sb = new StringBuffer()
-
-  def add(s: String): Unit = {
+  def add(sb: StringBuffer, s: String): StringBuffer = {
     sb.append("\n")
     sb.append(s)
-    ()
   }
 
-  def end(): Unit = {
+  def end(sb: StringBuffer): StringBuffer = {
     // End of string / None
     sb.append("\n◄")
-    ()
   }
 
-  def next(): Unit = {
+  def next(sb: StringBuffer): StringBuffer = {
     // End of multi-value
     sb.append("\n►")
-    ()
   }
 
-  def nil(): Unit = {
+  def nil(sb: StringBuffer): StringBuffer = {
     // Empty/end of sub data
     sb.append("\n◄◄")
-    ()
   }
 }

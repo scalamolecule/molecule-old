@@ -21,12 +21,13 @@ case class OptNested2packed(
   }
 
   def getPacked: String = {
+    val sb = new StringBuffer()
     if (!rowCollection.isEmpty) {
       // Recursively build lambda to process each row of nested data
-      val rowLambda = packNested(obj.props, 0, true)
+      val rowLambda: (StringBuffer, jIterator[_]) => StringBuffer = packNested(obj.props, 0, true)
 
       // Process data with lambda
-      rowLambda(rowCollection.iterator)
+      rowLambda(sb, rowCollection.iterator)
     }
     sb.toString
   }
@@ -37,7 +38,7 @@ case class OptNested2packed(
     case Obj(_, _, _, props)       => getRelatedProps(props)
   }
 
-  def packNode(node: Node, level: Int): jIterator[_] => Unit = {
+  def packNode(node: Node, level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     node match {
       case Prop(_, _, baseTpe, _, group, _) =>
         packOptNestedAttr(group, baseTpe)
@@ -54,7 +55,7 @@ case class OptNested2packed(
     }
   }
 
-  def packNested(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     attrs.size match {
       case 1  => packNested1(attrs, level, deeper)
       case 2  => packNested2(attrs, level, deeper)
@@ -81,7 +82,7 @@ case class OptNested2packed(
     }
   }
 
-  def packRef(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     attrs.size match {
       case 1  => packRef1(attrs, level)
       case 2  => packRef2(attrs, level)
@@ -108,7 +109,7 @@ case class OptNested2packed(
     }
   }
 
-  def packlevelRef(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     attrs.size match {
       case 1  => packlevelRef1(attrs, level)
       case 2  => packlevelRef2(attrs, level)
@@ -136,176 +137,189 @@ case class OptNested2packed(
   }
 
 
-  def packNested1(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested1(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             // Iterator on top level is immutable to not be affected by nested iterators assigned to mutable `it`
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
+            pack0(sb, it)
           }
+          sb
+        }
+
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             // Iterator on top level is immutable to not be affected by nested iterators assigned to mutable `it`
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
+            pack0(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(1, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
+                pack0(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested2(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested2(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
+            pack0(sb, it)
+            pack1(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator()
-            pack0(it)
-            pack1(it)
+            pack0(sb, it)
+            pack1(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(2, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" =>
-            nil()
+            nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
+                pack0(sb, it)
+                pack1(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested3(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested3(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(3, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" =>
-            nil()
+            nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested4(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested4(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(4, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" =>
-            nil()
+            nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested5(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested5(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -313,50 +327,53 @@ case class OptNested2packed(
     val pack4 = packNode(attrs(4), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(5, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested6(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested6(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -365,53 +382,56 @@ case class OptNested2packed(
     val pack5 = packNode(attrs(5), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(6, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested7(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested7(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -421,56 +441,59 @@ case class OptNested2packed(
     val pack6 = packNode(attrs(6), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(7, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested8(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested8(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -481,59 +504,62 @@ case class OptNested2packed(
     val pack7 = packNode(attrs(7), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(8, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested9(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested9(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -545,62 +571,65 @@ case class OptNested2packed(
     val pack8 = packNode(attrs(8), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(9, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested10(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested10(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -613,65 +642,68 @@ case class OptNested2packed(
     val pack9 = packNode(attrs(9), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(10, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested11(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested11(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -685,68 +717,71 @@ case class OptNested2packed(
     val pack10 = packNode(attrs(10), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(11, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested12(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested12(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -761,71 +796,74 @@ case class OptNested2packed(
     val pack11 = packNode(attrs(11), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(12, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested13(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested13(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -841,74 +879,77 @@ case class OptNested2packed(
     val pack12 = packNode(attrs(12), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(13, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested14(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested14(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -925,77 +966,80 @@ case class OptNested2packed(
     val pack13 = packNode(attrs(13), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(14, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested15(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested15(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1013,80 +1057,83 @@ case class OptNested2packed(
     val pack14 = packNode(attrs(14), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(15, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested16(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested16(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1105,83 +1152,86 @@ case class OptNested2packed(
     val pack15 = packNode(attrs(15), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(16, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
-                pack15(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
+                pack15(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested17(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested17(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1201,86 +1251,89 @@ case class OptNested2packed(
     val pack16 = packNode(attrs(16), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(17, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
-                pack15(it)
-                pack16(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
+                pack15(sb, it)
+                pack16(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested18(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested18(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1301,89 +1354,92 @@ case class OptNested2packed(
     val pack17 = packNode(attrs(17), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(18, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
-                pack15(it)
-                pack16(it)
-                pack17(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
+                pack15(sb, it)
+                pack16(sb, it)
+                pack17(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested19(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested19(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1405,92 +1461,95 @@ case class OptNested2packed(
     val pack18 = packNode(attrs(18), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(19, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
-                pack15(it)
-                pack16(it)
-                pack17(it)
-                pack18(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
+                pack15(sb, it)
+                pack16(sb, it)
+                pack17(sb, it)
+                pack18(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested20(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested20(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1513,95 +1572,98 @@ case class OptNested2packed(
     val pack19 = packNode(attrs(19), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
-            pack19(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
+            pack19(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
-            pack19(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
+            pack19(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(20, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
-                pack15(it)
-                pack16(it)
-                pack17(it)
-                pack18(it)
-                pack19(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
+                pack15(sb, it)
+                pack16(sb, it)
+                pack17(sb, it)
+                pack18(sb, it)
+                pack19(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested21(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested21(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1625,98 +1687,101 @@ case class OptNested2packed(
     val pack20 = packNode(attrs(20), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
-            pack19(it)
-            pack20(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
+            pack19(sb, it)
+            pack20(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
-            pack19(it)
-            pack20(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
+            pack19(sb, it)
+            pack20(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(21, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
-                pack15(it)
-                pack16(it)
-                pack17(it)
-                pack18(it)
-                pack19(it)
-                pack20(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
+                pack15(sb, it)
+                pack16(sb, it)
+                pack17(sb, it)
+                pack18(sb, it)
+                pack19(sb, it)
+                pack20(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
-  def packNested22(attrs: List[Node], level: Int, deeper: Boolean): jIterator[_] => Unit = {
+  def packNested22(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -1741,174 +1806,177 @@ case class OptNested2packed(
     val pack21 = packNode(attrs(21), level)
     if (level == 0) {
       if (maxRows == -1)
-        (rows: jIterator[_]) =>
+        (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
-            pack19(it)
-            pack20(it)
-            pack21(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
+            pack19(sb, it)
+            pack20(sb, it)
+            pack21(sb, it)
           }
+          sb
+        }
       else
-        (rows: jIterator[_]) => {
+        (sb: StringBuffer, rows: jIterator[_]) => {
           var i = 0
           while (rows.hasNext && i != maxRows) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
-            pack0(it)
-            pack1(it)
-            pack2(it)
-            pack3(it)
-            pack4(it)
-            pack5(it)
-            pack6(it)
-            pack7(it)
-            pack8(it)
-            pack9(it)
-            pack10(it)
-            pack11(it)
-            pack12(it)
-            pack13(it)
-            pack14(it)
-            pack15(it)
-            pack16(it)
-            pack17(it)
-            pack18(it)
-            pack19(it)
-            pack20(it)
-            pack21(it)
+            pack0(sb, it)
+            pack1(sb, it)
+            pack2(sb, it)
+            pack3(sb, it)
+            pack4(sb, it)
+            pack5(sb, it)
+            pack6(sb, it)
+            pack7(sb, it)
+            pack8(sb, it)
+            pack9(sb, it)
+            pack10(sb, it)
+            pack11(sb, it)
+            pack12(sb, it)
+            pack13(sb, it)
+            pack14(sb, it)
+            pack15(sb, it)
+            pack16(sb, it)
+            pack17(sb, it)
+            pack18(sb, it)
+            pack19(sb, it)
+            pack20(sb, it)
+            pack21(sb, it)
             i += 1
           }
+          sb
         }
     } else {
       val flatValues = extractFlatValues(22, refIndexes(level), tacitIndexes(level), deeper)
-      (vs: jIterator[_]) =>
+      (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" => nil()
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
               while (it.hasNext) {
-                pack0(it)
-                pack1(it)
-                pack2(it)
-                pack3(it)
-                pack4(it)
-                pack5(it)
-                pack6(it)
-                pack7(it)
-                pack8(it)
-                pack9(it)
-                pack10(it)
-                pack11(it)
-                pack12(it)
-                pack13(it)
-                pack14(it)
-                pack15(it)
-                pack16(it)
-                pack17(it)
-                pack18(it)
-                pack19(it)
-                pack20(it)
-                pack21(it)
+                pack0(sb, it)
+                pack1(sb, it)
+                pack2(sb, it)
+                pack3(sb, it)
+                pack4(sb, it)
+                pack5(sb, it)
+                pack6(sb, it)
+                pack7(sb, it)
+                pack8(sb, it)
+                pack9(sb, it)
+                pack10(sb, it)
+                pack11(sb, it)
+                pack12(sb, it)
+                pack13(sb, it)
+                pack14(sb, it)
+                pack15(sb, it)
+                pack16(sb, it)
+                pack17(sb, it)
+                pack18(sb, it)
+                pack19(sb, it)
+                pack20(sb, it)
+                pack21(sb, it)
               }
-              next()
-            } else nil()
+              next(sb)
+            } else nil(sb)
         }
     }
   }
 
 
-  def packRef1(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef1(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
+      pack0(sb, it)
   }
 
-  def packRef2(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef2(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator()
-      pack0(it)
-      pack1(it)
+      pack0(sb, it)
+      pack1(sb, it)
   }
 
-  def packRef3(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef3(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
   }
 
-  def packRef4(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef4(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
   }
 
-  def packRef5(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef5(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
     val pack4 = packNode(attrs(4), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
   }
 
-  def packRef6(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef6(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
     val pack4 = packNode(attrs(4), level)
     val pack5 = packNode(attrs(5), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
   }
 
-  def packRef7(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef7(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -1916,18 +1984,18 @@ case class OptNested2packed(
     val pack4 = packNode(attrs(4), level)
     val pack5 = packNode(attrs(5), level)
     val pack6 = packNode(attrs(6), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
   }
 
-  def packRef8(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef8(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -1936,19 +2004,19 @@ case class OptNested2packed(
     val pack5 = packNode(attrs(5), level)
     val pack6 = packNode(attrs(6), level)
     val pack7 = packNode(attrs(7), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
   }
 
-  def packRef9(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef9(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -1958,20 +2026,20 @@ case class OptNested2packed(
     val pack6 = packNode(attrs(6), level)
     val pack7 = packNode(attrs(7), level)
     val pack8 = packNode(attrs(8), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
   }
 
-  def packRef10(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef10(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -1982,21 +2050,21 @@ case class OptNested2packed(
     val pack7 = packNode(attrs(7), level)
     val pack8 = packNode(attrs(8), level)
     val pack9 = packNode(attrs(9), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
   }
 
-  def packRef11(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef11(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2008,22 +2076,22 @@ case class OptNested2packed(
     val pack8  = packNode(attrs(8), level)
     val pack9  = packNode(attrs(9), level)
     val pack10 = packNode(attrs(10), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
   }
 
-  def packRef12(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef12(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2036,23 +2104,23 @@ case class OptNested2packed(
     val pack9  = packNode(attrs(9), level)
     val pack10 = packNode(attrs(10), level)
     val pack11 = packNode(attrs(11), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
   }
 
-  def packRef13(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef13(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2066,24 +2134,24 @@ case class OptNested2packed(
     val pack10 = packNode(attrs(10), level)
     val pack11 = packNode(attrs(11), level)
     val pack12 = packNode(attrs(12), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
   }
 
-  def packRef14(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef14(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2098,25 +2166,25 @@ case class OptNested2packed(
     val pack11 = packNode(attrs(11), level)
     val pack12 = packNode(attrs(12), level)
     val pack13 = packNode(attrs(13), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
   }
 
-  def packRef15(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef15(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2132,26 +2200,26 @@ case class OptNested2packed(
     val pack12 = packNode(attrs(12), level)
     val pack13 = packNode(attrs(13), level)
     val pack14 = packNode(attrs(14), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
   }
 
-  def packRef16(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef16(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2168,27 +2236,27 @@ case class OptNested2packed(
     val pack13 = packNode(attrs(13), level)
     val pack14 = packNode(attrs(14), level)
     val pack15 = packNode(attrs(15), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
   }
 
-  def packRef17(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef17(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2206,28 +2274,28 @@ case class OptNested2packed(
     val pack14 = packNode(attrs(14), level)
     val pack15 = packNode(attrs(15), level)
     val pack16 = packNode(attrs(16), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
   }
 
-  def packRef18(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef18(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2246,29 +2314,29 @@ case class OptNested2packed(
     val pack15 = packNode(attrs(15), level)
     val pack16 = packNode(attrs(16), level)
     val pack17 = packNode(attrs(17), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
   }
 
-  def packRef19(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef19(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2288,30 +2356,30 @@ case class OptNested2packed(
     val pack16 = packNode(attrs(16), level)
     val pack17 = packNode(attrs(17), level)
     val pack18 = packNode(attrs(18), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
   }
 
-  def packRef20(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef20(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2332,31 +2400,31 @@ case class OptNested2packed(
     val pack17 = packNode(attrs(17), level)
     val pack18 = packNode(attrs(18), level)
     val pack19 = packNode(attrs(19), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
-      pack19(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
+      pack19(sb, it)
   }
 
-  def packRef21(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef21(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2378,32 +2446,32 @@ case class OptNested2packed(
     val pack18 = packNode(attrs(18), level)
     val pack19 = packNode(attrs(19), level)
     val pack20 = packNode(attrs(20), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
-      pack19(it)
-      pack20(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
+      pack19(sb, it)
+      pack20(sb, it)
   }
 
-  def packRef22(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packRef22(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2426,100 +2494,100 @@ case class OptNested2packed(
     val pack19 = packNode(attrs(19), level)
     val pack20 = packNode(attrs(20), level)
     val pack21 = packNode(attrs(21), level)
-    (vs: jIterator[_]) =>
+    (sb: StringBuffer, vs: jIterator[_]) =>
       val it = vs.next.asInstanceOf[jMap[String, Any]].values().iterator
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
-      pack19(it)
-      pack20(it)
-      pack21(it)
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
+      pack19(sb, it)
+      pack20(sb, it)
+      pack21(sb, it)
   }
 
 
-  def packlevelRef1(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef1(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
-    (it: jIterator[_]) =>
-      pack0(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
   }
 
-  def packlevelRef2(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef2(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
   }
 
-  def packlevelRef3(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef3(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
   }
 
-  def packlevelRef4(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef4(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
   }
 
-  def packlevelRef5(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef5(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
     val pack4 = packNode(attrs(4), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
   }
 
-  def packlevelRef6(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef6(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
     val pack4 = packNode(attrs(4), level)
     val pack5 = packNode(attrs(5), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
   }
 
-  def packlevelRef7(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef7(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2527,17 +2595,17 @@ case class OptNested2packed(
     val pack4 = packNode(attrs(4), level)
     val pack5 = packNode(attrs(5), level)
     val pack6 = packNode(attrs(6), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
   }
 
-  def packlevelRef8(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef8(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2546,18 +2614,18 @@ case class OptNested2packed(
     val pack5 = packNode(attrs(5), level)
     val pack6 = packNode(attrs(6), level)
     val pack7 = packNode(attrs(7), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
   }
 
-  def packlevelRef9(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef9(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2567,19 +2635,19 @@ case class OptNested2packed(
     val pack6 = packNode(attrs(6), level)
     val pack7 = packNode(attrs(7), level)
     val pack8 = packNode(attrs(8), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
   }
 
-  def packlevelRef10(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef10(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2590,20 +2658,20 @@ case class OptNested2packed(
     val pack7 = packNode(attrs(7), level)
     val pack8 = packNode(attrs(8), level)
     val pack9 = packNode(attrs(9), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
   }
 
-  def packlevelRef11(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef11(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2615,21 +2683,21 @@ case class OptNested2packed(
     val pack8  = packNode(attrs(8), level)
     val pack9  = packNode(attrs(9), level)
     val pack10 = packNode(attrs(10), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
   }
 
-  def packlevelRef12(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef12(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2642,22 +2710,22 @@ case class OptNested2packed(
     val pack9  = packNode(attrs(9), level)
     val pack10 = packNode(attrs(10), level)
     val pack11 = packNode(attrs(11), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
   }
 
-  def packlevelRef13(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef13(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2671,23 +2739,23 @@ case class OptNested2packed(
     val pack10 = packNode(attrs(10), level)
     val pack11 = packNode(attrs(11), level)
     val pack12 = packNode(attrs(12), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
   }
 
-  def packlevelRef14(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef14(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2702,24 +2770,24 @@ case class OptNested2packed(
     val pack11 = packNode(attrs(11), level)
     val pack12 = packNode(attrs(12), level)
     val pack13 = packNode(attrs(13), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
   }
 
-  def packlevelRef15(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef15(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2735,25 +2803,25 @@ case class OptNested2packed(
     val pack12 = packNode(attrs(12), level)
     val pack13 = packNode(attrs(13), level)
     val pack14 = packNode(attrs(14), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
   }
 
-  def packlevelRef16(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef16(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2770,26 +2838,26 @@ case class OptNested2packed(
     val pack13 = packNode(attrs(13), level)
     val pack14 = packNode(attrs(14), level)
     val pack15 = packNode(attrs(15), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
   }
 
-  def packlevelRef17(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef17(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2807,27 +2875,27 @@ case class OptNested2packed(
     val pack14 = packNode(attrs(14), level)
     val pack15 = packNode(attrs(15), level)
     val pack16 = packNode(attrs(16), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
   }
 
-  def packlevelRef18(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef18(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2846,28 +2914,28 @@ case class OptNested2packed(
     val pack15 = packNode(attrs(15), level)
     val pack16 = packNode(attrs(16), level)
     val pack17 = packNode(attrs(17), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
   }
 
-  def packlevelRef19(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef19(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2887,29 +2955,29 @@ case class OptNested2packed(
     val pack16 = packNode(attrs(16), level)
     val pack17 = packNode(attrs(17), level)
     val pack18 = packNode(attrs(18), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
   }
 
-  def packlevelRef20(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef20(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2930,30 +2998,30 @@ case class OptNested2packed(
     val pack17 = packNode(attrs(17), level)
     val pack18 = packNode(attrs(18), level)
     val pack19 = packNode(attrs(19), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
-      pack19(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
+      pack19(sb, it)
   }
 
-  def packlevelRef21(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef21(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2975,31 +3043,31 @@ case class OptNested2packed(
     val pack18 = packNode(attrs(18), level)
     val pack19 = packNode(attrs(19), level)
     val pack20 = packNode(attrs(20), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
-      pack19(it)
-      pack20(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
+      pack19(sb, it)
+      pack20(sb, it)
   }
 
-  def packlevelRef22(attrs: List[Node], level: Int): jIterator[_] => Unit = {
+  def packlevelRef22(attrs: List[Node], level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -3022,28 +3090,28 @@ case class OptNested2packed(
     val pack19 = packNode(attrs(19), level)
     val pack20 = packNode(attrs(20), level)
     val pack21 = packNode(attrs(21), level)
-    (it: jIterator[_]) =>
-      pack0(it)
-      pack1(it)
-      pack2(it)
-      pack3(it)
-      pack4(it)
-      pack5(it)
-      pack6(it)
-      pack7(it)
-      pack8(it)
-      pack9(it)
-      pack10(it)
-      pack11(it)
-      pack12(it)
-      pack13(it)
-      pack14(it)
-      pack15(it)
-      pack16(it)
-      pack17(it)
-      pack18(it)
-      pack19(it)
-      pack20(it)
-      pack21(it)
+    (sb: StringBuffer, it: jIterator[_]) =>
+      pack0(sb, it)
+      pack1(sb, it)
+      pack2(sb, it)
+      pack3(sb, it)
+      pack4(sb, it)
+      pack5(sb, it)
+      pack6(sb, it)
+      pack7(sb, it)
+      pack8(sb, it)
+      pack9(sb, it)
+      pack10(sb, it)
+      pack11(sb, it)
+      pack12(sb, it)
+      pack13(sb, it)
+      pack14(sb, it)
+      pack15(sb, it)
+      pack16(sb, it)
+      pack17(sb, it)
+      pack18(sb, it)
+      pack19(sb, it)
+      pack20(sb, it)
+      pack21(sb, it)
   }
 }

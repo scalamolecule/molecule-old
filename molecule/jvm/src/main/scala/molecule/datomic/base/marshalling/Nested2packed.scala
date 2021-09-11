@@ -66,6 +66,8 @@ case class Nested2packed(
     case 6 => (e: AnyRef) => e6 = e
   }
 
+  val sb = new StringBuffer()
+
   def getPacked: String = {
     if (!rowCollection.isEmpty) {
       packRows(obj.props)
@@ -73,11 +75,11 @@ case class Nested2packed(
     sb.toString
   }
 
-  def packNode(node: Node, level: Int): jList[_] => Unit = {
+  def packNode(node: Node, level: Int): jList[_] => StringBuffer = {
     node match {
       case Prop(_, _, baseTpe, _, group, _) =>
         colIndex += 1
-        packFlatAttr(group, baseTpe, colIndex)
+        packFlatAttr(sb, group, baseTpe, colIndex)
 
       case Obj(_, _, true, props) =>
         packNested(props, level + 1)
@@ -114,7 +116,7 @@ case class Nested2packed(
     }
   }
 
-  def packNested(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     attrs.size match {
       case 1  => packNested1(attrs, level)
       case 2  => packNested2(attrs, level)
@@ -141,7 +143,7 @@ case class Nested2packed(
     }
   }
 
-  def packRef(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     attrs.size match {
       case 1  => packRef1(attrs, level)
       case 2  => packRef2(attrs, level)
@@ -850,7 +852,7 @@ case class Nested2packed(
     } while (i != last)
   }
 
-  def packNested1(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested1(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val prevLevel = level - 1
     val setCurE   = setCurEid(level)
@@ -863,18 +865,18 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
           setCurE(row.get(level))
           pack0(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested2(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested2(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val prevLevel = level - 1
@@ -889,7 +891,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -897,11 +899,11 @@ case class Nested2packed(
           pack0(row)
           pack1(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested3(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested3(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -918,7 +920,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -927,11 +929,11 @@ case class Nested2packed(
           pack1(row)
           pack2(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested4(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested4(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -950,7 +952,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -960,11 +962,11 @@ case class Nested2packed(
           pack2(row)
           pack3(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested5(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested5(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -985,7 +987,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -996,11 +998,11 @@ case class Nested2packed(
           pack3(row)
           pack4(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested6(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested6(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1023,7 +1025,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1035,11 +1037,11 @@ case class Nested2packed(
           pack4(row)
           pack5(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested7(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested7(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1064,7 +1066,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1077,11 +1079,11 @@ case class Nested2packed(
           pack5(row)
           pack6(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested8(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested8(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1108,7 +1110,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1122,11 +1124,11 @@ case class Nested2packed(
           pack6(row)
           pack7(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested9(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested9(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1155,7 +1157,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1170,11 +1172,11 @@ case class Nested2packed(
           pack7(row)
           pack8(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested10(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested10(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1205,7 +1207,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1221,11 +1223,11 @@ case class Nested2packed(
           pack8(row)
           pack9(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested11(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested11(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1258,7 +1260,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1275,11 +1277,11 @@ case class Nested2packed(
           pack9(row)
           pack10(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested12(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested12(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1314,7 +1316,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1332,11 +1334,11 @@ case class Nested2packed(
           pack10(row)
           pack11(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested13(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested13(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1373,7 +1375,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1392,11 +1394,11 @@ case class Nested2packed(
           pack11(row)
           pack12(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested14(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested14(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1435,7 +1437,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1455,11 +1457,11 @@ case class Nested2packed(
           pack12(row)
           pack13(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested15(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested15(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1500,7 +1502,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1521,11 +1523,11 @@ case class Nested2packed(
           pack13(row)
           pack14(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested16(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested16(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1568,7 +1570,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1590,11 +1592,11 @@ case class Nested2packed(
           pack14(row)
           pack15(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested17(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested17(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1639,7 +1641,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1662,11 +1664,11 @@ case class Nested2packed(
           pack15(row)
           pack16(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested18(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested18(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1713,7 +1715,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1737,11 +1739,11 @@ case class Nested2packed(
           pack16(row)
           pack17(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested19(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested19(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1790,7 +1792,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1815,11 +1817,11 @@ case class Nested2packed(
           pack17(row)
           pack18(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested20(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested20(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1870,7 +1872,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1896,11 +1898,11 @@ case class Nested2packed(
           pack18(row)
           pack19(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested21(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested21(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -1953,7 +1955,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -1980,11 +1982,11 @@ case class Nested2packed(
           pack19(row)
           pack20(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
-  def packNested22(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packNested22(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0     = packNode(attrs.head, level)
     val pack1     = packNode(attrs(1), level)
     val pack2     = packNode(attrs(2), level)
@@ -2039,7 +2041,7 @@ case class Nested2packed(
             row = rows.next
           i += 1
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     } else {
       (_: jList[_]) =>
         do {
@@ -2067,18 +2069,18 @@ case class Nested2packed(
           pack20(row)
           pack21(row)
         } while (i != last && row.get(prevLevel) == prevE())
-        next()
+        next(sb)
     }
   }
 
 
-  def packRef1(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef1(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     (_: jList[_]) =>
       pack0(row)
   }
 
-  def packRef2(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef2(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     (_: jList[_]) =>
@@ -2086,7 +2088,7 @@ case class Nested2packed(
       pack1(row)
   }
 
-  def packRef3(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef3(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2096,7 +2098,7 @@ case class Nested2packed(
       pack2(row)
   }
 
-  def packRef4(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef4(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2108,7 +2110,7 @@ case class Nested2packed(
       pack3(row)
   }
 
-  def packRef5(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef5(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2122,7 +2124,7 @@ case class Nested2packed(
       pack4(row)
   }
 
-  def packRef6(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef6(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2138,7 +2140,7 @@ case class Nested2packed(
       pack5(row)
   }
 
-  def packRef7(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef7(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2156,7 +2158,7 @@ case class Nested2packed(
       pack6(row)
   }
 
-  def packRef8(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef8(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2176,7 +2178,7 @@ case class Nested2packed(
       pack7(row)
   }
 
-  def packRef9(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef9(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2198,7 +2200,7 @@ case class Nested2packed(
       pack8(row)
   }
 
-  def packRef10(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef10(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
@@ -2222,7 +2224,7 @@ case class Nested2packed(
       pack9(row)
   }
 
-  def packRef11(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef11(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2248,7 +2250,7 @@ case class Nested2packed(
       pack10(row)
   }
 
-  def packRef12(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef12(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2276,7 +2278,7 @@ case class Nested2packed(
       pack11(row)
   }
 
-  def packRef13(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef13(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2306,7 +2308,7 @@ case class Nested2packed(
       pack12(row)
   }
 
-  def packRef14(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef14(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2338,7 +2340,7 @@ case class Nested2packed(
       pack13(row)
   }
 
-  def packRef15(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef15(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2372,7 +2374,7 @@ case class Nested2packed(
       pack14(row)
   }
 
-  def packRef16(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef16(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2408,7 +2410,7 @@ case class Nested2packed(
       pack15(row)
   }
 
-  def packRef17(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef17(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2446,7 +2448,7 @@ case class Nested2packed(
       pack16(row)
   }
 
-  def packRef18(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef18(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2486,7 +2488,7 @@ case class Nested2packed(
       pack17(row)
   }
 
-  def packRef19(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef19(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2528,7 +2530,7 @@ case class Nested2packed(
       pack18(row)
   }
 
-  def packRef20(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef20(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2572,7 +2574,7 @@ case class Nested2packed(
       pack19(row)
   }
 
-  def packRef21(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef21(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
@@ -2618,7 +2620,7 @@ case class Nested2packed(
       pack20(row)
   }
 
-  def packRef22(attrs: List[Node], level: Int): jList[_] => Unit = {
+  def packRef22(attrs: List[Node], level: Int): jList[_] => StringBuffer = {
     val pack0  = packNode(attrs.head, level)
     val pack1  = packNode(attrs(1), level)
     val pack2  = packNode(attrs(2), level)
