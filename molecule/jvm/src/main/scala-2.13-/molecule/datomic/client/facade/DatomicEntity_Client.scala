@@ -55,11 +55,11 @@ case class DatomicEntity_Client(
     res
   }
 
-  def keySet: Set[String] = map.keySet
+  final override def keySet: Set[String] = map.keySet
 
-  def keys: List[String] = map.keySet.toList
+  final override def keys: List[String] = map.keySet.toList
 
-  def rawValue(key: String): Any = {
+  final override def rawValue(key: String): Any = {
     key match {
       case r":[^/]+/_.+" =>
         // reverse lookup

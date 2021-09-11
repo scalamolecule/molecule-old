@@ -33,12 +33,8 @@ case class Flat2packed(
 
   def packAttr(node: Node, level: Int): jList[_] => StringBuffer = {
     node match {
-      case Prop(_, _, baseTpe, _, group, _) =>
-        colIndex += 1
-        packFlatAttr(sb, group, baseTpe, colIndex)
-
-      case Obj(_, _, _, props) =>
-        packRef(props, level)
+      case Prop(_, _, baseTpe, _, group, _) => colIndex += 1; packFlatAttr(sb, group, baseTpe, colIndex)
+      case Obj(_, _, _, props)              => packRef(props, level)
     }
   }
 

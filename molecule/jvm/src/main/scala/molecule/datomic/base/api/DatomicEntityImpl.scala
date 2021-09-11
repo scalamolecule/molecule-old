@@ -22,14 +22,14 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
 
   // Get ================================================================
 
-  def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
+  final override def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     conn.q(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]").map(_
       .map(l => (l.head.toString, l(1)))
       .toMap + (":db/id" -> eid)
     )
   }
 
-  def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
+  final override def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     try {
       var buildMap = Map.empty[String, Any]
       conn.db.pull("[*]", eid).map { vs =>
@@ -49,13 +49,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     }
   }
 
-  def keySet(implicit ec: ExecutionContext): Future[Set[String]]
-
-  def keys(implicit ec: ExecutionContext): Future[List[String]]
-
-  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any]
-
-  def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
+  final override def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
     rawValue(key).flatMap { rawV =>
       try {
         rawV match {
@@ -89,7 +83,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
   }
 
 
-  def apply(kw1: String, kw2: String, kws: String*)
+  final override def apply(kw1: String, kw2: String, kws: String*)
            (implicit ec: ExecutionContext): Future[List[Option[Any]]] = {
     Future.sequence((kw1 +: kw2 +: kws.toList) map apply[Any])
   }
@@ -261,7 +255,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
 
   lazy protected val ident = Keyword.intern("db", "ident")
 
-  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
+  final override def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
     l.head match {
       case _: String               => l.asInstanceOf[List[String]].sorted
       case _: Long                 => l.asInstanceOf[List[Long]].sorted

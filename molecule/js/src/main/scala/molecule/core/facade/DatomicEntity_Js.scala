@@ -15,9 +15,6 @@ import scala.util.control.NonFatal
 case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(conn) with DatomicEntity {
   val rpc = conn.rpc
 
-  def ???(i: Int): Nothing = throw MoleculeException(s"Unexpected method call ($i) on JS side in DatomicEntity_Js")
-
-
   private def withEid[T](body: Long => Future[T]): Future[T] = try {
     eidAny match {
       case eidLong: Long => body(eidLong)
@@ -26,21 +23,6 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
-
-  def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???(1)
-
-  def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???(2)
-
-  def keySet(implicit ec: ExecutionContext): Future[Set[String]] = ???(3)
-
-  def keys(implicit ec: ExecutionContext): Future[List[String]] = ???(4)
-
-  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = ???(5)
-
-  def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = ???(6)
-
-  def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] = ???(7)
-
 
   def retract(implicit ec: ExecutionContext): Future[TxReport] = withEid(eid =>
     rpc.transact(conn.connProxy, Stmts2Edn(List(RetractEntity(eid)), conn))
@@ -90,8 +72,6 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
   }
 
 
-
-
   def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] = withEid(eid =>
     rpc.touchMax(conn.connProxy, eid, 5).map(packed2entityMap)
   )
@@ -131,11 +111,4 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
   def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] = withEid(eid =>
     rpc.asList(conn.connProxy, eid, depth, maxDepth).map(packed2entityList)
   )
-
-  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = ???(10)
-//  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = withEid(eid =>
-//    rpc.sortList(conn.connProxy, eid, l).map(list =>
-//      List.empty[Any] // todo...
-//    )
-//  )
 }

@@ -91,23 +91,21 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         val sb   = new StringBuffer()
         var next = false
         if (conn.isJsPlatform) {
-          conn.queryJsJson(
-            _query, _datalog, n,
-            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
-          ).map { packed =>
-            if (packed.isEmpty) {
-              outerJson("")
-            } else {
-              val lines = packed.linesIterator
-              lines.next() // skip first empty line
-              while (lines.hasNext) {
-                if (next) sb.append(",") else next = true
-                packed2json(lines, sb)
+          conn.queryJsJson(_query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
+            .map { packed =>
+              if (packed.isEmpty) {
+                outerJson("")
+              } else {
+                val lines = packed.linesIterator
+                lines.next() // skip first empty line
+                while (lines.hasNext) {
+                  if (next) sb.append(",") else next = true
+                  packed2json(lines, sb)
+                }
+                sb.append("\n    ")
+                outerJson(sb.toString)
               }
-              sb.append("\n    ")
-              outerJson(sb.toString)
             }
-          }
         } else {
           conn.query(_model, _query).map { jColl =>
             val count = jColl.size()

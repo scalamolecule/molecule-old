@@ -56,6 +56,8 @@ trait MoleculeRpc {
 
   //  def pull(pattern: String, eid: Any): Future[]
 
+
+
   def retract(connProxy: ConnProxy, eid: Long) = ???
 
 

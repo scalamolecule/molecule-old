@@ -10,107 +10,21 @@ import scala.util.control.NonFatal
 
 trait DatomicEntity {
 
-  def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]]
+  private[molecule] def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???
 
-  def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]]
+  private[molecule] def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???
 
-  def keySet(implicit ec: ExecutionContext): Future[Set[String]]
+  private[molecule] def keySet(implicit ec: ExecutionContext): Future[Set[String]] = ???
 
-  def keys(implicit ec: ExecutionContext): Future[List[String]]
+  private[molecule] def keys(implicit ec: ExecutionContext): Future[List[String]] = ???
 
-  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any]
+  private[molecule] def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = ???
 
+  private[molecule] def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = ???
 
-  /** Get typed attribute value of entity.
-    * <br><br>
-    * Apply namespaced attribute name with a type parameter to return an optional typed value.
-    * <br><br>
-    * Note how referenced entities are returned as a Map so that we can continue traverse the entity graph.
-    * {{{
-    *   val List(benId, benAddressId) = Person.name.age.Address.street.insert("Ben", 42, "Hollywood Rd").eids
-    *
-    *   // Level 1
-    *   benId[String](":Person/name").map(_ ==> Some("Ben"))
-    *   benId[Int](":Person/age").map(_ ==> Some(42))
-    *
-    *   // Level 2
-    *   val refMap = benId[Map[String, Any]](":Person/address").getOrElse(Map.empty[String, Any])
-    *   benAddressId[String](":Address/street").map(_ ==> Some("Hollywood Rd"))
-    *
-    *   // Non-asserted or non-existing attribute returns None
-    *   benId[Int](":Person/non-existing-attribute").map(_ ==> None)
-    *   benId[Int](":Person/existing-but-non-asserted-attribute").map(_ ==> None)
-    * }}}
-    *
-    * @group entityApi
-    * @param key Attribute: ":ns/attr"
-    * @tparam T Type of attribute
-    * @return Optional typed attribute value
-    */
-  def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]]
+  private[molecule] def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] = ???
 
-
-  /** Get List of two or more unchecked/untyped attribute values of entity.
-    * <br><br>
-    * Apply two or more namespaced attribute names to return a List of unchecked/untyped optional attribute values.
-    * <br><br>
-    * Referenced entities can be cast to an `Option[Map[String, Any]]`.
-    * {{{
-    *   val List(benId, benAddressId) = Person.name.age.Address.street.insert("Ben", 42, "Hollywood Rd").eids
-    *
-    *   // Type ascription is still unchecked since it is eliminated by erasure
-    *   val List(
-    *     optName: Option[String],
-    *     optAge: Option[Int],
-    *     optAddress: Option[Map[String, Any]]
-    *   ) = benId(
-    *     ":Person/name",
-    *     ":Person/age",
-    *     ":Person/address"
-    *   )
-    *
-    *   val name: String = optName.getOrElse("no name")
-    *
-    *   // Type casting necessary to get right value type from Map[String, Any]
-    *   val address: Map[String, Any] = optAddress.getOrElse(Map.empty[String, Any])
-    *   val street: String = address.getOrElse(":Address/street", "no street").asInstanceOf[String]
-    *
-    *   name === "Ben"
-    *   street === "Hollywood Rd"
-    * }}}
-    * Typed apply is likely more convenient if typed values are required.
-    *
-    * @group entityApi
-    * @param kw1 First namespaced attribute name: ":[namespace with lowercase first letter]/[attribute name]"
-    * @param kw2 Second namespaced attribute name
-    * @param kws Further namespaced attribute names
-    * @return List of optional unchecked/untyped attribute values
-    */
-  def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]]
-
-
-//  /** Retract single entity using entity id.
-//    * <br><br>
-//    * Given the implicit conversion of Long's in molecule.datomic.base.api.EntityOps to an [[molecule.datomic.base.api.DatomicEntity Entity]] we can
-//    * can call `retract` on an entity id directly:
-//    * {{{
-//    *   // Get entity id of Ben
-//    *   val benId = Person.e.name_("Ben").get.head
-//    *
-//    *   // Retract Ben entity
-//    *   benId.retract
-//    * }}}
-//    *
-//    * To retract single entity id with tx meta data, use<br>
-//    * `eid.Tx(MyMetaData.action("my meta data")).retract`
-//    * <br><br>
-//    * To retract multiple entities (with or without tx meta data), use<br>
-//    * `retract(eids, txMetaDataMolecules*)` in molecule.datomic.base.api.EntityOps.
-//    *
-//    * @group retract
-//    * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
-//    */
-////  def retract: TxReport
+  private[molecule] def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = ???
 
   /** Asynchronously retract single entity using entity id.
     * <br><br>
@@ -174,32 +88,7 @@ trait DatomicEntity {
     */
   def inspectRetract(implicit ec: ExecutionContext): Future[Unit]
 
-  /** Entity retraction transaction meta data constructor.
-    * <br><br>
-    * Build on from entity with `Tx` and apply a transaction meta data molecule to
-    * save transaction meta data with retraction of the entity.
-    * {{{
-    *   val benId = Person.name("Ben").Tx(MyMetaData.action("add member")).save.eid
-    *
-    *   // Retract entity with tx meta data
-    *   benId.Tx(MyMetaData.action("moved away")).retract
-    *
-    *   // Query for Ben's history and why he was retracted
-    *   Person(benId).name.t.op.Tx(MyMetaData.action).getHistory.map(_ ==> List(
-    *     ("Ben", 1028, true, "add member"), // Ben added as member
-    *     ("Ben", 1030, false, "moved away") // Ben retracted since he moved away
-    *   )
-    * }}}
-    *
-    * @group tx
-    * @param metaMolecule Transaction meta data molecule
-    * @return [[RetractMolecule RetractMolecule]] - a simple wrapper for adding retraction tx meta data
-    */
-//  def Tx(txMeta: Molecule)(implicit ec: ExecutionContext): Future[RetractMolecule]
-
-
   def inspectRetract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[Unit]
-
 
   /** Get entity graph as Map.
     * <br><br>
@@ -452,5 +341,4 @@ trait DatomicEntity {
 
   def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]]
 
-  def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]]
 }

@@ -173,6 +173,7 @@ object CompositeArities extends AsyncTestSuite {
       } yield ()
     }
 
+
     "2 + 3 (2+1tx)" - core { implicit conn =>
       for {
         // Composite of Molecule2 + Molecule1 + Tx meta data
@@ -192,23 +193,6 @@ object CompositeArities extends AsyncTestSuite {
           ":Ref2/str2" -> "a"
         ))
 
-//      List(
-//      (:db/id,Future(Success(17592186045453))),
-//      (:Ref1/int1,Future(Success(11))),
-//      (:Ref1/str1,Future(<not completed>)),
-//      (:Ref2/int2,Future(<not completed>)),
-//      (:Ref2/str2,Future(<not completed>))) !=
-//
-//      List(
-//      (:db/id,17592186045453),
-//      (:Ref1/int1,11),
-//      (:Ref1/str1,aa),
-//      (:Ref2/int2,1),
-//      (:Ref2/str2,a))
-
-
-
-
         _ <- e2.touchList.map(_ ==> List(
           ":db/id" -> e2,
           ":Ref1/int1" -> 22,
@@ -216,11 +200,10 @@ object CompositeArities extends AsyncTestSuite {
           ":Ref2/int2" -> 2,
           ":Ref2/str2" -> "b"
         ))
-        txInstant <- txId[Date](":db/txInstant").map(_.get)
         _ <- txId.touchList.map(_ ==> List(
           ":db/id" -> txId,
-          ":db/txInstant" -> txInstant,
-          ":Ns/str" -> "Tx meta data",
+          ":db/txInstant" -> tx.inst,
+          ":Ns/str" -> "Tx meta data"
         ))
 
         // Queries via one namespace

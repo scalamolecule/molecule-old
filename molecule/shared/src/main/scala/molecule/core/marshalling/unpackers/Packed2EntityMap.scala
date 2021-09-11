@@ -120,18 +120,26 @@ class Packed2EntityMap(conn: Conn) extends DateHandling {
     vs: Iterator[String],
     unpackCol: (String, Iterator[String]) => (String, Col)
   ): (String, Any) = {
-    val attr = v0 match {
+    val attr  = v0 match {
       case "►" => vs.next()
       case v   => v
     }
-    println("ATTR: " + attr)
+    //    println("ATTR: " + attr)
     val v     = vs.next()
     val value = attr match {
-      case ":db/id" => unpackOneLong(v)
-      case attr     =>
+      case ":db/id"        => unpackOneLong(v)
+      case "e"             => unpackOneLong(v)
+      case "a"             => unpackOneString(v, vs)
+      case "v"             => unpackOneString(v, vs)
+      case ":db/t"         => unpackOneLong(v)
+      case ":db/tx"        => unpackOneLong(v)
+      case ":db/txInstant" => unpackOneDate(v)
+      case "op"            => unpackOneBoolean(v)
+
+      case attr =>
         attrs(attr) match {
           case (1, tpe) => tpe match {
-            case "String" | "enum" => unpackOneString(v, vs) //._2
+            case "String" | "enum" => unpackOneString(v, vs)
             case "ref"             => unpackOneRef(v, vs, unpackCol)
             case "Int"             => unpackOneInt(v)
             case "Long"            => unpackOneLong(v)
@@ -162,7 +170,7 @@ class Packed2EntityMap(conn: Conn) extends DateHandling {
           case _ => unpackManyString(v, vs)
         }
     }
-    println(s"PAIR: $attr -> $value")
+    //    println(s"PAIR: $attr -> $value")
     attr -> value
   }
 
@@ -189,13 +197,13 @@ class Packed2EntityMap(conn: Conn) extends DateHandling {
     }
 
   def packed2entityList(packed: String): List[(String, Any)] = {
-    println(packed + "\n-----------------------------")
+    //    println(packed + "\n-----------------------------")
     val vs = packed.linesIterator
     unpackList[List[(String, Any)]](vs.next(), vs)._2
   }
 
   def packed2entityMap(packed: String): Map[String, Any] = {
-    println(packed + "\n-----------------------------")
+    //    println(packed + "\n-----------------------------")
     val vs = packed.linesIterator
     unpackMap[Map[String, Any]](vs.next(), vs)._2
   }

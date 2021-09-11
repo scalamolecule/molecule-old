@@ -23,11 +23,11 @@ case class DatomicEntity_Client(
   showKW: Boolean = true
 ) extends DatomicEntityImpl(conn, eid) with RegexMatching {
 
-  def keySet(implicit ec: ExecutionContext): Future[Set[String]] = entityMap.map(_.keySet)
+  final override def keySet(implicit ec: ExecutionContext): Future[Set[String]] = entityMap.map(_.keySet)
 
-  def keys(implicit ec: ExecutionContext): Future[List[String]] = entityMap.map(_.keySet.toList)
+  final override def keys(implicit ec: ExecutionContext): Future[List[String]] = entityMap.map(_.keySet.toList)
 
-  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = {
+  final override def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = {
     key match {
       case r":[^/]+/_.+" =>
         conn.db.pull(s"[$key]", eid).map(raw =>
