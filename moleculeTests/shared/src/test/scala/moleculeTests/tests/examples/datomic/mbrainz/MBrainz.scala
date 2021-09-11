@@ -3,7 +3,7 @@ package moleculeTests.tests.examples.datomic.mbrainz
 import molecule.datomic.api.in1_out4._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
+import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

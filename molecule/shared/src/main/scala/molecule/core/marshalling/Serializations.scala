@@ -4,6 +4,8 @@ import java.net.URI
 import java.nio.ByteBuffer
 import boopickle.Default._
 import chameleon._
+import molecule.core.api.exception.EntityException
+import molecule.core.exceptions._
 import scala.util.{Failure, Success, Try}
 
 
@@ -14,6 +16,12 @@ trait Serializations {
   implicit val uriPickler  = transformPickler((t: String) => new URI(t))(_.toString)
 
   implicit val exPickler = exceptionPickler
+
+  exPickler
+    .addConcreteType[MoleculeException]
+    .addConcreteType[MoleculeCompileException]
+  //    .addConcreteType[QueryException] // Can't add this since we can't unpickle `Element`s
+    .addConcreteType[EntityException]
 
   // Copying this method so that we can avoid `import chameleon.ext.boopickle._`
   // in all custom SlothControllers and WebClients

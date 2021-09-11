@@ -34,13 +34,13 @@ trait PackBase {
   }
 
   def next(): Unit = {
-    // End of string/multi-value
+    // End of multi-value
     sb.append("\n►")
     ()
   }
 
   def nil(): Unit = {
-    // Empty sub data
+    // Empty/end of sub data
     sb.append("\n◄◄")
     ()
   }

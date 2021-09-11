@@ -4,7 +4,7 @@ import molecule.datomic.api.in1_out2._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

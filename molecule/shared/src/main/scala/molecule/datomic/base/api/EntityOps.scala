@@ -48,7 +48,7 @@ trait EntityOps {
     lazy private val de: Future[DatomicEntity] = conn.map(_.entity(id))
 
     def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] =
-      de.flatMap(_[T](key))
+      de.flatMap(_.apply[T](key))
 
     def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] =
       de.flatMap(_(kw1, kw2, kws: _*))

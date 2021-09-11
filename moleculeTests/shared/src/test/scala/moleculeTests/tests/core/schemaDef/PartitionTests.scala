@@ -2,7 +2,7 @@ package moleculeTests.tests.core.schemaDef
 
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.schemaDef.dsl.PartitionTest._
+import moleculeTests.dataModels.core.schemaDef.dsl.PartitionTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.reflectiveCalls

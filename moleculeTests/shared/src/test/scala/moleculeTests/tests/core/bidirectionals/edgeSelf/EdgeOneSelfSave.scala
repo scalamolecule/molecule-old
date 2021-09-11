@@ -3,7 +3,7 @@ package moleculeTests.tests.core.bidirectionals.edgeSelf
 import molecule.datomic.api.out3._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

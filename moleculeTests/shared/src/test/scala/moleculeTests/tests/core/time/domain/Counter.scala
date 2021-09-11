@@ -2,7 +2,7 @@ package moleculeTests.tests.core.time.domain
 
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

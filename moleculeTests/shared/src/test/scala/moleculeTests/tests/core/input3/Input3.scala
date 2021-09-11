@@ -3,7 +3,7 @@
 //import java.net.URI
 //import molecule.core.api._
 //import molecule.core.api.exception.Molecule_3_Exception
-//import moleculeTests.tests.core.base.dsl.CoreTest._
+//import moleculeTests.dataModels.core.base.dsl.CoreTest._
 //import molecule.datomic.api.in3_out4._
 //import moleculeTests.setup.AsyncTestSuite
 //import utest._

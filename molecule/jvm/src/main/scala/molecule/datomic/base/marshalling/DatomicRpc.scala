@@ -11,7 +11,9 @@ import molecule.core.marshalling._
 import molecule.core.marshalling.nodes.Obj
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
+import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
+import molecule.datomic.base.marshalling.packers.PackEntityMap
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
@@ -21,7 +23,10 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 object DatomicRpc extends MoleculeRpc
-  with DateHandling with DateStrLocal with Helpers with ClojureBridge with Serializations {
+  with DateHandling with DateStrLocal
+  with Helpers with ClojureBridge
+  with PackEntityMap
+  with Serializations {
 
   // Necessary for `readString` to encode uri in transactions
   require("clojure.core.async")
@@ -61,9 +66,9 @@ object DatomicRpc extends MoleculeRpc
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]]
   ): Future[String] = try {
-    val log    = new log
-    val t      = TimerPrint("DatomicRpc")
-    val inputs = unmarshallInputs(l ++ ll ++ lll)
+    val log       = new log
+    val t         = TimerPrint("DatomicRpc")
+    val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
     for {
       conn <- getConn(connProxy)
@@ -78,7 +83,7 @@ object DatomicRpc extends MoleculeRpc
 
       log("###### DatomicRpc #########################################")
       log(datalogQuery + space + timeRight)
-      if(allInputs.nonEmpty) log(allInputs.mkString("Inputs:\n", "\n", ""))
+      if (allInputs.nonEmpty) log(allInputs.mkString("Inputs:\n", "\n", ""))
       //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
@@ -117,7 +122,6 @@ object DatomicRpc extends MoleculeRpc
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
-
 
   def getAttrValues(
     connProxy: ConnProxy,
@@ -186,64 +190,85 @@ object DatomicRpc extends MoleculeRpc
   }
 
 
+  def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.touchMax(maxDepth)).map(entityMap2packed2)
+  }
+
+  def touchQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.touchQuotedMax(maxDepth))
+  }
+
+  def touchListMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.touchListMax(maxDepth)).map(entityList2packed2)
+  }
+
+  def touchListQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.touchListQuotedMax(maxDepth))
+  }
+
+  def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.asMap(depth, maxDepth)).map(entityMap2packed2)
+  }
+
+  def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.asList(depth, maxDepth)).map(entityList2packed2)
+  }
+
+  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = ???
+  //  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = {
+  ////    getDatomicEntity(connProxy, eid).flatMap(_.sortList(l)).map(list =>
+  ////    )
+  //      "" // todo...
+  //  }
+
+
   // Cached Conn ---------------------------------------------
 
   private val connCache = mutable.Map.empty[String, Future[Conn]]
 
+  private def getFreshConn(connProxy: ConnProxy): Future[Conn] = {
+    connProxy match {
+      case DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
+        //            println("==============================================")
+        Datomic_Peer.recreateDbFromEdn(schemaPeer)
+
+      case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _) =>
+        if (datomicProtocol != protocol) {
+          throw new RuntimeException(
+            s"\nProject is built with datomic `$datomicProtocol` protocol and " +
+              s"cannot serve supplied `$protocol` protocol. " +
+              s"\nPlease change the build setup or your Conn_Js protocol"
+          )
+        }
+        protocol match {
+          case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier)
+          case "mem"          => throw new IllegalArgumentException(
+            "Please connect with `DatomicInMemProxy` to get an in-memory db.")
+        }
+
+      case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _) =>
+        Datomic_DevLocal(system, storageDir).connect(dbName)
+
+      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _) =>
+        Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
+    }
+  }
+
   private def getConn(
     connProxy: ConnProxy
   ): Future[Conn] = {
-    var msg     = s"--- " + connProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
-    val futConn = connCache.getOrElse(
-      connProxy.uuid,
-      {
-        msg = s"============= Conn CACHING ============= " + connProxy.uuid.take(5) + "  " + connCache.keySet.map(_.take(5))
-        connProxy match {
-          case DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
-            //            println("==============================================")
-            Datomic_Peer.recreateDbFromEdn(schemaPeer)
-
-          case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _) =>
-            if (datomicProtocol != protocol) {
-              throw new RuntimeException(
-                s"\nProject is built with datomic `$datomicProtocol` protocol and " +
-                  s"cannot serve supplied `$protocol` protocol. " +
-                  s"\nPlease change the build setup or your Conn_Js protocol"
-              )
-            }
-            protocol match {
-              case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier)
-              case "mem"          => throw new IllegalArgumentException(
-                "Please connect with `DatomicInMemProxy` to get an in-memory db.")
-            }
-
-          case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _) =>
-            Datomic_DevLocal(system, storageDir).connect(dbName)
-
-          case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _) =>
-            Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
-        }
-      }
-    )
-
+    val futConn = connCache.getOrElse(connProxy.uuid, getFreshConn(connProxy))
     val futConnTimeAdjusted = futConn.map { conn =>
       conn.updateAdhocDbView(connProxy.adhocDbView)
       conn.updateTestDbView(connProxy.testDbView, connProxy.testDbStatus)
       conn
     }
     connCache(connProxy.uuid) = futConnTimeAdjusted
-
-    //    val c = Await.result(futConnTimeAdjusted, 10.seconds)
-    //    println("----- " + c.asInstanceOf[Conn_Peer].peerConn.db)
-    //    println("----- " + connProxy.testDbStatus + "  " + connProxy.testDbView + "  " + c.asInstanceOf[Conn_Peer].peerConn.db)
-    //    println("----- " + c.connProxy.testDbStatus + "  " + c.connProxy.testDbView + "   " + c.asInstanceOf[Conn_Peer].peerConn.db)
-    //    msg = msg + "\n" + c._adhocDbView
-    //    msg = msg + "\n" + c._adhocDbView
-    //    msg = msg + "  " + c.asInstanceOf[Conn_Peer].peerConn.db
-    //    println(msg)
-    //    println("----- " + c._adhocDbView)
-    //    println("----- ")
     futConnTimeAdjusted
+  }
+
+  private def getDatomicEntity(connProxy: ConnProxy, eid: Any): Future[DatomicEntity] = {
+    getConn(connProxy).map(conn => conn.db.entity(conn, eid))
   }
 
 

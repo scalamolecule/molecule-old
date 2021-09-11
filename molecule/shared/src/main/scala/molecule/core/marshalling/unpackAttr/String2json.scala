@@ -30,19 +30,19 @@ trait String2json extends JsonBase with Helpers {
   protected lazy val unpack2jsonOneString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) =>
     quotedPair(sb, field, unpack2jsonOneString_(v, vs))
 
-  protected lazy val unpack2jsonOne         = (sb: StringBuffer, field: String, v: String) => pair(sb, field, v)
-  protected lazy val unpack2jsonOneDate     = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, truncateDateStr(v))
-  protected lazy val unpack2jsonOneQuoted   = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, v)
-  protected lazy val unpack2jsonOneAny      = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) => v match {
+  protected lazy val unpack2jsonOne       = (sb: StringBuffer, field: String, v: String) => pair(sb, field, v)
+  protected lazy val unpack2jsonOneDate   = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, truncateDateStr(v))
+  protected lazy val unpack2jsonOneQuoted = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, v)
+  protected lazy val unpack2jsonOneAny    = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) => v match {
     case "String"     => unpack2jsonOneString(sb, field, v, vs)
-    case "Integer"    => pair(sb, field, v)
+    case "Int"    => pair(sb, field, v)
     case "Long"       => pair(sb, field, v)
     case "Double"     => pair(sb, field, v)
     case "Boolean"    => pair(sb, field, v)
     case "Date"       => quotedPair(sb, field, v)
     case "UUID"       => quotedPair(sb, field, v)
     case "URI"        => quotedPair(sb, field, v)
-    case "BigInteger" => pair(sb, field, v)
+    case "BigInt"     => pair(sb, field, v)
     case "BigDecimal" => pair(sb, field, v)
   }
 

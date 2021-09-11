@@ -4,8 +4,8 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import molecule.datomic.api.out10._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
-import moleculeTests.tests.core.ref.dsl.SelfJoin._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.ref.dsl.SelfJoin._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

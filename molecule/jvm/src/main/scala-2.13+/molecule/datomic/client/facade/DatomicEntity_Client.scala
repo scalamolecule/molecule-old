@@ -84,8 +84,8 @@ case class DatomicEntity_Client(
       case u: UUID                  => Future(u)
       case u: java.net.URI          => Future(u)
       case u: URIImpl               => Future(new URI(u.toString))
-      case bi: java.math.BigInteger => Future(BigInt(bi))
       case bi: clojure.lang.BigInt  => Future(BigInt(bi.toString))
+      case bi: java.math.BigInteger => Future(BigInt(bi))
       case bd: java.math.BigDecimal => Future(BigDecimal(bd))
       case bytes: Array[Byte]       => Future(bytes)
 

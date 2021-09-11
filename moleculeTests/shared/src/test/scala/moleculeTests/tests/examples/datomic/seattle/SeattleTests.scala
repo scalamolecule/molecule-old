@@ -5,7 +5,7 @@ import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.setup.examples.seattle.SeattleData
-import moleculeTests.tests.examples.datomic.seattle.dsl.Seattle._
+import moleculeTests.dataModels.examples.datomic.seattle.dsl.Seattle._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

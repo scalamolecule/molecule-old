@@ -3,7 +3,7 @@ package moleculeTests
 import java.util
 import molecule.datomic.api.in3_out11._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.{Collections, Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
@@ -17,15 +17,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
-import moleculeTests.tests.core.base.schema.CoreTestSchema
+import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
 import molecule.core.marshalling.nodes._
 import molecule.core.marshalling.unpackAttr.String2cast
+import molecule.core.marshalling.unpackers.{Packed2EntityMap, Packed2EntityMap}
+import molecule.datomic.base.marshalling.packers.{PackEntityMap, PackEntityMap}
 import scala.jdk.CollectionConverters._
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
-  with String2cast with CastTypes with CastOptNested with JsonBase {
+  with String2cast with CastTypes with CastOptNested with JsonBase
+  with PackEntityMap {
 
 
   lazy val tests = Tests {
@@ -35,8 +38,8 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
-        _ <- Ns.int(1).save
-        _ <- m(Ns.int(?))(1).get.map(_ ==> List(1))
+
+
 
 
         //        obj = Obj("", "Ns", false, List(
@@ -474,7 +477,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
     }
 
     //    "adhoc" - products { implicit conn =>
-    //      import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
+    //      import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
     //
     //      for {
     //
@@ -483,7 +486,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
 
 
     //    "mbrainz" - mbrainz { implicit conn =>
-    //      import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
+    //      import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._
     //      val ledZeppelinUUID = UUID.fromString("678d88b2-87b0-403b-b63d-5da7465aecc3")
     //
     //      for {

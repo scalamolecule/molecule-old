@@ -24,7 +24,7 @@ case class DatomicDb_Js(rpc: MoleculeRpc, connProxy: ConnProxy) extends DatomicD
   }
 
   def entity(conn: Conn, eid: Any): DatomicEntity = {
-    DatomicEntity_Js(conn, connProxy, eid)
+    DatomicEntity_Js(conn, eid)
   }
 
   def pull(pattern: String, eid: Any)(implicit ec: ExecutionContext): Future[util.Map[_, _]] = ???

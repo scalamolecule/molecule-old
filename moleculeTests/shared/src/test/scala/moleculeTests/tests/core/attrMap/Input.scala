@@ -1,7 +1,7 @@
 package moleculeTests.tests.core.attrMap
 
 import molecule.datomic.api.in1_out2._
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

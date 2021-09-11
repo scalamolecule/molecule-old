@@ -2,7 +2,7 @@ package moleculeTests.tests.core.expression
 
 import java.net.URI
 import molecule.datomic.api.out2._
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

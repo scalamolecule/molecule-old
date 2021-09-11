@@ -2,7 +2,7 @@ package moleculeTests.restore
 
 import molecule.datomic.api.out1._
 import molecule.datomic.peer.facade.Datomic_Peer
-import moleculeTests.tests.examples.datomic.mbrainz.schema.MBrainzSchemaLowerToUpper
+import moleculeTests.dataModels.examples.datomic.mbrainz.schema.MBrainzSchemaLowerToUpper
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

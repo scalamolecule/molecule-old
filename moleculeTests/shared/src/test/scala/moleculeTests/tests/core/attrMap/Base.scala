@@ -5,7 +5,7 @@ import java.util.{Date, UUID}
 import molecule.datomic.api.out2._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Base extends AsyncTestSuite {

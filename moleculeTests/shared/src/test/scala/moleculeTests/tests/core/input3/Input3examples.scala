@@ -3,7 +3,7 @@ package moleculeTests.tests.core.input3
 import molecule.core.api.exception.Molecule_3_Exception
 import molecule.datomic.api.in3_out4._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

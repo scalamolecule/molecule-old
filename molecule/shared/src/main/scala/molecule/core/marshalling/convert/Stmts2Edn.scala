@@ -89,15 +89,14 @@ object Stmts2Edn extends Helpers {
         }
 
         case _ => (attrMap(attr)._2, v) match {
-          case ("String", Enum(prefix, enum))          => buf.append(prefix + enum)
+          case ("enum", Enum(prefix, enum))            => buf.append(prefix + enum)
           case ("String", _)                           => quote(s)
           case ("Long" | "ref", TempId(part, i))       => buf.append(s"#db/id[$part $i]")
           case ("Int" | "Long" | "ref" | "Boolean", _) => buf.append(s)
           case ("Double", _)                           => buf.append(s + (if (s.contains('.')) "" else ".0"))
           case ("Date", d: Date)                       => buf.append("#inst \"" + date2datomicStr(d) + "\"")
           case ("UUID", _)                             => buf.append("#uuid \"" + v + "\"")
-          case ("URI", _)                              => uriAttrs = uriAttrs + attr;
-            buf.append(s)
+          case ("URI", _)                              => uriAttrs = uriAttrs + attr; buf.append(s)
           case ("BigInt", _)                           => buf.append(s + "N")
           case ("BigDecimal", _)                       => buf.append(s + (if (s.contains('.')) "M" else ".0M"))
           case (tpe, _)                                => throw new IllegalArgumentException(

@@ -7,7 +7,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 
 
-/** Datomic Entity facade for peer api.
+/** Datomic Entity facade for the Datomic Peer api.
   *
   * @param datomicEntity
   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
@@ -42,6 +42,7 @@ case class DatomicEntity_Peer(
       case d: Date                  => Future(d)
       case u: UUID                  => Future(u)
       case u: java.net.URI          => Future(u)
+      case bi: clojure.lang.BigInt  => Future(BigInt(bi.toString))
       case bi: java.math.BigInteger => Future(BigInt(bi))
       case bd: java.math.BigDecimal => Future(BigDecimal(bd))
       case bytes: Array[Byte]       => Future(bytes)

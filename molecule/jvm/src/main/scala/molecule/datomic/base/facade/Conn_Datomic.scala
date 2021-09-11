@@ -120,12 +120,12 @@ trait Conn_Datomic extends Conn {
   }
 
   def inspect(
-    clazz: String,
+    header: String,
     threshold: Int,
     max: Int = 9999,
     showStackTrace: Boolean = false,
     maxLevel: Int = 99,
     showBi: Boolean = false
   )(id: Int, params: Any*): Unit =
-    Inspect(clazz, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
+    Inspect(header, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }

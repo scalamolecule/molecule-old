@@ -5,7 +5,7 @@ import molecule.datomic.api.out8._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer}
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.examples.datomic.mbrainz.dsl.MBrainz._
+import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

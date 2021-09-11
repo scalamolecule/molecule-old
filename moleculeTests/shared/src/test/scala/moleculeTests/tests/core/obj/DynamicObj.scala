@@ -7,8 +7,8 @@
 //import moleculeTests.setup.AsyncTestSuite
 //import utest._
 //import scala.concurrent.ExecutionContext.Implicits.global
-//import moleculeTests.tests.core.base.dsl.CoreTest._
-//import moleculeTests.tests.core.ref.dsl.SelfJoin._
+//import moleculeTests.dataModels.core.base.dsl.CoreTest._
+//import moleculeTests.dataModels.core.ref.dsl.SelfJoin._
 //
 //
 ///**

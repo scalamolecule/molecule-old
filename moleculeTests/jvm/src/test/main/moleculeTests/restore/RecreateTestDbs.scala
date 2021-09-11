@@ -3,13 +3,13 @@ package moleculeTests.restore
 import molecule.core.util.testing.TxCount.schema.TxCountSchema
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
-import moleculeTests.tests.core.base.schema.CoreTestSchema
-import moleculeTests.tests.core.bidirectionals.schema.BidirectionalSchema
-import moleculeTests.tests.core.ref.schema.NestedSchema
-import moleculeTests.tests.core.schemaDef.schema.PartitionTestSchema
-import moleculeTests.tests.examples.datomic.dayOfDatomic.schema._
-import moleculeTests.tests.examples.datomic.seattle.schema.SeattleSchema
-import moleculeTests.tests.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
+import moleculeTests.dataModels.core.base.schema.CoreTestSchema
+import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
+import moleculeTests.dataModels.core.ref.schema.NestedSchema
+import moleculeTests.dataModels.core.schemaDef.schema.PartitionTestSchema
+import moleculeTests.dataModels.examples.datomic.dayOfDatomic.schema._
+import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
+import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 

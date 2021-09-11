@@ -12,15 +12,15 @@ trait SettingsMolecule {
     // Generate Molecule boilerplate code with `sbt clean compile -Dmolecule=true`
     moleculePluginActive := sys.props.get("molecule").contains("true"),
     moleculeDataModelPaths := Seq(
-      "moleculeTests/tests/core/base",
-      "moleculeTests/tests/core/bidirectionals",
-      "moleculeTests/tests/core/ref",
-      "moleculeTests/tests/core/schemaDef",
+      "moleculeTests/dataModels/core/base",
+      "moleculeTests/dataModels/core/bidirectionals",
+      "moleculeTests/dataModels/core/ref",
+      "moleculeTests/dataModels/core/schemaDef",
 
-      "moleculeTests/tests/examples/datomic/dayOfDatomic",
-      "moleculeTests/tests/examples/datomic/mbrainz",
-      "moleculeTests/tests/examples/datomic/seattle",
-      "moleculeTests/tests/examples/gremlin/gettingStarted"
+      "moleculeTests/dataModels/examples/datomic/dayOfDatomic",
+      "moleculeTests/dataModels/examples/datomic/mbrainz",
+      "moleculeTests/dataModels/examples/datomic/seattle",
+      "moleculeTests/dataModels/examples/gremlin/gettingStarted"
 
       //      "molecule/tests/core/generic"
     ),

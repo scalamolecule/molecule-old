@@ -23,15 +23,15 @@ trait PackFlatTypes extends PackBase with Helpers {
   protected lazy val packOneAny = (colIndex: Int) => (row: jList[_]) => {
     val prefixed = row.get(colIndex) match {
       case s: java.lang.String      => "String    " + s
-      case i: java.lang.Integer     => "Integer   " + i.toString
+      case i: java.lang.Integer     => "Int       " + i.toString
       case l: java.lang.Long        => "Long      " + l.toString
       case d: java.lang.Double      => "Double    " + d.toString
       case b: java.lang.Boolean     => "Boolean   " + b.toString
       case d: Date                  => "Date      " + date2strLocal(d)
       case u: UUID                  => "UUID      " + u.toString
       case u: java.net.URI          => "URI       " + u.toString
-      case bi: java.math.BigInteger => "BigInteger" + bi.toString
-      case bi: clojure.lang.BigInt  => "BigInteger" + bi.toString
+      case bi: java.math.BigInteger => "BigInt    " + bi.toString
+      case bi: clojure.lang.BigInt  => "BigInt    " + bi.toString
       case bd: java.math.BigDecimal => "BigDecimal" + bd.toString
       case other                    =>
         throw MoleculeException(s"Unexpected generic `v` $other of type " + other.getClass)

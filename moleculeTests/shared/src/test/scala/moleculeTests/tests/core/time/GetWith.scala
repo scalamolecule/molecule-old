@@ -3,7 +3,7 @@ package moleculeTests.tests.core.time
 import molecule.datomic.api.out3._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}

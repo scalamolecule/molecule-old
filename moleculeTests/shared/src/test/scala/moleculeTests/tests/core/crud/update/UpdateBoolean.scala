@@ -3,7 +3,7 @@ package moleculeTests.tests.core.crud.update
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out1._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

@@ -25,8 +25,8 @@
 //import molecule.datomic.base.marshalling.DatomicRpc.{getCachedQueryExecutor, qTime, unmarshallInputs}
 //import molecule.datomic.peer.facade.Datomic_Peer._
 //import moleculeTests.setup.core.CoreData
-//import moleculeTests.tests.core.base.dsl.CoreTest._
-//import moleculeTests.tests.core.base.schema.CoreTestSchema
+//import moleculeTests.dataModels.core.base.dsl.CoreTest._
+//import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 //import org.specs2.concurrent.ExecutionEnv
 //import org.specs2.mutable.Specification
 //import scala.concurrent.{ExecutionContext, Promise}
@@ -113,7 +113,7 @@
 //  //
 //  //  "Simple hyperedge" in new GraphSetup {
 //  //
-//  //    import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Graph._
+//  //    import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.Graph._
 //  //
 //  //    // User 1 Roles in Group 2
 //  //    User.name_("User1")
@@ -125,13 +125,13 @@
 //  //  }
 //  //
 //  //      "adhoc" in new BidirectionalSetup {
-//  //        import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+//  //        import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
 //  //
 //  //      }
 //  //
 //  //
 //  //    "self-join" >> {
-//  //      import moleculeTests.tests.core.ref.dsl.SelfJoin._
+//  //      import moleculeTests.dataModels.core.ref.dsl.SelfJoin._
 //  //      implicit val conn: Conn = Datomic_Peer.recreateDbFrom(SelfJoinSchema)
 //  //
 //  //
@@ -141,7 +141,7 @@
 //  //    }
 //  //
 //  //  "bidirectional" >> {
-//  //    import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+//  //    import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
 //  //    implicit val conn: Conn = recreateDbFrom(BidirectionalSchema)
 //  //
 //  //
@@ -149,7 +149,7 @@
 //  //  }
 //  //
 //  //  "socialNews" >> {
-//  //    import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
+//  //    import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.SocialNews._
 //  //    implicit val conn: Conn = recreateDbFrom(SocialNewsSchema)
 //  //
 //  //
@@ -163,7 +163,7 @@
 //  //
 //  //  "adhoc" in new CoreSetup {
 //  //
-//  //    import moleculeTests.tests.core.base.dsl.CoreTest._
+//  //    import moleculeTests.dataModels.core.base.dsl.CoreTest._
 //  //
 //  //    Ns.str.bool.inspectGet
 //  ////    Ns.str.bool.inspectGet
@@ -172,7 +172,7 @@
 //  //
 //  //    "Insert resolves to correct partitions" in new PartitionSetup {
 //  //  "Insert resolves to correct partitions" >> {
-//  //    import moleculeTests.tests.core.schemaDef.dsl.PartitionTest._
+//  //    import moleculeTests.dataModels.core.schemaDef.dsl.PartitionTest._
 //  //    implicit val conn: Conn = recreateDbFrom(PartitionTestSchema)
 //  //
 //  //    m(lit_Book.title("yeah")).inspectSave
@@ -214,7 +214,7 @@
 //  //
 //  //    "Insert resolves to correct partitions" in new ModernGraph2Setup {
 //  //
-//  //      import moleculeTests.tests.examples.gremlin.gettingStarted.dsl.ModernGraph2._
+//  //      import moleculeTests.dataModels.examples.gremlin.gettingStarted.dsl.ModernGraph2._
 //  //
 //  //      m(Person.name.Knows * Person.name).inspectGet
 //  //    }
@@ -232,7 +232,7 @@
 //  //
 //  //
 //  //  "A first query" in new SeattleSetup {
-//  //    import moleculeTests.tests.examples.datomic.seattle.dsl.Seattle._
+//  //    import moleculeTests.dataModels.examples.datomic.seattle.dsl.Seattle._
 //  //
 //  //    // A Community-name molecule
 //  //    val communities = m(Community. e.name_)
@@ -242,7 +242,7 @@
 //  //  }
 //  //
 //  //  "adhoc" in new BidirectionalSetup {
-//  //import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+//  //import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
 //  //
 //  //  }
 //  //

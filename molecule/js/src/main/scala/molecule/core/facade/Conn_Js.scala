@@ -138,7 +138,7 @@ case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers 
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???(14)
 
   def inspect(
-    clazz: String,
+    header: String,
     threshold: Int,
     max: Int,
     showStackTrace: Boolean,

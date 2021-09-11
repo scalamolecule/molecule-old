@@ -3,7 +3,7 @@ package moleculeTests.tests.examples.gremlin.gettingStarted
 import molecule.datomic.api.out10._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.examples.gremlin.gettingStarted.dsl.ModernGraph2._
+import moleculeTests.dataModels.examples.gremlin.gettingStarted.dsl.ModernGraph2._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

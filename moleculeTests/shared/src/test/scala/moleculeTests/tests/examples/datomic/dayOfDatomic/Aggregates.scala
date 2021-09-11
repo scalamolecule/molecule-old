@@ -2,7 +2,7 @@ package moleculeTests.tests.examples.datomic.dayOfDatomic
 
 import molecule.datomic.api.out5._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Aggregates._
+import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.Aggregates._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps

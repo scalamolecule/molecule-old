@@ -1,6 +1,6 @@
 package moleculeTests.tests.core.attrMap
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import molecule.datomic.api.out1._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global

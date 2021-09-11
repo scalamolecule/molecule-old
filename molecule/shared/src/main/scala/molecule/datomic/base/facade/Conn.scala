@@ -31,7 +31,8 @@ trait Conn extends ColOps with Serializations {
   private[molecule] var _adhocDbView: Option[DbView] = None
 
   protected val emptyConnProxy               = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
-  private[molecule] var connProxy: ConnProxy = emptyConnProxy
+//  private[molecule]
+  var connProxy: ConnProxy = emptyConnProxy
 
   /** */
   lazy val rpc: MoleculeRpc = ???
@@ -125,11 +126,11 @@ trait Conn extends ColOps with Serializations {
         //      println("@@@ " + packed0 + " @@@")
         //      println("@@@ " + packed + " @@@")
 
-        val vs = packed.linesIterator
-        vs.next() // skip initial newline
+        val lines = packed.linesIterator
+        lines.next() // skip initial newline
         val rows = new ListBuffer[T]
-        while (vs.hasNext) {
-          rows.addOne(packed2T(vs))
+        while (lines.hasNext) {
+          rows.addOne(packed2T(lines))
         }
         rows.toList
       }
@@ -495,7 +496,7 @@ trait Conn extends ColOps with Serializations {
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 
   def inspect(
-    clazz: String,
+    header: String,
     threshold: Int,
     max: Int = 9999,
     showStackTrace: Boolean = false,

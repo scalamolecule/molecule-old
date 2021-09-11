@@ -4,7 +4,7 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out8._
 import molecule.datomic.base.facade.{Conn, TxReport}
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.ref.dsl.SelfJoin._
+import moleculeTests.dataModels.core.ref.dsl.SelfJoin._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

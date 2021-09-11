@@ -3,7 +3,7 @@ package moleculeTests.tests.core.bidirectionals.edgeSelf
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.in1_out3._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

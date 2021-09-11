@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.jdk.CollectionConverters._
 
 private[molecule] case class Inspect(
-  clazz: String,
+  header: String,
   threshold: Int,
   max: Int = 9999,
   showStackTrace: Boolean = false,
@@ -146,7 +146,7 @@ private[molecule] case class Inspect(
       }
 
       println(
-        s"## $id ## $clazz \n=============================================================================\n" +
+        s"## $id ## $header \n=============================================================================\n" +
           params.toList.zipWithIndex.map {
             case (x, i) => traverse(x, 0, i + 1)
           }.mkString("\n-----------------------------------------------------------------------------\n") +

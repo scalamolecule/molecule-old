@@ -3,7 +3,7 @@ package moleculeTests.tests.examples.datomic.dayOfDatomic
 import molecule.datomic.api.in2_out3._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.SocialNews._
+import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.SocialNews._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

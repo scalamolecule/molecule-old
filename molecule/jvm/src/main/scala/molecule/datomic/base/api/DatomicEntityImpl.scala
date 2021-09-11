@@ -7,6 +7,8 @@ import clojure.lang.{Keyword, PersistentArrayMap}
 import datomicClient.anomaly.Fault
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
+import molecule.core.exceptions.MoleculeException
+import molecule.core.marshalling.Serializations
 import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, Quoted}
 import molecule.datomic.base.ast.transactionModel.RetractEntity
@@ -16,7 +18,7 @@ import scala.util.control.NonFatal
 
 
 abstract class DatomicEntityImpl(conn: Conn, eid: Any)
-  extends DatomicEntity with Quoted with Helpers {
+  extends DatomicEntity with Quoted with Helpers with Serializations {
 
   // Get ================================================================
 
@@ -142,8 +144,12 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
   def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] =
     asMap(1, 5)
 
-  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
+    //    val res = asMap(1, maxDepth)
+    //    res.map(l => println(l.mkString("====== asMap\n", "\n", "")))
+    //    res
     asMap(1, maxDepth)
+  }
 
   def touchQuoted(implicit ec: ExecutionContext): Future[String] =
     asMap(1, 5).map(quote(_))
@@ -154,8 +160,12 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
   def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
     asList(1, 5)
 
-  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
+  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
+    //    val res = asList(1, maxDepth)
+    //    res.map(l => println(l.mkString("====== asList\n", "\n", "")))
+    //    res
     asList(1, maxDepth)
+  }
 
   def touchListQuoted(implicit ec: ExecutionContext): Future[String] =
     asList(1, 5).map(quote(_))
@@ -175,73 +185,77 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
 
   def asMap(depth: Int, maxDepth: Int)
            (implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    keys.flatMap { keys =>
-      val keysSorted   = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
-      val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
-      val valueFutures = keysSorted.map { key =>
-        toScala(key, None, depth, maxDepth).map { scalaValue =>
-          val sortedValue = scalaValue match {
-            case l: Seq[_] => l.head match {
-              case m1: Map[_, _]
-                if m1.asInstanceOf[Map[String, Any]].isDefinedAt(":db/id") =>
-                val indexedRefMaps: Seq[(Long, Map[String, Any])] = l.map {
-                  case m2: Map[_, _] =>
-                    m2.asInstanceOf[Map[String, Any]]
-                      .apply(":db/id").asInstanceOf[Long] ->
+    keys.flatMap {
+      case Nil  => Future.failed(MoleculeException(s"Entity id `$eid` not found in database."))
+      case keys =>
+        val keysSorted   = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
+        val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
+        val valueFutures = keysSorted.map { key =>
+          toScala(key, None, depth, maxDepth).map { scalaValue =>
+            val sortedValue = scalaValue match {
+              case l: Seq[_] => l.head match {
+                case m1: Map[_, _]
+                  if m1.asInstanceOf[Map[String, Any]].isDefinedAt(":db/id") =>
+                  val indexedRefMaps: Seq[(Long, Map[String, Any])] = l.map {
+                    case m2: Map[_, _] =>
                       m2.asInstanceOf[Map[String, Any]]
-                }
-                indexedRefMaps.sortBy(_._1).map(_._2)
+                        .apply(":db/id").asInstanceOf[Long] ->
+                        m2.asInstanceOf[Map[String, Any]]
+                  }
+                  indexedRefMaps.sortBy(_._1).map(_._2)
 
-              case _ => l
+                case _ => l
+              }
+              case other     => other
             }
-            case other     => other
+            key -> sortedValue
           }
-          key -> sortedValue
         }
-      }
-      Future.sequence(futId ++ valueFutures).map(_.toMap)
+        Future.sequence(futId ++ valueFutures).map(_.toMap)
     }
   }
 
   def asList(depth: Int, maxDepth: Int)
             (implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
-    keys.flatMap { keys2 =>
-      val keysSorted   = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
-      val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
-      val valueFutures = keysSorted.map { key =>
-        toScala(key, None, depth, maxDepth, "List").map { scalaValue =>
-          val sortedValue = scalaValue match {
-            case l: Seq[_] => l.head match {
-              case l0: Seq[_] => l0.head match {
-                case _: (_, _) => // Now we now we have a Seq of Seq with pairs
-                  // Make typed Seq
-                  val typedSeq: Seq[Seq[(String, Any)]] = l.collect {
-                    case l1: Seq[_] => l1.collect {
-                      case (k: String, v) => (k, v)
+    keys.flatMap {
+      case Nil   => Future.failed(MoleculeException(s"Entity id `$eid` not found in database."))
+      case keys2 =>
+        val keysSorted   = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
+        val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
+        val valueFutures = keysSorted.map { key =>
+          toScala(key, None, depth, maxDepth, "List").map { scalaValue =>
+            val sortedValue = scalaValue match {
+              case l: Seq[_] => l.head match {
+                case l0: Seq[_] => l0.head match {
+                  case _: (_, _) => // Now we now we have a Seq of Seq with pairs
+                    // Make typed Seq
+                    val typedSeq: Seq[Seq[(String, Any)]] = l.collect {
+                      case l1: Seq[_] => l1.collect {
+                        case (k: String, v) => (k, v)
+                      }
                     }
-                  }
-                  if (typedSeq.head.map(_._1).contains(":db/id")) {
-                    // We now know we have :db/id's to sort on
-                    val indexedRefLists: Seq[(Long, Seq[(String, Any)])] = typedSeq.map {
-                      subSeq => subSeq.toMap.apply(":db/id").asInstanceOf[Long] -> subSeq
+                    if (typedSeq.head.map(_._1).contains(":db/id")) {
+                      // We now know we have :db/id's to sort on
+                      val indexedRefLists: Seq[(Long, Seq[(String, Any)])] = typedSeq.map {
+                        subSeq => subSeq.toMap.apply(":db/id").asInstanceOf[Long] -> subSeq
+                      }
+                      // Sort sub Seq's by :db/id
+                      indexedRefLists.sortBy(_._1).map(_._2)
+                    } else {
+                      typedSeq
                     }
-                    // Sort sub Seq's by :db/id
-                    indexedRefLists.sortBy(_._1).map(_._2)
-                  } else {
-                    typedSeq
-                  }
-                case other     =>
-                  // Propagates to failed Future
-                  throw new Exception("Expected pairs of values. Found: " + other)
+                  case other     =>
+                    // Propagates to failed Future
+                    throw new Exception("Expected pairs of values. Found: " + other)
+                }
+                case _          => l
               }
-              case _          => l
+              case other     => other
             }
-            case other     => other
+            key -> sortedValue
           }
-          key -> sortedValue
         }
-      }
-      Future.sequence(futId ++ valueFutures)
+        Future.sequence(futId ++ valueFutures)
     }
   }
 

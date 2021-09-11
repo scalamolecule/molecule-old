@@ -66,15 +66,16 @@ trait String2cast extends Helpers {
   protected lazy val unpackOneAny        = (s: String) => {
     val v = s.drop(10)
     s.take(10) match {
+      //      case "String    " | "enum      " => v
       case "String    " => v
-      case "Integer   " => v.toInt
+      case "Int       " => v.toInt
       case "Long      " => v.toLong
       case "Double    " => v.toDouble
       case "Boolean   " => v.toBoolean
       case "Date      " => str2date(v)
       case "UUID      " => UUID.fromString(v)
       case "URI       " => new URI(v)
-      case "BigInteger" => BigInt(v)
+      case "BigInt    " => BigInt(v)
       case "BigDecimal" => BigDecimal(v)
     }
   }
@@ -101,15 +102,15 @@ trait String2cast extends Helpers {
     }
   }
 
-  protected lazy val unpackOptOneEnum       = (v: String) => if (v == "◄") Option.empty[String]     else Some(unpackOneEnum(v))
-  protected lazy val unpackOptOneInt        = (v: String) => if (v == "◄") Option.empty[Int]        else Some(unpackOneInt(v))
-  protected lazy val unpackOptOneLong       = (v: String) => if (v == "◄") Option.empty[Long]       else Some(unpackOneLong(v))
-  protected lazy val unpackOptOneDouble     = (v: String) => if (v == "◄") Option.empty[Double]     else Some(unpackOneDouble(v))
-  protected lazy val unpackOptOneBoolean    = (v: String) => if (v == "◄") Option.empty[Boolean]    else Some(unpackOneBoolean(v))
-  protected lazy val unpackOptOneDate       = (v: String) => if (v == "◄") Option.empty[Date]       else Some(unpackOneDate(v))
-  protected lazy val unpackOptOneUUID       = (v: String) => if (v == "◄") Option.empty[UUID]       else Some(unpackOneUUID(v))
-  protected lazy val unpackOptOneURI        = (v: String) => if (v == "◄") Option.empty[URI]        else Some(unpackOneURI(v))
-  protected lazy val unpackOptOneBigInt     = (v: String) => if (v == "◄") Option.empty[BigInt]     else Some(unpackOneBigInt(v))
+  protected lazy val unpackOptOneEnum       = (v: String) => if (v == "◄") Option.empty[String] else Some(unpackOneEnum(v))
+  protected lazy val unpackOptOneInt        = (v: String) => if (v == "◄") Option.empty[Int] else Some(unpackOneInt(v))
+  protected lazy val unpackOptOneLong       = (v: String) => if (v == "◄") Option.empty[Long] else Some(unpackOneLong(v))
+  protected lazy val unpackOptOneDouble     = (v: String) => if (v == "◄") Option.empty[Double] else Some(unpackOneDouble(v))
+  protected lazy val unpackOptOneBoolean    = (v: String) => if (v == "◄") Option.empty[Boolean] else Some(unpackOneBoolean(v))
+  protected lazy val unpackOptOneDate       = (v: String) => if (v == "◄") Option.empty[Date] else Some(unpackOneDate(v))
+  protected lazy val unpackOptOneUUID       = (v: String) => if (v == "◄") Option.empty[UUID] else Some(unpackOneUUID(v))
+  protected lazy val unpackOptOneURI        = (v: String) => if (v == "◄") Option.empty[URI] else Some(unpackOneURI(v))
+  protected lazy val unpackOptOneBigInt     = (v: String) => if (v == "◄") Option.empty[BigInt] else Some(unpackOneBigInt(v))
   protected lazy val unpackOptOneBigDecimal = (v: String) => if (v == "◄") Option.empty[BigDecimal] else Some(unpackOneBigDecimal(v))
 
 

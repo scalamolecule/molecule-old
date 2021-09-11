@@ -3,7 +3,7 @@ package moleculeTests.tests.core.obj
 import molecule.core.util.Helpers
 import molecule.datomic.api.out5._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

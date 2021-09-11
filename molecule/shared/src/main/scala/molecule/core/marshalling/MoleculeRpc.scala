@@ -3,7 +3,7 @@ package molecule.core.marshalling
 import java.util.Date
 import molecule.core.marshalling.nodes.Obj
 import molecule.datomic.base.facade.TxReportRPC
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MoleculeRpc {
 
@@ -47,6 +47,7 @@ trait MoleculeRpc {
     eid: Long
   ): Future[List[String]]
 
+
   def t(connProxy: ConnProxy): Future[Long] = ???
   def tx(connProxy: ConnProxy): Future[Long] = ???
   def txInstant(connProxy: ConnProxy): Future[Date] = ???
@@ -56,5 +57,21 @@ trait MoleculeRpc {
   //  def pull(pattern: String, eid: Any): Future[]
 
   def retract(connProxy: ConnProxy, eid: Long) = ???
+
+
+
+  def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
+
+  def touchQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
+
+  def touchListMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
+
+  def touchListQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
+
+  def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
+
+  def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
+
+  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String]
 
 }

@@ -1,6 +1,6 @@
 package moleculeTests.tests.core.bidirectionals.edgeOther
 
-import moleculeTests.tests.core.bidirectionals.dsl.Bidirectional._
+import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
 import molecule.datomic.api.in1_out4._
 import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite

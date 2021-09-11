@@ -62,14 +62,14 @@ trait Helpers extends DateHandling {
     val v = s.drop(10)
     s.take(10) match {
       case "String    " => v
-      case "Integer   " => v.toInt
+      case "Int       " => v.toInt
       case "Long      " => v.toLong
       case "Double    " => v.toDouble
       case "Boolean   " => v.toBoolean
       case "Date      " => str2date(v)
       case "UUID      " => UUID.fromString(v)
       case "URI       " => new java.net.URI(v)
-      case "BigInteger" => BigInt(v)
+      case "BigInt    " => BigInt(v)
       case "BigDecimal" => BigDecimal(v)
     }
   }

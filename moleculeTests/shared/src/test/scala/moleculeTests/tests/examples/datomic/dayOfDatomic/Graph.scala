@@ -12,7 +12,7 @@ object Graph extends AsyncTestSuite {
   lazy val tests = Tests {
 
     "Simple hyperedge" - graph { implicit conn =>
-      import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Graph._
+      import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.Graph._
       for {
         tx <- Role.name insert List("Role1", "Role2")
         List(r1, r2) = tx.eids
@@ -116,7 +116,7 @@ object Graph extends AsyncTestSuite {
 
     // Load graph 2 where RoleInGroup references multiple Roles
     "Advanced hyperedge" - graph2 { implicit conn =>
-      import moleculeTests.tests.examples.datomic.dayOfDatomic.dsl.Graph2._
+      import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.Graph2._
       for {
         tx1 <- Role.name insert List("Role1", "Role2", "Role3", "Role4", "Role5", "Role6")
         List(r1, r2, r3, r4, r5, r6) = tx1.eids

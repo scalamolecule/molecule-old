@@ -6,7 +6,7 @@ package moleculeTests.tests.core.input2
 //import scala.reflect.ClassTag
 //import scala.annotation.unchecked.uncheckedVariance
 
-import moleculeTests.tests.core.base.dsl.CoreTest._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import molecule.datomic.api.in2_out3._
 import moleculeTests.Adhoc.{enum1, enum2, enum3, enum4, enum5, uri1, uri2, uri3, uri4, uri5}
 import moleculeTests.setup.AsyncTestSuite
