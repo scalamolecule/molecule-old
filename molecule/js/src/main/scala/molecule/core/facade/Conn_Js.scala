@@ -109,9 +109,7 @@ case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers 
     } yield result
   }
 
-  private[molecule] def buildTxFnInstall(
-    txFn: String,
-    args: Seq[Any]): jList[_] = ???(6)
+  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = ???(6)
 
 
   def q(query: String, inputs: Any*)

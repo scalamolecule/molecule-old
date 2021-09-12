@@ -32,7 +32,63 @@ object Adhoc extends AsyncTestSuite with Helpers {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
+        _ <- Ref2.int2.str2$ + Ref1.int1.str1$ + Ns.int.str$ insert Seq(
+          ((1, Some("a")), (11, Some("aa")), (111, Some("aaa"))),
+          ((2, Some("b")), (22, Some("bb")), (222, None)),
+          ((3, Some("c")), (33, None), (333, None)),
+          ((4, None), (44, None), (444, None)),
+        )
 
+//        // Same namespace
+//
+//        _ <- m(Ref2.int2.str2).get.map(_.sorted ==> List(
+//          (1, "a"),
+//          (2, "b"),
+//          (3, "c")
+//        ))
+//        // When 1 + 1 attribute, this outcome will be the same
+//        _ <- m(Ref2.int2 + Ref2.str2).get.map(_.sorted ==> List(
+//          (1, "a"),
+//          (2, "b"),
+//          (3, "c")
+//        ))
+//
+//        _ <- m(Ref2.int2).get.map(_.sorted ==> List(1, 2, 3, 4))
+
+        _ <- m(Ref2.int2.str2 + Ref1.int1).get.map(_.sorted ==> List(
+          ((1, "a"), 11),
+          ((2, "b"), 22),
+          ((3, "c"), 33),
+        ))
+        _ <- m(Ref2.int2 + Ref2.str2_).get.map(_.sorted ==> List(1, 2, 3))
+//        // Order irrelevant
+//        _ <- m(Ref2.str2_ + Ref2.int2).get.map(_.sorted ==> List(1, 2, 3))
+//
+//        _ <- m(Ref1.int1 + Ref1.str1_).get.map(_.sorted ==> List(11, 22))
+//
+//        _ <- m(Ns.int + Ns.str_).get.map(_ ==> List(111))
+//
+//
+//        // 2 namespaces, 1 tacit
+//
+//        _ <- m(Ref2.int2 + Ref1.str1_).get.map(_.sorted ==> List(1, 2))
+//        _ <- m(Ref2.int2 + Ns.str_).get.map(_ ==> List(1))
+//        _ <- m(Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
+//
+//
+//        // 3 namespaces, 2 tacits
+//
+//        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.str_).get.map(_ ==> List(1))
+//        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
+//        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int).get.map(_.sorted ==> List(111, 222))
+//
+//
+//        // 3 namespaces, 3 tacits, 4 composite parts (to test second `+` method)
+//
+//        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.int_ + Ns.str_).get.map(_ ==> List(1))
+//        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.int_ + Ns.str_).get.map(_ ==> List(11))
+//        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int + Ns.str_).get.map(_ ==> List(111))
+//        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int_ + Ns.str).get.map(_ ==> List("aaa"))
 
 
       } yield ()

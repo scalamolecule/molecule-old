@@ -106,16 +106,18 @@ object DatomicRpc extends MoleculeRpc
       log(obj.toString)
       log("-------------------------------")
       allRows.forEach(row => log(row.toString))
-
-      val packed = if (isOptNested)
-        OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked
-      else if (nestedLevels == 0)
-        Flat2packed(obj, allRows, maxRows).getPacked
-      else
-        Nested2packed(obj, allRows, nestedLevels).getPacked
-
-      log("-------------------------------" + packed)
       log.print
+
+      val packed = if (isOptNested) {
+        OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked
+      } else if (nestedLevels == 0) {
+        // Flat and composites
+        Flat2packed(obj, allRows, maxRows).getPacked
+      } else {
+        Nested2packed(obj, allRows, nestedLevels).getPacked
+      }
+
+      println("-------------------------------" + packed)
       //        log("Sending data to client... Total server time: " + t.msTotal)
       packed
     }

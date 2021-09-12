@@ -14,7 +14,10 @@ case class Flat2packed(
 
   def getPacked: String = {
     if (!rows.isEmpty) {
-      val packRow: jList[_] => StringBuffer = packRef(obj.props, 0)
+      val packRow = packRef(obj.props.filter {
+        case Obj(_, _, _, Nil) => false
+        case _                 => true
+      }, 0)
       if (maxRows == -1) {
         rows.forEach(row => packRow(row))
       } else {
@@ -140,7 +143,9 @@ case class Flat2packed(
       case 98  => packRef98(attrs, level)
       case 99  => packRef99(attrs, level)
       case 100 => packRef100(attrs, level)
-      case n   => throw new RuntimeException("[Flat2packed] Exceeding number of attributes: " + n)
+      case n   => throw new RuntimeException(
+        s"[Flat2packed] Can handle maximum 100 attributes from JS side. Found $n."
+      )
     }
   }
 
