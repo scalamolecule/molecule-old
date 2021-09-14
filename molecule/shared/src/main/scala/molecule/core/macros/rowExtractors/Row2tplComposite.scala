@@ -9,16 +9,14 @@ trait Row2tplComposite extends TreeOps { self: Row2tplFlat =>
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("BuildTplComposite", 1, mkError = true)
-  private lazy val xx = InspectMacro("BuildTplComposite", 10)
+  //  private lazy val xx = InspectMacro("Row2tplComposite", 1, mkError = true)
+  private lazy val xx = InspectMacro("Row2tplComposite", 10)
 
-  def tplComposite(
-    castss: List[List[Int => Tree]],
-    txMetas: Int
-  ): Tree = {
-
+  def tplComposite(castss: List[List[Int => Tree]], txMetas: Int): Tree =
     if (txMetas == 0) {
-      q"(..${compositeCasts(castss)})"
+      val res = q"(..${compositeCasts(castss)})"
+      xx(1, txMetas, castss, res)
+      res
 
     } else {
       val ordinaryComposites = castss.take(castss.length - txMetas)
@@ -35,21 +33,13 @@ trait Row2tplComposite extends TreeOps { self: Row2tplFlat =>
       }
       val lastWithTx         = topLevel(List(lastComposite), lastOffset) ++ txCasts
 
-      val t = (init, lastWithTx) match {
+      val tree = (init, lastWithTx) match {
         case (Nil, lastWithTx)  => q"(..$lastWithTx)"
         case (init, Nil)        => q"(..$init)"
         case (init, lastWithTx) => q"(..$init, (..$lastWithTx))"
       }
 
-      xx(3
-        , txMetas
-        , castss
-        , init
-        , txCasts
-        , lastWithTx
-        , t
-      )
-      t
+      xx(2, txMetas, castss, init, lastComposite, txCasts, lastWithTx, tree)
+      tree
     }
-  }
 }

@@ -9,6 +9,8 @@ trait Row2tplFlat extends TreeOps {
 
   import c.universe._
 
+  //  private lazy val xx = InspectMacro("Row2tplFlat", 1, mkError = true)
+  private lazy val xx = InspectMacro("Row2tplFlat", 20)
 
   def topLevel(castss: List[List[Int => Tree]], offset: Int = 0): List[Tree] = {
     var i = -1 + offset
@@ -26,10 +28,7 @@ trait Row2tplFlat extends TreeOps {
     }
   }
 
-  def tplFlat(
-    castss: List[List[Int => Tree]],
-    txMetas: Int
-  ): Tree = {
+  def tplFlat(castss: List[List[Int => Tree]], txMetas: Int): Tree =
     if (txMetas == 0) {
       q"(..${topLevel(castss)})"
 
@@ -42,7 +41,8 @@ trait Row2tplFlat extends TreeOps {
       } else {
         compositeCasts(castss.tail, castss.head.length)
       }
-      q"(..$first, ..$last)"
+      val tree       = q"(..$first, ..$last)"
+      xx(2, txMetas, castss, first, last, tree)
+      tree
     }
-  }
 }

@@ -79,7 +79,12 @@ case class Nested2packed(
     node match {
       case Prop(_, _, baseTpe, _, group, _) => colIndex += 1; packFlatAttr(sb, group, baseTpe, colIndex)
       case Obj(_, _, true, props)           => packNested(props, level + 1)
-      case Obj(_, _, _, props)              => packRef(props, level)
+      case Obj(_, _, _, props)              =>
+        val populatedProps = props.flatMap {
+          case Obj(_, _, _, Nil) => None // skip objects with only tacit attributes
+          case node              => Some(node)
+        }
+        packRef(populatedProps, level)
     }
   }
 

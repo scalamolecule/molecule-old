@@ -16,22 +16,20 @@ trait Packed2tplNested extends PackedValue2cast {
 
 
   def packed2tplNested(typess: List[List[Tree]], obj: Obj, txMetas: Int): Tree = {
-    val v          = q"v"
-    val next       = q"vs.next()"
-    val levels     = typess.size - txMetas
-    val unpackerss = mutable.Seq.fill(typess.size)(List.empty[Tree])
-
-    def compositeTypes(typess: List[List[Tree]]): Seq[Tree] = typess.flatMap {
-      case Nil   => None
-      case types => Some(q"(..$types)")
-    }
-
+    val v                    = q"v"
+    val next                 = q"vs.next()"
+    val levels               = typess.size - txMetas
+    val unpackerss           = mutable.Seq.fill(typess.size)(List.empty[Tree])
     val typess1              = typess.take(levels)
     val txMetaTypes          = typess.takeRight(txMetas)
-    val txMetaCompositeTypes = compositeTypes(txMetaTypes)
-    val nestedTypes          = typess1.init.foldRight(List(tq"(..${typess1.last})"), levels - 2) {
-      case (types, (acc, 0)) if txMetas != 0 => (tq"(..$types, List[${acc.head}], ..$txMetaCompositeTypes)" +: acc, -1)
-      case (types, (acc, level))             => (tq"(..$types, List[${acc.head}])" +: acc, level - 1)
+    val txMetaCompositeTypes = if (txMetaTypes.size == 1) {
+      txMetaTypes.head
+    } else {
+      txMetaTypes.filter(_.nonEmpty).map(compositeTypes => q"(..$compositeTypes)")
+    }
+    val nestedTypes          = typess1.init.foldRight(Seq(tq"(..${typess1.last})"), levels - 2) {
+      case (types, (acc, 0)) if txMetas != 0 => (tq"(..$types, Seq[${acc.head}], ..$txMetaCompositeTypes)" +: acc, -1)
+      case (types, (acc, level))             => (tq"(..$types, Seq[${acc.head}])" +: acc, level - 1)
     }._1
 
     def resolveTxGroups(txCompositeGroups: Seq[Node]): Seq[Tree] = {
@@ -39,11 +37,15 @@ trait Packed2tplNested extends PackedValue2cast {
         case Prop(_, _, baseTpe, _, group, _) => acc :+ getPackedValue2cast(group, baseTpe, next)
         case Obj(_, _, _, nodes)              => resolve(nodes, acc)
       }
-      txCompositeGroups.collect {
+      val txGroups = txCompositeGroups.collect {
         case Obj(_, _, _, nodes) => resolve(nodes, Nil)
-      }.flatMap {
-        case Nil     => None
-        case txGroup => Some(q"(..$txGroup)")
+      }
+      if (txMetas == 1) {
+        // attributes (no tuple)
+        txGroups.flatten
+      } else {
+        // tuples
+        txGroups.filter(_.nonEmpty).map(attrs => q"(..$attrs)")
       }
     }
 
@@ -64,7 +66,6 @@ trait Packed2tplNested extends PackedValue2cast {
           unpackerss(level) = unpackerss(level) ++ resolveTxGroups(txGroups)
 
         case Obj(_, _, _, props) =>
-          //          setUnpackers(props, level, i + 1) // todo - revert to this?
           setUnpackers(props, level, i)
       }
     }
@@ -104,7 +105,7 @@ trait Packed2tplNested extends PackedValue2cast {
             (..${unpackerss.head})
           }
         """
-      xx(6, typess, typess1, obj, unpackerss, tree)
+      //      xx(6, typess, typess1, obj, unpackerss, tree)
       tree
     }
 
@@ -112,12 +113,14 @@ trait Packed2tplNested extends PackedValue2cast {
       , levels
       , txMetas
       , obj
+      , "----------"
       , typess
       , typess1
-      , "----------"
-      , nestedTypes
-      , unpackerss.toList
+      , txMetaTypes
       , txMetaCompositeTypes
+      , nestedTypes
+      , "----------"
+      , unpackerss.toList
       , tree
     )
     tree

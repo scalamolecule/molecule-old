@@ -105,6 +105,10 @@ object DatomicRpc extends MoleculeRpc
       log("-------------------------------")
       log(obj.toString)
       log("-------------------------------")
+      //      log(refIndexes.mkString("\n"))
+      //      log("-------------------------------")
+      //      log(tacitIndexes.mkString("\n"))
+      //      log("-------------------------------")
       allRows.forEach(row => log(row.toString))
       log.print
 
@@ -259,7 +263,7 @@ object DatomicRpc extends MoleculeRpc
   private def getConn(
     connProxy: ConnProxy
   ): Future[Conn] = {
-    val futConn = connCache.getOrElse(connProxy.uuid, getFreshConn(connProxy))
+    val futConn             = connCache.getOrElse(connProxy.uuid, getFreshConn(connProxy))
     val futConnTimeAdjusted = futConn.map { conn =>
       conn.updateAdhocDbView(connProxy.adhocDbView)
       conn.updateTestDbView(connProxy.testDbView, connProxy.testDbStatus)

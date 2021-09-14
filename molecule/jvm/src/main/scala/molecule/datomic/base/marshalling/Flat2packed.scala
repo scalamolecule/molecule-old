@@ -14,10 +14,20 @@ case class Flat2packed(
 
   def getPacked: String = {
     if (!rows.isEmpty) {
-      val packRow = packRef(obj.props.filter {
-        case Obj(_, _, _, Nil) => false
-        case _                 => true
-      }, 0)
+      val nodesWithNonTacitProps: List[Node] = {
+        def resolve(node: Node, acc: List[Node]): List[Node] = node match {
+          case Obj(_, _, _, Nil)     => acc
+          case prop: Prop            => acc :+ prop
+          case o@Obj(_, _, _, props) =>
+            val nonEmptyProps = props.flatMap(prop => resolve(prop, Nil))
+            nonEmptyProps match {
+              case Nil => acc
+              case _   => acc :+ o.copy(props = nonEmptyProps)
+            }
+        }
+        resolve(obj, Nil)
+      }
+      val packRow = packRef(nodesWithNonTacitProps, 0)
       if (maxRows == -1) {
         rows.forEach(row => packRow(row))
       } else {

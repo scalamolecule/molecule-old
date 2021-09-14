@@ -10,8 +10,8 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
   import c.universe._
 
-  //      private lazy val xx = InspectMacro("MakeComposite", 9, mkError = true)
-  private lazy val xx = InspectMacro("MakeComposite", 80)
+//  private lazy val xx = InspectMacro("MakeComposite", 8, mkError = true)
+    private lazy val xx = InspectMacro("MakeComposite", 80)
 
 
   private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, OutTypes: Type*): Tree = {
