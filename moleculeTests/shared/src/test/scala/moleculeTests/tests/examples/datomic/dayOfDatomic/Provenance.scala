@@ -49,7 +49,7 @@ object Provenance extends AsyncTestSuite {
           ":Story/url" -> "http://blog.datomic.com/2012/08/atomic-chocolate.html"))
 
         // Time of transaction
-        stuTxInstant <- stuTxId[java.util.Date](":db/txInstant").map(_.get)
+        stuTxInstant <- User(stuTxId).txInstant.get.map(_.head)
 
         // Limit entity traversal 1 level deep
         _ <- stuTxId.touchMax(1).map(_ ==> Map(

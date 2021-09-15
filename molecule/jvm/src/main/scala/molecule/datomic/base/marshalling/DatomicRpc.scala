@@ -46,6 +46,9 @@ object DatomicRpc extends MoleculeRpc
 
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
+//      println("TX DatomicRpc: " + txReport)
+
+
       TxReportRPC(
         txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
       )
@@ -129,38 +132,25 @@ object DatomicRpc extends MoleculeRpc
     case NonFatal(exc) => Future.failed(exc)
   }
 
+  // Presuming a datalog query returning rows of single values.
+  // Card-many attributes should therefore not be returned as Sets.
   def getAttrValues(
     connProxy: ConnProxy,
     datalogQuery: String,
     card: Int,
     tpe: String
   ): Future[List[String]] = {
-    var vs = List.empty[String]
     for {
       conn <- getConn(connProxy)
       rows0 <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
-      val rows = rows0.iterator
-      if (rows.hasNext) {
-        val rawValue = rows.next().get(0)
-        // marshall raw value. Dates need to be standardized
-        card match {
-          case 1 => rawValue match {
-            case d: Date => vs = List(date2strLocal(d))
-            case v       => vs = List(v.toString)
-          }
-          case 2 => tpe match {
-            case "Date" => rawValue.asInstanceOf[jSet[_]].forEach(v =>
-              vs = vs :+ date2strLocal(v.asInstanceOf[Date])
-            )
-            case _      => rawValue.asInstanceOf[jSet[_]].forEach(v =>
-              vs = vs :+ v.toString
-            )
-          }
-          case 3 => rawValue.asInstanceOf[jSet[_]].forEach(v => vs = vs :+ v.toString)
-        }
-        vs
-      } else Nil
+      val cast = if (tpe == "Date")
+        (v: Any) => date2strLocal(v.asInstanceOf[Date])
+      else
+        (v: Any) => v.toString
+      var vs   = List.empty[String]
+      rows0.forEach(row => vs = vs :+ cast(row.get(0)))
+      vs
     }
   }
 
@@ -221,11 +211,6 @@ object DatomicRpc extends MoleculeRpc
   }
 
   def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = ???
-  //  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = {
-  ////    getDatomicEntity(connProxy, eid).flatMap(_.sortList(l)).map(list =>
-  ////    )
-  //      "" // todo...
-  //  }
 
 
   // Cached Conn ---------------------------------------------
@@ -238,7 +223,7 @@ object DatomicRpc extends MoleculeRpc
         //            println("==============================================")
         Datomic_Peer.recreateDbFromEdn(schemaPeer)
 
-      case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _) =>
+      case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _, _) =>
         if (datomicProtocol != protocol) {
           throw new RuntimeException(
             s"\nProject is built with datomic `$datomicProtocol` protocol and " +
@@ -252,10 +237,10 @@ object DatomicRpc extends MoleculeRpc
             "Please connect with `DatomicInMemProxy` to get an in-memory db.")
         }
 
-      case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _) =>
+      case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _, _) =>
         Datomic_DevLocal(system, storageDir).connect(dbName)
 
-      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _) =>
+      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
         Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
     }
   }

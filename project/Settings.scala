@@ -111,14 +111,16 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         //        sharedTests + "/core/time",
 //        sharedTests + "/core/attr",
 //        sharedTests + "/core/attrMap",
+
+        sharedTests + "/core/bidirectionals",
 //        sharedTests + "/core/build",
+//        sharedTests + "/core/composite",
 //        sharedTests + "/core/json",
 //        sharedTests + "/core/nested",
-//        sharedTests + "/core/obj",
 
+//        sharedTests + "/core/obj",
 //        sharedTests + "/core/runtime",
-//        sharedTests + "/core/composite",
-        sharedTests + "/core/txMetaData",
+//        sharedTests + "/core/txMetaData",
 
 
 //        sharedTests + "/core/transaction",

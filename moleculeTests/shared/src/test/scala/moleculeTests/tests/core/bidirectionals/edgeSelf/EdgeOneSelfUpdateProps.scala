@@ -379,10 +379,10 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
         ))
 
         // Apply new values (replacing all current values!)
-        _ <- Loves(annBen).commonScores("volleball" -> 4, "handball" -> 5).update
+        _ <- Loves(annBen).commonScores("volleyball" -> 4, "handball" -> 5).update
         _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
-          ("Ann", Map("volleball" -> 4, "handball" -> 5)),
-          ("Ben", Map("volleball" -> 4, "handball" -> 5))
+          ("Ann", Map("volleyball" -> 4, "handball" -> 5)),
+          ("Ben", Map("volleyball" -> 4, "handball" -> 5))
         ))
 
         // Delete all

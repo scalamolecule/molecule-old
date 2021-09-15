@@ -214,12 +214,10 @@ object OneSelf extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name.insert("Adam")
-        adam = tx.eid
+        adam <- Person.name.insert("Adam").map(_.eid)
 
         // Create and reference Lisa to Adam
-        tx2 <- Person(adam).Spouse.name("Lisa").update
-        lisa = tx2.eid
+        lisa <- Person(adam).Spouse.name("Lisa").update.map(_.eid)
 
         _ <- Person(adam).Spouse.name.get.map(_ ==> List("Lisa"))
         _ <- Person(lisa).Spouse.name.get.map(_ ==> List("Adam"))

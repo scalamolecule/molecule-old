@@ -66,7 +66,6 @@ trait String2cast extends Helpers {
   protected lazy val unpackOneAny        = (s: String) => {
     val v = s.drop(10)
     s.take(10) match {
-      //      case "String    " | "enum      " => v
       case "String    " => v
       case "Int       " => v.toInt
       case "Long      " => v.toLong

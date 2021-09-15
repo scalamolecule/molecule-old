@@ -24,10 +24,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * Make a similar subclass of ConnProxy like this one in order to use an
   * alternative rpc implementation.
   *
-  * @param connProxy0 Db coordinates to access db on server side
+  * @param defaultConnProxy Db coordinates to access db on server side
   */
-case class Conn_Js(connProxy0: ConnProxy) extends Conn with ColOps with Helpers {
-  connProxy = connProxy0
+case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with Helpers {
 
   def ???(i: Int) : Nothing = throw MoleculeException(s"Unexpected method call ($i) on JS side in Conn_Js")
 

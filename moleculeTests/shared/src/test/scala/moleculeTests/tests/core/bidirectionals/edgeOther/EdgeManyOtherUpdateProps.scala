@@ -356,9 +356,9 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
         _ <- Animal.name_("Rex").CloseTo.commonScores.Person.name.get.map(_ ==> List((Map("baseball" -> 8, "parachuting" -> 4), "Ann")))
 
         // Apply new values (replacing all current values!)
-        _ <- CloseTo(annRex).commonScores("volleball" -> 4, "handball" -> 5).update
-        _ <- Person.name_("Ann").CloseTo.commonScores.Animal.name.get.map(_ ==> List((Map("volleball" -> 4, "handball" -> 5), "Rex")))
-        _ <- Animal.name_("Rex").CloseTo.commonScores.Person.name.get.map(_ ==> List((Map("volleball" -> 4, "handball" -> 5), "Ann")))
+        _ <- CloseTo(annRex).commonScores("volleyball" -> 4, "handball" -> 5).update
+        _ <- Person.name_("Ann").CloseTo.commonScores.Animal.name.get.map(_ ==> List((Map("volleyball" -> 4, "handball" -> 5), "Rex")))
+        _ <- Animal.name_("Rex").CloseTo.commonScores.Person.name.get.map(_ ==> List((Map("volleyball" -> 4, "handball" -> 5), "Ann")))
 
         // Delete all
         _ <- CloseTo(annRex).commonScores().update

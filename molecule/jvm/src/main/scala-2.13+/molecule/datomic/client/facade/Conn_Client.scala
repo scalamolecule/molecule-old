@@ -11,6 +11,7 @@ import datomicScala.client.api.sync.{Client, Db, Datomic => clientDatomic}
 import datomicScala.client.api.{Datom, sync}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
+import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
 import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -30,7 +31,8 @@ case class Conn_Client(
   client: Client,
   clientAsync: AsyncClient,
   dbName: String,
-  system: String = ""
+  system: String = "",
+  defaultConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
 ) extends Conn_Datomic213 {
 
   lazy val clientConn: sync.Connection = client.connect(dbName)

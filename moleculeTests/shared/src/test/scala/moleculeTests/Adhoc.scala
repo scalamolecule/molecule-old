@@ -17,7 +17,6 @@ import molecule.datomic.base.facade.Conn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
-import molecule.datomic.api.out10.m
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
@@ -32,6 +31,8 @@ object Adhoc extends AsyncTestSuite with Helpers {
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
+
+
 
 
 
@@ -78,13 +79,16 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //
     //      } yield ()
     //    }
-
-
-    //    "adhoc" - bidirectional { implicit conn =>
-    //    for {
-    //      _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-    //
-    //    } yield ()
-    //  }
+//
+//
+//    "adhoc" - bidirectional { implicit conn =>
+//      import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
+//
+//      for {
+//        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+//
+//
+//      } yield ()
+//    }
   }
 }

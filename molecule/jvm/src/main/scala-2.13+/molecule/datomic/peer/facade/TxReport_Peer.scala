@@ -14,14 +14,21 @@ import scala.jdk.CollectionConverters._
 /** Datomic TxReport facade for peer api.
   *
   * @param rawTxReport
-  * @param stmts
+  * @param scalaStmts
   */
 case class TxReport_Peer(
   rawTxReport: jMap[_, _],
-  stmts: Seq[Statement] = Nil
+  scalaStmts: Seq[Statement] = Nil
 ) extends TxReport {
 
-  lazy val eids: List[Long] = {
+  lazy val eids: List[Long] = if (scalaStmts.isEmpty) {
+    var tempIds = List.empty[Long]
+    rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach(raw =>
+      tempIds = tempIds :+ raw.asInstanceOf[Long]
+    )
+    tempIds.sorted
+
+  } else {
     val allIds = {
       val datoms = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].iterator
       var ids    = Array.empty[Long]
@@ -35,61 +42,56 @@ case class TxReport_Peer(
       }
       ids.toList
     }
-    if (stmts.isEmpty) {
-      allIds.distinct
-    } else {
-      val assertStmts = stmts.filterNot(_.isInstanceOf[RetractEntity])
 
-      //      println("-------------------------------------------")
-      //      txDataRaw.map(datom2string) foreach println
-      //      println("--------")
-      //      allIds foreach println
-      //      println("--------")
-      //      stmts foreach println
-      //      println("--------")
-      //      assertStmts foreach println
+    val assertStmts = scalaStmts.filterNot(_.isInstanceOf[RetractEntity])
 
-      if (allIds.size != assertStmts.size) {
-        throw new DatomicFacadeException(
-          s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
-        )
-      }
-      val resolvedIds = assertStmts.zip(allIds).collect {
-        case (Add(_: TempId, _, _, _), eid)    => eid
-        case (Add("datomic.tx", _, _, _), eid) => eid
-      }.distinct.toList
+    //      println("-------------------------------------------")
+    //      txDataRaw.map(datom2string) foreach println
+    //      println("--------")
+    //      allIds foreach println
+    //      println("--------")
+    //      scalaStmts foreach println
+    //      println("--------")
+    //      assertStmts foreach println
 
-      //      println("--------")
-      //      resolvedIds foreach println
-
-      resolvedIds
+    if (allIds.size != assertStmts.size) {
+      throw DatomicFacadeException(
+        s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
+      )
     }
+    val resolvedIds = assertStmts.zip(allIds).collect {
+      case (Add(_: TempId, _, _, _), eid)    => eid
+      case (Add("datomic.tx", _, _, _), eid) => eid
+    }.distinct.toList
+
+    //      println("--------")
+    //      resolvedIds foreach println
+    resolvedIds
   }
 
   private lazy val txDataRaw: List[Datum] =
     rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].asScala.toList.asInstanceOf[List[Datum]]
 
-  private def datom2string(d: datomic.db.Datum) =
-    s"[${d.e}   ${d.a}   ${d.v}       ${d.tx}  ${d.added()}]"
+  private def datom2string(d: datomic.db.Datum, vMax: Int) = {
+    val e = s"${d.e}" + " " * (14 - d.e.toString.length)
+    val a = s"${d.a}" + " " * (4 - d.a.toString.length)
+    val v = s"${d.v}" + " " * (33 - d.v.toString.length)
+    s"[$e  $a  $v    ${d.tx}   ${d.added()}]"
+  }
 
-  def inspect: Unit = Inspect("TxReport", 1)(1, stmts, txDataRaw)
+  def inspect: Unit = Inspect("TxReport", 1)(1, scalaStmts, txDataRaw)
 
-  override def toString =
+  override def toString = {
+    val vMax = txDataRaw.map(_.v.toString.length).max
     s"""TxReport {
        |  dbBefore  : $dbBefore
        |  dbBefore.t: ${dbBefore.basisT}
        |  dbAfter   : $dbAfter
        |  dbAfter.t : ${dbAfter.basisT}
-       |  txData    : ${txDataRaw.map(datom2string).mkString(",\n              ")}
+       |  txData    : ${txDataRaw.map(d => datom2string(d, vMax)).mkString(",\n              ")}
        |  tempids   : ${rawTxReport.get(TEMPIDS).asInstanceOf[AnyRef]}
        |  eids      : $eids
        |}""".stripMargin
-
-  def printEidStats(): String = {
-    s"""
-       |
-       |  txData    : ${txDataRaw.map(datom2string).mkString("\n              ")}
-       |  tempids   : ${rawTxReport.get(TEMPIDS)}""".stripMargin
   }
 
   /** Get database value before transaction. */
@@ -103,7 +105,6 @@ case class TxReport_Peer(
   lazy val tx: Long = Peer.toTx(t).asInstanceOf[Long]
 
   lazy val inst: Date = {
-    //    dbAfter.entity(tx).get(":db/txInstant").asInstanceOf[Date]
     rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].get(0).asInstanceOf[Datum].v.asInstanceOf[Date]
   }
 }

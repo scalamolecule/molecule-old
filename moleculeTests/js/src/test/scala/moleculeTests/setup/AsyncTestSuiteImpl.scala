@@ -1,7 +1,6 @@
 package moleculeTests.setup
 
 import molecule.core.data.SchemaTransaction
-import molecule.core.facade
 import molecule.core.facade.Conn_Js
 import molecule.core.marshalling.DatomicInMemProxy
 import molecule.datomic.base.facade.Conn
@@ -21,10 +20,10 @@ trait AsyncTestSuiteImpl {
 
   val isJsPlatform_ = true
 
-  def inMem(schemaTransaction: SchemaTransaction): Future[Conn_Js] = Future(facade.Conn_Js(
+  def inMem(schema: SchemaTransaction): Future[Conn_Js] = Future(Conn_Js(
     DatomicInMemProxy(
-      schemaTransaction.datomicPeer,
-      schemaTransaction.attrMap
+      schema.datomicPeer,
+      schema.attrMap
     )
   ))
 

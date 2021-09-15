@@ -155,22 +155,22 @@ import scala.util.control.NonFatal
   * */
 abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Option[Throwable]))
   extends Marshalling[Obj, Tpl](model, queryData)
-  with CastTypes
-  with CastAggr
-  with CastOptNested
+    with CastTypes
+    with CastAggr
+    with CastOptNested
 
-  with JsonTypes
-  with JsonAggr
-  with JsonOptNested
+    with JsonTypes
+    with JsonAggr
+    with JsonOptNested
 
-  with String2cast
-  with String2json
+    with String2cast
+    with String2json
 
-  with GetTpls[Obj, Tpl]
-  with GetObjs[Obj, Tpl]
-  with GetJson[Obj, Tpl]
-  with ShowInspect[Obj, Tpl]
-  with Helpers {
+    with GetTpls[Obj, Tpl]
+    with GetObjs[Obj, Tpl]
+    with GetJson[Obj, Tpl]
+    with ShowInspect[Obj, Tpl]
+    with Helpers {
 
 
   // Dynamic molecule ==========================================================
@@ -200,7 +200,7 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
     */
   def save(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
     VerifyModel(_model, "save")
-    conn.flatMap { conn =>
+    val res = conn.flatMap { conn =>
       if (conn.isJsPlatform) {
         for {
           saveStmts <- conn.model2stmts(_model).saveStmts
@@ -212,6 +212,8 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
         )
       }
     }
+    //    res.foreach(r => println("@@@@@@@@@@@@ SAVE  " + r))
+    res
   } catch {
     // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
@@ -297,7 +299,7 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
   protected def _insert(conn: Future[Conn], dataRows: Iterable[Seq[Any]])
                        (implicit ec: ExecutionContext): Future[TxReport] = try {
     VerifyModel(_model, "insert")
-    conn.flatMap { conn =>
+    val res = conn.flatMap { conn =>
       if (conn.isJsPlatform) {
         for {
           insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
@@ -314,6 +316,8 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
         )
       }
     }
+    //    res.foreach(r => println("@@@@@@@@@@@@ INSERT  " + r))
+    res
   } catch {
     // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)

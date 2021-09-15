@@ -1,5 +1,7 @@
 package molecule.core.marshalling.unpackAttr
 
+import java.net.URI
+import java.util.UUID
 import molecule.core.macros.rowAttr.JsonBase
 import molecule.core.util.Helpers
 
@@ -33,17 +35,20 @@ trait String2json extends JsonBase with Helpers {
   protected lazy val unpack2jsonOne       = (sb: StringBuffer, field: String, v: String) => pair(sb, field, v)
   protected lazy val unpack2jsonOneDate   = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, truncateDateStr(v))
   protected lazy val unpack2jsonOneQuoted = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, v)
-  protected lazy val unpack2jsonOneAny    = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) => v match {
-    case "String"     => unpack2jsonOneString(sb, field, v, vs)
-    case "Int"    => pair(sb, field, v)
-    case "Long"       => pair(sb, field, v)
-    case "Double"     => pair(sb, field, v)
-    case "Boolean"    => pair(sb, field, v)
-    case "Date"       => quotedPair(sb, field, v)
-    case "UUID"       => quotedPair(sb, field, v)
-    case "URI"        => quotedPair(sb, field, v)
-    case "BigInt"     => pair(sb, field, v)
-    case "BigDecimal" => pair(sb, field, v)
+  protected lazy val unpack2jsonOneAny    = (sb: StringBuffer, field: String, s: String, vs: Iterator[String]) => {
+    val v = s.drop(10)
+    s.take(10) match {
+      case "String    " => unpack2jsonOneString(sb, field, v, vs)
+      case "Int       " => pair(sb, field, v)
+      case "Long      " => pair(sb, field, v)
+      case "Double    " => pair(sb, field, v)
+      case "Boolean   " => pair(sb, field, v)
+      case "Date      " => quotedPair(sb, field, v)
+      case "UUID      " => quotedPair(sb, field, v)
+      case "URI       " => quotedPair(sb, field, v)
+      case "BigInt    " => pair(sb, field, v)
+      case "BigDecimal" => pair(sb, field, v)
+    }
   }
 
 

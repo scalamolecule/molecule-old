@@ -100,11 +100,7 @@ object QueryTour extends AsyncTestSuite {
 
 
         // 12. Requesting an Attribute value
-        _ <- editor(":User/firstName").map(_ ==> Some("Ed"))
-        _ <- editor(":unrecognizedKey").map(_ ==> None)
-
-        // Or as query
-        _ <- User(editor).firstName.get.map(_.head ==> "Ed")
+        _ <- User(editor).firstName.get.map(_ ==> List("Ed"))
 
 
         // 13. Touching an entity
@@ -120,28 +116,12 @@ object QueryTour extends AsyncTestSuite {
         // 14. Navigating backwards
 
         // The editors comments (Comments pointing to the Editor entity)
-        _ <- editor.apply[List[Long]](":Comment/_author").map(_ ==> Some(List(c2, c4, c5, c7, c11)))
-
-        // .. almost same as: (here, only matching data is returned)
-        // Comments of editor
         _ <- Comment.e.author_(editor).get.map(_.sorted ==> List(c2, c4, c5, c7, c11))
 
 
-        // 15. Navigating Deeper with entity api
+        // 15. Navigating Deeper
 
-        // Comments to the editors comments (with entity api)
-        _ <- for {
-          authorIds <- editor.apply[List[Long]](":Comment/_author").map(_.get)
-          commentEntityMaps <- Future.sequence(authorIds.map(x => x.apply[Map[String, Long]](":Parent/comment")))
-          commentIds = commentEntityMaps.flatMap {
-            case Some(entityMap) => entityMap.get(":db/id")
-            case None            => None
-          }
-        } yield {
-          commentIds ==> List(c3, c6, c8, c12)
-        }
-
-        // Comments to the editors comments (with query)
+        // Comments to the editors comments
         _ <- m(Comment.author_(editor) + Parent.comment).get.map(_.sorted ==> List(c3, c6, c8, c12))
 
         // Editors comments and responses (note that c4 wasn't commented on)

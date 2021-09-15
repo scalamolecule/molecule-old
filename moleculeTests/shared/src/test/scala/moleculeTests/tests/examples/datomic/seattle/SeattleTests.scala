@@ -58,19 +58,10 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           ":Community/url" -> "http://greenlake.wetpaint.com/",
           ":Community/tpe" -> ":Community.tpe/wiki"))
 
-        // We can also retrieve a single (optional) attribute value
-        untyped: Option[Any] <- communityId(":community/name")
-        typed: Option[String] <- communityId[String](":community/name")
-
-        _ <- communityId.apply[String](":Community/name").map(_ ==> Some("Greenlake Community Wiki"))
-        _ <- communityId.apply[String](":Community/url").map(_ ==> Some("http://greenlake.wetpaint.com/"))
-        _ <- communityId.apply[List[String]](":Community/category").map(
-          _.get.sorted ==> List("events", "for sale", "services")
-        )
-        _ <- communityId.apply(":Community/emptyOrBogusAttribute").map(_ ==> None)
-
-        // We can also use the entity id to query for an attribute value
-        _ <- Community(communityId).name.get.map(_.head ==> "Greenlake Community Wiki")
+        // We can also use the entity id to query for attribute values
+        _ <- Community(communityId).name.get.map(_ ==> List("Greenlake Community Wiki"))
+        _ <- Community(communityId).url.get.map(_ ==> List("http://greenlake.wetpaint.com/"))
+        _ <- Community(communityId).category.get.map(_.head.toList.sorted ==> List("events", "for sale", "services"))
       } yield ()
     }
 

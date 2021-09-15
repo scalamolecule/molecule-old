@@ -8,7 +8,7 @@ import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy}
+import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -26,19 +26,32 @@ import scala.util.control.NonFatal
 /** Factory methods to create facade to Datomic Connection. */
 object Conn_Peer {
 
-  def apply(uri: String): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), uri)
+  def apply(
+    uri: String
+  ): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), uri)
+
+  def apply(
+    uri: String,
+    defaultConnProxy: ConnProxy
+  ): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), uri, defaultConnProxy)
 
   // Constructor for transaction functions where db is supplied inside transaction by transactor
   def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null) {
     testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
   }
+
+  // todo: necessary with conn proxy in tx fns?
+//  def apply(txDb: AnyRef, defConnProxy: ConnProxy): Conn_Peer = new Conn_Peer(null, defaultConnProxy = defConnProxy) {
+//    testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
+//  }
 }
 
 /** Facade to Datomic connection for peer api.
   * */
 case class Conn_Peer(
   peerConn: datomic.Connection,
-  system: String = ""
+  system: String = "",
+  defaultConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
 ) extends Conn_Datomic213 {
 
   // In-memory fixed test db for integration testing
@@ -131,7 +144,7 @@ case class Conn_Peer(
         txReport.dbAfter.asOf(txReport.t)
     }
     _adhocDbView = None
-    connProxy = emptyConnProxy
+    connProxy = defaultConnProxy
     adhocDb
   }
 
@@ -204,6 +217,7 @@ case class Conn_Peer(
       //      debug("t", _testDb.toString)
       txReport
     }
+
     def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
     if (_adhocDbView.isDefined) {

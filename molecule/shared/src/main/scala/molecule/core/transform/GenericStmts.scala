@@ -25,7 +25,7 @@ abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
 
   // Save attribute cardinality/type info
   val attrInfo = mutable.Map(
-    ":molecule_Meta/otherEdge" -> (1, "Long")
+    ":molecule_Meta/otherEdge" -> (1, "ref")
   )
 
   val genericStmts: Seq[Statement] = {
@@ -44,6 +44,7 @@ abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
       // Set attrInfo
       element match {
         case Atom(ns, attr, tpe, card, _, _, _, _) => attrInfo(s":$ns/$attr") = (card, tpe)
+        case Bond(ns, refAttr, _, card, _)         => attrInfo(s":$ns/$refAttr") = (card, "ref")
         case _                                     =>
       }
       (eSlot, element) match {

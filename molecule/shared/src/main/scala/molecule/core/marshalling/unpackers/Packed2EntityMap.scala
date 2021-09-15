@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 
 class Packed2EntityMap(conn: Conn) extends DateHandling {
 
-  private val attrs = conn.connProxy.attrMap
+  private val attrs = conn.connProxy.attrMap + (":molecule_Meta/otherEdge" -> (1, "ref"))
 
   private lazy val buf = new StringBuffer
 

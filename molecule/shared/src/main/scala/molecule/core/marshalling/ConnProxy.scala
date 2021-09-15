@@ -7,7 +7,7 @@ import molecule.datomic.base.ast.dbView.{AsOf, DbView, History, TxLong}
 sealed trait ConnProxy {
   val uuid      : String
   val schemaPeer: Seq[String]
-  val attrMap = Map.empty[String, (Int, String)]
+  val attrMap   : Map[String, (Int, String)]
 
   /** 0 inactive
     * 1 activate
@@ -16,12 +16,12 @@ sealed trait ConnProxy {
     */
   val testDbStatus: Int
   val testDbView  : Option[DbView]
-  val adhocDbView: Option[DbView]
+  val adhocDbView : Option[DbView]
 }
 
 case class DatomicInMemProxy(
   schemaPeer: Seq[String],
-  override val attrMap: Map[String, (Int, String)],
+  attrMap: Map[String, (Int, String)],
   testDbStatus: Int = 0,
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,
@@ -32,6 +32,7 @@ case class DatomicPeerProxy(
   protocol: String,
   dbIdentifier: String,
   schemaPeer: Seq[String] = Nil,
+  attrMap: Map[String, (Int, String)] = Map.empty[String, (Int, String)],
   testDbStatus: Int = 0,
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,
@@ -43,6 +44,7 @@ case class DatomicDevLocalProxy(
   storageDir: String,
   dbName: String,
   schemaPeer: Seq[String] = Nil,
+  attrMap: Map[String, (Int, String)] = Map.empty[String, (Int, String)],
   testDbStatus: Int = 0,
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,
@@ -55,6 +57,7 @@ case class DatomicPeerServerProxy(
   endpoint: String,
   dbName: String,
   schemaPeer: Seq[String] = Nil,
+  attrMap: Map[String, (Int, String)] = Map.empty[String, (Int, String)],
   testDbStatus: Int = 0,
   testDbView: Option[DbView] = None,
   adhocDbView: Option[DbView] = None,

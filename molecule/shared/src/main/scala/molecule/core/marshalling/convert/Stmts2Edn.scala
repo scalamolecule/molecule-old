@@ -11,7 +11,7 @@ object Stmts2Edn extends Helpers {
 
   def apply(stmts: Seq[Statement], conn: Conn): (String, Set[String]) = {
     var uriAttrs = Set.empty[String]
-    val attrMap  = conn.connProxy.attrMap
+    val attrMap  = conn.connProxy.attrMap + (":molecule_Meta/otherEdge" -> (1, "ref"))
     val buf      = new StringBuffer()
 
     // Shamelessly copied from lift-json:

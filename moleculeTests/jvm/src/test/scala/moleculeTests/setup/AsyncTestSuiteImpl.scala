@@ -19,11 +19,14 @@ trait AsyncTestSuiteImpl {
 
   val isJsPlatform_ = false
 
-  def inMem(schemaTransaction: SchemaTransaction): Future[Conn] = {
-    Datomic_Peer.recreateDbFrom(schemaTransaction).map { conn =>
-      conn.connProxy = DatomicInMemProxy(schemaTransaction.datomicPeer, schemaTransaction.attrMap)
-      conn
-    }
+  def inMem(schema: SchemaTransaction): Future[Conn] = {
+    Datomic_Peer.recreateDbFrom(
+      schema,
+      connProxy = DatomicInMemProxy(
+        schema.datomicPeer,
+        schema.attrMap
+      )
+    )
   }
 
   def coreImpl[T](func: Future[Conn] => T): T = func(inMem(CoreTestSchema))

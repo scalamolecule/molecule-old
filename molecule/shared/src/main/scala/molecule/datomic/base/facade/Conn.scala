@@ -26,16 +26,15 @@ trait Conn extends ColOps with Serializations {
 
   val tempId = TempIdFactory
 
+  val defaultConnProxy: ConnProxy
+  var connProxy: ConnProxy = defaultConnProxy
+
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over _testDb)
   private[molecule] var _adhocDbView: Option[DbView] = None
 
-  protected val emptyConnProxy               = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
-//  private[molecule]
-  var connProxy: ConnProxy = emptyConnProxy
-
-  /** */
   lazy val rpc: MoleculeRpc = ???
+
 
   def usingAdhocDbView(dbView: DbView): Conn = {
     updateAdhocDbView(Some(dbView))
@@ -112,20 +111,8 @@ trait Conn extends ColOps with Serializations {
   )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
     jsGetRaw(query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes).map { packed =>
       if (packed.isEmpty) {
-        println("======= Empty result set =======")
         List.empty[T]
       } else {
-        //      val packed0 =
-        //        """
-        //          |a
-        //          |◄
-        //          |12
-        //          |aa
-        //          |◄
-        //          |◄◄""".stripMargin
-        //      println("@@@ " + packed0 + " @@@")
-        //      println("@@@ " + packed + " @@@")
-
         val lines = packed.linesIterator
         lines.next() // skip initial newline
         val rows = new ListBuffer[T]

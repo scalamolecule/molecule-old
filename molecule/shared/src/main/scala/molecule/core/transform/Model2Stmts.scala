@@ -16,6 +16,7 @@ import scala.util.control.NonFatal
 case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, model) {
 
   private def getPairs(e: Any, a: String, key: String = ""): Future[Map[String, String]] = {
+    // Returning card one/many values uniformly as single value for each row
     val query = if (key.isEmpty) {
       s"[:find ?v :where [$e $a ?v]]"
     } else {
@@ -35,17 +36,17 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
     val unMarshall  = card match {
       case 3 => (v: String) => v
       case _ => tpe match {
-        case "String"     => (v: String) => v.asInstanceOf[AnyRef]
-        case "Int"        => (v: String) => v.toInt.asInstanceOf[AnyRef]
-        case "Long"       => (v: String) => v.toLong.asInstanceOf[AnyRef]
-        case "Float"      => (v: String) => v.toDouble.asInstanceOf[AnyRef]
-        case "Double"     => (v: String) => v.toDouble.asInstanceOf[AnyRef]
-        case "BigInt"     => (v: String) => BigInt(v).asInstanceOf[AnyRef]
-        case "BigDecimal" => (v: String) => BigDecimal(v).asInstanceOf[AnyRef]
-        case "Boolean"    => (v: String) => v.toBoolean.asInstanceOf[AnyRef]
-        case "Date"       => (v: String) => str2date(v).asInstanceOf[AnyRef]
-        case "UUID"       => (v: String) => java.util.UUID.fromString(v).asInstanceOf[AnyRef]
-        case "URI"        => (v: String) => new java.net.URI(v).asInstanceOf[AnyRef]
+        case "String" | "enum" => (v: String) => v.asInstanceOf[AnyRef]
+        case "Int"             => (v: String) => v.toInt.asInstanceOf[AnyRef]
+        case "Long" | "ref"    => (v: String) => v.toLong.asInstanceOf[AnyRef]
+        case "Float"           => (v: String) => v.toDouble.asInstanceOf[AnyRef]
+        case "Double"          => (v: String) => v.toDouble.asInstanceOf[AnyRef]
+        case "BigInt"          => (v: String) => BigInt(v).asInstanceOf[AnyRef]
+        case "BigDecimal"      => (v: String) => BigDecimal(v).asInstanceOf[AnyRef]
+        case "Boolean"         => (v: String) => v.toBoolean.asInstanceOf[AnyRef]
+        case "Date"            => (v: String) => str2date(v).asInstanceOf[AnyRef]
+        case "UUID"            => (v: String) => java.util.UUID.fromString(v).asInstanceOf[AnyRef]
+        case "URI"             => (v: String) => new java.net.URI(v).asInstanceOf[AnyRef]
       }
     }
     conn.jsGetAttrValues(query, card, tpe).map { stringValues =>
@@ -331,7 +332,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
                   Retract(e, a, oldRef), Add(e, a, newRef, Card(card)),
                   // RevRef no longer has a ref to this entity e
                   // Instead newRef has a ref to this entity e
-                  Retract(revRef, revRefAttr, e, Card(card)), Add(newRef, revRefAttr, e, Card(card))
+                  Retract(revRef, revRefAttr, e), Add(newRef, revRefAttr, e, Card(card))
                 )
               case _                                    => Nil
             }
@@ -506,8 +507,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
               futStmts.flatMap { stmts =>
                 edgeAB(edge, targetAttr).map { case (edgeA, edgeB) =>
                   stmts ++ retracts ++ Seq(
-                    Add(edgeA, ":molecule_Meta/otherEdge", edgeB, Card(card)),
-                    Add(edgeB, ":molecule_Meta/otherEdge", edgeA, Card(card)),
+                    Add(edgeA, ":molecule_Meta/otherEdge", edgeB, Card(1)),
+                    Add(edgeB, ":molecule_Meta/otherEdge", edgeA, Card(1)),
                     Add(edgeB, targetAttr, e, Card(card)),
                     Add(e, a, edgeA, Card(card))
                   )
@@ -522,8 +523,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
         val edgeB    = otherEdgeId getOrElse err("valueStmts:biEdgeRef", "Missing id of other edge.")
         val addStmts = Seq(
           // Interlink edge entities so that we later know which other one to update
-          Add(edgeA, ":molecule_Meta/otherEdge", edgeB, Card(card)),
-          Add(edgeB, ":molecule_Meta/otherEdge", edgeA, Card(card)),
+          Add(edgeA, ":molecule_Meta/otherEdge", edgeB, Card(1)),
+          Add(edgeB, ":molecule_Meta/otherEdge", edgeA, Card(1)),
           Add(edgeB, targetAttr, e, Card(card)),
           Add(e, a, edgeA, Card(card))
         )
@@ -559,8 +560,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
                 case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
                 case (k, v) if curKeys.contains(k)                       =>
                   Seq(
-                    Retract(edgeB, a, k + "@" + curPairs(k)), Add(edgeB, a, k + "@" + d(v), Card(card)),
-                    Retract(edgeA, a, k + "@" + curPairs(k)), Add(edgeA, a, k + "@" + d(v), Card(card))
+                    Retract(edgeB, a, k + "@" + curPairs(k), Card(card)), Add(edgeB, a, k + "@" + d(v), Card(card)),
+                    Retract(edgeA, a, k + "@" + curPairs(k), Card(card)), Add(edgeA, a, k + "@" + d(v), Card(card))
                   )
                 case (k, v)                                              =>
                   Seq(
@@ -583,8 +584,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
                 case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
                 case (k, v) if curKeys.contains(k)                       =>
                   Seq(
-                    Retract(edgeB, a, k + "@" + curPairs(k)), Add(edgeB, a, k + "@" + d(v), Card(card)),
-                    Retract(edgeA, a, k + "@" + curPairs(k)), Add(edgeA, a, k + "@" + d(v), Card(card))
+                    Retract(edgeB, a, k + "@" + curPairs(k), Card(card)), Add(edgeB, a, k + "@" + d(v), Card(card)),
+                    Retract(edgeA, a, k + "@" + curPairs(k), Card(card)), Add(edgeA, a, k + "@" + d(v), Card(card))
                   )
                 case (k, v)                                              =>
                   Seq(
@@ -603,8 +604,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
               oldPairs.flatMap {
                 case (oldK, oldV) if removeKeys.contains(oldK) =>
                   Seq(
-                    Retract(edgeB, a, s"$oldK@$oldV"),
-                    Retract(edgeA, a, s"$oldK@$oldV")
+                    Retract(edgeB, a, s"$oldK@$oldV", Card(card)),
+                    Retract(edgeA, a, s"$oldK@$oldV", Card(card))
                   )
                 case (oldK, oldV)                              => Nil
               }
@@ -623,8 +624,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
                     case (oldK, oldV) if newPairs1.contains((oldK, oldV)) => Nil
                     case (oldK, oldV)                                     =>
                       Seq(
-                        Retract(edgeB, a, s"$oldK@$oldV"),
-                        Retract(edgeA, a, s"$oldK@$oldV")
+                        Retract(edgeB, a, s"$oldK@$oldV", Card(card)),
+                        Retract(edgeA, a, s"$oldK@$oldV", Card(card))
                       )
                   }
                   val adds     = newPairs.flatMap { case (k, v) =>
@@ -662,16 +663,16 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
           checkDupValuesOfPairs(oldNew, "biEdgeProp", "replace")
           oldNew.flatMap { case (oldValue, newValue) =>
             Seq(
-              Retract(edgeB, a, p(oldValue)), Add(edgeB, a, p(newValue), Card(card)),
-              Retract(edgeA, a, p(oldValue)), Add(edgeA, a, p(newValue), Card(card)))
+              Retract(edgeB, a, p(oldValue), Card(card)), Add(edgeB, a, p(newValue), Card(card)),
+              Retract(edgeA, a, p(oldValue), Card(card)), Add(edgeA, a, p(newValue), Card(card)))
           }
         }
 
         case RetractValue(removeValues) => futEdgeB.map { edgeB =>
           removeValues.distinct.flatMap(v =>
             Seq(
-              Retract(edgeB, a, p(v)),
-              Retract(edgeA, a, p(v))
+              Retract(edgeB, a, p(v), Card(card)),
+              Retract(edgeA, a, p(v), Card(card))
             )
           )
         }
@@ -688,8 +689,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
                 case curValue if newValueStrings.contains(curValue.toString) => Nil
                 case obsoleteValue                                           =>
                   Seq(
-                    Retract(edgeB, a, p(obsoleteValue)),
-                    Retract(edgeA, a, p(obsoleteValue))
+                    Retract(edgeB, a, p(obsoleteValue), Card(card)),
+                    Retract(edgeA, a, p(obsoleteValue), Card(card))
                   )
               }
               val adds     = newValues.flatMap {
@@ -749,8 +750,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
           case Add(_, ":molecule_Meta/otherEdge", _, _) => Nil
         } getOrElse
           Seq(
-            Add(edgeA, ":molecule_Meta/otherEdge", edgeB, Card(card)),
-            Add(edgeB, ":molecule_Meta/otherEdge", edgeA, Card(card))
+            Add(edgeA, ":molecule_Meta/otherEdge", edgeB, Card(1)),
+            Add(edgeB, ":molecule_Meta/otherEdge", edgeA, Card(1))
           )
       }
 
@@ -791,7 +792,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
             case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
             case (k, v) if curKeys.contains(k)                       =>
               Seq(
-                Retract(e, a, s"$k@${curPairs(k)}"),
+                Retract(e, a, s"$k@${curPairs(k)}", Card(card)),
                 Add(e, a, s"$k@${d(v)}", Card(card))
               )
             case (k, v)                                              =>
@@ -810,7 +811,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
             case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
             case (k, v) if curKeys.contains(k)                       =>
               Seq(
-                Retract(e, a, s"$k@${curPairs(k)}"),
+                Retract(e, a, s"$k@${curPairs(k)}", Card(card)),
                 Add(e, a, s"$k@${d(v)}", Card(card))
               )
             case (k, v)                                              =>
@@ -823,7 +824,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
         val removeKeys = removeKeys0.distinct
         getPairs(e, a).map { oldPairs =>
           oldPairs.flatMap {
-            case (oldK, oldV) if removeKeys.contains(oldK) => Seq(Retract(e, a, s"$oldK@$oldV"))
+            case (oldK, oldV) if removeKeys.contains(oldK) => Seq(Retract(e, a, s"$oldK@$oldV", Card(card)))
             case (oldK, oldV)                              => Nil
           }
         }
@@ -836,7 +837,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
               val newPairs1 = newPairs.map { case (k, v) => (k, d(v).toString) }
               val retracts  = oldPairs.flatMap {
                 case (oldK, oldV) if newPairs1.contains((oldK, oldV)) => Nil
-                case (oldK, oldV)                                     => Seq(Retract(e, a, s"$oldK@$oldV"))
+                case (oldK, oldV)                                     => Seq(Retract(e, a, s"$oldK@$oldV", Card(card)))
               }
               val adds      = newPairs.map { case (k, v) => Add(e, a, k + "@" + d(v), Card(card)) }
               retracts ++ adds
@@ -853,13 +854,13 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
         checkDupValuesOfPairs(oldNew, "default", "replace")
         oldNew.flatMap { case (oldValue, newValue) =>
           Seq(
-            Retract(e, a, p(oldValue)),
+            Retract(e, a, p(oldValue), Card(card)),
             Add(e, a, p(newValue), Card(card))
           )
         }
       }
 
-      case RetractValue(removeValues) => Future(flatten(removeValues).distinct.map(v => Retract(e, a, p(v))))
+      case RetractValue(removeValues) => Future(flatten(removeValues).distinct.map(v => Retract(e, a, p(v), Card(card))))
 
       case Eq(newValues0) => {
         val newValues    = flatten(newValues0).distinct
@@ -870,7 +871,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
           val retracts        = if (card == 2 || (newValues.isEmpty && curValues.nonEmpty))
             curValues.flatMap {
               case curValue if newValueStrings.contains(curValue.toString) => Nil
-              case obsoleteValue                                           => Seq(Retract(e, a, p(obsoleteValue)))
+              case obsoleteValue                                           => Seq(Retract(e, a, p(obsoleteValue), Card(card)))
             }
           else
             Nil
@@ -1100,8 +1101,8 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
             val edgeA     = tempId(revAttr)
             val edgeB1    = tempId(ref)
             val bondStmts = Seq(
-              Add(edgeA, ":molecule_Meta/otherEdge", edgeB1, Card(2)),
-              Add(edgeB1, ":molecule_Meta/otherEdge", edgeA, Card(2)),
+              Add(edgeA, ":molecule_Meta/otherEdge", edgeB1, Card(1)),
+              Add(edgeB1, ":molecule_Meta/otherEdge", edgeA, Card(1)),
               Add(edgeB1, revAttr, parentE, Card(2)),
               Add(parentE, ref, edgeA, Card(2))
             )
