@@ -14,17 +14,17 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     crossScalaVersions := Seq("2.12.13", "2.13.6"),
     ThisBuild / scalaVersion := "2.13.6",
     scalacOptions := List(
-//      "-feature",
-//      "-unchecked",
-//      "-deprecation",
-////      "-explaintypes",
-//      "-feature",
-////      "-language:_",
-//      "-Xlint",
-//      "-Yrangepos",
-//      "-Ywarn-value-discard",
-//      "-Ywarn-extra-implicit",
-//      "-Ywarn-unused",
+      //      "-feature",
+      //      "-unchecked",
+      //      "-deprecation",
+      ////      "-explaintypes",
+      //      "-feature",
+      ////      "-language:_",
+      //      "-Xlint",
+      //      "-Yrangepos",
+      //      "-Ywarn-value-discard",
+      //      "-Ywarn-extra-implicit",
+      //      "-Ywarn-unused",
 
       "-feature",
       "-deprecation",
@@ -108,22 +108,39 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed     = Seq(
+        //        sharedTests + "/core/attr",
+        sharedTests + "/core/attrMap",
+        //        sharedTests + "/core/bidirectionals",
+        //        sharedTests + "/core/build",
+        //        sharedTests + "/core/composite",
+
+
+        //-------------------
+
+        //        sharedTests + "/core/crud",
+        //        sharedTests + "/core/equality",
+        //        sharedTests + "/core/expression",
+        //        sharedTests + "/core/generic",
+        //        sharedTests + "/core/input1",
+        //        sharedTests + "/core/input2",
+        //        sharedTests + "/core/input3",
+
+        //        sharedTests + "/core/ref",
+        //        sharedTests + "/core/schemaDef",
+        //        sharedTests + "/core/transaction",
+
+
+        //-------------------
+
+        //        sharedTests + "/core/json",
+        //        sharedTests + "/core/nested",
+        //        sharedTests + "/core/obj",
+        //        sharedTests + "/core/runtime",
         //        sharedTests + "/core/time",
-//        sharedTests + "/core/attr",
-//        sharedTests + "/core/attrMap",
-
-        sharedTests + "/core/bidirectionals",
-//        sharedTests + "/core/build",
-//        sharedTests + "/core/composite",
-//        sharedTests + "/core/json",
-//        sharedTests + "/core/nested",
-
-//        sharedTests + "/core/obj",
-//        sharedTests + "/core/runtime",
-//        sharedTests + "/core/txMetaData",
+        //        sharedTests + "/core/txMetaData",
 
 
-//        sharedTests + "/core/transaction",
+        //        sharedTests + "/core/transaction",
         sharedTests + "/Adhoc.scala",
       )
       new SimpleFileFilter(f =>

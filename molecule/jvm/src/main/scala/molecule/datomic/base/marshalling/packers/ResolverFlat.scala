@@ -87,11 +87,8 @@ trait ResolverFlat extends PackFlatTypes with PackFlatAggr {
     case _        => packOptApplyMap(sb, colIndex)
   }
 
-  def packKeyedMapAtt(sb: StringBuffer, baseTpe: String, colIndex: Int): jList[_] => StringBuffer = baseTpe match {
-    case "String" => packKeyedMapString(sb, colIndex)
-    case "Date"   => packKeyedMapDate(sb, colIndex)
-    case _        => packKeyedMap(sb, colIndex)
-  }
+  def packKeyedMapAtt(sb: StringBuffer, baseTpe: String, colIndex: Int): jList[_] => StringBuffer =
+    packKeyedMapString(sb, colIndex)
 
   def packAggrOneList(sb: StringBuffer, baseTpe: String, colIndex: Int): jList[_] => StringBuffer = baseTpe match {
     case "String" => packAggrOneListString(sb, colIndex)

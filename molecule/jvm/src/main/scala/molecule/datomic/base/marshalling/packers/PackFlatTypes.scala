@@ -344,16 +344,4 @@ trait PackFlatTypes extends PackBase with Helpers {
     add(sb, row.get(colIndex).toString)
     end(sb)
   }
-
-  protected lazy val packKeyedMap     = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
-  protected lazy val packKeyedMapDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
-
-  // Generic `v` attribute value converted to String}
-  protected lazy val packKeyedMapAny = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-    row.get(colIndex) match {
-      case s: String => add(sb, s); end(sb)
-      case d: Date   => add(sb, date2strLocal(d))
-      case other     => add(sb, other.toString)
-    }
-  }
 }

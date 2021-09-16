@@ -7,23 +7,44 @@ import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 import java.lang.{RuntimeException, Long => jLong}
+import java.net.URI
 import java.util.{Collections, Date, UUID, ArrayList => jArrayList, Comparator => jComparator, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
 import molecule.core.ast.elements._
 import molecule.core.exceptions.{MoleculeException, TxFnException}
 import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.util.Helpers
-import molecule.datomic.base.facade.Conn
+import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
+import moleculeTests.tests.core.attrMap.Base
+
+object Adhoc extends AsyncTestSuite with Helpers with Base {
 
 
-object Adhoc extends AsyncTestSuite with Helpers {
+  val en_da       = Seq("en", "da")
+  val hi_he       = Seq("Hi there", "Hello")
+  val _10_30      = Seq(10, 30)
+  val date1_date3 = Seq(date1, date3)
 
+  val hi_hello       = List(
+    (1, "Hi there"),
+    (3, "Hello")
+  )
+  val en_10_30       = List(
+    (3, 30),
+    (2, 10),
+    (1, 10)
+  )
+  val en_date1_date3 = List(
+    (3, date3),
+    (2, date1),
+    (1, date1),
+  )
 
   lazy val tests = Tests {
 
