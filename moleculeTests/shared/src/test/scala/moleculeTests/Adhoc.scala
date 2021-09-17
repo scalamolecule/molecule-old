@@ -15,45 +15,53 @@ import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.util.Helpers
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.concurrent.ExecutionContext.Implicits.global
+//import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
-import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import scala.util.control.NonFatal
-import moleculeTests.tests.core.attrMap.Base
 
-object Adhoc extends AsyncTestSuite with Helpers with Base {
+object Adhoc extends AsyncTestSuite with Helpers  {
 
 
-  val en_da       = Seq("en", "da")
-  val hi_he       = Seq("Hi there", "Hello")
-  val _10_30      = Seq(10, 30)
-  val date1_date3 = Seq(date1, date3)
-
-  val hi_hello       = List(
-    (1, "Hi there"),
-    (3, "Hello")
-  )
-  val en_10_30       = List(
-    (3, 30),
-    (2, 10),
-    (1, 10)
-  )
-  val en_date1_date3 = List(
-    (3, date3),
-    (2, date1),
-    (1, date1),
-  )
+  def data(implicit conn: Future[Conn], ec: ExecutionContext) = {
+    for {
+      _ <- Ns.int.insert(1, 2, 3)
+      _ <- Ns.double.insert(1.0, 2.0, 3.0)
+      _ <- Ns.str.insert("a", "b", "c")
+    } yield ()
+  }
 
   lazy val tests = Tests {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
 
     "adhoc shared" - core { implicit futConn =>
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
+        _ <- data
+        // For any property
 
+        _ <- Ns.int(min).get.map(_ ==> List(1))
+        _ <- Ns.int(min).getObj.map(_.int ==> 1)
+//        _ <- Ns.int(max).getObj.map(_.int ==> 3)
+//        _ <- Ns.int(rand).getObj.map(_.int) // 1, 2 or 3
+//        _ <- Ns.int(sample).getObj.map(_.int) // 1, 2 or 3
+//        _ <- Ns.int(median).getObj.map(_.int ==> 2)
+//
+//        _ <- Ns.double(min).getObj.map(_.double ==> 1.0)
+//        _ <- Ns.double(max).getObj.map(_.double ==> 3.0)
+//        _ <- Ns.double(rand).getObj.map(_.double) // 1.0, 2.0 or 3.0
+//        _ <- Ns.double(sample).getObj.map(_.double) // 1.0, 2.0 or 3.0
+//        _ <- Ns.double(median).getObj.map(_.double ==> 2.0)
+//
+//        _ <- Ns.str(min).getObj.map(_.str ==> "a")
+//        _ <- Ns.str(max).getObj.map(_.str ==> "c")
+//        _ <- Ns.str(rand).getObj.map(_.str) // a, b or c
+//        _ <- Ns.str(sample).getObj.map(_.str) // a, b or c
+//        _ <- Ns.str(median).getObj.map(_.str ==> "b")
 
 
 

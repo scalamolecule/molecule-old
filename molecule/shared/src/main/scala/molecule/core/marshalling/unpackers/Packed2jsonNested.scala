@@ -23,7 +23,9 @@ trait Packed2jsonNested extends PackedValue2json with JsonBase {
 
     def resolveTxGroups(txCompositeGroups: Seq[Node], tabs: Int): Seq[Tree] = {
       def resolve(nodes: Seq[Node], acc: Seq[Tree]): Seq[Tree] = nodes.flatMap {
-        case Prop(prop, _, baseTpe, _, group, _) => acc :+ getPackedValue2json(group, baseTpe, prop, next, tabs + 1)
+        case Prop(prop, _, baseTpe, _, group, optAggrTpe) =>
+          acc :+ getPackedValue2json(group, baseTpe, prop, next, tabs + 1, optAggrTpe)
+
         case Obj(_, _, _, nodes)                 => resolve(nodes, acc)
       }
       txCompositeGroups.collect {
@@ -36,18 +38,24 @@ trait Packed2jsonNested extends PackedValue2json with JsonBase {
 
     def setUnpacker(node: Node, level: Int, levelIndex: Int, refIndex: Int, ref: String, tabs: Int): Unit = {
       node match {
-        case Prop(_, prop, baseTpe, _, group, _) if level > 0 && levelIndex == 0 =>
+        case Prop(_, prop, baseTpe, _, group, optAggrTpe) if level > 0 && levelIndex == 0 =>
           // First prop on each sub level takes the `v` from before the loop
-          unpackerss(level) = (unpackerss(level)._1 :+ getPackedValue2json(group, baseTpe, prop, v, tabs + 1), ref, tabs)
+          unpackerss(level) = (
+            unpackerss(level)._1 :+ getPackedValue2json(group, baseTpe, prop, v, tabs + 1, optAggrTpe),
+            ref, tabs
+          )
 
-        case Prop(_, prop, baseTpe, _, group, _) if refIndex == 0 =>
+        case Prop(_, prop, baseTpe, _, group, optAggrTpe) if refIndex == 0 =>
           // First prop after each new flat ref has no comma before
-          unpackerss(level) = (unpackerss(level)._1 :+ getPackedValue2json(group, baseTpe, prop, next, tabs + 1), ref, tabs)
+          unpackerss(level) = (
+            unpackerss(level)._1 :+ getPackedValue2json(group, baseTpe, prop, next, tabs + 1, optAggrTpe),
+            ref, tabs
+          )
 
-        case Prop(_, prop, baseTpe, _, group, _) =>
+        case Prop(_, prop, baseTpe, _, group, optAggrTpe) =>
           unpackerss(level) = (unpackerss(level)._1 ++ Seq(
             q"""sb.append(${"," + indent(tabs + 1)})""",
-            getPackedValue2json(group, baseTpe, prop, next, tabs + 1)
+            getPackedValue2json(group, baseTpe, prop, next, tabs + 1, optAggrTpe)
           ), ref, tabs)
 
         case Obj(_, nestedRef, true, props) =>

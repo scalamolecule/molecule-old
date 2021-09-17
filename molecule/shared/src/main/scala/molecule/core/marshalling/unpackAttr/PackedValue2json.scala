@@ -8,18 +8,28 @@ private[molecule] trait PackedValue2json extends TreeOps {
 
   import c.universe._
 
-  def getPackedValue2json(group: String, baseTpe: String, field: String, v: Tree, tabs: Int): Tree = group match {
-    case "One" | "KeyedMap" | "AggrSingleSample" | "AggrOneSingle"    => unpack2jsonOneAttr(field, baseTpe, v)
-    case "OptOne" | "OptApplyOne"                                     => unpack2jsonOptOneAttr(field, baseTpe, v)
-    case "Many" | "AggrManySingle"                                    => unpack2jsonManyAttr(field, baseTpe, v, tabs)
-    case "OptMany" | "OptApplyMany"                                   => unpack2jsonOptManyAttr(field, baseTpe, v, tabs)
-    case "Map"                                                        => unpack2jsonMapAttr(field, baseTpe, v, tabs)
-    case "OptMap" | "OptApplyMap"                                     => unpack2jsonOptMapAttr(field, baseTpe, v, tabs)
-    case "AggrOneList" | "AggrOneListDistinct" | "AggrOneListRand"    => unpack2jsonAggrOneList(field, baseTpe, v, tabs)
-    case "AggrManyList" | "AggrManyListDistinct" | "AggrManyListRand" => unpack2jsonAggrManyList(field, baseTpe, v, tabs)
+  def getPackedValue2json(
+    group: String,
+    baseTpe: String,
+    field: String, 
+    v: Tree, 
+    tabs: Int,
+    optAggrTpe: Option[String]
+  ): Tree = {
+    val tpe = optAggrTpe.getOrElse(baseTpe)
+    group match {
+      case "One" | "KeyedMap" | "AggrSingleSample" | "AggrOneSingle"    => unpack2jsonOneAttr(field, tpe, v)
+      case "OptOne" | "OptApplyOne"                                     => unpack2jsonOptOneAttr(field, tpe, v)
+      case "Many" | "AggrManySingle"                                    => unpack2jsonManyAttr(field, tpe, v, tabs)
+      case "OptMany" | "OptApplyMany"                                   => unpack2jsonOptManyAttr(field, tpe, v, tabs)
+      case "Map"                                                        => unpack2jsonMapAttr(field, tpe, v, tabs)
+      case "OptMap" | "OptApplyMap"                                     => unpack2jsonOptMapAttr(field, tpe, v, tabs)
+      case "AggrOneList" | "AggrOneListDistinct" | "AggrOneListRand"    => unpack2jsonAggrOneList(field, tpe, v, tabs)
+      case "AggrManyList" | "AggrManyListDistinct" | "AggrManyListRand" => unpack2jsonAggrManyList(field, tpe, v, tabs)
+    }
   }
 
-  def unpack2jsonOneAttr(field: String, baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpack2jsonOneAttr(field: String, tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpack2jsonOneString(sb, $field, $v, vs)"
     case "Int"        => q"unpack2jsonOne(sb, $field, $v)"
     case "Long"       => q"unpack2jsonOne(sb, $field, $v)"
@@ -35,7 +45,7 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "ref"        => q"unpack2jsonOne(sb, $field, $v)"
   }
 
-  def unpack2jsonOptOneAttr(field: String, baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpack2jsonOptOneAttr(field: String, tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpack2jsonOptOneString(sb, $field, $v, vs)"
     case "Int"        => q"unpack2jsonOptOne(sb, $field, $v)"
     case "Long"       => q"unpack2jsonOptOne(sb, $field, $v)"
@@ -50,7 +60,7 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "ref"        => q"unpack2jsonOptOne(sb, $field, $v)"
   }
 
-  def unpack2jsonManyAttr(field: String, baseTpe: String, v: Tree, tabs: Int): Tree = baseTpe match {
+  def unpack2jsonManyAttr(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
     case "String"     => q"unpack2jsonManyString(sb, $field, $v, vs, $tabs)"
     case "Int"        => q"unpack2jsonMany(sb, $field, $v, vs, $tabs)"
     case "Long"       => q"unpack2jsonMany(sb, $field, $v, vs, $tabs)"
@@ -65,7 +75,7 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "ref"        => q"unpack2jsonMany(sb, $field, $v, vs, $tabs)"
   }
 
-  def unpack2jsonOptManyAttr(field: String, baseTpe: String, v: Tree, tabs: Int): Tree = baseTpe match {
+  def unpack2jsonOptManyAttr(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
     case "String"     => q"unpack2jsonOptManyString(sb, $field, $v, vs, $tabs)"
     case "Int"        => q"unpack2jsonOptMany(sb, $field, $v, vs, $tabs)"
     case "Long"       => q"unpack2jsonOptMany(sb, $field, $v, vs, $tabs)"
@@ -80,7 +90,7 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "ref"        => q"unpack2jsonOptMany(sb, $field, $v, vs, $tabs)"
   }
 
-  def unpack2jsonMapAttr(field: String, baseTpe: String, v: Tree, tabs: Int): Tree = baseTpe match {
+  def unpack2jsonMapAttr(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
     case "String"     => q"unpack2jsonMapString(sb, $field, $v, vs, $tabs)"
     case "Int"        => q"unpack2jsonMap(sb, $field, $v, vs, $tabs)"
     case "Long"       => q"unpack2jsonMap(sb, $field, $v, vs, $tabs)"
@@ -93,7 +103,7 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "BigDecimal" => q"unpack2jsonMap(sb, $field, $v, vs, $tabs)"
   }
 
-  def unpack2jsonOptMapAttr(field: String, baseTpe: String, v: Tree, tabs: Int): Tree = baseTpe match {
+  def unpack2jsonOptMapAttr(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
     case "String"     => q"unpack2jsonOptMapString(sb, $field, $v, vs, $tabs)"
     case "Int"        => q"unpack2jsonOptMap(sb, $field, $v, vs, $tabs)"
     case "Long"       => q"unpack2jsonOptMap(sb, $field, $v, vs, $tabs)"
@@ -106,7 +116,7 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "BigDecimal" => q"unpack2jsonOptMap(sb, $field, $v, vs, $tabs)"
   }
 
-  def unpack2jsonAggrOneList(field: String, baseTpe: String, v: Tree, tabs: Int): Tree = baseTpe match {
+  def unpack2jsonAggrOneList(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
     case "String"     => q"unpack2jsonListString(sb, $field, $v, vs, $tabs)"
     case "Int"        => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
     case "Long"       => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
@@ -119,7 +129,7 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "BigDecimal" => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
   }
 
-  def unpack2jsonAggrManyList(field: String, baseTpe: String, v: Tree, tabs: Int): Tree = baseTpe match {
+  def unpack2jsonAggrManyList(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
     case "String"     => q"unpack2jsonListSetString(sb, $field, $v, vs, $tabs)"
     case "Int"        => q"unpack2jsonListSet(sb, $field, $v, vs, $tabs)"
     case "Long"       => q"unpack2jsonListSet(sb, $field, $v, vs, $tabs)"

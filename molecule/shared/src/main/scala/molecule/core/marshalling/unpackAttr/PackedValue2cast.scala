@@ -8,18 +8,21 @@ trait PackedValue2cast extends TreeOps with String2cast {
 
   import c.universe._
 
-  def getPackedValue2cast(group: String, baseTpe: String, v: Tree): Tree = group match {
-    case "One" | "KeyedMap" | "AggrSingleSample" | "AggrOneSingle"    => unpackOneAttr(baseTpe, v)
-    case "OptOne" | "OptApplyOne"                                     => unpackOptOneAttr(baseTpe, v)
-    case "Many" | "AggrManySingle"                                    => unpackManyAttr(baseTpe, v)
-    case "OptMany" | "OptApplyMany"                                   => unpackOptManyAttr(baseTpe, v)
-    case "Map"                                                        => unpackMapAttr(baseTpe, v)
-    case "OptMap" | "OptApplyMap"                                     => unpackOptMapAttr(baseTpe, v)
-    case "AggrOneList" | "AggrOneListDistinct" | "AggrOneListRand"    => unpackAggrOneList(baseTpe, v)
-    case "AggrManyList" | "AggrManyListDistinct" | "AggrManyListRand" => unpackAggrManyList(baseTpe, v)
+  def getPackedValue2cast(group: String, baseTpe: String, v: Tree, optAggrTpe: Option[String]): Tree = {
+    val tpe = optAggrTpe.getOrElse(baseTpe)
+    group match {
+      case "One" | "KeyedMap" | "AggrSingleSample" | "AggrOneSingle"    => unpackOneAttr(tpe, v)
+      case "OptOne" | "OptApplyOne"                                     => unpackOptOneAttr(tpe, v)
+      case "Many" | "AggrManySingle"                                    => unpackManyAttr(tpe, v)
+      case "OptMany" | "OptApplyMany"                                   => unpackOptManyAttr(tpe, v)
+      case "Map"                                                        => unpackMapAttr(tpe, v)
+      case "OptMap" | "OptApplyMap"                                     => unpackOptMapAttr(tpe, v)
+      case "AggrOneList" | "AggrOneListDistinct" | "AggrOneListRand"    => unpackAggrOneList(tpe, v)
+      case "AggrManyList" | "AggrManyListDistinct" | "AggrManyListRand" => unpackAggrManyList(tpe, v)
+    }
   }
 
-  def unpackOneAttr(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackOneAttr(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackOneString($v, vs)"
     case "Int"        => q"unpackOneInt($v)"
     case "Long"       => q"unpackOneLong($v)"
@@ -35,7 +38,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "ref"        => q"unpackOneLong($v)"
   }
 
-  def unpackOptOneAttr(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackOptOneAttr(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackOptOneString($v, vs)"
     case "Int"        => q"unpackOptOneInt($v)"
     case "Long"       => q"unpackOptOneLong($v)"
@@ -50,7 +53,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "ref"        => q"unpackOptOneLong($v)"
   }
 
-  def unpackManyAttr(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackManyAttr(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackManyString($v, vs)"
     case "Int"        => q"unpackManyInt($v, vs)"
     case "Long"       => q"unpackManyLong($v, vs)"
@@ -65,7 +68,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "ref"        => q"unpackManyLong($v, vs)"
   }
 
-  def unpackOptManyAttr(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackOptManyAttr(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackOptManyString($v, vs)"
     case "Int"        => q"unpackOptManyInt($v, vs)"
     case "Long"       => q"unpackOptManyLong($v, vs)"
@@ -80,7 +83,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "ref"        => q"unpackOptManyLong($v, vs)"
   }
 
-  def unpackMapAttr(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackMapAttr(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackMapString($v, vs)"
     case "Int"        => q"unpackMapInt($v, vs)"
     case "Long"       => q"unpackMapLong($v, vs)"
@@ -93,7 +96,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "BigDecimal" => q"unpackMapBigDecimal($v, vs)"
   }
 
-  def unpackOptMapAttr(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackOptMapAttr(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackOptMapString($v, vs)"
     case "Int"        => q"unpackOptMapInt($v, vs)"
     case "Long"       => q"unpackOptMapLong($v, vs)"
@@ -106,7 +109,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "BigDecimal" => q"unpackOptMapBigDecimal($v, vs)"
   }
 
-  def unpackAggrOneList(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackAggrOneList(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackListString($v, vs)"
     case "Int"        => q"unpackListInt($v, vs)"
     case "Long"       => q"unpackListLong($v, vs)"
@@ -119,7 +122,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "BigDecimal" => q"unpackListBigDecimal($v, vs)"
   }
 
-  def unpackAggrManyList(baseTpe: String, v: Tree): Tree = baseTpe match {
+  def unpackAggrManyList(tpe: String, v: Tree): Tree = tpe match {
     case "String"     => q"unpackListSetString($v, vs)"
     case "Int"        => q"unpackListSetInt($v, vs)"
     case "Long"       => q"unpackListSetLong($v, vs)"

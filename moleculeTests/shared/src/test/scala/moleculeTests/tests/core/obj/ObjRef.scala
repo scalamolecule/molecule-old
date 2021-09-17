@@ -182,22 +182,13 @@ object ObjRef extends AsyncTestSuite with Helpers {
       for {
         _ <- (Ns.int + Ns.double.str + Ref1.int1.str1).insert(1, (2.2, "a"), (3, "b"))
 
-        // Multiple same-name namespace composites need ++ to allow access to object interface
-        // Can't access object properties from same-name namespace composites
+        // Multiple same-name namespace composites not allowed for object output
         _ <- m(Ns.int + Ns.double.str + Ref1.int1.str1).getObj.recover { case MoleculeException(err, _) =>
-          err ==> s"Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
+          err ==> "Molecule objects are not allowed to have multiple same-named namespaces. Please use tuples instead that allow this."
         }
 
-        _ <- m(Ns.int ++ Ns.double.str + Ref1.int1.str1).getObj.map { o =>
-          o.Ns.int ==> 1
-          o.Ns.double ==> 2.2
-          o.Ns.str ==> "a"
-          o.Ref1.int1 ==> 3
-          o.Ref1.str1 ==> "b"
-        }
-        // Multiple same-name namespace composites behaves equally for tuple output
+        // Multiple same-name namespace composites allowed with tuple output
         _ <- m(Ns.int + Ns.double.str + Ref1.int1.str1).get.map(_.head ==> (1, (2.2, "a"), (3, "b")))
-        _ <- m(Ns.int ++ Ns.double.str + Ref1.int1.str1).get.map(_.head ==> (1, (2.2, "a"), (3, "b")))
       } yield ()
     }
 
@@ -218,13 +209,26 @@ object ObjRef extends AsyncTestSuite with Helpers {
           // Self-join to other Person (same namespace)
           p1.Person.name ==> "Ben"
 
-          p3.name ==> "Joe"
-          p3.Likes.beverage ==> "Coffee"
+          p2.name ==> "Joe"
+          p2.Likes.beverage ==> "Coffee"
+          p2.Person.name ==> "Ben"
+
+          p3.name ==> "Liz"
+          p3.Likes.beverage ==> "Tea"
           p3.Person.name ==> "Ben"
 
-          p2.name ==> "Liz"
-          p2.Likes.beverage ==> "Tea"
-          p2.Person.name ==> "Ben"
+//          p1.name ==> "Liz"
+//          p1.Likes.beverage ==> "Coffee"
+//          // Self-join to other Person (same namespace)
+//          p1.Person.name ==> "Ben"
+//
+//          p3.name ==> "Joe"
+//          p3.Likes.beverage ==> "Coffee"
+//          p3.Person.name ==> "Ben"
+//
+//          p2.name ==> "Liz"
+//          p2.Likes.beverage ==> "Tea"
+//          p2.Person.name ==> "Ben"
         }
 
         _ <- Person

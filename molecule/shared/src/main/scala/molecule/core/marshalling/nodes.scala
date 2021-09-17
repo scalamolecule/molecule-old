@@ -67,10 +67,9 @@ object nodes {
     case (acc, Obj(_, _, false, refProps)) => acc + getPropCount(refProps)
     case (acc, nested: Obj)                => acc + 1 // nested counting as 1 prop
   }
-//  def getPropCount(nodes: List[Node]): Int = nodes.foldLeft(0) {
-//    case (acc, _: Prop)                    => acc + 1
-//    case (acc, Obj(_, _, false, refProps)) => acc + refProps.length
-//    case (acc, nested: Obj)                => acc + 1 // nested counting as 1 prop
+
+//  def mergeSameNameNs(obj: Obj) = {
+//
 //  }
 
 

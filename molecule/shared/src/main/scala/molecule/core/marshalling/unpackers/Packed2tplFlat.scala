@@ -18,11 +18,11 @@ trait Packed2tplFlat extends PackedValue2cast { //self: Row2tplComposite =>
 
   def resolveGroups(nodes: List[Node], acc: List[List[Tree]]): List[List[Tree]] = {
     nodes.foldLeft(acc: List[List[Tree]]) {
-      case (List(Nil), Prop(_, _, baseTpe, _, group, _)) =>
-        acc.init :+ List(getPackedValue2cast(group, baseTpe, nextValue))
+      case (List(Nil), Prop(_, _, baseTpe, _, group, optAggrTpe)) =>
+        acc.init :+ List(getPackedValue2cast(group, baseTpe, nextValue, optAggrTpe))
 
-      case (acc, Prop(_, _, baseTpe, _, group, _)) =>
-        acc.init :+ (acc.last :+ getPackedValue2cast(group, baseTpe, nextValue))
+      case (acc, Prop(_, _, baseTpe, _, group, optAggrTpe)) =>
+        acc.init :+ (acc.last :+ getPackedValue2cast(group, baseTpe, nextValue, optAggrTpe))
 
       case (acc, Obj("Tx_", _, _, compositeObjects)) =>
         val txGroups = compositeObjects.collect {

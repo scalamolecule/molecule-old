@@ -231,18 +231,18 @@ private[molecule] trait Dsl2Model extends TreeOps
       }
     }
 
-    def traverseElements(prev: Tree, p: richTree, elements: Seq[Element], sameNs: Boolean = false): Seq[Element] = {
+    def traverseElements(prev: Tree, p: richTree, elements: Seq[Element]): Seq[Element] = {
       if (isComposite) {
-        xx(640, prev, elements, sameNs, obj)
+        xx(640, prev, elements, obj)
         val prevElements = resolve(prev)
         if (collectCompositeElements) {
           val result = prevElements :+ Composite(elements)
-          xx(641, prevElements, elements, result, collectCompositeElements, castss, typess, obj, sameNs)
+          xx(641, prevElements, elements, result, collectCompositeElements, castss, typess, obj)
           result
         } else {
           val result = Seq(Composite(prevElements), Composite(elements))
-          levelCompositeObj(result, sameNs)
-          xx(642, prevElements, elements, result, collectCompositeElements, castss, typess, obj, sameNs)
+          levelCompositeObj(result)
+          xx(642, prevElements, elements, result, collectCompositeElements, castss, typess, obj)
           result
         }
       } else {
@@ -322,17 +322,12 @@ private[molecule] trait Dsl2Model extends TreeOps
           xx(600, prev, subComposite, obj)
           resolveComposite(prev, richTree(prev), q"$subComposite")
 
-        case q"$prev.++[..$types]($subComposite)" =>
-          xx(610, prev, subComposite, obj)
-          val res = resolveComposite(prev, richTree(prev), q"$subComposite", true)
-          res
-
         case other => abort(s"Unexpected DSL structure: $other\n${showRaw(other)}")
       }
     }
 
-    def levelCompositeObj(subCompositeElements: Seq[Element], sameNs: Boolean = false): Unit = {
-      xx(630, subCompositeElements, sameNs, objCompositesCount)
+    def levelCompositeObj(subCompositeElements: Seq[Element]): Unit = {
+      xx(630, subCompositeElements, objCompositesCount)
       lazy val err = "Unexpectedly couldn't find ns in sub composite:\n  " + subCompositeElements.mkString("\n  ")
       val ns    = subCompositeElements.collectFirst {
         case Atom(ns, _, _, _, _, _, _, _) => ns
@@ -348,20 +343,16 @@ private[molecule] trait Dsl2Model extends TreeOps
       val newBuilderNodes: List[Node] = if (objCompositesCount > 0) {
         val (props, compositeProps) = obj.props.splitAt(obj.props.length - objCompositesCount)
 
-        val newBuilderNodes: List[Node] = compositeProps.head match {
+        compositeProps.head match {
           case Obj("Tx_", _, _, _) =>
             // Reset obj composites count
             objCompositesCount = 0
             List(Obj(nsCls, ns, false, props ++ compositeProps))
 
-          case compositeObj@Obj(compositeCls, _, _, _) if sameNs && nsCls == compositeCls =>
-            compositeObj.copy(props = props ++ compositeObj.props) :: compositeProps.tail
-
           case _ => Obj(nsCls, ns, false, props) :: compositeProps
         }
-        newBuilderNodes
       } else {
-        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(Obj(nsCls, ns, false, obj.props))), sameNs)
+        xx(632, typess, objCompositesCount, obj, obj.copy(props = List(Obj(nsCls, ns, false, obj.props))))
         List(Obj(nsCls, ns, false, obj.props))
       }
 
@@ -369,15 +360,15 @@ private[molecule] trait Dsl2Model extends TreeOps
       xx(633, ns, obj)
     }
 
-    def resolveComposite(prev: Tree, p: richTree, subCompositeTree: Tree, sameNs: Boolean = false): Seq[Element] = {
-      xx(620, prev, subCompositeTree, obj, sameNs)
+    def resolveComposite(prev: Tree, p: richTree, subCompositeTree: Tree): Seq[Element] = {
+      xx(620, prev, subCompositeTree, obj)
       post = false
       isComposite = true
       collectCompositeElements = false
       val subCompositeElements = resolve(subCompositeTree)
       // Make sure we continue to collect composite elements
       collectCompositeElements = false
-      xx(621, prev, subCompositeElements, typess, castss, obj, sameNs)
+      xx(621, prev, subCompositeElements, typess, castss, obj)
 
       // Start new level
       typess = List.empty[Tree] :: typess
@@ -387,13 +378,13 @@ private[molecule] trait Dsl2Model extends TreeOps
         txMetas = if (txMetas == 0) 2 else txMetas + 1
 
       // Make composite in obj
-      levelCompositeObj(subCompositeElements, sameNs)
+      levelCompositeObj(subCompositeElements)
       objCompositesCount += 1
 
-      xx(622, prev, subCompositeElements, typess, castss, txMetas, obj, sameNs, objCompositesCount)
-      val elements = traverseElements(prev, p, subCompositeElements, sameNs)
+      xx(622, prev, subCompositeElements, typess, castss, txMetas, obj, objCompositesCount)
+      val elements = traverseElements(prev, p, subCompositeElements)
       collectCompositeElements = true
-      xx(623, prev, subCompositeElements, typess, castss, elements, txMetas, obj, sameNs)
+      xx(623, prev, subCompositeElements, typess, castss, elements, txMetas, obj)
       elements
     }
 

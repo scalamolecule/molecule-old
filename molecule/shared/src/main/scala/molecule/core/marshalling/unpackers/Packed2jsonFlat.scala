@@ -32,12 +32,12 @@ trait Packed2jsonFlat extends JsonBase with PackedValue2json {
             Nil
           }
           val trees   = node match {
-            case Prop(_, prop, baseTpe, _, group, _) =>
+            case Prop(_, prop, baseTpe, _, group, optAggrTpe) =>
               colIndex += 1
               // Only generate 1 property, even if attribute is repeated in molecule
               if (props.contains(prop)) Nil else {
                 props = props :+ prop
-                newLine :+ getPackedValue2json(group, baseTpe, prop, nextValue, tabs)
+                newLine :+ getPackedValue2json(group, baseTpe, prop, nextValue, tabs, optAggrTpe)
               }
 
             case refObj@Obj(_, ref, _, _) =>

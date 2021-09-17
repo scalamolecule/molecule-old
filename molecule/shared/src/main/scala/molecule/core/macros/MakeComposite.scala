@@ -23,18 +23,19 @@ class MakeComposite(val c: blackbox.Context) extends Base {
 
     val transformers = if (isJsPlatform) {
       val jsTpl = Some(if (OutTypes.length == 1) q"Tuple1(packed2tpl(vs))" else q"packed2tpl(vs)")
+//          final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj)}
       q"""
-          final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplComposite(obj, txMetas)}
-          final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
-          final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
-          final override lazy val obj: nodes.Obj = $obj
-       """
+        final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplComposite(obj, txMetas)}
+        final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl, true)}
+        final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
+        final override lazy val obj: nodes.Obj = $obj
+      """
     } else {
       q"""
-          final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplComposite(castss, txMetas)}
-          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-          final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
-        """
+        final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplComposite(castss, txMetas)}
+        final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
+        final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+      """
     }
 
     val tree = if (hasVariables) {

@@ -21,7 +21,7 @@ object JsonAttributes extends AsyncTestSuite {
           |}""".stripMargin)
     }
 
-    "value" - core { implicit conn =>
+    "Card one" - core { implicit conn =>
       for {
         // Insert single value for one cardinality-1 attribute
         _ <- Ns.str insert str1
@@ -32,7 +32,11 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.date insert date1
         _ <- Ns.uuid insert uuid1
         _ <- Ns.uri insert uri1
+        _ <- Ns.bigInt insert bigInt1
+        _ <- Ns.bigDec insert bigDec1
         _ <- Ns.enum insert enum1
+        refId <- Ref1.int1(1).save.map(_.eid)
+        _ <- Ns.ref1(refId).save
 
         _ <- Ns.str.getJson.map(_ ==>
           """{
@@ -122,6 +126,28 @@ object JsonAttributes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
+        _ <- Ns.bigInt.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "bigInt": $bigInt1
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
+
+        _ <- Ns.bigDec.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "bigDec": $bigDec1
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
+
         _ <- Ns.enum.getJson.map(_ ==>
           """{
             |  "data": {
@@ -132,11 +158,22 @@ object JsonAttributes extends AsyncTestSuite {
             |    ]
             |  }
             |}""".stripMargin)
+
+        _ <- Ns.ref1.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "ref1": $refId
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
       } yield ()
     }
 
 
-    "set" - core { implicit conn =>
+    "Card many" - core { implicit conn =>
       for {
         _ <- Ns.strs insert Set("", "a", "b")
         _ <- Ns.ints insert Set(1, 2)
@@ -146,9 +183,11 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.dates insert Set(date1, date2)
         _ <- Ns.uuids insert Set(uuid1)
         _ <- Ns.uris insert Set(uri1, uri2)
-        _ <- Ns.enums insert Set(enum1, enum2)
         _ <- Ns.bigInts insert Set(bigInt1, bigInt2)
         _ <- Ns.bigDecs insert Set(bigDec1, bigDec2)
+        _ <- Ns.enums insert Set(enum1, enum2)
+        List(refId1, refId2) <- Ref1.int1.insert(1, 2).map(_.eids)
+        _ <- Ns.refs1(refId1, refId2).save
 
         _ <- Ns.strs.getJson.map(_ ==>
           """{
@@ -279,20 +318,6 @@ object JsonAttributes extends AsyncTestSuite {
                |}""".stripMargin)
         }
 
-        _ <- Ns.enums.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "enums": [
-            |          "enum1",
-            |          "enum2"
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-
         _ <- Ns.bigInts.getJson.map(_ ==>
           """{
             |  "data": {
@@ -320,11 +345,39 @@ object JsonAttributes extends AsyncTestSuite {
             |    ]
             |  }
             |}""".stripMargin)
+
+        _ <- Ns.enums.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "enums": [
+            |          "enum1",
+            |          "enum2"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.refs1.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "refs1": [
+             |          $refId2,
+             |          $refId1
+             |        ]
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
       } yield ()
     }
 
 
-    "map" - core { implicit conn =>
+    "Card map" - core { implicit conn =>
       for {
         _ <- Ns.strMap insert Map("a" -> "A", "b" -> "B")
         _ <- Ns.intMap insert Map("a" -> 1, "b" -> 2)
@@ -479,8 +532,9 @@ object JsonAttributes extends AsyncTestSuite {
     }
 
 
-    "Optional value" - core { implicit conn =>
+    "Card one optional" - core { implicit conn =>
       for {
+        refId <- Ref1.int1(1).save.map(_.eid)
         _ <- Ns.int.str$ insert List((1, None), (1, Some("")), (1, Some("c")))
         _ <- Ns.long.int$ insert List((2, None), (2, Some(2)))
         _ <- Ns.int.long$ insert List((3, None), (3, Some(20L)))
@@ -489,9 +543,10 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.int.date$ insert List((6, None), (6, Some(date2)))
         _ <- Ns.int.uuid$ insert List((7, None), (7, Some(uuid2)))
         _ <- Ns.int.uri$ insert List((8, None), (8, Some(uri2)))
-        _ <- Ns.int.enum$ insert List((9, None), (9, Some(enum2)))
-        _ <- Ns.int.bigInt$ insert List((10, None), (10, Some(bigInt2)))
-        _ <- Ns.int.bigDec$ insert List((11, None), (11, Some(bigDec2)))
+        _ <- Ns.int.bigInt$ insert List((9, None), (9, Some(bigInt2)))
+        _ <- Ns.int.bigDec$ insert List((10, None), (10, Some(bigDec2)))
+        _ <- Ns.int.enum$ insert List((11, None), (11, Some(enum1)))
+        _ <- Ns.int.ref1$ insert List((12, None), (12, Some(refId)))
 
         _ <- Ns.int(1).str$.getJson.map(_ ==>
           """{
@@ -625,49 +680,65 @@ object JsonAttributes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.int(9).enum$.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 9,
-            |        "enum$": null
-            |      },
-            |      {
-            |        "int": 9,
-            |        "enum$": "enum2"
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-
-        _ <- Ns.int(10).bigInt$.getJson.map(_ ==>
+        _ <- Ns.int(9).bigInt$.getJson.map(_ ==>
           s"""{
              |  "data": {
              |    "Ns": [
              |      {
-             |        "int": 10,
+             |        "int": 9,
              |        "bigInt$$": null
              |      },
              |      {
-             |        "int": 10,
+             |        "int": 9,
              |        "bigInt$$": 2
              |      }
              |    ]
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.int(11).bigDec$.getJson.map(_ ==>
+        _ <- Ns.int(10).bigDec$.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "int": 10,
+             |        "bigDec$$": null
+             |      },
+             |      {
+             |        "int": 10,
+             |        "bigDec$$": 2.0
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
+
+        _ <- Ns.int(11).enum$.getJson.map(_ ==>
           s"""{
              |  "data": {
              |    "Ns": [
              |      {
              |        "int": 11,
-             |        "bigDec$$": null
+             |        "enum$$": null
              |      },
              |      {
              |        "int": 11,
-             |        "bigDec$$": 2.0
+             |        "enum$$": "$enum1"
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
+
+        _ <- Ns.int(12).ref1$.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "int": 12,
+             |        "ref1$$": null
+             |      },
+             |      {
+             |        "int": 12,
+             |        "ref1$$": $refId
              |      }
              |    ]
              |  }
@@ -676,8 +747,9 @@ object JsonAttributes extends AsyncTestSuite {
     }
 
 
-    "Optional set" - core { implicit conn =>
+    "Card many optional" - core { implicit conn =>
       for {
+        refId <- Ref1.int1(1).save.map(_.eid)
         _ <- Ns.int.strs$ insert List((1, None), (1, Some(Set("", "b"))))
         _ <- Ns.int.ints$ insert List((2, None), (2, Some(Set(1, 2))))
         _ <- Ns.int.longs$ insert List((3, None), (3, Some(Set(1L, 2L))))
@@ -686,9 +758,10 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.int.dates$ insert List((6, None), (6, Some(Set(date1, date2))))
         _ <- Ns.int.uuids$ insert List((7, None), (7, Some(Set(uuid1, uuid2))))
         _ <- Ns.int.uris$ insert List((8, None), (8, Some(Set(uri1, uri2))))
-        _ <- Ns.int.enums$ insert List((9, None), (9, Some(Set(enum1, enum2))))
-        _ <- Ns.int.bigInts$ insert List((10, None), (10, Some(Set(bigInt1, bigInt2))))
-        _ <- Ns.int.bigDecs$ insert List((11, None), (11, Some(Set(bigDec1, bigDec2))))
+        _ <- Ns.int.bigInts$ insert List((9, None), (9, Some(Set(bigInt1, bigInt2))))
+        _ <- Ns.int.bigDecs$ insert List((10, None), (10, Some(Set(bigDec1, bigDec2))))
+        _ <- Ns.int.enums$ insert List((11, None), (11, Some(Set(enum1, enum2))))
+        _ <- Ns.int.refs1$ insert List((12, None), (12, Some(Set(refId))))
 
         _ <- Ns.int(1).strs$.getJson.map(_ ==>
           """{
@@ -843,35 +916,16 @@ object JsonAttributes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.int(9).enums$.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 9,
-            |        "enums$": null
-            |      },
-            |      {
-            |        "int": 9,
-            |        "enums$": [
-            |          "enum1",
-            |          "enum2"
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
-
-        _ <- Ns.int(10).bigInts$.getJson.map(_ ==>
+        _ <- Ns.int(9).bigInts$.getJson.map(_ ==>
           s"""{
              |  "data": {
              |    "Ns": [
              |      {
-             |        "int": 10,
+             |        "int": 9,
              |        "bigInts$$": null
              |      },
              |      {
-             |        "int": 10,
+             |        "int": 9,
              |        "bigInts$$": [
              |          1,
              |          2
@@ -881,19 +935,57 @@ object JsonAttributes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.int(11).bigDecs$.getJson.map(_ ==>
+        _ <- Ns.int(10).bigDecs$.getJson.map(_ ==>
           s"""{
              |  "data": {
              |    "Ns": [
              |      {
-             |        "int": 11,
+             |        "int": 10,
              |        "bigDecs$$": null
              |      },
              |      {
-             |        "int": 11,
+             |        "int": 10,
              |        "bigDecs$$": [
              |          1.0,
              |          2.0
+             |        ]
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
+
+
+        _ <- Ns.int(11).enums$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 11,
+            |        "enums$": null
+            |      },
+            |      {
+            |        "int": 11,
+            |        "enums$": [
+            |          "enum1",
+            |          "enum2"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int(12).refs1$.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "int": 12,
+             |        "refs1$$": null
+             |      },
+             |      {
+             |        "int": 12,
+             |        "refs1$$": [
+             |          $refId
              |        ]
              |      }
              |    ]
@@ -903,7 +995,7 @@ object JsonAttributes extends AsyncTestSuite {
     }
 
 
-    "Optional map" - core { implicit conn =>
+    "Card map optional" - core { implicit conn =>
       for {
         _ <- Ns.int.strMap$ insert List((1, None), (1, Some(Map("a" -> "A", "b" -> "B"))))
         _ <- Ns.int.intMap$ insert List((2, None), (2, Some(Map("a" -> 1, "b" -> 2))))

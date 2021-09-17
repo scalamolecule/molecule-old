@@ -34,7 +34,8 @@ trait Packed2tplNested extends PackedValue2cast {
 
     def resolveTxGroups(txCompositeGroups: Seq[Node]): Seq[Tree] = {
       def resolve(nodes: Seq[Node], acc: Seq[Tree]): Seq[Tree] = nodes.flatMap {
-        case Prop(_, _, baseTpe, _, group, _) => acc :+ getPackedValue2cast(group, baseTpe, next)
+        case Prop(_, _, baseTpe, _, group, optAggrTpe) =>
+          acc :+ getPackedValue2cast(group, baseTpe, next, optAggrTpe)
         case Obj(_, _, _, nodes)              => resolve(nodes, acc)
       }
       val txGroups = txCompositeGroups.collect {
@@ -51,12 +52,12 @@ trait Packed2tplNested extends PackedValue2cast {
 
     def setUnpacker(node: Node, level: Int, i: Int): Unit = {
       node match {
-        case Prop(_, _, baseTpe, _, group, _) if level > 0 && i == 0 =>
+        case Prop(_, _, baseTpe, _, group, optAggrTpe) if level > 0 && i == 0 =>
           // First prop on each sub level takes the `v` from before the loop
-          unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, v)
+          unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, v, optAggrTpe)
 
-        case Prop(_, _, baseTpe, _, group, _) =>
-          unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, next)
+        case Prop(_, _, baseTpe, _, group, optAggrTpe) =>
+          unpackerss(level) = unpackerss(level) :+ getPackedValue2cast(group, baseTpe, next, optAggrTpe)
 
         case Obj(_, _, true, props) =>
           unpackerss(level) = unpackerss(level) :+ q"${TermName("nested" + (level + 1))}"

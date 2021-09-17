@@ -10,8 +10,8 @@ trait Row2obj extends RowValue2cast {
 
   import c.universe._
 
-    private lazy val xx = InspectMacro("BuildObj", 1)
-//  private lazy val xx = InspectMacro("BuildObj", 1, mkError = true)
+  //  private lazy val xx = InspectMacro("BuildObj", 1, mkError = true)
+  private lazy val xx = InspectMacro("BuildObj", 1)
 
   def classes(nodes: List[Node]): List[Tree] = {
     var prevClasses = List.empty[String]
@@ -78,16 +78,16 @@ trait Row2obj extends RowValue2cast {
     }
   }
 
-  def objTree(obj: Obj, tplOpt: Option[Tree] = None): Tree = {
+  def objTree(obj: Obj, tplOpt: Option[Tree] = None, composite: Boolean = false): Tree = {
     tplOpt match {
       case Some(tpl) =>
         q"""{
             val tpl: Product = $tpl
-            ${resolve(obj, -1, true)._1}
+            ${resolve(obj, -1, true, composite)._1}
           }
         """
       case None      =>
-        q"{ ${resolve(obj, -1, false)._1} }"
+        q"{ ${resolve(obj, -1, false, composite)._1} }"
     }
   }
 
@@ -114,15 +114,15 @@ trait Row2obj extends RowValue2cast {
     }
   }
 
-  def resolve(obj: Obj, colIndex0: Int, nested: Boolean): (Tree, Int) = {
-    var colIndex = if (nested && colIndex0 == -1) -1 else colIndex0
+  def resolve(obj: Obj, colIndex0: Int, nested: Boolean, composite: Boolean): (Tree, Int) = {
+    var colIndex = if ((nested || composite) && colIndex0 == -1) -1 else colIndex0
 
     def properties(nodes: List[Node]): List[Tree] = {
       var propNames = List.empty[String]
       val propDefs  = nodes.flatMap {
         case p@Prop(_, prop, baseTpe, card, group, optAggrTpe) =>
           val tpe = getTpe(p)
-//          xx(1, prop, baseTpe, tpe, optAggrTpe)
+          //          xx(1, prop, baseTpe, tpe, optAggrTpe)
           colIndex += 1
           // Only generate 1 property, even if attribute is repeated in molecule
           if (!propNames.contains(prop)) {
@@ -143,77 +143,99 @@ trait Row2obj extends RowValue2cast {
             }
           } else None
 
-        case o@Obj(_, ref, true, props) =>
+        case o@Obj(_, nestedRef, true, props) =>
           colIndex += 1
-          val oneNestedProp    = props.length == 1
-          val singleNestedType = props.head match {
-            case p@Prop(_, _, _, _, _, _) => getTpe(p)
-            case _: Obj                   => tq"Product"
-          }
-          val subObj           = if (oneNestedProp)
+          val nestedAttrs = if (props.length == 1) {
+            val singleNestedType = props.head match {
+              case p@Prop(_, _, _, _, _, _) => getTpe(p)
+              case _: Obj                   => tq"Product"
+            }
             q"""
               tpl.productElement($colIndex).asInstanceOf[Seq[$singleNestedType]].map { v =>
                 val tpl = Tuple1(v)
-                ${resolve(o, -1, nested)._1}
+                ${resolve(o, -1, nested, false)._1}
               }
             """
-          else
-            q"tpl.productElement($colIndex).asInstanceOf[Seq[Product]].map( tpl => ${resolve(o, -1, nested)._1} )"
+          } else {
+            q"tpl.productElement($colIndex).asInstanceOf[Seq[Product]].map( tpl => ${resolve(o, -1, nested, false)._1} )"
+          }
 
           classes(props) match {
-            case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init] = $subObj")
-            case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Seq[Init with $a] = $subObj")
-            case List(a, b)                                                             => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b] = $subObj")
-            case List(a, b, c)                                                          => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c] = $subObj")
-            case List(a, b, c, d)                                                       => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d] = $subObj")
-            case List(a, b, c, d, e)                                                    => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e] = $subObj")
-            case List(a, b, c, d, e, f)                                                 => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f] = $subObj")
-            case List(a, b, c, d, e, f, g)                                              => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g] = $subObj")
-            case List(a, b, c, d, e, f, g, h)                                           => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i)                                        => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j)                                     => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k)                                  => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l)                               => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m)                            => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n)                         => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)                      => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)                   => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)                => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)             => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)          => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)       => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)    => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u] = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => Some(q"final override def ${TermName(ref)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u with $v] = $subObj")
+            case Nil                                                                    => Some(q"final override def ${TermName(nestedRef)}: Seq[Init] = $nestedAttrs")
+            case List(a)                                                                => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a] = $nestedAttrs")
+            case List(a, b)                                                             => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b] = $nestedAttrs")
+            case List(a, b, c)                                                          => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c] = $nestedAttrs")
+            case List(a, b, c, d)                                                       => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d] = $nestedAttrs")
+            case List(a, b, c, d, e)                                                    => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e] = $nestedAttrs")
+            case List(a, b, c, d, e, f)                                                 => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g)                                              => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h)                                           => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i)                                        => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j)                                     => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k)                                  => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l)                               => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m)                            => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n)                         => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)                      => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)                   => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)                => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)             => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)          => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)       => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)    => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u] = $nestedAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => Some(q"final override def ${TermName(nestedRef)}: Seq[Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u with $v] = $nestedAttrs")
             case _                                                                      => None
           }
 
         case o@Obj(_, ref, _, props) =>
-          val (subObj, colIndexSub) = resolve(o, colIndex, nested)
+          val (refAttrs, colIndexSub) = if (composite) {
+            colIndex += 1
+            val tree = if (props.length == 1) {
+              q"""
+                val tpl0: Product = tpl;
+                {
+                  val tpl: Product = Tuple1(tpl0.productElement($colIndex))
+                  ${resolve(o, -1, nested, false)._1}
+                }
+              """
+            } else {
+              q"""
+                val tpl0: Product = tpl;
+                {
+                  val tpl: Product = tpl0.productElement($colIndex).asInstanceOf[Product]
+                  ${resolve(o, -1, nested, false)._1}
+                }
+              """
+            }
+            (tree, colIndex)
+          } else {
+            resolve(o, colIndex, nested, composite)
+          }
           colIndex = colIndexSub
           classes(props) match {
-            case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Init = $subObj")
-            case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Init with $a = $subObj")
-            case List(a, b)                                                             => Some(q"final override def ${TermName(ref)}: Init with $a with $b = $subObj")
-            case List(a, b, c)                                                          => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c = $subObj")
-            case List(a, b, c, d)                                                       => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d = $subObj")
-            case List(a, b, c, d, e)                                                    => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e = $subObj")
-            case List(a, b, c, d, e, f)                                                 => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f = $subObj")
-            case List(a, b, c, d, e, f, g)                                              => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g = $subObj")
-            case List(a, b, c, d, e, f, g, h)                                           => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h = $subObj")
-            case List(a, b, c, d, e, f, g, h, i)                                        => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j)                                     => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k)                                  => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l)                               => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m)                            => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n)                         => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)                      => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)                   => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)                => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)             => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)          => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)       => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)    => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u = $subObj")
-            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u with $v = $subObj")
+            case Nil                                                                    => Some(q"final override def ${TermName(ref)}: Init = $refAttrs")
+            case List(a)                                                                => Some(q"final override def ${TermName(ref)}: Init with $a = $refAttrs")
+            case List(a, b)                                                             => Some(q"final override def ${TermName(ref)}: Init with $a with $b = $refAttrs")
+            case List(a, b, c)                                                          => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c = $refAttrs")
+            case List(a, b, c, d)                                                       => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d = $refAttrs")
+            case List(a, b, c, d, e)                                                    => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e = $refAttrs")
+            case List(a, b, c, d, e, f)                                                 => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f = $refAttrs")
+            case List(a, b, c, d, e, f, g)                                              => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g = $refAttrs")
+            case List(a, b, c, d, e, f, g, h)                                           => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i)                                        => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j)                                     => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k)                                  => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l)                               => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m)                            => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n)                         => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)                      => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)                   => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)                => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)             => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)          => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)       => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)    => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u = $refAttrs")
+            case List(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) => Some(q"final override def ${TermName(ref)}: Init with $a with $b with $c with $d with $e with $f with $g with $h with $i with $j with $k with $l with $m with $n with $o with $p with $q with $r with $s with $t with $u with $v = $refAttrs")
             case _                                                                      => None
           }
       }
@@ -222,7 +244,7 @@ trait Row2obj extends RowValue2cast {
 
     val tree = if (hasSameNss(obj)) {
       q"""throw MoleculeException(
-            "Please compose multiple same-name namespaces with `++` instead of `+` to access object properties."
+            "Molecule objects are not allowed to have multiple same-named namespaces. Please use tuples instead that allow this."
           )"""
     } else {
       classes(obj.props) match {
