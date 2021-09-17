@@ -27,6 +27,7 @@ case class Flat2packed(
         }
         resolve(obj, Nil)
       }
+
       val packRow = packRef(nodesWithNonTacitProps, 0)
       if (maxRows == -1) {
         rows.forEach(row => packRow(row))
@@ -46,8 +47,12 @@ case class Flat2packed(
 
   def packAttr(node: Node, level: Int): jList[_] => StringBuffer = {
     node match {
-      case Prop(_, _, baseTpe, _, group, _) => colIndex += 1; packFlatAttr(sb, group, baseTpe, colIndex)
-      case Obj(_, _, _, props)              => packRef(props, level)
+      case Prop(_, _, baseTpe, _, group, optAggrTpe) =>
+        colIndex += 1
+        packFlatAttr(sb, group, baseTpe, colIndex, optAggrTpe)
+
+      case Obj(_, _, _, props) =>
+        packRef(props, level)
     }
   }
 

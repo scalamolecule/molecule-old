@@ -1,14 +1,10 @@
 package moleculeTests
 
-import java.util.Collections
-import molecule.core.dsl.base
 import molecule.core.exceptions.MoleculeException
-import molecule.datomic.api.in3_out11._
 import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
-import molecule.core.marshalling.nodes.{Node, Obj, Prop}
 import molecule.core.marshalling.unpackAttr.String2cast
-import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.util.Helpers
+import molecule.datomic.api.in3_out11._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -28,16 +24,7 @@ object AdhocJs extends AsyncTestSuite with Helpers
         conn <- futConn
 
 
-//        _ <- (Ns.int.str + Ref1.str1.int1).insert((1, "a"), ("b", 2))
-//        _ <- (Ns.int.str + Ref1.str1.int1).get.map(_ ==> List(((1, "a"), ("b", 2))))
-        _ <- (Ns.int.str + Ref1.str1.int1).getObj.map { o =>
-          o.Ns.int ==> 1
-          o.Ns.str ==> "a"
-          o.Ref1.int1 ==> 2
-          o.Ref1.str1 ==> "b"
-        }
 
-        //        _ <- (Ns.int + Ref1.str1.int1).get
 
 
       } yield ()

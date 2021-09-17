@@ -5,29 +5,36 @@ import java.util.{Iterator => jIterator}
 
 trait ResolverOptNested extends PackOptNestedTypes with PackOptNestedAggr {
 
-  def packOptNestedAttr(group: String, baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = group match {
-    case "One"                  => packOneAttr(baseTpe)
-    case "OptOne"               => packOptOneAttr(baseTpe)
-    case "Many"                 => packManyAttr(baseTpe)
-    case "OptMany"              => packOptManyAttr(baseTpe)
-    case "Map"                  => packMapAttr(baseTpe)
-    case "OptMap"               => packOptMapAttr(baseTpe)
-    case "OptApplyOne"          => packOptApplyOneAtt(baseTpe)
-    case "OptApplyMany"         => packOptApplyManyAtt(baseTpe)
-    case "OptApplyMap"          => packOptApplyMapAttr(baseTpe)
-    case "KeyedMap"             => packKeyedMapAtt(baseTpe)
-    case "AggrOneList"          => packAggrOneList(baseTpe)
-    case "AggrManyList"         => packAggrManyList(baseTpe)
-    case "AggrOneListDistinct"  => packAggrOneListDistinct(baseTpe)
-    case "AggrManyListDistinct" => packAggrManyListDistinct(baseTpe)
-    case "AggrOneListRand"      => packAggrOneListRand(baseTpe)
-    case "AggrManyListRand"     => packAggrManyListRand(baseTpe)
-    case "AggrSingleSample"     => packAggrSingleSample(baseTpe)
-    case "AggrOneSingle"        => packAggrOneSingle(baseTpe)
-    case "AggrManySingle"       => packAggrManySingle(baseTpe)
+  def packOptNestedAttr(
+    group: String,
+    baseTpe: String,
+    optAggrTpe: Option[String]
+  ): (StringBuffer, jIterator[_]) => StringBuffer = {
+    val tpe = optAggrTpe.getOrElse(baseTpe)
+    group match {
+      case "One"                  => packOneAttr(tpe)
+      case "OptOne"               => packOptOneAttr(tpe)
+      case "Many"                 => packManyAttr(tpe)
+      case "OptMany"              => packOptManyAttr(tpe)
+      case "Map"                  => packMapAttr(tpe)
+      case "OptMap"               => packOptMapAttr(tpe)
+      case "OptApplyOne"          => packOptApplyOneAtt(tpe)
+      case "OptApplyMany"         => packOptApplyManyAtt(tpe)
+      case "OptApplyMap"          => packOptApplyMapAttr(tpe)
+      case "KeyedMap"             => packKeyedMapAtt(tpe)
+      case "AggrOneList"          => packAggrOneList(tpe)
+      case "AggrManyList"         => packAggrManyList(tpe)
+      case "AggrOneListDistinct"  => packAggrOneListDistinct(tpe)
+      case "AggrManyListDistinct" => packAggrManyListDistinct(tpe)
+      case "AggrOneListRand"      => packAggrOneListRand(tpe)
+      case "AggrManyListRand"     => packAggrManyListRand(tpe)
+      case "AggrSingleSample"     => packAggrSingleSample(tpe)
+      case "AggrOneSingle"        => packAggrOneSingle(tpe)
+      case "AggrManySingle"       => packAggrManySingle(tpe)
+    }
   }
 
-  def packOneAttr(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packOneAttr(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedOneString
     case "Date"   => packOptNestedOneDate
     case "Any"    => packOptNestedOneAny
@@ -36,7 +43,7 @@ trait ResolverOptNested extends PackOptNestedTypes with PackOptNestedAggr {
     case _        => packOptNestedOne_
   }
 
-  def packOptOneAttr(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packOptOneAttr(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedOptOneString
     case "Date"   => packOptNestedOptOneDate
     case "enum"   => packOptNestedOptOneEnum
@@ -44,7 +51,7 @@ trait ResolverOptNested extends PackOptNestedTypes with PackOptNestedAggr {
     case _        => packOptNestedOptOne_
   }
 
-  def packManyAttr(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packManyAttr(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedManyString
     case "Date"   => packOptNestedManyDate
     case "enum"   => packOptNestedManyEnum
@@ -52,7 +59,7 @@ trait ResolverOptNested extends PackOptNestedTypes with PackOptNestedAggr {
     case _        => packOptNestedMany_
   }
 
-  def packOptManyAttr(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packOptManyAttr(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedOptManyString
     case "Date"   => packOptNestedOptManyDate
     case "enum"   => packOptNestedOptManyEnum
@@ -60,89 +67,89 @@ trait ResolverOptNested extends PackOptNestedTypes with PackOptNestedAggr {
     case _        => packOptNestedOptMany_
   }
 
-  def packMapAttr(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packMapAttr(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedMapString
     case _        => packOptNestedMap_
   }
 
-  def packOptMapAttr(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packOptMapAttr(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedOptMapString
     case _        => packOptNestedOptMap_
   }
 
-  def packOptApplyOneAtt(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packOptApplyOneAtt(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedOptApplyOneString
     case "Date"   => packOptNestedOptApplyOneDate
     case _        => packOptNestedOptApplyOne_
   }
 
-  def packOptApplyManyAtt(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packOptApplyManyAtt(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedOptApplyManyString
     case "Date"   => packOptNestedOptApplyManyDate
     case _        => packOptNestedOptApplyMany_
   }
 
-  def packOptApplyMapAttr(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packOptApplyMapAttr(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedOptApplyMapString
     case "Date"   => packOptNestedOptApplyMapDate
     case _        => packOptNestedOptApplyMap_
   }
 
-  def packKeyedMapAtt(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packKeyedMapAtt(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedKeyedMapString
     case "Date"   => packOptNestedKeyedMapDate
     case _        => packOptNestedKeyedMap_
   }
 
-  def packAggrOneList(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrOneList(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrOneListString
     case "Date"   => packOptNestedAggrOneListDate
     case _        => packOptNestedAggrOneList_
   }
 
-  def packAggrManyList(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrManyList(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrManyListString
     case "Date"   => packOptNestedAggrManyListDate
     case _        => packOptNestedAggrManyList_
   }
 
-  def packAggrOneListDistinct(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrOneListDistinct(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrOneListDistinctString
     case "Date"   => packOptNestedAggrOneListDistinctDate
     case _        => packOptNestedAggrOneListDistinct_
   }
 
-  def packAggrManyListDistinct(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrManyListDistinct(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrManyListDistinctString
     case "Date"   => packOptNestedAggrManyListDistinctDate
     case _        => packOptNestedAggrManyListDistinct_
   }
 
-  def packAggrOneListRand(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrOneListRand(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrOneListRandString
     case "Date"   => packOptNestedAggrOneListRandDate
     case _        => packOptNestedAggrOneListRand_
   }
 
-  def packAggrManyListRand(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrManyListRand(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrManyListRandString
     case "Date"   => packOptNestedAggrManyListRandDate
     case _        => packOptNestedAggrManyListRand_
   }
 
-  def packAggrSingleSample(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrSingleSample(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrSingleSampleString
     case "Date"   => packOptNestedAggrSingleSampleDate
     case _        => packOptNestedAggrSingleSample_
   }
 
-  def packAggrOneSingle(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrOneSingle(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrOneSingleString
     case "Date"   => packOptNestedAggrOneSingleDate
     case _        => packOptNestedAggrOneSingle_
   }
 
-  def packAggrManySingle(baseTpe: String): (StringBuffer, jIterator[_]) => StringBuffer = baseTpe match {
+  def packAggrManySingle(tpe: String): (StringBuffer, jIterator[_]) => StringBuffer = tpe match {
     case "String" => packOptNestedAggrManySingleString
     case "Date"   => packOptNestedAggrManySingleDate
     case _        => packOptNestedAggrManySingle_

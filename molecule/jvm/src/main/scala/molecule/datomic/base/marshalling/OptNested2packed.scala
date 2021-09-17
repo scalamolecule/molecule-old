@@ -40,7 +40,7 @@ case class OptNested2packed(
 
   def packNode(node: Node, level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     node match {
-      case Prop(_, _, baseTpe, _, group, _) => packOptNestedAttr(group, baseTpe)
+      case Prop(_, _, baseTpe, _, group, optAggrTpe) => packOptNestedAttr(group, baseTpe, optAggrTpe)
       case nested@Obj(_, _, true, props)    => packNested(getRelatedProps(props), level + 1, isDeeper(nested))
       case Obj(_, _, _, props)              =>
         val populatedProps = props.flatMap {

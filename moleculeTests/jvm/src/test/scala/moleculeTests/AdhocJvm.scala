@@ -40,26 +40,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
-        _ <- (Ns.int.str + Ref1.str1.int1).get
-
-//        _ <- (Ns.int(1) + Ref1.int1(1) + Ref2.int2(1)).save
-//        _ <- m(Ns.int + Ref1.int1 + Ref2.int2).getObj.map { o =>
-//          o.Ns.int ==> 1
-//          o.Ref1.int1 ==> 1
-//          o.Ref2.int2 ==> 1
-//        }
-//        _ <- (Ns.int(2).Ref1.int1(1) + Ref2.int2(2)).save
-//        _ <- m(Ns.int.Ref1.int1 + Ref2.int2).getObj.map { o =>
-//          o.Ns.int ==> 2
-//          o.Ns.Ref1.int1 ==> 1
-//          o.Ref2.int2 ==> 2
-//        }
-//        _ <- (Ns.int(3) + Ref1.int1(3).Ref2.int2(3)).save
-//        _ <- m(Ns.int + Ref1.int1.Ref2.int2).getObj.map { o =>
-//          o.Ns.int ==> 3
-//          o.Ref1.int1 ==> 3
-//          o.Ref1.Ref2.int2 ==> 3
-//        }
 
 
         //        _ = {

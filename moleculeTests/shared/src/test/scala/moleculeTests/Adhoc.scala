@@ -15,53 +15,23 @@ import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.util.Helpers
 import molecule.datomic.base.facade.{Conn, TxReport}
-//import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
 import scala.util.control.NonFatal
 
-object Adhoc extends AsyncTestSuite with Helpers  {
 
+object Adhoc extends AsyncTestSuite with Helpers {
 
-  def data(implicit conn: Future[Conn], ec: ExecutionContext) = {
-    for {
-      _ <- Ns.int.insert(1, 2, 3)
-      _ <- Ns.double.insert(1.0, 2.0, 3.0)
-      _ <- Ns.str.insert("a", "b", "c")
-    } yield ()
-  }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
-
 
     "adhoc shared" - core { implicit futConn =>
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
-        _ <- data
-        // For any property
-
-        _ <- Ns.int(min).get.map(_ ==> List(1))
-        _ <- Ns.int(min).getObj.map(_.int ==> 1)
-//        _ <- Ns.int(max).getObj.map(_.int ==> 3)
-//        _ <- Ns.int(rand).getObj.map(_.int) // 1, 2 or 3
-//        _ <- Ns.int(sample).getObj.map(_.int) // 1, 2 or 3
-//        _ <- Ns.int(median).getObj.map(_.int ==> 2)
-//
-//        _ <- Ns.double(min).getObj.map(_.double ==> 1.0)
-//        _ <- Ns.double(max).getObj.map(_.double ==> 3.0)
-//        _ <- Ns.double(rand).getObj.map(_.double) // 1.0, 2.0 or 3.0
-//        _ <- Ns.double(sample).getObj.map(_.double) // 1.0, 2.0 or 3.0
-//        _ <- Ns.double(median).getObj.map(_.double ==> 2.0)
-//
-//        _ <- Ns.str(min).getObj.map(_.str ==> "a")
-//        _ <- Ns.str(max).getObj.map(_.str ==> "c")
-//        _ <- Ns.str(rand).getObj.map(_.str) // a, b or c
-//        _ <- Ns.str(sample).getObj.map(_.str) // a, b or c
-//        _ <- Ns.str(median).getObj.map(_.str ==> "b")
 
 
 
@@ -108,16 +78,16 @@ object Adhoc extends AsyncTestSuite with Helpers  {
     //
     //      } yield ()
     //    }
-//
-//
-//    "adhoc" - bidirectional { implicit conn =>
-//      import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
-//
-//      for {
-//        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-//
-//
-//      } yield ()
-//    }
+    //
+    //
+    //    "adhoc" - bidirectional { implicit conn =>
+    //      import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
+    //
+    //      for {
+    //        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+    //
+    //
+    //      } yield ()
+    //    }
   }
 }

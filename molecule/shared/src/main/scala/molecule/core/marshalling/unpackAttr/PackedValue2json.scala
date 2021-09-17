@@ -11,8 +11,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
   def getPackedValue2json(
     group: String,
     baseTpe: String,
-    field: String, 
-    v: Tree, 
+    field: String,
+    v: Tree,
     tabs: Int,
     optAggrTpe: Option[String]
   ): Tree = {
@@ -117,16 +117,26 @@ private[molecule] trait PackedValue2json extends TreeOps {
   }
 
   def unpack2jsonAggrOneList(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
-    case "String"     => q"unpack2jsonListString(sb, $field, $v, vs, $tabs)"
-    case "Int"        => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
-    case "Long"       => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
-    case "Double"     => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
-    case "Boolean"    => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
-    case "Date"       => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
-    case "UUID"       => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
-    case "URI"        => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
-    case "BigInt"     => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
-    case "BigDecimal" => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "String"           => q"unpack2jsonListString(sb, $field, $v, vs, $tabs)"
+    case "Int"              => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "Long"             => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "Double"           => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "Boolean"          => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "Date"             => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
+    case "UUID"             => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
+    case "URI"              => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
+    case "BigInt"           => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "BigDecimal"       => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "List[String]"     => q"unpack2jsonListString(sb, $field, $v, vs, $tabs)"
+    case "List[Int]"        => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "List[Long]"       => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "List[Double]"     => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "List[Boolean]"    => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "List[Date]"       => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
+    case "List[UUID]"       => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
+    case "List[URI]"        => q"unpack2jsonListQuoted(sb, $field, $v, vs, $tabs)"
+    case "List[BigInt]"     => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
+    case "List[BigDecimal]" => q"unpack2jsonList(sb, $field, $v, vs, $tabs)"
   }
 
   def unpack2jsonAggrManyList(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {

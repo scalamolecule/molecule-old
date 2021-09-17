@@ -110,16 +110,26 @@ trait PackedValue2cast extends TreeOps with String2cast {
   }
 
   def unpackAggrOneList(tpe: String, v: Tree): Tree = tpe match {
-    case "String"     => q"unpackListString($v, vs)"
-    case "Int"        => q"unpackListInt($v, vs)"
-    case "Long"       => q"unpackListLong($v, vs)"
-    case "Double"     => q"unpackListDouble($v, vs)"
-    case "Boolean"    => q"unpackListBoolean($v, vs)"
-    case "Date"       => q"unpackListDate($v, vs)"
-    case "UUID"       => q"unpackListUUID($v, vs)"
-    case "URI"        => q"unpackListURI($v, vs)"
-    case "BigInt"     => q"unpackListBigInt($v, vs)"
-    case "BigDecimal" => q"unpackListBigDecimal($v, vs)"
+    case "String"           => q"unpackListString($v, vs)"
+    case "Int"              => q"unpackListInt($v, vs)"
+    case "Long"             => q"unpackListLong($v, vs)"
+    case "Double"           => q"unpackListDouble($v, vs)"
+    case "Boolean"          => q"unpackListBoolean($v, vs)"
+    case "Date"             => q"unpackListDate($v, vs)"
+    case "UUID"             => q"unpackListUUID($v, vs)"
+    case "URI"              => q"unpackListURI($v, vs)"
+    case "BigInt"           => q"unpackListBigInt($v, vs)"
+    case "BigDecimal"       => q"unpackListBigDecimal($v, vs)"
+    case "List[String]"     => q"unpackListString($v, vs)"
+    case "List[Int]"        => q"unpackListInt($v, vs)"
+    case "List[Long]"       => q"unpackListLong($v, vs)"
+    case "List[Double]"     => q"unpackListDouble($v, vs)"
+    case "List[Boolean]"    => q"unpackListBoolean($v, vs)"
+    case "List[Date]"       => q"unpackListDate($v, vs)"
+    case "List[UUID]"       => q"unpackListUUID($v, vs)"
+    case "List[URI]"        => q"unpackListURI($v, vs)"
+    case "List[BigInt]"     => q"unpackListBigInt($v, vs)"
+    case "List[BigDecimal]" => q"unpackListBigDecimal($v, vs)"
   }
 
   def unpackAggrManyList(tpe: String, v: Tree): Tree = tpe match {

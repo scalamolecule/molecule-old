@@ -77,9 +77,14 @@ case class Nested2packed(
 
   def packNode(node: Node, level: Int): jList[_] => StringBuffer = {
     node match {
-      case Prop(_, _, baseTpe, _, group, _) => colIndex += 1; packFlatAttr(sb, group, baseTpe, colIndex)
-      case Obj(_, _, true, props)           => packNested(props, level + 1)
-      case Obj(_, _, _, props)              =>
+      case Prop(_, _, baseTpe, _, group, optAggrTpe) =>
+        colIndex += 1
+        packFlatAttr(sb, group, baseTpe, colIndex, optAggrTpe)
+
+      case Obj(_, _, true, props) =>
+        packNested(props, level + 1)
+
+      case Obj(_, _, _, props)    =>
         val populatedProps = props.flatMap {
           case Obj(_, _, _, Nil) => None // skip objects with only tacit attributes
           case node              => Some(node)

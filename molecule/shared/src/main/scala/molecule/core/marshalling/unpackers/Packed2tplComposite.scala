@@ -16,26 +16,6 @@ trait Packed2tplComposite extends PackedValue2cast { self: Packed2tplFlat =>
   private lazy val xx = InspectMacro("Packed2tplComposite", 10)
 
   def packed2tplComposite(obj: Obj, txMetas: Int): Tree = {
-//    val obj = if (hasSameNss(obj0)) {
-//      val mergedObjs = obj0.props.foldLeft(Seq.empty[String], mutable.Map.empty[String, Obj]) {
-//        case ((Nil, _), o@Obj(cls, _, _, _)) =>
-//          (Seq(cls), mutable.Map(cls -> o))
-//
-//        case ((clss, objs), o@Obj(cls, _, _, props)) if clss.contains(cls) =>
-//          val mergedProps = objs(cls).props ++ props
-//          val newObj      = o.copy(props = mergedProps)
-//          objs.update(cls, newObj)
-//          (clss, objs)
-//
-//        case ((clss, objs), o@Obj(cls, _, _, _)) =>
-//          (clss :+ cls, objs += cls -> o)
-//
-//        case ((_, _), node) => throw MoleculeException("Unexpected property in composite object: " + node)
-//      }._2.values.toList
-//      obj0.copy(props = mergedObjs)
-//    } else obj0
-
-
     val groups = obj.props.collect {
       case Obj(_, _, _, props) => resolveGroups(props, List(List.empty[Tree]))
     }
