@@ -46,7 +46,7 @@ object DatomicRpc extends MoleculeRpc
 
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
-//      println("TX DatomicRpc: " + txReport)
+      //      println("TX DatomicRpc: " + txReport)
 
 
       TxReportRPC(
@@ -73,6 +73,10 @@ object DatomicRpc extends MoleculeRpc
     val t         = TimerPrint("DatomicRpc")
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
+
+    //    println(datalogQuery)
+    //    allInputs foreach println
+
     for {
       conn <- getConn(connProxy)
       allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
@@ -84,7 +88,7 @@ object DatomicRpc extends MoleculeRpc
       val time        = qTime(queryTime)
       val timeRight   = " " * (8 - time.length) + time
 
-      log("###### DatomicRpc #########################################")
+      log("###### DatomicRpc ##################################################################")
       log(datalogQuery + space + timeRight)
       if (allInputs.nonEmpty) log(allInputs.mkString("Inputs:\n", "\n", ""))
       //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
@@ -144,7 +148,7 @@ object DatomicRpc extends MoleculeRpc
       conn <- getConn(connProxy)
       rows0 <- conn.qRaw(conn.db, datalogQuery, Nil)
     } yield {
-      val cast = if (tpe == "Date")
+      val cast = if (tpe == "Date" && card != 3)
         (v: Any) => date2strLocal(v.asInstanceOf[Date])
       else
         (v: Any) => v.toString
@@ -280,9 +284,10 @@ object DatomicRpc extends MoleculeRpc
         val stmt = stmtRaw.asInstanceOf[jList[AnyRef]]
         if (uriAttrs.contains(stmt.get(2).toString)) {
           val uriStmt = stmt.get(0).toString match {
-            case ":db/add"    => list(stmt.get(0), stmt.get(1), stmt.get(2), uri(stmt.get(3)))
-            case ":db.fn/cas" => list(stmt.get(0), stmt.get(1), stmt.get(2), uri(stmt.get(3)), uri(stmt.get(4)))
-            case _            => stmt
+            case ":db/add"     => list(stmt.get(0), stmt.get(1), stmt.get(2), uri(stmt.get(3)))
+            case ":db/retract" => list(stmt.get(0), stmt.get(1), stmt.get(2), uri(stmt.get(3)))
+            case ":db.fn/cas"  => list(stmt.get(0), stmt.get(1), stmt.get(2), uri(stmt.get(3)), uri(stmt.get(4)))
+            case _             => stmt
           }
           newStmts.add(uriStmt)
         } else {

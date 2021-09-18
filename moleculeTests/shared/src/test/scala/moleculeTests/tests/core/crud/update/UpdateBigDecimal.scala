@@ -36,7 +36,7 @@ object UpdateBigDecimal extends AsyncTestSuite {
 
           _ <- Ns(eid).bigDec(bigDec2, bigDec3).update.recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-              s"\n  Ns ... bigDec($bigDec2, $bigDec3)"
+              s"\n  Ns ... bigDec(2.0, 3.0)"
           }
         } yield ()
       }

@@ -138,13 +138,13 @@ object UpdateDate extends AsyncTestSuite {
 
           _ <- Ns(eid).dates.replace(date7 -> date8, date8 -> other8).update.recover { case Model2TransactionException(err) =>
             err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
-              "\n" + date8
+              "\n2008-01-01"
           }
 
           // Conflicting new values
           _ <- Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> other8)).update.recover { case Model2TransactionException(err) =>
             err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
-              "\n" + date8
+              "\n2008-01-01"
           }
         } yield ()
       }

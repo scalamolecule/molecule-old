@@ -41,9 +41,9 @@ object Conn_Peer {
   }
 
   // todo: necessary with conn proxy in tx fns?
-//  def apply(txDb: AnyRef, defConnProxy: ConnProxy): Conn_Peer = new Conn_Peer(null, defaultConnProxy = defConnProxy) {
-//    testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
-//  }
+  //  def apply(txDb: AnyRef, defConnProxy: ConnProxy): Conn_Peer = new Conn_Peer(null, defaultConnProxy = defConnProxy) {
+  //    testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
+  //  }
 }
 
 /** Facade to Datomic connection for peer api.
@@ -263,6 +263,9 @@ case class Conn_Peer(
         _testDb = None
       }
 
+//      if (javaStmts.size < 5)
+//        println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+
       // Live transaction
       val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
       val p                                                  = Promise[util.Map[_, _]]()
@@ -285,7 +288,9 @@ case class Conn_Peer(
               case e: java.util.concurrent.ExecutionException =>
                 println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(e.getCause)
+                //                p.failure(e.getCause)
+                //                p.failure(MoleculeException(e.getMessage.trim, e.getCause))
+                p.failure(MoleculeException(e.getMessage.trim))
 
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)

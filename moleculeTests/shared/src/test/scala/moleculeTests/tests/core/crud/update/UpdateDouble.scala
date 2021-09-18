@@ -66,7 +66,7 @@ object UpdateDouble extends AsyncTestSuite {
 
           _ <- Ns(eid).double(double2, double3).update.recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-              s"\n  Ns ... double($double2, $double3)"
+              s"\n  Ns ... double(2.0, 3.0)"
           }
         } yield ()
       }

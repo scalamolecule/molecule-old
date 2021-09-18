@@ -338,10 +338,10 @@ trait PackFlatTypes extends PackBase with Helpers {
   }
 
 
-  //  packKeyedMap -------------------------------------------------------
-
-  protected lazy val packKeyedMapString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-    add(sb, row.get(colIndex).toString)
-    end(sb)
-  }
+//  //  packKeyedMap -------------------------------------------------------
+//
+//  protected lazy val packKeyedMapString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+//    add(sb, row.get(colIndex).toString)
+//    end(sb)
+//  }
 }

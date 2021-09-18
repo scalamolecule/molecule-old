@@ -23,8 +23,8 @@ import scala.util.control.NonFatal
 import molecule.core.marshalling.nodes._
 import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
+import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.base.marshalling.packers.PackEntityMap
-import moleculeTests.tests.core.obj.ObjAttributes.{bigDec1, bigDec2, bigInt1, bigInt2, date1, date2, enum1, enum2, uri1, uri2, uuid1}
 import scala.jdk.CollectionConverters._
 
 

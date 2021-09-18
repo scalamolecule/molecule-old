@@ -57,6 +57,16 @@ trait Helpers extends DateHandling {
     case v                                  => v.toString
   }
 
+  // Hack to ensure decimal digits on JS platform output - todo: remove when jvm/js displays whole decimal numbers equally
+  def d(tpe: String, v: Any) = {
+    (tpe, v) match {
+      case ("Int", v)                    => v
+      case ("Double", v: Double)         => if (v.isWhole) s"${v.toLong}.0" else v
+      case ("BigDecimal", v: BigDecimal) => if (v.isWhole) s"${v.toBigInt}.0" else v
+      case (_, v)                        => v
+    }
+  }
+
   // Generic `v` of type Any needs to be cast on JS side
   protected def castV(s: String): Any = {
     val v = s.drop(10)

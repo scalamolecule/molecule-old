@@ -13,9 +13,16 @@ import molecule.core.ast.elements._
 import molecule.core.exceptions.{MoleculeException, TxFnException}
 import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
+import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.Helpers
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.datomic.base.transform.exception.Model2TransactionException
+import moleculeTests.tests.core.crud.update.UpdateBigDecimal.{bigDec1, bigDec2, bigDec3, bigDec4}
+import moleculeTests.tests.core.crud.update.UpdateBigInt.{bigInt1, bigInt2, bigInt3}
+import moleculeTests.tests.core.crud.update.UpdateInt.{int1, int2, int3}
+import moleculeTests.tests.core.crud.update.UpdateURI.{uri1, uri2, uri3}
+import moleculeTests.tests.core.crud.updateMap.UpdateMapDate.{str1, str2, str3, str4, str5}
+//import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.base.transform.Model2Query
@@ -26,12 +33,12 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
   lazy val tests = Tests {
+    import scala.concurrent.ExecutionContext.Implicits.global
 
-    "adhoc shared" - core { implicit futConn =>
+    "adhoc jvm" - core { implicit futConn =>
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
-
 
 
 

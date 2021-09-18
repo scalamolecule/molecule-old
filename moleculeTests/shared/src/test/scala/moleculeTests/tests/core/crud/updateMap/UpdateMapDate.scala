@@ -44,13 +44,15 @@ object UpdateMapDate extends AsyncTestSuite {
 
           // vararg
           _ = expectCompileError("""Ns(eid).dateMap.assert(str1 -> date1, str1 -> date2).update""",
-            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+            "molecule.core.ops.exception.VerifyRawModelException: " +
+              "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")
 
           // Seq
           _ = expectCompileError("""Ns(eid).dateMap.assert(Seq(str1 -> date1, str1 -> date2)).update""",
-            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+            "molecule.core.ops.exception.VerifyRawModelException: " +
+              "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")
 
@@ -60,18 +62,20 @@ object UpdateMapDate extends AsyncTestSuite {
           // vararg
           _ <- Ns(eid).dateMap.assert(str1 -> date1, str1x -> date2).update.recover {
             case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> " + date1 +
-                "\na -> " + date2
+              err ==> "[valueStmts:default]  " +
+                "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+                "\na -> 2001-07-01" +
+                "\na -> 2002-01-01"
           }
 
 
           // Seq
           _ <- Ns(eid).dateMap.assert(Seq(str1 -> date1, str1x -> date2)).update.recover {
             case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> " + date1 +
-                "\na -> " + date2
+              err ==> "[valueStmts:default]  " +
+                "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+                "\na -> 2001-07-01" +
+                "\na -> 2002-01-01"
           }
         } yield ()
       }
@@ -108,12 +112,14 @@ object UpdateMapDate extends AsyncTestSuite {
           // Can't replace pairs with duplicate keys
 
           _ = expectCompileError("""Ns(eid).dateMap.replace(str1 -> date1, str1 -> date2).update""",
-            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+            "molecule.core.ops.exception.VerifyRawModelException: " +
+              "Can't replace multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")
 
           _ = expectCompileError("""Ns(eid).dateMap.replace(Seq(str1 -> date1, str1 -> date2)).update""",
-            "molecule.core.ops.exception.VerifyRawModelException: Can't replace multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+            "molecule.core.ops.exception.VerifyRawModelException: " +
+              "Can't replace multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
               "\n__ident__str1 -> __ident__date1" +
               "\n__ident__str1 -> __ident__date2")
         } yield ()
@@ -182,18 +188,20 @@ object UpdateMapDate extends AsyncTestSuite {
           // vararg
           _ <- Ns(eid).dateMap(str1 -> date1, str1 -> date2).update.recover {
             case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> " + date1 +
-                "\na -> " + date2
+              err ==> "[valueStmts:default]  " +
+                "Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+                "\na -> 2001-07-01" +
+                "\na -> 2002-01-01"
           }
 
 
           // Seq
           _ <- Ns(eid).dateMap(Seq(str1 -> date1, str1 -> date2)).update.recover {
             case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> " + date1 +
-                "\na -> " + date2
+              err ==> "[valueStmts:default]  " +
+                "Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+                "\na -> 2001-07-01" +
+                "\na -> 2002-01-01"
           }
         } yield ()
       }

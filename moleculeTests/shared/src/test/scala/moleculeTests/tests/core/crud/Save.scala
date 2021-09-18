@@ -2,6 +2,7 @@ package moleculeTests.tests.core.crud
 
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out9._
+import moleculeTests.Adhoc.{bigDec1, bigInt1, date1, uri1, uuid1}
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
@@ -14,8 +15,6 @@ object Save extends AsyncTestSuite {
 
     "Card one attr" - core { implicit conn =>
       for {
-        // Construct a "Data-Molecule" with an attribute value and save it to the database
-
         _ <- Ns.str("a").save
         _ <- Ns.int(1).save
         _ <- Ns.long(1L).save
@@ -24,6 +23,8 @@ object Save extends AsyncTestSuite {
         _ <- Ns.date(date1).save
         _ <- Ns.uuid(uuid1).save
         _ <- Ns.uri(uri1).save
+        _ <- Ns.bigInt(bigInt1).save
+        _ <- Ns.bigDec(bigDec1).save
         _ <- Ns.enum("enum1").save
 
         _ <- Ns.str.get.map(_.head ==> "a")
@@ -34,7 +35,9 @@ object Save extends AsyncTestSuite {
         _ <- Ns.date.get.map(_.head ==> date1)
         _ <- Ns.uuid.get.map(_.head ==> uuid1)
         _ <- Ns.uri.get.map(_.head ==> uri1)
-        _ <- Ns.enum.get.map(_.head ==> enum1)
+        _ <- Ns.bigInt.get.map(_.head ==> bigInt1)
+        _ <- Ns.bigDec.get.map(_.head ==> bigDec1)
+        _ <- Ns.enum.get.map(_.head ==> "enum1")
 
         // Applying multiple values to card-one attr not allowed when saving
 
@@ -47,8 +50,6 @@ object Save extends AsyncTestSuite {
 
     "Card many attr" - core { implicit conn =>
       for {
-        // Construct a "Data-Molecule" with multiple attributes populated with data and add it to the database
-
         _ <- Ns.strs("a", "b")
           .ints(1, 2)
           .longs(1L, 2L)
@@ -67,30 +68,6 @@ object Save extends AsyncTestSuite {
           Set(uuid1, uuid2),
           Set(uri1, uri2),
           Set("enum1", "enum2")))
-      } yield ()
-    }
-
-    "Card one attrs" - core { implicit conn =>
-      for {
-        _ <- Ns.str("a").save
-        _ <- Ns.int(1).save
-        _ <- Ns.long(1L).save
-        _ <- Ns.double(1.1).save
-        _ <- Ns.bool(true).save
-        _ <- Ns.date(date1).save
-        _ <- Ns.uuid(uuid1).save
-        _ <- Ns.uri(uri1).save
-        _ <- Ns.enum("enum1").save
-
-        _ <- Ns.str.get.map(_.head ==> "a")
-        _ <- Ns.int.get.map(_.head ==> 1)
-        _ <- Ns.long.get.map(_.head ==> 1L)
-        _ <- Ns.double.get.map(_.head ==> 1.1)
-        _ <- Ns.bool.get.map(_.head ==> true)
-        _ <- Ns.date.get.map(_.head ==> date1)
-        _ <- Ns.uuid.get.map(_.head ==> uuid1)
-        _ <- Ns.uri.get.map(_.head ==> uri1)
-        _ <- Ns.enum.get.map(_.head ==> "enum1")
       } yield ()
     }
 

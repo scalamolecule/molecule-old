@@ -1,10 +1,12 @@
 package moleculeTests.tests.core.crud.update
 
+import molecule.core.exceptions.MoleculeException
 import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out1._
 import molecule.datomic.base.transform.exception.Model2TransactionException
 import molecule.datomic.base.util.SystemPeer
+import moleculeTests.Adhoc.isJsPlatform
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
@@ -128,8 +130,13 @@ object UpdateEnum extends AsyncTestSuite {
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
 
           // Trying to use a non-existing enum not possible
-          _ <- Ns(eid).enums.replace("x" -> "enum9").update.recover { case exc => exc.getMessage.contains(
-            s"""Unable to resolve entity: :Ns.enums/x in datom [$eid ":Ns/enums" ":Ns.enums/x"]""") ==> true
+          _ <- Ns(eid).enums.replace("x" -> "enum9").update.recover { case MoleculeException(err, _) =>
+            // On JS platform, attributes and enum values are passed as edn clojure.Keywords (renders without quotes).
+            // On JVM platform, attributes and enum values are passed as Strings in java.util.List (renders with quotes).
+            val enumAttrValue = if (isJsPlatform) ":Ns/enums :Ns.enums/x" else "\":Ns/enums\" \":Ns.enums/x\""
+            err ==> "java.lang.IllegalArgumentException: " +
+              ":db.error/not-an-entity Unable to resolve entity: " +
+              s":Ns.enums/x in datom [$eid $enumAttrValue]"
           }
 
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))

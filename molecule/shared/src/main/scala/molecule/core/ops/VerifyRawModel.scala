@@ -1,5 +1,6 @@
 package molecule.core.ops
 
+import java.util.Date
 import molecule.core.ast.elements._
 import molecule.core.ops.exception.VerifyRawModelException
 import molecule.core.util.Helpers
@@ -19,9 +20,19 @@ object VerifyRawModel extends Helpers {
 
     // Model checks - mutable variables used extensively to optimize speed.
 
-    def txError(s: String) = abort(s"Molecule not allowed to have any attributes after transaction or nested data structure. Found" + s)
-    def dupValues(pairs: Seq[(Any, Any)]): Seq[String] = pairs.map(_._2.toString).groupBy(identity).collect { case (v, vs) if vs.size > 1 => v }.toSeq
-    def dupKeys(pairs: Seq[(Any, Any)]): Seq[Any] = pairs.map(_._1).groupBy(identity).collect { case (v, vs) if vs.size > 1 => v }.toSeq
+    def txError(s: String) = abort(
+      s"Molecule not allowed to have any attributes after transaction or nested data structure. Found" + s
+    )
+
+    def dupValues(tpe: String, pairs: Seq[(Any, Any)]): Seq[String] =
+      pairs.map(pair => d(tpe, pair._2).toString).groupBy(identity).collect {
+        case (v, vs) if vs.size > 1 => v
+      }.toSeq
+
+    def dupKeys(pairs: Seq[(Any, Any)]): Seq[Any] =
+      pairs.map(_._1).groupBy(identity).collect {
+        case (v, vs) if vs.size > 1 => v
+      }.toSeq
 
     val last: Int = elements.length
 
@@ -63,17 +74,17 @@ object VerifyRawModel extends Helpers {
             hasMandatory = true
 
           a match {
-            case Atom(nsFull, attr, _, _, ReplaceValue(pairs), _, _, _) if dupValues(pairs).nonEmpty =>
-              abort(s"Can't replace with duplicate values of attribute `:$nsFull/$attr`:\n" + dupValues(pairs).mkString("\n"))
+            case Atom(nsFull, attr, tpe, _, ReplaceValue(pairs), _, _, _) if dupValues(tpe, pairs).nonEmpty =>
+              abort(s"Can't replace with duplicate values of attribute `:$nsFull/$attr`:\n" + dupValues(tpe, pairs).mkString("\n"))
 
-            case Atom(nsFull, attr, _, _, AssertMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
+            case Atom(nsFull, attr, tpe, _, AssertMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
               val dups     = dupKeys(pairs)
-              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> $v" }
+              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${d(tpe, v)}" }
               abort(s"Can't assert multiple key/value pairs with the same key for attribute `:$nsFull/$attr`:\n" + dupPairs.mkString("\n"))
 
-            case Atom(nsFull, attr, _, _, ReplaceMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
+            case Atom(nsFull, attr, tpe, _, ReplaceMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
               val dups     = dupKeys(pairs)
-              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> $v" }
+              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${d(tpe, v)}" }
               abort(s"Can't replace multiple key/value pairs with the same key for attribute `:$nsFull/$attr`:\n" + dupPairs.mkString("\n"))
 
             case Atom(nsFull, attr, _, 2, Distinct, _, _, _) =>

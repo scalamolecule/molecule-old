@@ -85,6 +85,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
 
     def d(v: Any) = v match {
       case d: Date => date2str(d)
+//      case b: Byte => b // Catches Integers from falling into Double (sounds weird, I know)
       // ensure decimal digits on JS platform
       case d: Double      => if (attrInfo(a)._2 == "Double" && d.isWhole) s"${d.toLong}.0" else d
       case bd: BigDecimal => if (bd.isWhole) s"${bd.toBigInt}.0" else bd
@@ -168,7 +169,7 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
         case (key, keys) if keys.size > 1 => key
       }.toSeq
       if (dupKeys.nonEmpty) {
-        val dupPairs = pairs.filter(p => dupKeys.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> $v" }
+        val dupPairs = pairs.filter(p => dupKeys.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${d(v)}" }
         err(s"valueStmts:$host",
           s"Can't $op multiple key/value pairs with the same key for attribute `$a`:\n"
             + dupPairs.mkString("\n"))
@@ -179,14 +180,14 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
       val dups = pairs.map(_._2).groupBy(identity).collect { case (v, vs) if vs.size > 1 => v }
       if (dups.nonEmpty)
         err(s"valueStmts:$host",
-          s"Can't replace with duplicate new values of attribute `$a`:\n" + dups.mkString("\n"))
+          s"Can't replace with duplicate new values of attribute `$a`:\n" + dups.map(d).mkString("\n"))
     }
 
     def checkDupValues(values: Seq[Any], host: String, op: String): Unit = {
       val dups = values.groupBy(identity).collect { case (v, vs) if vs.size > 1 => v }
       if (dups.nonEmpty)
         err(s"valueStmts:$host",
-          s"Can't $op duplicate new values to attribute `$a`:\n" + dups.mkString("\n"))
+          s"Can't $op duplicate new values to attribute `$a`:\n" + dups.map(d).mkString("\n"))
     }
 
     def checkUnknownKeys(newPairs: Seq[(String, Any)], curKeys: Seq[String], host: String): Unit = {
@@ -860,24 +861,37 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
         }
       }
 
-      case RetractValue(removeValues) => Future(flatten(removeValues).distinct.map(v => Retract(e, a, p(v), Card(card))))
+      case RetractValue(removeValues) => Future(
+        flatten(removeValues).distinct.map(v => Retract(e, a, p(v), Card(card)))
+      )
 
       case Eq(newValues0) => {
         val newValues    = flatten(newValues0).distinct
         val futCurValues = if (e == datomicTx) Future(Nil) else attrValues(e, a)
         futCurValues.map { curValues =>
-          val newValueStrings = newValues.map(_.toString)
-          val curValueStrings = curValues.map(_.toString)
-          val retracts        = if (card == 2 || (newValues.isEmpty && curValues.nonEmpty))
+          val newValueStrings = newValues.map(v => d(v).toString)
+          val curValueStrings = curValues.map(v => d(v).toString)
+
+//          println("...............................................")
+//          println("newValueStrings: " + newValueStrings)
+//          println("curValueStrings: " + curValueStrings)
+
+
+          val retracts = if (card == 2 || (newValues.isEmpty && curValues.nonEmpty))
             curValues.flatMap {
-              case curValue if newValueStrings.contains(curValue.toString) => Nil
-              case obsoleteValue                                           => Seq(Retract(e, a, p(obsoleteValue), Card(card)))
+              case curValue if newValueStrings.contains(d(curValue).toString) =>
+//                println("  curValue     : " + d(curValue))
+                Nil
+              case obsoleteValue                                              =>
+//                println("  obsoleteValue: " + d(obsoleteValue))
+                Seq(Retract(e, a, p(obsoleteValue), Card(card)))
             }
           else
             Nil
-          val adds            = newValues.flatMap {
-            case newValue if curValueStrings.contains(newValue.toString) => Nil
-            case newValue                                                => Seq(Add(e, a, p(newValue), Card(card)))
+          val adds     = newValues.flatMap {
+            case newValue if curValueStrings.contains(d(newValue).toString) =>
+              Nil
+            case newValue                                                   => Seq(Add(e, a, p(newValue), Card(card)))
           }
           retracts ++ adds
         }

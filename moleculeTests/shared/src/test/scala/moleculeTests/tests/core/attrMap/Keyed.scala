@@ -57,7 +57,7 @@ object Keyed extends Base {
       val en_date1_date3 = List(
         (3, date3),
         (2, date1),
-        (1, date1),
+        (1, date1)
       )
       for {
         _ <- testData
@@ -135,7 +135,7 @@ object Keyed extends Base {
         _ <- Ns.int.dateMapK("en|da")(date3).get.map(_ ==> List(
           (1, date3),
           (3, date3),
-          (4, date3),
+          (4, date3)
         ))
         _ <- Ns.int.dateMapK_("en|da")(date3).get.map(_ ==> List(1, 3, 4))
       } yield ()
@@ -162,7 +162,7 @@ object Keyed extends Base {
         (3, date3),
         (4, date3),
         (2, date1),
-        (1, date1),
+        (1, date1)
       )
 
       for {
@@ -221,20 +221,20 @@ object Keyed extends Base {
         _ <- Ns.int.dateMapK("en|da").>(date2).get.map(_ ==> List(
           (1, date3),
           (3, date3),
-          (4, date3),
+          (4, date3)
         ))
         _ <- Ns.int.dateMapK("en|da").>=(date2).get.map(_ ==> List(
           (1, date3),
           (3, date3),
-          (4, date3),
+          (4, date3)
         ))
         _ <- Ns.int.dateMapK("en|da").<=(date2).get.map(_ ==> List(
           (2, date1),
-          (1, date1),
+          (1, date1)
         ))
         _ <- Ns.int.dateMapK("en|da").<(date2).get.map(_ ==> List(
           (2, date1),
-          (1, date1),
+          (1, date1)
         ))
 
         _ <- Ns.int.dateMapK_("en|da").>(date2).get.map(_ ==> List(1, 3, 4))

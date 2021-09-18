@@ -2,9 +2,10 @@ package molecule.core.ops
 
 import molecule.core.ast.elements.{VarValue, _}
 import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.Helpers
 
 
-case class VerifyModel(model: Model, op: String) {
+case class VerifyModel(model: Model, op: String) extends Helpers {
 
   val datomGenerics = Seq(
     "e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
@@ -20,7 +21,7 @@ case class VerifyModel(model: Model, op: String) {
     unexpectedAppliedId
     noGenericsInTail
     noTacitAttrs
-//    missingAttrInStartEnd
+    //    missingAttrInStartEnd
     noConflictingCardOneValues
     noNested
     noEdgePropRefs
@@ -32,7 +33,7 @@ case class VerifyModel(model: Model, op: String) {
     noGenericsInTail
     onlyTacitTxAttrs
     noTacitAttrs
-//    missingAttrInStart
+    //    missingAttrInStart
     noNestedEdgesWithoutTarget
     edgeComplete
   }
@@ -147,11 +148,13 @@ case class VerifyModel(model: Model, op: String) {
 
   private def noConflictingCardOneValues: Unit = {
     def catchConflictingCardOneValues(elements: Seq[Element]): Unit = elements.collectFirst {
-      case Atom(nsFull, attr, _, 1, Eq(vs), _, _, _) if vs.length > 1 => err("noConflictingCardOneValues",
-        s"""Can't $op multiple values for cardinality-one attribute:
-           |  ${Ns(nsFull)} ... $attr(${vs.mkString(", ")})""".stripMargin)
-      case Nested(_, es)                                              => catchConflictingCardOneValues(es)
-      case Composite(es)                                              => catchConflictingCardOneValues(es)
+      case Atom(nsFull, attr, tpe, 1, Eq(vs), _, _, _) if vs.length > 1 =>
+        val format = (v: Any) => d(tpe, v)
+        err("noConflictingCardOneValues",
+          s"""Can't $op multiple values for cardinality-one attribute:
+             |  ${Ns(nsFull)} ... $attr(${vs.map(format).mkString(", ")})""".stripMargin)
+      case Nested(_, es)                                                  => catchConflictingCardOneValues(es)
+      case Composite(es)                                                  => catchConflictingCardOneValues(es)
     }
     catchConflictingCardOneValues(model.elements)
   }
@@ -164,7 +167,7 @@ case class VerifyModel(model: Model, op: String) {
     case Bond(_, _, _, _, Seq(BiTargetRef(_, _))) => true
 
     // Otherwise disallow refs in updates
-    case Bond(_, _, refNs, _, _)            =>
+    case Bond(_, _, refNs, _, _) =>
       err("update_onlyOneNs",
         op.capitalize + s" molecules can't span multiple namespaces like `${Ns(refNs)}`.")
 
@@ -172,7 +175,7 @@ case class VerifyModel(model: Model, op: String) {
       err("update_onlyOneNs",
         op.capitalize + s" molecules can't have nested data structures like `${Ns(refNs)}`.")
 
-    case c: Composite                       =>
+    case c: Composite =>
       err("update_onlyOneNs",
         op.capitalize + " molecules can't be composites.")
   }
@@ -189,7 +192,7 @@ case class VerifyModel(model: Model, op: String) {
   private def noEdgePropRefs: Option[Unit] = model.elements.collectFirst {
     case Bond(_, refAttr, _, _, Seq(BiEdgePropRef(_))) => err("noEdgePropRefs",
       s"Building on to another namespace from a property edge of a $op molecule not allowed. " +
-        s"Please create the referenced entity sepearately and apply the created ids to a ref attr instead, " +
+        s"Please create the referenced entity separately and apply the created ids to a ref attr instead, " +
         s"like `.$refAttr(<refIds>)`")
   }
 
@@ -273,7 +276,7 @@ case class VerifyModel(model: Model, op: String) {
           err("update_edgeComplete",
             s"Can't update edge `${Ns(edgeNs)}` of base entity `${Ns(baseNs)}` without knowing which target " +
               s"entity the edge is pointing too. " +
-            s"Please update the edge itself, like `${Ns(edgeNs)}(<edgeId>).edgeProperty(<new value>).update`.")
+              s"Please update the edge itself, like `${Ns(edgeNs)}(<edgeId>).edgeProperty(<new value>).update`.")
       }
     }
     missingTarget(model.elements)
