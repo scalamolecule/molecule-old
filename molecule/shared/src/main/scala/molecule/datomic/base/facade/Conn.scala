@@ -478,7 +478,7 @@ trait Conn extends ColOps with Serializations {
                               (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
 
-  def model2stmts(model: Model): Model2Stmts = Model2Stmts(this, model)
+  def model2stmts(model: Model): Model2Stmts = Model2Stmts(isJsPlatform, this, model)
 
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 

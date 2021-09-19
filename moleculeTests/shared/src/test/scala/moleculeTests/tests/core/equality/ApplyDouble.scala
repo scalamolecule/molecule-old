@@ -376,7 +376,8 @@ object ApplyDouble extends AsyncTestSuite {
         _ <- Ns.int.double.>=(int2).get.map(_ ==> res2)
         _ <- Ns.int.double.<=(int1).get.map(_.sortBy(_._1) ==> res1)
 
-        // Widening conversion from Long to Double is deprecated because it loses precision
+        // Widening conversion from Long to Double is deprecated because it loses precision.
+        // So, we add explicit conversion
         _ <- Ns.int.double(long1.toDouble).get.map(_.sortBy(_._1) ==> res1)
         _ <- Ns.int.double.not(long2.toDouble).get.map(_.sortBy(_._1) ==> res1)
         _ <- Ns.int.double.<(long2.toDouble).get.map(_.sortBy(_._1) ==> res1)

@@ -61,8 +61,9 @@ private[molecule] trait Dsl2Model extends TreeOps
   import c.universe._
 
   //      private lazy val xx = InspectMacro("Dsl2Model", 101, 900, mkError = true)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 10, 900)
-  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 100, 900)
+//  private lazy val xx = InspectMacro("Dsl2Model", 40, 40)
+    private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
   //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
   //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
 
@@ -1670,16 +1671,39 @@ private[molecule] trait Dsl2Model extends TreeOps
         ReplaceValue(keyValues)
     }
 
-    def extract(tree: Tree) = {
-      xx(40, tree)
-      tree match {
+    def extract(tree: Tree, tpe: String = "") = {
+      val res = tree match {
         case Constant(v: String)                            => v
-        case Literal(Constant(s: String))                   => s
-        case Literal(Constant(i: Int))                      => i
-        case Literal(Constant(l: Long))                     => l
-        case Literal(Constant(f: Float))                    => f
-        case Literal(Constant(d: Double))                   => d
-        case Literal(Constant(b: Boolean))                  => b
+        case Literal(Constant(v))                           =>
+          if (isJsPlatform)
+            v match {
+              case s: String            => s
+              case n@(_: Int | _: Long) => tpe match {
+                case "Double"     => "__n__" + n + ".0"
+                case "BigDecimal" => "__n__" + n + ".0M"
+                case _            => n
+              }
+              case f: Float             => tpe match {
+                case "Double"     => "__n__" + f + (if (f.toString.contains(".")) "" else ".0")
+                case "BigDecimal" => "__n__" + f + (if (f.toString.contains(".")) "M" else ".0M")
+                case _            => "__n__" + f
+              }
+              case d: Double            => tpe match {
+                case "Double"     => "__n__" + d + (if (d.toString.contains(".")) "" else ".0")
+                case "BigDecimal" => "__n__" + d + (if (d.toString.contains(".")) "M" else ".0M")
+                case _            => "__n__" + d
+              }
+              case b: Boolean           => b
+            }
+          else
+            v match {
+              case s: String  => s
+              case i: Int     => i
+              case l: Long    => l
+              case f: Float   => f
+              case d: Double  => d
+              case b: Boolean => b
+            }
         case Ident(TermName(v: String))                     => hasVariables = true; "__ident__" + v
         case Select(This(TypeName(_)), TermName(v: String)) => hasVariables = true; "__ident__" + v
 
@@ -1689,8 +1713,10 @@ private[molecule] trait Dsl2Model extends TreeOps
           hasVariables = true
           "__ident__" + v
 
-        case other => other
+        case v => v
       }
+      xx(40, isJsPlatform, tpe, tree, tree.raw, res)
+      res
     }
 
     def resolveValues(tree: Tree, t: richTree = null): Seq[Any] = {
@@ -1706,7 +1732,8 @@ private[molecule] trait Dsl2Model extends TreeOps
           case q"${_}.string2Model($v)" => values :+ v
 
           case q"scala.StringContext.apply(..$tokens).s(..$variables)" => abort(
-            "Can't use string interpolation for applied values. Please assign the interpolated value to a single variable and apply that instead.")
+            "Can't use string interpolation for applied values. " +
+              "Please assign the interpolated value to a single variable and apply that instead.")
 
           // Preventing simple arithmetic operation
           case q"$pre.$a.+(..$b)" => noAppliedExpression(s"$a + $b")
@@ -1726,9 +1753,10 @@ private[molecule] trait Dsl2Model extends TreeOps
         value
       }
       if (at == null || !at.isAnyEnum) {
-        resolve(tree).map(extract).distinct
+        val tpe = if (t == null) "" else t.tpeS
+        resolve(tree).map(tr => extract(tr, tpe)).distinct
       } else {
-        resolve(tree).map(extract).distinct.map(value => validateStaticEnums(value, at.enumValues))
+        resolve(tree).map(tr => extract(tr, t.tpeS)).distinct.map(value => validateStaticEnums(value, at.enumValues))
       }
     }
 

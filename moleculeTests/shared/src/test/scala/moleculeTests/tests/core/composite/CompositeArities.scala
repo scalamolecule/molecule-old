@@ -182,9 +182,17 @@ object CompositeArities extends AsyncTestSuite {
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
         )
-        List(e1, e2, txId) = tx.eids
+        //        List(e1, e2, txId) = tx.eids // todo: this order on jvm??
+        List(txId, e1, e2) = tx.eids
 
-        // Three (!) entities created
+        // Three entities created
+
+        _ <- txId.touchList.map(_ ==> List(
+          ":db/id" -> txId,
+          ":db/txInstant" -> tx.inst,
+          ":Ns/str" -> "Tx meta data"
+        ))
+
         _ <- e1.touchList.map(_ ==> List(
           ":db/id" -> e1,
           ":Ref1/int1" -> 11,
@@ -199,11 +207,6 @@ object CompositeArities extends AsyncTestSuite {
           ":Ref1/str1" -> "bb",
           ":Ref2/int2" -> 2,
           ":Ref2/str2" -> "b"
-        ))
-        _ <- txId.touchList.map(_ ==> List(
-          ":db/id" -> txId,
-          ":db/txInstant" -> tx.inst,
-          ":Ns/str" -> "Tx meta data"
         ))
 
         // Queries via one namespace

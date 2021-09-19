@@ -278,12 +278,15 @@ object elements {
     case ("Long", v) => v.toString + "L"
     //    case ("Float" | "Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
     //    case ("Float" | "Double", v)                                   => v.toString
-    case ("Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
-    case ("Double", v)                                   => v.toString
-    case ("Date", date: Date)                            => "\"" + date2str(date) + "\""
-    case ("String", s: String)                           => "\"" + escStr(s) + "\""
-    case ("UUID" | "URI", v)                             => "\"" + v + "\""
-    case (_, v)                                          => v.toString
+    //    case ("Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
+    //    case ("Double", v)                                   => v.toString
+
+    //    case ("Double", v) if v.toString.startsWith("__n__") => "\"" + v + "\"" // leave prepend as-is
+    case ("Date", date: Date)                     => "\"" + date2str(date) + "\""
+    case ("String", s: String)                    => "\"" + escStr(s) + "\""
+    case ("UUID" | "URI", v)                      => "\"" + v + "\""
+    case (_, v) if v.toString.startsWith("__n__") => "\"" + v + "\""
+    case (_, v)                                   => v.toString
   }
 
   final private def getSeq2[T](tpe: String, values: Seq[T]): String =

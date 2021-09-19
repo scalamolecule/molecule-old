@@ -204,7 +204,13 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
       if (conn.isJsPlatform) {
         for {
           saveStmts <- conn.model2stmts(_model).saveStmts
-          result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
+          result <- {
+
+//            println(_model)
+//            saveStmts foreach println
+
+            conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
+          }
         } yield result
       } else {
         conn.transact(

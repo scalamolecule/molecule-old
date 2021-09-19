@@ -295,17 +295,22 @@ private[molecule] trait TreeOps extends Liftables {
 
     lazy val tpe: Type = sym match {
       case t: TermSymbol if t.isPublic =>
-        val tpe = t.typeSignature.typeSymbol.asType.toType
-        t match {
-          case _ if tpe <:< weakTypeOf[Ref[_, _]]             => typeOf[Long]
-          case _ if tpe <:< weakTypeOf[RefAttr[_]]            => typeOf[Long]
-          case _ if tpe <:< weakTypeOf[RefAttr$[_]]           => typeOf[Long]
-          case _ if tpe <:< weakTypeOf[Enum]                  => typeOf[String]
-          case _ if tpe <:< weakTypeOf[ValueAttr[_, _, _, _]] => t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _, _]].typeSymbol).typeArgs.last
-          case _ if tpe <:< weakTypeOf[ValueAttr$[_]]         => t.typeSignature.baseType(weakTypeOf[ValueAttr$[_]].typeSymbol).typeArgs.head
-          case _ if tpe <:< weakTypeOf[MapAttr[_, _, _, _]]   => t.typeSignature.baseType(weakTypeOf[MapAttr[_, _, _, _]].typeSymbol).typeArgs.last
-          case _ if tpe <:< weakTypeOf[MapAttr$[_, _, _]]     => t.typeSignature.baseType(weakTypeOf[MapAttr$[_, _, _]].typeSymbol).typeArgs.last
-          case _                                              => NoType
+        val typeSymbol = t.typeSignature.typeSymbol
+        if (typeSymbol.isType) {
+          val tpe = t.typeSignature.typeSymbol.asType.toType
+          t match {
+            case _ if tpe <:< weakTypeOf[Ref[_, _]]             => typeOf[Long]
+            case _ if tpe <:< weakTypeOf[RefAttr[_]]            => typeOf[Long]
+            case _ if tpe <:< weakTypeOf[RefAttr$[_]]           => typeOf[Long]
+            case _ if tpe <:< weakTypeOf[Enum]                  => typeOf[String]
+            case _ if tpe <:< weakTypeOf[ValueAttr[_, _, _, _]] => t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _, _]].typeSymbol).typeArgs.last
+            case _ if tpe <:< weakTypeOf[ValueAttr$[_]]         => t.typeSignature.baseType(weakTypeOf[ValueAttr$[_]].typeSymbol).typeArgs.head
+            case _ if tpe <:< weakTypeOf[MapAttr[_, _, _, _]]   => t.typeSignature.baseType(weakTypeOf[MapAttr[_, _, _, _]].typeSymbol).typeArgs.last
+            case _ if tpe <:< weakTypeOf[MapAttr$[_, _, _]]     => t.typeSignature.baseType(weakTypeOf[MapAttr$[_, _, _]].typeSymbol).typeArgs.last
+            case _                                              => NoType
+          }
+        } else {
+          NoType
         }
       case unexpected                  =>
         abortTree(q"$unexpected", s"[TreeOps:tpe] ModelOps.att(sym) can only take an Attr symbol")

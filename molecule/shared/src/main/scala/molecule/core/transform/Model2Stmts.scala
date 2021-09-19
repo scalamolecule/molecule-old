@@ -13,7 +13,7 @@ import scala.util.control.NonFatal
 /** Model to Statements transformer.
   *
   * */
-case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, model) {
+case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends GenericStmts(conn, model) {
 
   private def getPairs(e: Any, a: String, key: String = ""): Future[Map[String, String]] = {
     // Returning card one/many values uniformly as single value for each row
@@ -75,21 +75,19 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
     //    )
 
     def p(v: Any): Any = v match {
-      case f: Float              => f.toString.toDouble
-      case _ if prefix.isDefined => Enum(prefix.get, v.toString)
-      case bd: BigDecimal        =>
-        // ensure decimal digits // here we want a typed BidDecimal - might fail on JS
-        bd + 0.0
-      case _                     => v
+      case f: Float                                           => f.toString.toDouble
+      case _ if prefix.isDefined                              => Enum(prefix.get, v.toString)
+      case bd: BigDecimal                                     => bd + 0.0
+      case s: String if isJsPlatform && s.startsWith("__n__") => s.drop(5)
+      case _                                                  => v
     }
 
     def d(v: Any) = v match {
-      case d: Date => date2str(d)
-//      case b: Byte => b // Catches Integers from falling into Double (sounds weird, I know)
-      // ensure decimal digits on JS platform
-      case d: Double      => if (attrInfo(a)._2 == "Double" && d.isWhole) s"${d.toLong}.0" else d
-      case bd: BigDecimal => if (bd.isWhole) s"${bd.toBigInt}.0" else bd
-      case other          => other
+      case d: Date                                            => date2str(d)
+      case d: Double                                          => if (attrInfo(a)._2 == "Double" && d.isWhole) s"${d.toLong}.0" else d
+      case bd: BigDecimal                                     => if (bd.isWhole) s"${bd.toBigInt}.0" else bd
+      case s: String if isJsPlatform && s.startsWith("__n__") => s.drop(5)
+      case v                                                  => v
     }
 
     def attrValues(id: Any, attr: String): Future[Seq[AnyRef]] = {
@@ -872,18 +870,18 @@ case class Model2Stmts(conn: Conn, model: Model) extends GenericStmts(conn, mode
           val newValueStrings = newValues.map(v => d(v).toString)
           val curValueStrings = curValues.map(v => d(v).toString)
 
-//          println("...............................................")
-//          println("newValueStrings: " + newValueStrings)
-//          println("curValueStrings: " + curValueStrings)
+          //          println("...............................................")
+          //          println("newValueStrings: " + newValueStrings)
+          //          println("curValueStrings: " + curValueStrings)
 
 
           val retracts = if (card == 2 || (newValues.isEmpty && curValues.nonEmpty))
             curValues.flatMap {
               case curValue if newValueStrings.contains(d(curValue).toString) =>
-//                println("  curValue     : " + d(curValue))
+                //                println("  curValue     : " + d(curValue))
                 Nil
               case obsoleteValue                                              =>
-//                println("  obsoleteValue: " + d(obsoleteValue))
+                //                println("  obsoleteValue: " + d(obsoleteValue))
                 Seq(Retract(e, a, p(obsoleteValue), Card(card)))
             }
           else

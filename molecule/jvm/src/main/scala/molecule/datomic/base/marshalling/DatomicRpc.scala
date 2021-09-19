@@ -75,7 +75,7 @@ object DatomicRpc extends MoleculeRpc
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
 
     //    println(datalogQuery)
-    //    allInputs foreach println
+//        allInputs foreach println
 
     for {
       conn <- getConn(connProxy)
@@ -90,7 +90,9 @@ object DatomicRpc extends MoleculeRpc
 
       log("###### DatomicRpc ##################################################################")
       log(datalogQuery + space + timeRight)
-      if (allInputs.nonEmpty) log(allInputs.mkString("Inputs:\n", "\n", ""))
+      if (allInputs.nonEmpty)
+        log(allInputs.mkString("Inputs:\n", "\n", ""))
+
       //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
       //      log(s"\n---- Querying Datomic... --------------------")
       //      log(datalogQuery)
@@ -331,7 +333,7 @@ object DatomicRpc extends MoleculeRpc
       case ("Int", v)        => v.toInt.asInstanceOf[Object]
       case ("Long", v)       => v.toLong.asInstanceOf[Object]
       case ("Double", v)     => v.toDouble.asInstanceOf[Object]
-      case ("BigInt", v)     => BigInt.apply(v).asInstanceOf[Object]
+      case ("BigInt", v)     => BigInt(v).asInstanceOf[Object]
       case ("BigDecimal", v) => BigDecimal(v).asInstanceOf[Object]
       case ("Boolean", v)    => v.toBoolean.asInstanceOf[Object]
       case ("Date", v)       => str2date(v).asInstanceOf[Object]

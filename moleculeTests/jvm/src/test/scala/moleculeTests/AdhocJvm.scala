@@ -40,7 +40,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
-
+        _ <- Ns.double.apply(1.0, 2.0).get
 
 
 

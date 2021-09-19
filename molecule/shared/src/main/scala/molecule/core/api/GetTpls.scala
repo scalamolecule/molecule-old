@@ -1,6 +1,7 @@
 package molecule.core.api
 
 import java.util.{Date, Collection => jCollection, List => jList}
+import molecule.core.ast.elements._
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps
@@ -53,6 +54,21 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
+
+//          println(_model)
+//
+//          _model.elements.collect {
+//            case Atom(_, _, _, _, Eq(Seq(v1)), _, _, _) =>
+//              println(v1)
+//              println(v1.getClass)
+//            case Atom(_, _, _, _, Neq(Seq(v1)), _, _, _) =>
+//              println(v1)
+//              println(v1.getClass)
+//          }
+//
+//          println(_query)
+//          println(_datalog)
+
           conn.queryJsTpl(_query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl)
         } else {
           conn.query(_model, _query).map { jColl =>

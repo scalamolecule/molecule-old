@@ -15,13 +15,9 @@ import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.Helpers
+import molecule.datomic.api.out4.m
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import moleculeTests.tests.core.crud.update.UpdateBigDecimal.{bigDec1, bigDec2, bigDec3, bigDec4}
-import moleculeTests.tests.core.crud.update.UpdateBigInt.{bigInt1, bigInt2, bigInt3}
-import moleculeTests.tests.core.crud.update.UpdateInt.{int1, int2, int3}
-import moleculeTests.tests.core.crud.update.UpdateURI.{uri1, uri2, uri3}
-import moleculeTests.tests.core.crud.updateMap.UpdateMapDate.{str1, str2, str3, str4, str5}
 //import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
@@ -31,6 +27,79 @@ import scala.util.control.NonFatal
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
+  val en    = "en"
+  val da    = "da"
+  val fr    = "fr"
+  val it    = "it"
+  val Hi    = "Hi"
+  val He    = "He"
+  val Bo    = "Bo"
+  val regEx = "Hi|He"
+
+  val i10 = 10
+  val i20 = 20
+  val i30 = 30
+
+  def testData(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
+    for {
+//      _ <- Ns.int.strMap insert List(
+//        (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
+//        (2, Map("en" -> "Oh, Hi", "da" -> "Hilser", "fr" -> "Bonjour", "it" -> "Bon giorno")),
+//        (3, Map("en" -> "Hello", "da" -> "Hej")),
+//        (4, Map("da" -> "Hej")),
+//        (5, Map[String, String]())
+//      )
+      _ <- Ns.int.intMap insert List(
+        (1, Map("en" -> 10, "da" -> 30)),
+        (2, Map("en" -> 10, "da" -> 10, "fr" -> 20, "it" -> 30)),
+        (3, Map("en" -> 30, "da" -> 30)),
+        (4, Map("da" -> 30)),
+        (5, Map[String, Int]())
+      )
+//      _ <- Ns.int.longMap insert List(
+//        (1, Map("en" -> 10L, "da" -> 30L)),
+//        (2, Map("en" -> 10L, "da" -> 10L, "fr" -> 20L, "it" -> 30L)),
+//        (3, Map("en" -> 30L, "da" -> 30L)),
+//        (4, Map("da" -> 30L)),
+//        (5, Map[String, Long]())
+//      )
+      res <- Ns.int.doubleMap insert List(
+        (1, Map("en" -> 10.0, "da" -> 30.0)),
+        (2, Map("en" -> 10.0, "da" -> 10.0, "fr" -> 20.0, "it" -> 30.0)),
+        (3, Map("en" -> 30.0, "da" -> 30.0)),
+        (4, Map("da" -> 30.0)),
+        (5, Map[String, Double]())
+      )
+//      _ <- Ns.int.boolMap insert List(
+//        (1, Map("en" -> true, "da" -> false)),
+//        (2, Map("en" -> true, "da" -> true, "fr" -> false, "it" -> false)),
+//        (3, Map("en" -> false, "en" -> false)),
+//        (4, Map("da" -> false)),
+//        (5, Map[String, Boolean]())
+//      )
+//      _ <- Ns.int.dateMap insert List(
+//        (1, Map("en" -> date1, "da" -> date3)),
+//        (2, Map("en" -> date1, "da" -> date1, "fr" -> date2, "it" -> date3)),
+//        (3, Map("en" -> date3, "da" -> date3)),
+//        (4, Map("da" -> date3)),
+//        (5, Map[String, Date]())
+//      )
+//      _ <- Ns.int.uuidMap insert List(
+//        (1, Map("en" -> uuid1, "da" -> uuid3)),
+//        (2, Map("en" -> uuid1, "da" -> uuid1, "fr" -> uuid2, "it" -> uuid3)),
+//        (3, Map("en" -> uuid3, "da" -> uuid3)),
+//        (4, Map("da" -> uuid3)),
+//        (5, Map[String, UUID]())
+//      )
+//      res <- Ns.int.uriMap insert List(
+//        (1, Map("en" -> uri1, "da" -> uri3)),
+//        (2, Map("en" -> uri1, "da" -> uri1, "fr" -> uri2, "it" -> uri3)),
+//        (3, Map("en" -> uri3, "da" -> uri3)),
+//        (4, Map("da" -> uri3)),
+//        (5, Map[String, URI]())
+//      )
+    } yield res
+  }
 
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,7 +109,77 @@ object Adhoc extends AsyncTestSuite with Helpers {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
+        _ <- testData
 
+        _ <- Ns.int.intMap.>(20).get.map(_ ==> List(
+          (1, Map("da" -> 30)),
+          (2, Map("it" -> 30)),
+          (3, Map("en" -> 30, "da" -> 30)),
+          (4, Map("da" -> 30))
+        ))
+
+        _ <- Ns.int.doubleMap.>(20.0).get.map(_ ==> List(
+          (1, Map("da" -> 30.0)),
+          (2, Map("it" -> 30.0)),
+          (3, Map("en" -> 30.0, "da" -> 30.0)),
+          (4, Map("da" -> 30.0))
+        ))
+//        _ <- Ns.int.doubleMap.>=(20.0).get.map(_ ==> List(
+//          (1, Map("da" -> 30.0)),
+//          (2, Map("fr" -> 20.0, "it" -> 30.0)),
+//          (3, Map("en" -> 30.0, "da" -> 30.0)),
+//          (4, Map("da" -> 30.0))
+//        ))
+//        _ <- Ns.int.doubleMap.<=(20.0).get.map(_ ==> List(
+//          (1, Map("en" -> 10.0)),
+//          (2, Map("en" -> 10.0, "da" -> 10.0, "fr" -> 20.0))
+//        ))
+//        _ <- Ns.int.doubleMap.<(20.0).get.map(_ ==> List(
+//          (1, Map("en" -> 10.0)),
+//          (2, Map("en" -> 10.0, "da" -> 10.0))
+//        ))
+//
+//        _ <- Ns.int.doubleMap.>(-10.0).get.map(_ ==> List(
+//          (1, Map("en" -> 10.0, "da" -> 30.0)),
+//          (2, Map("en" -> 10.0, "da" -> 10.0, "fr" -> 20.0, "it" -> 30.0)),
+//          (3, Map("en" -> 30.0, "da" -> 30.0)),
+//          (4, Map("da" -> 30.0))
+//        ))
+//
+//        _ <- Ns.int.doubleMap_.>(20.0).get.map(_ ==> List(1, 2, 3, 4))
+//        _ <- Ns.int.doubleMap_.>=(20.0).get.map(_ ==> List(1, 2, 3, 4))
+//        _ <- Ns.int.doubleMap_.<=(20.0).get.map(_ ==> List(1, 2))
+//        _ <- Ns.int.doubleMap_.<(20.0).get.map(_ ==> List(1, 2))
+//
+//
+//        // Date
+//
+//        _ <- Ns.int.dateMap.>(date2).get.map(_ ==> List(
+//          (1, Map("da" -> date3)),
+//          (2, Map("it" -> date3)),
+//          (3, Map("en" -> date3, "da" -> date3)),
+//          (4, Map("da" -> date3))
+//        ))
+//
+//        _ <- Ns.int.dateMap.>=(date2).get.map(_ ==> List(
+//          (1, Map("da" -> date3)),
+//          (2, Map("fr" -> date2, "it" -> date3)),
+//          (3, Map("en" -> date3, "da" -> date3)),
+//          (4, Map("da" -> date3))
+//        ))
+//        _ <- Ns.int.dateMap.<=(date2).get.map(_ ==> List(
+//          (1, Map("en" -> date1)),
+//          (2, Map("en" -> date1, "da" -> date1, "fr" -> date2))
+//        ))
+//        _ <- Ns.int.dateMap.<(date2).get.map(_ ==> List(
+//          (1, Map("en" -> date1)),
+//          (2, Map("en" -> date1, "da" -> date1))
+//        ))
+//
+//        _ <- Ns.int.dateMap_.>(date2).get.map(_ ==> List(1, 2, 3, 4))
+//        _ <- Ns.int.dateMap_.>=(date2).get.map(_ ==> List(1, 2, 3, 4))
+//        _ <- Ns.int.dateMap_.<=(date2).get.map(_ ==> List(1, 2))
+//        _ <- Ns.int.dateMap_.<(date2).get.map(_ ==> List(1, 2))
 
 
       } yield ()

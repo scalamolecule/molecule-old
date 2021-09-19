@@ -37,7 +37,8 @@ case class Query2String(q: Query) extends Helpers {
     case Val(v: Int)                                     => v.toString
     case Val(v: Long)                                    => v.toString
     case Val(v: Float)                                   => v.toString
-    case Val(v: Double)                                  => v.toString
+    case Val(v: Double) if v.toString.contains(".")      => v.toString
+    case Val(v: Double)                                  => v.toString + ".0"
     case Val(v: Boolean)                                 => v.toString
     case Val(v: BigInt) if asN                           => v.toString + "N"
     case Val(v: BigInt)                                  => s"(biginteger $v)"
@@ -51,8 +52,12 @@ case class Query2String(q: Query) extends Helpers {
     case Pull(e, nsFull, attr, Some(_))                  => s"(pull ?$e [{:$nsFull/$attr [:db/ident]}])"
     case Pull(e, nsFull, attr, _)                        => s"(pull ?$e [(limit :$nsFull/$attr nil)])"
     case PullNested(e, nestedAttrs)                      => s"\n        (pull ?$e [\n          ${p(nestedAttrs)}])"
-    case NestedAttrs(1, nsFull, attr, attrSpecs)         => val sp = "  " * 6; s"""{(:$nsFull/$attr :limit nil) [""" + s"\n$sp${attrSpecs.map(p).mkString(s"\n$sp")}]}"
-    case NestedAttrs(level, nsFull, attr, attrSpecs)     => val sp = "  " * (5 + level); s"""{(:$nsFull/$attr :limit nil :default "__none__") [""" + s"\n$sp${attrSpecs.map(p).mkString(s"\n$sp")}]}"
+    case NestedAttrs(1, nsFull, attr, attrSpecs)         =>
+      val sp = "  " * 6;
+      s"""{(:$nsFull/$attr :limit nil) [""" + s"\n$sp${attrSpecs.map(p).mkString(s"\n$sp")}]}"
+    case NestedAttrs(level, nsFull, attr, attrSpecs)     =>
+      val sp = "  " * (5 + level);
+      s"""{(:$nsFull/$attr :limit nil :default "__none__") [""" + s"\n$sp${attrSpecs.map(p).mkString(s"\n$sp")}]}"
     case PullAttr(nsFull, attr, true)                    => s"""(:$nsFull/$attr :limit nil :default "__none__")"""
     case PullAttr(nsFull, attr, _)                       => s"""(:$nsFull/$attr :limit nil)"""
     case PullEnum(nsFull, attr, true)                    => s"""{(:$nsFull/$attr :limit nil :default "__none__") [:db/ident]}"""
@@ -70,16 +75,29 @@ case class Query2String(q: Query) extends Helpers {
     case CollectionBinding(v)                            => "[" + p(v) + " ...]"
     case TupleBinding(vs)                                => "[ " + vs.map(p).mkString(" ") + " ]"
     case RelationBinding(vs)                             => "[[ " + vs.map(p).mkString(" ") + " ]]"
-    case DataClause(ds, e, a, v@Val(bi: BigInt), tx, op) => asN = true; val dc = pp(ds, e, a, v, tx, op); asN = false; dc
+    case DataClause(ds, e, a, v@Val(bi: BigInt), tx, op) =>
+      asN = true
+      val dc = pp(ds, e, a, v, tx, op);
+      asN = false;
+      dc
     case DataClause(ds, e, a, v, tx, op)                 => pp(ds, e, a, v, tx, op)
     case NotClause(e, a)                                 => s"(not [" + p(e) + " " + p(a) + "])"
     case NotClauses(cls)                                 => s"(not " + cls.map(p).mkString(" ") + ")"
     case NotJoinClauses(vars, cls)                       => s"(not-join [" + vars.map(p).mkString(" ") + "]\n          " + cls.map(p).mkString("\n          ") + ")"
     case Funct(name, ins, outs)                          => ((s"[($name " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim + "]"
     case RuleInvocation(name, args)                      => s"($name " + args.map(p).mkString(" ") + ")"
-    case Rule(name, args, clauses) if clauses.size > 1   => asN = true; val rc = clauses.map(p).mkString("\n   "); asN = false; s"[($name " + args.map(p).mkString(" ") + ")\n   " + rc + "]"
-    case Rule(name, args, clauses)                       => asN = true; val rc = clauses.map(p).mkString(" "); asN = false; s"[($name " + args.map(p).mkString(" ") + ") " + rc + "]"
-    case unresolvedQuery                                 => throw Query2StringException(s"\nUNRESOLVED query expression: $unresolvedQuery")
+    case Rule(name, args, clauses) if clauses.size > 1   =>
+      asN = true
+      val rc = clauses.map(p).mkString("\n   ")
+      asN = false
+      s"[($name " + args.map(p).mkString(" ") + ")\n   " + rc + "]"
+    case Rule(name, args, clauses)                       =>
+      asN = true
+      val rc = clauses.map(p).mkString(" ")
+      asN = false
+      s"[($name " + args.map(p).mkString(" ") + ") " + rc + "]"
+
+    case unresolvedQuery => throw Query2StringException(s"\nUNRESOLVED query expression: $unresolvedQuery")
   }
 
   def pp(es: QueryExpr*): String = es.toList.map(p).filter(_.trim.nonEmpty).mkString("[", " ", "]")

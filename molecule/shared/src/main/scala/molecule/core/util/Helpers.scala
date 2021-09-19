@@ -33,8 +33,9 @@ trait Helpers extends DateHandling {
 
   // Uniform Date formatting to allow text comparisons
   final protected def f(a: Any) = a match {
-    case date: Date => date2str(date).replace("+", "\\\\+")
-    case other      => other
+    case date: Date                          => date2str(date).replace("+", "\\\\+")
+    case v if v.toString.startsWith("__n__") => v.toString.drop(5)
+    case other                               => other
   }
 
   def escStr(s: String) = s.replace("""\""", """\\""").replace(""""""", """\"""")
@@ -46,24 +47,25 @@ trait Helpers extends DateHandling {
   def pad(longest: Int, shorter: Int): String = if (longest > shorter) " " * (longest - shorter) else ""
 
   def cast(value: Any): String = value match {
-    case (a, b)                             => s"(${cast(a)}, ${cast(b)})"
-    case v: Long                            => v.toString + "L"
-    case v: Float                           => v.toString + "f"
-    case date: Date                         => "\"" + date2str(date) + "\""
-    case v: String if v.startsWith("__n__") => v.drop(5) // JS number hack
-    case v: String                          => "\"" + escStr(v) + "\""
-    case v: UUID                            => "\"" + v + "\""
-    case v: URI                             => "\"" + v + "\""
-    case v                                  => v.toString
+    case (a, b)     => s"(${cast(a)}, ${cast(b)})"
+    case v: Long    => v.toString + "L"
+    case v: Float   => v.toString + "f"
+    case date: Date => "\"" + date2str(date) + "\""
+    //    case v: String if v.startsWith("__n__") => v.drop(5) // JS number hack
+    case v: String => "\"" + escStr(v) + "\""
+    case v: UUID   => "\"" + v + "\""
+    case v: URI    => "\"" + v + "\""
+    case v         => v.toString
   }
 
   // Hack to ensure decimal digits on JS platform output - todo: remove when jvm/js displays whole decimal numbers equally
   def d(tpe: String, v: Any) = {
     (tpe, v) match {
-      case ("Int", v)                    => v
-      case ("Double", v: Double)         => if (v.isWhole) s"${v.toLong}.0" else v
-      case ("BigDecimal", v: BigDecimal) => if (v.isWhole) s"${v.toBigInt}.0" else v
-      case (_, v)                        => v
+      //      case ("Int", v)                    => v
+      case ("Double", v: Double)                                          => if (v.isWhole) s"${v.toLong}.0" else v
+      case ("BigDecimal", v: BigDecimal)                                  => if (v.isWhole) s"${v.toBigInt}.0" else v
+      case ("Double" | "BigDecimal", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
+      case (_, v)                                                         => v
     }
   }
 

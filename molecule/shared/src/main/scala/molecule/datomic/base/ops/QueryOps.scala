@@ -439,8 +439,16 @@ object QueryOps extends Helpers with JavaUtil {
     def compareTo(op: String, a: Atom, v: String, qv: QueryValue, i: Int = 0): Query = qv match {
       case Val(arg) if a.tpe == "String" => compareTo2(op, a.tpe, v, Val(arg.toString.replace("\"", "\\\"")), i)
       //      case Val(arg) if a.tpe == "Float"      => compareTo2(op, a.tpe, v, Val(arg.toString.toFloat), i)
-      case Val(arg) if a.tpe == "Double"     => compareTo2(op, a.tpe, v, Val(arg.toString.toDouble), i)
-      case Val(arg) if a.tpe == "BigDecimal" => compareTo2(op, a.tpe, v, Val(BigDecimal(withDecimal(arg))), i)
+      case Val(arg) if a.tpe == "Double"     =>
+        if (arg.toString.startsWith("__n__"))
+          compareTo2(op, a.tpe, v, Val(arg), i) // Leave prepend as-is
+        else
+          compareTo2(op, a.tpe, v, Val(arg.toString.toDouble), i)
+      case Val(arg) if a.tpe == "BigDecimal" =>
+        if (arg.toString.startsWith("__n__"))
+          compareTo2(op, a.tpe, v, Val(arg), i) // Leave prepend as-is
+        else
+          compareTo2(op, a.tpe, v, Val(BigDecimal(withDecimal(arg))), i)
       case _                                 => compareTo2(op, a.tpe, v, qv, i)
     }
 
@@ -476,13 +484,9 @@ object QueryOps extends Helpers with JavaUtil {
     def ground(a: Atom, arg: Any, v: String): Query = a.tpe match {
       case "String"                           => q.func(s"""ground "${esc1(arg)}"""", Empty, v)
       case "Int" | "Long" | "Boolean" | "ref" => q.func(s"""ground $arg""", Empty, v)
-
-      case "Double" =>
+      case "Double"                           =>
         if (arg.toString.startsWith("__n__")) {
-          // Hack for MoleculeAdmin / ScalaJS
-          val arg1 = arg.toString.drop(5)
-          val arg2 = withDecimal(arg1)
-          q.func(s"""ground $arg2""", Empty, v)
+          q.func(s"""ground ${arg.toString.drop(5)}""", Empty, v)
         } else {
           q.func(s"""ground ${withDecimal(arg)}""", Empty, v)
         }
@@ -491,7 +495,13 @@ object QueryOps extends Helpers with JavaUtil {
       case "UUID"       => q.func(s"""ground #uuid "$arg"""", Empty, v)
       case "URI"        => q.func(s"""ground (java.net.URI. "$arg")""", Empty, v)
       case "BigInt"     => q.func(s"""ground (java.math.BigInteger. "$arg")""", Empty, v)
-      case "BigDecimal" => q.func(s"""ground (java.math.BigDecimal. "${withDecimal(arg)}")""", Empty, v)
+      case "BigDecimal" =>
+        if (arg.toString.startsWith("__n__")) {
+          val arg1 = arg.toString.drop(5).init // skip "M" at end too
+          q.func(s"""ground (java.math.BigDecimal. "$arg1")""", Empty, v)
+        } else {
+          q.func(s"""ground (java.math.BigDecimal. "${withDecimal(arg)}")""", Empty, v)
+        }
     }
 
     def fulltext(e: String, a: Atom, v: String, s: String): Query =
@@ -536,6 +546,11 @@ object QueryOps extends Helpers with JavaUtil {
             .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
       }
       arg match {
+        case s: String if s.startsWith("__n__") => q1
+          .func("read-string", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
+          .func(op, Seq(Var(v + 3), Val(s)))
+//          .func(op, Seq(Var(v + 3), Val(s.drop(5))))
+
         case _: String  => q1.compareTo(op, a, v + 2, Val(arg), 1)
         case _: UUID    => q1.compareTo(op, a, v + 2, Val(arg), 1)
         case _: URI     => q1.compareTo(op, a, v + 2, Val(arg), 1)
