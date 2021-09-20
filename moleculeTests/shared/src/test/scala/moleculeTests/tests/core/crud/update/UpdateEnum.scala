@@ -134,7 +134,8 @@ object UpdateEnum extends AsyncTestSuite {
             // On JS platform, attributes and enum values are passed as edn clojure.Keywords (renders without quotes).
             // On JVM platform, attributes and enum values are passed as Strings in java.util.List (renders with quotes).
             val enumAttrValue = if (isJsPlatform) ":Ns/enums :Ns.enums/x" else "\":Ns/enums\" \":Ns.enums/x\""
-            err ==> "java.lang.IllegalArgumentException: " +
+            err ==>
+//              "java.lang.IllegalArgumentException: " +
               ":db.error/not-an-entity Unable to resolve entity: " +
               s":Ns.enums/x in datom [$eid $enumAttrValue]"
           }

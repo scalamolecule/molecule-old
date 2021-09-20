@@ -82,7 +82,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
       case _                                                  => v
     }
 
-    def d(v: Any) = v match {
+    def str(v: Any) = v match {
       case d: Date                                            => date2str(d)
       case d: Double                                          => if (attrInfo(a)._2 == "Double" && d.isWhole) s"${d.toLong}.0" else d
       case bd: BigDecimal                                     => if (bd.isWhole) s"${bd.toBigInt}.0" else bd
@@ -167,7 +167,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         case (key, keys) if keys.size > 1 => key
       }.toSeq
       if (dupKeys.nonEmpty) {
-        val dupPairs = pairs.filter(p => dupKeys.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${d(v)}" }
+        val dupPairs = pairs.filter(p => dupKeys.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${str(v)}" }
         err(s"valueStmts:$host",
           s"Can't $op multiple key/value pairs with the same key for attribute `$a`:\n"
             + dupPairs.mkString("\n"))
@@ -178,14 +178,14 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
       val dups = pairs.map(_._2).groupBy(identity).collect { case (v, vs) if vs.size > 1 => v }
       if (dups.nonEmpty)
         err(s"valueStmts:$host",
-          s"Can't replace with duplicate new values of attribute `$a`:\n" + dups.map(d).mkString("\n"))
+          s"Can't replace with duplicate new values of attribute `$a`:\n" + dups.map(str).mkString("\n"))
     }
 
     def checkDupValues(values: Seq[Any], host: String, op: String): Unit = {
       val dups = values.groupBy(identity).collect { case (v, vs) if vs.size > 1 => v }
       if (dups.nonEmpty)
         err(s"valueStmts:$host",
-          s"Can't $op duplicate new values to attribute `$a`:\n" + dups.map(d).mkString("\n"))
+          s"Can't $op duplicate new values to attribute `$a`:\n" + dups.map(str).mkString("\n"))
     }
 
     def checkUnknownKeys(newPairs: Seq[(String, Any)], curKeys: Seq[String], host: String): Unit = {
@@ -555,17 +555,17 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
             val curKeys      = curPairs.keys.toList
             futEdgeB.map { edgeB =>
               newPairs.flatMap {
-                case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
-                case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+                case (k, v) if curPairsList.contains((k, str(v).toString)) => Nil
+                case (k, v) if curPairsList.contains((k, str(v).toString)) => Nil
                 case (k, v) if curKeys.contains(k)                       =>
                   Seq(
-                    Retract(edgeB, a, k + "@" + curPairs(k), Card(card)), Add(edgeB, a, k + "@" + d(v), Card(card)),
-                    Retract(edgeA, a, k + "@" + curPairs(k), Card(card)), Add(edgeA, a, k + "@" + d(v), Card(card))
+                    Retract(edgeB, a, k + "@" + curPairs(k), Card(card)), Add(edgeB, a, k + "@" + str(v), Card(card)),
+                    Retract(edgeA, a, k + "@" + curPairs(k), Card(card)), Add(edgeA, a, k + "@" + str(v), Card(card))
                   )
                 case (k, v)                                              =>
                   Seq(
-                    Add(edgeB, a, k + "@" + d(v), Card(card)),
-                    Add(edgeA, a, k + "@" + d(v), Card(card))
+                    Add(edgeB, a, k + "@" + str(v), Card(card)),
+                    Add(edgeA, a, k + "@" + str(v), Card(card))
                   )
               }
             }
@@ -580,16 +580,16 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
             checkUnknownKeys(newPairs, curKeys, "biEdgeProp")
             futEdgeB.map { edgeB =>
               newPairs.flatMap {
-                case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+                case (k, v) if curPairsList.contains((k, str(v).toString)) => Nil
                 case (k, v) if curKeys.contains(k)                       =>
                   Seq(
-                    Retract(edgeB, a, k + "@" + curPairs(k), Card(card)), Add(edgeB, a, k + "@" + d(v), Card(card)),
-                    Retract(edgeA, a, k + "@" + curPairs(k), Card(card)), Add(edgeA, a, k + "@" + d(v), Card(card))
+                    Retract(edgeB, a, k + "@" + curPairs(k), Card(card)), Add(edgeB, a, k + "@" + str(v), Card(card)),
+                    Retract(edgeA, a, k + "@" + curPairs(k), Card(card)), Add(edgeA, a, k + "@" + str(v), Card(card))
                   )
                 case (k, v)                                              =>
                   Seq(
-                    Add(edgeB, a, k + "@" + d(v), Card(card)),
-                    Add(edgeA, a, k + "@" + d(v), Card(card))
+                    Add(edgeB, a, k + "@" + str(v), Card(card)),
+                    Add(edgeA, a, k + "@" + str(v), Card(card))
                   )
               }
             }
@@ -617,7 +617,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
           edgeA match {
             case updateE: Long => {
               getPairs(edgeA, a).flatMap { oldPairs =>
-                val newPairs1 = newPairs.map { case (k, v) => (k, d(v).toString) }
+                val newPairs1 = newPairs.map { case (k, v) => (k, str(v).toString) }
                 futEdgeB.map { edgeB =>
                   val retracts = oldPairs.flatMap {
                     case (oldK, oldV) if newPairs1.contains((oldK, oldV)) => Nil
@@ -629,8 +629,8 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
                   }
                   val adds     = newPairs.flatMap { case (k, v) =>
                     Seq(
-                      Add(edgeB, a, k + "@" + d(v), Card(card)),
-                      Add(edgeA, a, k + "@" + d(v), Card(card))
+                      Add(edgeB, a, k + "@" + str(v), Card(card)),
+                      Add(edgeA, a, k + "@" + str(v), Card(card))
                     )
                   }
                   retracts ++ adds
@@ -641,8 +641,8 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
             case newE => futEdgeB.map { edgeB =>
               newPairs.flatMap { case (k, v) =>
                 Seq(
-                  Add(edgeB, a, k + "@" + d(v), Card(card)),
-                  Add(edgeA, a, k + "@" + d(v), Card(card))
+                  Add(edgeB, a, k + "@" + str(v), Card(card)),
+                  Add(edgeA, a, k + "@" + str(v), Card(card))
                 )
               }
             }
@@ -708,8 +708,8 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         case m: Map[_, _] => futEdgeB.map { edgeB =>
           m.flatMap { case (k, v) =>
             Seq(
-              Add(edgeB, a, s"$k@${d(v)}", Card(card)),
-              Add(edgeA, a, s"$k@${d(v)}", Card(card))
+              Add(edgeB, a, s"$k@${str(v)}", Card(card)),
+              Add(edgeA, a, s"$k@${str(v)}", Card(card))
             )
           }
         }
@@ -788,14 +788,14 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
           val curPairsList = curPairs.toList
           val curKeys      = curPairs.keys.toList
           newPairs.flatMap {
-            case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+            case (k, v) if curPairsList.contains((k, str(v).toString)) => Nil
             case (k, v) if curKeys.contains(k)                       =>
               Seq(
                 Retract(e, a, s"$k@${curPairs(k)}", Card(card)),
-                Add(e, a, s"$k@${d(v)}", Card(card))
+                Add(e, a, s"$k@${str(v)}", Card(card))
               )
             case (k, v)                                              =>
-              Seq(Add(e, a, s"$k@${d(v)}", Card(card)))
+              Seq(Add(e, a, s"$k@${str(v)}", Card(card)))
           }
         }
       }
@@ -807,14 +807,14 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
           val curKeys      = curPairs.keys.toList
           checkUnknownKeys(newPairs, curKeys, "default")
           newPairs.flatMap {
-            case (k, v) if curPairsList.contains((k, d(v).toString)) => Nil
+            case (k, v) if curPairsList.contains((k, str(v).toString)) => Nil
             case (k, v) if curKeys.contains(k)                       =>
               Seq(
                 Retract(e, a, s"$k@${curPairs(k)}", Card(card)),
-                Add(e, a, s"$k@${d(v)}", Card(card))
+                Add(e, a, s"$k@${str(v)}", Card(card))
               )
             case (k, v)                                              =>
-              Seq(Add(e, a, s"$k@${d(v)}", Card(card)))
+              Seq(Add(e, a, s"$k@${str(v)}", Card(card)))
           }
         }
       }
@@ -833,17 +833,17 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         e match {
           case updateE: Long => {
             getPairs(e, a).map { oldPairs =>
-              val newPairs1 = newPairs.map { case (k, v) => (k, d(v).toString) }
+              val newPairs1 = newPairs.map { case (k, v) => (k, str(v).toString) }
               val retracts  = oldPairs.flatMap {
                 case (oldK, oldV) if newPairs1.contains((oldK, oldV)) => Nil
                 case (oldK, oldV)                                     => Seq(Retract(e, a, s"$oldK@$oldV", Card(card)))
               }
-              val adds      = newPairs.map { case (k, v) => Add(e, a, k + "@" + d(v), Card(card)) }
+              val adds      = newPairs.map { case (k, v) => Add(e, a, k + "@" + str(v), Card(card)) }
               retracts ++ adds
             }
           }
 
-          case newE => Future(newPairs.map { case (k, v) => Add(e, a, k + "@" + d(v), Card(card)) })
+          case newE => Future(newPairs.map { case (k, v) => Add(e, a, k + "@" + str(v), Card(card)) })
         }
       }
 
@@ -867,8 +867,8 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         val newValues    = flatten(newValues0).distinct
         val futCurValues = if (e == datomicTx) Future(Nil) else attrValues(e, a)
         futCurValues.map { curValues =>
-          val newValueStrings = newValues.map(v => d(v).toString)
-          val curValueStrings = curValues.map(v => d(v).toString)
+          val newValueStrings = newValues.map(v => str(v).toString)
+          val curValueStrings = curValues.map(v => str(v).toString)
 
           //          println("...............................................")
           //          println("newValueStrings: " + newValueStrings)
@@ -877,7 +877,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
 
           val retracts = if (card == 2 || (newValues.isEmpty && curValues.nonEmpty))
             curValues.flatMap {
-              case curValue if newValueStrings.contains(d(curValue).toString) =>
+              case curValue if newValueStrings.contains(str(curValue).toString) =>
                 //                println("  curValue     : " + d(curValue))
                 Nil
               case obsoleteValue                                              =>
@@ -887,7 +887,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
           else
             Nil
           val adds     = newValues.flatMap {
-            case newValue if curValueStrings.contains(d(newValue).toString) =>
+            case newValue if curValueStrings.contains(str(newValue).toString) =>
               Nil
             case newValue                                                   => Seq(Add(e, a, p(newValue), Card(card)))
           }
@@ -895,7 +895,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         }
       }
 
-      case m: Map[_, _] => Future(m.map { case (k, v) => Add(e, a, s"$k@${d(v)}", Card(card)) })
+      case m: Map[_, _] => Future(m.map { case (k, v) => Add(e, a, s"$k@${str(v)}", Card(card)) })
       case vs: Set[_]   => Future(vs.map(v => Add(e, a, p(v), Card(card))))
       case v :: Nil     => Future(Seq(Add(e, a, p(v), Card(card))))
       case vs: List[_]  => Future(vs.map(v => Add(e, a, p(v), Card(card))))

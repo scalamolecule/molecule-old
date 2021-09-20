@@ -24,9 +24,7 @@ abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
   val datomicTx = "datomic.tx"
 
   // Save attribute cardinality/type info
-  val attrInfo = mutable.Map(
-    ":molecule_Meta/otherEdge" -> (1, "ref")
-  )
+  val attrInfo = conn.connProxy.attrMap + (":molecule_Meta/otherEdge" -> (1, "ref"))
 
   val genericStmts: Seq[Statement] = {
 
@@ -41,12 +39,6 @@ abstract class GenericStmts(conn: Conn, model: Model) extends Helpers {
     } getOrElse Card(card)
 
     def resolveElement(eSlot: Any, stmts: Seq[Statement], element: Element): (Any, Seq[Statement]) = {
-      // Set attrInfo
-      element match {
-        case Atom(ns, attr, tpe, card, _, _, _, _) => attrInfo(s":$ns/$attr") = (card, tpe)
-        case Bond(ns, refAttr, _, card, _)         => attrInfo(s":$ns/$refAttr") = (card, "ref")
-        case _                                     =>
-      }
       (eSlot, element) match {
         // None
         case (eids@Eids(ids), Atom(nsFull, name, _, c, Fn("not", _), _, gs, _)) => (eids, stmts ++ ids.map(Retract(_, s":$nsFull/$name", Values(Eq(Nil)), bi(gs, c))))

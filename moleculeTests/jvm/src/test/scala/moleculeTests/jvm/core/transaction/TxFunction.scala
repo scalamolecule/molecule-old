@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * LOCAL DEV / IN-MEMORY
   * No need to prepare anything since transaction functions defined within the project
   * will be available on the classpath for the Transactor managed by the Peer.
-  * OBS: Note that when running test from sbt this is not the case
+  * OBS: Note that when running test from sbt this is not the case!
   *
   * STARTER PRO / PRO
   * Set Datomic classpath variable to where your tx functions are before starting the transactor

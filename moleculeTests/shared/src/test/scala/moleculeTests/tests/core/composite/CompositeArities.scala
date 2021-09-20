@@ -49,7 +49,7 @@ object CompositeArities extends AsyncTestSuite {
     "1 + 2" - core { implicit conn =>
       for {
         // Composite of Molecule1 + Molecule2
-        tx <- (Ref2.int2 + Ns.int.str).insert.apply( Seq(
+        tx <- (Ref2.int2 + Ns.int.str).insert.apply(Seq(
           // Two rows of data
           (1, (11, "aa")),
           (2, (22, "bb"))
@@ -182,17 +182,14 @@ object CompositeArities extends AsyncTestSuite {
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
         )
-        //        List(e1, e2, txId) = tx.eids // todo: this order on jvm??
-        List(txId, e1, e2) = tx.eids
 
         // Three entities created
-
+        List(txId, e1, e2) = tx.eids
         _ <- txId.touchList.map(_ ==> List(
           ":db/id" -> txId,
           ":db/txInstant" -> tx.inst,
           ":Ns/str" -> "Tx meta data"
         ))
-
         _ <- e1.touchList.map(_ ==> List(
           ":db/id" -> e1,
           ":Ref1/int1" -> 11,
@@ -200,7 +197,6 @@ object CompositeArities extends AsyncTestSuite {
           ":Ref2/int2" -> 1,
           ":Ref2/str2" -> "a"
         ))
-
         _ <- e2.touchList.map(_ ==> List(
           ":db/id" -> e2,
           ":Ref1/int1" -> 22,

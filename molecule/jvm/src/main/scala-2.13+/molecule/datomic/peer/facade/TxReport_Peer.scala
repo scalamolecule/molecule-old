@@ -66,7 +66,7 @@ case class TxReport_Peer(
 
     //      println("--------")
     //      resolvedIds foreach println
-    resolvedIds
+    resolvedIds.sorted
   }
 
   private lazy val txDataRaw: List[Datum] =

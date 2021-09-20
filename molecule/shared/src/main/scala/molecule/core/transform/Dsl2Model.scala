@@ -63,7 +63,7 @@ private[molecule] trait Dsl2Model extends TreeOps
   //      private lazy val xx = InspectMacro("Dsl2Model", 101, 900, mkError = true)
   //  private lazy val xx = InspectMacro("Dsl2Model", 100, 900)
 //  private lazy val xx = InspectMacro("Dsl2Model", 40, 40)
-    private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+      private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
   //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
   //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
 
@@ -1675,35 +1675,54 @@ private[molecule] trait Dsl2Model extends TreeOps
       val res = tree match {
         case Constant(v: String)                            => v
         case Literal(Constant(v))                           =>
-          if (isJsPlatform)
+          if (isJsPlatform) {
             v match {
-              case s: String            => s
-              case n@(_: Int | _: Long) => tpe match {
-                case "Double"     => "__n__" + n + ".0"
-                case "BigDecimal" => "__n__" + n + ".0M"
-                case _            => n
+              case _: String            => v
+              case _: Int | _: Long => tpe match {
+                case "Double"     => "__n__" + v + ".0"
+                case "BigDecimal" => "__n__" + v + ".0M"
+                case _            => v
               }
-              case f: Float             => tpe match {
-                case "Double"     => "__n__" + f + (if (f.toString.contains(".")) "" else ".0")
-                case "BigDecimal" => "__n__" + f + (if (f.toString.contains(".")) "M" else ".0M")
-                case _            => "__n__" + f
+              case _: Float   => tpe match {
+                case "Double"     => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
+                case "BigDecimal" => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+                case _            => "__n__" + v
               }
-              case d: Double            => tpe match {
-                case "Double"     => "__n__" + d + (if (d.toString.contains(".")) "" else ".0")
-                case "BigDecimal" => "__n__" + d + (if (d.toString.contains(".")) "M" else ".0M")
-                case _            => "__n__" + d
+              case _: Double => tpe match {
+                case "Double"     => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
+                case "BigDecimal" => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+                case _            => "__n__" + v
               }
-              case b: Boolean           => b
+              case _: Boolean => v
             }
-          else
+          } else {
             v match {
-              case s: String  => s
-              case i: Int     => i
-              case l: Long    => l
-              case f: Float   => f
-              case d: Double  => d
-              case b: Boolean => b
+              case _: String => v
+              case v: Int   => tpe match {
+                case "Long"       => v.toLong
+                case "Double"     => v.toDouble
+                case "BigInt"     => BigInt(v)
+                case "BigDecimal" => BigDecimal(v)
+                case _            => v
+              }
+              case v: Long   => tpe match {
+                case "Double"     => v.toDouble
+                case "BigInt"     => BigInt(v)
+                case "BigDecimal" => BigDecimal(v)
+                case _            => v
+              }
+              case v: Float   => tpe match {
+                case "Double"     => v.toDouble
+                case "BigDecimal" => BigDecimal(v)
+                case _            => v
+              }
+              case v: Double => tpe match {
+                case "BigDecimal" => BigDecimal(v)
+                case _            => v
+              }
+              case _: Boolean => v
             }
+          }
         case Ident(TermName(v: String))                     => hasVariables = true; "__ident__" + v
         case Select(This(TypeName(_)), TermName(v: String)) => hasVariables = true; "__ident__" + v
 

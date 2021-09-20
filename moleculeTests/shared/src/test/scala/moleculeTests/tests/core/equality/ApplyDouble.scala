@@ -457,7 +457,7 @@ object ApplyDouble extends AsyncTestSuite {
           (2, Set(1L)),
           (3, Set(1f)),
           (4, Set(1.0)),
-          (5, Set(double2)),
+          (5, Set(double2))
         )
 
         // Mandatory

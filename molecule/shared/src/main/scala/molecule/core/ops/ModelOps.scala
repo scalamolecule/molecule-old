@@ -6,40 +6,76 @@ import molecule.core.ast.elements._
 /** Model operations */
 object ModelOps {
 
-  def convert(tpe: String, value: Any): Any = {
+  def convert(isJsPlatform: Boolean, tpe: String, value: Any): Any = {
+    val conv = if (isJsPlatform) {
+      (v: Any) =>
+        v match {
+          case v: Long  =>
+            tpe match {
+              case "Double"     => "__n__" + v + ".0"
+              case "BigDecimal" => "__n__" + v + ".0M"
+              case _            => v
+            }
+          case v: Float =>
+            tpe match {
+              case "Double" if v.toString.contains(".")     => "__n__" + v
+              case "Double"                                 => "__n__" + v + ".0"
+              case "BigDecimal" if v.toString.contains(".") => "__n__" + v + "M"
+              case "BigDecimal"                             => "__n__" + v + ".0M"
+              case _                                        => v.toString.toDouble
+            }
+          case _        => v
+        }
+    } else {
+      (v: Any) =>
+        v match {
+          case v: Int    => tpe match {
+            case "Long"       => v.toLong
+            case "Double"     => v.toDouble
+            case "BigInt"     => BigInt(v)
+            case "BigDecimal" => BigDecimal(v)
+            case _            => v
+          }
+          case v: Long   => tpe match {
+            case "Double"     => v.toDouble
+            case "BigInt"     => BigInt(v)
+            case "BigDecimal" => BigDecimal(v)
+            case _            => v
+          }
+          case v: Float  => tpe match {
+            case "Double"     => v.toDouble
+            case "BigDecimal" => BigDecimal(v)
+            case _            => v
+          }
+          case v: Double => tpe match {
+            case "BigDecimal" => BigDecimal(v)
+            case _            => v
+          }
+          case v: BigInt => tpe match {
+            case "BigDecimal" => BigDecimal(v)
+            case _            => v
+          }
+          case _         => v
+        }
+    }
 
     val res = value match {
-      case set: scala.collection.Set[_]  => set.map(v => convert(tpe, v))
-      case seq: scala.collection.Seq[_]  => seq.map(v => convert(tpe, v))
-      case m: scala.collection.Map[_, _] => m.toSeq.map(v => convert(tpe, v))
-      case (k, v)                        => (convert("String", k), convert(tpe, v))
-      case Some(v)                       => convert(tpe, v)
-      case v: Long                       =>
-        tpe match {
-          case "Double"     => "__n__" + v + ".0"
-          case "BigDecimal" => "__n__" + v + ".0M"
-          case _            => v
-        }
-      case v: Float                      =>
-        tpe match {
-          case "Double" if v.toString.contains(".")     => "__n__" + v
-          case "Double"                                 => "__n__" + v + ".0"
-          case "BigDecimal" if v.toString.contains(".") => "__n__" + v + "M"
-          case "BigDecimal"                             => "__n__" + v + ".0M"
-          case _                                        => v.toString.toDouble
-        }
-      case v                             => v
+      case set: scala.collection.Set[_]  => set.map(v => conv(v))
+      case seq: scala.collection.Seq[_]  => seq.map(v => conv(v))
+      case m: scala.collection.Map[_, _] => m.toSeq.map { case (k, v) => (k, conv(v)) }
+      case Some(v)                       => convert(isJsPlatform, tpe, v)
+      case v                             => conv(v)
     }
     //    println(s"@@@@@@  $tpe  $value  ${value.getClass}  $res")
     res
   }
 
-  def resolveIdentifiers(model: Model, identMap: Map[String, Any]): Model = {
+  def resolveIdentifiers(isJsPlatform: Boolean, model: Model, identMap: Map[String, Any]): Model = {
     def flatSeq(tpe: String, a: Any): scala.collection.Seq[Any] = (a match {
       case seq: scala.collection.Seq[_] => seq
       case set: scala.collection.Set[_] => set.toSeq
       case v                            => Seq(v)
-    }).map(v => convert(tpe, v))
+    }).map(v => convert(isJsPlatform, tpe, v))
 
     def getKeys(tpe: String, keyIdents: Seq[String]): Seq[String] = getValues(tpe, keyIdents).flatMap {
       case keys: scala.collection.Seq[_] => keys
@@ -49,17 +85,17 @@ object ModelOps {
     def getValues(tpe: String, idents: Seq[Any]): Seq[Any] = idents.flatMap {
       case set: scala.collection.Set[_] if set.nonEmpty => Seq(set.flatMap {
         case ident if ident.toString.startsWith("__ident__") => flatSeq(tpe, identMap(ident.toString))
-        case value                                           => Seq(convert(tpe, value))
+        case value                                           => Seq(convert(isJsPlatform, tpe, value))
       })
 
       case v: String if v.startsWith("__ident__")                                           => flatSeq(tpe, identMap(v))
       case (k: String, "__pair__") if k.startsWith("__ident__")                             => flatSeq(tpe, identMap(k))
       case (k: String, v: String) if k.startsWith("__ident__") && v.startsWith("__ident__") => Seq((identMap(k), identMap(v)))
-      case (k: String, v: Any) if k.startsWith("__ident__")                                 => Seq((identMap(k), convert(tpe, v)))
-      case (k: Any, v: String) if v.startsWith("__ident__")                                 => Seq((convert(tpe, k), identMap(v)))
-      case (k, v)                                                                           => Seq((convert(tpe, k), convert(tpe, v)))
-      case seq: scala.collection.Seq[_]                                                     => seq.map(v => convert(tpe, v))
-      case v                                                                                => Seq(convert(tpe, v))
+      case (k: String, v: Any) if k.startsWith("__ident__")                                 => Seq((identMap(k), convert(isJsPlatform, tpe, v)))
+      case (k: Any, v: String) if v.startsWith("__ident__")                                 => Seq((convert(isJsPlatform, tpe, k), identMap(v)))
+      case (k, v)                                                                           => Seq((convert(isJsPlatform, tpe, k), convert(isJsPlatform, tpe, v)))
+      case seq: scala.collection.Seq[_]                                                     => seq.map(v => convert(isJsPlatform, tpe, v))
+      case v                                                                                => Seq(convert(isJsPlatform, tpe, v))
     }
 
     def resolve(elements: Seq[Element]): Seq[Element] = elements map {

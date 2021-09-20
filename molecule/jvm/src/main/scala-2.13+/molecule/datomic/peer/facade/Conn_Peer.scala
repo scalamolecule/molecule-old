@@ -263,8 +263,8 @@ case class Conn_Peer(
         _testDb = None
       }
 
-//      if (javaStmts.size < 5)
-//        println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+      //      if (javaStmts.size < 5)
+      //        println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
 
       // Live transaction
       val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
@@ -288,9 +288,18 @@ case class Conn_Peer(
               case e: java.util.concurrent.ExecutionException =>
                 println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                //                p.failure(e.getCause)
-                //                p.failure(MoleculeException(e.getMessage.trim, e.getCause))
-                p.failure(MoleculeException(e.getMessage.trim))
+                // White list of exceptions that can be pickled by BooPickle
+                p.failure(
+                  e.getCause match {
+                    case e: TxFnException     => e
+                    case e: MoleculeException => e
+                    case e                    => MoleculeException(e.getMessage.trim)
+                  }
+                )
+
+              //                p.failure(e.getCause)
+              //                p.failure(MoleculeException(e.getMessage.trim, e.getCause))
+              //                p.failure(MoleculeException(e.getMessage.trim))
 
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)

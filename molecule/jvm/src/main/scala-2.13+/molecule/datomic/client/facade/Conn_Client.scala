@@ -280,7 +280,7 @@ case class Conn_Client(
       }
     } catch {
       case NonFatal(exc) =>
-        Future.failed(new QueryException(exc, model, query))
+        Future.failed(QueryException(exc, model, query))
     }
   }
 
