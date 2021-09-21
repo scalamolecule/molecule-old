@@ -156,9 +156,9 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(min).get.map(_.head ==> date1)
         _ <- Ns.uuid(min).get.map(_.head ==> uuid1)
         _ <- Ns.uri(min).get.map(_.head ==> uri1)
-        _ <- Ns.enum(min).get.map(_.head ==> enum1)
         _ <- Ns.bigInt(min).get.map(_.head ==> bigInt1)
         _ <- Ns.bigDec(min).get.map(_.head ==> bigDec1)
+        _ <- Ns.enum(min).get.map(_.head ==> enum1)
 
         _ <- Ns.str(min(2)).get.map(_.head ==> List("str1", "str2"))
         _ <- Ns.int(min(2)).get.map(_.head ==> List(1, 2))
@@ -168,9 +168,9 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(min(2)).get.map(_.head ==> List(date1, date2))
         _ <- Ns.uuid(min(2)).get.map(_.head ==> List(uuid1, uuid2))
         _ <- Ns.uri(min(2)).get.map(_.head ==> List(uri1, uri2))
-        _ <- Ns.enum(min(2)).get.map(_.head ==> List(enum1, enum2))
         _ <- Ns.bigInt(min(2)).get.map(_.head ==> List(bigInt1, bigInt2))
         _ <- Ns.bigDec(min(2)).get.map(_.head ==> List(bigDec1, bigDec2))
+        _ <- Ns.enum(min(2)).get.map(_.head ==> List(enum1, enum2))
 
 
         // card many
@@ -183,9 +183,9 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.dates(min).get.map(_.head ==> Set(date1))
         _ <- Ns.uuids(min).get.map(_.head ==> Set(uuid1))
         _ <- Ns.uris(min).get.map(_.head ==> Set(uri1))
-        _ <- Ns.enums(min).get.map(_.head ==> Set(enum1))
         _ <- Ns.bigInts(min).get.map(_.head ==> Set(bigInt1))
         _ <- Ns.bigDecs(min).get.map(_.head ==> Set(bigDec1))
+        _ <- Ns.enums(min).get.map(_.head ==> Set(enum1))
 
         _ <- Ns.strs(min(2)).get.map(_.head ==> List(Set("a", "b")))
         _ <- Ns.ints(min(2)).get.map(_.head ==> List(Set(1, 2)))
@@ -195,9 +195,9 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.dates(min(2)).get.map(_.head ==> List(Set(date1, date2)))
         _ <- Ns.uuids(min(2)).get.map(_.head ==> List(Set(uuid1, uuid2)))
         _ <- Ns.uris(min(2)).get.map(_.head ==> List(Set(uri1, uri2)))
-        _ <- Ns.enums(min(2)).get.map(_.head ==> List(Set(enum1, enum2)))
         _ <- Ns.bigInts(min(2)).get.map(_.head ==> List(Set(bigInt1, bigInt2)))
         _ <- Ns.bigDecs(min(2)).get.map(_.head ==> List(Set(bigDec1, bigDec2)))
+        _ <- Ns.enums(min(2)).get.map(_.head ==> List(Set(enum1, enum2)))
 
 
         // combinations

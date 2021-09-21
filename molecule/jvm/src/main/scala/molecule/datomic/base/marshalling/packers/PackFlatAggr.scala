@@ -205,14 +205,17 @@ trait PackFlatAggr extends PackBase {
 
   protected val packAggrManySingleString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     add(sb, row.get(colIndex).asInstanceOf[String])
-    end(sb)
+    end(sb) // end of string
+    end(sb) // end of elements list
   }
 
   protected val packAggrManySingle = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     add(sb, row.get(colIndex).toString)
+    end(sb) // end of elements list
   }
 
   protected val packAggrManySingleDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
+    end(sb) // end of elements list
   }
 }

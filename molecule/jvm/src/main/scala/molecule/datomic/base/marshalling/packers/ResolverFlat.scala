@@ -102,54 +102,48 @@ trait ResolverFlat extends PackFlatTypes with PackFlatAggr {
   }
 
 
+  // Aggregates
+
   def packAggrOneList(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String"       => packAggrOneListString(sb, colIndex)
-    case "Date"         => packAggrOneListDate(sb, colIndex)
     case "List[String]" => packAggrOneListString(sb, colIndex)
     case "List[Date]"   => packAggrOneListDate(sb, colIndex)
     case _              => packAggrOneList(sb, colIndex)
   }
 
   def packAggrManyList(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String" => packAggrManyListString(sb, colIndex)
-    case "Date"   => packAggrManyListDate(sb, colIndex)
-    case _        => packAggrManyList(sb, colIndex)
+    case "List[String]" => packAggrManyListString(sb, colIndex)
+    case "List[Date]"   => packAggrManyListDate(sb, colIndex)
+    case _              => packAggrManyList(sb, colIndex)
   }
 
   def packAggrOneListDistinct(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String"       => packAggrOneListDistinctString(sb, colIndex)
-    case "Date"         => packAggrOneListDistinctDate(sb, colIndex)
     case "List[String]" => packAggrOneListDistinctString(sb, colIndex)
     case "List[Date]"   => packAggrOneListDistinctDate(sb, colIndex)
     case _              => packAggrOneListDistinct(sb, colIndex)
   }
 
   def packAggrManyListDistinct(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String" => packAggrManyListDistinctString(sb, colIndex)
-    case "Date"   => packAggrManyListDistinctDate(sb, colIndex)
-    case _        => packAggrManyListDistinct(sb, colIndex)
+    case "List[String]" => packAggrManyListDistinctString(sb, colIndex)
+    case "List[Date]"   => packAggrManyListDistinctDate(sb, colIndex)
+    case _              => packAggrManyListDistinct(sb, colIndex)
   }
 
   def packAggrOneListRand(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String"       => packAggrOneListRandString(sb, colIndex)
-    case "Date"         => packAggrOneListRandDate(sb, colIndex)
     case "List[String]" => packAggrOneListRandString(sb, colIndex)
     case "List[Date]"   => packAggrOneListRandDate(sb, colIndex)
     case _              => packAggrOneListRand(sb, colIndex)
   }
 
   def packAggrManyListRand(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String" => packAggrManyListRandString(sb, colIndex)
-    case "Date"   => packAggrManyListRandDate(sb, colIndex)
-    case _        => packAggrManyListRand(sb, colIndex)
+    case "List[String]" => packAggrManyListRandString(sb, colIndex)
+    case "List[Date]"   => packAggrManyListRandDate(sb, colIndex)
+    case _              => packAggrManyListRand(sb, colIndex)
   }
 
   def packAggrSingleSample(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String"       => packAggrSingleSampleString(sb, colIndex)
-    case "Date"         => packAggrSingleSampleDate(sb, colIndex)
-    case "List[String]" => packAggrSingleSampleString(sb, colIndex)
-    case "List[Date]"   => packAggrSingleSampleDate(sb, colIndex)
-    case _              => packAggrSingleSample(sb, colIndex)
+    case "String" => packAggrSingleSampleString(sb, colIndex)
+    case "Date"   => packAggrSingleSampleDate(sb, colIndex)
+    case _        => packAggrSingleSample(sb, colIndex)
   }
 
   def packAggrOneSingle(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
@@ -159,8 +153,8 @@ trait ResolverFlat extends PackFlatTypes with PackFlatAggr {
   }
 
   def packAggrManySingle(sb: StringBuffer, tpe: String, colIndex: Int): jList[_] => StringBuffer = tpe match {
-    case "String" => packAggrManySingleString(sb, colIndex)
-    case "Date"   => packAggrManySingleDate(sb, colIndex)
-    case _        => packAggrManySingle(sb, colIndex)
+    case "Set[String]" => packAggrManySingleString(sb, colIndex)
+    case "Set[Date]"   => packAggrManySingleDate(sb, colIndex)
+    case _             => packAggrManySingle(sb, colIndex)
   }
 }

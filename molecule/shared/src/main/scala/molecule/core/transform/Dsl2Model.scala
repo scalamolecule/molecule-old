@@ -1292,7 +1292,8 @@ private[molecule] trait Dsl2Model extends TreeOps
                     if (isOptNested) jsonOptNestedOneAttr("Int", attr) else jsonOneAttr("Int", attr),
                     Some(tq"Set[$tpe]"),
                     optAggr = Some((propFn, tq"${TypeName("Int")}")),
-                    baseTpe0 = Some(tpeStr)
+                    baseTpe0 = Some(tpeStr),
+                    group0 = Some("One")
                   )
 
                 case "double" =>
@@ -1302,7 +1303,8 @@ private[molecule] trait Dsl2Model extends TreeOps
                     if (isOptNested) jsonOptNestedOneAttr("Double", attr) else jsonOneAttr("Double", attr),
                     Some(tq"Set[$tpe]"),
                     optAggr = Some((propFn, tq"${TypeName("Double")}")),
-                    baseTpe0 = Some(tpeStr)
+                    baseTpe0 = Some(tpeStr),
+                    group0 = Some("One")
                   )
 
                 case "list" =>
@@ -1354,7 +1356,8 @@ private[molecule] trait Dsl2Model extends TreeOps
                     if (isOptNested) jsonOptNestedOneAttr("Int", attr) else jsonOneAttr("Int", attr),
                     Some(tq"$tpe"),
                     optAggr = Some((propFn, tq"${TypeName("Int")}")),
-                    baseTpe0 = Some(tpeStr)
+                    baseTpe0 = Some(tpeStr),
+                    group0 = Some("One")
                   )
 
                 case "double" =>
@@ -1364,7 +1367,8 @@ private[molecule] trait Dsl2Model extends TreeOps
                     if (isOptNested) jsonOptNestedOneAttr("Double", attr) else jsonOneAttr("Double", attr),
                     Some(tq"$tpe"),
                     optAggr = Some((propFn, tq"${TypeName("Double")}")),
-                    baseTpe0 = Some(tpeStr)
+                    baseTpe0 = Some(tpeStr),
+                    group0 = Some("One")
                   )
 
                 case "list" =>

@@ -13,12 +13,13 @@ trait PackedValue2cast extends TreeOps with String2cast {
     group match {
       case "One" | "KeyedMap" | "AggrSingleSample" | "AggrOneSingle"    => unpackOneAttr(tpe, v)
       case "OptOne" | "OptApplyOne"                                     => unpackOptOneAttr(tpe, v)
-      case "Many" | "AggrManySingle"                                    => unpackManyAttr(tpe, v)
+      case "Many"                                                       => unpackManyAttr(tpe, v)
       case "OptMany" | "OptApplyMany"                                   => unpackOptManyAttr(tpe, v)
       case "Map"                                                        => unpackMapAttr(tpe, v)
       case "OptMap" | "OptApplyMap"                                     => unpackOptMapAttr(tpe, v)
       case "AggrOneList" | "AggrOneListDistinct" | "AggrOneListRand"    => unpackAggrOneList(tpe, v)
       case "AggrManyList" | "AggrManyListDistinct" | "AggrManyListRand" => unpackAggrManyList(tpe, v)
+      case "AggrManySingle"                                             => unpackAggrManySingleAttr(tpe, v)
     }
   }
 
@@ -110,16 +111,6 @@ trait PackedValue2cast extends TreeOps with String2cast {
   }
 
   def unpackAggrOneList(tpe: String, v: Tree): Tree = tpe match {
-    case "String"           => q"unpackListString($v, vs)"
-    case "Int"              => q"unpackListInt($v, vs)"
-    case "Long"             => q"unpackListLong($v, vs)"
-    case "Double"           => q"unpackListDouble($v, vs)"
-    case "Boolean"          => q"unpackListBoolean($v, vs)"
-    case "Date"             => q"unpackListDate($v, vs)"
-    case "UUID"             => q"unpackListUUID($v, vs)"
-    case "URI"              => q"unpackListURI($v, vs)"
-    case "BigInt"           => q"unpackListBigInt($v, vs)"
-    case "BigDecimal"       => q"unpackListBigDecimal($v, vs)"
     case "List[String]"     => q"unpackListString($v, vs)"
     case "List[Int]"        => q"unpackListInt($v, vs)"
     case "List[Long]"       => q"unpackListLong($v, vs)"
@@ -133,15 +124,30 @@ trait PackedValue2cast extends TreeOps with String2cast {
   }
 
   def unpackAggrManyList(tpe: String, v: Tree): Tree = tpe match {
-    case "String"     => q"unpackListSetString($v, vs)"
-    case "Int"        => q"unpackListSetInt($v, vs)"
-    case "Long"       => q"unpackListSetLong($v, vs)"
-    case "Double"     => q"unpackListSetDouble($v, vs)"
-    case "Boolean"    => q"unpackListSetBoolean($v, vs)"
-    case "Date"       => q"unpackListSetDate($v, vs)"
-    case "UUID"       => q"unpackListSetUUID($v, vs)"
-    case "URI"        => q"unpackListSetURI($v, vs)"
-    case "BigInt"     => q"unpackListSetBigInt($v, vs)"
-    case "BigDecimal" => q"unpackListSetBigDecimal($v, vs)"
+    case "List[String]"     => q"unpackListSetString($v, vs)"
+    case "List[Int]"        => q"unpackListSetInt($v, vs)"
+    case "List[Long]"       => q"unpackListSetLong($v, vs)"
+    case "List[Double]"     => q"unpackListSetDouble($v, vs)"
+    case "List[Boolean]"    => q"unpackListSetBoolean($v, vs)"
+    case "List[Date]"       => q"unpackListSetDate($v, vs)"
+    case "List[UUID]"       => q"unpackListSetUUID($v, vs)"
+    case "List[URI]"        => q"unpackListSetURI($v, vs)"
+    case "List[BigInt]"     => q"unpackListSetBigInt($v, vs)"
+    case "List[BigDecimal]" => q"unpackListSetBigDecimal($v, vs)"
+  }
+
+
+  def unpackAggrManySingleAttr(tpe: String, v: Tree): Tree = tpe match {
+    case "Set[String]"     => q"unpackManyString($v, vs)"
+    case "Set[Int]"        => q"unpackManyInt($v, vs)"
+    case "Set[Long]"       => q"unpackManyLong($v, vs)"
+    case "Set[Double]"     => q"unpackManyDouble($v, vs)"
+    case "Set[Boolean]"    => q"unpackManyBoolean($v, vs)"
+    case "Set[Date]"       => q"unpackManyDate($v, vs)"
+    case "Set[UUID]"       => q"unpackManyUUID($v, vs)"
+    case "Set[URI]"        => q"unpackManyURI($v, vs)"
+    case "Set[BigInt]"     => q"unpackManyBigInt($v, vs)"
+    case "Set[BigDecimal]" => q"unpackManyBigDecimal($v, vs)"
+    case "Set[enum]"       => q"unpackManyEnum($v, vs)"
   }
 }

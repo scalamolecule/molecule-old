@@ -108,17 +108,17 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed     = Seq(
-        sharedTests + "/core/attr",
-        sharedTests + "/core/attrMap",
-        sharedTests + "/core/bidirectionals",
-        sharedTests + "/core/composite",
-        sharedTests + "/core/crud",
-        sharedTests + "/core/equality",
+        //        sharedTests + "/core/attr",
+        //        sharedTests + "/core/attrMap",
+        //        sharedTests + "/core/bidirectionals",
+        //        sharedTests + "/core/composite",
+        //        sharedTests + "/core/crud",
+        //        sharedTests + "/core/equality",
 
 
         //-------------------
 
-        //        sharedTests + "/core/expression",
+        sharedTests + "/core/expression",
         //        sharedTests + "/core/generic",
         //        sharedTests + "/core/input1",
         //        sharedTests + "/core/input2",

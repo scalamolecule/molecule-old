@@ -12,7 +12,7 @@ trait String2json extends JsonBase with Helpers {
   private var first    = true
 
 
-  protected lazy val unpack2jsonOneString_ = (v0: String, vs: Iterator[String]) => {
+  protected lazy val unpackJsonOneString_ = (v0: String, vs: Iterator[String]) => {
     buf.setLength(0)
     first = true
     v = v0
@@ -29,16 +29,16 @@ trait String2json extends JsonBase with Helpers {
     buf.toString
   }
 
-  protected lazy val unpack2jsonOneString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) =>
-    quotedPair(sb, field, unpack2jsonOneString_(v, vs))
+  protected lazy val unpackJsonOneString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) =>
+    quotedPair(sb, field, unpackJsonOneString_(v, vs))
 
-  protected lazy val unpack2jsonOne       = (sb: StringBuffer, field: String, v: String) => pair(sb, field, v)
-  protected lazy val unpack2jsonOneDate   = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, truncateDateStr(v))
-  protected lazy val unpack2jsonOneQuoted = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, v)
-  protected lazy val unpack2jsonOneAny    = (sb: StringBuffer, field: String, s: String, vs: Iterator[String]) => {
+  protected lazy val unpackJsonOne       = (sb: StringBuffer, field: String, v: String) => pair(sb, field, v)
+  protected lazy val unpackJsonOneDate   = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, truncateDateStr(v))
+  protected lazy val unpackJsonOneQuoted = (sb: StringBuffer, field: String, v: String) => quotedPair(sb, field, v)
+  protected lazy val unpackJsonOneAny    = (sb: StringBuffer, field: String, s: String, vs: Iterator[String]) => {
     val v = s.drop(10)
     s.take(10) match {
-      case "String    " => unpack2jsonOneString(sb, field, v, vs)
+      case "String    " => unpackJsonOneString(sb, field, v, vs)
       case "Int       " => pair(sb, field, v)
       case "Long      " => pair(sb, field, v)
       case "Double    " => pair(sb, field, v)
@@ -52,25 +52,25 @@ trait String2json extends JsonBase with Helpers {
   }
 
 
-  protected lazy val unpack2jsonOptOneString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) => {
+  protected lazy val unpackJsonOptOneString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String]) => {
     if (v == "◄") {
       pair(sb, field, "null")
     } else {
-      quotedPair(sb, field, unpack2jsonOneString_(v, vs))
+      quotedPair(sb, field, unpackJsonOneString_(v, vs))
     }
   }
 
-  protected lazy val unpack2jsonOptOne = (sb: StringBuffer, field: String, v: String) =>
-    if (v == "◄") pair(sb, field, "null") else unpack2jsonOne(sb, field, v)
+  protected lazy val unpackJsonOptOne = (sb: StringBuffer, field: String, v: String) =>
+    if (v == "◄") pair(sb, field, "null") else unpackJsonOne(sb, field, v)
 
-  protected lazy val unpack2jsonOptOneDate = (sb: StringBuffer, field: String, v: String) =>
-    if (v == "◄") pair(sb, field, "null") else unpack2jsonOneDate(sb, field, v)
+  protected lazy val unpackJsonOptOneDate = (sb: StringBuffer, field: String, v: String) =>
+    if (v == "◄") pair(sb, field, "null") else unpackJsonOneDate(sb, field, v)
 
-  protected lazy val unpack2jsonOptOneQuoted = (sb: StringBuffer, field: String, v: String) =>
-    if (v == "◄") pair(sb, field, "null") else unpack2jsonOneQuoted(sb, field, v)
+  protected lazy val unpackJsonOptOneQuoted = (sb: StringBuffer, field: String, v: String) =>
+    if (v == "◄") pair(sb, field, "null") else unpackJsonOneQuoted(sb, field, v)
 
 
-  def unpack2jsonMany_(
+  def unpackJsonMany_(
     sb: StringBuffer,
     field: String,
     v0: String,
@@ -92,52 +92,52 @@ trait String2json extends JsonBase with Helpers {
     sb.append("]")
   }
 
-  protected lazy val unpack2jsonManyString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
-    unpack2jsonMany_(sb, field, v, vs, tabs,
-      (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpack2jsonOneString_(v, vs))
+  protected lazy val unpackJsonManyString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
+    unpackJsonMany_(sb, field, v, vs, tabs,
+      (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpackJsonOneString_(v, vs))
     )
   }
 
-  protected lazy val unpack2jsonMany = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
+  protected lazy val unpackJsonMany = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
 
-  protected lazy val unpack2jsonManyDate = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, truncateDateStr(v)))
+  protected lazy val unpackJsonManyDate = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, truncateDateStr(v)))
 
-  protected lazy val unpack2jsonManyQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
+  protected lazy val unpackJsonManyQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
 
 
-  protected lazy val unpack2jsonOptManyString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
+  protected lazy val unpackJsonOptManyString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
     if (v == "◄") {
       pair(sb, field, "null")
     } else {
-      unpack2jsonMany_(sb, field, v, vs, tabs,
-        (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpack2jsonOneString_(v, vs))
+      unpackJsonMany_(sb, field, v, vs, tabs,
+        (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpackJsonOneString_(v, vs))
       )
     }
   }
 
-  protected lazy val unpack2jsonOptMany = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+  protected lazy val unpackJsonOptMany = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
     if (v == "◄")
       pair(sb, field, "null")
     else
-      unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
+      unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
 
-  protected lazy val unpack2jsonOptManyDate = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+  protected lazy val unpackJsonOptManyDate = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
     if (v == "◄")
       pair(sb, field, "null")
     else
-      unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, truncateDateStr(v)))
+      unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, truncateDateStr(v)))
 
-  protected lazy val unpack2jsonOptManyQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+  protected lazy val unpackJsonOptManyQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
     if (v == "◄")
       pair(sb, field, "null")
     else
-      unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
+      unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
 
 
-  def unpack2jsonMap_(
+  def unpackJsonMap_(
     sb: StringBuffer,
     field: String,
     v0: String,
@@ -163,59 +163,59 @@ trait String2json extends JsonBase with Helpers {
     sb.append("}")
   }
 
-  protected lazy val unpack2jsonMapString =
+  protected lazy val unpackJsonMapString =
     (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
-      unpack2jsonMap_(sb, field, v, vs, tabs,
-        (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpack2jsonOneString_(v, vs))
+      unpackJsonMap_(sb, field, v, vs, tabs,
+        (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpackJsonOneString_(v, vs))
       )
     }
 
-  protected lazy val unpack2jsonMap = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
+  protected lazy val unpackJsonMap = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
 
-  protected lazy val unpack2jsonMapQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
+  protected lazy val unpackJsonMapQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
 
 
-  protected lazy val unpack2jsonOptMapString =
+  protected lazy val unpackJsonOptMapString =
     (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
       if (v == "◄") {
         pair(sb, field, "null")
       } else {
-        unpack2jsonMap_(sb, field, v, vs, tabs,
-          (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpack2jsonOneString_(v, vs))
+        unpackJsonMap_(sb, field, v, vs, tabs,
+          (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpackJsonOneString_(v, vs))
         )
       }
     }
 
-  protected lazy val unpack2jsonOptMap = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+  protected lazy val unpackJsonOptMap = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
     if (v == "◄")
       pair(sb, field, "null")
     else
-      unpack2jsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
+      unpackJsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
 
-  protected lazy val unpack2jsonOptMapQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+  protected lazy val unpackJsonOptMapQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
     if (v == "◄")
       pair(sb, field, "null")
     else
-      unpack2jsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
+      unpackJsonMap_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
 
 
-  protected lazy val unpack2jsonListString =
+  protected lazy val unpackJsonListString =
     (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
-      unpack2jsonMany_(sb, field, v, vs, tabs,
-        (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpack2jsonOneString_(v, vs))
+      unpackJsonMany_(sb, field, v, vs, tabs,
+        (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpackJsonOneString_(v, vs))
       )
     }
 
-  protected lazy val unpack2jsonList = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
+  protected lazy val unpackJsonList = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
 
-  protected lazy val unpack2jsonListQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
+  protected lazy val unpackJsonListQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonMany_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
 
 
-  def unpack2jsonListSet_(
+  def unpackJsonListSet_(
     sb: StringBuffer,
     field: String,
     v0: String,
@@ -237,15 +237,15 @@ trait String2json extends JsonBase with Helpers {
     sb.append("]]")
   }
 
-  protected lazy val unpack2jsonListSetString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
-    unpack2jsonListSet_(sb, field, v, vs, tabs,
-      (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpack2jsonOneString_(v, vs))
+  protected lazy val unpackJsonListSetString = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) => {
+    unpackJsonListSet_(sb, field, v, vs, tabs,
+      (sb: StringBuffer, v: String, vs: Iterator[String]) => quote(sb, unpackJsonOneString_(v, vs))
     )
   }
 
-  protected lazy val unpack2jsonListSet = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonListSet_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
+  protected lazy val unpackJsonListSet = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonListSet_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => sb.append(v))
 
-  protected lazy val unpack2jsonListSetQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
-    unpack2jsonListSet_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
+  protected lazy val unpackJsonListSetQuoted = (sb: StringBuffer, field: String, v: String, vs: Iterator[String], tabs: Int) =>
+    unpackJsonListSet_(sb, field, v, vs, tabs, (sb: StringBuffer, v: String, _: Iterator[String]) => quote(sb, v))
 }
