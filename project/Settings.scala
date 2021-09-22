@@ -114,12 +114,12 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         //        sharedTests + "/core/composite",
         //        sharedTests + "/core/crud",
         //        sharedTests + "/core/equality",
+        //        sharedTests + "/core/expression",
 
 
         //-------------------
 
-        sharedTests + "/core/expression",
-        //        sharedTests + "/core/generic",
+        sharedTests + "/core/generic",
         //        sharedTests + "/core/input1",
         //        sharedTests + "/core/input2",
         //        sharedTests + "/core/input3",

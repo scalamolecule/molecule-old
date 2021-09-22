@@ -66,105 +66,6 @@ trait Conn extends ColOps with Serializations {
     println(s"$p  ${connProxy.testDbStatus}  ${connProxy.testDbView}   " + suffix)
   }
 
-  private def jsGetRaw(
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
-  ): Future[String] = {
-    val q2s          = Query2String(query)
-    val p            = q2s.p
-    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-    val (l, ll, lll) = marshallInputs(query)
-    rpc.query2packed(
-      connProxy, datalog, rules, l, ll, lll, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
-    )
-  }
-
-
-  private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext) = Future {
-    if (connProxy.adhocDbView.isDefined) {
-      // Reset adhoc db view
-      updateAdhocDbView(None)
-    }
-    if (connProxy.testDbStatus == -1) {
-      // Reset test db view
-      updateTestDbView(None, 0)
-    }
-    futResult
-  }.flatten
-
-  private def queryJs[T](
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    packed2T: Iterator[String] => T,
-  )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
-    jsGetRaw(query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes).map { packed =>
-      if (packed.isEmpty) {
-        List.empty[T]
-      } else {
-        val lines = packed.linesIterator
-        lines.next() // skip initial newline
-        val rows = new ListBuffer[T]
-        while (lines.hasNext) {
-          rows.addOne(packed2T(lines))
-        }
-        rows.toList
-      }
-    }
-  )
-
-  private[molecule] def queryJsTpl[Tpl](
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    packed2tpl: Iterator[String] => Tpl,
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = queryJs(
-    query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
-  )
-
-  private[molecule] def queryJsObj[Obj](
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: nodes.Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    packed2obj: Iterator[String] => Obj,
-  )(implicit ec: ExecutionContext): Future[List[Obj]] = queryJs(
-    query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
-  )
-
-  private[molecule] def queryJsJson(
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: nodes.Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
-  )(implicit ec: ExecutionContext): Future[String] = withDbView(
-    jsGetRaw(query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
-  )
-
 
   /** Flag to indicate if live database is used */
   def liveDbUsed: Boolean
@@ -493,6 +394,44 @@ trait Conn extends ColOps with Serializations {
 
 
   // JS query rpc api .........................................
+
+  private[molecule] def queryJsTpl[Tpl](
+    model: Model,
+    query: Query,
+    datalog: String,
+    n: Int,
+    obj: Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]],
+    packed2tpl: Iterator[String] => Tpl,
+  )(implicit ec: ExecutionContext): Future[List[Tpl]] = ???
+
+  private[molecule] def queryJsObj[Obj](
+    model: Model,
+    query: Query,
+    datalog: String,
+    n: Int,
+    obj: nodes.Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]],
+    packed2obj: Iterator[String] => Obj,
+  )(implicit ec: ExecutionContext): Future[List[Obj]] = ???
+
+  private[molecule] def queryJsJson(
+    model: Model,
+    query: Query,
+    datalog: String,
+    n: Int,
+    obj: nodes.Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]]
+  )(implicit ec: ExecutionContext): Future[String] = ???
 
 
   private[molecule] def jsGetAttrValues(

@@ -339,11 +339,7 @@ object Datom extends AsyncTestSuite {
         expectCompileError("""m(Ns.int.tx_)""",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "Tacit `tx_` can only be used with an applied value i.e. `tx_(<value>)`")
-        //                for {
-        //                    ok
-        //                } yield ()
       }
-
     }
 
 

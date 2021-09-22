@@ -69,7 +69,7 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
 //          println(_query)
 //          println(_datalog)
 
-          conn.queryJsTpl(_query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl)
+          conn.queryJsTpl(_model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl)
         } else {
           conn.query(_model, _query).map { jColl =>
             val it  = jColl.iterator
@@ -97,22 +97,22 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * simply named `get` (and not `getList`).
     *
     * @group get
-    * @param n       Int Number of rows returned
+    * @param maxRows       Int Number of rows returned
     * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */
-  def get(n: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  def get(maxRows: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJsTpl(_query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl)
+          conn.queryJsTpl(_model, _query, _datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl)
         } else {
-          if (n == -1) {
+          if (maxRows == -1) {
             get(futConn, ec)
           } else {
             conn.query(_model, _query).map { jColl =>
               val size = jColl.size
-              val max  = if (size < n) size else n
+              val max  = if (size < maxRows) size else maxRows
               if (max == 0) {
                 List.empty[Tpl]
               } else {

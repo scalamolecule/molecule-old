@@ -2,6 +2,7 @@ package molecule.core.marshalling.unpackAttr
 
 import java.net.URI
 import java.util.{Date, UUID}
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import scala.collection.mutable.ListBuffer
 
@@ -63,12 +64,13 @@ trait String2cast extends Helpers {
   protected lazy val unpackOneURI        = (v: String) => new URI(v)
   protected lazy val unpackOneBigInt     = (v: String) => BigInt(v)
   protected lazy val unpackOneBigDecimal = (v: String) => BigDecimal(v)
-  protected lazy val unpackOneAny        = (s: String) => {
+  protected lazy val unpackOneAny        = (s: String, vs: Iterator[String]) => {
     val v = s.drop(10)
     s.take(10) match {
-      case "String    " => v
+      case "String    " => unpackOneString(v, vs)
       case "Int       " => v.toInt
       case "Long      " => v.toLong
+      case "ref       " => v.toLong
       case "Double    " => v.toDouble
       case "Boolean   " => v.toBoolean
       case "Date      " => str2date(v)
@@ -76,6 +78,8 @@ trait String2cast extends Helpers {
       case "URI       " => new URI(v)
       case "BigInt    " => BigInt(v)
       case "BigDecimal" => BigDecimal(v)
+      case "enum      " => v // always single line
+      case x            => throw MoleculeException(s"Unexpected unpackOneAny prefix `$x`.")
     }
   }
 

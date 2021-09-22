@@ -91,7 +91,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         val sb   = new StringBuffer()
         var next = false
         if (conn.isJsPlatform) {
-          conn.queryJsJson(_query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
+          conn.queryJsJson(_model, _query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
             .map { packed =>
               if (packed.isEmpty) {
                 outerJson("")

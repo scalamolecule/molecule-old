@@ -48,7 +48,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJsObj(_query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
+          conn.queryJsObj(_model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
         } else {
           conn.query(_model, _query).map { jColl =>
             val it  = jColl.iterator
@@ -81,7 +81,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJsObj(_query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
+          conn.queryJsObj(_model, _query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
         } else {
           if (n == -1) {
             getObjs(futConn, ec)

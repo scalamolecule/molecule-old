@@ -33,6 +33,14 @@ trait MoleculeRpc {
     tacitIndexes: List[List[Int]]
   ): Future[String]
 
+  def index2packed(
+    connProxy: ConnProxy,
+    api: String,
+    index: String,
+    indexArgs: IndexArgs,
+    attrs: Seq[String]
+  ): Future[String]
+
 
   def getAttrValues(
     connProxy: ConnProxy,
@@ -48,9 +56,11 @@ trait MoleculeRpc {
   ): Future[List[String]]
 
 
-  def t(connProxy: ConnProxy): Future[Long] = ???
-  def tx(connProxy: ConnProxy): Future[Long] = ???
-  def txInstant(connProxy: ConnProxy): Future[Date] = ???
+  def t(connProxy: ConnProxy): Future[Long]
+
+  def tx(connProxy: ConnProxy): Future[Long]
+
+  def txInstant(connProxy: ConnProxy): Future[Date]
 
   //  def entity(connProxy: DbProxy): Future[DatomicEntity] = ???
 

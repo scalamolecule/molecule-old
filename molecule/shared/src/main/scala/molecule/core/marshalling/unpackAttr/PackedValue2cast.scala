@@ -34,7 +34,7 @@ trait PackedValue2cast extends TreeOps with String2cast {
     case "URI"        => q"unpackOneURI($v)"
     case "BigInt"     => q"unpackOneBigInt($v)"
     case "BigDecimal" => q"unpackOneBigDecimal($v)"
-    case "Any"        => q"unpackOneAny($v)"
+    case "Any"        => q"unpackOneAny($v, vs)"
     case "enum"       => q"unpackOneEnum($v)"
     case "ref"        => q"unpackOneLong($v)"
   }

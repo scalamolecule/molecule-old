@@ -1,11 +1,14 @@
 package molecule.datomic.base.marshalling
 
 import java.io.StringReader
+import java.net.URI
 import java.util
-import java.util.{Collections, Date, List => jList, Set => jSet}
-import datomic.Util
+import java.util.{Collections, Date, UUID, List => jList, Set => jSet}
+import datomic.Peer.toT
+import datomic.{Database, Datom, Util}
 import datomic.Util._
 import datomicClient.ClojureBridge
+import molecule.core.ast.elements.Generic
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
 import molecule.core.marshalling.nodes.Obj
@@ -15,18 +18,22 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.PackEntityMap
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
-import molecule.datomic.peer.facade.Datomic_Peer
+import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
 import moleculeBuildInfo.BuildInfo.datomicProtocol
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import scala.jdk.CollectionConverters._
+
 
 object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal
   with Helpers with ClojureBridge
   with PackEntityMap
-  with Serializations {
+  with Serializations
+  with PackBase {
 
   // Necessary for `readString` to encode uri in transactions
   require("clojure.core.async")
@@ -46,9 +53,6 @@ object DatomicRpc extends MoleculeRpc
 
       txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
     } yield {
-      //      println("TX DatomicRpc: " + txReport)
-
-
       TxReportRPC(
         txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
       )
@@ -73,10 +77,6 @@ object DatomicRpc extends MoleculeRpc
     val t         = TimerPrint("DatomicRpc")
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
-
-    //    println(datalogQuery)
-//        allInputs foreach println
-
     for {
       conn <- getConn(connProxy)
       allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
@@ -88,7 +88,7 @@ object DatomicRpc extends MoleculeRpc
       val time        = qTime(queryTime)
       val timeRight   = " " * (8 - time.length) + time
 
-      log("###### DatomicRpc ##################################################################")
+      log("################################################################################")
       log(datalogQuery + space + timeRight)
       if (allInputs.nonEmpty)
         log(allInputs.mkString("Inputs:\n", "\n", ""))
@@ -138,6 +138,243 @@ object DatomicRpc extends MoleculeRpc
     case NonFatal(exc) => Future.failed(exc)
   }
 
+
+  def index2packed(
+    connProxy: ConnProxy,
+    api: String,
+    index: String,
+    args: IndexArgs,
+    attrs: Seq[String]
+  ): Future[String] = {
+    def datomArgs: Seq[Any] = index match {
+      case "EAVT" => args match {
+        case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
+        case IndexArgs(e, "", "", "", -1L, -1L, _, _)   => Seq(e)
+        case IndexArgs(e, a, "", "", -1L, -1L, _, _)    => Seq(e, a)
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(e, a, castTpeV(tpe, v))
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(e, a, castTpeV(tpe, v), t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(e, a, castTpeV(tpe, v), new Date(inst))
+        case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
+      }
+      case "AEVT" => args match {
+        case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
+        case IndexArgs(-1L, a, "", "", -1L, -1L, _, _)  => Seq(a)
+        case IndexArgs(e, a, "", "", -1L, -1L, _, _)    => Seq(a, e)
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(a, e, castTpeV(tpe, v))
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(a, e, castTpeV(tpe, v), t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(a, e, castTpeV(tpe, v), new Date(inst))
+        case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
+      }
+      case "AVET" => args match {
+        case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
+        case IndexArgs(-1L, a, "", "", -1L, -1L, _, _)  => Seq(a)
+        case IndexArgs(-1L, a, v, tpe, -1L, -1L, _, _)  => Seq(a, castTpeV(tpe, v))
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(a, castTpeV(tpe, v), e)
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(a, castTpeV(tpe, v), e, t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(a, castTpeV(tpe, v), e, new Date(inst))
+        case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
+      }
+      case "VAET" => args match {
+        case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
+        case IndexArgs(-1L, "", v, tpe, -1L, -1L, _, _) => Seq(castTpeV(tpe, v))
+        case IndexArgs(-1L, a, v, tpe, -1L, -1L, _, _)  => Seq(castTpeV(tpe, v), a)
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(castTpeV(tpe, v), a, e)
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(castTpeV(tpe, v), a, e, t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(castTpeV(tpe, v), a, e, new Date(inst))
+        case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
+      }
+      case other  => throw MoleculeException("Unexpected index name: " + other)
+    }
+
+    try {
+      for {
+        conn <- getConn(connProxy)
+        packed <- {
+          val adhocDb = conn.db
+          lazy val attrMap = conn.connProxy.attrMap ++ Seq(
+            ":db/txInstant" -> (1, "Date")
+          )
+
+          def datomElement2packed(
+            tOpt: Option[Long],
+            attr: String
+          ): (StringBuffer, Datom) => Future[StringBuffer] = attr match {
+            case "e"                   => (sb: StringBuffer, d: Datom) => Future(add(sb, d.e.toString))
+            case "a"                   => (sb: StringBuffer, d: Datom) =>
+              Future {
+                add(sb, adhocDb.getDatomicDb.asInstanceOf[Database].ident(d.a).toString)
+                end(sb)
+              }
+            case "v"                   => (sb: StringBuffer, d: Datom) =>
+              Future {
+                val a         = adhocDb.getDatomicDb.asInstanceOf[Database].ident(d.a).toString
+                val (_, tpe)  = attrMap.getOrElse(a,
+                  throw MoleculeException(s"Unexpected attribute `$a` not found in attrMap.")
+                )
+                val tpePrefix = tpe + " " * (10 - tpe.length)
+                tpe match {
+                  case "String" => add(sb, tpePrefix + d.v.toString); end(sb)
+                  case "Date"   => add(sb, tpePrefix + date2str(d.v.asInstanceOf[Date]))
+                  case _        => add(sb, tpePrefix + d.v.toString)
+                }
+              }
+            case "t" if tOpt.isDefined => (sb: StringBuffer, _: Datom) => Future(add(sb, tOpt.get.toString))
+            case "t"                   => (sb: StringBuffer, d: Datom) => Future(add(sb, toT(d.tx).toString))
+            case "tx"                  => (sb: StringBuffer, d: Datom) => Future(add(sb, d.tx.toString))
+            case "txInstant"           => (sb: StringBuffer, d: Datom) =>
+              adhocDb.entity(conn, d.tx).rawValue(":db/txInstant").map { v =>
+                add(sb, date2str(v.asInstanceOf[Date]))
+              }
+            case "op"                  => (sb: StringBuffer, d: Datom) => Future(add(sb, d.added.toString))
+            case x                     => throw MoleculeException("Unexpected Datom element: " + x)
+          }
+
+          def getDatom2packed(tOpt: Option[Long]): (StringBuffer, Datom) => Future[StringBuffer] = attrs.length match {
+            case 1 =>
+              val x1 = datomElement2packed(tOpt, attrs.head)
+              (sb: StringBuffer, d: Datom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                } yield sb1
+
+            case 2 =>
+              val x1 = datomElement2packed(tOpt, attrs.head)
+              val x2 = datomElement2packed(tOpt, attrs(1))
+              (sb: StringBuffer, d: Datom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                } yield sb2
+
+            case 3 =>
+              val x1 = datomElement2packed(tOpt, attrs.head)
+              val x2 = datomElement2packed(tOpt, attrs(1))
+              val x3 = datomElement2packed(tOpt, attrs(2))
+              (sb: StringBuffer, d: Datom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                } yield sb3
+
+            case 4 =>
+              val x1 = datomElement2packed(tOpt, attrs.head)
+              val x2 = datomElement2packed(tOpt, attrs(1))
+              val x3 = datomElement2packed(tOpt, attrs(2))
+              val x4 = datomElement2packed(tOpt, attrs(3))
+              (sb: StringBuffer, d: Datom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                } yield sb4
+
+            case 5 =>
+              val x1 = datomElement2packed(tOpt, attrs.head)
+              val x2 = datomElement2packed(tOpt, attrs(1))
+              val x3 = datomElement2packed(tOpt, attrs(2))
+              val x4 = datomElement2packed(tOpt, attrs(3))
+              val x5 = datomElement2packed(tOpt, attrs(4))
+              (sb: StringBuffer, d: Datom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                  sb5 <- x5(sb4, d)
+                } yield sb5
+
+            case 6 =>
+              val x1 = datomElement2packed(tOpt, attrs.head)
+              val x2 = datomElement2packed(tOpt, attrs(1))
+              val x3 = datomElement2packed(tOpt, attrs(2))
+              val x4 = datomElement2packed(tOpt, attrs(3))
+              val x5 = datomElement2packed(tOpt, attrs(4))
+              val x6 = datomElement2packed(tOpt, attrs(5))
+              (sb: StringBuffer, d: Datom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                  sb5 <- x5(sb4, d)
+                  sb6 <- x6(sb5, d)
+                } yield sb6
+
+            case 7 =>
+              val x1 = datomElement2packed(tOpt, attrs.head)
+              val x2 = datomElement2packed(tOpt, attrs(1))
+              val x3 = datomElement2packed(tOpt, attrs(2))
+              val x4 = datomElement2packed(tOpt, attrs(3))
+              val x5 = datomElement2packed(tOpt, attrs(4))
+              val x6 = datomElement2packed(tOpt, attrs(5))
+              val x7 = datomElement2packed(tOpt, attrs(6))
+              (sb: StringBuffer, d: Datom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                  sb5 <- x5(sb4, d)
+                  sb6 <- x6(sb5, d)
+                  sb7 <- x7(sb6, d)
+                } yield sb7
+          }
+
+          // Pack Datoms
+          val sbFut = api match {
+            case "datoms" =>
+              val datomicIndex = index match {
+                case "EAVT" => datomic.Database.EAVT
+                case "AEVT" => datomic.Database.AEVT
+                case "AVET" => datomic.Database.AVET
+                case "VAET" => datomic.Database.VAET
+              }
+              val datom2packed = getDatom2packed(None)
+              adhocDb.asInstanceOf[DatomicDb_Peer].datoms(datomicIndex, datomArgs: _*).flatMap { datoms =>
+                datoms.asScala.foldLeft(Future(new StringBuffer())) {
+                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                }
+              }
+
+            case "indexRange" =>
+              val datom2packed = getDatom2packed(None)
+              val startValue   = if (args.v.isEmpty) null else castTpeV(args.tpe, args.v)
+              val endValue     = if (args.v2.isEmpty) null else castTpeV(args.tpe2, args.v2)
+              adhocDb.asInstanceOf[DatomicDb_Peer].indexRange(args.a, startValue, endValue).flatMap { datoms =>
+                datoms.asScala.foldLeft(Future(new StringBuffer())) {
+                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                }
+              }
+
+            case "txRange" =>
+              val from  = if (args.v.isEmpty) null else castTpeV(args.tpe, args.v)
+              val until = if (args.v2.isEmpty) null else castTpeV(args.tpe2, args.v2)
+              // Loop transactions
+              conn.asInstanceOf[Conn_Peer].peerConn.log.txRange(from, until).asScala
+                .foldLeft(Future(new StringBuffer())) {
+                  case (sbFut, txMap) =>
+                    // Flatten transaction datoms to uniform tuples return type
+                    val datom2packed = getDatom2packed(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
+                    txMap.get(datomic.Log.DATA).asInstanceOf[jList[Datom]].asScala.foldLeft(sbFut) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
+                }
+          }
+
+          sbFut.map(_.toString)
+        }
+      } yield {
+        println("-------------------------------" + packed)
+        packed
+      }
+    } catch {
+      case NonFatal(exc) => Future.failed(exc)
+    }
+  }
+
+
   // Presuming a datalog query returning rows of single values.
   // Card-many attributes should therefore not be returned as Sets.
   def getAttrValues(
@@ -176,6 +413,30 @@ object DatomicRpc extends MoleculeRpc
       list.sorted
     }
   }
+
+
+
+  def t(connProxy: ConnProxy): Future[Long] = {
+    for {
+      conn <- getConn(connProxy)
+      t <- conn.db.t
+    } yield t
+  }
+
+  def tx(connProxy: ConnProxy): Future[Long] = {
+    for {
+      conn <- getConn(connProxy)
+      tx <- conn.db.tx
+    } yield tx
+  }
+
+  def txInstant(connProxy: ConnProxy): Future[Date] = {
+    for {
+      conn <- getConn(connProxy)
+      txInstant <- conn.db.txInstant
+    } yield txInstant
+  }
+
 
   def retract(
     connProxy: ConnProxy,
@@ -225,11 +486,11 @@ object DatomicRpc extends MoleculeRpc
 
   private def getFreshConn(connProxy: ConnProxy): Future[Conn] = {
     connProxy match {
-      case DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
+      case proxy@DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
         //            println("==============================================")
-        Datomic_Peer.recreateDbFromEdn(schemaPeer)
+        Datomic_Peer.recreateDbFromEdn(schemaPeer, connProxy = proxy)
 
-      case DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _, _) =>
+      case proxy@DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _, _) =>
         if (datomicProtocol != protocol) {
           throw new RuntimeException(
             s"\nProject is built with datomic `$datomicProtocol` protocol and " +
@@ -238,16 +499,16 @@ object DatomicRpc extends MoleculeRpc
           )
         }
         protocol match {
-          case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier)
+          case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier, proxy)
           case "mem"          => throw new IllegalArgumentException(
             "Please connect with `DatomicInMemProxy` to get an in-memory db.")
         }
 
-      case DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _, _) =>
-        Datomic_DevLocal(system, storageDir).connect(dbName)
+      case proxy@DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _, _) =>
+        Datomic_DevLocal(system, storageDir).connect(dbName, proxy)
 
-      case DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
-        Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName)
+      case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
+        Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName, proxy)
     }
   }
 
@@ -311,23 +572,22 @@ object DatomicRpc extends MoleculeRpc
         Util.list(l.collect {
           case l2: Seq[_] =>
             Util.list(l2.collect {
-              case (tpe: String, v: String) => castRightOfPair(tpe, v)
+              case (tpe: String, v: String) => castTpeV(tpe, v)
             }: _*)
 
-          case (tpe: String, v: String) => castRightOfPair(tpe, v)
+          case (tpe: String, v: String) => castTpeV(tpe, v)
         }: _*)
 
-      case (tpe: String, v: String) => castRightOfPair(tpe, v)
+      case (tpe: String, v: String) => castTpeV(tpe, v)
       case _                        => throw MoleculeException("Unexpected input values")
     }
   }
-
 
   // To avoid type combination explosions from multiple inputs of various types
   // to be transferred with autowire/boopickle, we cast all input variable values
   // as String on the client and then cast them back to their original type here
   // and pass them as Object's to Datomic.
-  def castRightOfPair(tpe: String, v: String): Object = {
+  def castTpeV(tpe: String, v: String): Object = {
     (tpe, v) match {
       case ("String", v)     => v.asInstanceOf[Object]
       case ("Int", v)        => v.toInt.asInstanceOf[Object]

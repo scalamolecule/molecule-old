@@ -2,6 +2,7 @@ package molecule.core.marshalling.unpackAttr
 
 import java.net.URI
 import java.util.UUID
+import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.rowAttr.JsonBase
 import molecule.core.util.Helpers
 
@@ -41,6 +42,7 @@ trait String2json extends JsonBase with Helpers {
       case "String    " => unpackJsonOneString(sb, field, v, vs)
       case "Int       " => pair(sb, field, v)
       case "Long      " => pair(sb, field, v)
+      case "ref       " => pair(sb, field, v)
       case "Double    " => pair(sb, field, v)
       case "Boolean   " => pair(sb, field, v)
       case "Date      " => quotedPair(sb, field, v)
@@ -48,6 +50,8 @@ trait String2json extends JsonBase with Helpers {
       case "URI       " => quotedPair(sb, field, v)
       case "BigInt    " => pair(sb, field, v)
       case "BigDecimal" => pair(sb, field, v)
+      case "enum      " => quotedPair(sb, field, v) // always single line
+      case x            => throw MoleculeException(s"Unexpected unpackJsonOneAny prefix `$x`.")
     }
   }
 

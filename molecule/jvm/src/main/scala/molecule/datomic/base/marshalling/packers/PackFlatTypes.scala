@@ -21,22 +21,21 @@ trait PackFlatTypes extends PackBase with Helpers {
 
   // Generic `v` attribute value converted to String with appended type to be packed on JS side
   protected lazy val packOneAny = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-    val prefixed = row.get(colIndex) match {
-      case s: java.lang.String      => "String    " + s
-      case i: java.lang.Integer     => "Int       " + i.toString
-      case l: java.lang.Long        => "Long      " + l.toString
-      case d: java.lang.Double      => "Double    " + d.toString
-      case b: java.lang.Boolean     => "Boolean   " + b.toString
-      case d: Date                  => "Date      " + date2strLocal(d)
-      case u: UUID                  => "UUID      " + u.toString
-      case u: java.net.URI          => "URI       " + u.toString
-      case bi: java.math.BigInteger => "BigInt    " + bi.toString
-      case bi: clojure.lang.BigInt  => "BigInt    " + bi.toString
-      case bd: java.math.BigDecimal => "BigDecimal" + bd.toString
+    row.get(colIndex) match {
+      case s: java.lang.String      => add(sb, "String    " + s); end(sb) // String can be multi-line
+      case i: java.lang.Integer     => add(sb, "Int       " + i.toString)
+      case l: java.lang.Long        => add(sb, "Long      " + l.toString)
+      case d: java.lang.Double      => add(sb, "Double    " + d.toString)
+      case b: java.lang.Boolean     => add(sb, "Boolean   " + b.toString)
+      case d: Date                  => add(sb, "Date      " + date2strLocal(d))
+      case u: UUID                  => add(sb, "UUID      " + u.toString)
+      case u: java.net.URI          => add(sb, "URI       " + u.toString)
+      case bi: java.math.BigInteger => add(sb, "BigInt    " + bi.toString)
+      case bi: clojure.lang.BigInt  => add(sb, "BigInt    " + bi.toString)
+      case bd: java.math.BigDecimal => add(sb, "BigDecimal" + bd.toString)
       case other                    =>
-        throw MoleculeException(s"Unexpected generic `v` $other of type " + other.getClass)
+        throw MoleculeException(s"Unexpected packOneAny value `$other` of type " + other.getClass)
     }
-    add(sb, prefixed)
   }
 
   protected lazy val packOneRefAttr = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
