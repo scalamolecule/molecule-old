@@ -177,22 +177,22 @@ abstract class InputMolecule(
   private def getAsString(tpe: String, value: Any): Any => String = value match {
     case _: String        => (v: Any) => v.toString
     case _: Int | _: Long => tpe match {
-      case "Double"     => (v: Any) => "__n__" + v + ".0"
-      case "BigDecimal" => (v: Any) => "__n__" + v + ".0M"
+      case "Double"     => (v: Any) => s"$v.0"
+      case "BigDecimal" => (v: Any) => s"$v.0"
       case _            => (v: Any) => v.toString
     }
     case _: Float         => tpe match {
-      case "Double"     => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
-      case "BigDecimal" => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
-      case _            => (v: Any) => "__n__" + v
+      case "Double"     => (v: Any) => v.toString + (if (v.toString.contains(".")) "" else ".0")
+      case "BigDecimal" => (v: Any) => v.toString + (if (v.toString.contains(".")) "M" else ".0")
+      case _            => (v: Any) => v.toString
     }
     case _: Double        => tpe match {
-      case "Double"     => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
-      case "BigDecimal" => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
-      case _            => (v: Any) => "__n__" + v
+      case "Double"     => (v: Any) => v.toString + (if (v.toString.contains(".")) "" else ".0")
+      case "BigDecimal" => (v: Any) => v.toString + (if (v.toString.contains(".")) "" else ".0")
+      case _            => (v: Any) => v.toString
     }
     case _: Date          => (v: Any) => fns.date2str(v.asInstanceOf[Date])
-    case _: BigDecimal    => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+    case _: BigDecimal    => (v: Any) => v.toString + (if (v.toString.contains(".")) "" else ".0")
     case _                => (v: Any) => v.toString
   }
 
@@ -227,30 +227,68 @@ abstract class InputMolecule(
 
     val Placeholder(e@Var(e_), kw@KW(nsFull, attr, _), v@Var(w), tpe, prefix) = ph
 
+    val args: Seq[Any] = inputs.flatMap {
+      case set: Set[_] if set.isEmpty => Nil
+      case set: Set[_]                => if (isJsPlatform) {
+        val patch = getWithJsDecimalPrefix(tpe, set.head)
+        set.toSeq.map(patch)
+      } else set.toSeq
+      case arg                        => if (isJsPlatform) {
+        val patch = getWithJsDecimalPrefix(tpe, arg)
+        Seq(patch(arg))
+      } else Seq(arg)
+    }
+
+    val argss: Seq[Seq[_]] = inputs.flatMap {
+      case set: Set[_] if set.isEmpty => Nil
+      case set: Set[_]                => if (isJsPlatform) {
+        val prefix = getWithJsDecimalPrefix(tpe, set.head)
+        Seq(set.toSeq.map(prefix))
+      } else Seq(set.toSeq)
+      case arg                        => if (isJsPlatform) {
+        val prefix = getWithJsDecimalPrefix(tpe, arg)
+        Seq(Seq(prefix(arg)))
+      } else Seq(Seq(arg))
+    }
+
+    val argsJsString: Seq[Any] = inputs.flatMap {
+      case set: Set[_] if set.isEmpty => Nil
+      case set: Set[_]                => if (isJsPlatform) {
+        val patch = getAsString(tpe, set.head)
+        set.toSeq.map(patch)
+      } else set.toSeq
+      case arg                        => if (isJsPlatform) {
+        val patch = getAsString(tpe, arg)
+        Seq(patch(arg))
+      } else Seq(arg)
+    }
+
     val card = cardinality(nsFull, attr)
 
     if (card == 4) {
-
       // Mapped key attributes =========================================================================
-      val values = inputs.map(Seq(_))
+
+      // Compare Dates as standardized Strings
+      val tpeDateStr = if (tpe == "Date") "String" else tpe
       if (inputs.size > 1) {
-        query.copy(i = In(Seq(InVar(CollectionBinding(v), tpe, Seq(values.flatten))), query.i.rules, query.i.ds))
-      } else if (values.nonEmpty && values.head.size > 1) {
+        query.copy(i = In(Seq(InVar(CollectionBinding(v), tpeDateStr, Seq(argsJsString))), query.i.rules, query.i.ds))
+
+      } else if (argss.nonEmpty && argss.head.size > 1) {
         val In(List(Placeholder(_, kw, v, _, _)), _, _) = query.i
         val (e, newClauses)                             = query.wh.clauses.foldLeft(null: QueryValue, Seq.empty[Clause]) {
           case ((_, acc), DataClause(_, e, _, `v`, _, _)) => (e, acc :+ RuleInvocation(ruleName, List(e)))
           case ((e, acc), other)                          => (e, acc :+ other)
         }
-        val rules                                       = values.map(value =>
+        val rules                                       = argss.map(value =>
           Rule(ruleName, List(e), List(DataClause(ImplDS, e, kw, Val(value), Empty, NoBinding)))
         )
         query.copy(i = In(Nil, rules, query.i.ds), wh = Where(newClauses))
+
       } else {
-        query.copy(i = In(Seq(InVar(ScalarBinding(v), tpe, values)), query.i.rules, query.i.ds))
+        query.copy(i = In(Seq(InVar(ScalarBinding(v), tpeDateStr, Seq(argsJsString))), query.i.rules, query.i.ds))
       }
 
     } else {
-
       // Card-one/many attributes ======================================================================
 
       val v_ = w.filter(_.isLetter)
@@ -267,42 +305,6 @@ abstract class InputMolecule(
         case ((bef, cur, aft), cl@Funct(_, List(Var(v)), _)) if inGroup(v)              => (bef, cur :+ cl, aft)
         case ((bef, Nil, aft), cl)                                                      => (bef :+ cl, Nil, aft)
         case ((bef, cur, aft), cl)                                                      => (bef, cur, aft :+ cl)
-      }
-
-      val args: Seq[Any] = inputs.flatMap {
-        case set: Set[_] if set.isEmpty => Nil
-        case set: Set[_]                => if (isJsPlatform) {
-          val patch = getWithJsDecimalPrefix(tpe, set.head)
-          set.toSeq.map(patch)
-        } else set.toSeq
-        case arg                        => if (isJsPlatform) {
-          val patch = getWithJsDecimalPrefix(tpe, arg)
-          Seq(patch(arg))
-        } else Seq(arg)
-      }
-
-      val argss: Seq[Seq[_]] = inputs.flatMap {
-        case set: Set[_] if set.isEmpty => Nil
-        case set: Set[_]                => if (isJsPlatform) {
-          val prefix = getWithJsDecimalPrefix(tpe, set.head)
-          Seq(set.toSeq.map(prefix))
-        } else Seq(set.toSeq)
-        case arg                        => if (isJsPlatform) {
-          val prefix = getWithJsDecimalPrefix(tpe, arg)
-          Seq(Seq(prefix(arg)))
-        } else Seq(Seq(arg))
-      }
-
-      val argsJsString: Seq[Any] = inputs.flatMap {
-        case set: Set[_] if set.isEmpty => Nil
-        case set: Set[_]                => if (isJsPlatform) {
-          val patch = getAsString(tpe, set.head)
-          set.toSeq.map(patch)
-        } else set.toSeq
-        case arg                        => if (isJsPlatform) {
-          val patch = getAsString(tpe, arg)
-          Seq(patch(arg))
-        } else Seq(arg)
       }
 
       val nil = deepNil(args)
@@ -587,7 +589,7 @@ abstract class InputMolecule(
                   (vars ++ newRules.head.vars).distinct,
                   rules :+ Rule(ruleName, (vars ++ newRules.head.vars).distinct, cls ++ newRules.head.clauses)
                 )
-              case ((vs, rules), other) => (vs, rules)
+              case ((vs, rules), other)                      => (vs, rules)
             }
             // Unify rule invocations
             val newClauses1: Seq[Clause] = newClauses0.foldRight(0, Seq.empty[Clause]) {

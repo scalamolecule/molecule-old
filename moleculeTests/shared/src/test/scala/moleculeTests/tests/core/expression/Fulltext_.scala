@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.expression
 
+import molecule.datomic.api.in3_out11.m
 import molecule.datomic.api.out2._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
@@ -18,6 +19,9 @@ object Fulltext_ extends AsyncTestSuite {
         // Trivial words like "The" not indexed
         _ <- Ns.str.contains("The").get.map(_ ==> List())
         _ <- Ns.str.contains("Ten").get.map(_ ==> List("Ten slow monkeys"))
+
+        // Input
+        _ <- m(Ns.str.contains(?))("Ten").get.map(_ ==> List("Ten slow monkeys"))
 
         /*
     Non-indexed words:
