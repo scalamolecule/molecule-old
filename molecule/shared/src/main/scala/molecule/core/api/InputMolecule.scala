@@ -268,10 +268,15 @@ abstract class InputMolecule(
     if (card == 4) {
       // Mapped key attributes =========================================================================
 
+      val argsJsString2 = if(isJsPlatform) argsJsString else argsJsString.map {
+        case d: Date => fns.date2str(d) // compare standardized Date string format on jvm too
+        case v       => v
+      }
+
       // Compare Dates as standardized Strings
-      val tpeDateStr = if (tpe == "Date") "String" else tpe
+      val tpeDateStr = if (isJsPlatform && tpe == "Date") "String" else tpe
       if (inputs.size > 1) {
-        query.copy(i = In(Seq(InVar(CollectionBinding(v), tpeDateStr, Seq(argsJsString))), query.i.rules, query.i.ds))
+        query.copy(i = In(Seq(InVar(CollectionBinding(v), tpeDateStr, Seq(argsJsString2))), query.i.rules, query.i.ds))
 
       } else if (argss.nonEmpty && argss.head.size > 1) {
         val In(List(Placeholder(_, kw, v, _, _)), _, _) = query.i
@@ -285,7 +290,7 @@ abstract class InputMolecule(
         query.copy(i = In(Nil, rules, query.i.ds), wh = Where(newClauses))
 
       } else {
-        query.copy(i = In(Seq(InVar(ScalarBinding(v), tpeDateStr, Seq(argsJsString))), query.i.rules, query.i.ds))
+        query.copy(i = In(Seq(InVar(ScalarBinding(v), tpeDateStr, Seq(argsJsString2))), query.i.rules, query.i.ds))
       }
 
     } else {

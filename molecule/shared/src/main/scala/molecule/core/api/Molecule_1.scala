@@ -39,7 +39,7 @@ abstract class Molecule_1[Obj, I1](
 
   protected def bindValues(query: Query, inputs0: Seq[I1]): Either[Throwable, Query] = try {
     val inputs = inputs0.distinct
-    val q2 = query.i.inputs.size match {
+    val q2     = query.i.inputs.size match {
       case 2 => // Mapped attributes
         val inVars                                         = query.i.inputs.collect { case Placeholder(_, _, v, _, _) => v }
         val Placeholder(_, KW(nsFull, attr, _), _, tpe, _) = query.i.inputs.head
@@ -56,7 +56,7 @@ abstract class Molecule_1[Obj, I1](
             }
           case other          => throw Molecule_1_Exception(s"Unexpected input for mapped attribute `:$nsFull/$attr`: " + other)
         }
-        val tpeDateStr = if(tpe == "Date") "String" else tpe
+        val tpeDateStr                                     = if (isJsPlatform && tpe == "Date") "String" else tpe
         query.copy(i = In(Seq(InVar(RelationBinding(inVars), tpeDateStr, values)), query.i.rules, query.i.ds))
 
       case 1 => // Card-one/many/mapK

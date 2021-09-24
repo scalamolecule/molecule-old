@@ -99,6 +99,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
 
+
         _ <- m(Ns.int.dateMapK(".*").>(?))(date2).get.map(_ ==> List(
           (1, date3),
           (2, date3),
