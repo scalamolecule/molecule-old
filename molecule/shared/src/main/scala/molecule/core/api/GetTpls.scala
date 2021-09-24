@@ -55,19 +55,9 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
 
-//          println(_model)
-//
-//          _model.elements.collect {
-//            case Atom(_, _, _, _, Eq(Seq(v1)), _, _, _) =>
-//              println(v1)
-//              println(v1.getClass)
-//            case Atom(_, _, _, _, Neq(Seq(v1)), _, _, _) =>
-//              println(v1)
-//              println(v1.getClass)
-//          }
-//
-//          println(_query)
-//          println(_datalog)
+          //          println(_model)
+          //          println(_query)
+          //          println(_datalog)
 
           conn.queryJsTpl(_model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl)
         } else {
@@ -97,7 +87,7 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     * simply named `get` (and not `getList`).
     *
     * @group get
-    * @param maxRows       Int Number of rows returned
+    * @param maxRows Int Number of rows returned
     * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
     */

@@ -115,31 +115,21 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         //        sharedTests + "/core/crud",
         //        sharedTests + "/core/equality",
         //        sharedTests + "/core/expression",
-
-
-        //-------------------
-
-        sharedTests + "/core/generic",
+        //        sharedTests + "/core/generic",
         //        sharedTests + "/core/input1",
         //        sharedTests + "/core/input2",
         //        sharedTests + "/core/input3",
 
-        //        sharedTests + "/core/ref",
+        sharedTests + "/core/ref",
         //        sharedTests + "/core/schemaDef",
-        //        sharedTests + "/core/transaction",
-
-
-        //-------------------
-
-        //                sharedTests + "/core/json",
+        //        sharedTests + "/core/json",
         //        sharedTests + "/core/nested",
-        //                sharedTests + "/core/obj",
+        //        sharedTests + "/core/obj",
         //        sharedTests + "/core/runtime",
         //        sharedTests + "/core/time",
         //        sharedTests + "/core/txMetaData",
-
-
         //        sharedTests + "/core/transaction",
+
         sharedTests + "/Adhoc.scala",
       )
       new SimpleFileFilter(f =>

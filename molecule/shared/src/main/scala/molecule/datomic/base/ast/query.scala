@@ -1,4 +1,5 @@
 package molecule.datomic.base.ast
+
 import molecule.datomic.base.transform.Query2String
 import molecule.core.util.Helpers
 
@@ -8,7 +9,8 @@ import molecule.core.util.Helpers
   * <br><br>
   * Custom DSL molecule --> Model --> Query --> Datomic query string
   */
-object query  {
+object query {
+
   import Helpers._
 
   sealed trait QueryExpr
@@ -101,7 +103,7 @@ object query  {
           case NestedAttrs(level, nsFull, attr, attrSpecs) =>
             s"""$s  NestedAttrs($level, "$nsFull", "$attr", Seq(""" + "\n" +
               draw(attrSpecs, indent + 1).mkString(s",\n") + "))"
-          case other                                =>
+          case other                                       =>
             s"$s  $other"
         }
       }
@@ -120,23 +122,22 @@ object query  {
 
 
   sealed trait DataSource extends QueryTerm
-  case class DS(name: String = "") extends DataSource {override def toString = s"""DS("$name")"""}
+  case class DS(name: String = "") extends DataSource {
+    override def toString = s"""DS("$name")"""
+  }
   case object DS extends DataSource
   case object ImplDS extends DataSource
 
-  case class Rule(name: String, args: Seq[QueryValue], clauses: Seq[Clause]) extends QueryTerm {
-    override def toString: String = s"""Rule("$name", ${sq(args)}, Seq(""" + clauses.mkString("\n        ", ",\n        ", "))")
+  case class Rule(name: String, vars: Seq[QueryValue], clauses: Seq[Clause]) extends QueryTerm {
+    override def toString: String = s"""Rule("$name", ${sq(vars)}, Seq(""" + clauses.mkString("\n        ", ",\n        ", "))")
   }
 
   sealed trait Input extends QueryTerm
-  case class InDataSource(ds: DataSource, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input {
-    override def toString: String = s"""InDataSource($ds, ${sq(argss)})"""
+  case class InVar(binding: Binding, tpe: String, argss: Seq[Seq[Any]]) extends Input {
+    override def toString: String = s"""InVar($binding, "$tpe", ${sq(argss)})"""
   }
-  case class InVar(binding: Binding, argss: Seq[Seq[Any]] = Seq(Seq())) extends Input {
-    override def toString: String = s"""InVar($binding, ${sq(argss)})"""
-  }
-  case class Placeholder(e: Var, kw: KW, v: Var, enumPrefix: Option[String] = None) extends Input {
-    override def toString: String = s"""Placeholder($e, $kw, $v, ${o(enumPrefix)})"""
+  case class Placeholder(e: Var, kw: KW, v: Var, tpe: String, enumPrefix: Option[String] = None) extends Input {
+    override def toString: String = s"""Placeholder($e, $kw, $v, "$tpe", ${o(enumPrefix)})"""
   }
 
 

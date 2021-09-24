@@ -37,18 +37,18 @@ abstract class Molecule_1[Obj, I1](
 ) extends InputMolecule(model, queryData) {
 
 
-  protected def bindValues(query: Query, inputs0: Seq[I1]): Either[Throwable, Query] = try {
-    val inputs = inputs0.distinct
-    val q2     = query.i.inputs.size match {
-      // Mapped attributes
-      case 2 => {
-        val inVars                                    = query.i.inputs.collect { case Placeholder(_, _, v, _) => v }
-        val Placeholder(_, KW(nsFull, attr, _), _, _) = query.i.inputs.head
-        val values                                    = inputs.flatMap {
+  protected def bindValues(query: Query, inputs: Seq[I1]): Either[Throwable, Query] = try {
+    val List(ph@Placeholder(_, KW(nsFull, attr, _), _, tpe, _)) = query.i.inputs
+
+    val q2 = query.i.inputs.size match {
+      case 2 =>
+        // Mapped attributes
+        val inVars = query.i.inputs.collect { case Placeholder(_, _, v, _, _) => v }
+        val values = inputs.flatMap {
           case map: Map[_, _] =>
             map.head._2 match {
               case _: Date => map.toSeq.map {
-                case (k, v: Date) => Seq(k, fns.date2str(v)) // compare standardized format
+                case (k, v: Date) => Seq(k, fns.date2str(v)) // compare standardized date format
                 case (k, v)       => Seq(k, v)
               }
               case _       => map.toSeq.map {
@@ -57,16 +57,13 @@ abstract class Molecule_1[Obj, I1](
             }
           case other          => throw Molecule_1_Exception(s"Unexpected input for mapped attribute `:$nsFull/$attr`: " + other)
         }
-        query.copy(i = In(Seq(InVar(RelationBinding(inVars), values)), query.i.rules, query.i.ds))
-      }
+        query.copy(i = In(Seq(InVar(RelationBinding(inVars), tpe, values)), query.i.rules, query.i.ds))
 
-      // Card-one/many/mapK
-      case 1 => {
-        val List(ph: Placeholder) = query.i.inputs
+      case 1 =>
+        // Card-one/many/mapK
         // Remove placeholder
-        val q1                    = query.copy(i = In(Nil, query.i.rules, query.i.ds))
+        val q1 = query.copy(i = In(Nil, query.i.rules, query.i.ds))
         resolveInput(q1, ph, inputs)
-      }
     }
     Right(q2)
   } catch {

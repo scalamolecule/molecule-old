@@ -392,7 +392,7 @@ object Model2Query extends Helpers {
     val v = g.attr
     g.value match {
       case NoValue                        => q.find(v)
-      case Eq(args)                       => q.find(v).in(args, v)
+      case Eq(args)                       => q.find(v).in(tpe, args, v)
       case Neq(args)                      => q.find(v).compareToMany2("!=", v, args)
       case Gt(arg)                        => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)                        => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
@@ -409,7 +409,7 @@ object Model2Query extends Helpers {
     val v = g.attr.init
     g.value match {
       case NoValue                        => q
-      case Eq(args)                       => q.in(args, v)
+      case Eq(args)                       => q.in(tpe, args, v)
       case Neq(args)                      => q.compareToMany2("!=", v, args)
       case Gt(arg)                        => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)                        => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
@@ -495,7 +495,7 @@ object Model2Query extends Helpers {
     val v = if (w.nonEmpty) w else v0 + "_" + g.attr
     g.value match {
       case NoValue | EntValue => q.find(v)
-      case Eq(args)           => q.find(v).in(args, v)
+      case Eq(args)           => q.find(v).in(tpe, args, v)
       case Neq(args)          => q.find(v).compareToMany2("!=", v, args)
       case Gt(arg)            => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)            => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
@@ -510,8 +510,8 @@ object Model2Query extends Helpers {
     val v = if (w.nonEmpty) w else v0 + "_" + g.attr.init // skip underscore at end
     g.value match {
       case NoValue | EntValue => q
-      case Eq(Seq(Qm))        => q.in(v, g.tpe, g.attr, e)
-      case Eq(args)           => q.in(args, v)
+      case Eq(Seq(Qm))        => q.in(v, tpe, g.tpe, g.attr, e)
+      case Eq(args)           => q.in(tpe, args, v)
       case Neq(args)          => q.compareToMany2("!=", v, args)
       case Gt(arg)            => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)            => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
@@ -1038,7 +1038,7 @@ object Model2Query extends Helpers {
         }
         def queryTerm(qt: QueryTerm): QueryTerm = qt match {
           case Rule(name, args, cls) => Rule(name, args map queryValue, cls flatMap clause)
-          case InVar(b, argss)       => InVar(binding(b), argss)
+          case InVar(b, tpe, argss)  => InVar(binding(b), tpe, argss)
           case qv: QueryValue        => queryValue(qv)
           case _                     => qt
         }

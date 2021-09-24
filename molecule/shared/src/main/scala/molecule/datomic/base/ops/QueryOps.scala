@@ -79,13 +79,13 @@ object QueryOps extends Helpers with JavaUtil {
     // In ..........................................
 
     def in(e: String, a: Atom, enumPrefix: Option[String], v: String): Query =
-      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(Var(e), KW(a.nsFull, a.attr), Var(v), enumPrefix)))
+      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(Var(e), KW(a.nsFull, a.attr), Var(v), a.tpe, enumPrefix)))
 
-    def in(v: String, nsFull: String, attr: String, e: String): Query =
-      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(Var(e), KW(nsFull, attr), Var(v), None)))
+    def in(v: String, tpe: String, nsFull: String, attr: String, e: String): Query =
+      q.copy(i = q.i.copy(inputs = q.i.inputs :+ Placeholder(Var(e), KW(nsFull, attr), Var(v), tpe, None)))
 
-    def in(vs: Seq[Any], v: String): Query =
-      q.copy(i = q.i.copy(inputs = q.i.inputs :+ InVar(CollectionBinding(Var(v)), Seq(vs))))
+    def in(tpe: String, vs: Seq[Any], v: String): Query =
+      q.copy(i = q.i.copy(inputs = q.i.inputs :+ InVar(CollectionBinding(Var(v)), tpe, Seq(vs))))
 
 
     // With ...........................................
@@ -549,7 +549,6 @@ object QueryOps extends Helpers with JavaUtil {
         case s: String if s.startsWith("__n__") => q1
           .func("read-string", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
           .func(op, Seq(Var(v + 3), Val(s)))
-//          .func(op, Seq(Var(v + 3), Val(s.drop(5))))
 
         case _: String  => q1.compareTo(op, a, v + 2, Val(arg), 1)
         case _: UUID    => q1.compareTo(op, a, v + 2, Val(arg), 1)
@@ -685,16 +684,14 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
     def inputs: Seq[AnyRef] = q.i.inputs.map {
-      case InVar(RelationBinding(_), Nil)         => Util.list()
-      case InVar(RelationBinding(_), argss)       => Util.list(argss.map(args => Util.list(args map cast: _*)): _*)
-      case InVar(CollectionBinding(_), Nil)       => Util.list()
-      case InVar(CollectionBinding(_), argss)     => Util.list(argss.head map cast: _*)
-      case InVar(_, Nil)                          => Util.list()
-      case InVar(_, argss) if argss.head.size > 1 => Nil
-      case InVar(_, argss)                        => cast(argss.head.head)
-      case InDataSource(_, Nil)                   => Util.list()
-      case InDataSource(_, argss)                 => cast(argss.head.head)
-      case other                                  => throw QueryOpsException(s"UNEXPECTED input: $other\nquery:\n$q")
+      case InVar(RelationBinding(_), _, Nil)         => Util.list()
+      case InVar(RelationBinding(_), _, argss)       => Util.list(argss.map(args => Util.list(args map cast: _*)): _*)
+      case InVar(CollectionBinding(_), _, Nil)       => Util.list()
+      case InVar(CollectionBinding(_), _, argss)     => Util.list(argss.head map cast: _*)
+      case InVar(_, _, Nil)                          => Util.list()
+      case InVar(_, _, argss) if argss.head.size > 1 => Nil
+      case InVar(_, _, argss)                        => cast(argss.head.head)
+      case other                                     => throw QueryOpsException(s"UNEXPECTED input: $other\nquery:\n$q")
     }
   }
 }

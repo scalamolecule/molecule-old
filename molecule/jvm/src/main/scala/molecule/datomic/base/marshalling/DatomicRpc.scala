@@ -63,9 +63,9 @@ object DatomicRpc extends MoleculeRpc
     connProxy: ConnProxy,
     datalogQuery: String,
     rules: Seq[String],
-    l: Seq[(Int, (String, String))],
-    ll: Seq[(Int, Seq[(String, String)])],
-    lll: Seq[(Int, Seq[Seq[(String, String)]])],
+    l: Seq[(Int, String, String)],
+    ll: Seq[(Int, String, Seq[String])],
+    lll: Seq[(Int, String, Seq[Seq[String]])],
     maxRows0: Int,
     obj: Obj,
     nestedLevels: Int,
@@ -77,6 +77,16 @@ object DatomicRpc extends MoleculeRpc
     val t         = TimerPrint("DatomicRpc")
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
+    //    println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
+    //    println(datalogQuery)
+    //    println("Rules:")
+    //    rules foreach println
+    //
+    //    println("l  : " + l)
+    //    println("ll : " + ll)
+    //    println("lll: " + lll)
+    //
+    //    inputs.foreach(i => println(s"$i   " + i.getClass))
     for {
       conn <- getConn(connProxy)
       allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
@@ -138,6 +148,41 @@ object DatomicRpc extends MoleculeRpc
     case NonFatal(exc) => Future.failed(exc)
   }
 
+  // Unmarshall to Datomic types
+  private def unmarshallInputs(lists: Seq[(Int, String, Any)]): Seq[Object] = {
+    lists.sortBy(_._1).map {
+      case (_, tpe, vs) => {
+        val cast = tpe match {
+          case "String"     => (v: String) => stripEnum(v).asInstanceOf[Object]
+          case "Int"        => (v: String) => v.toLong.asInstanceOf[Object]
+          case "Long"       => (v: String) => v.toLong.asInstanceOf[Object]
+          case "Double"     => (v: String) => v.drop(5).toDouble.asInstanceOf[Object]
+          case "Boolean"    => (v: String) => v.toBoolean.asInstanceOf[Object]
+          case "Date"       => (v: String) => str2date(v).asInstanceOf[Object]
+          case "UUID"       => (v: String) => java.util.UUID.fromString(v).asInstanceOf[Object]
+          case "URI"        => (v: String) => new java.net.URI(v).asInstanceOf[Object]
+          case "BigInt"     => (v: String) => new java.math.BigInteger(v).asInstanceOf[Object]
+          case "BigDecimal" => (v: String) => new java.math.BigDecimal(v.substring(5, v.length - 1)).asInstanceOf[Object]
+          case _            => throw MoleculeException(s"Unexpected type to cast: $tpe")
+        }
+        vs match {
+          case l: Seq[_] =>
+            Util.list(l.collect {
+              case l2: Seq[_] =>
+                Util.list(l2.collect {
+                  case v: String => cast(v)
+                }: _*)
+
+              case v: String => cast(v)
+            }: _*)
+
+          case v: String => cast(v)
+          case _         => throw MoleculeException("Unexpected input values")
+        }
+      }
+    }
+  }
+
 
   def index2packed(
     connProxy: ConnProxy,
@@ -146,6 +191,24 @@ object DatomicRpc extends MoleculeRpc
     args: IndexArgs,
     attrs: Seq[String]
   ): Future[String] = {
+    def castTpeV(tpe: String, v: String): Object = {
+      (tpe, v) match {
+        case ("String", v)     => stripEnum(v).asInstanceOf[Object]
+        case ("Int", v)        => v.toInt.asInstanceOf[Object]
+        case ("Long", v)       => v.toLong.asInstanceOf[Object]
+        case ("Double", v)     => v.toDouble.asInstanceOf[Object]
+        case ("Boolean", v)    => v.toBoolean.asInstanceOf[Object]
+        case ("Date", v)       => str2date(v).asInstanceOf[Object]
+        case ("UUID", v)       => java.util.UUID.fromString(v).asInstanceOf[Object]
+        case ("URI", v)        => new java.net.URI(v).asInstanceOf[Object]
+        case ("BigInt", v)     => new java.math.BigInteger(v).asInstanceOf[Object]
+        case ("BigDecimal", v) =>
+          val v1 = if (v.contains(".")) v else s"$v.0"
+          new java.math.BigDecimal(v1).asInstanceOf[Object]
+        case _                 => throw MoleculeException(s"Unexpected input pair to cast: ($tpe, $v)")
+      }
+    }
+
     def datomArgs: Seq[Any] = index match {
       case "EAVT" => args match {
         case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
@@ -415,7 +478,6 @@ object DatomicRpc extends MoleculeRpc
   }
 
 
-
   def t(connProxy: ConnProxy): Future[Long] = {
     for {
       conn <- getConn(connProxy)
@@ -564,42 +626,5 @@ object DatomicRpc extends MoleculeRpc
   def qTime(queryTime: Long): String = {
     val indents = 5 - queryTime.toString.length
     " " * indents + thousands(queryTime) + " ms"
-  }
-
-  private def unmarshallInputs(lists: Seq[(Int, Any)]): Seq[Object] = {
-    lists.sortBy(_._1).map(_._2).map {
-      case l: Seq[_] =>
-        Util.list(l.collect {
-          case l2: Seq[_] =>
-            Util.list(l2.collect {
-              case (tpe: String, v: String) => castTpeV(tpe, v)
-            }: _*)
-
-          case (tpe: String, v: String) => castTpeV(tpe, v)
-        }: _*)
-
-      case (tpe: String, v: String) => castTpeV(tpe, v)
-      case _                        => throw MoleculeException("Unexpected input values")
-    }
-  }
-
-  // To avoid type combination explosions from multiple inputs of various types
-  // to be transferred with autowire/boopickle, we cast all input variable values
-  // as String on the client and then cast them back to their original type here
-  // and pass them as Object's to Datomic.
-  def castTpeV(tpe: String, v: String): Object = {
-    (tpe, v) match {
-      case ("String", v)     => v.asInstanceOf[Object]
-      case ("Int", v)        => v.toInt.asInstanceOf[Object]
-      case ("Long", v)       => v.toLong.asInstanceOf[Object]
-      case ("Double", v)     => v.toDouble.asInstanceOf[Object]
-      case ("BigInt", v)     => BigInt(v).asInstanceOf[Object]
-      case ("BigDecimal", v) => BigDecimal(v).asInstanceOf[Object]
-      case ("Boolean", v)    => v.toBoolean.asInstanceOf[Object]
-      case ("Date", v)       => str2date(v).asInstanceOf[Object]
-      case ("UUID", v)       => java.util.UUID.fromString(v).asInstanceOf[Object]
-      case ("URI", v)        => new java.net.URI(v).asInstanceOf[Object]
-      case _                 => throw MoleculeException(s"Unexpected input pair to cast: ($tpe, $v)")
-    }
   }
 }

@@ -22,9 +22,9 @@ trait MoleculeRpc {
     connProxy: ConnProxy,
     datalogQuery: String,
     rules: Seq[String],
-    l: Seq[(Int, (String, String))],
-    ll: Seq[(Int, Seq[(String, String)])],
-    lll: Seq[(Int, Seq[Seq[(String, String)]])],
+    l: Seq[(Int, String, String)],
+    ll: Seq[(Int, String, Seq[String])],
+    lll: Seq[(Int, String, Seq[Seq[String]])],
     maxRows: Int,
     obj : Obj,
     nestedLevels: Int,
@@ -67,9 +67,7 @@ trait MoleculeRpc {
   //  def pull(pattern: String, eid: Any): Future[]
 
 
-
   def retract(connProxy: ConnProxy, eid: Long) = ???
-
 
 
   def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]

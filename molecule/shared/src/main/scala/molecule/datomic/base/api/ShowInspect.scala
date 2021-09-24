@@ -3,24 +3,20 @@ package molecule.datomic.base.api
 import java.util.{Date, Collection => jCollection, List => jList, Map => jMap, Set => jSet}
 import molecule.core.api.Molecule
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.datomic.base.ast.query.Placeholder
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-//import clojure.lang.{PersistentHashSet, PersistentVector}
-import molecule.core.api.Molecule_0
 import molecule.core.ast.elements._
-import molecule.datomic.base.ast.query.QueryExpr
-import molecule.datomic.base.ast.dbView._
 import molecule.core.exceptions.{MoleculeException, QueryException}
 import molecule.core.ops.VerifyModel
-import molecule.datomic.base.ops.QueryOps._
-import molecule.datomic.base.transform._
+import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.ops.QueryOps._
+import molecule.datomic.base.transform._
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
-import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** Inspect methods

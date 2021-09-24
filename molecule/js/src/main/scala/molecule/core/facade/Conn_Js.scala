@@ -286,8 +286,17 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
       case _                                                           =>
         val q2s          = Query2String(query)
         val p            = q2s.p
-        val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+        val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString "\n ") + "]")
         val (l, ll, lll) = marshallInputs(query)
+        //        println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
+        //        println(query)
+        //        println(datalog)
+        //        println("Rules:")
+        //        rules foreach println
+        //
+        //        println("l  : " + l)
+        //        println("ll : " + ll)
+        //        println("lll: " + lll)
         rpc.query2packed(
           connProxy, datalog, rules, l, ll, lll, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
         )

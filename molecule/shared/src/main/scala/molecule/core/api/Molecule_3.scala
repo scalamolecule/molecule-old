@@ -71,13 +71,13 @@ abstract class Molecule_3[Obj, I1, I2, I3](
       And3(TermValue(a1), TermValue(a2), TermValue(a3)),
       And3(TermValue(b1), TermValue(b2), TermValue(b3)),
       or3: Or3[I1, I2, I3]
-      )      => traverse(or3).map(Seq((a1, a2, a3), (b1, b2, b3)) ++ _)
+      ) => traverse(or3).map(Seq((a1, a2, a3), (b1, b2, b3)) ++ _)
 
       case Or3(
       And3(TermValue(a1), TermValue(a2), TermValue(a3)),
       And3(TermValue(b1), TermValue(b2), TermValue(b3)),
       And3(TermValue(c1), TermValue(c2), TermValue(c3))
-      )      => Right(Seq((a1, a2, a3), (b1, b2, b3), (c1, c2, c3)))
+      ) => Right(Seq((a1, a2, a3), (b1, b2, b3), (c1, c2, c3)))
 
       case _ => Left(Molecule_3_Exception(s"Unexpected Or3 expression: " + expr))
     }
@@ -120,46 +120,43 @@ abstract class Molecule_3[Obj, I1, I2, I3](
   }
 
   // Triples
-  protected def bindValues(query: Query, inputTuples: Seq[(I1, I2, I3)]): Either[Throwable, Query] = try {
-    val ph1@Placeholder(e1@Var(ex1), kw1@KW(ns1, attr1, _), v1@Var(w1), enumPrefix1) = query.i.inputs.head
-    val ph2@Placeholder(e2@Var(ex2), kw2@KW(ns2, attr2, _), v2@Var(w2), enumPrefix2) = query.i.inputs(1)
-    val ph3@Placeholder(e3@Var(ex3), kw3@KW(ns3, attr3, _), v3@Var(w3), enumPrefix3) = query.i.inputs(2)
-    val (v1_, v2_, v3_)                                                              = (w1.filter(_.isLetter), w2.filter(_.isLetter), w3.filter(_.isLetter))
-    val (isTacit1, isTacit2, isTacit3)                                               = (isTacit(ns1, attr1), isTacit(ns2, attr2), isTacit(ns3, attr3))
-    val (isExpr1, isExpr2, isExpr3)                                                  = (isExpression(ns1, attr1), isExpression(ns2, attr2), isExpression(ns3, attr3))
-    val hasExpression                                                                = isExpr1 || isExpr2 || isExpr3
-    val es                                                                           = List(e1, e2, e3).distinct // same or different namespaces
+  protected def bindValues(query: Query, inputTriples: Seq[(I1, I2, I3)]): Either[Throwable, Query] = try {
+    val ph1@Placeholder(e1@Var(ex1), kw1@KW(ns1, attr1, _), v1@Var(w1), tpe1, enumPrefix1) = query.i.inputs.head
+    val ph2@Placeholder(e2@Var(ex2), kw2@KW(ns2, attr2, _), v2@Var(w2), tpe2, enumPrefix2) = query.i.inputs(1)
+    val ph3@Placeholder(e3@Var(ex3), kw3@KW(ns3, attr3, _), v3@Var(w3), tpe3, enumPrefix3) = query.i.inputs(2)
+
+    val (v1_, v2_, v3_)                = (w1.filter(_.isLetter), w2.filter(_.isLetter), w3.filter(_.isLetter))
+    val (isTacit1, isTacit2, isTacit3) = (isTacit(ns1, attr1), isTacit(ns2, attr2), isTacit(ns3, attr3))
+    val (isExpr1, isExpr2, isExpr3)    = (isExpression(ns1, attr1), isExpression(ns2, attr2), isExpression(ns3, attr3))
+    val hasExpression                  = isExpr1 || isExpr2 || isExpr3
+    val es                             = List(e1, e2, e3).distinct // same or different namespaces
+
 
     // Discard placeholders
     val q0 = query.copy(i = In(Nil, query.i.rules, query.i.ds))
 
-    val query2 = inputTuples.distinct match {
+    val query2 = inputTriples.distinct match {
 
       case Nil if !isTacit1 || !isTacit2 || !isTacit3 =>
         throw Molecule_3_Exception("Can only apply empty list of pairs (Nil) to two tacit attributes")
 
-      case Nil => {
+      case Nil =>
         // Both input attributes to be non-asserted
         val newClauses1 = addNilClause(query.wh.clauses, e1, kw1, v1)
         val newClauses2 = addNilClause(newClauses1, e2, kw2, v2)
         val newClauses3 = addNilClause(newClauses2, e3, kw3, v3)
         q0.copy(wh = Where(newClauses3))
-      }
 
-      case triples if triples.size > 1 && hasExpression => throw Molecule_3_Exception(
+      case Seq((arg1, arg2, arg3)) =>
+        val q1 = resolveInput(q0, ph1, Seq(arg1), unifyRule = true)
+        val q2 = resolveInput(q1, ph2, Seq(arg2), unifyRule = true)
+        val q3 = resolveInput(q2, ph3, Seq(arg3), unifyRule = true)
+        q3
+
+      case triples if hasExpression => throw Molecule_3_Exception(
         "Can't apply multiple triples to input attributes with one or more expressions (<, >, <=, >=, !=)")
 
-      // 1 triple possibly with expressions
-      case Seq((arg1, arg2, arg3)) => {
-        val q1 = resolveInput(q0, ph1, Seq(arg1), "rule1", true)
-        val q2 = resolveInput(q1, ph2, Seq(arg2), "rule1", true)
-        val q3 = resolveInput(q2, ph3, Seq(arg3), "rule1", true)
-        q3
-      }
-
-      // Multiple triples without expressions (only Eq)
-      case triples => {
-
+      case triples =>
         def resolve2[A, B](query: Query,
                            ph1: Placeholder, ph2: Placeholder,
                            es: Seq[Var],
@@ -204,11 +201,10 @@ abstract class Molecule_3[Obj, I1, I2, I3](
             )
 
           val rules = pairs.map { case (arg1, arg2) =>
-            Rule("rule2", es, valueClauses(ex1, kw1, enumPrefix1, arg1) ++ valueClauses(ex2, kw2, enumPrefix2, arg2))
+            Rule("rule2", es, valueClauses(ex1, kw1, enumPrefix1, tpe1, arg1) ++ valueClauses(ex2, kw2, enumPrefix2, tpe2, arg2))
           }
           query.copy(i = In(Nil, query.i.rules ++ rules, query.i.ds), wh = Where(newClauses))
         }
-
 
         triples.head match {
 
@@ -216,22 +212,22 @@ abstract class Molecule_3[Obj, I1, I2, I3](
 
           case (set: Set[_], _, _) if set.size <= 1 || isExpr1 => {
             val (args, pairs) = triples.map { case (arg1, arg2, arg3) => (arg1, (arg2, arg3)) }.unzip
-            val q1            = resolveInput(q0, ph1, args, "rule1")
+            val q1            = resolveInput(q0, ph1, args)
             resolve2(q1, ph2, ph3, Seq(e2, e3).distinct, ex2, ex3, enumPrefix2, enumPrefix3, kw2, kw3, v2, v3, v2_, v3_, isTacit2, isTacit3, pairs)
           }
           case (_, set: Set[_], _) if set.size <= 1 || isExpr2 => {
             val (args, pairs) = triples.map { case (arg1, arg2, arg3) => (arg2, (arg1, arg3)) }.unzip
-            val q1            = resolveInput(q0, ph2, args, "rule1")
+            val q1            = resolveInput(q0, ph2, args)
             resolve2(q1, ph1, ph3, Seq(e1, e3).distinct, ex1, ex3, enumPrefix1, enumPrefix3, kw1, kw3, v1, v3, v1_, v3_, isTacit1, isTacit3, pairs)
           }
           case (_, _, set: Set[_]) if set.size <= 1 || isExpr3 => {
             val (args, pairs) = triples.map { case (arg1, arg2, arg3) => (arg3, (arg1, arg2)) }.unzip
-            val q1            = resolveInput(q0, ph3, args, "rule1")
+            val q1            = resolveInput(q0, ph3, args)
             resolve2(q1, ph1, ph2, Seq(e1, e2).distinct, ex1, ex2, enumPrefix1, enumPrefix2, kw1, kw2, v1, v2, v1_, v2_, isTacit1, isTacit2, pairs)
           }
 
           // 3 input attributes share rule
-          case _ => {
+          case _ =>
             // Add rule invocation clause to first input attribute clause (only 1 rule invocation needed)
             val rule                    = RuleInvocation("rule1", es)
             val ident1                  = Var(v1_ + 1)
@@ -278,12 +274,13 @@ abstract class Molecule_3[Obj, I1, I2, I3](
               )
 
             val rules = triples.map { case (arg1, arg2, arg3) =>
-              Rule("rule1", es, valueClauses(ex1, kw1, enumPrefix1, arg1) ++ valueClauses(ex2, kw2, enumPrefix2, arg2) ++ valueClauses(ex3, kw3, enumPrefix3, arg3))
+              Rule("rule1", es,
+                valueClauses(ex1, kw1, enumPrefix1, tpe1, arg1) ++
+                  valueClauses(ex2, kw2, enumPrefix2, tpe2, arg2) ++
+                  valueClauses(ex3, kw3, enumPrefix3, tpe3, arg3))
             }
             q0.copy(i = In(Nil, query.i.rules ++ rules, query.i.ds), wh = Where(newClauses))
-          }
         }
-      }
     }
     Right(query2)
   } catch {
@@ -292,15 +289,25 @@ abstract class Molecule_3[Obj, I1, I2, I3](
 
 
   protected def bindSeqs(query: Query, inputRaw1: Seq[I1], inputRaw2: Seq[I2], inputRaw3: Seq[I3]): Either[Throwable, Query] = try {
-    val (input1, input2, input3) = (inputRaw1.distinct, inputRaw2.distinct, inputRaw3.distinct)
-
     val List(
-    ph1@Placeholder(_, KW(ns1, attr1, _), _, _),
-    ph2@Placeholder(_, KW(ns2, attr2, _), _, _),
-    ph3@Placeholder(_, KW(ns3, attr3, _), _, _)) = query.i.inputs
+    ph1@Placeholder(_, KW(ns1, attr1, _), _, tpe1, _),
+    ph2@Placeholder(_, KW(ns2, attr2, _), _, tpe2, _),
+    ph3@Placeholder(_, KW(ns3, attr3, _), _, tpe3, _)) = query.i.inputs
 
-    def resolve[T](query: Query, ph: Placeholder, input: Seq[T], ruleName: String, tacit: Boolean, expr: Boolean): Query = {
-      val Placeholder(_, KW(nsFull, attr, _), _, _) = ph
+    val input1 = inputRaw1.distinct
+    val input2 = inputRaw2.distinct
+    val input3 = inputRaw3.distinct
+
+    def resolve[T](
+      query: Query,
+      ph: Placeholder,
+      input: Seq[T],
+      tpe: String,
+      ruleName: String,
+      tacit: Boolean,
+      expr: Boolean
+    ): Query = {
+      val Placeholder(_, KW(nsFull, attr, _), _, _, _) = ph
       input match {
         case Nil if !tacit =>
           throw Molecule_3_Exception(s"Can only apply empty list (Nil) to a tacit input attribute. Please make input attr tacit: `$attr` --> `${attr}_`")
@@ -317,9 +324,9 @@ abstract class Molecule_3[Obj, I1, I2, I3](
     val q0 = query.copy(i = In(Seq(), query.i.rules, query.i.ds))
 
     // Resolve inputs
-    val q1 = resolve(q0, ph1, input1, "rule1", isTacit(ns1, attr1), isExpression(ns1, attr1))
-    val q2 = resolve(q1, ph2, input2, "rule2", isTacit(ns2, attr2), isExpression(ns2, attr2))
-    val q3 = resolve(q2, ph3, input3, "rule3", isTacit(ns3, attr3), isExpression(ns3, attr3))
+    val q1 = resolve(q0, ph1, input1, tpe1, "rule1", isTacit(ns1, attr1), isExpression(ns1, attr1))
+    val q2 = resolve(q1, ph2, input2, tpe2, "rule2", isTacit(ns2, attr2), isExpression(ns2, attr2))
+    val q3 = resolve(q2, ph3, input3, tpe3, "rule3", isTacit(ns3, attr3), isExpression(ns3, attr3))
     Right(q3)
   } catch {
     case NonFatal(exc) => Left(exc)
@@ -505,36 +512,6 @@ object Molecule_3 {
     def apply(and: And3[I1, I2, I3])                   (implicit conn: Future[Conn]): Molecule_0_01[Obj, A] = outMoleculeSeqs(resolveAnd3(and))
     def apply(in1: Seq[I1], in2: Seq[I2], in3: Seq[I3])(implicit conn: Future[Conn]): Molecule_0_01[Obj, A] = outMoleculeSeqs(Right((in1, in2, in3)))
     protected def outMoleculeSeqs(args: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_01[Obj, A] // generated by macro
-//    protected def outMoleculeSeqs(args0: Either[Throwable, (Seq[I1], Seq[I2], Seq[I3])])(implicit conn: Future[Conn]): Molecule_0_01[Obj, A] = {
-//
-//
-//      val queryData: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-//        case Right(args) => bindSeqs(_rawQuery, args._1, args._2, args._3) match {
-//          case Right(boundRawQuery) => (QueryOptimizer(boundRawQuery), None, boundRawQuery, None, None)
-//          case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-//        }
-//        case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-//      }
-//
-//      val queryDataNested: (Query, Option[Query], Query, Option[Query], Option[Throwable]) = args0 match {
-//        case Right(args) => bindSeqs(_rawQuery, args._1, args._2, args._3) match {
-//          case Right(boundRawQuery) => bindSeqs(_rawNestedQuery.get, args._1, args._2, args._3) match {
-//            case Right(boundRawNestedQuery) => (
-//              QueryOptimizer(boundRawQuery),
-//              Some(QueryOptimizer(boundRawNestedQuery)),
-//              boundRawQuery,
-//              Some(boundRawNestedQuery),
-//              None
-//            )
-//            case Left(exc)                  => (_rawQuery, None, _rawQuery, None, Some(exc))
-//          }
-//          case Left(exc)            => (_rawQuery, None, _rawQuery, None, Some(exc))
-//        }
-//        case Left(exc)   => (_rawQuery, None, _rawQuery, None, Some(exc))
-//      }
-//
-//      null
-//    }
   }
 
   abstract class Molecule_3_02[Obj, I1, I2, I3, A, B](model: Model, queryData: (Query, String, Option[Throwable])) extends Molecule_3[Obj, I1, I2, I3](model, queryData) {

@@ -68,7 +68,7 @@ abstract class Molecule_2[Obj, I1, I2](
     def traverse(expr: Or2[I1, I2]): Either[Throwable, Seq[(I1, I2)]] = expr match {
       case Or2(And2(TermValue(a1), TermValue(a2)), And2(TermValue(b1), TermValue(b2))) => Right(Seq((a1, a2), (b1, b2)))
       case Or2(And2(TermValue(a1), TermValue(a2)), or2: Or2[I1, I2])                   => traverse(or2).map((a1, a2) +: _)
-      case Or2(or1: Or2[I1, I2], And2(TermValue(b1), TermValue(b2)))                   => traverse(or1).map(_  :+ (b1, b2))
+      case Or2(or1: Or2[I1, I2], And2(TermValue(b1), TermValue(b2)))                   => traverse(or1).map(_ :+ (b1, b2))
       case Or2(or1: Or2[I1, I2], or2: Or2[I1, I2])                                     => traverse(or1).flatMap(a => traverse(or2).map(b => a ++ b))
       case _                                                                           => Left(Molecule_2_Exception(s"Unexpected Or2 expression: " + expr))
     }
@@ -88,13 +88,14 @@ abstract class Molecule_2[Obj, I1, I2](
 
   // Pairs
   protected def bindValues(query: Query, inputTuples: Seq[(I1, I2)]): Either[Throwable, Query] = try {
-    val ph1@Placeholder(e1@Var(ex1), kw1@KW(ns1, attr1, _), v1@Var(w1), enumPrefix1) = query.i.inputs.head
-    val ph2@Placeholder(e2@Var(ex2), kw2@KW(ns2, attr2, _), v2@Var(w2), enumPrefix2) = query.i.inputs(1)
-    val (v1_, v2_) = (w1.filter(_.isLetter), w2.filter(_.isLetter))
+    val ph1@Placeholder(e1@Var(ex1), kw1@KW(ns1, attr1, _), v1@Var(w1), tpe1, enumPrefix1) = query.i.inputs.head
+    val ph2@Placeholder(e2@Var(ex2), kw2@KW(ns2, attr2, _), v2@Var(w2), tpe2, enumPrefix2) = query.i.inputs(1)
+
+    val (v1_, v2_)           = (w1.filter(_.isLetter), w2.filter(_.isLetter))
     val (isTacit1, isTacit2) = (isTacit(ns1, attr1), isTacit(ns2, attr2))
-    val (isExpr1, isExpr2) = (isExpression(ns1, attr1), isExpression(ns2, attr2))
-    val hasExpression = isExpr1 || isExpr2
-    val es = List(e1, e2).distinct // same or different namespaces
+    val (isExpr1, isExpr2)   = (isExpression(ns1, attr1), isExpression(ns2, attr2))
+    val hasExpression        = isExpr1 || isExpr2
+    val es                   = List(e1, e2).distinct // same or different namespaces
 
     // Discard placeholders
     val q0 = query.copy(i = In(Nil, query.i.rules, query.i.ds))
@@ -104,32 +105,27 @@ abstract class Molecule_2[Obj, I1, I2](
       case Nil if !isTacit1 || !isTacit2 =>
         throw Molecule_2_Exception("Can only apply empty list of pairs (Nil) to two tacit attributes")
 
-      case Nil => {
+      case Nil =>
         // Both input attributes to be non-asserted
         val newClauses1 = addNilClause(query.wh.clauses, e1, kw1, v1)
         val newClauses2 = addNilClause(newClauses1, e2, kw2, v2)
 
         // Remove placeholders
         q0.copy(wh = Where(newClauses2))
-      }
 
-      case pairs if pairs.size > 1 && hasExpression => throw Molecule_2_Exception(
+      case Seq((arg1, arg2)) =>
+        val q1 = resolveInput(q0, ph1, Seq(arg1), unifyRule = true)
+        val q2 = resolveInput(q1, ph2, Seq(arg2), unifyRule = true)
+        q2
+
+      case pairs if hasExpression => throw Molecule_2_Exception(
         "Can't apply multiple pairs to input attributes with one or more expressions (<, >, <=, >=, !=)")
 
-      // 1 pair, possibly with expressions
-      case Seq((arg1, arg2)) => {
-        val q1 = resolveInput(q0, ph1, Seq(arg1), "rule1", true)
-        val q2 = resolveInput(q1, ph2, Seq(arg2), "rule1", true)
-        q2
-      }
-
-      // Multiple pairs without expressions
-      case pairs => {
-
+      case pairs =>
         // Add rule invocation clause to first input attribute clause (only 1 rule invocation needed)
-        val rule = RuleInvocation("rule1", es)
-        val ident1 = Var(v1_ + 1)
-        val ident2 = Var(v2_ + 1)
+        val rule                    = RuleInvocation("rule1", es)
+        val ident1                  = Var(v1_ + 1)
+        val ident2                  = Var(v2_ + 1)
         val (done, resolvedClauses) = query.wh.clauses.foldLeft(0, Seq.empty[Seq[Clause]]) {
           case ((n, acc), cl@DataClause(_, _, KW("db", "ident", _), `ident1`, _, _)) if isTacit1 => (n, acc)
           case ((_, acc), cl@DataClause(_, _, _, `v1`, _, _)) if isTacit1                        => (1, acc :+ Seq(rule))
@@ -160,10 +156,11 @@ abstract class Molecule_2[Obj, I1, I2](
           )
 
         val rules = pairs.map { case (arg1, arg2) =>
-          Rule("rule1", es, valueClauses(ex1, kw1, enumPrefix1, arg1) ++ valueClauses(ex2, kw2, enumPrefix2, arg2))
+          Rule("rule1", es,
+            valueClauses(ex1, kw1, enumPrefix1, tpe1, arg1) ++
+              valueClauses(ex2, kw2, enumPrefix2, tpe2, arg2))
         }
         q0.copy(i = In(Nil, query.i.rules ++ rules, query.i.ds), wh = Where(newClauses))
-      }
     }
     Right(query2)
   } catch {
@@ -172,14 +169,23 @@ abstract class Molecule_2[Obj, I1, I2](
 
 
   protected def bindSeqs(query: Query, inputRaw1: Seq[I1], inputRaw2: Seq[I2]): Either[Throwable, Query] = try {
-    val (input1, input2) = (inputRaw1.distinct, inputRaw2.distinct)
     val List(
-    ph1@Placeholder(_, KW(nsFull1, attr1, _), _, _),
-    ph2@Placeholder(_, KW(nsFull2, attr2, _), _, _)
-    ) = query.i.inputs
+    ph1@Placeholder(_, KW(nsFull1, attr1, _), _, tpe1, _),
+    ph2@Placeholder(_, KW(nsFull2, attr2, _), _, tpe2, _)) = query.i.inputs
 
-    def resolve[T](query: Query, ph: Placeholder, input: Seq[T], ruleName: String, tacit: Boolean, expr: Boolean): Query = {
-      val Placeholder(_, KW(nsFull, attr, _), _, _) = ph
+    val input1 = inputRaw1.distinct
+    val input2 = inputRaw2.distinct
+
+    def resolve[T](
+      query: Query,
+      ph: Placeholder,
+      input: Seq[T],
+      tpe: String,
+      ruleName: String,
+      tacit: Boolean,
+      expr: Boolean
+    ): Query = {
+      val Placeholder(_, KW(nsFull, attr, _), _, _, _) = ph
       input match {
         case Nil if !tacit =>
           throw Molecule_2_Exception(s"Can only apply empty list (Nil) to a tacit input attribute. Please make input attr tacit: `$attr` --> `${attr}_`")
@@ -196,8 +202,8 @@ abstract class Molecule_2[Obj, I1, I2](
     val q0 = query.copy(i = In(Seq(), query.i.rules, query.i.ds))
 
     // Resolve inputs
-    val q1 = resolve(q0, ph1, input1, "rule1", isTacit(nsFull1, attr1), isExpression(nsFull1, attr1))
-    val q2 = resolve(q1, ph2, input2, "rule2", isTacit(nsFull2, attr2), isExpression(nsFull2, attr2))
+    val q1 = resolve(q0, ph1, input1, tpe1, "rule1", isTacit(nsFull1, attr1), isExpression(nsFull1, attr1))
+    val q2 = resolve(q1, ph2, input2, tpe2, "rule2", isTacit(nsFull2, attr2), isExpression(nsFull2, attr2))
     Right(q2)
   } catch {
     case NonFatal(exc) => Left(exc)

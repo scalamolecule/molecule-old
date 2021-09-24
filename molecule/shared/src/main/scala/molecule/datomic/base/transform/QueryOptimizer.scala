@@ -16,9 +16,9 @@ object QueryOptimizer {
     val optimizedClauses = new ListBuffer[Clause]
 
     q.i.inputs.foreach {
-      case InVar(ScalarBinding(Var(v)), _)     => equalsOne += v -> None
-      case InVar(CollectionBinding(Var(v)), _) => equalsMany += v -> None
-      case _                                   =>
+      case InVar(ScalarBinding(Var(v)), _, _)     => equalsOne += v -> None
+      case InVar(CollectionBinding(Var(v)), _, _) => equalsMany += v -> None
+      case _                                      =>
     }
 
     q.wh.clauses.foreach {

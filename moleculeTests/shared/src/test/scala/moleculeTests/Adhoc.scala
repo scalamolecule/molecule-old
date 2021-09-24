@@ -15,10 +15,9 @@ import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.Helpers
+import molecule.datomic.base.ast.query.{KW, Placeholder, Query}
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import moleculeTests.tests.core.generic.Datom.delay
-import moleculeTests.tests.core.generic.Schema_AttrOptions.attrCount
 //import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
@@ -33,6 +32,9 @@ object Adhoc extends AsyncTestSuite with Helpers {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     "adhoc jvm" - core { implicit futConn =>
+
+
+
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn

@@ -4,7 +4,7 @@ import java.net.URI
 import java.util.Date
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
-import molecule.core.util.fns
+import molecule.core.util.{Helpers, fns}
 import molecule.datomic.base.ast.query._
 import scala.util.control.NonFatal
 
@@ -47,6 +47,7 @@ abstract class InputMolecule(
   model: Model,
   queryData: (Query, String, Option[Throwable])
 ) extends Molecule(model, queryData) {
+  val isJsPlatform: Boolean
 
   protected def resolveOr[I1](or: Or[I1]): Either[Throwable, Seq[I1]] = {
     def traverse(or0: Or[I1]): Either[Throwable, Seq[I1]] = or0 match {
@@ -60,7 +61,7 @@ abstract class InputMolecule(
   }
 
   protected def varsAndPrefixes(query: Query): Seq[(Var, String)] = query.i.inputs.collect {
-    case Placeholder(_, _, v, enumPrefix) => (v, enumPrefix.getOrElse(""))
+    case Placeholder(_, _, v, _, enumPrefix) => (v, enumPrefix.getOrElse(""))
   }
 
   protected def isTacit(nsFull: String, attr: String): Boolean = {
@@ -144,10 +145,26 @@ abstract class InputMolecule(
     )
   }
 
-  protected def valueClauses[TT](e: String, kw: KW, enumPrefix: Option[String], args: TT): Seq[Clause] = args match {
+  protected def valueClauses[TT](e: String, kw: KW, enumPrefix: Option[String], tpe: String, args: TT): Seq[Clause] = args match {
     case set: Set[_] if set.isEmpty => Seq(NotClause(Var(e), kw))
-    case set: Set[_]                => set.toSeq.zipWithIndex.flatMap { case (arg, i) => dataClause(e, kw, enumPrefix, arg, i + 1) }
-    case arg                        => dataClause(e, kw, enumPrefix, arg, 1)
+    case set: Set[_]                =>
+      if (isJsPlatform) {
+        val patch = getWithJsDecimalPrefix(tpe, set.head)
+        set.toSeq.zipWithIndex.flatMap {
+          case (arg, i) => dataClause(e, kw, enumPrefix, patch(arg), i + 1)
+        }
+      } else {
+        set.toSeq.zipWithIndex.flatMap {
+          case (arg, i) => dataClause(e, kw, enumPrefix, arg, i + 1)
+        }
+      }
+    case arg                        =>
+      if (isJsPlatform) {
+        val patch = getWithJsDecimalPrefix(tpe, arg)
+        dataClause(e, kw, enumPrefix, patch(arg), 1)
+      } else {
+        dataClause(e, kw, enumPrefix, arg, 1)
+      }
   }
 
   protected def deepNil(args: Seq[Any]) = args match {
@@ -157,42 +174,84 @@ abstract class InputMolecule(
     case _                                   => false
   }
 
-  protected def resolveInput[T](
+  private def getAsString(tpe: String, value: Any): Any => String = value match {
+    case _: String        => (v: Any) => v.toString
+    case _: Int | _: Long => tpe match {
+      case "Double"     => (v: Any) => "__n__" + v + ".0"
+      case "BigDecimal" => (v: Any) => "__n__" + v + ".0M"
+      case _            => (v: Any) => v.toString
+    }
+    case _: Float         => tpe match {
+      case "Double"     => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
+      case "BigDecimal" => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+      case _            => (v: Any) => "__n__" + v
+    }
+    case _: Double        => tpe match {
+      case "Double"     => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
+      case "BigDecimal" => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+      case _            => (v: Any) => "__n__" + v
+    }
+    case _: Date          => (v: Any) => fns.date2str(v.asInstanceOf[Date])
+    case _: BigDecimal    => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+    case _                => (v: Any) => v.toString
+  }
+
+  private def getWithJsDecimalPrefix(tpe: String, value: Any): Any => Any = value match {
+    case _: String        => (v: Any) => v
+    case _: Int | _: Long => tpe match {
+      case "Double"     => (v: Any) => "__n__" + v + ".0"
+      case "BigDecimal" => (v: Any) => "__n__" + v + ".0M"
+      case _            => (v: Any) => v
+    }
+    case _: Float         => tpe match {
+      case "Double"     => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
+      case "BigDecimal" => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+      case _            => (v: Any) => "__n__" + v
+    }
+    case _: Double        => tpe match {
+      case "Double"     => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
+      case "BigDecimal" => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+      case _            => (v: Any) => "__n__" + v
+    }
+    case _: BigDecimal    => (v: Any) => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
+    case _                => (v: Any) => v
+  }
+
+  protected def resolveInput(
     query: Query,
     ph: Placeholder,
-    inputs: Seq[T],
+    inputs: Seq[Any],
     ruleName: String = "rule1",
     unifyRule: Boolean = false
   ): Query = {
-    val Placeholder(e@Var(e_), kw@KW(nsFull, attr, _), v@Var(w), prefix) = ph
-    val card                                                             = cardinality(nsFull, attr)
 
-    // Mapped key attributes
+    val Placeholder(e@Var(e_), kw@KW(nsFull, attr, _), v@Var(w), tpe, prefix) = ph
+
+    val card = cardinality(nsFull, attr)
+
     if (card == 4) {
 
-      val values = inputs.map {
-        case d: Date => Seq(fns.date2str(d)) // compare standardized format
-        case v       => Seq(v)
-      }
+      // Mapped key attributes =========================================================================
+      val values = inputs.map(Seq(_))
       if (inputs.size > 1) {
-        query.copy(i = In(Seq(InVar(CollectionBinding(v), Seq(values.flatten))), query.i.rules, query.i.ds))
+        query.copy(i = In(Seq(InVar(CollectionBinding(v), tpe, Seq(values.flatten))), query.i.rules, query.i.ds))
       } else if (values.nonEmpty && values.head.size > 1) {
-        val In(List(Placeholder(_, kw, v, _)), _, _) = query.i
-        val (e, newClauses)                          = query.wh.clauses.foldLeft(null: QueryValue, Seq.empty[Clause]) {
+        val In(List(Placeholder(_, kw, v, _, _)), _, _) = query.i
+        val (e, newClauses)                             = query.wh.clauses.foldLeft(null: QueryValue, Seq.empty[Clause]) {
           case ((_, acc), DataClause(_, e, _, `v`, _, _)) => (e, acc :+ RuleInvocation(ruleName, List(e)))
           case ((e, acc), other)                          => (e, acc :+ other)
         }
-        val rules                                    = values.head.map(value =>
+        val rules                                       = values.map(value =>
           Rule(ruleName, List(e), List(DataClause(ImplDS, e, kw, Val(value), Empty, NoBinding)))
         )
         query.copy(i = In(Nil, rules, query.i.ds), wh = Where(newClauses))
       } else {
-        query.copy(i = In(Seq(InVar(ScalarBinding(v), values)), query.i.rules, query.i.ds))
+        query.copy(i = In(Seq(InVar(ScalarBinding(v), tpe, values)), query.i.rules, query.i.ds))
       }
 
     } else {
 
-      // Card-one/many
+      // Card-one/many attributes ======================================================================
 
       val v_ = w.filter(_.isLetter)
       def inGroup(v: String) = v.filter(_.isLetter) == v_ || v == v_ + "_casted"
@@ -210,25 +269,50 @@ abstract class InputMolecule(
         case ((bef, cur, aft), cl)                                                      => (bef, cur, aft :+ cl)
       }
 
-      val argss: Seq[Seq[_]] = inputs.flatMap {
-        case map: Map[_, _]             => throw MoleculeException("Unexpected Map input: " + map)
+      val args: Seq[Any] = inputs.flatMap {
         case set: Set[_] if set.isEmpty => Nil
-        case set: Set[_]                => Seq(set.toSeq)
-        case arg                        => Seq(Seq(arg))
+        case set: Set[_]                => if (isJsPlatform) {
+          val patch = getWithJsDecimalPrefix(tpe, set.head)
+          set.toSeq.map(patch)
+        } else set.toSeq
+        case arg                        => if (isJsPlatform) {
+          val patch = getWithJsDecimalPrefix(tpe, arg)
+          Seq(patch(arg))
+        } else Seq(arg)
       }
-      val args : Seq[Any]    = inputs.flatMap {
-        case map: Map[_, _] => throw MoleculeException("Unexpected Map input: " + map)
-        case set: Set[_]    => set.toSeq
-        case arg            => Seq(arg)
+
+      val argss: Seq[Seq[_]] = inputs.flatMap {
+        case set: Set[_] if set.isEmpty => Nil
+        case set: Set[_]                => if (isJsPlatform) {
+          val prefix = getWithJsDecimalPrefix(tpe, set.head)
+          Seq(set.toSeq.map(prefix))
+        } else Seq(set.toSeq)
+        case arg                        => if (isJsPlatform) {
+          val prefix = getWithJsDecimalPrefix(tpe, arg)
+          Seq(Seq(prefix(arg)))
+        } else Seq(Seq(arg))
       }
-      val nil                = deepNil(args)
-      val one                = args.size == 1
-      val uri                = if (nil) false else args.head.isInstanceOf[URI]
+
+      val argsJsString: Seq[Any] = inputs.flatMap {
+        case set: Set[_] if set.isEmpty => Nil
+        case set: Set[_]                => if (isJsPlatform) {
+          val patch = getAsString(tpe, set.head)
+          set.toSeq.map(patch)
+        } else set.toSeq
+        case arg                        => if (isJsPlatform) {
+          val patch = getAsString(tpe, arg)
+          Seq(patch(arg))
+        } else Seq(arg)
+      }
+
+      val nil = deepNil(args)
+      val one = args.size == 1
+      val uri = if (nil) false else tpe == "URI"
 
       val (newIns, newRules, newClauses): (Seq[Input], Seq[Rule], Seq[Clause]) = card match {
 
         // Applying entity ids to Namespace: `m(Ns(?).int).apply(42L)`
-        case 2 if attr == "e_" => (Seq(InVar(CollectionBinding(v), Seq(args))), Nil, clauses)
+        case 2 if attr == "e_" => (Seq(InVar(CollectionBinding(v), tpe, Seq(argsJsString))), Nil, clauses)
 
 
         // Card-many enum attribute ...................................................................
@@ -249,12 +333,12 @@ abstract class InputMolecule(
           // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
           case Seq(enum, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil && tacit  => (Nil, Nil, Seq(enum))
           case Seq(enum, ident, getName, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil => (Nil, Nil, Seq(enum, ident, getName))
-          case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one          => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+          case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one          => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
           case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))                     => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Qm
           case _ if nil && tacit    => (Nil, Nil, Seq(Funct("missing?", Seq(DS(), e, kw), NoBinding)))
-          case cls if nil           => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, cls)
+          case cls if nil           => (Seq(InVar(CollectionBinding(v), tpe, Seq(Nil))), Nil, cls)
           case Seq(enum, ident, fn) => (
             Nil,
             argss.map(args =>
@@ -286,7 +370,7 @@ abstract class InputMolecule(
 
               // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
               case Seq(dc, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
-              case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+              case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
               case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
             }
           }
@@ -307,21 +391,22 @@ abstract class InputMolecule(
             }
           )
 
-          case Seq(dc, _, Funct("!=", _, _)) => (Nil, Nil,
-            dc +: argss.map(args =>
-              NotClauses(args.map(arg =>
-                DataClause(ImplDS, e, kw, Val(arg), Empty, NoBinding))
+          case Seq(dc, _, Funct("!=", _, _)) =>
+            (Nil, Nil,
+              dc +: argss.map(args =>
+                NotClauses(args.map(arg =>
+                  DataClause(ImplDS, e, kw, Val(arg), Empty, NoBinding))
+                )
               )
             )
-          )
 
           // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
           case Seq(dc, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
-          case cls@Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+          case cls@Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
           case Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Fulltext(Seq(Qm))
-          case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(f))
+          case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), tpe, Seq(Nil))), Nil, Seq(f))
           case Seq(f@Funct("fulltext", _, _))        => (
             Nil,
             argss.map(args =>
@@ -336,7 +421,7 @@ abstract class InputMolecule(
 
           // Qm
           case Seq(dc: DataClause) if nil && tacit => (Nil, Nil, Seq(Funct("missing?", Seq(DS(), e, kw), NoBinding)))
-          case Seq(dc: DataClause) if nil          => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(dc))
+          case Seq(dc: DataClause) if nil          => (Seq(InVar(CollectionBinding(v), tpe, Seq(Nil))), Nil, Seq(dc))
           case Seq(dc: DataClause) if uri          => (
             Nil,
             argss.map(args =>
@@ -349,13 +434,14 @@ abstract class InputMolecule(
               })),
             Seq(dc, RuleInvocation(ruleName, Seq(e)))
           )
-          case Seq(dc: DataClause)                 => (
-            Nil,
-            argss.map(args =>
-              Rule(ruleName, Seq(e), args.map(arg =>
-                DataClause(ImplDS, e, kw, Val(arg), dc.tx, dc.op)))),
-            Seq(dc, RuleInvocation(ruleName, Seq(e)))
-          )
+          case Seq(dc: DataClause)                 =>
+            (
+              Nil,
+              argss.map(args =>
+                Rule(ruleName, Seq(e), args.map(arg =>
+                  DataClause(ImplDS, e, kw, Val(arg), dc.tx, dc.op)))),
+              Seq(dc, RuleInvocation(ruleName, Seq(e)))
+            )
         }
 
 
@@ -366,7 +452,7 @@ abstract class InputMolecule(
           // Neq(Seq(Qm))
           case Seq(enum, ident, getName, _, Funct("!=", _, _)) if nil && tacit                  => (Nil, Nil, Seq(enum))
           case Seq(enum, ident, getName, _, Funct("!=", _, _)) if nil                           => (Nil, Nil, Seq(enum, ident, getName))
-          case cls@Seq(_, _, _, _, Funct("!=", _, _)) if one                                    => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+          case cls@Seq(_, _, _, _, Funct("!=", _, _)) if one                                    => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
           case Seq(enum, ident, getName, Funct(n, Seq(Var(v2), `v`), _), not@Funct("!=", _, _)) => (Nil, Nil,
             Seq(enum, ident, getName) ++ args.zipWithIndex.flatMap { case (arg, i) =>
               Seq(
@@ -378,21 +464,21 @@ abstract class InputMolecule(
           // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
           case Seq(enum, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil && tacit  => (Nil, Nil, Seq(enum))
           case Seq(enum, ident, getName, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil => (Nil, Nil, Seq(enum, ident, getName))
-          case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one          => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+          case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one          => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
           case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))                     => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Fulltext(Seq(Qm))
-          case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(f))
-          case Seq(f@Funct("fulltext", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, Seq(f))
-          case Seq(f@Funct("fulltext", _, _))        => (Seq(InVar(CollectionBinding(v), Seq(args))), Nil, Seq(f))
+          case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), tpe, Seq(Nil))), Nil, Seq(f))
+          case Seq(f@Funct("fulltext", _, _)) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, Seq(f))
+          case Seq(f@Funct("fulltext", _, _))        => (Seq(InVar(CollectionBinding(v), tpe, Seq(argsJsString))), Nil, Seq(f))
 
           // Qm
           case cls if nil && tacit             => (Nil, Nil, Seq(Funct("missing?", Seq(DS(), e, kw), NoBinding)))
-          case cls if nil                      => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, cls)
-          case Seq(enum, _, _) if one && tacit => (Seq(InVar(ScalarBinding(Var(v_)), Seq(Seq("__enum__" + prefix.get + args.head)))), Nil, Seq(enum))
-          case cls if one                      => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
-          case Seq(enum, _, _) if tacit        => (Seq(InVar(CollectionBinding(Var(v_)), Seq(args.map(arg => "__enum__" + prefix.get + arg)))), Nil, Seq(enum))
-          case cls                             => (Seq(InVar(CollectionBinding(v), Seq(args))), Nil, cls)
+          case cls if nil                      => (Seq(InVar(CollectionBinding(v), tpe, Seq(Nil))), Nil, cls)
+          case Seq(enum, _, _) if one && tacit => (Seq(InVar(ScalarBinding(Var(v_)), tpe, Seq(Seq("__enum__" + prefix.get + args.head)))), Nil, Seq(enum))
+          case cls if one                      => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
+          case Seq(enum, _, _) if tacit        => (Seq(InVar(CollectionBinding(Var(v_)), tpe, Seq(args.map(arg => "__enum__" + prefix.get + arg)))), Nil, Seq(enum))
+          case cls                             => (Seq(InVar(CollectionBinding(v), tpe, Seq(argsJsString))), Nil, cls)
         }
 
 
@@ -410,7 +496,7 @@ abstract class InputMolecule(
                 (Nil, Nil, Seq(dc))
 
               case cls@Seq(_, _, _, _, Funct("!=", _, _)) if one =>
-                (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+                (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
 
               case Seq(dc,
               Funct("biginteger", Seq(Var(v0)), ScalarBinding(Var(v0_casted))),
@@ -433,7 +519,7 @@ abstract class InputMolecule(
 
               // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm) BigInt
               case Seq(dc, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
-              case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+              case cls@Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
               case Seq(_, _, _, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
             }
           }
@@ -442,7 +528,7 @@ abstract class InputMolecule(
 
           case Seq(dc, _, Funct("!=", _, _)) if nil => (Nil, Nil, Seq(dc))
 
-          case cls@Seq(_, _, Funct("!=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+          case cls@Seq(_, _, Funct("!=", _, _)) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
 
           case Seq(dc, Funct(fn, Seq(v1, `v`), _), Funct("!=", _, _)) if uri =>
             (Nil, Nil,
@@ -458,30 +544,31 @@ abstract class InputMolecule(
 
           case Seq(dc, Funct(fn, Seq(v1, `v`), ScalarBinding(Var(v2))), Funct("!=", _, _)) =>
             (Nil, Nil,
-              dc +: args.zipWithIndex.flatMap { case (arg, i) =>
-                val vx = Var(v2 + "_" + (i + 1))
-                Seq(
-                  Funct(fn, Seq(v1, Val(arg)), ScalarBinding(vx)),
-                  Funct("!=", Seq(vx, Val(0)), NoBinding)
-                )
+              dc +: args.zipWithIndex.flatMap {
+                case (arg, i) =>
+                  val vx = Var(v2 + "_" + (i + 1))
+                  Seq(
+                    Funct(fn, Seq(v1, Val(arg)), ScalarBinding(vx)),
+                    Funct("!=", Seq(vx, Val(0)), NoBinding)
+                  )
               }
             )
 
           // Gt(Qm), Ge(Qm), Lt(Qm), Le(Qm)
           case Seq(dc, _, Funct(">" | ">=" | "<" | "<=", _, _)) if nil    => (Nil, Nil, Seq(dc))
-          case cls@Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, cls)
+          case cls@Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _)) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, cls)
           case Seq(_, _, Funct(">" | ">=" | "<" | "<=", _, _))            => throw MoleculeException("Can't apply multiple values to comparison function.")
 
           // Fulltext(Seq(Qm))
-          case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(f))
-          case Seq(f@Funct("fulltext", _, _)) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, Seq(f))
-          case Seq(f@Funct("fulltext", _, _))        => (Seq(InVar(CollectionBinding(v), Seq(args))), Nil, Seq(f))
+          case Seq(f@Funct("fulltext", _, _)) if nil => (Seq(InVar(CollectionBinding(v), tpe, Seq(Nil))), Nil, Seq(f))
+          case Seq(f@Funct("fulltext", _, _)) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, Seq(f))
+          case Seq(f@Funct("fulltext", _, _))        => (Seq(InVar(CollectionBinding(v), tpe, Seq(argsJsString))), Nil, Seq(f))
 
           // Qm
           case _ if nil && tacit          => (Nil, Nil, Seq(Funct("missing?", Seq(DS(), e, kw), NoBinding)))
-          case Seq(dc: DataClause) if nil => (Seq(InVar(CollectionBinding(v), Seq(Nil))), Nil, Seq(dc))
-          case Seq(dc: DataClause) if one => (Seq(InVar(ScalarBinding(v), Seq(args))), Nil, Seq(dc))
-          case Seq(dc: DataClause)        => (Seq(InVar(CollectionBinding(v), Seq(args))), Nil, Seq(dc))
+          case Seq(dc: DataClause) if nil => (Seq(InVar(CollectionBinding(v), tpe, Seq(Nil))), Nil, Seq(dc))
+          case Seq(dc: DataClause) if one => (Seq(InVar(ScalarBinding(v), tpe, Seq(argsJsString))), Nil, Seq(dc))
+          case Seq(dc: DataClause)        => (Seq(InVar(CollectionBinding(v), tpe, Seq(argsJsString))), Nil, Seq(dc))
         }
       }
 
@@ -491,13 +578,16 @@ abstract class InputMolecule(
         }
         val newClauses0 = before ++ newClauses ++ after
         curRules.size match {
-          case 0          => (newRules, newClauses0)
-          case 1          => {
+          case 0 => (newRules, newClauses0)
+          case 1 =>
             // Collect rule clauses to be unified
             val (ruleVars, unifiedRules) = query.i.rules.foldLeft(Seq.empty[QueryValue], Seq.empty[Rule]) {
-              case ((_, rules), r@Rule(`ruleName`, vars, cls)) =>
-                ((vars ++ newRules.head.args).distinct, rules :+ Rule(ruleName, (vars ++ newRules.head.args).distinct, cls ++ newRules.head.clauses))
-              case ((vs, rules), other)                        => (vs, rules)
+              case ((_, rules), Rule(`ruleName`, vars, cls)) =>
+                (
+                  (vars ++ newRules.head.vars).distinct,
+                  rules :+ Rule(ruleName, (vars ++ newRules.head.vars).distinct, cls ++ newRules.head.clauses)
+                )
+              case ((vs, rules), other) => (vs, rules)
             }
             // Unify rule invocations
             val newClauses1: Seq[Clause] = newClauses0.foldRight(0, Seq.empty[Clause]) {
@@ -506,7 +596,7 @@ abstract class InputMolecule(
               case (cl, (done, cls))                            => (done, cl +: cls)
             }._2
             (unifiedRules, newClauses1)
-          }
+
           case unexpected => throw MoleculeException(s"Didn't expect $unexpected rules to be unified in query:\n" + query)
         }
       } else {

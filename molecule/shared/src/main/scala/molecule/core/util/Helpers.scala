@@ -38,6 +38,8 @@ trait Helpers extends DateHandling {
     case other                               => other
   }
 
+  def stripEnum(s: String): String = if (s.startsWith("__enum__")) s.drop(8) else s
+
   def escStr(s: String) = s.replace("""\""", """\\""").replace(""""""", """\"""")
 
   def unescStr(s: String) = s.replace("""\"""", """"""").replace("""\\""", """\""")
@@ -85,6 +87,7 @@ trait Helpers extends DateHandling {
       case "BigDecimal" => BigDecimal(v)
     }
   }
+
 
   final def os(opt: Option[Set[_]]): String =
     if (opt.isEmpty) "None" else s"""Some(${opt.get.map(cast)})"""

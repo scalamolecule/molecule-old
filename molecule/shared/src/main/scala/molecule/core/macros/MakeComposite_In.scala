@@ -126,13 +126,17 @@ class MakeComposite_In(val c: blackbox.Context) extends Base {
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
           _resolvedModel, Model2Query(_resolvedModel)
         ) {
+          val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}
           ${getApplySeq(outMoleculeClass)}
         }
       """
     } else {
       q"""
-        final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes]($model0, ${Model2Query(model0)}) {
+        final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
+          $model0, ${Model2Query(model0)}
+        ) {
+          val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}
           ${getApplySeq(outMoleculeClass)}
         }

@@ -210,9 +210,8 @@ private[molecule] trait Liftables extends MacroHelpers {
   }
 
   implicit val liftInput: c.universe.Liftable[Input] = Liftable[Input] {
-    case InDataSource(ds, argss)           => q"InDataSource($ds, Seq(..${argss.map(args => q"Seq(..$args)")}))"
-    case InVar(binding, argss)             => q"InVar($binding, Seq(..${argss.map(args => q"Seq(..$args)")}))"
-    case Placeholder(e, kw, v, enumPrefix) => q"Placeholder($e, $kw, $v, $enumPrefix)"
+    case InVar(binding, tpe, argss)             => q"InVar($binding, $tpe, Seq(..${argss.map(args => q"Seq(..$args)")}))"
+    case Placeholder(e, kw, v, tpe, enumPrefix) => q"Placeholder($e, $kw, $v, $tpe, $enumPrefix)"
   }
 
   implicit val liftDataClause    : c.universe.Liftable[DataClause]     = Liftable[DataClause] { dc => q"DataClause(${dc.ds}, ${dc.e}, ${dc.a}, ${dc.v}, ${dc.tx}, ${dc.op})" }
@@ -264,7 +263,7 @@ private[molecule] trait Liftables extends MacroHelpers {
     case Funct(name, ins, outs)          => q"Funct($name, Seq(..$ins), $outs)"
   }
 
-  implicit val liftRule : c.universe.Liftable[Rule]  = Liftable[Rule] { rd => q"Rule(${rd.name}, Seq(..${rd.args}), Seq(..${rd.clauses}))" }
+  implicit val liftRule : c.universe.Liftable[Rule]  = Liftable[Rule] { rd => q"Rule(${rd.name}, Seq(..${rd.vars}), Seq(..${rd.clauses}))" }
   implicit val liftIn   : c.universe.Liftable[In]    = Liftable[In] { in => q"In(Seq(..${in.inputs}), Seq(..${in.rules}), Seq(..${in.ds}))" }
   implicit val liftWhere: c.universe.Liftable[Where] = Liftable[Where] { where => q"Where(Seq(..${where.clauses}))" }
   implicit val liftQuery: c.universe.Liftable[Query] = Liftable[Query] { q => q"Query(${q.f}, ${q.wi}, ${q.i}, ${q.wh})" }

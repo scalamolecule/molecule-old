@@ -67,9 +67,8 @@ case class Query2String(q: Query) extends Helpers {
     case DS                                              => "$"
     case Empty                                           => ""
     case ImplDS                                          => ""
-    case InDataSource(ds, _)                             => p(ds)
-    case InVar(binding, _)                               => p(binding)
-    case Placeholder(_, _, Var(v), _)                    => "?" + v
+    case InVar(binding, _, _)                            => p(binding)
+    case Placeholder(_, _, Var(v), _, _)                 => "?" + v
     case NoBinding                                       => ""
     case ScalarBinding(v)                                => p(v)
     case CollectionBinding(v)                            => "[" + p(v) + " ...]"
@@ -84,13 +83,13 @@ case class Query2String(q: Query) extends Helpers {
     case NotClause(e, a)                                 => s"(not [" + p(e) + " " + p(a) + "])"
     case NotClauses(cls)                                 => s"(not " + cls.map(p).mkString(" ") + ")"
     case NotJoinClauses(vars, cls)                       => s"(not-join [" + vars.map(p).mkString(" ") + "]\n          " + cls.map(p).mkString("\n          ") + ")"
-    case Funct(name, ins, outs)                          => ((s"[($name " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim + "]"
-    case RuleInvocation(name, args)                      => s"($name " + args.map(p).mkString(" ") + ")"
-    case Rule(name, args, clauses) if clauses.size > 1   =>
+    case Funct(fn, ins, outs)                            => ((s"[($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim + "]"
+    case RuleInvocation(rule, args)                      => s"($rule " + args.map(p).mkString(" ") + ")"
+    case Rule(rule, args, clauses) if clauses.size > 1   =>
       asN = true
       val rc = clauses.map(p).mkString("\n   ")
       asN = false
-      s"[($name " + args.map(p).mkString(" ") + ")\n   " + rc + "]"
+      s"[($rule " + args.map(p).mkString(" ") + ")\n   " + rc + "]"
     case Rule(name, args, clauses)                       =>
       asN = true
       val rc = clauses.map(p).mkString(" ")
