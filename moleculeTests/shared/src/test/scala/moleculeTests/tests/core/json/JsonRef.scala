@@ -47,34 +47,7 @@ object JsonRef extends AsyncTestSuite {
         )
 
         // Flat
-        // (order is not guaranteed)
-        _ <- Ns.str.Refs1.int1.getJson.map(_ ==> {
-          if (isJsPlatform)
-            """{
-              |  "data": {
-              |    "Ns": [
-              |      {
-              |        "str": "b",
-              |        "Refs1": {
-              |          "int1": 2
-              |        }
-              |      },
-              |      {
-              |        "str": "a",
-              |        "Refs1": {
-              |          "int1": 1
-              |        }
-              |      },
-              |      {
-              |        "str": "b",
-              |        "Refs1": {
-              |          "int1": 3
-              |        }
-              |      }
-              |    ]
-              |  }
-              |}""".stripMargin
-          else
+        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
             """{
               |  "data": {
               |    "Ns": [
@@ -99,7 +72,7 @@ object JsonRef extends AsyncTestSuite {
               |    ]
               |  }
               |}""".stripMargin
-        })
+        )
 
         // Nested
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
@@ -140,27 +113,7 @@ object JsonRef extends AsyncTestSuite {
         ) map (_.eids)
 
         // Ref namespace
-        _ <- Ns.int.Ref1.str1.getJson.map(_ ==> {
-          if (isJsPlatform)
-            """{
-              |  "data": {
-              |    "Ns": [
-              |      {
-              |        "int": 2,
-              |        "Ref1": {
-              |          "str1": "b"
-              |        }
-              |      },
-              |      {
-              |        "int": 1,
-              |        "Ref1": {
-              |          "str1": "a"
-              |        }
-              |      }
-              |    ]
-              |  }
-              |}""".stripMargin
-          else
+        _ <- Ns.int.Ref1.str1.getJson.map(_ ==>
             """{
               |  "data": {
               |    "Ns": [
@@ -179,7 +132,7 @@ object JsonRef extends AsyncTestSuite {
               |    ]
               |  }
               |}""".stripMargin
-        })
+        )
 
 
         // Ref attr

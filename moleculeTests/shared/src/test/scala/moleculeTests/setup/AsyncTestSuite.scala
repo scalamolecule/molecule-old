@@ -13,7 +13,7 @@ trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific JS/JVM implementations
   with AsyncTestSuiteImpl {
 
-  var system: System = SystemPeer
+  var system      : System  = SystemPeer
   val isJsPlatform: Boolean = isJsPlatform_
 
 

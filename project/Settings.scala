@@ -102,33 +102,36 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
       "org.specs2" %%% "specs2-core" % "4.10.6"
     ),
-    testFrameworks += new TestFramework("utest.runner.Framework"),
+    //    testFrameworks += new TestFramework("utest.runner.Framework"),
+    //    testFrameworks += new TestFramework("moleculeTests.core.MoleculeTestFramework"),
+    testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
     // Temporarily limit number of tests to be compiled (comment out to test all)
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed     = Seq(
         //        sharedTests + "/core/attr",
-                sharedTests + "/core/attrMap",
+        //        sharedTests + "/core/attrMap",
         //        sharedTests + "/core/bidirectionals",
         //        sharedTests + "/core/composite",
         //        sharedTests + "/core/crud",
         //        sharedTests + "/core/equality",
         //        sharedTests + "/core/expression",
         //        sharedTests + "/core/generic",
-                sharedTests + "/core/input1",
-                sharedTests + "/core/input2",
-                sharedTests + "/core/input3",
-
-//        sharedTests + "/core/ref",
-        //        sharedTests + "/core/schemaDef",
+        //        sharedTests + "/core/input1",
+        //        sharedTests + "/core/input2",
+        //        sharedTests + "/core/input3",
+        //        sharedTests + "/core/ref",
         //        sharedTests + "/core/json",
         //        sharedTests + "/core/nested",
         //        sharedTests + "/core/obj",
         //        sharedTests + "/core/runtime",
+
+        sharedTests + "/core/schemaDef",
+
         //        sharedTests + "/core/time",
-        //        sharedTests + "/core/txMetaData",
         //        sharedTests + "/core/transaction",
+        //        sharedTests + "/core/txMetaData",
 
         sharedTests + "/Adhoc.scala",
       )

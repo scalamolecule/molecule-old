@@ -35,7 +35,6 @@ trait Conn extends ColOps with Serializations {
 
   lazy val rpc: MoleculeRpc = ???
 
-
   def usingAdhocDbView(dbView: DbView): Conn = {
     updateAdhocDbView(Some(dbView))
     this

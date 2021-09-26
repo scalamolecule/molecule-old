@@ -142,7 +142,7 @@ object JsonAttributes extends AsyncTestSuite {
              |  "data": {
              |    "Ns": [
              |      {
-             |        "bigDec": $bigDec1
+             |        "bigDec": 1.0
              |      }
              |    ]
              |  }

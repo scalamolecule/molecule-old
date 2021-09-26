@@ -38,7 +38,6 @@ object DatomicRpc extends MoleculeRpc
   // Necessary for `readString` to encode uri in transactions
   require("clojure.core.async")
 
-
   // Api ---------------------------------------------
 
   def transact(
@@ -77,14 +76,14 @@ object DatomicRpc extends MoleculeRpc
     val t         = TimerPrint("DatomicRpc")
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
-//    println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
-//    println(datalogQuery)
-//    println("Rules:")
-//    rules foreach println
-//
-//    println("l  : " + l)
-//    println("ll : " + ll)
-//    println("lll: " + lll)
+    //    println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
+    //    println(datalogQuery)
+    //    println("Rules:")
+    //    rules foreach println
+    //
+    //    println("l  : " + l)
+    //    println("ll : " + ll)
+    //    println("lll: " + lll)
 
     inputs.foreach(i => println(s"$i   " + i.getClass))
     for {
@@ -122,8 +121,8 @@ object DatomicRpc extends MoleculeRpc
       //      val rows = new jArrayList(allRows).subList(0, maxRows)
 
       log("-------------------------------")
-      log(obj.toString)
-      log("-------------------------------")
+      //      log(obj.toString)
+      //      log("-------------------------------")
       //      log(refIndexes.mkString("\n"))
       //      log("-------------------------------")
       //      log(tacitIndexes.mkString("\n"))
@@ -140,7 +139,7 @@ object DatomicRpc extends MoleculeRpc
         Nested2packed(obj, allRows, nestedLevels).getPacked
       }
 
-      println("-------------------------------" + packed)
+      //      println("-------------------------------" + packed)
       //        log("Sending data to client... Total server time: " + t.msTotal)
       packed
     }
@@ -541,9 +540,14 @@ object DatomicRpc extends MoleculeRpc
   def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = ???
 
 
-  // Cached Conn ---------------------------------------------
+  // Connection pool ---------------------------------------------
 
-  private val connCache = mutable.Map.empty[String, Future[Conn]]
+  private val connectionPool = mutable.HashMap.empty[String, Future[Conn]]
+
+  def clearConnPool(): Future[Unit] = Future {
+    connectionPool.clear()
+    //    println("Connection pool cleared")
+  }
 
   private def getFreshConn(connProxy: ConnProxy): Future[Conn] = {
     connProxy match {
@@ -576,13 +580,13 @@ object DatomicRpc extends MoleculeRpc
   private def getConn(
     connProxy: ConnProxy
   ): Future[Conn] = {
-    val futConn             = connCache.getOrElse(connProxy.uuid, getFreshConn(connProxy))
+    val futConn             = connectionPool.getOrElse(connProxy.uuid, getFreshConn(connProxy))
     val futConnTimeAdjusted = futConn.map { conn =>
       conn.updateAdhocDbView(connProxy.adhocDbView)
       conn.updateTestDbView(connProxy.testDbView, connProxy.testDbStatus)
       conn
     }
-    connCache(connProxy.uuid) = futConnTimeAdjusted
+    connectionPool(connProxy.uuid) = futConnTimeAdjusted
     futConnTimeAdjusted
   }
 
