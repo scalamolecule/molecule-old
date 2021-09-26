@@ -1,9 +1,10 @@
 package moleculeTests.tests.core.generic
 
 import molecule.core.util.testing.expectCompileError
-import molecule.datomic.api.out6._
+import molecule.datomic.api.out12._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeerServer}
+import moleculeTests.Adhoc.{bigDec1, bigDecs1, bigInt1, bigInts1, bool1, bools1, date1, dates1, double1, doubles1, enum1, enums1, int1, ints1, long1, longs1, r1, rs1, str1, strs1, uri1, uris1, uuid1, uuids1}
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
@@ -343,6 +344,156 @@ object Datom extends AsyncTestSuite {
     }
 
 
+    "Types" - {
+
+      "Card one" - core { implicit conn =>
+        for {
+          e1 <- Ns.str.int.long.double.bool.date.uuid.uri.bigInt.bigDec.enum.ref1.insert(
+            str1, int1, long1, double1, bool1, date1, uuid1, uri1, bigInt1, bigDec1, enum1, r1
+          ).map(_.eid)
+
+          // All attribute assertions with value "a" of entity e1
+          _ <- Ns(e1).a.v.get.map(_.sortBy(_._1) ==> List(
+            (":Ns/bigDec", bigDec1),
+            (":Ns/bigInt", bigInt1),
+            (":Ns/bool", bool1),
+            (":Ns/date", date1),
+            (":Ns/double", double1),
+            (":Ns/enum", enum1),
+            (":Ns/int", int1),
+            (":Ns/long", long1),
+            (":Ns/ref1", r1),
+            (":Ns/str", str1),
+            (":Ns/uri", uri1),
+            (":Ns/uuid", uuid1),
+          ))
+
+          _ <- Ns(e1).a.v(str1).get.map(_ ==> List((":Ns/str", str1)))
+          _ <- Ns(e1).a.v(int1).get.map(_ ==> List((":Ns/int", int1)))
+          _ <- Ns(e1).a.v(long1).get.map(_ ==> List((":Ns/long", long1)))
+          _ <- Ns(e1).a.v(double1).get.map(_ ==> List((":Ns/double", double1)))
+          _ <- Ns(e1).a.v(bool1).get.map(_ ==> List((":Ns/bool", bool1)))
+          _ <- Ns(e1).a.v(date1).get.map(_ ==> List((":Ns/date", date1)))
+          _ <- Ns(e1).a.v(uuid1).get.map(_ ==> List((":Ns/uuid", uuid1)))
+          _ <- Ns(e1).a.v(uri1).get.map(_ ==> List((":Ns/uri", uri1)))
+          _ <- Ns(e1).a.v(bigInt1).get.map(_ ==> List((":Ns/bigInt", bigInt1)))
+          _ <- Ns(e1).a.v(bigDec1).get.map(_ ==> List((":Ns/bigDec", bigDec1)))
+          _ <- Ns(e1).a.v(enum1).get.map(_ ==> List((":Ns/enum", enum1)))
+          _ <- Ns(e1).a.v(r1).get.map(_ ==> List((":Ns/ref1", r1)))
+
+          _ <- Ns(e1).a.v("a").get.map(_ ==> List((":Ns/str", str1)))
+          _ <- Ns(e1).a.v(1).get.map(_ ==> List((":Ns/int", int1)))
+          _ <- Ns(e1).a.v(1L).get.map(_ ==> List((":Ns/long", long1)))
+          _ <- Ns(e1).a.v(1.0).get.map(_ ==> List((":Ns/double", double1)))
+          _ <- Ns(e1).a.v(true).get.map(_ ==> List((":Ns/bool", bool1)))
+          _ <- Ns(e1).a.v(BigInt(1)).get.map(_ ==> List((":Ns/bigInt", bigInt1)))
+          _ <- Ns(e1).a.v(BigDecimal(1.0)).get.map(_ ==> List((":Ns/bigDec", bigDec1)))
+          _ <- Ns(e1).a.v("enum1").get.map(_ ==> List((":Ns/enum", enum1)))
+          _ <- Ns(e1).a.v(17194139534366L).get.map(_ ==> List((":Ns/ref1", r1)))
+        } yield ()
+      }
+
+
+      "Card many" - core { implicit conn =>
+        for {
+          e2 <- Ns.strs.ints.longs.doubles.bools.dates.uuids.uris.bigInts.bigDecs.enums.refs1.insert(
+            strs1, ints1, longs1, doubles1, bools1, dates1, uuids1, uris1, bigInts1, bigDecs1, enums1, rs1
+          ).map(_.eid)
+
+          // All attribute assertions with value "a" of entity e1
+          _ <- Ns(e2).a.v.get.map(_.sortBy(_._1) ==> List(
+            (":Ns/bigDecs", bigDecs1),
+            (":Ns/bigInts", bigInts1),
+            (":Ns/bools", bools1),
+            (":Ns/dates", dates1),
+            (":Ns/doubles", doubles1),
+            (":Ns/enums", enums1),
+            (":Ns/ints", ints1),
+            (":Ns/longs", longs1),
+            (":Ns/refs1", rs1),
+            (":Ns/strs", strs1),
+            (":Ns/uris", uris1),
+            (":Ns/uuids", uuids1),
+          ))
+
+          _ <- Ns(e2).a.v(str1).get.map(_ ==> List((":Ns/strs", strs1)))
+          _ <- Ns(e2).a.v(int1).get.map(_ ==> List((":Ns/ints", ints1)))
+          _ <- Ns(e2).a.v(long1).get.map(_ ==> List((":Ns/longs", longs1)))
+          _ <- Ns(e2).a.v(double1).get.map(_ ==> List((":Ns/doubles", doubles1)))
+          _ <- Ns(e2).a.v(bool1).get.map(_ ==> List((":Ns/bools", bools1)))
+          _ <- Ns(e2).a.v(date1).get.map(_ ==> List((":Ns/dates", dates1)))
+          _ <- Ns(e2).a.v(uuid1).get.map(_ ==> List((":Ns/uuids", uuids1)))
+          _ <- Ns(e2).a.v(uri1).get.map(_ ==> List((":Ns/uris", uris1)))
+          _ <- Ns(e2).a.v(bigInt1).get.map(_ ==> List((":Ns/bigInts", bigInts1)))
+          _ <- Ns(e2).a.v(bigDec1).get.map(_ ==> List((":Ns/bigDecs", bigDecs1)))
+          _ <- Ns(e2).a.v(enum1).get.map(_ ==> List((":Ns/enums", enums1)))
+          _ <- Ns(e2).a.v(r1).get.map(_ ==> List((":Ns/refs1", rs1)))
+
+          _ <- Ns(e2).a.v("a").get.map(_ ==> List((":Ns/strs", strs1)))
+          _ <- Ns(e2).a.v(1).get.map(_ ==> List((":Ns/ints", ints1)))
+          _ <- Ns(e2).a.v(1L).get.map(_ ==> List((":Ns/longs", longs1)))
+          _ <- Ns(e2).a.v(1.0).get.map(_ ==> List((":Ns/doubles", doubles1)))
+          _ <- Ns(e2).a.v(true).get.map(_ ==> List((":Ns/bools", bools1)))
+          _ <- Ns(e2).a.v(BigInt(1)).get.map(_ ==> List((":Ns/bigInts", bigInts1)))
+          _ <- Ns(e2).a.v(BigDecimal(1.0)).get.map(_ ==> List((":Ns/bigDecs", bigDecs1)))
+          _ <- Ns(e2).a.v("enum1").get.map(_ ==> List((":Ns/enums", enums1)))
+          _ <- Ns(e2).a.v(17194139534366L).get.map(_ ==> List((":Ns/refs1", rs1)))
+        } yield ()
+      }
+
+
+      "Card map" - core { implicit conn =>
+        for {
+          e3 <- Ns.bigDecMap.bigIntMap.boolMap.dateMap.doubleMap.intMap.longMap.strMap.uriMap.uuidMap.insert(
+            Map("key" -> bigDec1),
+            Map("key" -> bigInt1),
+            Map("key" -> bool1),
+            Map("key" -> date1),
+            Map("key" -> double1),
+            Map("key" -> int1),
+            Map("key" -> long1),
+            Map("key" -> str1),
+            Map("key" -> uri1),
+            Map("key" -> uuid1),
+          ).map(_.eid)
+
+          // All attribute assertions with value "a" of entity e1
+          _ <- Ns(e3).a.v.get.map(_.sortBy(_._1) ==> List(
+            (":Ns/bigDecMap", Map("key" -> bigDec1)),
+            (":Ns/bigIntMap", Map("key" -> bigInt1)),
+            (":Ns/boolMap", Map("key" -> bool1)),
+            (":Ns/dateMap", Map("key" -> date1)),
+            (":Ns/doubleMap", Map("key" -> double1)),
+            (":Ns/intMap", Map("key" -> int1)),
+            (":Ns/longMap", Map("key" -> long1)),
+            (":Ns/strMap", Map("key" -> str1)),
+            (":Ns/uriMap", Map("key" -> uri1)),
+            (":Ns/uuidMap", Map("key" -> uuid1)),
+          ))
+
+          _ <- Ns(e3).a.v(bigInt1).get.map(_ ==> List((":Ns/bigIntMap", Map("key" -> bigDec1))))
+          _ <- Ns(e3).a.v(bigDec1).get.map(_ ==> List((":Ns/bigDecMap", Map("key" -> bigInt1))))
+          _ <- Ns(e3).a.v(bool1).get.map(_ ==> List((":Ns/boolMap", Map("key" -> bool1))))
+          _ <- Ns(e3).a.v(date1).get.map(_ ==> List((":Ns/dateMap", Map("key" -> date1))))
+          _ <- Ns(e3).a.v(double1).get.map(_ ==> List((":Ns/doubleMap", Map("key" -> double1))))
+          _ <- Ns(e3).a.v(int1).get.map(_ ==> List((":Ns/intMap", Map("key" -> int1))))
+          _ <- Ns(e3).a.v(long1).get.map(_ ==> List((":Ns/longMap", Map("key" -> long1))))
+          _ <- Ns(e3).a.v(str1).get.map(_ ==> List((":Ns/strMap", Map("key" -> str1))))
+          _ <- Ns(e3).a.v(uri1).get.map(_ ==> List((":Ns/uriMap", Map("key" -> uri1))))
+          _ <- Ns(e3).a.v(uuid1).get.map(_ ==> List((":Ns/uuidMap", Map("key" -> uuid1))))
+
+          _ <- Ns(e3).a.v(BigDecimal(1.0)).get.map(_ ==> List((":Ns/bigDecMap", Map("key" -> bigDec1))))
+          _ <- Ns(e3).a.v(BigInt(1)).get.map(_ ==> List((":Ns/bigIntMap", Map("key" -> bigInt1))))
+          _ <- Ns(e3).a.v(true).get.map(_ ==> List((":Ns/boolMap", Map("key" -> bool1))))
+          _ <- Ns(e3).a.v(1.0).get.map(_ ==> List((":Ns/doubleMap", Map("key" -> double1))))
+          _ <- Ns(e3).a.v(1).get.map(_ ==> List((":Ns/intMap", Map("key" -> int1))))
+          _ <- Ns(e3).a.v(1L).get.map(_ ==> List((":Ns/longMap", Map("key" -> long1))))
+          _ <- Ns(e3).a.v("a").get.map(_ ==> List((":Ns/strMap", Map("key" -> str1))))
+        } yield ()
+      }
+    }
+
+
     "Expressions, mandatory" - core { implicit conn =>
       if (system != SystemPeerServer) {
         for {
@@ -587,8 +738,6 @@ object Datom extends AsyncTestSuite {
 
       expectCompileError("""m(Ns.int$.op.str)""",
         "molecule.core.transform.exception.Dsl2ModelException: Optional attributes (`int$`) can't be followed by generic transaction attributes (`op`).")
-      //            for {
-      //            } yield()
     }
   }
 }

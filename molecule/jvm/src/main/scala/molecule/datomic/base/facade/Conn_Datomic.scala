@@ -59,11 +59,11 @@ trait Conn_Datomic extends Conn {
     q(datalogQuery).map(_.map(_.head.toString))
 
 
-  def q(query: String, inputs: Any*)
+  override def q(query: String, inputs: Any*)
        (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] =
     q(db, query, inputs.toSeq)
 
-  def qRaw(query: String, inputs: Any*)
+  override def qRaw(query: String, inputs: Any*)
           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
     qRaw(db, query, inputs)
 
@@ -119,7 +119,7 @@ trait Conn_Datomic extends Conn {
     Collections.unmodifiableList(list)
   }
 
-  def inspect(
+ override def inspect(
     header: String,
     threshold: Int,
     max: Int = 9999,

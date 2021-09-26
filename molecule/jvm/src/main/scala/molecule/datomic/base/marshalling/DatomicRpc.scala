@@ -72,20 +72,20 @@ object DatomicRpc extends MoleculeRpc
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]]
   ): Future[String] = try {
-    val log       = new log
-    val t         = TimerPrint("DatomicRpc")
+    val log = new log
+    val t   = TimerPrint("DatomicRpc")
+    println("@@@@@@@@@@@@@@@@@@@@@@@@@")
+    println(datalogQuery)
+    println("Rules:")
+    rules foreach println
+
+    println("l  : " + l)
+    println("ll : " + ll)
+    println("lll: " + lll)
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
-    //    println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
-    //    println(datalogQuery)
-    //    println("Rules:")
-    //    rules foreach println
-    //
-    //    println("l  : " + l)
-    //    println("ll : " + ll)
-    //    println("lll: " + lll)
+    //    inputs.foreach(i => println(s"$i   " + i.getClass))
 
-    inputs.foreach(i => println(s"$i   " + i.getClass))
     for {
       conn <- getConn(connProxy)
       allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
@@ -97,7 +97,7 @@ object DatomicRpc extends MoleculeRpc
       val time        = qTime(queryTime)
       val timeRight   = " " * (8 - time.length) + time
 
-      log("################################################################################")
+      log("================================================================================")
       log(datalogQuery + space + timeRight)
       if (allInputs.nonEmpty)
         log(allInputs.mkString("Inputs:\n", "\n", ""))

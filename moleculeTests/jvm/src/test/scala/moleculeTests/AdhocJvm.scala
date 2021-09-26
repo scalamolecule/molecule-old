@@ -35,7 +35,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
 
   lazy val tests = Tests {
 
-    "adhoc jvm" - core { implicit futConn =>
+    "adhocJvm" - core { implicit futConn =>
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn

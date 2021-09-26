@@ -128,16 +128,16 @@ object elements {
     override def toString: String = s"Neq(${sq(values)})"
   }
   case class Lt(value: Any) extends Value {
-    override def toString: String = s"Lt(${cast(value)})"
+    override def toString: String = s"Lt(${render(value)})"
   }
   case class Gt(value: Any) extends Value {
-    override def toString: String = s"Gt(${cast(value)})"
+    override def toString: String = s"Gt(${render(value)})"
   }
   case class Le(value: Any) extends Value {
-    override def toString: String = s"Le(${cast(value)})"
+    override def toString: String = s"Le(${render(value)})"
   }
   case class Ge(value: Any) extends Value {
-    override def toString: String = s"Ge(${cast(value)})"
+    override def toString: String = s"Ge(${render(value)})"
   }
 
   // Question mark placeholder for input molecules

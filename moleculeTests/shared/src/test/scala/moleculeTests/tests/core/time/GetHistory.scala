@@ -316,7 +316,7 @@ object GetHistory extends AsyncTestSuite {
         _ <- Ns.e.a.v.txInstant.op_(false).getHistory.map(_.sortBy(t => (t._2, t._4)) ==> List(
           (e1, ":Ns/int", 1, date3),
           (e2, ":Ns/int", 4, date5),
-          (e1, ":Ns/str", "a", date2),
+          (e1, ":Ns/str", "a", date2)
         ))
 
         // Entities involved in transaction t2

@@ -1,6 +1,8 @@
 package molecule.core.ops
 
+import java.util.Date
 import molecule.core.ast.elements._
+import molecule.core.util.fns
 
 
 /** Model operations */
@@ -10,13 +12,13 @@ object ModelOps {
     val conv = if (isJsPlatform) {
       (v: Any) =>
         v match {
-          case v: Long  =>
+          case _: Int | _: Long  =>
             tpe match {
               case "Double"     => "__n__" + v + ".0"
               case "BigDecimal" => "__n__" + v + ".0M"
               case _            => v
             }
-          case v: Float =>
+          case _: Float =>
             tpe match {
               case "Double" if v.toString.contains(".")     => "__n__" + v
               case "Double"                                 => "__n__" + v + ".0"
@@ -24,7 +26,15 @@ object ModelOps {
               case "BigDecimal"                             => "__n__" + v + ".0M"
               case _                                        => v.toString.toDouble
             }
-          case _        => v
+
+          case _: Double        => tpe match {
+            case "Double"     => "__n__" + v.toString + (if (v.toString.contains(".")) "" else ".0")
+            case "BigDecimal" => "__n__" + v.toString + (if (v.toString.contains(".")) "" else ".0")
+            case _            => v.toString
+          }
+          case d: Date       => fns.date2str(d)
+          case _: BigDecimal => v.toString + (if (v.toString.contains(".")) "" else ".0")
+          case _             => v.toString
         }
     } else {
       (v: Any) =>

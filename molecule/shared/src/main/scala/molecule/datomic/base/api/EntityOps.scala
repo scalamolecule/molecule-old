@@ -174,9 +174,7 @@ trait EntityOps {
       val transformer = conn.model2stmts(txMetaDataModel)
       conn.model2stmts(txMetaDataModel).saveStmts.map { saveStmts =>
         val stmts = Seq(retractStmts ++ saveStmts)
-        conn.inspect(
-          "molecule.core.Datomic.inspectRetract", 1
-        )(1, txMetaDataModel, transformer.genericStmts, stmts)
+        conn.inspect("molecule.core.Datomic.inspectRetract", 1)(1, txMetaDataModel, transformer.genericStmts, stmts)
       }
     }
   }

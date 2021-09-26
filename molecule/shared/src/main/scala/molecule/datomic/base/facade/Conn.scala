@@ -349,7 +349,6 @@ trait Conn extends ColOps with Serializations {
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])
           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
-
   /** Query Datomic with Model and Query to get raw Java data.
     * <br><br>
     * Will transparently relegate query depending on Model to:
@@ -368,21 +367,23 @@ trait Conn extends ColOps with Serializations {
   def query(model: Model, query: Query)
            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
+  private[molecule] def _index(
+    model: Model
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
+
   private[molecule] def _query(
     model: Model,
     query: Query,
     _db: Option[DatomicDb] = None
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
 
-  private[molecule] def _index(model: Model)
-                              (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
 
   def model2stmts(model: Model): Model2Stmts = Model2Stmts(isJsPlatform, this, model)
 
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]]
 
-  def inspect(
+  private[molecule] def inspect(
     header: String,
     threshold: Int,
     max: Int = 9999,
@@ -393,6 +394,7 @@ trait Conn extends ColOps with Serializations {
 
 
   // JS query rpc api .........................................
+  // (only used on js side)
 
   private[molecule] def queryJsTpl[Tpl](
     model: Model,

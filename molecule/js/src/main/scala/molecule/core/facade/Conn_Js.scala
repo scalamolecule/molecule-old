@@ -3,23 +3,20 @@ package molecule.core.facade
 import java.io.Reader
 import java.net.URI
 import java.util.{Date, UUID, Collection => jCollection, List => jList}
-import molecule.core.ast.elements.{EntValue, Eq, Generic, NoValue}
-import molecule.core.marshalling.{IndexArgs, nodes}
-import molecule.core.marshalling.nodes.Obj
-import molecule.datomic.base.transform.Query2String
-import scala.collection.mutable.ListBuffer
-//import boopickle.Default._
-import molecule.core.ast.elements.Model
+import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.{ConnProxy, MoleculeRpc, MoleculeWebClient}
+import molecule.core.marshalling.nodes.Obj
+import molecule.core.marshalling._
 import molecule.core.ops.ColOps
-import molecule.core.util.Helpers
+import molecule.core.util.{Helpers, Inspect}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
-import molecule.datomic.base.ast.query.Query
+import molecule.datomic.base.ast.query.{InVar, Query}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
+import molecule.datomic.base.transform.Query2String
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -35,6 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with Helpers {
 
   def ???(i: Int): Nothing = throw MoleculeException(s"Unexpected method call ($i) on JS side in Conn_Js")
+  def noJs(method: String): Nothing = throw MoleculeException(
+    s"Method `$method` returns untyped data and is therefore not implemented on the JS side.")
 
   val isJsPlatform: Boolean = true
 
@@ -117,7 +116,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
   private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = ???(6)
 
 
-  private[molecule] def _index(model: Model, maxRows: Int): Future[String] = {
+  private[molecule] def _index(model: Model): Future[String] = {
     def p(v: Any): (String, String) = v match {
       case _: String     => (v.toString, "String")
       case _: Int        => (v.toString, "Int")
@@ -268,6 +267,37 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     rpc.index2packed(connProxy, api, index, indexArgs, attrs)
   }
 
+  private[molecule] def _query(
+    query: Query,
+    datalog: String,
+    maxRows: Int,
+    obj: Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]]
+  ): Future[String] = {
+    val q2s          = Query2String(query)
+    val p            = q2s.p
+    val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString "\n ") + "]")
+    val (l, ll, lll) = marshallInputs(query)
+
+    println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
+//    println(query)
+//    println(datalog)
+//    println("Rules:")
+//    rules foreach println
+//
+    println("l  : " + l)
+    println("ll : " + ll)
+    println("lll: " + lll)
+
+    rpc.query2packed(
+      connProxy, datalog, rules, l, ll, lll, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+    )
+  }
+
+
   private def jsGetRaw(
     model: Model,
     query: Query,
@@ -280,26 +310,9 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     tacitIndexes: List[List[Int]]
   ): Future[String] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) =>
-        //        println(obj)
-        _index(model, maxRows)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => _index(model)
       case _                                                           =>
-        val q2s          = Query2String(query)
-        val p            = q2s.p
-        val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString "\n ") + "]")
-        val (l, ll, lll) = marshallInputs(query)
-//                println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
-//                println(query)
-//                println(datalog)
-//                println("Rules:")
-//                rules foreach println
-//
-//                println("l  : " + l)
-//                println("ll : " + ll)
-//                println("lll: " + lll)
-        rpc.query2packed(
-          connProxy, datalog, rules, l, ll, lll, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
-        )
+        _query(query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
     }
   }
 
@@ -387,27 +400,21 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
   )
 
   def q(query: String, inputs: Any*)
-       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???(7)
+       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = noJs("q")
 
   def q(db: DatomicDb, query: String, inputs: Seq[Any])
-       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???(8)
+       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = noJs("q")
 
   def qRaw(query: String, inputs: Any*)
-          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(9)
+          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = noJs("qRaw")
 
   def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])
-          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(10)
+          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = noJs("qRaw")
 
   def query(model: Model, query: Query)
-           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(11)
+           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = noJs("query")
 
-  def _query(model: Model, query: Query, _db: Option[DatomicDb])
-            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(12)
-
-  def _index(model: Model)
-            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(13)
-
-  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???(14)
+  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = noJs("stmts2java")
 
   def inspect(
     header: String,
@@ -416,5 +423,6 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     showStackTrace: Boolean,
     maxLevel: Int,
     showBi: Boolean
-  )(id: Int, params: Any*): Unit = ???(15)
+  )(id: Int, params: Any*): Unit =
+    Inspect(header, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 }

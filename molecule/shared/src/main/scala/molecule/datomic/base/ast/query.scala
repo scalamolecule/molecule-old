@@ -80,7 +80,7 @@ object query {
     override def toString: String = s"""Var("$v")"""
   }
   case class Val(v: Any) extends QueryValue with Output {
-    override def toString: String = s"""Val(${cast(v)})"""
+    override def toString: String = s"""Val(${render(v)})"""
   }
 
   sealed trait PullAttrSpec extends QueryValue with Output

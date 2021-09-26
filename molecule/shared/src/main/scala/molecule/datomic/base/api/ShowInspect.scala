@@ -1,12 +1,12 @@
 package molecule.datomic.base.api
 
-import java.util.{Date, Collection => jCollection, List => jList, Map => jMap, Set => jSet}
+import java.util
+import java.util.{Collections, Date, Collection => jCollection, List => jList, Map => jMap, Set => jSet}
 import molecule.core.api.Molecule
-import molecule.core.marshalling.convert.Stmts2Edn
-import scala.concurrent.Future
-import scala.util.control.NonFatal
 import molecule.core.ast.elements._
 import molecule.core.exceptions.{MoleculeException, QueryException}
+import molecule.core.marshalling.Marshalling
+import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
@@ -15,8 +15,10 @@ import molecule.datomic.base.ops.QueryOps._
 import molecule.datomic.base.transform._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
+import scala.util.control.NonFatal
 
 
 /** Inspect methods
@@ -24,10 +26,8 @@ import scala.language.implicitConversions
   * Call a inspect method on a molecule to see the internal transformations and
   * produced transaction statements or sample data.
   * */
-trait ShowInspect[Obj, Tpl] {
-  self: Molecule =>
-//  self: Molecule_0[Obj, Tpl] =>
-
+trait ShowInspect[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
+  val maxRows = 500
 
   /** Inspect call to `get` on a molecule (without affecting the db).
     * <br><br>
@@ -40,12 +40,12 @@ trait ShowInspect[Obj, Tpl] {
     * OBS: printing raw Date's (Clojure Instant) will miss the time-zone
     *
     * @group inspectGet
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
     */
-  def inspectGet(implicit conn: Future[Conn]): Future[Unit] = {
+  def inspectGet(implicit futConn: Future[Conn]): Future[Unit] = {
 
-    def generic(): Future[Unit] = {
-      def render(rows: jCollection[jList[AnyRef]]): Unit = {
+    def renderIndex(): Future[Unit] = {
+      def render(rows: jCollection[_ <: jList[_]]): Unit = {
         val pE = 14
         val pA = 20
         val pV = 50
@@ -83,20 +83,20 @@ trait ShowInspect[Obj, Tpl] {
         n.size match {
           case 0 => rows forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2))
             }
           }
           case 1 => rows.forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2) +
                 p(row.get(0), n(0)))
             }
           }
           case 2 => rows.forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)))
@@ -104,7 +104,7 @@ trait ShowInspect[Obj, Tpl] {
           }
           case 3 => rows.forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
@@ -113,7 +113,7 @@ trait ShowInspect[Obj, Tpl] {
           }
           case 4 => rows.forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
@@ -123,7 +123,7 @@ trait ShowInspect[Obj, Tpl] {
           }
           case 5 => rows.forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
@@ -134,7 +134,7 @@ trait ShowInspect[Obj, Tpl] {
           }
           case 6 => rows.forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
@@ -146,7 +146,7 @@ trait ShowInspect[Obj, Tpl] {
           }
           case 7 => rows.forEach { row =>
             i += 1;
-            if (i <= 500) {
+            if (i <= maxRows) {
               println(p(i, 2) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
@@ -160,15 +160,29 @@ trait ShowInspect[Obj, Tpl] {
         }
 
         println("-----" + "-" * pad)
-        if (rows.size > 500) println(s"(showing 500 out of ${rows.size} rows)")
+        if (rows.size > maxRows)
+          println(s"(showing $maxRows out of ${rows.size} rows)")
         println()
       }
 
       for {
-        conn <- conn
-        rows <- conn._index(_model)
-      } yield {
-        render(rows)
+        conn <- futConn
+        rows <- if (conn.isJsPlatform) jsRows(conn) else conn._index(_model)
+      } yield render(rows)
+    }
+
+    def jsRows(conn: Conn): Future[jCollection[_ <: jList[_]]] = {
+      // Converting tuples to java list (for now - not critical for inspection of 500 rows)
+      conn.queryJsTpl(
+        _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+      ).map { listOfTuples =>
+        listOfTuples.map {
+          case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)
+          case v            =>
+            val list = new util.ArrayList[Any](1)
+            list.add(v)
+            Collections.list(Collections.enumeration(list))
+        }.asJava
       }
     }
 
@@ -196,7 +210,8 @@ trait ShowInspect[Obj, Tpl] {
       (0 to levels).toList.map(level => (1, false, false, false)) ++ outMatrix
     }
 
-    def resolve(rawRows: Iterable[jList[AnyRef]]): Seq[ListBuffer[Any]] = {
+//    def resolve(rawRows: Iterable[jList[AnyRef]]): Seq[ListBuffer[Any]] = {
+    def resolve(rawRows: Iterable[_ <: jList[_]]): Seq[ListBuffer[Any]] = {
       def cardOneOpt(v: Any, isDate: Boolean): Option[String] = {
         if (v == null) {
           Option.empty[String]
@@ -315,7 +330,7 @@ trait ShowInspect[Obj, Tpl] {
     }
 
 
-    def data(): Future[Unit] = conn.flatMap { conn =>
+    def renderQuery(): Future[Unit] = futConn.flatMap { conn =>
       try {
         // Also do Model2Query transformation at runtime to be able to debug it.
         // Note though that input variables are bound in the macro at compile
@@ -324,9 +339,11 @@ trait ShowInspect[Obj, Tpl] {
 
         val ins = QueryOps(_query).inputs
         val db  = conn.db
-        conn._query(_model, _query, Some(db)).map { res =>
-          val rows = resolve(res.asScala.take(500))
 
+        for{
+          rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn._query(_model, _query, Some(db))
+          rows = resolve(rawRows.asScala.take(maxRows))
+        } yield {
           val rulesOut: String = if (_query.i.rules.isEmpty)
             "none\n\n"
           else
@@ -374,8 +391,8 @@ trait ShowInspect[Obj, Tpl] {
     }
 
     _model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => generic()
-      case _                                                           => data()
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => renderIndex()
+      case _                                                           => renderQuery()
     }
   }
 
@@ -550,16 +567,12 @@ trait ShowInspect[Obj, Tpl] {
     try {
       VerifyModel(_model, "save")
       transformer.saveStmts.map(stmts =>
-        conn.inspect(
-          "output.Molecule.inspectSave", 1
-        )(1, _model, transformer.genericStmts, stmts)
+        conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts, stmts)
       )
     } catch {
       case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-        conn.inspect(
-          "output.Molecule.inspectSave", 1
-        )(1, _model, transformer.genericStmts)
+        conn.inspect("output.Molecule.inspectSave", 1)(1, _model, transformer.genericStmts)
         Future.failed(exc)
     }
   }
@@ -572,16 +585,13 @@ trait ShowInspect[Obj, Tpl] {
       try {
         // Separate each row so that we can distinguish each insert row
         Future.sequence(data.map(row => transformer.insertStmts(Iterable(row)))).map { stmtss =>
-          conn.inspect(
-            "output.Molecule._inspectInsert", 1
-          )(1, _model, transformer.genericStmts, dataRows, data, stmtss)
+          conn.inspect("output.Molecule._inspectInsert", 1)(
+            1, _model, transformer.genericStmts, dataRows, data, stmtss)
         }
       } catch {
         case NonFatal(exc) =>
           println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-          conn.inspect(
-            "output.Molecule._inspectInsert", 1
-          )(1, _model, transformer.genericStmts, dataRows, data)
+          conn.inspect("output.Molecule._inspectInsert", 1)(1, _model, transformer.genericStmts, dataRows, data)
           Future.failed(exc)
       }
     }
@@ -603,16 +613,12 @@ trait ShowInspect[Obj, Tpl] {
     try {
       VerifyModel(_model, "update")
       transformer.updateStmts.map(stmts =>
-        conn.inspect(
-          "output.Molecule.inspectUpdate", 1
-        )(1, _model, transformer.genericStmts, stmts)
+        conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts, stmts)
       )
     } catch {
       case NonFatal(exc) =>
         println("@@@@@@@@@@@@@@@@@  Error - data processed so far:  @@@@@@@@@@@@@@@@@\n")
-        conn.inspect(
-          "output.Molecule.inspectUpdate", 1
-        )(1, _model, transformer.genericStmts)
+        conn.inspect("output.Molecule.inspectUpdate", 1)(1, _model, transformer.genericStmts)
         Future.failed(exc)
     }
   }

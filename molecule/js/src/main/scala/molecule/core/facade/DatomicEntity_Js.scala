@@ -61,10 +61,7 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
     try {
       VerifyModel(model, "save") // can throw exception
       conn.model2stmts(model).saveStmts.map(txMetaStmts =>
-        conn.inspect(
-          "Inspect `retract` on entity with tx meta data", 1)(
-          1, retractStmts ++ txMetaStmts
-        )
+        conn.inspect("Inspect `retract` on entity with tx meta data", 1)(1, retractStmts ++ txMetaStmts)
       )
     } catch {
       case NonFatal(exc) => Future.failed(exc)

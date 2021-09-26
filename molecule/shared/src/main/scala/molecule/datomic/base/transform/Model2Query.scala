@@ -495,7 +495,7 @@ object Model2Query extends Helpers {
     val v = if (w.nonEmpty) w else v0 + "_" + g.attr
     g.value match {
       case NoValue | EntValue => q.find(v)
-      case Eq(args)           => q.find(v).in(tpe, args, v)
+      case Eq(args)           => q.find(v).in(anyType(tpe, args), args, v)
       case Neq(args)          => q.find(v).compareToMany2("!=", v, args)
       case Gt(arg)            => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)            => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
@@ -511,7 +511,7 @@ object Model2Query extends Helpers {
     g.value match {
       case NoValue | EntValue => q
       case Eq(Seq(Qm))        => q.in(v, tpe, g.tpe, g.attr, e)
-      case Eq(args)           => q.in(tpe, args, v)
+      case Eq(args)           => q.in(anyType(tpe, args), args, v)
       case Neq(args)          => q.compareToMany2("!=", v, args)
       case Gt(arg)            => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)            => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)

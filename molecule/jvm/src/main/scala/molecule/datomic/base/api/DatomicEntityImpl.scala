@@ -13,6 +13,7 @@ import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, Quoted}
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -117,10 +118,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
     val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
     VerifyModel(model, "save") // can throw exception
     conn.model2stmts(model).saveStmts.map(txMetaStmts =>
-      conn.inspect(
-        "Inspect `retract` on entity with tx meta data", 1)(
-        1, retractStmts ++ txMetaStmts
-      )
+      Inspect("Inspect `retract` on entity with tx meta data", 1)(1, retractStmts ++ txMetaStmts)
     )
   } catch {
     case NonFatal(exc) => Future.failed(exc)
@@ -128,7 +126,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
 
   def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = {
     getRetractStmts.map { stmts =>
-      conn.inspect("Inspect `retract` on entity", 1)(1, stmts)
+      Inspect("Inspect `retract` on entity", 1)(1, stmts)
     }
   }
 

@@ -264,28 +264,9 @@ case class Conn_Client(
     }
   }
 
-  private[molecule] def _query(
-    model: Model,
-    query: Query,
-    _db: Option[DatomicDb]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
-    try {
-      Future {
-        val p               = Query2String(query).p
-        val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-        val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-        val allInputs       = rules ++ inputsEvaluated
-        val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
-        clientDatomic.q(query.toMap, adhocDb, allInputs: _*)
-      }
-    } catch {
-      case NonFatal(exc) =>
-        Future.failed(QueryException(exc, model, query))
-    }
-  }
 
   // Datoms API providing direct access to indexes
-  private[molecule] def _index(model: Model)
+  private[molecule] override def _index(model: Model)
                               (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     val (api, index, args) = model.elements.head match {
       case Generic("EAVT", _, _, value) =>
@@ -568,6 +549,26 @@ case class Conn_Client(
           }
           jColl
         }
+    }
+  }
+
+  private[molecule] override def _query(
+    model: Model,
+    query: Query,
+    _db: Option[DatomicDb]
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    try {
+      Future {
+        val p               = Query2String(query).p
+        val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+        val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
+        val allInputs       = rules ++ inputsEvaluated
+        val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
+        clientDatomic.q(query.toMap, adhocDb, allInputs: _*)
+      }
+    } catch {
+      case NonFatal(exc) =>
+        Future.failed(QueryException(exc, model, query))
     }
   }
 }

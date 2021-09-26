@@ -20,6 +20,25 @@ trait Helpers extends DateHandling {
     }
   }
 
+  def anyType(tpe: String, vs: Seq[Any]): String = {
+    if (tpe == "Any")
+      vs.headOption.getOrElse("String") match {
+        case _: String     => "String"
+        case _: Int        => "Int"
+        case _: Long       => "Long"
+        case _: Float      => "Float"
+        case _: Double     => "Double"
+        case _: Boolean    => "Boolean"
+        case _: Date       => "Date"
+        case _: UUID       => "UUID"
+        case _: URI        => "URI"
+        case _: BigInt     => "BigInt"
+        case _: BigDecimal => "BigDecimal"
+      }
+    else
+      tpe
+  }
+
   def clean(attr: String): String = attr.last match {
     case '_' => attr.init
     case '$' => attr.init
@@ -40,30 +59,19 @@ trait Helpers extends DateHandling {
 
   def stripEnum(s: String): String = if (s.startsWith("__enum__")) s.drop(8) else s
 
-  def escStr(s: String) = s.replace("""\""", """\\""").replace(""""""", """\"""")
+  def escStr(s: String) =
+    s.replace("""\""", """\\""").replace(""""""", """\"""")
 
-  def unescStr(s: String) = s.replace("""\"""", """"""").replace("""\\""", """\""")
+  def unescStr(s: String) =
+    s.replace("""\"""", """"""").replace("""\\""", """\""")
 
   def padS(longest: Int, str: String): String = pad(longest, str.length)
 
   def pad(longest: Int, shorter: Int): String = if (longest > shorter) " " * (longest - shorter) else ""
 
-  def cast(value: Any): String = value match {
-    case (a, b)     => s"(${cast(a)}, ${cast(b)})"
-    case v: Long    => v.toString + "L"
-    case v: Float   => v.toString + "f"
-    case date: Date => "\"" + date2str(date) + "\""
-    //    case v: String if v.startsWith("__n__") => v.drop(5) // JS number hack
-    case v: String => "\"" + escStr(v) + "\""
-    case v: UUID   => "\"" + v + "\""
-    case v: URI    => "\"" + v + "\""
-    case v         => v.toString
-  }
-
-  // Hack to ensure decimal digits on JS platform output - todo: remove when jvm/js displays whole decimal numbers equally
+  // Ensure decimal digits on JS platform output
   def d(tpe: String, v: Any) = {
     (tpe, v) match {
-      //      case ("Int", v)                    => v
       case ("Double", v: Double)                                          => if (v.isWhole) s"${v.toLong}.0" else v
       case ("BigDecimal", v: BigDecimal)                                  => if (v.isWhole) s"${v.toBigInt}.0" else v
       case ("Double" | "BigDecimal", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
@@ -71,36 +79,28 @@ trait Helpers extends DateHandling {
     }
   }
 
-  // Generic `v` of type Any needs to be cast on JS side
-  protected def castV(s: String): Any = {
-    val v = s.drop(10)
-    s.take(10) match {
-      case "String    " => v
-      case "Int       " => v.toInt
-      case "Long      " => v.toLong
-      case "Double    " => v.toDouble
-      case "Boolean   " => v.toBoolean
-      case "Date      " => str2date(v)
-      case "UUID      " => UUID.fromString(v)
-      case "URI       " => new java.net.URI(v)
-      case "BigInt    " => BigInt(v)
-      case "BigDecimal" => BigDecimal(v)
-    }
-  }
-
-
   final def os(opt: Option[Set[_]]): String =
-    if (opt.isEmpty) "None" else s"""Some(${opt.get.map(cast)})"""
+    if (opt.isEmpty) "None" else s"""Some(${opt.get.map(render)})"""
 
   final def o(opt: Option[Any]): String =
-    if (opt.isEmpty) "None" else s"""Some(${cast(opt.get)})"""
+    if (opt.isEmpty) "None" else s"""Some(${render(opt.get)})"""
 
+  final def render(value: Any): String = value match {
+    case (a, b)    => s"(${render(a)}, ${render(b)})"
+    case v: Long   => v.toString + "L"
+    case v: Float  => v.toString + "f"
+    case v: String => "\"" + escStr(v) + "\""
+    case d: Date   => d.toString // Let us know if it's a Date and not a String representation
+    case v: UUID   => "\"" + v + "\""
+    case v: URI    => "\"" + v + "\""
+    case v         => v.toString
+  }
   final def sq[T](values: Seq[T]): String =
     values.map {
-      case set: Set[_] => set.map(cast).mkString("Set(", ", ", ")")
-      case seq: Seq[_] => seq.map(cast).mkString("Seq(", ", ", ")")
-      case (a, b)      => s"${cast(a)} -> ${cast(b)}"
-      case v           => cast(v)
+      case set: Set[_] => set.map(render).mkString("Set(", ", ", ")")
+      case seq: Seq[_] => seq.map(render).mkString("Seq(", ", ", ")")
+      case (a, b)      => s"${render(a)} -> ${render(b)}"
+      case v           => render(v)
     }.mkString("Seq(", ", ", ")")
 
 
@@ -169,7 +169,8 @@ trait Helpers extends DateHandling {
       throw new IllegalArgumentException(s"Identifiers have to be positive numbers")
 
     if (times.nonEmpty && n <= times.keys.max)
-      throw new IllegalArgumentException(s"Identifier have to be incremental. `$n` is smaller than or equal to previous `${times.keys.max}`")
+      throw new IllegalArgumentException(
+        s"Identifier have to be incremental. `$n` is smaller than or equal to previous `${times.keys.max}`")
 
     if (times.keys.toSeq.contains(n))
       throw new IllegalArgumentException(s"Can't use same time identifier `$n` multiple times")

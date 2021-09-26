@@ -91,38 +91,4 @@ trait MoleculeRpc {
   def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
 
   def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String]
-
-
-//  def q(query: String, inputs: Any*)
-//       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???(7)
-//
-//  def q(db: DatomicDb, query: String, inputs: Seq[Any])
-//       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = ???(8)
-//
-//  def qRaw(query: String, inputs: Any*)
-//          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(9)
-//
-//  def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])
-//          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(10)
-//
-//  def query(model: Model, query: Query)
-//           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(11)
-//
-//  def _query(model: Model, query: Query, _db: Option[DatomicDb])
-//            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(12)
-//
-//  def _index(model: Model)
-//            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???(13)
-//
-//  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = ???(14)
-//
-//  def inspect(
-//    header: String,
-//    threshold: Int,
-//    max: Int,
-//    showStackTrace: Boolean,
-//    maxLevel: Int,
-//    showBi: Boolean
-//  )(id: Int, params: Any*): Unit = ???
-
 }

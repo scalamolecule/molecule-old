@@ -341,30 +341,8 @@ case class Conn_Peer(
     }
   }
 
-  // Datalog query execution
-  private[molecule] def _query(
-    model: Model,
-    query: Query,
-    _db: Option[DatomicDb] = None
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-    // Allow exceptions to be wrapped in QueryException
-    try {
-      val p               = Query2String(query).p
-      val rules           = "[" + (query.i.rules map p mkString " ") + "]"
-      val adhocDb         = _db.getOrElse(db).getDatomicDb
-      val first           = if (query.i.rules.isEmpty) Seq(adhocDb) else Seq(adhocDb, rules)
-      val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-      val allInputs       = first ++ inputsEvaluated
-      val result          = Peer.q(query.toMap, allInputs: _*)
-      Future(result)
-    } catch {
-      case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
-    }
-  }.flatten
-
-
   // Datoms API providing direct access to indexes
-  private[molecule] def _index(model: Model)
+  private[molecule] override def _index(model: Model)
                               (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
       val (api, index, args) = model.elements.head match {
@@ -630,6 +608,28 @@ case class Conn_Peer(
       case NonFatal(ex) => Future.failed(ex)
     }
   }.flatten
+
+  // Datalog query execution
+  private[molecule] override def _query(
+    model: Model,
+    query: Query,
+    _db: Option[DatomicDb] = None
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
+    // Allow exceptions to be wrapped in QueryException
+    try {
+      val p               = Query2String(query).p
+      val rules           = "[" + (query.i.rules map p mkString " ") + "]"
+      val adhocDb         = _db.getOrElse(db).getDatomicDb
+      val first           = if (query.i.rules.isEmpty) Seq(adhocDb) else Seq(adhocDb, rules)
+      val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
+      val allInputs       = first ++ inputsEvaluated
+      val result          = Peer.q(query.toMap, allInputs: _*)
+      Future(result)
+    } catch {
+      case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
+    }
+  }.flatten
+
 
   def sync: ListenableFuture[Database] = peerConn.sync()
 
