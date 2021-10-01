@@ -8,7 +8,7 @@ import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy}
+import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy, IndexArgs}
 import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -343,7 +343,7 @@ case class Conn_Peer(
 
   // Datoms API providing direct access to indexes
   private[molecule] override def _index(model: Model)
-                              (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
+                                       (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
       val (api, index, args) = model.elements.head match {
         case Generic("EAVT", _, _, value) =>
@@ -406,38 +406,35 @@ case class Conn_Peer(
           })
 
         case Generic("Log", _, _, value) =>
+          def err(v: Any) = throw MoleculeException(
+            s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
+
           ("txRange", "", value match {
-            case Eq(Seq(from: Int, until: Int))   => Seq(from, until)
-            case Eq(Seq(from: Int, until: Long))  => Seq(from, until)
-            case Eq(Seq(from: Int, until: Date))  => Seq(from, until)
-            case Eq(Seq(from: Long, until: Int))  => Seq(from, until)
-            case Eq(Seq(from: Long, until: Long)) => Seq(from, until)
-            case Eq(Seq(from: Long, until: Date)) => Seq(from, until)
-            case Eq(Seq(from: Date, until: Int))  => Seq(from, until)
-            case Eq(Seq(from: Date, until: Long)) => Seq(from, until)
-            case Eq(Seq(from: Date, until: Date)) => Seq(from, until)
+            case Eq(Seq(a, b)) =>
+              // Get valid from/until values
+              val from  = a match {
+                case None                              => null
+                case from@(_: Int | _: Long | _: Date) => from
+                case other                             => err(other)
+              }
+              val until = b match {
+                case None                               => null
+                case until@(_: Int | _: Long | _: Date) => until
+                case other                              => err(other)
+              }
+              Seq(from, until)
 
-            case Eq(Seq(from: Int, None))  => Seq(from, null)
-            case Eq(Seq(from: Long, None)) => Seq(from, null)
-            case Eq(Seq(from: Date, None)) => Seq(from, null)
 
-            case Eq(Seq(None, until: Int))  => Seq(null, until)
-            case Eq(Seq(None, until: Long)) => Seq(null, until)
-            case Eq(Seq(None, until: Date)) => Seq(null, until)
-
-            // All !!
-            case Eq(Seq(None, None)) => Seq(null, null)
-
-            // From until end
-            case Eq(Seq(from: Int))  => Seq(from, null)
-            case Eq(Seq(from: Long)) => Seq(from, null)
-            case Eq(Seq(from: Date)) => Seq(from, null)
+            case Eq(Seq(from)) => from match {
+              case None                              => Seq(null, null)
+              case from@(_: Int | _: Long | _: Date) => Seq(from, null)
+              case other                             => err(other)
+            }
 
             // All !!
             case Eq(Nil) => Seq(null, null)
 
-            case Eq(other) => throw MoleculeException(
-              "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found: " + other)
+            case Eq(other) => err(other)
 
             case v => throw MoleculeException("Unexpected Log value: " + v)
           })
@@ -570,7 +567,7 @@ case class Conn_Peer(
 
       // Convert Datoms to standard list of rows so that we can use the same Molecule query API
       val rows = new ListBuffer[Future[jList[AnyRef]]]()
-      val res = api match {
+      val res  = api match {
         case "datoms" =>
           val datom2row_ = datom2row(None)
           adhocDb.asInstanceOf[DatomicDb_Peer].datoms(index, args: _*).flatMap { datoms =>

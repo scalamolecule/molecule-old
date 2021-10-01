@@ -358,8 +358,8 @@ case class Conn_Client(
           // All !!
           case Eq(Nil) => Seq(None, None)
 
-          case Eq(other) => throw MoleculeException(
-            "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found: " + other)
+          case Eq(v) => throw MoleculeException(
+            s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
 
           case v => throw MoleculeException("Unexpected Log value: " + v)
         })

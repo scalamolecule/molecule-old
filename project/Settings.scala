@@ -60,6 +60,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
     ),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+//    scalaJSLinkerConfig ~= {
+//      _.withSemantics(_.withStrictFloats(true))
+//    },
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
@@ -110,15 +113,15 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed     = Seq(
-        //        sharedTests + "/core/attr",
-        //        sharedTests + "/core/attrMap",
+        sharedTests + "/core/attr",
+        sharedTests + "/core/attrMap",
         //        sharedTests + "/core/bidirectionals",
         //        sharedTests + "/core/composite",
         //        sharedTests + "/core/crud",
-        //        sharedTests + "/core/equality",
-        //        sharedTests + "/core/expression",
-        //        sharedTests + "/core/generic",
-        //        sharedTests + "/core/input1",
+        sharedTests + "/core/equality",
+        sharedTests + "/core/expression",
+        sharedTests + "/core/generic",
+        sharedTests + "/core/input1",
         //        sharedTests + "/core/input2",
         //        sharedTests + "/core/input3",
         //        sharedTests + "/core/ref",
@@ -129,7 +132,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         //        sharedTests + "/core/schemaDef",
 
 
-        sharedTests + "/core/time",
+//        sharedTests + "/core/time",
         //        sharedTests + "/core/transaction",
         //        sharedTests + "/core/txMetaData",
 

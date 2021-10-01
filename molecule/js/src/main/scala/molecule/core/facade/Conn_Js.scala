@@ -49,7 +49,6 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
 
   def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(AsOf(TxLong(t))))
-    debug("js1")
   }
 
   def testDbAsOf(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
@@ -203,7 +202,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
 
       case Generic("Log", _, _, value) =>
         def err(v: Any) = throw MoleculeException(
-          s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v`")
+          s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
 
         ("txRange", "", value match {
           case Eq(Seq(a, b)) =>
@@ -282,15 +281,18 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString "\n ") + "]")
     val (l, ll, lll) = marshallInputs(query)
 
-    println("@@@@@@@@@@@@@@@@@@@@@@@@@'")
-//    println(query)
-//    println(datalog)
-//    println("Rules:")
-//    rules foreach println
+//    println("--------------------------")
+////    //    println("================================================================================")
+////    //    println(query)
+////    //    println(datalog)
+//    if (rules.nonEmpty) {
+//      println("Rules:")
+//      rules foreach println
+//    }
 //
-    println("l  : " + l)
-    println("ll : " + ll)
-    println("lll: " + lll)
+//    println("l  : " + l)
+//    println("ll : " + ll)
+//    println("lll: " + lll)
 
     rpc.query2packed(
       connProxy, datalog, rules, l, ll, lll, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes

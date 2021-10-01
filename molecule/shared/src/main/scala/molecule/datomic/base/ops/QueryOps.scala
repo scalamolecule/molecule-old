@@ -95,11 +95,24 @@ object QueryOps extends Helpers with JavaUtil {
 
     // Where ..........................................
 
-    def where(e: String, nsFull: String, attr: String, v: QueryValue, refNs: String): Query = v match {
-      case Val(arg: String) => q.copy(wh = Where(q.wh.clauses :+
-        DataClause(ImplDS, Var(e), KW(nsFull, attr, refNs), Val(esc1(arg)), Empty, NoBinding)))
-      case _                => q.copy(wh = Where(q.wh.clauses :+
-        DataClause(ImplDS, Var(e), KW(nsFull, attr, refNs), v, Empty, NoBinding)))
+    def where(
+      e: String,
+      nsFull: String,
+      attr: String,
+      qv: QueryValue,
+      refNs: String,
+      tpe: String
+    ): Query = {
+      val qv1 = qv match {
+        case Val(arg: String) => Val(esc1(arg))
+        case Val(arg)         => tpe match {
+          case "Double"     => Val(double(arg))
+          case "BigDecimal" => Val(bigDec(arg))
+          case _            => Val(arg)
+        }
+        case _                => qv
+      }
+      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(nsFull, attr, refNs), qv1, Empty, NoBinding)))
     }
 
 
@@ -109,10 +122,10 @@ object QueryOps extends Helpers with JavaUtil {
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, e, a, Var(v), NoBinding)))
 
     def where(e: String, a: Atom, v: String): Query =
-      where(e, a.nsFull, a.attr, Var(v), "")
+      where(e, a.nsFull, a.attr, Var(v), "", a.tpe)
 
     def where(e: String, a: Atom, qv: Val): Query =
-      where(e, a.nsFull, a.attr, qv, "")
+      where(e, a.nsFull, a.attr, qv, "", a.tpe)
 
     def whereAnd[T](e: String, a: Atom, v: String, args: Seq[T], uriV: String = ""): Query =
       args.zipWithIndex.foldLeft(q) {
@@ -173,7 +186,6 @@ object QueryOps extends Helpers with JavaUtil {
           )),
           ScalarBinding(Var("sys")))
         .func("=", Seq(Var("sys"), Val(false)))
-        //        .func("clojure.string/includes? ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("isPart")))
         .func(".contains ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("isPart")))
         .func(".split ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("nsParts")))
         .func("first", Seq(Var("nsParts")), ScalarBinding(Var("part0")))
@@ -235,7 +247,7 @@ object QueryOps extends Helpers with JavaUtil {
       .func("-", Seq(Var("tx"), Val(txBase)), ScalarBinding(Var("t")))
 
     def schemaTxInstant: Query = q.schema
-      .where("tx", "db", "txInstant", Var("txInstant"), "")
+      .where("tx", "db", "txInstant", Var("txInstant"), "", "")
 
 
     def schemaPull(v: String): Query =
@@ -254,7 +266,7 @@ object QueryOps extends Helpers with JavaUtil {
 
     def datomE(e: String, v: String, v1: String, singleElement: Boolean = false): Query = {
       if (singleElement) {
-        q.where(e, "?", e + "_attr", Var(v), "")
+        q.where(e, "?", e + "_attr", Var(v), "", "")
           .ident(e + "_attr", v1)
           .func("namespace", Seq(Var(v1)), ScalarBinding(Var(v + "_ns")))
           .func("!=", Seq(Var(v + "_ns"), Val("db.install")))
@@ -271,7 +283,7 @@ object QueryOps extends Helpers with JavaUtil {
           case DataClause(_, Var(`e`), _, _, _, _)                                        => q
           case DataClause(_, Var("a"), _, _, _, _)                                        => q
         } getOrElse
-          q.where(e, "?", e + "_attr", Var(v), "")
+          q.where(e, "?", e + "_attr", Var(v), "", "")
             .ident(e + "_attr", v1)
             .func("namespace", Seq(Var(v1)), ScalarBinding(Var(v + "_ns")))
             .func("!=", Seq(Var(v + "_ns"), Val("db.install")))
@@ -301,7 +313,7 @@ object QueryOps extends Helpers with JavaUtil {
             .func(".matches ^String", Seq(Var(v + "_a"), Val(":?-.*")), ScalarBinding(Var(v + "_a_test")))
             .func("=", Seq(Var(v + "_a_test"), Val(false)))
       }.getOrElse(
-        q.where(e, "?", e + "_attr", Var(v), "")
+        q.where(e, "?", e + "_attr", Var(v), "", "")
           .ident(e + "_attr", v1)
           .func("str", Seq(Var(v1)), ScalarBinding(Var(v + "_a")))
           .func(".matches ^String", Seq(Var(v + "_a"), Val(":?-.*")), ScalarBinding(Var(v + "_a_test")))
@@ -320,7 +332,7 @@ object QueryOps extends Helpers with JavaUtil {
         case DataClause(_, Var(`e`), KW(_, _, _), _, _, _)                              => q
           .func("identity", Seq(Var(v)), ScalarBinding(Var(v + "_v")))
       } getOrElse
-        q.where(e, "?", e + "_attr", Var(v), "")
+        q.where(e, "?", e + "_attr", Var(v), "", "")
           .ident(e + "_attr", v1)
           .func("namespace", Seq(Var(v1)), ScalarBinding(Var(v + "_ns")))
           .func("!=", Seq(Var(v + "_ns"), Val("db.install")))
@@ -336,11 +348,21 @@ object QueryOps extends Helpers with JavaUtil {
     def datomTx(e: String, v: String, v1: String): Query = {
       // Ensure tx value is present
       val (hasTxV, cls0): (Int, Seq[Clause]) = q.wh.clauses.foldRight(0, Seq.empty[Clause]) {
-        case (cl@DataClause(_, Var(`e`), _, _, NoBinding | Empty | Var("_"), _), (0, acc)) => (1, cl.copy(tx = Var(v + "_tx")) +: acc)
-        case (cl@DataClause(_, Var(`e`), _, _, Var(tx), _), (0, acc)) if tx == v + "_tx"   => (1, cl +: acc)
-        case (cl@DataClause(_, _, _, Var(`e`), NoBinding | Empty | Var("_"), _), (0, acc)) => (1, cl.copy(tx = Var(v + "_tx")) +: acc)
-        case (cl@DataClause(_, _, _, Var(`e`), Var(tx), _), (0, acc)) if tx == v + "_tx"   => (1, cl +: acc)
-        case (cl, (ok, acc))                                                               => (ok, cl +: acc)
+        case (cl@DataClause(_, Var(`e`), _, _, NoBinding | Empty | Var("_"), _), (0, acc)) =>
+          (1, cl.copy(tx = Var(v + "_tx")) +: acc)
+
+        case (cl@DataClause(_, Var(`e`), _, _, Var(tx), _), (0, acc)) if tx == v + "_tx" =>
+          (1, cl +: acc)
+
+        case (cl@DataClause(_, _, _, Var(`e`), NoBinding | Empty | Var("_"), _), (0, acc)) =>
+          (1, cl.copy(tx = Var(v + "_tx")) +: acc)
+
+        case (cl@DataClause(_, _, _, Var(`e`), Var(tx), _), (0, acc)) if tx == v + "_tx" =>
+          (1, cl +: acc)
+
+        case (cl, (ok, acc)) =>
+          (ok, cl +: acc)
+
       }
       val cls           : Seq[Clause]        = if (hasTxV == 1) {
         cls0
@@ -381,21 +403,35 @@ object QueryOps extends Helpers with JavaUtil {
     def datomTxInstant(e: String, v: String, v1: String): Query = {
       q.wh.clauses.reverse.collectFirst {
         case DataClause(_, _, _, _, Var(tx), _) if tx == v + "_tx" =>
-          q.where(v + "_tx", "db", "txInstant", Var(v + "_txInstant"), "")
+          q.where(v + "_tx", "db", "txInstant", Var(v + "_txInstant"), "", "")
       } getOrElse
         q.datomTx(e, v, v1)
-          .where(v + "_tx", "db", "txInstant", Var(v + "_txInstant"), "")
+          .where(v + "_tx", "db", "txInstant", Var(v + "_txInstant"), "", "")
     }
 
     def datomOp(e: String, v: String, v1: String): Query = {
       val (ok, cls0): (Int, Seq[Clause]) = q.wh.clauses.foldRight(0, Seq.empty[Clause]) {
-        case (cl@DataClause(_, Var(`e`), _, _, Empty | NoBinding, NoBinding), (0, acc))  => (1, cl.copy(tx = Var("_"), op = Var(v + "_op")) +: acc)
-        case (cl@DataClause(_, Var(`e`), _, _, _, NoBinding), (0, acc))                  => (1, cl.copy(op = Var(v + "_op")) +: acc)
-        case (cl@DataClause(_, Var(`e`), _, _, _, Var(op)), (0, acc)) if op == v + "_op" => (1, cl +: acc)
-        case (cl@DataClause(_, _, _, Var(`e`), Empty | NoBinding, NoBinding), (0, acc))  => (1, cl.copy(tx = Var("_"), op = Var(v + "_op")) +: acc)
-        case (cl@DataClause(_, _, _, Var(`e`), _, NoBinding), (0, acc))                  => (1, cl.copy(op = Var(v + "_op")) +: acc)
-        case (cl@DataClause(_, _, _, Var(`e`), _, Var(op)), (0, acc)) if op == v + "_op" => (1, cl +: acc)
-        case (cl, (ok, acc))                                                             => (ok, cl +: acc)
+        case (cl@DataClause(_, Var(`e`), _, _, Empty | NoBinding, NoBinding), (0, acc)) =>
+          (1, cl.copy(tx = Var("_"), op = Var(v + "_op")) +: acc)
+
+        case (cl@DataClause(_, Var(`e`), _, _, _, NoBinding), (0, acc)) =>
+          (1, cl.copy(op = Var(v + "_op")) +: acc)
+
+        case (cl@DataClause(_, Var(`e`), _, _, _, Var(op)), (0, acc)) if op == v + "_op" =>
+          (1, cl +: acc)
+
+        case (cl@DataClause(_, _, _, Var(`e`), Empty | NoBinding, NoBinding), (0, acc)) =>
+          (1, cl.copy(tx = Var("_"), op = Var(v + "_op")) +: acc)
+
+        case (cl@DataClause(_, _, _, Var(`e`), _, NoBinding), (0, acc)) =>
+          (1, cl.copy(op = Var(v + "_op")) +: acc)
+
+        case (cl@DataClause(_, _, _, Var(`e`), _, Var(op)), (0, acc)) if op == v + "_op" =>
+          (1, cl +: acc)
+
+        case (cl, (ok, acc)) =>
+          (ok, cl +: acc)
+
       }
       val cls       : Seq[Clause]        = if (ok == 1) cls0 else Seq(
         DataClause(ImplDS, Var(e), KW("?", e + "_attr"), Var(v), Var("_"), Var(v + "_op"))
@@ -421,7 +457,7 @@ object QueryOps extends Helpers with JavaUtil {
       q.where(e, a, v).ident(v, v + 1).kw(v + 1, v + 2)
 
     def ident(v: String, v1: String): Query =
-      q.where(v, "db", "ident", Var(v1), "")
+      q.where(v, "db", "ident", Var(v1), "", "")
 
     def kw(v1: String, v2: String): Query =
       q.func("name", Seq(Var(v1)), ScalarBinding(Var(v2)))
@@ -431,36 +467,37 @@ object QueryOps extends Helpers with JavaUtil {
       args.zipWithIndex.foldLeft(q) {
         case (q1, (arg: URI, i)) =>
           q1.func(s"""ground (java.net.URI. "$arg")""", Empty, v + "_" + (i + 1) + "a")
-            .func(".compareTo ^java.net.URI", Seq(Var(v), Var(v + "_" + (i + 1) + "a")), ScalarBinding(Var(v + "_" + (i + 1) + "b")))
+            .func(".compareTo ^java.net.URI", Seq(Var(v), Var(v + "_" + (i + 1) + "a")),
+              ScalarBinding(Var(v + "_" + (i + 1) + "b")))
             .func(op, Seq(Var(v + "_" + (i + 1) + "b"), Val(0)))
         case (q1, (arg, i))      => q1.compareTo(op, a, v, Val(arg), i + 1)
       }
 
     def compareTo(op: String, a: Atom, v: String, qv: QueryValue, i: Int = 0): Query = qv match {
-      case Val(arg) if a.tpe == "String" => compareTo2(op, a.tpe, v, Val(arg.toString.replace("\"", "\\\"")), i)
-      //      case Val(arg) if a.tpe == "Float"      => compareTo2(op, a.tpe, v, Val(arg.toString.toFloat), i)
-      case Val(arg) if a.tpe == "Double"     =>
-        if (arg.toString.startsWith("__n__"))
-          compareTo2(op, a.tpe, v, Val(arg), i) // Leave prepend as-is
-        else
-          compareTo2(op, a.tpe, v, Val(arg.toString.toDouble), i)
-      case Val(arg) if a.tpe == "BigDecimal" =>
-        if (arg.toString.startsWith("__n__"))
-          compareTo2(op, a.tpe, v, Val(arg), i) // Leave prepend as-is
-        else
-          compareTo2(op, a.tpe, v, Val(BigDecimal(withDecimal(arg))), i)
+      case Val(arg) if a.tpe == "String"     => compareTo2(op, a.tpe, v, Val(esc1(arg)), i)
+      case Val(arg) if a.tpe == "Double"     => compareTo2(op, a.tpe, v, Val(double(arg)), i)
+      case Val(arg) if a.tpe == "BigDecimal" => compareTo2(op, a.tpe, v, Val(bigDec(arg)), i)
       case _                                 => compareTo2(op, a.tpe, v, qv, i)
     }
 
     def compareTo2(op: String, tpeS: String, v: String, qv: QueryValue, i: Int = 0): Query = {
       val w  = Var(if (i > 0) v + "_" + i else v + 2)
       val q1 = tpeS match {
-        case "BigInt"     =>
+        case "URI" => qv match {
+          case Val(arg) => q
+            .func(s"""ground (java.net.URI. "$arg")""", Empty, v + "_" + (i + 1) + "a")
+            .func(".compareTo ^java.net.URI", Seq(Var(v), Var(v + "_" + (i + 1) + "a")), ScalarBinding(w))
+          case other    => q
+            .func(".compareTo ^" + castStr(tpeS), Seq(Var(v), qv), ScalarBinding(w))
+        }
+
+        case "BigInt" =>
           qv match {
             case Var(v1) => q
               .func("biginteger", Seq(Var(v)), ScalarBinding(Var(v + "_casted")))
               .func("biginteger", Seq(Var(v1)), ScalarBinding(Var(v1 + "_casted")))
-              .func(".compareTo ^java.math.BigInteger", Seq(Var(v + "_casted"), Var(v1 + "_casted")), ScalarBinding(w))
+              .func(".compareTo ^java.math.BigInteger", Seq(Var(v + "_casted"), Var(v1 + "_casted")),
+                ScalarBinding(w))
 
             case Val(arg) => q
               .func("biginteger", Seq(Var(v)), ScalarBinding(Var(v + "_casted")))
@@ -468,40 +505,22 @@ object QueryOps extends Helpers with JavaUtil {
 
             case other => throw new IllegalArgumentException("Unexpected QueryValue for BigInt resolution: " + other)
           }
+
         case "BigDecimal" => q.func(".compareTo ^java.math.BigDecimal", Seq(Var(v), qv), ScalarBinding(w))
-        case "URI"        => qv match {
-          case Val(arg) =>
-            q.func(s"""ground (java.net.URI. "$arg")""", Empty, v + "_" + (i + 1) + "a")
-              .func(".compareTo ^java.net.URI", Seq(Var(v), Var(v + "_" + (i + 1) + "a")), ScalarBinding(w))
-          case other    =>
-            q.func(".compareTo ^" + castStr(tpeS), Seq(Var(v), qv), ScalarBinding(w))
-        }
         case _            => q.func(".compareTo ^" + castStr(tpeS), Seq(Var(v), qv), ScalarBinding(w))
       }
       q1.func(op, Seq(w, Val(0)))
     }
 
     def ground(a: Atom, arg: Any, v: String): Query = a.tpe match {
-      case "String"                           => q.func(s"""ground "${esc1(arg)}"""", Empty, v)
-      case "Int" | "Long" | "Boolean" | "ref" => q.func(s"""ground $arg""", Empty, v)
-      case "Double"                           =>
-        if (arg.toString.startsWith("__n__")) {
-          q.func(s"""ground ${arg.toString.drop(5)}""", Empty, v)
-        } else {
-          q.func(s"""ground ${withDecimal(arg)}""", Empty, v)
-        }
-
+      case "String"     => q.func(s"""ground "${esc1(arg)}"""", Empty, v)
+      case "Double"     => q.func(s"""ground ${withDecimal(arg)}""", Empty, v)
       case "Date"       => q.func(s"""ground #inst "${date2datomicStr(arg.asInstanceOf[Date])}"""", Empty, v)
       case "UUID"       => q.func(s"""ground #uuid "$arg"""", Empty, v)
       case "URI"        => q.func(s"""ground (java.net.URI. "$arg")""", Empty, v)
       case "BigInt"     => q.func(s"""ground (java.math.BigInteger. "$arg")""", Empty, v)
-      case "BigDecimal" =>
-        if (arg.toString.startsWith("__n__")) {
-          val arg1 = arg.toString.drop(5).init // skip "M" at end too
-          q.func(s"""ground (java.math.BigDecimal. "$arg1")""", Empty, v)
-        } else {
-          q.func(s"""ground (java.math.BigDecimal. "${withDecimal(arg)}")""", Empty, v)
-        }
+      case "BigDecimal" => q.func(s"""ground (java.math.BigDecimal. "${withDecimal(arg)}")""", Empty, v)
+      case _            => q.func(s"""ground $arg""", Empty, v)
     }
 
     def fulltext(e: String, a: Atom, v: String, s: String): Query =
@@ -546,10 +565,6 @@ object QueryOps extends Helpers with JavaUtil {
             .func("second", Seq(Var(v + 1)), ScalarBinding(Var(v + 2)))
       }
       arg match {
-        case s: String if s.startsWith("__n__") => q1
-          .func("read-string", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
-          .func(op, Seq(Var(v + 3), Val(s)))
-
         case _: String  => q1.compareTo(op, a, v + 2, Val(arg), 1)
         case _: UUID    => q1.compareTo(op, a, v + 2, Val(arg), 1)
         case _: URI     => q1.compareTo(op, a, v + 2, Val(arg), 1)
@@ -558,6 +573,8 @@ object QueryOps extends Helpers with JavaUtil {
           .func(".compareTo ^String", Seq(Var(v + 2), Val(date2str(d))), ScalarBinding(Var(v + 3)))
           .func(op, Seq(Var(v + 3), Val(0)))
         case number     => q1
+          // todo: compare BigInt/BigDecimal instead - can't compare number strings!
+          // on JS platform we can't compare types either
           .func("read-string", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
           .func(op, Seq(Var(v + 3), Val(number)))
       }
@@ -621,38 +638,57 @@ object QueryOps extends Helpers with JavaUtil {
       val orRules  = if (flag && a.card == 2) {
         // Fulltext search for card-many attribute
         val ruleClauses = args.zipWithIndex.map { case (arg, i) =>
-          Funct("fulltext", Seq(DS(""), KW(a.nsFull, a.attr), Val(arg)), RelationBinding(List(Var(e), Var(e + "_" + (i + 1)))))
+          Funct("fulltext", Seq(DS(""), KW(a.nsFull, a.attr), Val(arg)),
+            RelationBinding(List(Var(e), Var(e + "_" + (i + 1)))))
         }
         Seq(Rule(ruleName, Seq(Var(e)), ruleClauses))
       } else {
         args.zipWithIndex.distinct.flatMap { case (arg, i) =>
           val ruleClauses = arg match {
-            case set: Set[_] if specialV.nonEmpty => set.toSeq.zipWithIndex.flatMap { case (uri, j) =>
-              val x = Var(specialV + "_" + (j + 1))
-              Seq(
-                DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), x, Empty),
-                Funct(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(x))
-              )
-            }
-            case set: Set[_]                      => set.toSeq.map(arg =>
-              DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(pre(a, arg)), Empty)
-            )
-            case mapArg if a.card == 3            => Seq(
-              Funct(".matches ^String", Seq(Var(e), Val(".+@" + doubleEsc(mapArg))), NoBinding)
-            )
-            case _ if specialV.nonEmpty && flag   => Seq(
-              Funct("=", Seq(Var(specialV), Val(arg)), NoBinding)
-            )
-            case uri if specialV.nonEmpty         => Seq(
+            case set: Set[_] =>
+              if (specialV.nonEmpty) {
+                set.toSeq.zipWithIndex.flatMap { case (uri, j) =>
+                  val x = Var(specialV + "_" + (j + 1))
+                  Seq(
+                    DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), x, Empty),
+                    Funct(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(x))
+                  )
+                }
+              } else {
+                a.tpe match {
+                  case "Double" => set.toSeq.map(arg =>
+                    DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(double(arg)), Empty))
+
+                  case "BigDecimal" => set.toSeq.map(arg =>
+                    DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(bigDec(arg)), Empty))
+
+                  case _ => set.toSeq.map(arg =>
+                    DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(pre(a, arg)), Empty))
+                }
+              }
+
+            case mapArg if a.card == 3 => Seq(
+              Funct(".matches ^String", Seq(Var(e), Val(".+@" + doubleEsc(mapArg))), NoBinding))
+
+            case _ if specialV.nonEmpty && flag => Seq(
+              Funct("=", Seq(Var(specialV), Val(arg)), NoBinding))
+
+            case uri if specialV.nonEmpty => Seq(
               DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Var(specialV), Empty),
               Funct(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(Var(specialV)))
             )
-            case fulltext if flag                 => Seq(
-              Funct("fulltext", Seq(DS(""), KW(a.nsFull, a.attr), Val(arg)), RelationBinding(List(Var(e), Var(e + "_" + (i + 1)))))
-            )
-            case _                                => Seq(
-              DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(pre(a, doubleEsc(arg))), Empty)
-            )
+            case fulltext if flag         => Seq(
+              Funct("fulltext", Seq(DS(""), KW(a.nsFull, a.attr), Val(arg)),
+                RelationBinding(List(Var(e), Var(e + "_" + (i + 1))))))
+
+            case _ if a.tpe == "Double" => Seq(
+              DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(double(arg)), Empty))
+
+            case _ if a.tpe == "BigDecimal" => Seq(
+              DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(bigDec(arg)), Empty))
+
+            case _ => Seq(
+              DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Val(pre(a, doubleEsc(arg))), Empty))
           }
           if (ruleClauses.isEmpty) None else Some(Rule(ruleName, Seq(Var(e)), ruleClauses))
         }
@@ -672,11 +708,12 @@ object QueryOps extends Helpers with JavaUtil {
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(nsFull, refAttr, refNs), Var(v), Empty)))
 
 
+
+
     // Java conversions ...........................................................
 
     private def cast(a: Any): AnyRef = a match {
-      case i: Int => i.toLong.asInstanceOf[Object]
-      //      case f: Float                              => f.toDouble.asInstanceOf[Object]
+      case i: Int                                => i.toLong.asInstanceOf[Object]
       case bigI: BigInt                          => bigI.bigInteger
       case bigD: BigDecimal                      => bigD.bigDecimal
       case s: String if s.startsWith("__enum__") => s.drop(8).asInstanceOf[Object]

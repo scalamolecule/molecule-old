@@ -16,7 +16,7 @@ import sloth._
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
-import chameleon.ext.boopickle._
+import scala.concurrent.duration.DurationInt
 
 /** Akka Http Ajax responder implementation
   *
@@ -86,6 +86,7 @@ object AjaxResponder extends App with Serializations {
   Http()
     .newServerAt("localhost", 8080)
     .bind(route)
+    .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
     .onComplete {
       case Success(b) => println(s"Ajax server is running ${b.localAddress} ")
       case Failure(e) => println(s"there was an error starting the server $e")

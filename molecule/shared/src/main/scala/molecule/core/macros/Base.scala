@@ -30,63 +30,58 @@ private[molecule] trait Base extends Dsl2Model {
         import scala.concurrent.Future
      """
 
-  def mapIdents(isJsPlatform: Boolean, tpe: String, idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {
+  def mapIdents(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {
     case (key: String, v: String) if key.startsWith("__ident__") && v.startsWith("__ident__") =>
       Seq(
-        ArrowAssoc(key) -> q"convert($isJsPlatform, $tpe, ${TermName(key.substring(9))})",
-        ArrowAssoc(v) -> q"convert($isJsPlatform, $tpe, ${TermName(v.substring(9))})"
+        ArrowAssoc(key) -> q"${TermName(key.substring(9))}",
+        ArrowAssoc(v) -> q"${TermName(v.substring(9))}"
       )
 
     case (key: String, v: Any) if key.startsWith("__ident__") =>
-      Seq(ArrowAssoc(key) -> q"convert($isJsPlatform, $tpe, ${TermName(key.substring(9))})")
+      Seq(ArrowAssoc(key) -> q"${TermName(key.substring(9))}")
 
     case (key: Any, v: String) if v.startsWith("__ident__") =>
-      Seq(ArrowAssoc(v) -> q"convert($isJsPlatform, $tpe, ${TermName(v.substring(9))})")
+      Seq(ArrowAssoc(v) -> q"${TermName(v.substring(9))}")
 
     case ident: String if ident.startsWith("__ident__") =>
-      Seq(ArrowAssoc(ident) -> q"convert($isJsPlatform, $tpe, ${TermName(ident.substring(9))})")
+      Seq(ArrowAssoc(ident) -> q"${TermName(ident.substring(9))}")
 
     case set: Set[_] if set.nonEmpty => set.flatMap {
       case ident if ident.toString.startsWith("__ident__") =>
-        Seq(ArrowAssoc(ident.toString) -> q"convert($isJsPlatform, $tpe, ${TermName(ident.toString.substring(9))})")
-      case value                                           => Nil
+        Seq(ArrowAssoc(ident.toString) -> q"${TermName(ident.toString.substring(9))}")
+      case _                                               => Nil
     }
-    case other                       => Nil
+    case _                           => Nil
   }
 
-  def mapIdentifiers(
-    isJsPlatform: Boolean,
-    elements: Seq[Element],
-    identifiers0: Seq[(String, Tree)] = Seq()
-  ): Seq[(String, Tree)] = {
+  def mapIdentifiers(elements: Seq[Element], identifiers0: Seq[(String, Tree)] = Nil): Seq[(String, Tree)] = {
     val newIdentifiers = (elements collect {
-      case Atom(_, _, tpe, _, Eq(idents), _, _, keyIdents)              => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, Neq(idents), _, _, keyIdents)             => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, And(idents), _, _, keyIdents)             => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, Lt(ident), _, _, keyIdents)               => mapIdents(isJsPlatform, tpe, ident +: keyIdents)
-      case Atom(_, _, tpe, _, Gt(ident), _, _, keyIdents)               => mapIdents(isJsPlatform, tpe, ident +: keyIdents)
-      case Atom(_, _, tpe, _, Le(ident), _, _, keyIdents)               => mapIdents(isJsPlatform, tpe, ident +: keyIdents)
-      case Atom(_, _, tpe, _, Ge(ident), _, _, keyIdents)               => mapIdents(isJsPlatform, tpe, ident +: keyIdents)
-      case Atom(_, _, tpe, _, Fulltext(idents), _, _, keyIdents)        => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, AssertValue(idents), _, _, keyIdents)     => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, RetractValue(idents), _, _, keyIdents)    => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, ReplaceValue(idents), _, _, keyIdents)    => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, MapEq(idents), _, _, keyIdents)           => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, AssertMapPairs(idents), _, _, keyIdents)  => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, ReplaceMapPairs(idents), _, _, keyIdents) => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, RetractMapKeys(idents), _, _, keyIdents)  => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, MapKeys(idents), _, _, keyIdents)         => mapIdents(isJsPlatform, tpe, idents ++ keyIdents)
-      case Atom(_, _, tpe, _, _, _, _, keyIdents)                       => mapIdents(isJsPlatform, tpe, keyIdents)
-      case Generic(_, _, tpe, Eq(idents))                               => mapIdents(isJsPlatform, tpe, idents)
-      case Generic(_, _, tpe, Neq(idents))                              => mapIdents(isJsPlatform, tpe, idents)
-      case Generic(_, _, tpe, Lt(ident))                                => mapIdents(isJsPlatform, tpe, Seq(ident))
-      case Generic(_, _, tpe, Gt(ident))                                => mapIdents(isJsPlatform, tpe, Seq(ident))
-      case Generic(_, _, tpe, Le(ident))                                => mapIdents(isJsPlatform, tpe, Seq(ident))
-      case Generic(_, _, tpe, Ge(ident))                                => mapIdents(isJsPlatform, tpe, Seq(ident))
-      case Nested(_, nestedElements)                                    => mapIdentifiers(isJsPlatform, nestedElements, identifiers0)
-      case Composite(compositeElements)                                 => mapIdentifiers(isJsPlatform, compositeElements, identifiers0)
-      case TxMetaData(txElements)                                       => mapIdentifiers(isJsPlatform, txElements, identifiers0)
-
+      case Atom(_, _, _, _, Eq(idents), _, _, keyIdents)              => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, Neq(idents), _, _, keyIdents)             => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, And(idents), _, _, keyIdents)             => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, Lt(ident), _, _, keyIdents)               => mapIdents(ident +: keyIdents)
+      case Atom(_, _, _, _, Gt(ident), _, _, keyIdents)               => mapIdents(ident +: keyIdents)
+      case Atom(_, _, _, _, Le(ident), _, _, keyIdents)               => mapIdents(ident +: keyIdents)
+      case Atom(_, _, _, _, Ge(ident), _, _, keyIdents)               => mapIdents(ident +: keyIdents)
+      case Atom(_, _, _, _, Fulltext(idents), _, _, keyIdents)        => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, AssertValue(idents), _, _, keyIdents)     => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, RetractValue(idents), _, _, keyIdents)    => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, ReplaceValue(idents), _, _, keyIdents)    => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, MapEq(idents), _, _, keyIdents)           => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, AssertMapPairs(idents), _, _, keyIdents)  => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, ReplaceMapPairs(idents), _, _, keyIdents) => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, RetractMapKeys(idents), _, _, keyIdents)  => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, MapKeys(idents), _, _, keyIdents)         => mapIdents(idents ++ keyIdents)
+      case Atom(_, _, _, _, _, _, _, keyIdents)                       => mapIdents(keyIdents)
+      case Generic(_, _, _, Eq(idents))                               => mapIdents(idents)
+      case Generic(_, _, _, Neq(idents))                              => mapIdents(idents)
+      case Generic(_, _, _, Lt(ident))                                => mapIdents(Seq(ident))
+      case Generic(_, _, _, Gt(ident))                                => mapIdents(Seq(ident))
+      case Generic(_, _, _, Le(ident))                                => mapIdents(Seq(ident))
+      case Generic(_, _, _, Ge(ident))                                => mapIdents(Seq(ident))
+      case Nested(_, nestedElements)                                  => mapIdentifiers(nestedElements, identifiers0)
+      case Composite(compositeElements)                               => mapIdentifiers(compositeElements, identifiers0)
+      case TxMetaData(txElements)                                     => mapIdentifiers(txElements, identifiers0)
     }).flatten
     (identifiers0 ++ newIdentifiers).distinct
   }

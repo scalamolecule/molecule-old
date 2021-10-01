@@ -207,34 +207,6 @@ case class Conn_Client(
     }
   }
 
-  //  def transactRaw(
-  //    javaStmts: jList[_],
-  //    futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
-  //  )(implicit ec: ExecutionContext): Future[TxReport] = try {
-  //    futScalaStmts.map { scalaStmts =>
-  //      if (_adhocDbView.isDefined) {
-  //        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
-  //
-  //      } else if (_testDb.isDefined) {
-  //        // In-memory "transaction"
-  //        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
-  //
-  //        // Continue with updated in-memory db
-  //        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-  //        //      val dbAfter = txReport.dbAfter
-  //        val dbAfter = txReport.dbAfter.asOf(txReport.t)
-  //        _testDb = Some(dbAfter)
-  //        txReport
-  //
-  //      } else {
-  //        // Live transaction
-  //        TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
-  //      }
-  //    }
-  //  } catch {
-  //    case NonFatal(exc) => Future.failed(exc)
-  //  }
-
 
   def qRaw(
     db: DatomicDb,
@@ -329,38 +301,35 @@ case class Conn_Client(
         })
 
       case Generic("Log", _, _, value) =>
+        def err(v: Any) = throw MoleculeException(
+          s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
+
         ("txRange", "", value match {
-          case Eq(Seq(from: Int, until: Int))   => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Int, until: Long))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Int, until: Date))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Long, until: Int))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Long, until: Long)) => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Long, until: Date)) => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Date, until: Int))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Date, until: Long)) => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Date, until: Date)) => Seq(Some(from), Some(until))
+          case Eq(Seq(a, b)) =>
+            // Get valid from/until values
+            val from  = a match {
+              case None                              => None
+              case from@(_: Int | _: Long | _: Date) => from
+              case other                             => err(other)
+            }
+            val until = b match {
+              case None                               => None
+              case until@(_: Int | _: Long | _: Date) => until
+              case other                              => err(other)
+            }
+            Seq(from, until)
 
-          case Eq(Seq(from: Int, None))  => Seq(Some(from), None)
-          case Eq(Seq(from: Long, None)) => Seq(Some(from), None)
-          case Eq(Seq(from: Date, None)) => Seq(Some(from), None)
 
-          case Eq(Seq(None, until: Int))  => Seq(None, Some(until))
-          case Eq(Seq(None, until: Long)) => Seq(None, Some(until))
-          case Eq(Seq(None, until: Date)) => Seq(None, Some(until))
-
-          // All !!
-          case Eq(Seq(None, None)) => Seq(None, None)
-
-          // From until end
-          case Eq(Seq(from: Int))  => Seq(Some(from), None)
-          case Eq(Seq(from: Long)) => Seq(Some(from), None)
-          case Eq(Seq(from: Date)) => Seq(Some(from), None)
+          case Eq(Seq(from)) => from match {
+            case None                              => Seq(None, None)
+            case from@(_: Int | _: Long | _: Date) => Seq(from, None)
+            case other                             => err(other)
+          }
 
           // All !!
           case Eq(Nil) => Seq(None, None)
 
-          case Eq(other) => throw MoleculeException(
-            "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found: " + other)
+          case Eq(other) => err(other)
 
           case v => throw MoleculeException("Unexpected Log value: " + v)
         })

@@ -1,7 +1,6 @@
 package moleculeTests.tests.core.expression
 
-import molecule.datomic.api.in3_out11.m
-import molecule.datomic.api.out2._
+import molecule.datomic.api.in1_out2._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._

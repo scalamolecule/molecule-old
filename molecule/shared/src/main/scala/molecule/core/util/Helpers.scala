@@ -6,7 +6,9 @@ import java.time.format.DateTimeFormatter
 import java.util.{Date, UUID}
 import molecule.core.ast.elements.{Atom, Bond, Composite, Element, Generic, Model}
 import molecule.core.exceptions.MoleculeException
+import molecule.core.ops.ModelOps.date2str
 import molecule.datomic.base.facade.TxReport
+import molecule.datomic.base.ops.QueryOps.withDecimal
 import scala.concurrent.{ExecutionContext, Future}
 
 object Helpers extends Helpers
@@ -18,25 +20,6 @@ trait Helpers extends DateHandling {
       val instant   = localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant
       Date.from(instant)
     }
-  }
-
-  def anyType(tpe: String, vs: Seq[Any]): String = {
-    if (tpe == "Any")
-      vs.headOption.getOrElse("String") match {
-        case _: String     => "String"
-        case _: Int        => "Int"
-        case _: Long       => "Long"
-        case _: Float      => "Float"
-        case _: Double     => "Double"
-        case _: Boolean    => "Boolean"
-        case _: Date       => "Date"
-        case _: UUID       => "UUID"
-        case _: URI        => "URI"
-        case _: BigInt     => "BigInt"
-        case _: BigDecimal => "BigDecimal"
-      }
-    else
-      tpe
   }
 
   def clean(attr: String): String = attr.last match {
@@ -64,6 +47,9 @@ trait Helpers extends DateHandling {
 
   def unescStr(s: String) =
     s.replace("""\"""", """"""").replace("""\\""", """\""")
+
+  protected def double(arg: Any): String = "__n__" + arg + (if (arg.toString.contains(".")) "" else ".0")
+  protected def bigDec(arg: Any) = BigDecimal(withDecimal(arg))
 
   def padS(longest: Int, str: String): String = pad(longest, str.length)
 

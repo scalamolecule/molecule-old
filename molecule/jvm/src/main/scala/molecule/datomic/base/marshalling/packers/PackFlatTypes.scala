@@ -1,6 +1,6 @@
 package molecule.datomic.base.marshalling.packers
 
-import java.util.{Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
+import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
 import clojure.lang.Keyword
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
@@ -19,31 +19,30 @@ trait PackFlatTypes extends PackBase with Helpers {
   protected lazy val packOneDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
     add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
 
-  // Generic `v` attribute value converted to String with appended type to be packed on JS side
+  // Generic `v` attribute value converted to String with appended type to be unpacked on JS side
   protected lazy val packOneAny = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
-      case s: java.lang.String      => add(sb, "String    " + s); end(sb) // String can be multi-line
-      case i: java.lang.Integer     => add(sb, "Int       " + i.toString)
-      case l: java.lang.Long        => add(sb, "Long      " + l.toString)
-      case d: java.lang.Double      => add(sb, "Double    " + d.toString)
-      case b: java.lang.Boolean     => add(sb, "Boolean   " + b.toString)
-      case d: Date                  => add(sb, "Date      " + date2strLocal(d))
-      case u: UUID                  => add(sb, "UUID      " + u.toString)
-      case u: java.net.URI          => add(sb, "URI       " + u.toString)
-      case bi: java.math.BigInteger => add(sb, "BigInt    " + bi.toString)
-      case bi: clojure.lang.BigInt  => add(sb, "BigInt    " + bi.toString)
-      case bd: java.math.BigDecimal => add(sb, "BigDecimal" + bd.toString)
-      case other                    =>
+      case v: java.lang.String     => add(sb, "String    " + v); end(sb) // String can be multi-line
+      case v: java.lang.Integer    => add(sb, "Int       " + v.toString)
+      case v: java.lang.Long       => add(sb, "Long      " + v.toString)
+      case v: java.lang.Double     => add(sb, "Double    " + v.toString)
+      case v: java.lang.Boolean    => add(sb, "Boolean   " + v.toString)
+      case v: Date                 => add(sb, "Date      " + date2strLocal(v))
+      case v: java.net.URI         => add(sb, "URI       " + v.toString)
+      case v: UUID                 => add(sb, "UUID      " + v.toString)
+      case v: java.math.BigInteger => add(sb, "BigInt    " + v.toString)
+      case v: java.math.BigDecimal => add(sb, "BigDecimal" + v.toString)
+      case v: clojure.lang.BigInt  => add(sb, "BigInt    " + v.toString)
+      case v: BigInt               => add(sb, "BigInt    " + v.toString)
+      case v: BigDecimal           => add(sb, "BigDecimal" + v.toString)
+
+      case other =>
         throw MoleculeException(s"Unexpected packOneAny value `$other` of type " + other.getClass)
     }
   }
 
   protected lazy val packOneRefAttr = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
-    add(sb,
-      row.get(colIndex).toString
-//      row.get(colIndex).asInstanceOf[Keyword].getName
-//      row.get(colIndex).asInstanceOf[jMap[String, Any]].values.iterator.next.toString
-    )
+    add(sb, row.get(colIndex).toString)
 
   protected lazy val packOne = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
     add(sb, row.get(colIndex).toString)
@@ -335,12 +334,4 @@ trait PackFlatTypes extends PackBase with Helpers {
     }
     end(sb)
   }
-
-
-//  //  packKeyedMap -------------------------------------------------------
-//
-//  protected lazy val packKeyedMapString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-//    add(sb, row.get(colIndex).toString)
-//    end(sb)
-//  }
 }

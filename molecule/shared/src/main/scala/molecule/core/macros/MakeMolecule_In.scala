@@ -96,9 +96,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends Base {
 
 
     def getInputClass(outMoleculeClass: Tree) = if (hasVariables) {
-      val identifiers = mapIdentifiers(isJsPlatform, model0.elements).toMap
+      val identifiers = mapIdentifiers(model0.elements).toMap
       q"""
-        private val _resolvedModel: Model = resolveIdentifiers($isJsPlatform, $model0, $identifiers)
+        private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
           _resolvedModel, Model2Query(_resolvedModel)
         ) {

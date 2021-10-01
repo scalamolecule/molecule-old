@@ -353,8 +353,8 @@ class Conn_Peer(val peerConn: datomic.Connection)
           // All !!
           case Eq(Nil) => Seq(null, null)
 
-          case Eq(other) => throw MoleculeException(
-            "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found: " + other)
+          case Eq(v) => throw MoleculeException(
+            s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
 
           case v => throw MoleculeException("Unexpected Log value: " + v)
         })

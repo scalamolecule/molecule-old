@@ -17,7 +17,7 @@ import scala.language.implicitConversions
   * */
 case class Query2String(q: Query) extends Helpers {
 
-  // Ugly convenience hack to switch BigInt representation
+  // Switch BigInt representation
   var asN = false
 
   val p: QueryExpr => String = {
@@ -34,21 +34,26 @@ case class Query2String(q: Query) extends Helpers {
     case Var("_")                                        => "_"
     case Var(eid) if eid matches """\d+"""               => eid
     case Var(v)                                          => "?" + v
-    case Val(v: Int)                                     => v.toString
-    case Val(v: Long)                                    => v.toString
-    case Val(v: Float)                                   => v.toString
-    case Val(v: Double) if v.toString.contains(".")      => v.toString
-    case Val(v: Double)                                  => v.toString + ".0"
-    case Val(v: Boolean)                                 => v.toString
-    case Val(v: BigInt) if asN                           => v.toString + "N"
-    case Val(v: BigInt)                                  => s"(biginteger $v)"
-    case Val(v: BigDecimal) if v.toString.contains(".")  => v.toString + "M"
-    case Val(v: BigDecimal)                              => v.toString + ".0M"
-    case Val(date: Date)                                 => "#inst \"" + date2datomicStr(date) + "\""
-    case Val(v: UUID)                                    => "#uuid \"" + v + "\""
-    case Val(v: String) if v.startsWith("__n__")         => v.drop(5) // JS number hack
-    case Val(v: String) if v.startsWith("__enum__")      => v.drop(8) // clojure Keyword notation (clojure non-ScalaJS compatible)
-    case Val(v)                                          => "\"" + v + "\""
+    case Val(v: Any)                                     => v match {
+      // Order of type checks here is important since JS types match by value
+      // See: https://www.scala-js.org/doc/semantics.html
+      case v: String if v.startsWith("__d__")        => "#inst \"" + v.drop(5) + "\"" // JS date
+      case v: String if v.startsWith("__n__")        => v.drop(5) // JS number
+      case v: String if v.startsWith("__enum__")     => v.drop(8) // clojure Keyword notation (clojure non-ScalaJS compatible)
+      case v: Int                                    => v.toString
+      case v: Long                                   => v.toString
+      case v: Float                                  => v.toString
+      case v: Double if v.toString.contains(".")     => v.toString
+      case v: Double                                 => v.toString + ".0"
+      case v: Boolean                                => v.toString
+      case v: BigInt if asN                          => v.toString + "N"
+      case v: BigInt                                 => s"(biginteger $v)"
+      case v: BigDecimal if v.toString.contains(".") => v.toString + "M"
+      case v: BigDecimal                             => v.toString + ".0M"
+      case date: Date                                => "#inst \"" + date2datomicStr(date) + "\""
+      case v: UUID                                   => s"#uuid \"$v\""
+      case string                                    => s"\"$string\""
+    }
     case Pull(e, nsFull, attr, Some(_))                  => s"(pull ?$e [{:$nsFull/$attr [:db/ident]}])"
     case Pull(e, nsFull, attr, _)                        => s"(pull ?$e [(limit :$nsFull/$attr nil)])"
     case PullNested(e, nestedAttrs)                      => s"\n        (pull ?$e [\n          ${p(nestedAttrs)}])"

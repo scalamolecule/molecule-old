@@ -91,7 +91,6 @@ object LogTest extends Base {
             (t3, e1, ":Ns/int", 1, false)
           )
         ))
-
       } yield ()
     }
 
@@ -170,13 +169,24 @@ object LogTest extends Base {
           "molecule.core.transform.exception.Dsl2ModelException: Log attributes not allowed to have values applied.\n" +
             "Log only accepts range arguments: `Log(from, until)`.")
 
-
-        _ <- Log(Some(tx1), Some("unexpected string")).tx.get.recover { case MoleculeException(err, _) =>
-          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `unexpected string`"
+        _ <- Log(Some("start")).t.get.recover { case MoleculeException(err, _) =>
+          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
+            "Found `start` of type class java.lang.String"
         }
 
-        _ <- Log(Some(t1), Some("unexpected string")).t.get.recover { case MoleculeException(err, _) =>
-          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `unexpected string`"
+        _ <- Log(Some(1.0), Some(tx2)).t.get.recover { case MoleculeException(err, _) =>
+          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
+            "Found `1.0` of type class java.lang.Double"
+        }
+
+        _ <- Log(Some(tx1), Some("end")).t.get.recover { case MoleculeException(err, _) =>
+          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
+            "Found `end` of type class java.lang.String"
+        }
+
+        _ <- Log(Some("42"), Some("45")).t.get.recover { case MoleculeException(err, _) =>
+          err ==> "Args to Log can only be t, tx or txInstant of type Int/Long/Date. " +
+            "Found `42` of type class java.lang.String"
         }
       } yield ()
     }

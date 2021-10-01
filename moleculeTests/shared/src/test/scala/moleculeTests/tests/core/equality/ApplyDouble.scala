@@ -76,6 +76,7 @@ object ApplyDouble extends AsyncTestSuite {
       }
     }
 
+
     "Card many" - {
 
       "Mandatory" - core { implicit conn =>

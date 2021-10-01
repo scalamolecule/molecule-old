@@ -28,6 +28,12 @@ trait CastTypes extends Helpers {
   protected def castOneBigDecimal(row: jList[_], colIndex: Int): BigDecimal =
     BigDecimal(row.get(colIndex).toString)
 
+  protected def castOneAny(row: jList[_], colIndex: Int): Any = row.get(colIndex) match {
+    case v: java.math.BigInteger => BigInt(v.toString)
+    case v: java.math.BigDecimal => BigDecimal(v.toString)
+    case v                       => v
+  }
+
   protected def castOne[T](row: jList[_], colIndex: Int): T =
     row.get(colIndex).asInstanceOf[T]
 

@@ -425,7 +425,7 @@ object Model2Query extends Helpers {
     val v = g.attr.init
     g.value match {
       case NoValue        => q.schemaPull(v)
-      case Eq(arg :: Nil) => q.find(v).where(Var("id"), KW("db", v), v).where("id", "db", v, Val(arg), "")
+      case Eq(arg :: Nil) => q.find(v).where(Var("id"), KW("db", v), v).where("id", "db", v, Val(arg), "", "")
       case Fn("not", _)   => q.schemaPull(v).not(v) // None
       case other          => abort(s"Unexpected value for optional schema attribute `${g.attr}`: " + other)
     }
@@ -495,7 +495,7 @@ object Model2Query extends Helpers {
     val v = if (w.nonEmpty) w else v0 + "_" + g.attr
     g.value match {
       case NoValue | EntValue => q.find(v)
-      case Eq(args)           => q.find(v).in(anyType(tpe, args), args, v)
+      case Eq(args)           => q.find(v).in(tpe, args, v)
       case Neq(args)          => q.find(v).compareToMany2("!=", v, args)
       case Gt(arg)            => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)            => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
@@ -511,7 +511,7 @@ object Model2Query extends Helpers {
     g.value match {
       case NoValue | EntValue => q
       case Eq(Seq(Qm))        => q.in(v, tpe, g.tpe, g.attr, e)
-      case Eq(args)           => q.in(anyType(tpe, args), args, v)
+      case Eq(args)           => q.in(tpe, args, v)
       case Neq(args)          => q.compareToMany2("!=", v, args)
       case Gt(arg)            => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
       case Ge(arg)            => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
@@ -875,7 +875,6 @@ object Model2Query extends Helpers {
     }
   }
 
-
   def resolveAtomTacit(q: Query, e: String, a0: Atom, v: String, v1: String): Query = {
     val a = a0.copy(attr = a0.attr.init)
     val t = a.tpe
@@ -909,8 +908,6 @@ object Model2Query extends Helpers {
       case other                                   => abort(s"Unresolved tacit Atom_:\nAtom_  : $a\nElement: $other")
     }
   }
-
-  private def n(arg: Any) = arg.toString.startsWith("__n__")
 
   def resolveAtomMandatory2(q: Query, e: String, a: Atom, v: String, v1: String): Query = {
     val t = a.tpe
@@ -962,7 +959,7 @@ object Model2Query extends Helpers {
       case VarValue                                => q.find(v).where(e, a, v)
       case NoValue                                 => q.find(NoVal).where(e, a, v)
       case Distinct                                => q.find("distinct", Nil, v).where(e, a, v).widh(e)
-      case BackValue(backNs)                       => q.find(e).where(v, a.nsFull, a.attr, Var(e), backNs)
+      case BackValue(backNs)                       => q.find(e).where(v, a.nsFull, a.attr, Var(e), backNs, t)
       case Fn("not", _)                            => q.find(v).where(e, a, v).not(e, a)
       case Eq(Nil)                                 => q.find(v).where(e, a, v).not(e, a)
       case Eq((seq: Seq[_]) :: Nil) if seq.isEmpty => q.find(v).where(e, a, v).not(e, a)

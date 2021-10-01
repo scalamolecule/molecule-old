@@ -4,7 +4,7 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
 import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.util.Helpers
-import molecule.datomic.api.in3_out11._
+import molecule.datomic.api.in3_out12._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -22,6 +22,7 @@ object AdhocJs extends AsyncTestSuite with Helpers
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
+
 
 
 

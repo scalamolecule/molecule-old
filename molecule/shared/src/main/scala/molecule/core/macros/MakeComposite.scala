@@ -39,10 +39,10 @@ class MakeComposite(val c: blackbox.Context) extends Base {
     }
 
     val tree = if (hasVariables) {
-      val identifiers = mapIdentifiers(isJsPlatform, model0.elements).toMap
+      val identifiers = mapIdentifiers(model0.elements).toMap
       q"""
         ..$imports
-        private val _resolvedModel: Model = resolveIdentifiers($isJsPlatform, $model0, $identifiers)
+        private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
           ..$transformers
         }

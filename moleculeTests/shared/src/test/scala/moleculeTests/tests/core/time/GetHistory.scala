@@ -289,7 +289,7 @@ object GetHistory extends AsyncTestSuite {
           (":Ns/str", "a", t2, false)
         ))
 
-        // All attribute assertions with value "a" of entity e1
+        // All attribute assertions with value 2 of entity e1
         _ <- Ns(e1).a.v(2).t.op.getHistory.map(_ ==> List(
           (":Ns/int", 2, t3, true)
         ))

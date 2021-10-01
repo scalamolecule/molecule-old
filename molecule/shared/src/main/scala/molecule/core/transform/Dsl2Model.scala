@@ -13,8 +13,9 @@ import molecule.core.generic._
 import molecule.core.macros.rowAttr._
 import molecule.core.macros.rowExtractors._
 import molecule.core.marshalling.nodes._
-import molecule.core.marshalling.unpackAttr.{String2cast, PackedValue2json}
+import molecule.core.marshalling.unpackAttr.{PackedValue2json, String2cast}
 import molecule.core.marshalling.unpackers.{Packed2jsonFlat, _}
+import molecule.core.ops.ModelOps._
 import molecule.core.ops.{TreeOps, VerifyRawModel}
 import molecule.core.transform.exception.Dsl2ModelException
 import scala.language.experimental.macros
@@ -62,8 +63,8 @@ private[molecule] trait Dsl2Model extends TreeOps
 
   //      private lazy val xx = InspectMacro("Dsl2Model", 101, 900, mkError = true)
   //  private lazy val xx = InspectMacro("Dsl2Model", 100, 900)
-//  private lazy val xx = InspectMacro("Dsl2Model", 40, 40)
-      private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 43, 44)
+  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
   //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
   //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
 
@@ -471,7 +472,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           xx(153, objLevel, isComposite, refCls, obj)
 
         } else {
-          val objBefore = obj
           obj = addRef(obj, refCls, refName, false, objLevel)
 
           xx(154, objLevel, isComposite, refCls, obj)
@@ -905,8 +905,8 @@ private[molecule] trait Dsl2Model extends TreeOps
         case q"scala.collection.immutable.List($pkg.count)"            => resolve(Fn("count"), "Int2")
         case q"scala.collection.immutable.List($pkg.?)"                => abort("Generic input attributes not implemented.")
         case q"scala.collection.immutable.List($pkg.$fn)" if badFn(fn) => abort(s"Generic attributes only allowed to aggregate `count`. Found: `$fn`")
-        case q"scala.collection.immutable.List($v)"                    => resolve(modelValue("apply", null, v))
-        case q"scala.collection.immutable.List(..$vs)"                 => resolve(modelValue("apply", null, q"Seq(..$vs)"))
+        case q"scala.collection.immutable.List($v)"                    => resolve(modelValue("apply", null, v, attrStr))
+        case q"scala.collection.immutable.List(..$vs)"                 => resolve(modelValue("apply", null, q"Seq(..$vs)", attrStr))
         case _                                                         => abort("Unexpected value applied to generic attribute: " + args)
       }
       xx(245, t.nsFull, attrStr, args, element, obj)
@@ -958,26 +958,19 @@ private[molecule] trait Dsl2Model extends TreeOps
         xx(310, "Tx", prev, txMolecule, txMetaData, typess, castss, txMetas, objCompositesCount, ns, obj)
         traverseElement(prev, p, txMetaData)
 
-      case q"$prev.e.apply[..$types]($nested)"
-        if !p.isRef
-      =>
+      case q"$prev.e.apply[..$types]($nested)" if !p.isRef =>
         xx(320, "e")
         Seq(Nested(Bond("", "", "", 2), Generic("", "e", "datom", EntValue) +: resolve(q"$nested")))
 
-      case q"$prev.e_.apply[..$types]($nested)"
-        if !p.isRef
-      =>
+      case q"$prev.e_.apply[..$types]($nested)" if !p.isRef =>
         xx(330, "e_")
         Seq(Nested(Bond("", "", "", 2), resolve(q"$nested")))
 
-      case q"$prev.$manyRef.apply[..$types]($nested)"
-        if !q"$prev.$manyRef".isRef
-      =>
+      case q"$prev.$manyRef.apply[..$types]($nested)" if !q"$prev.$manyRef".isRef =>
         xx(340, manyRef, nested)
         Seq(Nested(Bond("", "", "", 2), nestedElements(q"$prev.$manyRef", manyRef.toString, q"$nested")))
 
-      case q"$prev.$manyRef.apply[..$types]($nested)"
-      =>
+      case q"$prev.$manyRef.apply[..$types]($nested)" =>
         xx(350, manyRef, nested)
         traverseElement(prev, p, nested1(prev, p, manyRef, nested))
     }
@@ -1113,10 +1106,10 @@ private[molecule] trait Dsl2Model extends TreeOps
         case "e" | "e_"                 => resolve("Long")
         case "a" | "a_"                 => resolve("String")
         case "v" | "v_"                 => value match {
-          case Gt(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.>($v)")
-          case Ge(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.>=($v)")
-          case Le(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.<=($v)")
-          case Lt(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.<($v)")
+          case Gt(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.>(${v.toString.replace("__n__", "")})")
+          case Ge(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.>=(${v.toString.replace("__n__", "")})")
+          case Le(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.<=(${v.toString.replace("__n__", "")})")
+          case Lt(v) => abort(s"Can't compare generic values being of different types. Found: $attrStr.<(${v.toString.replace("__n__", "")})")
           case _     => resolve("Any")
         }
         case "tx" | "tx_"               => resolve("Long")
@@ -1430,10 +1423,10 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     // Values ================================================================================
 
-    def modelValue(op: String, attr: Tree, values0: Tree): Value = {
+    def modelValue(op: String, attr: Tree, values0: Tree, attrStr: String = ""): Value = {
       val t = if (attr == null) null else richTree(attr)
       def errValue(i: Int, v: Any) = abort(s"Unexpected resolved model value for `${t.name}.$op`: $v")
-      val values = getValues(values0, t)
+      val values = getValues(values0, t, attrStr)
       xx(60, op, attr, values0, values, values0.raw)
       op match {
         case "applyKey"    => NoValue
@@ -1501,7 +1494,7 @@ private[molecule] trait Dsl2Model extends TreeOps
     }
 
 
-    def getValues(values: Tree, t: richTree = null): Any = {
+    def getValues(values: Tree, t: richTree = null, attrStr: String = ""): Any = {
       def aggr(fn: String, aggrTpe: String, value: Option[Int] = None, checkNum: Boolean = false) = if (t != null && t.name.last == '_') {
         abort(s"Aggregated values need to be returned. Please omit underscore from attribute `:${t.nsFull}/${t.name}`")
       } else {
@@ -1658,8 +1651,8 @@ private[molecule] trait Dsl2Model extends TreeOps
           multiple(values)
 
         case other =>
-          xx(4, other)
-          resolveValues(other, t)
+          xx(4, other, attrStr)
+          resolveValues(other, t, attrStr)
       }
     }
 
@@ -1675,75 +1668,23 @@ private[molecule] trait Dsl2Model extends TreeOps
         ReplaceValue(keyValues)
     }
 
-    def extract(tree: Tree, tpe: String = "") = {
-      val res = tree match {
-        case Constant(v: String)                            => v
-        case Literal(Constant(v))                           =>
-          if (isJsPlatform) {
-            v match {
-              case _: String            => v
-              case _: Int | _: Long => tpe match {
-                case "Double"     => "__n__" + v + ".0"
-                case "BigDecimal" => "__n__" + v + ".0M"
-                case _            => v
-              }
-              case _: Float   => tpe match {
-                case "Double"     => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
-                case "BigDecimal" => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
-                case _            => "__n__" + v
-              }
-              case _: Double => tpe match {
-                case "Double"     => "__n__" + v + (if (v.toString.contains(".")) "" else ".0")
-                case "BigDecimal" => "__n__" + v + (if (v.toString.contains(".")) "M" else ".0M")
-                case _            => "__n__" + v
-              }
-              case _: Boolean => v
-            }
-          } else {
-            v match {
-              case _: String => v
-              case v: Int   => tpe match {
-                case "Long"       => v.toLong
-                case "Double"     => v.toDouble
-                case "BigInt"     => BigInt(v)
-                case "BigDecimal" => BigDecimal(v)
-                case _            => v
-              }
-              case v: Long   => tpe match {
-                case "Double"     => v.toDouble
-                case "BigInt"     => BigInt(v)
-                case "BigDecimal" => BigDecimal(v)
-                case _            => v
-              }
-              case v: Float   => tpe match {
-                case "Double"     => v.toDouble
-                case "BigDecimal" => BigDecimal(v)
-                case _            => v
-              }
-              case v: Double => tpe match {
-                case "BigDecimal" => BigDecimal(v)
-                case _            => v
-              }
-              case _: Boolean => v
-            }
-          }
-        case Ident(TermName(v: String))                     => hasVariables = true; "__ident__" + v
-        case Select(This(TypeName(_)), TermName(v: String)) => hasVariables = true; "__ident__" + v
+    def extract(tree: Tree) = tree match {
+      case Constant(v: String)                            => v
+      case Literal(Constant(v))                           => v
+      case Ident(TermName(v: String))                     => hasVariables = true; "__ident__" + v
+      case Select(This(TypeName(_)), TermName(v: String)) => hasVariables = true; "__ident__" + v
 
-        // Implicit widening conversions of variables
-        case Select(Select(This(TypeName(_)), TermName(v)),
-        TermName("toFloat" | "toDouble" | "toLong")) =>
-          hasVariables = true
-          "__ident__" + v
+      // Implicit widening conversions of variables
+      case Select(Select(This(TypeName(_)), TermName(v)),
+      TermName("toFloat" | "toDouble" | "toLong")) =>
+        hasVariables = true
+        "__ident__" + v
 
-        case v => v
-      }
-      xx(40, isJsPlatform, tpe, tree, tree.raw, res)
-      res
+      case v => v
     }
 
-    def resolveValues(tree: Tree, t: richTree = null): Seq[Any] = {
-      xx(41, tree)
+    def resolveValues(tree: Tree, t: richTree = null, attrStr: String = ""): Seq[Any] = {
+      xx(41, tree, attrStr)
       val at: att = if (t == null) null else t.at
       def noAppliedExpression(expr: String): Nothing = abort(
         s"Can't apply expression `$expr` here. Please assign expression to a variable and apply this instead."
@@ -1775,11 +1716,13 @@ private[molecule] trait Dsl2Model extends TreeOps
         }
         value
       }
+
       if (at == null || !at.isAnyEnum) {
-        val tpe = if (t == null) "" else t.tpeS
-        resolve(tree).map(tr => extract(tr, tpe)).distinct
+        resolve(tree).map(extract).distinct
       } else {
-        resolve(tree).map(tr => extract(tr, t.tpeS)).distinct.map(value => validateStaticEnums(value, at.enumValues))
+        resolve(tree).map(extract).distinct.map(value =>
+          validateStaticEnums(value, at.enumValues)
+        )
       }
     }
 

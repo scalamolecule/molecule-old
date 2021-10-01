@@ -48,9 +48,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       }
 
       if (hasVariables) {
-        val identifiers = mapIdentifiers(isJsPlatform, model0.elements).toMap
+        val identifiers = mapIdentifiers(model0.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($isJsPlatform, $model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
           }
@@ -89,9 +89,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
       }
 
       if (hasVariables) {
-        val identifiers = mapIdentifiers(isJsPlatform, model0.elements).toMap
+        val identifiers = mapIdentifiers(model0.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($isJsPlatform, $model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
           }
@@ -116,9 +116,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
           final override lazy val nestedLevels: Int = ${levels - 1}
         """
       if (hasVariables) {
-        val identifiers = mapIdentifiers(isJsPlatform, model0.elements).toMap
+        val identifiers = mapIdentifiers(model0.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($isJsPlatform, $model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
           }
@@ -145,9 +145,9 @@ class MakeMolecule(val c: blackbox.Context) extends Base {
          """
 
       if (hasVariables) {
-        val identifiers = mapIdentifiers(isJsPlatform, model0.elements).toMap
+        val identifiers = mapIdentifiers(model0.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($isJsPlatform, $model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel))
             with $nestedTupleClass[$ObjType, (..$OutTypes)]
             with $nestedJsonClass[$ObjType, (..$OutTypes)] {

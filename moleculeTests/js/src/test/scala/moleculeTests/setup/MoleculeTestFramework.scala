@@ -6,7 +6,7 @@ import molecule.core.marshalling.MoleculeWebClient
 class MoleculeTestFramework extends utest.runner.Framework {
 
   override def setup(): Unit = {
-        println("Setting up JS MoleculeTestFramework")
+    //    println("Setting up JS MoleculeTestFramework")
   }
 
   override def teardown(): Unit = {
