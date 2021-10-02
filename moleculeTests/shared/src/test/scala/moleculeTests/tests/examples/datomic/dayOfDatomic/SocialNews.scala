@@ -29,7 +29,6 @@ object SocialNews extends AsyncTestSuite {
       )
       List(stu, ed) = txR2.eids
 
-
       // Add comments
       // Input Molecule act as a template to insert data
       addComment = Parent.e.Comment.author.text.insert

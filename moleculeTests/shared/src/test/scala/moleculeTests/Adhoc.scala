@@ -18,7 +18,6 @@ import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.{KW, Placeholder, Query}
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import moleculeTests.tests.core.equality.ApplyDouble.{double2, float1, float2, int1, int2, long1, long2}
 //import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable.ListBuffer
 import molecule.core.util.testing.expectCompileError
@@ -44,10 +43,22 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
 
-
       } yield ()
     }
+    /*
 
+moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherInsert
+moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherUpdateProps
+moleculeTests.tests.core.bidirectionals.edgeOther.EdgeOneOtherInsert
+moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfInsert
+moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfSave
+moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeManySelfInsert
+moleculeTests.tests.core.bidirectionals.other.OneOther
+moleculeTests.tests.examples.datomic.seattle.SeattleTests
+moleculeTests.tests.examples.datomic.dayOfDatomic.Pull
+moleculeTests.tests.examples.datomic.mbrainz.MBrainz
+moleculeTests.tests.examples.gremlin.gettingStarted.Friends2
+     */
 
     //    "core2" - core { implicit futConn =>
     //      for {
@@ -57,7 +68,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //
     //      } yield ()
     //    }
-
+    //
     //    "adhoc" - products { implicit conn =>
     //      import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
     //
@@ -65,8 +76,8 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //
     //      } yield ()
     //    }
-
-
+    //
+    //
     //    "mbrainz" - mbrainz { implicit conn =>
     //      import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._
     //      val ledZeppelinUUID = UUID.fromString("678d88b2-87b0-403b-b63d-5da7465aecc3")

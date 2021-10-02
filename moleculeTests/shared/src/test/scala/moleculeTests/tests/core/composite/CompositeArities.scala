@@ -182,9 +182,9 @@ object CompositeArities extends AsyncTestSuite {
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
         )
+        txId = tx.tx
+        List(e1, e2) = tx.eids
 
-        // Three entities created
-        List(txId, e1, e2) = tx.eids
         _ <- txId.touchList.map(_ ==> List(
           ":db/id" -> txId,
           ":db/txInstant" -> tx.inst,

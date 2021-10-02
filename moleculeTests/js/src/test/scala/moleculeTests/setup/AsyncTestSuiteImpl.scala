@@ -2,7 +2,7 @@ package moleculeTests.setup
 
 import molecule.core.data.SchemaTransaction
 import molecule.core.facade.Conn_Js
-import molecule.core.marshalling.DatomicInMemProxy
+import molecule.core.marshalling.{DatomicInMemProxy, DatomicPeerProxy}
 import molecule.datomic.base.facade.Conn
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
@@ -42,32 +42,38 @@ trait AsyncTestSuiteImpl {
   def seattleImpl[T](func: Future[Conn] => T): T = func(inMem(SeattleSchema))
 
   def mbrainzImpl[T](func: Future[Conn] => T): T = {
-    func(inMem(MBrainzSchema))
+    //    val dbName = if (system == SystemDevLocal)
+    //      "mbrainz-subset" // dev-local
+    //    else
+    //      "mbrainz-1968-1973" // peer and peer-server
+    //    implicit val conn = getConn(MBrainzSchema,
+    //      dbName,
+    //      false, // don't recreate db
+    //      "localhost:4334/mbrainz-1968-1973", // peer uri to transactor
+    //      //      "free" // if running free transactor
+    //      "dev" // if running pro transactor
+    //    )
+    //
+    //    import molecule.datomic.api.out1._
+    //
+    //    if (Schema.a(":Artist/name").get.isEmpty) {
+    //      // Add uppercase-namespaced attribute names so that we can access the externally
+    //      // transacted lowercase names with uppercase names of the molecule code.
+    //      println("Converting nss from lower to upper..")
+    //      conn.transact(MBrainzSchemaLowerToUpper.edn)
+    //    }
+    //            Datomic_Peer.connect("dev", "localhost:4334/mbrainz-1968-1973")
+    func(
+      Future(
+        Conn_Js(
+          DatomicPeerProxy(
+            "dev",
+            "localhost:4334/mbrainz-1968-1973",
+            MBrainzSchema.datomicPeer,
+            MBrainzSchema.attrMap
+          )
+        )
+      )
+    )
   }
-
-  //  def mbrainzImpl[T](func: Future[Conn] => T): T = {
-  //    //    val dbName = if (system == SystemDevLocal)
-  //    //      "mbrainz-subset" // dev-local
-  //    //    else
-  //    //      "mbrainz-1968-1973" // peer and peer-server
-  //    //    implicit val conn = getConn(MBrainzSchema,
-  //    //      dbName,
-  //    //      false, // don't recreate db
-  //    //      "localhost:4334/mbrainz-1968-1973", // peer uri to transactor
-  //    //      //      "free" // if running free transactor
-  //    //      "dev" // if running pro transactor
-  //    //    )
-  //    //
-  //    //    import molecule.datomic.api.out1._
-  //    //
-  //    //    if (Schema.a(":Artist/name").get.isEmpty) {
-  //    //      // Add uppercase-namespaced attribute names so that we can access the externally
-  //    //      // transacted lowercase names with uppercase names of the molecule code.
-  //    //      println("Converting nss from lower to upper..")
-  //    //      conn.transact(MBrainzSchemaLowerToUpper.edn)
-  //    //    }
-  //    func(
-  //      Datomic_Peer.connect("dev", "localhost:4334/mbrainz-1968-1973")
-  //    )
-  //  }
 }

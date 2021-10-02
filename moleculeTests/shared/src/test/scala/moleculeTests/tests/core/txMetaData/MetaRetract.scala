@@ -10,6 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object MetaRetract extends AsyncTestSuite {
 
+
   val basisTx = QueryOps.txBase
 
   lazy val tests = Tests {
@@ -54,8 +55,9 @@ object MetaRetract extends AsyncTestSuite {
       for {
         // Insert multiple entities with tx meta data
         txR1 <- Ns.int.Tx(Ref2.str2_("a")) insert List(1, 2, 3)
-        List(e1, e2, e3, tx1) = txR1.eids
+        tx1 = txR1.tx
         t1 = txR1.t
+        List(e1, e2, e3) = txR1.eids
 
         // Retract multiple entities with tx meta data
         txR2 <- retract(Seq(e1, e2), Ref2.str2("b"))
@@ -80,16 +82,16 @@ object MetaRetract extends AsyncTestSuite {
             // Entities and int values that were retracted with tx meta data "b"
             _ <- Ns.e.int.tx.op(false).Tx(Ref2.str2("b")).getHistory
               .map(_.filter(_._3 >= basisTx).sortBy(_._2) ==> List(
-              (e1, 1, tx2, false, "b"),
-              (e2, 2, tx2, false, "b")
-            ))
+                (e1, 1, tx2, false, "b"),
+                (e2, 2, tx2, false, "b")
+              ))
 
             // Or: What int values were retracted with tx meta data "b"?
             res <- Ns.int.tx.op_(false).Tx(Ref2.str2_("b")).getHistory
               .map(_.filter(_._2 >= basisTx).sortBy(_._1) ==> List(
-              (1, tx2),
-              (2, tx2)
-            ))
+                (1, tx2),
+                (2, tx2)
+              ))
           } yield res
 
         } else {
@@ -123,7 +125,8 @@ object MetaRetract extends AsyncTestSuite {
       for {
         // Insert multiple entities with tx meta data including ref
         txR1 <- Ns.int.Tx(Ns.str_("a").Ref1.int1_(7)) insert List(1, 2, 3)
-        List(e1, e2, e3, tx1, r1) = txR1.eids
+        List(e1, e2, e3, r1) = txR1.eids
+        tx1 = txR1.tx
 
         // Add tx meta data to retracting multiple entities
         tx2 <- retract(Seq(e1, e2), Ns.str("b").Ref1.int1(8)).map(_.tx)

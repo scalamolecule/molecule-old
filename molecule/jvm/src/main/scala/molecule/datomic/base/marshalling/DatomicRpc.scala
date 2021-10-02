@@ -83,9 +83,9 @@ object DatomicRpc extends MoleculeRpc
 //      println("Rules:")
 //      rules foreach println
 //    }
-    println("l  : " + l)
-    println("ll : " + ll)
-    println("lll: " + lll)
+//    println("l  : " + l)
+//    println("ll : " + ll)
+//    println("lll: " + lll)
 
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs

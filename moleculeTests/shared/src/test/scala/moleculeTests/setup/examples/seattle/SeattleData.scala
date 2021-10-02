@@ -165,5 +165,6 @@ trait SeattleData {
     ("Nature Consortium", "http://www.naturec.org", "website", Some("community"), Some(Set("environmental conservation")), "Delridge", "Delridge", Some("sw")),
     ("ballardite blog", "http://www.ballardite.blogspot.com/", "blog", Some("personal"), Some(Set("personal", "news")), "Ballard", "Ballard", Some("nw")),
     ("belltown", "http://www.belltownpeople.com/", "blog", Some("commercial"), Some(Set("news", "events")), "Belltown", "Downtown", Some("w"))
+
   )
 }

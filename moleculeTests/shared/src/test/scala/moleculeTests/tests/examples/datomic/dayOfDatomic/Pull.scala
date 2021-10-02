@@ -260,7 +260,7 @@ object Pull extends AsyncTestSuite {
         // :find [(pull ?e [*]) ...]  // not allowed in client
         // See question and answer: https://clojurians-log.clojureverse.org/datomic/2018-04-04
 
-        _ <- if (system == SystemPeer) {
+        _ <- if (!isJsPlatform && system == SystemPeer) {
           // Using a dynamic query
           conn.flatMap(_.q(
             """[:find [(pull ?e pattern) ...]

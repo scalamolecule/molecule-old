@@ -30,7 +30,7 @@ object EdgeManySelfInsert extends AsyncTestSuite {
       "existing targets" - bidirectional { implicit conn =>
         for {
           tx <- Person.name.insert("Ben", "Joe")
-          Seq(ben, joe) = tx.eids
+          List(ben, joe) = tx.eids
 
           // Create Ann with multiple edges to existing target entities Ben and Joe
           _ <- Person.name.Knows.*(Knows.weight.person).insert("Ann", List((7, ben), (8, joe)))
@@ -49,7 +49,10 @@ object EdgeManySelfInsert extends AsyncTestSuite {
         for {
           // Create edges to new target entities
           tx <- Knows.weight.Person.name.insert(List((7, "Ben"), (8, "Joe")))
-          Seq(knowsBen, knowsJoe) = tx.eids.grouped(3).map(_.head).toSeq
+          List(
+          knowsBen, _, _,
+          knowsJoe, _, _
+          ) = tx.eids
 
           // Connect base entity to edges
           _ <- Person.name.knows.insert("Ann", Set(knowsBen, knowsJoe))
@@ -64,11 +67,14 @@ object EdgeManySelfInsert extends AsyncTestSuite {
       "existing targets" - bidirectional { implicit conn =>
         for {
           tx1 <- Person.name.insert("Ben", "Joe")
-          Seq(ben, joe) = tx1.eids
+          List(ben, joe) = tx1.eids
 
           // Create edges to existing target entities
           tx2 <- Knows.weight.person.insert(List((7, ben), (8, joe)))
-          Seq(knowsBen, knowsJoe) = tx2.eids.grouped(3).map(_.head).toSeq
+          List(
+          knowsBen, _,
+          knowsJoe, _
+          ) = tx2.eids
 
           // Connect base entity to edges
           _ <- Person.name.knows.insert("Ann", Set(knowsBen, knowsJoe))

@@ -14,11 +14,14 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
     for {
       tx1 <- Quality.name("Love").save
       love = tx1.eid
+
       tx2 <- Quality.name.insert("Patience", "Humor")
       List(patience, humor) = tx2.eids
+
       tx3 <- Animal.name.insert("Rex")
       rex = tx3.eid
-      tx4 <- Person.name("Ann") // New entity
+
+      List(ann, annRex, rexAnn) <- Person.name("Ann") // New entity
         .CloseTo
         .weight(7)
         .howWeMet("inSchool")
@@ -27,10 +30,9 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
         .commonScores(Seq("golf" -> 7, "baseball" -> 9))
         .coreQuality(love)
         .inCommon(Seq(patience, humor))
-        .animal(rex) // Saving reference to existing Person entity
-        .save
+        .animal(rex) // Saving reference to existing Person entity rex
+        .save.map(_.eids)
     } yield {
-      val List(ann, annRex, rexAnn) = tx4.eids
       Seq(love, patience, humor, rex, ann, annRex, rexAnn)
     }
   }

@@ -1,7 +1,7 @@
 package moleculeTests.tests.examples.datomic.seattle
 
 import molecule.datomic.api.in2_out8._
-import molecule.datomic.base.facade.Conn
+import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.setup.examples.seattle.SeattleData
@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object SeattleTests extends AsyncTestSuite with SeattleData {
 
-  def loadData(implicit conn: Future[Conn], ec: ExecutionContext) = {
+  def loadData(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
     Community.name.url.tpe.orgtype$.category$.Neighborhood.name.District.name.region$ insert seattleData
   }
 
@@ -23,7 +23,6 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
       for {
         _ <- loadData
 
-        // A Community-name molecule
         communities = m(Community.e.name_)
 
         // We have 150 communities

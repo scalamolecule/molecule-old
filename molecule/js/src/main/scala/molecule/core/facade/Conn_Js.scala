@@ -261,8 +261,6 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
       case Generic(_, attr, _, _) if attr != "args_" && attr != "range" => attr
     }
 
-    //    println(indexArgs)
-
     rpc.index2packed(connProxy, api, index, indexArgs, attrs)
   }
 

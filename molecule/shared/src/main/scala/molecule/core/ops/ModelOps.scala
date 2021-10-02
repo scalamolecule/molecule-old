@@ -8,38 +8,39 @@ import molecule.core.util.Helpers
 object ModelOps extends Helpers {
 
   def convert(value: Any): Any = value match {
-    case set: scala.collection.Set[_]  => set map convert
-    case seq: scala.collection.Seq[_]  => seq map convert
-    case m: scala.collection.Map[_, _] => m.toSeq.map { case (k, v) => (k, convert(v)) }
-    case Some(v)                       => convert(v)
-    case v                             => v
+    case set: Set[_]  => set map convert
+    case seq: Seq[_]  => seq map convert
+    case m: Map[_, _] => m.toSeq map convert
+    case (k, v)       => (convert(k), convert(v))
+    case Some(v)      => convert(v)
+    case v            => v
   }
 
   def resolveIdentifiers(model: Model, identMap: Map[String, Any]): Model = {
-    def flatSeq(value: Any): scala.collection.Seq[Any] = (value match {
-      case seq: scala.collection.Seq[_] => seq
-      case set: scala.collection.Set[_] => set.toSeq
-      case v                            => Seq(v)
-    }).map(v => convert(v))
+    def flatSeq(value: Any): Seq[Any] = (value match {
+      case seq: Seq[_] => seq
+      case set: Set[_] => set.toSeq
+      case v           => Seq(v)
+    }) map convert
 
     def getKeys(keyIdents: Seq[String]): Seq[String] = getValues(keyIdents).flatMap {
-      case keys: scala.collection.Seq[_] => keys
-      case key                           => Seq(key)
+      case keys: Seq[_] => keys
+      case key          => Seq(key)
     }.asInstanceOf[Seq[String]]
 
     def getValues(idents: Seq[Any]): Seq[Any] = idents.flatMap {
-      case set: scala.collection.Set[_] if set.nonEmpty => Seq(set.flatMap {
+      case set: Set[_] if set.nonEmpty => Seq(set.flatMap {
         case ident if ident.toString.startsWith("__ident__") => flatSeq(identMap(ident.toString))
         case value                                           => Seq(convert(value))
       })
 
       case v: String if v.startsWith("__ident__")                                           => flatSeq(identMap(v))
-      case (k: String, "__pair__") if k.startsWith("__ident__")                             => flatSeq(identMap(k))
+      case (k: String, "__pair__") if k.startsWith("__ident__")                             => flatSeq(convert(identMap(k)))
       case (k: String, v: String) if k.startsWith("__ident__") && v.startsWith("__ident__") => Seq((identMap(k), identMap(v)))
       case (k: String, v: Any) if k.startsWith("__ident__")                                 => Seq((identMap(k), convert(v)))
       case (k: Any, v: String) if v.startsWith("__ident__")                                 => Seq((convert(k), identMap(v)))
       case (k, v)                                                                           => Seq((convert(k), convert(v)))
-      case seq: scala.collection.Seq[_]                                                     => seq map convert
+      case seq: Seq[_]                                                                      => seq map convert
       case v                                                                                => Seq(convert(v))
     }
 

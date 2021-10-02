@@ -70,7 +70,10 @@ object EdgeManyOtherInsert extends AsyncTestSuite {
 
           // Create edges to existing target entities
           tx2 <- CloseTo.weight.animal.insert(List((7, gus), (8, leo)))
-          Seq(closeToGus, closeToLeo) = tx2.eids.grouped(3).map(_.head).toSeq
+          Seq(
+          closeToGus, _, // gus edges
+          closeToLeo, _  // leo edges
+          ) = tx2.eids
 
           // Connect base entity to edges
           _ <- Person.name.closeTo.insert("Ann", Set(closeToGus, closeToLeo))

@@ -7,6 +7,7 @@ import datomic._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
 import molecule.datomic.base.facade.exception.DatomicFacadeException
+import molecule.datomic.base.ops.QueryOps
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
@@ -21,53 +22,85 @@ case class TxReport_Peer(
   scalaStmts: Seq[Statement] = Nil
 ) extends TxReport {
 
-  lazy val eids: List[Long] = if (scalaStmts.isEmpty) {
-    var tempIds = List.empty[Long]
-    rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach(raw =>
-      tempIds = tempIds :+ raw.asInstanceOf[Long]
-    )
-    tempIds.sorted
+  lazy val eids: List[Long] = {
+    var ids = List.empty[Long]
+    val tx = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].get(0).asInstanceOf[Datom].tx().asInstanceOf[Long]
 
-  } else {
-    val allIds = {
-      val datoms = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].iterator
-      var ids    = Array.empty[Long]
-      var i      = 0
-      datoms.next() // skip first transaction time datom
-      while (datoms.hasNext) {
-        val datom = datoms.next.asInstanceOf[Datom]
-        if (datom.added()) // only asserted datoms
-          ids = ids :+ datom.e().asInstanceOf[Long]
-        i += 1
+//    println("================= tx " + tx)
+//    println(rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values())
+
+
+    rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach { tempId =>
+      val eid = tempId.asInstanceOf[Long]
+//      println("eid " + eid)
+      if (eid != tx) {
+        ids = ids :+ eid
       }
-      ids.toList
     }
 
-    val assertStmts = scalaStmts.filterNot(_.isInstanceOf[RetractEntity])
+//    println(ids.distinct.sorted)
 
-    //      println("-------------------------------------------")
-    //      txDataRaw.map(datom2string) foreach println
-    //      println("--------")
-    //      allIds foreach println
-    //      println("--------")
-    //      scalaStmts foreach println
-    //      println("--------")
-    //      assertStmts foreach println
+    ids.distinct.sorted // newest entities last
 
-    if (allIds.size != assertStmts.size) {
-      throw DatomicFacadeException(
-        s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
-      )
-    }
-    val resolvedIds = assertStmts.zip(allIds).collect {
-      case (Add(_: TempId, _, _, _), eid)    => eid
-      case (Add("datomic.tx", _, _, _), eid) => eid
-    }.distinct.toList
-
-    //      println("--------")
-    //      resolvedIds foreach println
-    resolvedIds.sorted
   }
+
+//  lazy val eids2: List[Long] = if (scalaStmts.isEmpty) {
+//    var ids = List.empty[Long]
+//    val tx = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].get(0).asInstanceOf[Datom].tx().asInstanceOf[Long]
+//
+//
+//    println("================= tx " + tx)
+//
+//    println(rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values())
+//
+//
+//    rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach { tempId =>
+//      val eid = tempId.asInstanceOf[Long]
+//      println("eid " + eid)
+//      if (eid != tx) {
+//        ids = ids :+ eid
+//      }
+//    }
+//
+//    println(ids.distinct.sorted)
+//
+//    ids.distinct.sorted // newest entities last
+//
+//  } else {
+//
+//    println(rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values())
+//
+//
+//    val datoms = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].iterator
+//    var ids    = List.empty[Long]
+//    var i      = 0
+//    // skip first transaction time datom
+//    val tx = datoms.next().asInstanceOf[Datom].tx().asInstanceOf[Long]
+//    while (datoms.hasNext) {
+//      val datom = datoms.next.asInstanceOf[Datom]
+//      val eid   = datom.e().asInstanceOf[Long]
+//      if (datom.added() && eid != tx) {
+//        // Only asserted datoms and not the tx entity itself
+//        ids = ids :+ eid
+//      }
+//      i += 1
+//    }
+//
+//    // Filter out retractions and the transaction entity itself
+//    val assertStmts = scalaStmts.filter {
+//      case _: RetractEntity           => false
+//      case Add("datomic.tx", _, _, _) => false
+//      case _                          => true
+//    }
+//
+//    if (ids.length != assertStmts.size) {
+//      throw DatomicFacadeException(
+//        s"Unexpected different counts of ${ids.length} ids and ${assertStmts.length} stmts."
+//      )
+//    }
+//
+//    ids.distinct.sorted // newest entities last
+//  }
 
   private lazy val txDataRaw: List[Datum] =
     rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].asScala.toList.asInstanceOf[List[Datum]]

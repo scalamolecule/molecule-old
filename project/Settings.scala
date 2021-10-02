@@ -60,9 +60,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
     ),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-//    scalaJSLinkerConfig ~= {
-//      _.withSemantics(_.withStrictFloats(true))
-//    },
+    //    scalaJSLinkerConfig ~= {
+    //      _.withSemantics(_.withStrictFloats(true))
+    //    },
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
@@ -109,39 +109,42 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     //    testFrameworks += new TestFramework("moleculeTests.core.MoleculeTestFramework"),
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-    // Temporarily limit number of tests to be compiled (comment out to test all)
-    unmanagedSources / excludeFilter := {
-      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-      val allowed     = Seq(
-        sharedTests + "/core/attr",
-        sharedTests + "/core/attrMap",
-        //        sharedTests + "/core/bidirectionals",
-        //        sharedTests + "/core/composite",
-        //        sharedTests + "/core/crud",
-        sharedTests + "/core/equality",
-        sharedTests + "/core/expression",
-        sharedTests + "/core/generic",
-        sharedTests + "/core/input1",
-        //        sharedTests + "/core/input2",
-        //        sharedTests + "/core/input3",
-        //        sharedTests + "/core/ref",
-        //        sharedTests + "/core/json",
-        //        sharedTests + "/core/nested",
-        //        sharedTests + "/core/obj",
-        //        sharedTests + "/core/runtime",
-        //        sharedTests + "/core/schemaDef",
-
-
-//        sharedTests + "/core/time",
-        //        sharedTests + "/core/transaction",
-        //        sharedTests + "/core/txMetaData",
-
-        sharedTests + "/Adhoc.scala",
-      )
-      new SimpleFileFilter(f =>
-        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-      )
-    },
+//    // Temporarily limit number of tests to be compiled (comment out to test all)
+//    unmanagedSources / excludeFilter := {
+//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+//      val allowed     = Seq(
+//        //        sharedTests + "/core/attr",
+//        //        sharedTests + "/core/attrMap",
+//        //        sharedTests + "/core/bidirectionals",
+//        //        sharedTests + "/core/composite",
+//        //                sharedTests + "/core/crud",
+//        //        sharedTests + "/core/equality",
+//        //        sharedTests + "/core/expression",
+//        //        sharedTests + "/core/generic",
+//        //        sharedTests + "/core/input1",
+//        //        sharedTests + "/core/input2",
+//        //        sharedTests + "/core/input3",
+//        //        sharedTests + "/core/ref",
+//        //        sharedTests + "/core/json",
+//        //        sharedTests + "/core/nested",
+//        //        sharedTests + "/core/obj",
+//        //        sharedTests + "/core/runtime",
+//        //        sharedTests + "/core/schemaDef",
+//        //        sharedTests + "/core/time",
+//        //        sharedTests + "/core/transaction",
+//
+//        //        sharedTests + "/core/txMetaData",
+//
+//        sharedTests + "/examples/datomic/dayOfDatomic",
+////        sharedTests + "/examples/datomic/mbrainz",
+////        sharedTests + "/examples/datomic/seattle",
+//        sharedTests + "/examples/gremlin/gettingStarted",
+//        sharedTests + "/Adhoc.scala",
+//      )
+//      new SimpleFileFilter(f =>
+//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+//      )
+//    },
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,

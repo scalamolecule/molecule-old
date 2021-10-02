@@ -206,8 +206,8 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
           saveStmts <- conn.model2stmts(_model).saveStmts
           result <- {
 
-//            println(_model)
-//            saveStmts foreach println
+            //            println(_model)
+            //            saveStmts foreach println
 
             conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
           }
@@ -309,12 +309,14 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
       if (conn.isJsPlatform) {
         for {
           insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
-          //          _ = {
-          //            insertStmts foreach println
-          //            println("------------")
-          //            println(Stmts2Edn(insertStmts, conn))
-          //          }
-          result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(insertStmts, conn))
+          (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
+          _ = {
+//            insertStmts foreach println
+//            println("------------")
+//            println(stmtsEdn)
+//            println(stmtsEdn.length)
+          }
+          result <- conn.rpc.transact(conn.connProxy, stmtsEdn, uriAttrs)
         } yield result
       } else {
         conn.transact(

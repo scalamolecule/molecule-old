@@ -56,7 +56,7 @@ trait Helpers extends DateHandling {
   def pad(longest: Int, shorter: Int): String = if (longest > shorter) " " * (longest - shorter) else ""
 
   // Ensure decimal digits on JS platform output
-  def d(tpe: String, v: Any) = {
+  def jsNumber(tpe: String, v: Any) = {
     (tpe, v) match {
       case ("Double", v: Double)                                          => if (v.isWhole) s"${v.toLong}.0" else v
       case ("BigDecimal", v: BigDecimal)                                  => if (v.isWhole) s"${v.toBigInt}.0" else v

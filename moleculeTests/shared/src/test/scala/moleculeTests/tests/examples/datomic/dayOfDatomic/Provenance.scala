@@ -24,9 +24,10 @@ object Provenance extends AsyncTestSuite {
           ("ElastiCache in 6 minutes", "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"),
           ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html")
         )
+        stuTxId = stuTx.tx
 
-        // Two story entities and one transaction entity is created
-        List(elasticacheStory, chocolateStory, stuTxId) = stuTx.eids
+        // Two story entities created (and two tx meta data datoms added to transaction)
+        List(elasticacheStory, chocolateStory) = stuTx.eids
 
         // Now we have 5 stories - the two last from the transaction above
         _ <- Story.title.url.tx.get.map(_.sortBy(t => (t._3, t._1)) ==> List(

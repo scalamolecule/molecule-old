@@ -149,7 +149,7 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
   private def noConflictingCardOneValues: Unit = {
     def catchConflictingCardOneValues(elements: Seq[Element]): Unit = elements.collectFirst {
       case Atom(nsFull, attr, tpe, 1, Eq(vs), _, _, _) if vs.length > 1 =>
-        val format = (v: Any) => d(tpe, v)
+        val format = (v: Any) => jsNumber(tpe, v)
         err("noConflictingCardOneValues",
           s"""Can't $op multiple values for cardinality-one attribute:
              |  ${Ns(nsFull)} ... $attr(${vs.map(format).mkString(", ")})""".stripMargin)

@@ -25,7 +25,7 @@ object VerifyRawModel extends Helpers {
     )
 
     def dupValues(tpe: String, pairs: Seq[(Any, Any)]): Seq[String] =
-      pairs.map(pair => d(tpe, pair._2).toString).groupBy(identity).collect {
+      pairs.map(pair => jsNumber(tpe, pair._2).toString).groupBy(identity).collect {
         case (v, vs) if vs.size > 1 => v
       }.toSeq
 
@@ -79,12 +79,12 @@ object VerifyRawModel extends Helpers {
 
             case Atom(nsFull, attr, tpe, _, AssertMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
               val dups     = dupKeys(pairs)
-              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${d(tpe, v)}" }
+              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${jsNumber(tpe, v)}" }
               abort(s"Can't assert multiple key/value pairs with the same key for attribute `:$nsFull/$attr`:\n" + dupPairs.mkString("\n"))
 
             case Atom(nsFull, attr, tpe, _, ReplaceMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
               val dups     = dupKeys(pairs)
-              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${d(tpe, v)}" }
+              val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${jsNumber(tpe, v)}" }
               abort(s"Can't replace multiple key/value pairs with the same key for attribute `:$nsFull/$attr`:\n" + dupPairs.mkString("\n"))
 
             case Atom(nsFull, attr, _, 2, Distinct, _, _, _) =>

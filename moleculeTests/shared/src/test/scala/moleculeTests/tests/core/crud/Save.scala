@@ -391,7 +391,7 @@ object Save extends AsyncTestSuite {
           _ <- Ns.int.intMap$(Some(Map("a" -> 11, "b" -> 12))).get.map(_.head ==> (1, Some(Map("a" -> 11, "b" -> 12))))
 
           some2 = Some(Map("a" -> 21, "b" -> 22))
-          _ <- Ns.int(2).intMap$(some2).save
+          _ <- Ns.int(2).intMap$.apply(some2).save
           _ <- Ns.int(2).intMap.get.map(_.head ==> (2, Map("a" -> 21, "b" -> 22)))
           _ <- Ns.int(2).intMap$.get.map(_.head ==> (2, Some(Map("a" -> 21, "b" -> 22))))
           _ <- Ns.int.intMap$(some2).get.map(_.head ==> (2, Some(Map("a" -> 21, "b" -> 22))))
