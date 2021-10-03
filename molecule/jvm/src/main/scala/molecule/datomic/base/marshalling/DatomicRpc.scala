@@ -77,15 +77,15 @@ object DatomicRpc extends MoleculeRpc
     val t   = TimerPrint("DatomicRpc")
 
     //    println("------------------------------")
-    println("================================================================================")
+    //    println("================================================================================")
     //    println(datalogQuery)
-//    if (rules.nonEmpty) {
-//      println("Rules:")
-//      rules foreach println
-//    }
-//    println("l  : " + l)
-//    println("ll : " + ll)
-//    println("lll: " + lll)
+    //    if (rules.nonEmpty) {
+    //      println("Rules:")
+    //      rules foreach println
+    //    }
+    //    println("l  : " + l)
+    //    println("ll : " + ll)
+    //    println("lll: " + lll)
 
     val inputs    = unmarshallInputs(l ++ ll ++ lll)
     val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
@@ -102,7 +102,7 @@ object DatomicRpc extends MoleculeRpc
       val time        = qTime(queryTime)
       val timeRight   = " " * (8 - time.length) + time
 
-      //      log("================================================================================")
+      log("================================================================================")
       log(datalogQuery + space + timeRight)
       if (allInputs.nonEmpty)
         log(allInputs.mkString("Inputs:\n", "\n", ""))
@@ -181,7 +181,7 @@ object DatomicRpc extends MoleculeRpc
               case "BigInt    " => new java.math.BigInteger(v).asInstanceOf[Object]
               case "BigDecimal" => new java.math.BigDecimal(v).asInstanceOf[Object]
             }
-          case _ => throw MoleculeException(s"Unexpected type to cast: $tpe")
+          case _            => throw MoleculeException(s"Unexpected type to cast: $tpe")
         }
 
         vs match {

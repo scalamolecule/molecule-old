@@ -5,7 +5,6 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out12._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeerServer}
-import moleculeTests.Adhoc.{bigDec1, bigDec11, bigInt1, double1, double11, int1, long1, r1}
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._

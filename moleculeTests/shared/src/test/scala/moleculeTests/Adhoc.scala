@@ -27,9 +27,6 @@ import scala.util.control.NonFatal
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
-  val double11 = 1.1
-  val bigDec11 = BigDecimal("1.1")
-
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -43,22 +40,15 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
 
+
+
+
+
+
+
       } yield ()
     }
-    /*
 
-moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherInsert
-moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherUpdateProps
-moleculeTests.tests.core.bidirectionals.edgeOther.EdgeOneOtherInsert
-moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfInsert
-moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfSave
-moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeManySelfInsert
-moleculeTests.tests.core.bidirectionals.other.OneOther
-moleculeTests.tests.examples.datomic.seattle.SeattleTests
-moleculeTests.tests.examples.datomic.dayOfDatomic.Pull
-moleculeTests.tests.examples.datomic.mbrainz.MBrainz
-moleculeTests.tests.examples.gremlin.gettingStarted.Friends2
-     */
 
     //    "core2" - core { implicit futConn =>
     //      for {

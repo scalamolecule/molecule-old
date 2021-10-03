@@ -1,7 +1,6 @@
 package molecule.core.api
 
-import java.util.{Date, Collection => jCollection, List => jList}
-import molecule.core.ast.elements._
+import java.util.Date
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps

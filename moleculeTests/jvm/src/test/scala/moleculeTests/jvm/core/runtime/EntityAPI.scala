@@ -1,4 +1,4 @@
-//package moleculeTests.tests.core.runtime
+//package molecule.tests.core.runtime // only for internal molecule use
 //
 //import molecule.datomic.api.out3._
 //import moleculeTests.setup.AsyncTestSuite
