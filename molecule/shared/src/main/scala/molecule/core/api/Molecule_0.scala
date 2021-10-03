@@ -175,9 +175,8 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
 
   // Dynamic molecule ==========================================================
 
-  def apply(body: Obj => Unit): DynamicMolecule with Obj = macro MakeMoleculeDynamic.apply[Obj]
-  // todo
-  //  def apply(body: Obj => Unit): Future[DynamicMolecule with Obj] = macro MakeMoleculeDynamic.apply[Obj]
+  def apply(body: Obj => Unit): Future[List[DynamicMolecule with Obj]] = macro MakeMoleculeDynamic.apply[Obj]
+  def getDynObjs(body: Obj => Unit): Future[List[DynamicMolecule with Obj]] = macro MakeMoleculeDynamic.apply[Obj]
 
 
   // Save ======================================================================
@@ -205,10 +204,8 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
         for {
           saveStmts <- conn.model2stmts(_model).saveStmts
           result <- {
-
             //            println(_model)
             //            saveStmts foreach println
-
             conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
           }
         } yield result
@@ -310,12 +307,12 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
         for {
           insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
           (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
-          _ = {
-//            insertStmts foreach println
-//            println("------------")
-//            println(stmtsEdn)
-//            println(stmtsEdn.length)
-          }
+          //          _ = {
+          //            insertStmts foreach println
+          //            println("------------")
+          //            println(stmtsEdn)
+          //            println(stmtsEdn.length)
+          //          }
           result <- conn.rpc.transact(conn.connProxy, stmtsEdn, uriAttrs)
         } yield result
       } else {

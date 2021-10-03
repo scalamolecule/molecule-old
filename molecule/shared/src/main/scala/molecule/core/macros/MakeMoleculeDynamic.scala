@@ -15,8 +15,8 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
   override def abort(msg: String): Nothing = throw MoleculeException(msg)
 
   private lazy val xx = InspectMacro("MakeMolecule", 9, 8)
-  //    private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10)
-  //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 2, 10, mkError = true)
+  //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10)
+  //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10, mkError = true)
 
 
   final def apply[Obj: W](body: Tree): Tree = {
@@ -34,24 +34,28 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
     var methodClauses = Seq.empty[Tree]
 
     val moleculeBody: List[Tree] = c.prefix.tree match {
-      case Typed(Block(body, _), _)                                          => body
-      case Apply(_, List(Select(This(TypeName("$anon")), TermName("conn")))) =>
-        abort("Can't use input molecules as dynamic molecules")
-      case other                                                             =>
-        abort(s"Unexpected tree for dynamic molecule:\n$other\n" + showRaw(other))
+      case Typed(Block(body, _), _) => body
+      case other                    => abort(s"Unexpected tree for dynamic molecule: $other")
     }
 
-    val row2obj = moleculeBody.last match {
+    val objMaker = moleculeBody.last match {
       case ClassDef(_, _, _, Template(_, _, bodyElements)) =>
         // Since we control the Molecule structure in the macros,
         // we know that the obj marshaller is always the third element:
-        // constructor, row2tpl, row2obj ... or
+        // JVM: constructor, row2tpl, row2obj ...
+        // JS : constructor, packed2tpl, packed2obj ...
         bodyElements(2)
       case other                                           =>
         abort(s"Unexpected tree for dynamic molecule body:\n$other\n" + showRaw(other))
     }
 
-    val DefDef(_, _, _, _, _, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _)) = row2obj
+    val (objTypes, objBodyElements) = if (isJsPlatform) {
+      val DefDef(_, _, _, _, _, Block(_, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _))) = objMaker
+      (objTypes, objBodyElements)
+    } else {
+      val DefDef(_, _, _, _, _, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _)) = objMaker
+      (objTypes, objBodyElements)
+    }
 
     val propTypes = objTypes.drop(2)
     var props     = List.empty[Tree]
@@ -104,13 +108,12 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
 
     lazy val objBody =
       q"""
-          val __obj = $baseMolecule.getObj
-          val $self = __obj
-          ..$props
-          ..$refs
-          ..$bodyElements
-          ..${selectDynamic ++ applyDynamic}
-         """
+        val $self = __obj
+        ..$props
+        ..$refs
+        ..$bodyElements
+        ..${selectDynamic ++ applyDynamic}
+      """
 
     lazy val t0 = propTypes match {
       case List(a)                                                                => q"new DynamicMolecule with Init with $a { ..$objBody }"
@@ -140,10 +143,14 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
 
     val t =
       q"""
-         import molecule.core.transform.DynamicMolecule
-         import molecule.core.dsl.base.Init
-         $t0
-         """
+        import molecule.core.transform.DynamicMolecule
+        import molecule.core.dsl.base.Init
+        $baseMolecule.getObjs.map { objs =>
+           objs.map { __obj =>
+             $t0
+           }
+        }
+      """
 
     xx(1, t)
     t
