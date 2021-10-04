@@ -107,7 +107,7 @@ Copy all lines below and paste into terminal to start the Peer Server and having
 Now you can run molecule tests or projects against peer, peer-server and dev-local (cloud).
 
 ## Test
-Test in IDE or with sbt. Observe that first time tests are run, all test files have to be compiled which can take a few minutes.
+Run asynchronous uTest suites in sbt:
 ```
 sbt
 
@@ -117,14 +117,14 @@ sbt:molecule> testOnly molecule.tests.core.ref.*
 sbt:molecule> testOnly molecule.tests.core.ref.TwoStepQueries
 
 // Test against scala 2.13 explicitly
-sbt:molecule> ++2.13.5; testOnly molecule.tests.*
-sbt:molecule> ++2.13.5; testOnly molecule.tests.core.ref.*
-sbt:molecule> ++2.13.5; testOnly molecule.tests.core.ref.TwoStepQueries
+sbt:molecule> ++2.13.6; testOnly molecule.tests.*
+sbt:molecule> ++2.13.6; testOnly molecule.tests.core.ref.*
+sbt:molecule> ++2.13.6; testOnly molecule.tests.core.ref.TwoStepQueries
 
 // Test against scala 2.12 
-sbt:molecule> ++2.12.13; testOnly molecule.tests.*
-sbt:molecule> ++2.12.13; testOnly molecule.tests.core.ref.*
-sbt:molecule> ++2.12.13; testOnly molecule.tests.core.ref.TwoStepQueries
+sbt:molecule> ++2.12.15; testOnly molecule.tests.*
+sbt:molecule> ++2.12.15; testOnly molecule.tests.core.ref.*
+sbt:molecule> ++2.12.15; testOnly molecule.tests.core.ref.TwoStepQueries
 ```
 Using sbt is about twice as fast and therefore preferable when running all tests. Remember to ctrl-c the sbt process when switching to test in IDE to avoid process locks.
 

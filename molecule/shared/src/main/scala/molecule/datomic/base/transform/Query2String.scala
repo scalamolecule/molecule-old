@@ -51,8 +51,8 @@ case class Query2String(q: Query) extends Helpers {
       case v: BigDecimal if v.toString.contains(".") => v.toString + "M"
       case v: BigDecimal                             => v.toString + ".0M"
       case date: Date                                => "#inst \"" + date2datomicStr(date) + "\""
-      case v: UUID                                   => s"#uuid \"$v\""
-      case string                                    => s"\"$string\""
+      case v: UUID                                   => "#uuid \"" + v.toString + "\""
+      case v                                         => "\"" + v.toString + "\""
     }
     case Pull(e, nsFull, attr, Some(_))                  => s"(pull ?$e [{:$nsFull/$attr [:db/ident]}])"
     case Pull(e, nsFull, attr, _)                        => s"(pull ?$e [(limit :$nsFull/$attr nil)])"

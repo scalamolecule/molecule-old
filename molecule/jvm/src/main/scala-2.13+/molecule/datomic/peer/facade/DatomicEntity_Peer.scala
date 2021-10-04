@@ -62,7 +62,6 @@ case class DatomicEntity_Peer(
               case "List" => ent.asList(depth + 1, maxDepth)
             }
           }
-
         } else {
           Future(e.get(":db/id").asInstanceOf[Long])
         }
@@ -70,6 +69,13 @@ case class DatomicEntity_Peer(
       case set: clojure.lang.PersistentHashSet =>
         Future.sequence(
           set.asScala.toList.map(v1 =>
+            toScala(key, Some(v1), depth, maxDepth, tpe)
+          )
+        ).flatMap(sortList)
+
+      case vec: clojure.lang.PersistentVector =>
+        Future.sequence(
+          vec.asScala.toList.map(v1 =>
             toScala(key, Some(v1), depth, maxDepth, tpe)
           )
         ).flatMap(sortList)
@@ -91,9 +97,13 @@ case class DatomicEntity_Peer(
           }
         )
 
-      case unexpected => throw EntityException(
-        "Unexpected Datalog type to convert: " + unexpected.getClass.toString)
+      case None       => Future.failed(EntityException("Unexpectedly received null"))
+      case null       => Future.failed(EntityException("Unexpectedly received null"))
+      case unexpected => Future.failed(EntityException(
+        "Unexpected Datalog type to convert: " + unexpected.getClass.toString
+      ))
     }
+
     vOpt match {
       case Some(v) => retrieve(v)
       case _       => rawValue(key).flatMap(retrieve)

@@ -51,9 +51,9 @@ While the transactor is running, create a new tab/process in the terminal to run
 Now you can run molecule tests or projects against Datomic free.
 
 ## Test
-Test in IDE or with sbt:
+Run asynchronous uTest suites in sbt:
 ```
-sbt -Dfree=true
+sbt -Dfree=true 
 
 // Single test (2.13)
 sbt:molecule> testOnly molecule.tests.core.ref.TwoStepQueries
@@ -65,14 +65,14 @@ sbt:molecule> testOnly molecule.tests.core.ref.*
 sbt:molecule> test
 
 // Test against scala 2.13
-sbt:molecule> ++2.13.5; testOnly molecule.tests.*
-sbt:molecule> ++2.13.5; testOnly molecule.tests.core.ref.*
-sbt:molecule> ++2.13.5; testOnly molecule.tests.core.ref.TwoStepQueries
+sbt:molecule> ++2.13.6; testOnly moleculeTests.tests.*
+sbt:molecule> ++2.13.6; testOnly moleculeTests.tests.core.ref.*
+sbt:molecule> ++2.13.6; testOnly moleculeTests.tests.core.ref.TwoStepQueries
 
 // Test against scala 2.12 
-sbt:molecule> ++2.12.13; testOnly molecule.tests.*
-sbt:molecule> ++2.12.13; testOnly molecule.tests.core.ref.*
-sbt:molecule> ++2.12.13; testOnly molecule.tests.core.ref.TwoStepQueries
+sbt:molecule> ++2.12.15; testOnly moleculeTests.tests.*
+sbt:molecule> ++2.12.15; testOnly moleculeTests.tests.core.ref.*
+sbt:molecule> ++2.12.15; testOnly moleculeTests.tests.core.ref.TwoStepQueries
 ```
 Using sbt is about twice as fast and therefore preferable when running all tests (for peer system only though). 
 

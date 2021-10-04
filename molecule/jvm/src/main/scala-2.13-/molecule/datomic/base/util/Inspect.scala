@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
 private[molecule] case class Inspect(
-  clazz: String,
+  header: String,
   threshold: Int,
   max: Int = 9999,
   showStackTrace: Boolean = false,
@@ -43,19 +43,8 @@ private[molecule] case class Inspect(
             indent + ":db/add" + padS(10, ":db/add") + e + padS(32, e.toString) + a + padS(20, a) + s"list($biStr\n" +
               stmts.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
 
-          case add@Add(e, a, v, bi) =>
-            //            val biStr = if (showBi && bi != NoValue) padS(60, v.toString) + "   " + bi else ""
-            //            if (i < 3)
-            //              indent + ":db/add" + padS(10, ":db/add") + e + padS(32, e.toString) + a + padS(20, a.toString) + v + biStr
-            //            else
-            indent + add //+ ","
-
-          case ret@Retract(e, a, v, bi) =>
-            //            val biStr = if (showBi && bi != NoValue) padS(60, v.toString) + "   " + bi else ""
-            //            if (i < 3)
-            //              indent + ":db/retract" + padS(10, ":db/retract") + e + padS(34, e.toString) + a + padS(20, a.toString) + v + biStr
-            //            else
-            indent + ret //+ ","
+          case add: Add     => indent + add
+          case ret: Retract => indent + ret
 
           case RetractEntity(e) =>
             indent + ":db/retractEntity" + padS(22, ":db/retractEntity") + e
@@ -157,11 +146,11 @@ private[molecule] case class Inspect(
       }
 
       println(
-        s"## $id ## $clazz \n================================================================================================================\n" +
+        s"## $id ## $header \n=============================================================================\n" +
           params.toList.zipWithIndex.map {
             case (x, i) => traverse(x, 0, i + 1)
-          }.mkString("\n----------------------------------------------------------------------------------------------------------------\n") +
-          s"\n================================================================================================================\n$stackTrace"
+          }.mkString("\n-----------------------------------------------------------------------------\n") +
+          s"\n=============================================================================\n$stackTrace"
       )
     }
   }

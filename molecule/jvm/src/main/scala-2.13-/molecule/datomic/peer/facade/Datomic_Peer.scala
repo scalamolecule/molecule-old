@@ -3,7 +3,9 @@ package molecule.datomic.peer.facade
 import java.util.UUID.randomUUID
 import datomic.Peer
 import molecule.core.data.SchemaTransaction
+import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
 import molecule.datomic.base.facade.exception.DatomicFacadeException
+import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.JavaConverters._
 
 
@@ -13,6 +15,38 @@ import scala.collection.JavaConverters._
   * @groupprio 10
   * */
 trait Datomic_Peer {
+
+  private val inMemConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+
+  /** Connect to Peer database
+    *
+    * Datomic uses a URI to identify a database and is comprised of a protocol
+    * and a database identifier.
+    *
+    * Here are some examples of protocol/dbIdentifier settings for various
+    * systems on a local machine:
+    *
+    * | Peer        | protocol | db identifier         | new db name | Comment                        |
+    * | ---         | :---:    | ---                   | ---         | ---                            |
+    * | In-memory   | mem      | dbName                | newDbName   |                                |
+    * | Free        | free     | localhost:4334/dbName | newDbName   | With a running Free transactor |
+    * | Starter/Pro | dev      | localhost:4334/dbName | newDbName   | With a running Pro transactor  |
+    *
+    * Host could also be remote. For more info on the db URI syntax,
+    *
+    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
+    * @param protocol
+    * @param dbIdentifier
+    * @return
+    */
+  def connect(
+    protocol: String = "mem",
+    dbIdentifier: String = "",
+    connProxy: ConnProxy = inMemConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = Future {
+    val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
+    Conn_Peer(s"datomic:$protocol://$id", connProxy)
+  }
 
   /** Get database names
     *
@@ -37,10 +71,9 @@ trait Datomic_Peer {
     */
   def getDatabaseNames(
     protocol: String = "mem",
-    host: String = ""): List[String] = try {
+    host: String = ""
+  )(implicit ec: ExecutionContext): Future[List[String]] = Future {
     Peer.getDatabaseNames(s"datomic:$protocol://$host*").asScala.toList
-  } catch {
-    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
   /** Create database
@@ -66,10 +99,9 @@ trait Datomic_Peer {
     */
   def createDatabase(
     protocol: String = "mem",
-    dbIdentifier: String = ""): Boolean = try {
+    dbIdentifier: String = ""
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
     Peer.createDatabase(s"datomic:$protocol://$dbIdentifier")
-  } catch {
-    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
   /** Delete database
@@ -95,10 +127,9 @@ trait Datomic_Peer {
     */
   def deleteDatabase(
     protocol: String = "mem",
-    dbIdentifier: String = "localhost:4334/"): Boolean = try {
+    dbIdentifier: String = "localhost:4334/"
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
     Peer.deleteDatabase(s"datomic:$protocol://$dbIdentifier")
-  } catch {
-    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
   /** Rename database
@@ -126,42 +157,8 @@ trait Datomic_Peer {
     protocol: String = "mem",
     dbIdentifier: String = "localhost:4334/",
     newDbName: String,
-  ): Boolean = try {
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
     Peer.renameDatabase(s"datomic:$protocol://$dbIdentifier", newDbName)
-  } catch {
-    case e: Throwable => throw DatomicFacadeException(e.toString)
-  }
-
-
-  /** Connect to Peer database
-    *
-    * Datomic uses a URI to identify a database and is comprised of a protocol
-    * and a database identifier.
-    *
-    * Here are some examples of protocol/dbIdentifier settings for various
-    * systems on a local machine:
-    *
-    * | Peer        | protocol | db identifier         | new db name | Comment                        |
-    * | ---         | :---:    | ---                   | ---         | ---                            |
-    * | In-memory   | mem      | dbName                | newDbName   |                                |
-    * | Free        | free     | localhost:4334/dbName | newDbName   | With a running Free transactor |
-    * | Starter/Pro | dev      | localhost:4334/dbName | newDbName   | With a running Pro transactor  |
-    *
-    * Host could also be remote. For more info on the db URI syntax,
-    *
-    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
-    * @param protocol
-    * @param dbIdentifier
-    * @return
-    */
-  def connect(
-    protocol: String = "mem",
-    dbIdentifier: String = ""
-  ): Conn_Peer = try {
-    val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    Conn_Peer(s"datomic:$protocol://$id")
-  } catch {
-    case e: Throwable => throw DatomicFacadeException(e.toString)
   }
 
 
@@ -185,7 +182,10 @@ trait Datomic_Peer {
     schema: SchemaTransaction,
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = recreateDbFromEdn(schema.datomicPeer, protocol, dbIdentifier)
+    connProxy: ConnProxy = inMemConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
+    recreateDbFromEdn(schema.datomicPeer, protocol, dbIdentifier, connProxy)
+  }
 
 
   /** Deletes existing database (!) and creates a new empty db with schema from Schema Transaction file.
@@ -198,7 +198,6 @@ trait Datomic_Peer {
     *     `implicit val conn = recreateDbFrom(YourDomainSchema)`
     *
     * @group database
-    *
     * @param edns
     * @param protocol
     * @param dbIdentifier
@@ -208,17 +207,15 @@ trait Datomic_Peer {
     edns: Seq[String],
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = {
+    connProxy: ConnProxy = inMemConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    try {
-      deleteDatabase(protocol, id)
-      createDatabase(protocol, id)
-      val conn = connect(protocol, id)
-      edns.foreach(edn => conn.transact(edn))
-      conn
-    } catch {
-      case e: Throwable => throw DatomicFacadeException(e.toString)
-    }
+    for {
+      _ <- deleteDatabase(protocol, id)
+      _ <- createDatabase(protocol, id)
+      conn <- connect(protocol, id, connProxy)
+      _ <- Future.sequence(edns.map(edn => conn.transact(edn)))
+    } yield conn
   }
 
 
@@ -240,18 +237,17 @@ trait Datomic_Peer {
     schemaData: java.util.List[_],
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = {
+    connProxy: ConnProxy = inMemConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    try {
-      deleteDatabase(protocol, id)
-      createDatabase(protocol, id)
-      val conn = connect(protocol, id)
-      conn.transactRaw(schemaData)
-      conn
-    } catch {
-      case e: Throwable => throw DatomicFacadeException(e.toString)
-    }
+    for {
+      _ <- deleteDatabase(protocol, id)
+      _ <- createDatabase(protocol, id)
+      conn <- connect(protocol, id, connProxy)
+      _ <- conn.transactRaw(schemaData)
+    } yield conn
   }
+
 
   /** Transact schema from generated schema transaction data.
     *
@@ -265,13 +261,13 @@ trait Datomic_Peer {
     schema: SchemaTransaction,
     protocol: String = "mem",
     dbIdentifier: String = "",
-  ): Conn_Peer = try {
-    val id   = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    val conn = connect(protocol, id)
-    schema.datomicPeer.foreach(edn => conn.transact(edn))
-    conn
-  } catch {
-    case e: Throwable => throw DatomicFacadeException(e.toString)
+    connProxy: ConnProxy = inMemConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
+    val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
+    for {
+      conn <- connect(protocol, id, connProxy)
+      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
+    } yield conn
   }
 }
 

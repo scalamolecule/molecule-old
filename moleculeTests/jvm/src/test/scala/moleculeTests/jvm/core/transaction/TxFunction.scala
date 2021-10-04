@@ -1,17 +1,22 @@
 package moleculeTests.jvm.core.transaction
 
-import molecule.core.macros.TxFns
 import molecule.core.exceptions.TxFnException
+import molecule.core.macros.TxFns
 import molecule.datomic.api.out3._
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Example tx functions for tests
+  *
+  * A transaction function allows its logic and database calls to be performed withing a single
+  * transaction to guarantee transactional atomicity.
+  *
+  * Transaction functions are available for Peers on the jvm side only.
   *
   * To run tx functions, the transactor needs to have access to them. This is achieved
   * by 2 means:
@@ -29,7 +34,6 @@ import scala.concurrent.{ExecutionContext, Future}
   * LOCAL DEV / IN-MEMORY
   * No need to prepare anything since transaction functions defined within the project
   * will be available on the classpath for the Transactor managed by the Peer.
-  * OBS: Note that when running test from sbt this is not the case!
   *
   * STARTER PRO / PRO
   * Set Datomic classpath variable to where your tx functions are before starting the transactor
@@ -170,33 +174,15 @@ object TxFunctionExamples {
   }
 }
 
-/**
-  * Observe that when no additional tx meta data molecules are added (like in
-  * the first 3 tests below), the `transactFn` method executes the transaction as
-  * normal, just that it gets it tx statements from a tx function returning stmts.
-  *
-  * When a tx function adds meta data molecule(s), like the 4th test below, then
-  * the tx function is installed in the data
-  */
+
 object TxFunction extends AsyncTestSuite {
 
   import TxFunctionExamples._
 
-  //  // tx functions only implemented for scala 2.13
-  //  if (BuildInfo.scalaVersion.startsWith("2.13")) {
-
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    // Only Peer systems and ion systems can use tx functions
-    // (ion tx fns not impl since AWS/Clojure infrastructure might not be viable for molecule)
-    //  tests = 1
-    //    // todo: Async implementation for systems other than Peer
-    //    if (system == SystemPeer) {}
-
-
-
-    "Basic inc example" - core { implicit conn =>
+    "Basic inc example" - coreTxFn { implicit conn =>
       // Example from https://www.youtube.com/watch?v=8fY687k7DMA
       for {
         // Existing data
@@ -211,7 +197,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Atomic constraints" - core { implicit conn =>
+    "Atomic constraints" - coreTxFn { implicit conn =>
       for {
         fromAccount <- Ns.int(100).save.map(_.eid)
         toAccount <- Ns.int(700).save.map(_.eid)
@@ -238,7 +224,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Composing multiple tx functions" - core { implicit conn =>
+    "Composing multiple tx functions" - coreTxFn { implicit conn =>
       for {
         // (identical effect as in previous test)
 
@@ -264,16 +250,8 @@ object TxFunction extends AsyncTestSuite {
       } yield ()
     }
 
-    /**
-      * The two following tests fail when running in sbt and succeed when running in IDE
-      *
-      * [error]  org.codehaus.commons.compiler.CompileException:
-      * File org.codehaus.commons.compiler.jdk.SimpleCompiler$1[simplecompiler], Line 1, Column 0:
-      * package datomic does not exist (compiler.err.doesnt.exist) (TxMethods.scala:320)
-      *
-      * `datomic` doesn't seem to be on the classpath and might be related to some of those issues:
-      */
-    "Tx fn + 1 tx meta data molecule" - core { implicit conn =>
+
+    "Tx fn + 1 tx meta data molecule" - coreTxFn { implicit conn =>
       for {
         fromAccount <- Ns.int(100).save.map(_.eid)
         toAccount <- Ns.int(700).save.map(_.eid)
@@ -290,7 +268,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Tx fn + 2 tx meta data molecules" - core { implicit conn =>
+    "Tx fn + 2 tx meta data molecules" - coreTxFn { implicit conn =>
       for {
         fromAccount <- Ns.int(100).save.map(_.eid)
         toAccount <- Ns.int(700).save.map(_.eid)
@@ -314,7 +292,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Constructor" - core { implicit conn =>
+    "Constructor" - coreTxFn { implicit conn =>
       for {
         // Use tx function as a data constructor enforcing some integrity checks
 
@@ -339,7 +317,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Constructor with partial validation" - core { implicit conn =>
+    "Constructor with partial validation" - coreTxFn { implicit conn =>
       for {
         // Use tx function as a data constructor enforcing some integrity checks inside the
         // tx fun and some validation outside the tx function.
@@ -370,7 +348,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Inspecting tx fn call" - core { implicit conn =>
+    "Inspecting tx fn call" - coreTxFn { implicit conn =>
       for {
         eid <- Ns.int(100).save.map(_.eid)
 

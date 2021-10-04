@@ -1,27 +1,27 @@
 package molecule.datomic.client.facade
 
 import datomic.Peer
-import datomic.Util.read
 import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
-import molecule.datomic.base.facade.exception.DatomicFacadeException
+import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.util.control.NonFatal
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Datomic facade for cloud/dev-local.
- *
- * @param system     folder where samples reside
- * @param storageDir absolute path to where "system" is
- *                   overrides :storage-dir in ~/.datomic/dev-local.edn
- */
+  *
+  * @param system     folder where samples reside
+  * @param storageDir absolute path to where "system" is
+  *                   overrides :storage-dir in ~/.datomic/dev-local.edn
+  */
 case class Datomic_DevLocal(system: String, storageDir: String = "")
   extends Datomic_Client(
     Datomic.clientDevLocal(system, storageDir),
     AsyncDatomic.clientDevLocal(system, storageDir)
   ) {
+
+  private val inMemConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
 
 
   /** Retrieve DevLocal Client connection
@@ -29,9 +29,9 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     * @param dbName
     * @return
     */
-  def connect(dbName: String)
+  def connect(dbName: String, connProxy: ConnProxy = inMemConnProxy)
              (implicit ec: ExecutionContext): Future[Conn_Client] = {
-    Future(Conn_Client(client, clientAsync, dbName))
+    Future(Conn_Client(client, clientAsync, dbName, system, connProxy))
   }
 
   def getDatabaseNames(
@@ -45,29 +45,23 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
   def createDatabase(
     dbName: String,
     timeout: Int = 0
-  )(implicit ec: ExecutionContext): Future[Boolean] = try {
-    Future(client.createDatabase(dbName, timeout))
-  } catch {
-    case NonFatal(exc) => Future.failed(new DatomicFacadeException(exc.toString))
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
+    client.createDatabase(dbName, timeout)
   }
 
   def deleteDatabase(
     dbName: String,
     timeout: Int = 0
-  )(implicit ec: ExecutionContext): Future[Boolean] = try {
-    Future(client.deleteDatabase(dbName, timeout))
-  } catch {
-    case NonFatal(exc) => Future.failed(new DatomicFacadeException(exc.toString))
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
+    client.deleteDatabase(dbName, timeout)
   }
 
   def renameDatabase(
     dbIdentifier: String,
     newDbName: String,
     protocol: String = "mem"
-  )(implicit ec: ExecutionContext): Future[Boolean] = try {
-    Future(Peer.renameDatabase(s"datomic:$protocol://$dbIdentifier", newDbName))
-  } catch {
-    case NonFatal(exc) => Future.failed(new DatomicFacadeException(exc.toString))
+  )(implicit ec: ExecutionContext): Future[Boolean] = Future {
+    Peer.renameDatabase(s"datomic:$protocol://$dbIdentifier", newDbName)
   }
 
 
@@ -88,16 +82,15 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     */
   def recreateDbFrom(
     schema: SchemaTransaction,
-    dbName: String
-  )(implicit ec: ExecutionContext): Future[Conn_Client] = try {
+    dbName: String,
+    connProxy: ConnProxy = inMemConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Client] = {
     for {
       _ <- deleteDatabase(dbName)
       _ <- createDatabase(dbName)
-      conn <- connect(dbName)
+      conn <- connect(dbName, connProxy)
       _ <- Future.sequence(schema.datomicClient.map(edn => conn.transact(edn)))
     } yield conn
-  } catch {
-    case NonFatal(exc) => Future.failed(new DatomicFacadeException(exc.toString))
   }
 
   /** Deletes existing database (!) and creates a new empty db with schema from schema data structure.
@@ -114,23 +107,15 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     */
   def recreateDbFromRaw(
     schemaData: java.util.List[_],
-    dbName: String
-  )(implicit ec: ExecutionContext): Future[Conn_Client] = try {
+    dbName: String,
+    connProxy: ConnProxy = inMemConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Client] = {
     for {
       _ <- deleteDatabase(dbName)
       _ <- createDatabase(dbName)
-      conn <- connect(dbName)
+      conn <- connect(dbName, connProxy)
       _ <- conn.transactRaw(schemaData)
     } yield conn
-  } catch {
-    case NonFatal(exc) => Future.failed(new DatomicFacadeException(exc.toString))
   }
-//
-//
-//  def checkNotLambda: Any => Boolean = {
-//    val index    = read(":db/index")
-//    val fulltext = read(":db/fulltext")
-//    (k: Any) => k == index || k == fulltext
-//  }
 }
 

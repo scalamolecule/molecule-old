@@ -5,14 +5,14 @@ import java.net.URI
 import java.util.{Date, UUID, Collection => jCollection, List => jList}
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
+import molecule.core.marshalling._
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.marshalling.nodes.Obj
-import molecule.core.marshalling._
 import molecule.core.ops.ColOps
 import molecule.core.util.{Helpers, Inspect}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
-import molecule.datomic.base.ast.query.{InVar, Query}
+import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
 import molecule.datomic.base.transform.Query2String
@@ -346,9 +346,9 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
       } else {
         val lines = packed.linesIterator
         lines.next() // skip initial newline
-        val rows = new ListBuffer[T]
+        var rows = List.empty[T]
         while (lines.hasNext) {
-          rows.addOne(packed2T(lines))
+          rows = rows :+ packed2T(lines)
         }
         rows.toList
       }

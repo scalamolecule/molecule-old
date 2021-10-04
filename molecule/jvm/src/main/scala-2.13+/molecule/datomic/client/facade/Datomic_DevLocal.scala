@@ -4,7 +4,7 @@ import datomic.Peer
 import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy}
+import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 
@@ -117,12 +117,5 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
       _ <- conn.transactRaw(schemaData)
     } yield conn
   }
-
-
-  //  def checkNotLambda: Any => Boolean = {
-  //    val index    = read(":db/index")
-  //    val fulltext = read(":db/fulltext")
-  //    (k: Any) => k == index || k == fulltext
-  //  }
 }
 

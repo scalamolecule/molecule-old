@@ -40,14 +40,14 @@ case class TxReport_Client(
     } else {
       val assertStmts = stmts.filterNot(_.isInstanceOf[RetractEntity])
 
-      //        println("-------------------------------------------")
-      //        txDataRaw.map(datom2string) foreach println
-      //        println("--------")
-      //        allIds foreach println
-      //        println("--------")
-      //        stmtss foreach println
-      //        println("--------")
-      //        assertStmts foreach println
+      //      println("-------------------------------------------")
+      //      txDataRaw.map(datom2string) foreach println
+      //      println("--------")
+      //      allIds foreach println
+      //      println("--------")
+      //      stmts foreach println
+      //      println("--------")
+      //      assertStmts foreach println
 
       if (allIds.size != assertStmts.size) {
         throw DatomicFacadeException(

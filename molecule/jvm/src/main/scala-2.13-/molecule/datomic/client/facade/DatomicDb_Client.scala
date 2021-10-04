@@ -12,9 +12,9 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Datomic Db facade for client api (peer-server/cloud/dev-local).
- *
- * @param clientDb
- */
+  *
+  * @param clientDb
+  */
 case class DatomicDb_Client(clientDb: Db) extends DatomicDb {
 
   def getDatomicDb: AnyRef = clientDb.datomicDb

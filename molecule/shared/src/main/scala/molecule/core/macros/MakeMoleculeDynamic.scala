@@ -1,8 +1,6 @@
 package molecule.core.macros
 
 import molecule.core.exceptions.MoleculeException
-import molecule.core.ops.{Liftables, TreeOps}
-import molecule.core.transform.Dsl2Model
 import scala.language.higherKinds
 import scala.reflect.macros.blackbox
 
@@ -14,7 +12,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
 
   override def abort(msg: String): Nothing = throw MoleculeException(msg)
 
-  private lazy val xx = InspectMacro("MakeMolecule", 9, 8)
+  //  private lazy val xx = InspectMacro("MakeMolecule", 9, 8)
   //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10)
   //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10, mkError = true)
 
@@ -28,8 +26,19 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
         abort(s"Unexpected body of dynamic molecule:\n$other\n" + showRaw(other))
     }
 
-    val baseMolecule  = c.prefix.tree
-    val bodyElements  = rawBodyTree.map(transformer.transform)
+    val baseMolecule = c.prefix.tree
+
+    // Make tx function vals and defs private to avoid refinement errors.
+    // They are called by selectDynamic/applyDynamic anyway.
+    val bodyElements  = rawBodyTree.map(transformer.transform).map {
+      case ValDef(_, prop, tpt, rhs) =>
+        ValDef(Modifiers(flags = Flag.PRIVATE), prop, tpt, rhs)
+
+      case DefDef(_, name, tparams, vparamss, tpe, rhs) =>
+        DefDef(Modifiers(flags = Flag.PRIVATE), name, tparams, vparamss, tpe, rhs)
+
+      case other => other
+    }
     var fieldClauses  = Seq.empty[Tree]
     var methodClauses = Seq.empty[Tree]
 
@@ -70,6 +79,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
       case _ =>
     }
 
+
     rawBodyTree.foreach {
       case ValDef(_, TermName(field), _, _) =>
         fieldClauses = fieldClauses :+ cq"$field => ${TermName(field)}"
@@ -83,7 +93,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
       case DefDef(_, TermName(method), _, List(params), _, _) =>
         val args = params.zipWithIndex.map {
           case (ValDef(_, _, Ident(TypeName(_)), _), i) => q"args($i)"
-          case (ValDef(_, _, tpt, _), i)                => q"args($i).asInstanceOf[$tpt]"
+          case (ValDef(_, _, tpe, _), i)                => q"args($i).asInstanceOf[$tpe]"
         }
         methodClauses = methodClauses :+ cq"$method => ${TermName(method)}(..$args)"
 
@@ -108,7 +118,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
 
     lazy val objBody =
       q"""
-        val $self = __obj
+        private val $self = __obj
         ..$props
         ..$refs
         ..$bodyElements
@@ -152,7 +162,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransfo
         }
       """
 
-    xx(1, t)
+    //    xx(1, t)
     t
   }
 }

@@ -3,16 +3,14 @@ package molecule.datomic.base.marshalling
 import java.io.StringReader
 import java.net.URI
 import java.util
-import java.util.{Collections, Date, UUID, List => jList, Set => jSet}
+import java.util.{Collections, Date, UUID, List => jList}
 import datomic.Peer.toT
-import datomic.{Database, Datom, Util}
 import datomic.Util._
+import datomic.{Database, Datom, Util}
 import datomicClient.ClojureBridge
-import molecule.core.ast.elements.Generic
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
 import molecule.core.marshalling.nodes.Obj
-import molecule.core.ops.ModelOps.date2datomicStr
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers}
 import molecule.datomic.base.api.DatomicEntity
@@ -20,13 +18,12 @@ import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.PackEntityMap
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
-import moleculeBuildInfo.BuildInfo.datomicProtocol
+import moleculeBuildInfo.BuildInfo._
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
-import scala.jdk.CollectionConverters._
 
 
 object DatomicRpc extends MoleculeRpc

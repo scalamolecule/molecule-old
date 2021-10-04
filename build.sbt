@@ -10,8 +10,8 @@ lazy val molecule = crossProject(JSPlatform, JVMPlatform)
     Publish.withoutDocs // save time without doc creation for publishLocal
     //      Publish.withDocs // make docs for publishSigned
   )
-  .jsSettings(Settings.client)
-  .jvmSettings(Settings.server)
+  .jsSettings(Settings.js)
+  .jvmSettings(Settings.jvm)
 
 
 lazy val moleculeTests = crossProject(JSPlatform, JVMPlatform)
@@ -23,6 +23,6 @@ lazy val moleculeTests = crossProject(JSPlatform, JVMPlatform)
     Settings.tests ++
     Publish.not
   )
-  .jsSettings(Settings.client)
-  .jvmSettings(Settings.server)
+  .jsSettings(Settings.js)
+  .jvmSettings(Settings.jvm)
 

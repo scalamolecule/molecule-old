@@ -80,16 +80,17 @@ object AjaxResponder extends App with Serializations {
           bytesAsByteArray.update(0, 0)
           bytesAsByteArray
         }
-        .recover { exc =>
-          println("---- Error in AjaxResponder ---------------------\n" + exc)
-          println(exc.getStackTrace.mkString("\n"))
-          try {
-            serializeException(exc)
-          } catch {
-            case NonFatal(exceptionSerializationException) =>
-              println("Internal unexpected exception serialization error:\n" + exceptionSerializationException)
-              serializeException(exceptionSerializationException)
-          }
+        .recover {
+          case exc: Throwable =>
+            println("---- Error in AjaxResponder ---------------------\n" + exc)
+            println(exc.getStackTrace.mkString("\n"))
+            try {
+              serializeException(exc)
+            } catch {
+              case NonFatal(exceptionSerializationException) =>
+                println("Internal unexpected exception serialization error:\n" + exceptionSerializationException)
+                serializeException(exceptionSerializationException)
+            }
         }
 
       case Left(err) =>

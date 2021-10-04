@@ -1,7 +1,7 @@
 package molecule.datomic.client.facade
 
 import java.util
-import java.util.{Date, stream, Collection => jCollection, List => jList}
+import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Peer
 import datomic.Util._
 import datomic.db.DbId
@@ -11,12 +11,14 @@ import datomicScala.client.api.sync.{Client, Db, Datomic => clientDatomic}
 import datomicScala.client.api.{Datom, sync}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.util.{Helpers, QueryOpsClojure}
+import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
+import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
+import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.tempDb._
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Datomic213, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn_Datomic212, DatomicDb, TxReport}
+import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, blocking}
@@ -28,12 +30,14 @@ import scala.util.control.NonFatal
 case class Conn_Client(
   client: Client,
   clientAsync: AsyncClient,
-  dbName: String
-) extends Conn_Datomic213 with Helpers {
+  dbName: String,
+  system: String = "",
+  defaultConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+) extends Conn_Datomic212 {
 
-  val clientConn: sync.Connection = client.connect(dbName)
+  lazy val clientConn: sync.Connection = client.connect(dbName)
 
-  val clientConnAsync: Future[Either[CognitectAnomaly, AsyncConnection]] =
+  lazy val clientConnAsync: Future[Either[CognitectAnomaly, AsyncConnection]] =
     clientAsync.connect(dbName)
 
   // In-memory fixed test db for integration testing of domain model
@@ -43,10 +47,6 @@ case class Conn_Client(
   // Flag to indicate if special withDb is in use for testDb
   protected var withDbInUse = false
 
-  def usingTempDb(tempDb: TempDb): Conn = {
-    _adhocDbView = Some(tempDb)
-    this
-  }
 
   def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
@@ -97,7 +97,7 @@ case class Conn_Client(
   }
 
 
-  def testDbAsOfNow: Unit = {
+  def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(clientConn.db)
   }
 
@@ -129,7 +129,7 @@ case class Conn_Client(
 
 
   def testDbWith(txMolecules: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.sequence(txMolecules).map { stmtss =>
+    Future.sequence(txMolecules).flatMap { stmtss =>
       testDbWith(stmts2java(stmtss.flatten))
     }
   }
@@ -140,7 +140,7 @@ case class Conn_Client(
     withDbInUse = true
   }
 
-  def useLiveDb: Unit = {
+  def useLiveDb(): Unit = {
     sinceT = None
     sinceD = None
     withDbInUse = false
@@ -151,16 +151,19 @@ case class Conn_Client(
   private def getAdhocDb: Db = {
     val baseDb : Db = _testDb.getOrElse(clientConn.db)
     val adhocDb: Db = _adhocDbView.get match {
-      case AsOf(TxLong(t))  => baseDb.asOf(t)
-      case AsOf(TxDate(d))  => baseDb.asOf(d)
-      case Since(TxLong(t)) => baseDb.since(t)
-      case Since(TxDate(d)) => baseDb.since(d)
-      case With(tx)         => baseDb.`with`(clientConn.withDb, tx).dbAfter
-      case History          => baseDb.history
+      case AsOf(TxLong(t))          => baseDb.asOf(t)
+      case AsOf(TxDate(d))          => baseDb.asOf(d)
+      case Since(TxLong(t))         => baseDb.since(t)
+      case Since(TxDate(d))         => baseDb.since(d)
+      case History                  => baseDb.history
+      case With(stmtsEdn, uriAttrs) =>
+        val txData = getJavaStmts(stmtsEdn, uriAttrs)
+        baseDb.`with`(clientConn.withDb, txData).dbAfter
     }
     _adhocDbView = None
     adhocDb
   }
+
 
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
@@ -190,29 +193,25 @@ case class Conn_Client(
   def transactRaw(
     javaStmts: jList[_],
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
-  )(implicit ec: ExecutionContext): Future[TxReport] = try {
-    futScalaStmts.map { scalaStmts =>
-      if (_adhocDbView.isDefined) {
-        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
+  )(implicit ec: ExecutionContext): Future[TxReport] = futScalaStmts.map { scalaStmts =>
+    if (_adhocDbView.isDefined) {
+      TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
-      } else if (_testDb.isDefined) {
-        // In-memory "transaction"
-        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
+    } else if (_testDb.isDefined) {
+      // In-memory "transaction"
+      val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
 
-        // Continue with updated in-memory db
-        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-        //      val dbAfter = txReport.dbAfter
-        val dbAfter = txReport.dbAfter.asOf(txReport.t)
-        _testDb = Some(dbAfter)
-        txReport
+      // Continue with updated in-memory db
+      // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+      //      val dbAfter = txReport.dbAfter
+      val dbAfter = txReport.dbAfter.asOf(txReport.t)
+      _testDb = Some(dbAfter)
+      txReport
 
-      } else {
-        // Live transaction
-        TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
-      }
+    } else {
+      // Live transaction
+      TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
     }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
   }
 
 
@@ -244,28 +243,9 @@ case class Conn_Client(
     }
   }
 
-  private[molecule] def _query(
-    model: Model,
-    query: Query,
-    _db: Option[DatomicDb]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
-    try {
-      Future {
-        val p               = Query2String(query).p
-        val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-        val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-        val allInputs       = rules ++ inputsEvaluated
-        val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
-        clientDatomic.q(query.toMap, adhocDb, allInputs: _*)
-      }
-    } catch {
-      case NonFatal(exc) =>
-        Future.failed(new QueryException(exc, model, query))
-    }
-  }
 
   // Datoms API providing direct access to indexes
-  private[molecule] def _index(model: Model)
+  private[molecule] override def _index(model: Model)
                               (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     val (api, index, args) = model.elements.head match {
       case Generic("EAVT", _, _, value) =>
@@ -328,38 +308,35 @@ case class Conn_Client(
         })
 
       case Generic("Log", _, _, value) =>
+        def err(v: Any) = throw MoleculeException(
+          s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
+
         ("txRange", "", value match {
-          case Eq(Seq(from: Int, until: Int))   => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Int, until: Long))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Int, until: Date))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Long, until: Int))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Long, until: Long)) => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Long, until: Date)) => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Date, until: Int))  => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Date, until: Long)) => Seq(Some(from), Some(until))
-          case Eq(Seq(from: Date, until: Date)) => Seq(Some(from), Some(until))
+          case Eq(Seq(a, b)) =>
+            // Get valid from/until values
+            val from  = a match {
+              case None                              => None
+              case from@(_: Int | _: Long | _: Date) => from
+              case other                             => err(other)
+            }
+            val until = b match {
+              case None                               => None
+              case until@(_: Int | _: Long | _: Date) => until
+              case other                              => err(other)
+            }
+            Seq(from, until)
 
-          case Eq(Seq(from: Int, None))  => Seq(Some(from), None)
-          case Eq(Seq(from: Long, None)) => Seq(Some(from), None)
-          case Eq(Seq(from: Date, None)) => Seq(Some(from), None)
 
-          case Eq(Seq(None, until: Int))  => Seq(None, Some(until))
-          case Eq(Seq(None, until: Long)) => Seq(None, Some(until))
-          case Eq(Seq(None, until: Date)) => Seq(None, Some(until))
-
-          // All !!
-          case Eq(Seq(None, None)) => Seq(None, None)
-
-          // From until end
-          case Eq(Seq(from: Int))  => Seq(Some(from), None)
-          case Eq(Seq(from: Long)) => Seq(Some(from), None)
-          case Eq(Seq(from: Date)) => Seq(Some(from), None)
+          case Eq(Seq(from)) => from match {
+            case None                              => Seq(None, None)
+            case from@(_: Int | _: Long | _: Date) => Seq(from, None)
+            case other                             => err(other)
+          }
 
           // All !!
           case Eq(Nil) => Seq(None, None)
 
-          case Eq(v) => throw MoleculeException(
-            s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
+          case Eq(other) => err(other)
 
           case v => throw MoleculeException("Unexpected Log value: " + v)
         })
@@ -552,7 +529,7 @@ case class Conn_Client(
         val datom2row_ = datom2row(None)
         val raw        = db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1)
         raw.map { datoms =>
-          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
+          datoms.forEach(datom => datom2row_(datom).foreach(row => jColl.add(row)))
           jColl
         }
 
@@ -563,7 +540,7 @@ case class Conn_Client(
         val endValue   = args(2).asInstanceOf[Option[Any]]
         val raw        = db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1)
         raw.map { datoms =>
-          datoms.forEach(datom => datom2row_(datom).map(row => jColl.add(row)))
+          datoms.forEach(datom => datom2row_(datom).foreach(row => jColl.add(row)))
           jColl
         }
 
@@ -578,11 +555,31 @@ case class Conn_Client(
               // Use t from txRange result
               val datom2row_ = datom2row(Some(t))
               datoms.foreach { datom =>
-                datom2row_(datom).map(row => jColl.add(row))
+                datom2row_(datom).foreach(row => jColl.add(row))
               }
           }
           jColl
         }
+    }
+  }
+
+  private[molecule] override def _query(
+    model: Model,
+    query: Query,
+    _db: Option[DatomicDb]
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    try {
+      Future {
+        val p               = Query2String(query).p
+        val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+        val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
+        val allInputs       = rules ++ inputsEvaluated
+        val adhocDb         = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
+        clientDatomic.q(query.toMap, adhocDb, allInputs: _*)
+      }
+    } catch {
+      case NonFatal(exc) =>
+        Future.failed(QueryException(exc, model, query))
     }
   }
 }

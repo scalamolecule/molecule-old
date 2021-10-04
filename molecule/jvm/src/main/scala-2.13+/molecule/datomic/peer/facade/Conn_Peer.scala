@@ -8,7 +8,7 @@ import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy, IndexArgs}
+import molecule.core.marshalling._
 import molecule.core.util.QueryOpsClojure
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -45,6 +45,7 @@ object Conn_Peer {
   //    testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
   //  }
 }
+
 
 /** Facade to Datomic connection for peer api.
   * */
@@ -342,8 +343,9 @@ case class Conn_Peer(
   }
 
   // Datoms API providing direct access to indexes
-  private[molecule] override def _index(model: Model)
-                                       (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
+  private[molecule] override def _index(
+    model: Model
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
       val (api, index, args) = model.elements.head match {
         case Generic("EAVT", _, _, value) =>
@@ -471,7 +473,9 @@ case class Conn_Peer(
           if attr != "args_" && attr != "range" => attr
       }
 
-      def datom2row(tOpt: Option[Long])(implicit ec: ExecutionContext): Datom => Future[jList[AnyRef]] = attrs.length match {
+      def datom2row(
+        tOpt: Option[Long]
+      )(implicit ec: ExecutionContext): Datom => Future[jList[AnyRef]] = attrs.length match {
         case 1 =>
           val x1 = datomElement(tOpt, attrs.head)
           (d: Datom) =>
@@ -605,6 +609,7 @@ case class Conn_Peer(
       case NonFatal(ex) => Future.failed(ex)
     }
   }.flatten
+
 
   // Datalog query execution
   private[molecule] override def _query(

@@ -4,6 +4,7 @@ import molecule.core.data.SchemaTransaction
 import molecule.core.facade.Conn_Js
 import molecule.core.marshalling.{DatomicInMemProxy, DatomicPeerProxy}
 import molecule.datomic.base.facade.Conn
+import moleculeBuildInfo.BuildInfo
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
 import moleculeTests.dataModels.core.ref.schema.{NestedSchema, SelfJoinSchema}
@@ -27,21 +28,22 @@ trait AsyncTestSuiteImpl {
     )
   ))
 
-  def coreImpl[T](func: Future[Conn] => T): T = func(inMem(CoreTestSchema))
-  def bidirectionalImpl[T](func: Future[Conn] => T): T = func(inMem(BidirectionalSchema))
-  def partitionImpl[T](func: Future[Conn] => T): T = func(inMem(PartitionTestSchema))
-  def nestedImpl[T](func: Future[Conn] => T): T = func(inMem(NestedSchema))
-  def selfJoinImpl[T](func: Future[Conn] => T): T = func(inMem(SelfJoinSchema))
-  def aggregateImpl[T](func: Future[Conn] => T): T = func(inMem(AggregatesSchema))
-  def socialNewsImpl[T](func: Future[Conn] => T): T = func(inMem(SocialNewsSchema))
-  def graphImpl[T](func: Future[Conn] => T): T = func(inMem(GraphSchema))
-  def graph2Impl[T](func: Future[Conn] => T): T = func(inMem(Graph2Schema))
-  def modernGraph1Impl[T](func: Future[Conn] => T): T = func(inMem(ModernGraph1Schema))
-  def modernGraph2Impl[T](func: Future[Conn] => T): T = func(inMem(ModernGraph2Schema))
-  def productsImpl[T](func: Future[Conn] => T): T = func(inMem(ProductsOrderSchema))
-  def seattleImpl[T](func: Future[Conn] => T): T = func(inMem(SeattleSchema))
+  def coreImpl[T](test: Future[Conn] => T): T = test(inMem(CoreTestSchema))
+  def coreTxFnImpl[T](test: Future[Conn] => T): T = test(inMem(CoreTestSchema)) // Not used on js platform anyway
+  def bidirectionalImpl[T](test: Future[Conn] => T): T = test(inMem(BidirectionalSchema))
+  def partitionImpl[T](test: Future[Conn] => T): T = test(inMem(PartitionTestSchema))
+  def nestedImpl[T](test: Future[Conn] => T): T = test(inMem(NestedSchema))
+  def selfJoinImpl[T](test: Future[Conn] => T): T = test(inMem(SelfJoinSchema))
+  def aggregateImpl[T](test: Future[Conn] => T): T = test(inMem(AggregatesSchema))
+  def socialNewsImpl[T](test: Future[Conn] => T): T = test(inMem(SocialNewsSchema))
+  def graphImpl[T](test: Future[Conn] => T): T = test(inMem(GraphSchema))
+  def graph2Impl[T](test: Future[Conn] => T): T = test(inMem(Graph2Schema))
+  def modernGraph1Impl[T](test: Future[Conn] => T): T = test(inMem(ModernGraph1Schema))
+  def modernGraph2Impl[T](test: Future[Conn] => T): T = test(inMem(ModernGraph2Schema))
+  def productsImpl[T](test: Future[Conn] => T): T = test(inMem(ProductsOrderSchema))
+  def seattleImpl[T](test: Future[Conn] => T): T = test(inMem(SeattleSchema))
 
-  def mbrainzImpl[T](func: Future[Conn] => T): T = {
+  def mbrainzImpl[T](test: Future[Conn] => T): T = {
     //    val dbName = if (system == SystemDevLocal)
     //      "mbrainz-subset" // dev-local
     //    else
@@ -63,7 +65,7 @@ trait AsyncTestSuiteImpl {
     //      conn.transact(MBrainzSchemaLowerToUpper.edn)
     //    }
     //            Datomic_Peer.connect("dev", "localhost:4334/mbrainz-1968-1973")
-    func(
+    test(
       Future(
         Conn_Js(
           DatomicPeerProxy(

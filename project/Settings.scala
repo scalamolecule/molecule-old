@@ -10,31 +10,25 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    ThisBuild / version := "0.26.0-SNAPSHOT",
-    crossScalaVersions := Seq("2.12.13", "2.13.6"),
+    ThisBuild / version := "1.0.0-SNAPSHOT",
+    crossScalaVersions := Seq("2.12.15", "2.13.6"),
     ThisBuild / scalaVersion := "2.13.6",
     scalacOptions := List(
-      //      "-feature",
-      //      "-unchecked",
-      //      "-deprecation",
-      ////      "-explaintypes",
-      //      "-feature",
-      ////      "-language:_",
-      //      "-Xlint",
-      //      "-Yrangepos",
-      //      "-Ywarn-value-discard",
-      //      "-Ywarn-extra-implicit",
-      //      "-Ywarn-unused",
-
       "-feature",
+      //      "-unchecked",
       "-deprecation",
+      //      "-language:_",
       "-language:implicitConversions",
       "-language:postfixOps",
       "-language:higherKinds",
       "-language:existentials",
       "-Yrangepos"
+      //      "-explaintypes",
+      //      "-Ywarn-value-discard",
+      //      "-Ywarn-extra-implicit",
+      //      "-Ywarn-unused",
     ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => Seq("-Ymacro-annotations")
+      case Some((2, 13)) => Seq("-Ymacro-annotations") // for @TxFns macro annotation
       case _             => Nil
     }),
     resolvers ++= Seq(
@@ -53,33 +47,35 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     }
   )
 
-  val client: Seq[Def.Setting[_]] = Seq(
+  val js: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "1.1.0",
-      "io.github.cquiroz" %%% "scala-java-time" % "2.2.2",
-      "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.2.2"
+      "org.scala-js" %%% "scalajs-dom" % "1.2.0",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
+      "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0"
     ),
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-    //    scalaJSLinkerConfig ~= {
-    //      _.withSemantics(_.withStrictFloats(true))
-    //    },
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
-  val server: Seq[Def.Setting[_]] = {
+  val jvm: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
         "org.specs2" %% "specs2-core" % "4.10.6",
-        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
-        "com.typesafe.akka" %% "akka-stream" % "2.6.14",
-        "com.typesafe.akka" %% "akka-serialization-jackson" % "2.6.14",
-        "com.typesafe.akka" %% "akka-actor" % "2.6.14",
-        "com.typesafe.akka" %% "akka-actor-typed" % "2.6.14",
-        "com.typesafe.akka" %% "akka-slf4j" % "2.6.14",
-        "com.typesafe.akka" %% "akka-protobuf-v3" % "2.6.14",
-        "com.typesafe.akka" %% "akka-http" % "10.2.4",
-        "ch.megard" %% "akka-http-cors" % "1.1.1"
-      ),
+        "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.0",
+        "com.typesafe.akka" %% "akka-stream" % "2.6.16",
+        "com.typesafe.akka" %% "akka-serialization-jackson" % "2.6.16",
+        "com.typesafe.akka" %% "akka-actor" % "2.6.16",
+        "com.typesafe.akka" %% "akka-actor-typed" % "2.6.16",
+        "com.typesafe.akka" %% "akka-slf4j" % "2.6.16",
+        "com.typesafe.akka" %% "akka-protobuf-v3" % "2.6.16",
+        "com.typesafe.akka" %% "akka-http" % "10.2.6",
+        "ch.megard" %% "akka-http-cors" % "1.1.2"
+      ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 13)) => Nil
+        case _             =>
+          // For @TxFns macro annotation on Scala 2.12
+          sbt.compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) :: Nil
+      }),
       // Ensure clojure loads correctly for async tests run from sbt
       Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
     ) ++ (if (datomicProtocol == "free") {
@@ -99,50 +95,46 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.lihaoyi" %%% "utest" % "0.7.10",
-      "io.suzaku" %%% "boopickle" % "1.3.3",
+      "io.suzaku" %%% "boopickle" % "1.4.0",
       "com.github.cornerman" %%% "sloth" % "0.3.0",
-      //      "com.github.cornerman" %%% "sloth" % "0.3.1-SNAPSHOT",
-
       "org.specs2" %%% "specs2-core" % "4.10.6"
     ),
-    //    testFrameworks += new TestFramework("utest.runner.Framework"),
-    //    testFrameworks += new TestFramework("moleculeTests.core.MoleculeTestFramework"),
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-    // Temporarily limit number of tests to be compiled (comment out to test all)
-    unmanagedSources / excludeFilter := {
-      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-      val allowed     = Seq(
-        //        sharedTests + "/core/attr",
-        //        sharedTests + "/core/attrMap",
-        //        sharedTests + "/core/bidirectionals",
-        //        sharedTests + "/core/composite",
-        //        sharedTests + "/core/crud",
-        //        sharedTests + "/core/equality",
-        //        sharedTests + "/core/expression",
-        //        sharedTests + "/core/generic",
-        //        sharedTests + "/core/input1",
-        //        sharedTests + "/core/input2",
-        //        sharedTests + "/core/input3",
-        //        sharedTests + "/core/ref",
-        //        sharedTests + "/core/json",
-        //        sharedTests + "/core/nested",
-        sharedTests + "/core/obj",
-        //        sharedTests + "/core/runtime",
-        //        sharedTests + "/core/schemaDef",
-        //        sharedTests + "/core/time",
-        //        sharedTests + "/core/transaction",
-        //        sharedTests + "/core/txMetaData",
-        //        sharedTests + "/examples/datomic/dayOfDatomic",
-        //        sharedTests + "/examples/datomic/mbrainz",
-        //        sharedTests + "/examples/datomic/seattle",
-        //        sharedTests + "/examples/gremlin/gettingStarted",
-        //        sharedTests + "/Adhoc.scala",
-      )
-      new SimpleFileFilter(f =>
-        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-      )
-    },
+    //    // Temporarily limit number of tests to be compiled (comment out to test all)
+    //    unmanagedSources / excludeFilter := {
+    //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+    //      val allowed     = Seq(
+    //        //        sharedTests + "/core/attr",
+    //        //        sharedTests + "/core/attrMap",
+    //        //        sharedTests + "/core/bidirectionals",
+    //        //        sharedTests + "/core/composite",
+    //        //        sharedTests + "/core/crud",
+    //        //        sharedTests + "/core/equality",
+    //        //        sharedTests + "/core/expression",
+    //        //        sharedTests + "/core/generic",
+    //        //        sharedTests + "/core/input1",
+    //        //        sharedTests + "/core/input2",
+    //        //        sharedTests + "/core/input3",
+    //        //        sharedTests + "/core/ref",
+    //        //        sharedTests + "/core/json",
+    //        //        sharedTests + "/core/nested",
+    //        sharedTests + "/core/obj",
+    //        //        sharedTests + "/core/runtime",
+    //        //        sharedTests + "/core/schemaDef",
+    //        //        sharedTests + "/core/time",
+    //        //        sharedTests + "/core/transaction",
+    //        //        sharedTests + "/core/txMetaData",
+    //        //        sharedTests + "/examples/datomic/dayOfDatomic",
+    //        //        sharedTests + "/examples/datomic/mbrainz",
+    //        //        sharedTests + "/examples/datomic/seattle",
+    //        //        sharedTests + "/examples/gremlin/gettingStarted",
+    //        //        sharedTests + "/Adhoc.scala",
+    //      )
+    //      new SimpleFileFilter(f =>
+    //        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+    //      )
+    //    },
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,

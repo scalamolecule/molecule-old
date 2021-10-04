@@ -17,20 +17,21 @@ trait AsyncTestSuite extends TestSuite with CoreData
   val isJsPlatform: Boolean = isJsPlatform_
 
 
-  def core[T](func: Future[Conn] => T): T = coreImpl(func)
-  def bidirectional[T](func: Future[Conn] => T): T = bidirectionalImpl(func)
-  def partition[T](func: Future[Conn] => T): T = partitionImpl(func)
-  def nested[T](func: Future[Conn] => T): T = nestedImpl(func)
-  def selfJoin[T](func: Future[Conn] => T): T = selfJoinImpl(func)
-  def aggregate[T](func: Future[Conn] => T): T = aggregateImpl(func)
-  def socialNews[T](func: Future[Conn] => T): T = socialNewsImpl(func)
-  def graph[T](func: Future[Conn] => T): T = graphImpl(func)
-  def graph2[T](func: Future[Conn] => T): T = graph2Impl(func)
-  def modernGraph1[T](func: Future[Conn] => T): T = modernGraph1Impl(func)
-  def modernGraph2[T](func: Future[Conn] => T): T = modernGraph2Impl(func)
-  def products[T](func: Future[Conn] => T): T = productsImpl(func)
-  def seattle[T](func: Future[Conn] => T): T = seattleImpl(func)
-  def mbrainz[T](func: Future[Conn] => T): T = mbrainzImpl(func)
+  def core[T](test: Future[Conn] => T): T = coreImpl(test)
+  def coreTxFn[T](test: Future[Conn] => T): T = coreTxFnImpl(test)
+  def bidirectional[T](test: Future[Conn] => T): T = bidirectionalImpl(test)
+  def partition[T](test: Future[Conn] => T): T = partitionImpl(test)
+  def nested[T](test: Future[Conn] => T): T = nestedImpl(test)
+  def selfJoin[T](test: Future[Conn] => T): T = selfJoinImpl(test)
+  def aggregate[T](test: Future[Conn] => T): T = aggregateImpl(test)
+  def socialNews[T](test: Future[Conn] => T): T = socialNewsImpl(test)
+  def graph[T](test: Future[Conn] => T): T = graphImpl(test)
+  def graph2[T](test: Future[Conn] => T): T = graph2Impl(test)
+  def modernGraph1[T](test: Future[Conn] => T): T = modernGraph1Impl(test)
+  def modernGraph2[T](test: Future[Conn] => T): T = modernGraph2Impl(test)
+  def products[T](test: Future[Conn] => T): T = productsImpl(test)
+  def seattle[T](test: Future[Conn] => T): T = seattleImpl(test)
+  def mbrainz[T](test: Future[Conn] => T): T = mbrainzImpl(test)
 
 
   // create delays between transactions to allow dates to be separate by at least 1 ms

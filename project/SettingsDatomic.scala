@@ -1,8 +1,6 @@
 import sbt._
 
-/* Internal safeguards for Molecule development.
- * Doesn't affect the end user.
- */
+
 trait SettingsDatomic {
 
   // todo: make configurable

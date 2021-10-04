@@ -11,7 +11,7 @@ Compile to 2.13 only:
 
 Compile to 2.12 only:
 
-    sbt ++2.12.13 clean compile -Dfree=true
+    sbt ++2.12.15 clean compile -Dfree=true
 
 Compile to 2.12 and 2.13:
 
@@ -39,9 +39,9 @@ To have molecule jars generated, add `-Dmolecule=true`
 
 This might be too heavy for the compiler. In that case split up the process:
 
-> sbt ++2.12.13 clean compile -Dfree=true
-> sbt ++2.12.13 doc
-> sbt ++2.12.13 publishSigned -Dfree=true
+> sbt ++2.12.15 clean compile -Dfree=true
+> sbt ++2.12.15 doc
+> sbt ++2.12.15 publishSigned -Dfree=true
 > 
 > // publish 2.12 at maven central, then do 2.13:
 > 

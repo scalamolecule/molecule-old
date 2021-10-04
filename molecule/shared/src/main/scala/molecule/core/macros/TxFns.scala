@@ -16,9 +16,9 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("TxFns", 1, 3, mkError = true)
-  private lazy val xx = InspectMacro("TxFns", 1, 3)
-  //  private lazy val xx = InspectMacro("TxFns", 1, 0)
+  //    private lazy val xx = InspectMacro("TxFns", 1, 3, mkError = true)
+  //  private lazy val xx = InspectMacro("TxFns", 1, 3)
+  //    private lazy val xx = InspectMacro("TxFns", 10, 0)
 
   def prepareForDatalog(annottees: Tree*): Tree = annottees match {
     case List(obj: ModuleDef) => obj match {
@@ -34,7 +34,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
                 ..${typedTxFns.map(untypedTxFn(_))}
               }
           """
-        //       xx(1, t)
+        //        xx(1, t)
         t
 
       case _ => c.abort(c.enclosingPosition, s"No self-type allowed in @TxFns-annotated container.")

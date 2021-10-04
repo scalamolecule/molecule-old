@@ -130,6 +130,7 @@ trait Datomic_Peer {
   )(implicit ec: ExecutionContext): Future[Boolean] = Future {
     Peer.deleteDatabase(s"datomic:$protocol://$dbIdentifier")
   }
+
   /** Rename database
     *
     * Datomic uses a URI to identify a database and is comprised of a protocol

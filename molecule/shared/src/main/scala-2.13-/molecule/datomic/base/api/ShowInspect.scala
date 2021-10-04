@@ -2,7 +2,6 @@ package molecule.datomic.base.api
 
 import java.util
 import java.util.{Collections, Date, Collection => jCollection, List => jList, Map => jMap, Set => jSet}
-import molecule.core.api.Molecule
 import molecule.core.ast.elements._
 import molecule.core.exceptions.{MoleculeException, QueryException}
 import molecule.core.marshalling.Marshalling
@@ -16,7 +15,7 @@ import molecule.datomic.base.transform._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 import scala.util.control.NonFatal
 

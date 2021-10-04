@@ -91,32 +91,30 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
           val flatValues         = TermName("flatValues" + level)
           xx(3, level, current, props, nestedObj, nestedPropCount, deeper)
           q"""
-            val buf = new scala.collection.mutable.ListBuffer[Any]()
+            var buf = List.empty[Any]
             val $flatValues = extractFlatValues($nestedPropCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
             while (it.hasNext) {
-              buf.addOne(
-                (
-                  ..${properties(props)},
-                  it.next match {
-                    case "__none__" => Nil
-                    case last       =>
-                      val it = $flatValues(last.asInstanceOf[jList[Any]])
-                      ..${tplOptNested(nestedObj, refIndexes, tacitIndexes, level + 1)}
-                  }
-                )
+              buf = buf :+ (
+                ..${properties(props)},
+                it.next match {
+                  case "__none__" => Nil
+                  case last       =>
+                    val it = $flatValues(last.asInstanceOf[jList[Any]])
+                    ..${tplOptNested(nestedObj, refIndexes, tacitIndexes, level + 1)}
+                }
               )
             }
-            buf.toList
+            buf
            """
 
         case last =>
           xx(5, level, current, last, properties(current.props))
           q"""
-            val buf = new scala.collection.mutable.ListBuffer[Any]()
+            var buf = List.empty[Any]
             while (it.hasNext) {
-              buf.addOne((..${properties(current.props)}))
+              buf = buf :+ (..${properties(current.props)})
             }
-            buf.toList
+            buf
           """
       }
     }

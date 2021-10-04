@@ -43,9 +43,6 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
 
-
-
-
       } yield ()
     }
 

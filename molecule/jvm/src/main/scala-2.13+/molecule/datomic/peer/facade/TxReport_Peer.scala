@@ -2,14 +2,11 @@ package molecule.datomic.peer.facade
 
 import java.util.{Date, List => jList, Map => jMap}
 import datomic.Connection.TEMPIDS
-import datomic.db.{Datum, DbId}
 import datomic._
+import datomic.db.Datum
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
-import molecule.datomic.base.facade.exception.DatomicFacadeException
-import molecule.datomic.base.ops.QueryOps
 import molecule.datomic.base.util.Inspect
-import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 
 /** Datomic TxReport facade for peer api.
@@ -25,85 +22,18 @@ case class TxReport_Peer(
   lazy val eids: List[Long] = {
     var ids = List.empty[Long]
     val tx = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].get(0).asInstanceOf[Datom].tx().asInstanceOf[Long]
-
-//    println("================= tx " + tx)
-//    println(rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values())
-
-
     rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach { tempId =>
       val eid = tempId.asInstanceOf[Long]
-//      println("eid " + eid)
       if (eid != tx) {
         ids = ids :+ eid
       }
     }
-
-//    println(ids.distinct.sorted)
-
     ids.distinct.sorted // newest entities last
-
   }
 
-//  lazy val eids2: List[Long] = if (scalaStmts.isEmpty) {
-//    var ids = List.empty[Long]
-//    val tx = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].get(0).asInstanceOf[Datom].tx().asInstanceOf[Long]
-//
-//
-//    println("================= tx " + tx)
-//
-//    println(rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values())
-//
-//
-//    rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach { tempId =>
-//      val eid = tempId.asInstanceOf[Long]
-//      println("eid " + eid)
-//      if (eid != tx) {
-//        ids = ids :+ eid
-//      }
-//    }
-//
-//    println(ids.distinct.sorted)
-//
-//    ids.distinct.sorted // newest entities last
-//
-//  } else {
-//
-//    println(rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values())
-//
-//
-//    val datoms = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].iterator
-//    var ids    = List.empty[Long]
-//    var i      = 0
-//    // skip first transaction time datom
-//    val tx = datoms.next().asInstanceOf[Datom].tx().asInstanceOf[Long]
-//    while (datoms.hasNext) {
-//      val datom = datoms.next.asInstanceOf[Datom]
-//      val eid   = datom.e().asInstanceOf[Long]
-//      if (datom.added() && eid != tx) {
-//        // Only asserted datoms and not the tx entity itself
-//        ids = ids :+ eid
-//      }
-//      i += 1
-//    }
-//
-//    // Filter out retractions and the transaction entity itself
-//    val assertStmts = scalaStmts.filter {
-//      case _: RetractEntity           => false
-//      case Add("datomic.tx", _, _, _) => false
-//      case _                          => true
-//    }
-//
-//    if (ids.length != assertStmts.size) {
-//      throw DatomicFacadeException(
-//        s"Unexpected different counts of ${ids.length} ids and ${assertStmts.length} stmts."
-//      )
-//    }
-//
-//    ids.distinct.sorted // newest entities last
-//  }
-
   private lazy val txDataRaw: List[Datum] =
-    rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].asScala.toList.asInstanceOf[List[Datum]]
+    rawTxReport.get(Connection.TX_DATA)
+      .asInstanceOf[jList[_]].asScala.toList.asInstanceOf[List[Datum]]
 
   private def datom2string(d: datomic.db.Datum, vMax: Int) = {
     val e = s"${d.e}" + " " * (14 - d.e.toString.length)
