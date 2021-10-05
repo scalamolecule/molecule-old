@@ -30,52 +30,8 @@ import molecule.core.dsl.attributes.Attr
   */
 trait AttrExpressions {
 
-  /** Turn molecule into input molecule awaiting input.
-    * <br><br>
-    * Apply input marker `?` to attribute to turn molecule into an 'input molecule'.
-    * <br><br>
-    * At runtime the input molecule expects input for the attribute in place of the `?` marker.
-    * {{{
-    *   // Input molecule created at compile time.
-    *   val ageOfPersons = m(Person.name_(?).age) // awaiting name of type String
-    *
-    *   // At runtime, "Ben" is applied as input replacing the `?` placeholder and we can get the age.
-    *   ageOfPersons("Ben").get.map(_ ==> List(42))
-    * }}}
-    *
-    * @note Data can only be retrieved from input molecules once they have been resolved with input.<br>
-    *       Input molecule queries are cached and optimized by Datomic.
-    * @group attrMarker
-    * */
-  trait ?
-
-  // Avoiding overload via Keywords.? import
-  type ?? = molecule.core.expression.AttrExpressions.?
-
-  /** Unify attribute value in self-join.
-    * <br><br>
-    * Apply `unify` marker to attribute to unify its value with previous values of the same attribute in the molecule in a self-join.
-    * {{{
-    *   m(Person.age.name.Beverages * Beverage.name.rating) insert List(
-    *       (23, "Joe", List(("Coffee", 3), ("Cola", 2), ("Pepsi", 3))),
-    *       (25, "Ben", List(("Coffee", 2), ("Tea", 3))),
-    *       (23, "Liz", List(("Coffee", 1), ("Tea", 3), ("Pepsi", 1))))
-    *
-    *   // What beverages do pairs of 23- AND 25-year-olds like in common?
-    *   // Drink name is unified - Joe and Ben both drink coffee, etc..
-    *   Person.age_(23).name.Beverages.name._Ns.Self
-    *         .age_(25).name.Beverages.name_(unify).get.map(_.sorted ==> List()
-    *     ("Joe", "Coffee", "Ben"),
-    *     ("Liz", "Coffee", "Ben"),
-    *     ("Liz", "Tea", "Ben")
-    *   )
-    * }}}
-    *
-    * @group attrMarker
-    * */
-  trait unify
-  type unify_stable = molecule.core.expression.AttrExpressions.unify
-
+  trait qm
+  trait unify_stable
 
   /** Expression methods common for all attributes. */
   trait AttrExpr[Ns, T] {
@@ -466,7 +422,7 @@ trait AttrExpressions {
       * @param value Input marker `?` for equality match
       * @return Input molecule
       */
-    def apply(value: ??): In with Attr = ???
+    def apply(value: qm): In with Attr = ???
 
 
     /** Mark molecule as input molecule awaiting attribute negation value(s).
@@ -483,7 +439,7 @@ trait AttrExpressions {
       * @param value Input marker `?` for negation value
       * @return Input molecule
       */
-    def not(value: ??): In with Attr = ???
+    def not(value: qm): In with Attr = ???
 
 
     /** Mark molecule as input molecule awaiting attribute negation value(s).
@@ -500,7 +456,7 @@ trait AttrExpressions {
       * @param value Input marker `?` for negation value
       * @return Input molecule
       */
-    def !=(value: ??): In with Attr = ???
+    def !=(value: qm): In with Attr = ???
 
 
     /** Mark molecule as input molecule awaiting attribute upper value.
@@ -517,7 +473,7 @@ trait AttrExpressions {
       * @param upper Input marker `?` for upper value
       * @return Input molecule
       */
-    def <(upper: ??): In with Attr = ???
+    def <(upper: qm): In with Attr = ???
 
 
     /** Mark molecule as input molecule awaiting attribute upper value.
@@ -534,7 +490,7 @@ trait AttrExpressions {
       * @param upper Input marker `?` for upper value
       * @return Input molecule
       */
-    def <=(upper: ??): In with Attr = ???
+    def <=(upper: qm): In with Attr = ???
 
 
     /** Mark molecule as input molecule awaiting attribute lower value.
@@ -551,7 +507,7 @@ trait AttrExpressions {
       * @param lower Input marker `?` for lower value
       * @return Input molecule
       */
-    def >(lower: ??): In with Attr = ???
+    def >(lower: qm): In with Attr = ???
 
 
     /** Mark molecule as input molecule awaiting attribute lower value.
@@ -568,7 +524,7 @@ trait AttrExpressions {
       * @param lower Input marker `?` for lower value
       * @return Input molecule
       */
-    def >=(lower: ??): In with Attr = ???
+    def >=(lower: qm): In with Attr = ???
 
 
     /** Filter attribute values with logical expression.
@@ -1246,7 +1202,7 @@ trait AttrExpressions {
       * @param words Search words
       * @return Input molecule awaiting search word(s)
       */
-    def contains(words: ??): In with Attr = ???
+    def contains(words: qm): In with Attr = ???
   }
 }
 

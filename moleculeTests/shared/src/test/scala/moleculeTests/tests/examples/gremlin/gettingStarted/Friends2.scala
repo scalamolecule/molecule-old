@@ -52,7 +52,6 @@ object Friends2 extends AsyncTestSuite {
         ("lop", "java"),
         ("ripple", "java")
       )
-      _ = println("A" + tx1.eids)
       List(lop, ripple) = tx1.eids
 
       // People and software created
@@ -62,7 +61,6 @@ object Friends2 extends AsyncTestSuite {
         ("josh", 32, Seq((lop, 0.4), (ripple, 1.0))),
         ("peter", 35, Seq((lop, 0.2)))
       )
-      _ = println("B" + tx2.eids)
       List(
       marko, markoLop,
       vadas,

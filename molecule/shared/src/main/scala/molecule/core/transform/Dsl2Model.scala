@@ -65,7 +65,7 @@ private[molecule] trait Dsl2Model extends TreeOps
   //  private lazy val xx = InspectMacro("Dsl2Model", 100, 900)
   //  private lazy val xx = InspectMacro("Dsl2Model", 43, 44)
   private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 802, 802)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 802, 803)
   //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
 
   protected val isJsPlatform = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
@@ -667,7 +667,6 @@ private[molecule] trait Dsl2Model extends TreeOps
         xx(230, attrStr, genericType, args)
         tree match {
           case q"$prev.$nsFull.apply($pkg.?)"                            => traverseElement(prev, p, Generic(nsFull.toString(), "e_", genericType, Eq(Seq(Qm))))
-          case q"$prev.$nsFull.apply($pkg.??)"                           => traverseElement(prev, p, Generic(nsFull.toString(), "e_", genericType, Eq(Seq(Qm))))
           case q"$prev.$nsFull.apply($eid)" if t.isBiEdge                => traverseElement(prev, p, Generic(nsFull.toString(), "e_", genericType, Eq(Seq(extract(eid)))))
           case q"$prev.$nsFull.apply(..$eids)" if genericType != "datom" => traverseElement(prev, p, Generic(nsFull.toString(), "args_", genericType, Eq(resolveValues(q"Seq(..$eids)"))))
           case q"$prev.$nsFull.apply(..$eids)"                           => traverseElement(prev, p, Generic(nsFull.toString(), "e_", genericType, Eq(resolveValues(q"Seq(..$eids)"))))
@@ -829,7 +828,6 @@ private[molecule] trait Dsl2Model extends TreeOps
       val element = args match {
         case q"scala.collection.immutable.List($pkg.count)" => resolve(Fn("count"), "Int2")
         case q"scala.collection.immutable.List($pkg.?)"     => abort("Generic input attributes not implemented.")
-        case q"scala.collection.immutable.List($pkg.??)"    => abort("Generic input attributes not implemented.")
         case q"scala.collection.immutable.List(scala.None)" => resolve(Fn("not"))
         case q"scala.collection.immutable.List($v)"         => resolve(modelValue("apply", null, v))
         case q"scala.collection.immutable.List(..$vs)"      => resolve(modelValue("apply", null, q"Seq(..$vs)"))
@@ -906,7 +904,6 @@ private[molecule] trait Dsl2Model extends TreeOps
       val element = args match {
         case q"scala.collection.immutable.List($pkg.count)"            => resolve(Fn("count"), "Int2")
         case q"scala.collection.immutable.List($pkg.?)"                => abort("Generic input attributes not implemented.")
-        case q"scala.collection.immutable.List($pkg.??)"               => abort("Generic input attributes not implemented.")
         case q"scala.collection.immutable.List($pkg.$fn)" if badFn(fn) => abort(s"Generic attributes only allowed to aggregate `count`. Found: `$fn`")
         case q"scala.collection.immutable.List($v)"                    => resolve(modelValue("apply", null, v, attrStr))
         case q"scala.collection.immutable.List(..$vs)"                 => resolve(modelValue("apply", null, q"Seq(..$vs)", attrStr))

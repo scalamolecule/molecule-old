@@ -3,7 +3,7 @@
 
 ## Compile
 
-`-Dfree=true` makes sure the free Datomic version is used
+Add `-Dfree=true` to use free Datomic version. Default is Datomic dev/pro
 
 Compile to 2.13 only:
 
