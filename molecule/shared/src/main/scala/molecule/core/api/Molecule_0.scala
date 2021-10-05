@@ -9,10 +9,10 @@ import molecule.core.marshalling.unpackAttr.{String2cast, String2json}
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers
-import molecule.datomic.base.api.ShowInspect
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.util.ShowInspect
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 import scala.util.control.NonFatal

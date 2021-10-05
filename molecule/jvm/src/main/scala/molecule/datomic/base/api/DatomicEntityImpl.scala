@@ -10,7 +10,7 @@ import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Serializations
 import molecule.core.ops.VerifyModel
-import molecule.core.util.{Helpers, Quoted}
+import molecule.core.util.{Helpers, JavaConversions, Quoted}
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.util.Inspect
@@ -19,7 +19,7 @@ import scala.util.control.NonFatal
 
 
 abstract class DatomicEntityImpl(conn: Conn, eid: Any)
-  extends DatomicEntity with Quoted with Helpers with Serializations {
+  extends DatomicEntity with Quoted with Helpers with Serializations with JavaConversions {
 
   // Get ================================================================
 

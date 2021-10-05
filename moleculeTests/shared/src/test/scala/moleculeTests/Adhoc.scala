@@ -30,6 +30,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
+    val inputMolecule = m(Ns.int.apply(?))
 
     "adhoc" - core { implicit futConn =>
 
@@ -37,7 +38,8 @@ object Adhoc extends AsyncTestSuite with Helpers {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
-
+        _ <- Ns.int(1).save
+        _ <- inputMolecule(1).get.map(_ ==> List(1))
 
 
 

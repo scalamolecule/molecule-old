@@ -25,7 +25,6 @@ import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.base.marshalling.packers.PackEntityMap
-import moleculeTests.tests.core.generic.Datom.delay
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
@@ -44,90 +43,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers
 
       } yield ()
     }
-
-
-
-    /*
-moleculeTests.tests.core.generic.Datom
-moleculeTests.jvm.core.transaction.TxFunction
-moleculeTests.tests.core.time.TestDbWith
-
-object TxFunctionExamples extends scala.AnyRef {
-  def <init>() = {
-    super.<init>();
-    ()
-  };
-  def inc(e: Long, amount: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = Ns(e).int.get.map(((cur) => {
-  val curBalance = cur.headOption.getOrElse(0);
-  val newBalance = curBalance.$plus(amount);
-  scala.Tuple3(cur, curBalance, newBalance)
-})).flatMap(((x$1) => x$1: @scala.unchecked match {
-    case scala.Tuple3((cur @ _), (curBalance @ _), (newBalance @ _)) => Ns(e).int(newBalance).getUpdateStmts.map(((stmts) => stmts))
-  }));
-  def inc__txFnDatomic(txDb: AnyRef, txMetaStmtsRaw: AnyRef, e0: AnyRef, amount0: AnyRef): AnyRef = {
-    import molecule.datomic.peer.facade.Conn_Peer;
-    import molecule.datomic.base.ast.transactionModel.Statement;
-    import scala.concurrent.duration.DurationInt;
-    import scala.concurrent.ExecutionContext.Implicits.global;
-    import scala.concurrent.{Await, Future};
-    val conn: Conn = Conn_Peer(txDb);
-    implicit val futConn: Future[Conn] = Future(conn);
-    val e: Long = e0.asInstanceOf[Long];
-    val amount: Int = amount0.asInstanceOf[Int];
-    val futTxFnStmts: Future[Seq[Statement]] = Ns(e).int.get.map(((cur) => {
-  val curBalance = cur.headOption.getOrElse(0);
-  val newBalance = curBalance.$plus(amount);
-  scala.Tuple3(cur, curBalance, newBalance)
-})).flatMap(((x$1) => x$1: @scala.unchecked match {
-      case scala.Tuple3((cur @ _), (curBalance @ _), (newBalance @ _)) => Ns(e).int(newBalance).getUpdateStmts.map(((stmts) => stmts))
-    }));
-    val txFnStmts = Await.result(futTxFnStmts, 1.minute);
-    val txMetaStmts = txMetaStmtsRaw.asInstanceOf[Seq[Statement]];
-    conn.stmts2java(txFnStmts.$plus$plus(txMetaStmts))
-  }
-}
-======================================================
-@TxFns
-
-
-object TxFunctionExamples extends scala.AnyRef {
-  def <init>() = {
-    super.<init>();
-    ()
-  };
-  def inc(e: Long, amount: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = Ns(e).int.get.map(((cur) => {
-  val curBalance = cur.headOption.getOrElse(0);
-  val newBalance = curBalance.$plus(amount);
-  scala.Tuple3(cur, curBalance, newBalance)
-})).flatMap(((x$1) => x$1: @scala.unchecked match {
-    case scala.Tuple3((cur @ _), (curBalance @ _), (newBalance @ _)) => Ns(e).int(newBalance).getUpdateStmts.map(((stmts) => stmts))
-  }));
-  def inc__txFnDatomic(txDb: AnyRef, txMetaStmtsRaw: AnyRef, e0: AnyRef, amount0: AnyRef): AnyRef = {
-    import molecule.datomic.peer.facade.Conn_Peer;
-    import molecule.datomic.base.ast.transactionModel.Statement;
-    import scala.concurrent.duration.DurationInt;
-    import scala.concurrent.ExecutionContext.Implicits.global;
-    import scala.concurrent.{Await, Future};
-    val conn: Conn = Conn_Peer(txDb);
-    implicit val futConn: Future[Conn] = Future(conn);
-    val e: Long = e0.asInstanceOf[Long];
-    val amount: Int = amount0.asInstanceOf[Int];
-    val futTxFnStmts: Future[Seq[Statement]] = Ns(e).int.get.map(((cur) => {
-  val curBalance = cur.headOption.getOrElse(0);
-  val newBalance = curBalance.$plus(amount);
-  scala.Tuple3(cur, curBalance, newBalance)
-})).flatMap(((x$1) => x$1: @scala.unchecked match {
-      case scala.Tuple3((cur @ _), (curBalance @ _), (newBalance @ _)) => Ns(e).int(newBalance).getUpdateStmts.map(((stmts) => stmts))
-    }));
-    val txFnStmts = Await.result(futTxFnStmts, 1.minute);
-    val txMetaStmts = txMetaStmtsRaw.asInstanceOf[Seq[Statement]];
-    conn.stmts2java(txFnStmts.$plus$plus(txMetaStmts))
-  }
-}
-======================================================
-@TxFns
-
-     */
 
 
     //    "adhoc" - products { implicit conn =>

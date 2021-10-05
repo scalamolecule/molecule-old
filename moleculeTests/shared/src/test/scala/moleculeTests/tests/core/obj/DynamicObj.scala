@@ -51,8 +51,7 @@ object DynamicObj extends AsyncTestSuite with Helpers {
           person.nextAge ==> 24
         }
 
-        // Same as shorthand apply:
-
+        // Using apply as shorthand instead of `getDynObjs`
         person2 <- m(Person.name.age) { person =>
           // Local business logic using the molecule object properties
           def nextAge: Int = person.age + 1
