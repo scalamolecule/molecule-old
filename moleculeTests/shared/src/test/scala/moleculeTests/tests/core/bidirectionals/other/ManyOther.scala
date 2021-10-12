@@ -77,8 +77,7 @@ object ManyOther extends AsyncTestSuite {
 
       "1 existing" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Gus")
-          gus = tx.eid
+          gus <- Animal.name.insert("Gus").map(_.eid)
 
           // Save Ann with bidirectional ref to existing Gus
           _ <- Person.name("Ann").buddies(gus).save
@@ -102,8 +101,7 @@ object ManyOther extends AsyncTestSuite {
 
       "n existing" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Gus", "Leo")
-          gusLeo = tx.eids
+          gusLeo <- Animal.name.insert("Gus", "Leo").map(_.eids)
 
           // Save Ann with bidirectional ref to existing Gus and Leo
           _ <- Person.name("Ann").buddies(gusLeo).save
@@ -131,8 +129,7 @@ object ManyOther extends AsyncTestSuite {
 
       "1 existing" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name("Gus").save
-          gus = tx.eid
+          gus <- Animal.name("Gus").save.map(_.eid)
 
           // Insert Ann with bidirectional ref to existing Gus
           _ <- Person.name.buddies.insert("Ann", Set(gus))
@@ -161,8 +158,7 @@ object ManyOther extends AsyncTestSuite {
 
       "multiple existing" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Gus", "Leo")
-          List(gus, leo) = tx.eids
+          List(gus, leo) <- Animal.name.insert("Gus", "Leo").map(_.eids)
 
           // Insert 2 entities with bidirectional refs to existing entities
           _ <- Person.name.buddies insert List(
@@ -203,8 +199,7 @@ object ManyOther extends AsyncTestSuite {
 
       "nested existing" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name insert List("Gus", "Leo", "Rex")
-          List(gus, leo, rex) = tx.eids
+          List(gus, leo, rex) <- Animal.name insert List("Gus", "Leo", "Rex") map(_.eids)
 
           // Insert 2 Persons and connect them with existing Persons
           _ <- Person.name.buddies insert List(
@@ -231,10 +226,8 @@ object ManyOther extends AsyncTestSuite {
 
       "assert" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name("Ann").save
-          ann = tx1.eid
-          tx2 <- Animal.name.insert("Gus", "Leo", "Rex", "Zip")
-          List(gus, leo, rex, zip) = tx2.eids
+          ann <- Person.name("Ann").save.map(_.eid)
+          List(gus, leo, rex, zip) <- Animal.name.insert("Gus", "Leo", "Rex", "Zip").map(_.eids)
 
           // Add buddieships in various ways
 
@@ -261,10 +254,9 @@ object ManyOther extends AsyncTestSuite {
       "retract" - bidirectional { implicit conn =>
         for {
           // Insert Ann and buddies
-          tx <- Person.name.Buddies.*(Animal.name) insert List(
+          List(ann, gus, leo, rex, zip, zup) <- Person.name.Buddies.*(Animal.name) insert List(
             ("Ann", List("Gus", "Leo", "Rex", "Zip", "Zup"))
-          )
-          List(ann, gus, leo, rex, zip, zup) = tx.eids
+          ) map(_.eids)
 
           // Buddieships have been inserted in both directions
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo", "Rex", "Zip", "Zup"))
@@ -297,11 +289,8 @@ object ManyOther extends AsyncTestSuite {
 
       "replace 1" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Buddies.*(Animal.name).insert("Ann", List("Gus", "Leo"))
-          List(ann, gus, leo) = tx1.eids
-
-          tx2 <- Animal.name("Rex").save
-          rex = tx2.eid
+          List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name).insert("Ann", List("Gus", "Leo")).map(_.eids)
+          rex <- Animal.name("Rex").save.map(_.eid)
 
           _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Leo", "Gus"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
@@ -321,11 +310,8 @@ object ManyOther extends AsyncTestSuite {
 
       "replace multiple" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Buddies.*(Animal.name).insert("Ann", List("Gus", "Leo"))
-          List(ann, gus, leo) = tx1.eids
-
-          tx2 <- Animal.name.insert("Rex", "Zip")
-          List(rex, zip) = tx2.eids
+          List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name).insert("Ann", List("Gus", "Leo")).map(_.eids)
+          List(rex, zip) <- Animal.name.insert("Rex", "Zip").map(_.eids)
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
@@ -348,11 +334,8 @@ object ManyOther extends AsyncTestSuite {
 
       "replace all with 1" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo")))
-          List(ann, gus, leo) = tx1.eids
-
-          tx2 <- Animal.name.insert("Rex")
-          rex = tx2.eid
+          List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map(_.eids)
+          rex <- Animal.name.insert("Rex").map(_.eid)
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
@@ -374,11 +357,8 @@ object ManyOther extends AsyncTestSuite {
 
       "replace all with multiple (apply varargs)" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo")))
-          List(ann, gus, leo) = tx1.eids
-
-          tx2 <- Animal.name.insert("Rex")
-          rex = tx2.eid
+          List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map(_.eids)
+          rex <- Animal.name.insert("Rex").map(_.eid)
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
@@ -399,11 +379,8 @@ object ManyOther extends AsyncTestSuite {
 
       "replace all with multiple (apply Set)" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo")))
-          List(ann, gus, leo) = tx1.eids
-
-          tx2 <- Animal.name.insert("Rex")
-          rex = tx2.eid
+          List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map(_.eids)
+          rex <- Animal.name.insert("Rex").map(_.eid)
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
@@ -424,8 +401,7 @@ object ManyOther extends AsyncTestSuite {
 
       "remove all (apply no values)" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo")))
-          List(ann, gus, leo) = tx.eids
+          List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map(_.eids)
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
@@ -443,8 +419,7 @@ object ManyOther extends AsyncTestSuite {
 
       "remove all (apply empty Set)" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo")))
-          List(ann, gus, leo) = tx.eids
+          List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map(_.eids)
 
           _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
@@ -466,8 +441,7 @@ object ManyOther extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo")))
-        List(ann, gus, leo) = tx.eids
+        List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map(_.eids)
 
         _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
         _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))

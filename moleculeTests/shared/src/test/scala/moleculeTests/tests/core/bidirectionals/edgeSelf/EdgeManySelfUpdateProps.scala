@@ -12,13 +12,9 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
   def testData(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Long]] = {
     for {
-      tx1 <- Quality.name("Love").save
-      love = tx1.eid
-
-      tx2 <- Quality.name.insert("Patience", "Humor")
-      List(patience, humor) = tx2.eids
-
-      tx3 <- Person.name("Ann")
+      love <- Quality.name("Love").save.map(_.eid)
+      List(patience, humor) <- Quality.name.insert("Patience", "Humor").map(_.eids)
+      List(ann, annBen, _, _) <- Person.name("Ann")
         .Knows
         .weight(7)
         .howWeMet("atWork")
@@ -28,9 +24,8 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
         .coreQuality(love)
         .inCommon(Seq(patience, humor))
         .Person.name("Ben")
-        .save
+        .save.map(_.eids)
     } yield {
-      val List(ann, annBen, _, _) = tx3.eids
       Seq(love, patience, humor, ann, annBen)
     }
   }
@@ -164,8 +159,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // 2. Update reference
 
-          tx <- Quality.name("Trust").save
-          trust = tx.eid
+          trust <- Quality.name("Trust").save.map(_.eid)
           _ <- Knows(annBen).coreQuality(trust).update
 
           // New reference/value
@@ -303,8 +297,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // 2. Update reference(s)
 
-          tx <- Quality.name("Sporty").save
-          sporty = tx.eid
+          sporty <- Quality.name("Sporty").save.map(_.eid)
 
           // replace
           _ <- Knows(annBen).inCommon.replace(humor -> sporty).update

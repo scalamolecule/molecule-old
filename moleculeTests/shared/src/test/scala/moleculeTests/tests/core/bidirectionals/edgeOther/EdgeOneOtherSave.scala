@@ -27,8 +27,7 @@ object EdgeOneOtherSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Rex")
-          rex = tx.eid
+          rex <- Animal.name.insert("Rex").map(_.eid)
 
           // Save Ann with weighed relationship to existing Rex
           _ <- Person.name("Ann").Favorite.weight(7).animal(rex).save
@@ -44,8 +43,7 @@ object EdgeOneOtherSave extends AsyncTestSuite {
 
       "new target" - bidirectional { implicit conn =>
         for {
-          tx <- Favorite.weight(7).Animal.name("Rex").save
-          favoriteRex = tx.eid
+          favoriteRex <- Favorite.weight(7).Animal.name("Rex").save.map(_.eid)
 
           _ <- Person.name("Ann").favorite(favoriteRex).save
 
@@ -56,11 +54,8 @@ object EdgeOneOtherSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Rex")
-          rex = tx.eid
-
-          tx2 <- Favorite.weight(7).animal(rex).save
-          favoriteRex = tx2.eid
+          rex <- Animal.name("Rex").save.map(_.eid)
+          favoriteRex <- Favorite.weight(7).animal(rex).save.map(_.eid)
 
           _ <- Person.name("Ann").favorite(favoriteRex).save
 

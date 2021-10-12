@@ -14,13 +14,11 @@ object CompositeArities extends AsyncTestSuite {
     "1 + 1" - core { implicit conn =>
       for {
         // Composite of two single-value molecules
-        tx <- Ref2.int2 + Ns.int insert Seq(
+        List(e1, e2) <- Ref2.int2 + Ns.int insert Seq(
           // Two rows of data
           (1, 11),
           (2, 22)
-        )
-
-        List(e1, e2) = tx.eids
+        ) map (_.eids)
 
         // Two entities created
         _ <- e1.touchList.map(_ ==> List(
@@ -49,12 +47,11 @@ object CompositeArities extends AsyncTestSuite {
     "1 + 2" - core { implicit conn =>
       for {
         // Composite of Molecule1 + Molecule2
-        tx <- (Ref2.int2 + Ns.int.str).insert.apply(Seq(
+        List(e1, e2) <- (Ref2.int2 + Ns.int.str).insert(Seq(
           // Two rows of data
           (1, (11, "aa")),
           (2, (22, "bb"))
-        ))
-        List(e1, e2) = tx.eids
+        )).map(_.eids)
 
         // Two entities created
         _ <- e1.touchList.map(_ ==> List(
@@ -91,12 +88,11 @@ object CompositeArities extends AsyncTestSuite {
     "2 + 1" - core { implicit conn =>
       for {
         // Composite of Molecule2 + Molecule1
-        tx <- Ref2.int2.str2 + Ns.int insert Seq(
+        List(e1, e2) <- Ref2.int2.str2 + Ns.int insert Seq(
           // Two rows of data
           ((1, "a"), 11),
           ((2, "b"), 22)
-        )
-        List(e1, e2) = tx.eids
+        ) map(_.eids)
 
         // Two entities created
         _ <- e1.touchList.map(_ ==> List(
@@ -133,11 +129,10 @@ object CompositeArities extends AsyncTestSuite {
     "2 + 2" - core { implicit conn =>
       for {
         // Composite of Molecule2 + Molecule2
-        tx <- Ref2.int2.str2 + Ns.str.int insert Seq(
+        List(e1, e2) <- Ref2.int2.str2 + Ns.str.int insert Seq(
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
-        )
-        List(e1, e2) = tx.eids
+        ) map(_.eids)
 
         // Two entities created
         _ <- e1.touchList.map(_ ==> List(

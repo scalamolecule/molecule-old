@@ -12,11 +12,10 @@ object CompositeRef extends AsyncTestSuite {
 
     "Card-one ref" - core { implicit conn =>
       for {
-        tx <- Ref2.int2.str2 + Ns.str.Ref1.int1 insert List(
+        List(e1, r1, e2, r2) <- Ref2.int2.str2 + Ns.str.Ref1.int1 insert List(
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
-        )
-        List(e1, r1, e2, r2) = tx.eids
+        ) map(_.eids)
 
         // First entity (including referenced entity)
         _ <- e1.touchList.map(_ ==> List(
@@ -66,11 +65,10 @@ object CompositeRef extends AsyncTestSuite {
 
     "Card-many ref - one value" - core { implicit conn =>
       for {
-        tx <- Ref2.int2.str2 + Ns.str.Refs1.int1 insert List(
+        List(e1, r1, e2, r2) <- Ref2.int2.str2 + Ns.str.Refs1.int1 insert List(
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
-        )
-        List(e1, r1, e2, r2) = tx.eids
+        ) map(_.eids)
 
         // First entity (including referenced entity)
         _ <- e1.touchList.map(_ ==> List(
@@ -121,11 +119,10 @@ object CompositeRef extends AsyncTestSuite {
 
     "Card-many ref - one value 2" - core { implicit conn =>
       for {
-        tx <- Ref2.int2.str2 + Ns.Refs1.int1 insert List(
+        List(e1, r1, e2, r2) <- Ref2.int2.str2 + Ns.Refs1.int1 insert List(
           ((1, "a"), 11),
           ((2, "b"), 22)
-        )
-        List(e1, r1, e2, r2) = tx.eids
+        ) map(_.eids)
 
         // First entity (including referenced entity)
         _ <- e1.touchList.map(_ ==> List(

@@ -13,8 +13,7 @@ object Eid extends AsyncTestSuite {
 
     "Entity id" - core { implicit conn =>
       for {
-        tx <- Ns.int insert List(1, 2, 3, 4)
-        List(e1, e2, e3, e4) = tx.eids
+        List(e1, e2, e3, e4) <- Ns.int insert List(1, 2, 3, 4) map(_.eids)
         seq = Set(e1, e2)
         set = Seq(e3, e4)
         iterable = Iterable(e3, e4)
@@ -44,8 +43,7 @@ object Eid extends AsyncTestSuite {
 
     "Applied eid to namespace" - core { implicit conn =>
       for {
-        tx <- Ns.int.insert(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int.insert(1, 2, 3).map(_.eids)
 
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
 
@@ -64,8 +62,7 @@ object Eid extends AsyncTestSuite {
 
     "Applied eid to `e`" - core { implicit conn =>
       for {
-        tx <- Ns.int.insert(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int.insert(1, 2, 3).map(_.eids)
 
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
@@ -84,8 +81,7 @@ object Eid extends AsyncTestSuite {
 
     "Input molecule" - core { implicit conn =>
       for {
-        tx <- Ns.int.insert(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int.insert(1, 2, 3).map(_.eids)
 
         ints = m(Ns(?).int)
 
@@ -101,8 +97,7 @@ object Eid extends AsyncTestSuite {
 
     "e" - core { implicit conn =>
       for {
-        tx <- Ns.int insert List(1, 2)
-        List(e1, e2) = tx.eids
+        List(e1, e2) <- Ns.int insert List(1, 2) map(_.eids)
 
         _ <- Ns.e.int.get.map(_.sorted ==> List((e1, 1), (e2, 2)))
 

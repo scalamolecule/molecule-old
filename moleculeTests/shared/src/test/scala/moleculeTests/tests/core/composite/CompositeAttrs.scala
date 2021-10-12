@@ -118,11 +118,10 @@ object CompositeAttrs extends AsyncTestSuite {
       "Twice on different levels ok" - core { implicit conn =>
         for {
           // Okay to repeat attribute in _referenced_ namespace
-          tx <- Ref1.int1 + Ns.str.Ref1.int1 insert Seq(
+          List(e1, r11, e2, r22) <- Ref1.int1 + Ns.str.Ref1.int1 insert Seq(
             (1, ("aa", 11)),
             (2, ("bb", 22))
-          )
-          List(e1, r11, e2, r22) = tx.eids
+          ) map(_.eids)
 
           _ <- m(Ns.str).get.map(_.sorted ==> Seq("aa", "bb"))
           _ <- m(Ns.str.Ref1.int1).get.map(_.sorted ==> Seq(("aa", 11), ("bb", 22)))

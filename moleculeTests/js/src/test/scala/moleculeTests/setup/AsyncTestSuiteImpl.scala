@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 
-trait AsyncTestSuiteImpl {
+trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
   val isJsPlatform_ = true
 
@@ -29,7 +29,7 @@ trait AsyncTestSuiteImpl {
   ))
 
   def coreImpl[T](test: Future[Conn] => T): T = test(inMem(CoreTestSchema))
-  def coreTxFnImpl[T](test: Future[Conn] => T): T = test(inMem(CoreTestSchema)) // Not used on js platform anyway
+  def corePeerOnlyImpl[T](test: Future[Conn] => T): T = test(inMem(CoreTestSchema)) // Not used on js platform anyway
   def bidirectionalImpl[T](test: Future[Conn] => T): T = test(inMem(BidirectionalSchema))
   def partitionImpl[T](test: Future[Conn] => T): T = test(inMem(PartitionTestSchema))
   def nestedImpl[T](test: Future[Conn] => T): T = test(inMem(NestedSchema))
@@ -43,7 +43,7 @@ trait AsyncTestSuiteImpl {
   def productsImpl[T](test: Future[Conn] => T): T = test(inMem(ProductsOrderSchema))
   def seattleImpl[T](test: Future[Conn] => T): T = test(inMem(SeattleSchema))
 
-  def mbrainzImpl[T](test: Future[Conn] => T): T = {
+  def mbrainzImpl[T](test: Future[Conn] => T): Future[T] = Future {
     //    val dbName = if (system == SystemDevLocal)
     //      "mbrainz-subset" // dev-local
     //    else

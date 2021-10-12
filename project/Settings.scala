@@ -61,7 +61,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val jvm: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
+
         "org.specs2" %% "specs2-core" % "4.10.6",
+//        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.0",
         "com.typesafe.akka" %% "akka-stream" % "2.6.16",
         "com.typesafe.akka" %% "akka-serialization-jackson" % "2.6.16",

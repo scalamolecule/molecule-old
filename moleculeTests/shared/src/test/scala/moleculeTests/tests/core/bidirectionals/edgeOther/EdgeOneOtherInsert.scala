@@ -29,8 +29,7 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ann")
-          ann = tx.eid
+          ann <- Person.name.insert("Ann").map(_.eid)
 
           // We can insert from the other end as well
           _ <- Animal.name.Favorite.weight.person.insert("Rex", 7, ann)
@@ -48,8 +47,7 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
       "new target" - bidirectional { implicit conn =>
         for {
           // Create edges to/from Rex
-          tx <- Favorite.weight.Animal.name.insert(7, "Rex")
-          favoriteRex = tx.eid
+          favoriteRex <- Favorite.weight.Animal.name.insert(7, "Rex").map(_.eid)
 
           // Base entity Ann points to one of the edges (doesn't matter which of them - Molecule connects Ann to both)
 
@@ -63,12 +61,10 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Rex")
-          rex = tx.eid
+          rex <- Animal.name.insert("Rex").map(_.eid)
 
           // Create edges to existing Rex
-          tx2 <- Favorite.weight.animal.insert(7, rex)
-          List(favoriteRex, rexFavorite) = tx2.eids
+          List(favoriteRex, rexFavorite) <- Favorite.weight.animal.insert(7, rex).map(_.eids)
 
           // Base entity Ann points to one of the edges (doesn't matter which of them - Molecule connects Ann to both)
           _ <- Person.name.favorite.insert("Ann", rexFavorite)

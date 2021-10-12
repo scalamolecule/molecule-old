@@ -196,8 +196,7 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
     "VAET" - core { implicit conn =>
       for {
         (e, t, tx, txInstant, t2, tx2, txInstant2, t3, tx3, txInstant3) <- testData
-        tx <- Ref1.int1(11).save
-        ref = tx.eid
+        ref <- Ref1.int1(11).save.map(_.eid)
 
         txR4 <- Ns(e).ref1(ref).update
         t4 = txR4.t

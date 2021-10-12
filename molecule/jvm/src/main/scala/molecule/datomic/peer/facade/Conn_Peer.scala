@@ -9,7 +9,7 @@ import datomic.{Database, Datom, ListenableFuture, Peer}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.marshalling._
-import molecule.core.util.{JavaConversions, QueryOpsClojure}
+import molecule.core.util.JavaConversions
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
@@ -17,6 +17,7 @@ import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn_Datomic, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
+import molecule.datomic.base.util.QueryOpsClojure
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.util.control.NonFatal
 
@@ -199,19 +200,6 @@ case class Conn_Peer(
     javaStmts: jList[_],
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
-    def transactWith: Future[TxReport_Peer] = futScalaStmts.map { scalaStmts =>
-      // In-memory "transaction"
-      val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
-
-      // Continue with updated in-memory db
-      // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-      //      val dbAfter = txReport.dbAfter
-      val dbAfter = txReport.dbAfter.asOf(txReport.t)
-      _testDb = Some(dbAfter)
-      //      debug("t", _testDb.toString)
-      txReport
-    }
-
     def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
     if (_adhocDbView.isDefined) {
@@ -235,7 +223,18 @@ case class Conn_Peer(
       }
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
-      //      debug("t3", _testDb.toString)
+      def transactWith: Future[TxReport_Peer] = futScalaStmts.map { scalaStmts =>
+        // In-memory "transaction"
+        val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
+
+        // Continue with updated in-memory db
+        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+        //      val dbAfter = txReport.dbAfter
+        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+        _testDb = Some(dbAfter)
+        //      debug("t", _testDb.toString)
+        txReport
+      }
       val res = connProxy.testDbView.get match {
         case AsOf(TxLong(0))          => transactWith
         case AsOf(TxLong(t))          => cleanFrom(t + 1).flatMap(_ => transactWith)
@@ -257,8 +256,11 @@ case class Conn_Peer(
         _testDb = None
       }
 
-      //      if (javaStmts.size < 5)
-      //        println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+//      println("================")
+//      val list = javaStmts.asScala.toList.take(15)
+//      println("A " + list.last)
+//      println("A " + list.last.getClass)
+//      println(list.mkString("\n"))
 
       // Live transaction
       val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)

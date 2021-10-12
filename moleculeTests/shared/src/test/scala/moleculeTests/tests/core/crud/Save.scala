@@ -199,8 +199,8 @@ object Save extends AsyncTestSuite {
 
     "Relationships" - core { implicit conn =>
       for {
-        tx <- Ns.str("273 Broadway").Ref1.int1(10700).str1("New York").Ref2.str2("USA").save
-        List(addressE, streetE, countyE) = tx.eids
+        List(addressE, streetE, countyE) <-
+          Ns.str("273 Broadway").Ref1.int1(10700).str1("New York").Ref2.str2("USA").save.map(_.eids)
         _ <- addressE.touch.map(_ ==> Map(
           ":db/id" -> addressE,
           ":Ns/ref1" -> Map(

@@ -304,11 +304,10 @@ object NestedRef extends AsyncTestSuite {
 
     "Implicit initial namespace" - core { implicit conn =>
       for {
-        tx <- Ref1.str1.Refs2.*(Ref2.str2) insert List(
+        List(ref1a, _, _, _, _, _) <- Ref1.str1.Refs2.*(Ref2.str2) insert List(
           ("r1a", List("r2a", "r2b")),
           ("r1b", List("r2c", "r2d")) // <-- will not be referenced from Ns
-        )
-        List(ref1a, _, _, _, _, _) = tx.eids
+        ) map(_.eids)
 
         // Both Ns entities reference the same Ref1 entity
         _ <- Ns.str.refs1 insert List(

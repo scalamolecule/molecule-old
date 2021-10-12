@@ -13,11 +13,7 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
   val favoritePersonOf = m(Animal.name_(?).Favorite.weight.Person.name)
 
   def getAnn(implicit conn: Future[Conn], ec: ExecutionContext): Future[Long] = {
-    for {
-      tx <- Person.name("Ann").save
-    } yield {
-      tx.eid
-    }
+    Person.name("Ann").save.map(_.eid)
   }
 
 
@@ -53,9 +49,7 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
     "apply edge to existing target" - bidirectional { implicit conn =>
       for {
         ann <- getAnn
-
-        tx2 <- Animal.name.insert("Rex", "Zup")
-        List(rex, zup) = tx2.eids
+        List(rex, zup) <- Animal.name.insert("Rex", "Zup").map(_.eids)
 
         _ <- Person(ann).Favorite.weight(5).animal(rex).update
 
@@ -74,8 +68,7 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
 
     "retract edge" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save
-        List(ann, annRex, rexAnn, rex) = tx.eids
+        List(ann, annRex, rexAnn, rex) <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save.map(_.eids)
 
         _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
         _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))
@@ -91,8 +84,7 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
 
     "retract base/target entity" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save
-        List(ann, annRex, rexAnn, rex) = tx.eids
+        List(ann, annRex, rexAnn, rex) <- Person.name("Ann").Favorite.weight(5).Animal.name("Rex").save.map(_.eids)
 
         _ <- favoriteAnimalOf("Ann").get.map(_ ==> List((5, "Rex")))
         _ <- favoritePersonOf("Rex").get.map(_ ==> List((5, "Ann")))

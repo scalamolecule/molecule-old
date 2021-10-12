@@ -13,8 +13,7 @@ object TestDbWith extends AsyncTestSuite {
 
   def data(implicit conn: Future[Conn], ec: ExecutionContext) = {
     for {
-      tx <- Ns.int.insert(1, 2, 3)
-      List(e1, e2, e3) = tx.eids
+      List(e1, e2, e3) <- Ns.int.insert(1, 2, 3).map(_.eids)
     } yield {
       (e1, e2, e3)
     }

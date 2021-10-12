@@ -1,28 +1,12 @@
 package moleculeTests
 
-import java.util
-import molecule.datomic.api.in3_out12._
-import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
-import utest._
-import scala.concurrent.{ExecutionContext, Future}
-import java.lang.{RuntimeException, Long => jLong}
-import java.net.URI
-import java.util.{Collections, Date, UUID, ArrayList => jArrayList, Comparator => jComparator, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
-import molecule.core.ast.elements._
-import molecule.core.exceptions.{MoleculeException, TxFnException}
-import molecule.core.marshalling.unpackAttr.String2cast
-import molecule.core.marshalling.unpackers.Packed2EntityMap
-import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.Helpers
-import molecule.datomic.base.ast.query.{KW, Placeholder, Query}
-import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.exception.Model2TransactionException
+import molecule.datomic.api.in3_out12._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
+import utest._
+import scala.concurrent.Future
 //import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.mutable.ListBuffer
-import molecule.core.util.testing.expectCompileError
-import molecule.datomic.base.transform.Model2Query
-import scala.util.control.NonFatal
 
 
 object Adhoc extends AsyncTestSuite with Helpers {
@@ -30,25 +14,32 @@ object Adhoc extends AsyncTestSuite with Helpers {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    val inputMolecule = m(Ns.int.apply(?))
-//    val inputMolecule = m(Ns.int.apply(??))
-
-    "adhoc" - core { implicit futConn =>
-
-      for {
-        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-        conn <- futConn
-
-        _ <- Ns.int(1).save
-        _ <- inputMolecule(1).get.map(_ ==> List(1))
+        "adhoc" - core { implicit futConn =>
+          val inputMolecule = m(Ns.str.enum_(?))
+          for {
+            _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+            conn <- futConn
+            //        _ <- Ns.int.apply(1).asc1.str.desc2.get
+            //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
 
 
+          } yield ()
+        }
 
-
-      } yield ()
-    }
-
+    //    "adhoc2" - core { implicit futConn =>
+    //
+    //      for {
+    //        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+    //        conn <- futConn
+    ////        _ <- Ns.int.apply(1).asc1.str.desc2.get
+    ////        _ <- Ns.int.not(1).asc1.str.desc2.get
+    //
+    //        tx <- Ns.int(2).save
+    ////        _ = println("tx2: " + tx)
+    //        _ <- Ns.int.get.map(_ ==> List(2))
+    //      } yield ()
+    //    }
 
     //    "core2" - core { implicit futConn =>
     //      for {
@@ -89,14 +80,15 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //    }
     //
     //
-    //    "adhoc" - bidirectional { implicit conn =>
-    //      import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
-    //
-    //      for {
-    //        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-    //
-    //
-    //      } yield ()
-    //    }
+//    "adhoc" - bidirectional { implicit conn =>
+//      import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
+//
+//      for {
+//        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+//
+//
+//
+//      } yield ()
+//    }
   }
 }

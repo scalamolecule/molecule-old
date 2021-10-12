@@ -31,23 +31,20 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
   }
 
   final override def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    try {
-      var buildMap = Map.empty[String, Any]
-      conn.db.pull("[*]", eid).map { vs =>
+    var buildMap = Map.empty[String, Any]
+    conn.db.pull("[*]", eid)
+      .map { vs =>
         vs.forEach {
           case (k, v) => buildMap = buildMap + (k.toString -> v)
         }
         buildMap
       }
-    } catch {
-      // Fetch top level only for cyclic graphs
-      case _: StackOverflowError                                    =>
-        mapOneLevel
-      case Fault("java.lang.StackOverflowError with empty message") =>
-        mapOneLevel
-
-      case e: Throwable => throw e
-    }
+      .recoverWith {
+        // Fetch top level only for cyclic graph stack overflows
+        case MoleculeException("stackoverflow", _)                    => mapOneLevel
+        case Fault("java.lang.StackOverflowError with empty message") => mapOneLevel
+        case unexpected                                               => throw unexpected
+      }
   }
 
   final override def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
@@ -85,7 +82,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
 
 
   final override def apply(kw1: String, kw2: String, kws: String*)
-           (implicit ec: ExecutionContext): Future[List[Option[Any]]] = {
+                          (implicit ec: ExecutionContext): Future[List[Option[Any]]] = {
     Future.sequence((kw1 +: kw2 +: kws.toList) map apply[Any])
   }
 

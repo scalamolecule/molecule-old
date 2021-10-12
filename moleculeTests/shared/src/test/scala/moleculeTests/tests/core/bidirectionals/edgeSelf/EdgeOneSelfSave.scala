@@ -26,8 +26,8 @@ object EdgeOneSelfSave extends AsyncTestSuite {
 
             So we get 4 entities:
           */
-          tx <- Person.name("Ann").Loves.weight(7).Person.name("Ben").save
-          List(ann, annLovesBen, benLovesAnn, ben) = tx.eids
+          List(ann, annLovesBen, benLovesAnn, ben) <-
+            Person.name("Ann").Loves.weight(7).Person.name("Ben").save.map(_.eids)
 
           // Bidirectional property edges have been saved
           _ <- Person.name.Loves.weight.Person.name.get.map(_.sorted ==> List(
@@ -62,8 +62,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben")
-          ben = tx.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
 
           // Save Ann with weighed relationship to existing Ben
           _ <- Person.name("Ann").Loves.weight(7).person(ben).save
@@ -90,8 +89,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
             (Ann)                       Ben
                   (<--)  benLoves  <--
           */
-          tx <- Loves.weight(7).Person.name("Ben").save
-          List(lovesBen, benLoves, ben) = tx.eids
+          List(lovesBen, benLoves, ben) <- Loves.weight(7).Person.name("Ben").save.map(_.eids)
 
           // lovesBen edge points to Ben
           _ <- ben.touchMax(1).map(_ ==> Map(
@@ -126,8 +124,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           _ <- Person.name_("Ben").Loves.weight_(7).e.get.map(_ ==> List(benLoves))
 
           // Base entity Ann points to one of the edges (doesn't matter which of them)
-          tx <- Person.name("Ann").loves(lovesBen).save
-          ann = tx.eid
+          ann <- Person.name("Ann").loves(lovesBen).save.map(_.eid)
 
           _ <- ben.touchMax(1).map(_ ==> Map(
             ":db/id" -> ben,
@@ -150,12 +147,10 @@ object EdgeOneSelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben")
-          ben = tx.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
 
           // Create edges to existing Ben
-          tx2 <- Loves.weight.person.insert(7, ben)
-          List(annLovesBen, benLovesAnn) = tx2.eids
+          List(annLovesBen, benLovesAnn) <- Loves.weight.person.insert(7, ben).map(_.eids)
 
           // Base entity Ann points to one of the edges (doesn't matter which of them - Molecule connects Ann to both)
           _ <- Person.name("Ann").loves(benLovesAnn).save

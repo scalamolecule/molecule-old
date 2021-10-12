@@ -14,14 +14,12 @@ object Graph extends AsyncTestSuite {
     "Simple hyperedge" - graph { implicit conn =>
       import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.Graph._
       for {
-        tx <- Role.name insert List("Role1", "Role2")
-        List(r1, r2) = tx.eids
+        List(r1, r2) <- Role.name insert List("Role1", "Role2") map(_.eids)
 
         // Each Group has 2 Roles
-        tx2 <- Group.name.roles insert List(
+        List(g1, g2) <- Group.name.roles insert List(
           ("Group1", Set(r1, r2)),
-          ("Group2", Set(r1, r2)))
-        List(g1, g2) = tx2.eids
+          ("Group2", Set(r1, r2))) map(_.eids)
 
         // User with Roles in Groups
         _ <- User.name.RoleInGroup.name.group.role insert List(
@@ -118,14 +116,13 @@ object Graph extends AsyncTestSuite {
     "Advanced hyperedge" - graph2 { implicit conn =>
       import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.Graph2._
       for {
-        tx1 <- Role.name insert List("Role1", "Role2", "Role3", "Role4", "Role5", "Role6")
-        List(r1, r2, r3, r4, r5, r6) = tx1.eids
-        tx2 <- Group.name.roles insert List(
+        List(r1, r2, r3, r4, r5, r6) <-
+          Role.name insert List("Role1", "Role2", "Role3", "Role4", "Role5", "Role6") map(_.eids)
+        List(g1, g2, g3) <- Group.name.roles insert List(
           ("Group1", Set(r1, r2, r5)),
           ("Group2", Set(r2, r3, r4)),
           ("Group3", Set(r3, r4, r5, r6))
-        )
-        List(g1, g2, g3) = tx2.eids
+        ) map(_.eids)
 
         // Users with various Roles in various Groups
         _ <- User.name.RoleInGroup.name.group.roles insert List(

@@ -29,8 +29,8 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     * @return
     */
   def connect(dbName: String, connProxy: ConnProxy = inMemConnProxy)
-             (implicit ec: ExecutionContext): Future[Conn_Client] = {
-    Future(Conn_Client(client, clientAsync, dbName, system, connProxy))
+             (implicit ec: ExecutionContext): Future[Conn_Client] = Future {
+    Conn_Client(client, clientAsync, dbName, system, connProxy)
   }
 
   def getDatabaseNames(

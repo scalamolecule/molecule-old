@@ -104,8 +104,7 @@ object OptionalValues extends AsyncTestSuite {
 
       "Ref Long" - core { implicit conn =>
         for {
-          tx <- Ref1.int1(3).save
-          r3 = tx.eid
+          r3 <- Ref1.int1(3).save.map(_.eid)
           _ <- Ns.int.ref1$ insert List((1, Some(r3)), (2, None))
 
           _ <- Ns.int.ref1$.get.map(_.sortBy(_._1) ==> List((1, Some(r3)), (2, None)))
@@ -205,8 +204,7 @@ object OptionalValues extends AsyncTestSuite {
 
       "Ref" - core { implicit conn =>
         for {
-          tx <- Ref1.int1.insert(3, 4)
-          List(r3, r4) = tx.eids
+          List(r3, r4) <- Ref1.int1.insert(3, 4).map(_.eids)
           _ <- Ns.int.refs1$ insert Seq((1, Some(Set(r3, r4))), (2, None))
 
           _ <- Ns.int.refs1$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(r3, r4))), (2, None)))
@@ -216,8 +214,7 @@ object OptionalValues extends AsyncTestSuite {
 
       "Ref with sub components" - core { implicit conn =>
         for {
-          tx <- Ref1.int1.insert(3, 4)
-          List(r3, r4) = tx.eids
+          List(r3, r4) <- Ref1.int1.insert(3, 4).map(_.eids)
           _ <- Ns.int.refsSub1$ insert Seq((1, Some(Set(r3, r4))), (2, None))
 
           _ <- Ns.int.refsSub1$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(r3, r4))), (2, None)))

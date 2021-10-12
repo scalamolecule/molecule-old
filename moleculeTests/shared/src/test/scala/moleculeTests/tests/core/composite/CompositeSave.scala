@@ -29,15 +29,13 @@ object CompositeSave extends AsyncTestSuite {
         _ <- m(Ns.int(4).str("d") + Ref2.int2(44).str2("dd")).get.map(_.head ==> ((4, "d"), (44, "dd")))
 
         // All sub-molecules share the same entity id
-        tx <- m(Ns.int(5).Ref1.int1(55) + Ref2.int2(555)).save
-        e5 = tx.eid
+        e5 <- m(Ns.int(5).Ref1.int1(55) + Ref2.int2(555)).save.map(_.eid)
         _ <- Ns(e5).int.Ref1.int1.get.map(_.head ==> (5, 55))
         _ <- Ref2(e5).int2.get.map(_.head ==> 555)
         _ <- m(Ns(e5).int.Ref1.int1 + Ref2.int2).get.map(_.head ==> ((5, 55), 555))
 
         // Sub-molecules can point straight to other entities (without any attributes of their own)
-        tx2 <- m(Ns.Ref1.int1(6) + Ref2.int2(66)).save
-        e6 = tx2.eid
+        e6 <- m(Ns.Ref1.int1(6) + Ref2.int2(66)).save.map(_.eid)
         _ <- m(Ns(e6).Ref1.int1).get.map(_.head ==> 6)
         _ <- m(Ref2(e6).int2).get.map(_.head ==> 66)
         _ <- m(Ns(e6).Ref1.int1 + Ref2.int2).get.map(_.head ==> (6, 66))

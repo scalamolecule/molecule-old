@@ -18,8 +18,7 @@ object EdgeManySelfSave extends AsyncTestSuite {
       "no nesting in save molecules" - bidirectional { implicit conn =>
         for {
           // Insert entities, each having one or more connected entities with relationship properties
-          tx <- Person.name.insert("Ben")
-          ben = tx.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
           _ <- Person.name("Ben").Knows.*(Knows.weight(7).person(ben)).save.recover {
             case VerifyModelException(err) =>
               err ==> s"[noNested]  Nested data structures not allowed in save molecules"
@@ -44,8 +43,7 @@ object EdgeManySelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben")
-          ben = tx.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
 
           // Save Ann with weighed relationship to existing Ben
           _ <- Person.name("Ann").Knows.weight(7).person(ben).save
@@ -65,11 +63,8 @@ object EdgeManySelfSave extends AsyncTestSuite {
       "new target" - bidirectional { implicit conn =>
         for {
           // Create edges to new target entities
-          tx1 <- Knows.weight(7).Person.name("Ben").save
-          tx2 <- Knows.weight(8).Person.name("Joe").save
-
-          knowsBen = tx1.eid
-          knowsJoe = tx2.eid
+          knowsBen <- Knows.weight(7).Person.name("Ben").save.map(_.eid)
+          knowsJoe <- Knows.weight(8).Person.name("Joe").save.map(_.eid)
 
           // Connect multiple edges
           _ <- Person.name("Ann").knows(knowsBen, knowsJoe).save
@@ -86,14 +81,11 @@ object EdgeManySelfSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben", "Joe")
-          List(ben, joe) = tx.eids
+          List(ben, joe) <- Person.name.insert("Ben", "Joe").map(_.eids)
 
           // Create edges to existing target entities
-          tx1 <- Knows.weight(7).person(ben).save
-          tx2 <- Knows.weight(8).person(joe).save
-          knowsBen = tx1.eid
-          knowsJoe = tx2.eid
+          knowsBen <- Knows.weight(7).person(ben).save.map(_.eid)
+          knowsJoe <- Knows.weight(8).person(joe).save.map(_.eid)
 
           // Connect multiple edges
           _ <- Person.name("Ann").knows(knowsBen, knowsJoe).save

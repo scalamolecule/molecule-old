@@ -48,31 +48,28 @@ object Friends2 extends AsyncTestSuite {
       */
 
       // Software
-      tx1 <- Software.name.lang insert Seq(
+      List(lop, ripple) <- Software.name.lang insert Seq(
         ("lop", "java"),
         ("ripple", "java")
-      )
-      List(lop, ripple) = tx1.eids
+      ) map(_.eids)
 
       // People and software created
-      tx2 <- m(Person.name.age.Created * Created.software.weight) insert Seq(
-        ("marko", 29, Seq((lop, 0.4))),
-        ("vadas", 27, Seq()),
-        ("josh", 32, Seq((lop, 0.4), (ripple, 1.0))),
-        ("peter", 35, Seq((lop, 0.2)))
-      )
       List(
       marko, markoLop,
       vadas,
       josh, joshLop, joshRipple,
       peter, peterLop
-      ) = tx2.eids
+      ) <- m(Person.name.age.Created * Created.software.weight) insert Seq(
+        ("marko", 29, Seq((lop, 0.4))),
+        ("vadas", 27, Seq()),
+        ("josh", 32, Seq((lop, 0.4), (ripple, 1.0))),
+        ("peter", 35, Seq((lop, 0.2)))
+      ) map(_.eids)
 
       // Weighed friendships (property edges)
 
       // Creating multiple edges
-      tx3 <- Knows.person.weight.insert(List((vadas, 0.5), (josh, 1.0)))
-      markoKnows = tx3.eids
+      markoKnows <- Knows.person.weight.insert(List((vadas, 0.5), (josh, 1.0))).map(_.eids)
       _ <- Person(marko).knows(markoKnows).update
 
       // Extra friendship not in the tutorial so that we can make fof queries

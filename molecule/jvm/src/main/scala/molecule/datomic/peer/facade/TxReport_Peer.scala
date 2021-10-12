@@ -28,14 +28,14 @@ case class TxReport_Peer(
         ids = ids :+ eid
       }
     }
-    ids.distinct.sorted // newest entities last
+    ids.distinct.sorted
   }
 
   private lazy val txDataRaw: List[Datum] =
     rawTxReport.get(Connection.TX_DATA)
       .asInstanceOf[jList[_]].asScala.toList.asInstanceOf[List[Datum]]
 
-  private def datom2string(d: datomic.db.Datum, vMax: Int) = {
+  private def datom2string(d: datomic.db.Datum): String = {
     val e = s"${d.e}" + " " * (14 - d.e.toString.length)
     val a = s"${d.a}" + " " * (4 - d.a.toString.length)
     val v = s"${d.v}" + " " * (33 - d.v.toString.length)
@@ -45,13 +45,12 @@ case class TxReport_Peer(
   def inspect: Unit = Inspect("TxReport", 1)(1, scalaStmts, txDataRaw)
 
   override def toString = {
-    val vMax = txDataRaw.map(_.v.toString.length).max
     s"""TxReport {
        |  dbBefore  : $dbBefore
        |  dbBefore.t: ${dbBefore.basisT}
        |  dbAfter   : $dbAfter
        |  dbAfter.t : ${dbAfter.basisT}
-       |  txData    : ${txDataRaw.map(d => datom2string(d, vMax)).mkString(",\n              ")}
+       |  txData    : ${txDataRaw.map(d => datom2string(d)).mkString(",\n              ")}
        |  tempids   : ${rawTxReport.get(TEMPIDS).asInstanceOf[AnyRef]}
        |  eids      : $eids
        |}""".stripMargin

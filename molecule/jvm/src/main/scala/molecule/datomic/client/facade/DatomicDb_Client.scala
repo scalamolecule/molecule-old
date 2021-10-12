@@ -6,6 +6,7 @@ import java.util.stream.{Stream => jStream}
 import datomic.{Peer, Util}
 import datomicScala.client.api.sync.Db
 import datomicScala.client.api.{Datom => ClientDatom}
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade.{Conn, DatomicDb}
@@ -32,9 +33,15 @@ case class DatomicDb_Client(clientDb: Db) extends DatomicDb with JavaConversions
 
 
   def pull(pattern: String, eid: Any)
-          (implicit ec: ExecutionContext): Future[util.Map[_, _]] = Future(
-    clientDb.pull(pattern, eid)
-  )
+          (implicit ec: ExecutionContext): Future[util.Map[_, _]] = Future {
+    try {
+      clientDb.pull(pattern, eid) // todo: add timeout?
+    } catch {
+      // Recover from cyclic graph stack overflows
+      case _: StackOverflowError => throw MoleculeException("stackoverflow")
+      case e: Throwable          => throw e
+    }
+  }
 
   def datoms(
     index: String,

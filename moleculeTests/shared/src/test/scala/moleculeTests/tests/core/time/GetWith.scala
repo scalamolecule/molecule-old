@@ -117,8 +117,7 @@ object GetWith extends AsyncTestSuite {
 
         // Clean initial live state
         _ <- Ns.e.str_.get.flatMap(retract(_))
-        tx <- Ns.str("Fred").int(42).save
-        fred = tx.eid
+        fred <- Ns.str("Fred").int(42).save.map(_.eid)
 
         // Current state
         _ <- Ns.str.int.get.map(_ ==> List(("Fred", 42)))

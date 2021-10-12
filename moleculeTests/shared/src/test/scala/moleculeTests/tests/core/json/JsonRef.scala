@@ -1,7 +1,7 @@
 package moleculeTests.tests.core.json
 
 import molecule.datomic.api.out11._
-import molecule.datomic.base.util.SystemPeerServer
+import molecule.datomic.base.util.{SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
@@ -48,30 +48,30 @@ object JsonRef extends AsyncTestSuite {
 
         // Flat
         _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
-            """{
-              |  "data": {
-              |    "Ns": [
-              |      {
-              |        "str": "a",
-              |        "Refs1": {
-              |          "int1": 1
-              |        }
-              |      },
-              |      {
-              |        "str": "b",
-              |        "Refs1": {
-              |          "int1": 2
-              |        }
-              |      },
-              |      {
-              |        "str": "b",
-              |        "Refs1": {
-              |          "int1": 3
-              |        }
-              |      }
-              |    ]
-              |  }
-              |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 2
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         // Nested
@@ -113,7 +113,10 @@ object JsonRef extends AsyncTestSuite {
         ) map (_.eids)
 
         // Ref namespace
-        _ <- Ns.int.Ref1.str1.getJson.map(_ ==>
+        _ <- Ns.int.Ref1.str1.getJson.map(_ ==> (
+          // Order of data not guaranteed on each system
+          if (system == SystemPeer) {
+            // Peer order
             """{
               |  "data": {
               |    "Ns": [
@@ -132,8 +135,28 @@ object JsonRef extends AsyncTestSuite {
               |    ]
               |  }
               |}""".stripMargin
+          } else {
+            // Dev-local order
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "int": 2,
+              |        "Ref1": {
+              |          "str1": "b"
+              |        }
+              |      },
+              |      {
+              |        "int": 1,
+              |        "Ref1": {
+              |          "str1": "a"
+              |        }
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin
+          })
         )
-
 
         // Ref attr
         _ <- Ns.int.ref1.getJson.map(_ ==>

@@ -12,6 +12,7 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
   val loveOf = m(Person.name_(?).Loves.weight.Person.name)
 
   lazy val tests = Tests {
+
     "base/edge/target" - {
 
       "new target" - bidirectional { implicit conn =>
@@ -27,8 +28,7 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben")
-          ben = tx.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
 
           // Insert Ann with bidirectional property edge to existing Ben
           _ <- Person.name.Loves.weight.person.insert("Ann", 7, ben)
@@ -45,8 +45,7 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
       "new target" - bidirectional { implicit conn =>
         for {
           // Create edges and Ben
-          tx <- Loves.weight.Person.name.insert(7, "Ben")
-          List(lovesBen, benLoves, ben) = tx.eids
+          List(lovesBen, benLoves, ben) <- Loves.weight.Person.name.insert(7, "Ben").map(_.eids)
 
           /*
             Ben and bidirectional edges created
@@ -95,12 +94,10 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.insert("Ben")
-          ben = tx1.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
 
           // Create edges to existing Ben
-          tx2 <- Loves.weight.person.insert(7, ben)
-          List(annLovesBen, benLovesAnn) = tx2.eids
+          List(annLovesBen, benLovesAnn) <- Loves.weight.person.insert(7, ben).map(_.eids)
 
           // Base entity Ann points to one of the edges (doesn't matter which of them - Molecule connects Ann to both)
           _ <- Person.name.loves.insert("Ann", benLovesAnn)

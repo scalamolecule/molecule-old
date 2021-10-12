@@ -16,14 +16,12 @@ object InsertRelated extends AsyncTestSuite {
         // Asserting a fact in the `Ref1` namespace is the same as creating
         // one in the `Ns` namespace (no references between the two are made):
 
-        tx1 <- Ns.str.insert("a0")
-        a0 = tx1.eid
+        a0 <- Ns.str.insert("a0").map(_.eid)
         _ <- a0.touch.map(_ ==> Map(
           ":db/id" -> a0,
           ":Ns/str" -> "a0"))
 
-        tx2 <- Ref1.str1.insert("b0")
-        b0 = tx2.eid
+        b0 <- Ref1.str1.insert("b0").map(_.eid)
         _ <- b0.touch.map(_ ==> Map(
           ":db/id" -> b0,
           ":Ref1/str1" -> "b0"))
@@ -32,8 +30,7 @@ object InsertRelated extends AsyncTestSuite {
         // a :Ns/str assertion ("a0") of namespace `Ns` and a reference to an entity
         // with another :Ref1/str assertion ("b1") in namespace `Ref1`:
 
-        tx3 <- Ns.str.Ref1.str1.insert("a0", "b1")
-        List(a0ref, b1ref) = tx3.eids
+        List(a0ref, b1ref) <- Ns.str.Ref1.str1.insert("a0", "b1").map(_.eids)
         _ <- a0ref.touch.map(_ ==> Map(
           ":db/id" -> a0ref,
           ":Ns/str" -> "a0",
@@ -44,8 +41,7 @@ object InsertRelated extends AsyncTestSuite {
 
 
         // We can expand our graph one level deeper
-        tx4 <- Ns.str.Ref1.str1.Ref2.str2.insert("a0", "b1", "c2")
-        List(a0refs, b1ref1, c2ref2) = tx4.eids
+        List(a0refs, b1ref1, c2ref2) <- Ns.str.Ref1.str1.Ref2.str2.insert("a0", "b1", "c2").map(_.eids)
         _ <- a0refs.touch.map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> Map(
@@ -104,8 +100,8 @@ object InsertRelated extends AsyncTestSuite {
         _ <- Ns.strs.ints.Ref1.strs1.ints1.Ref2.strs2.ints2.get.map(_.head ==> (Set("a0"), Set(0), Set("b1"), Set(1), Set("c2"), Set(2)))
 
         // Address example
-        tx1 <- Ns.str.Ref1.int1.str1.Ref2.str2.insert("273 Broadway", 10700, "New York", "USA")
-        List(addressE, streetE, countryE) = tx1.eids
+        List(addressE, streetE, countryE) <-
+          Ns.str.Ref1.int1.str1.Ref2.str2.insert("273 Broadway", 10700, "New York", "USA").map(_.eids)
         _ <- addressE.touch.map(_ ==> Map(
           ":db/id" -> addressE,
           ":Ns/ref1" -> Map(
@@ -140,8 +136,7 @@ object InsertRelated extends AsyncTestSuite {
 
     "Card many references" - core { implicit conn =>
       for {
-        tx1 <- Ns.int.Refs1.str1.insert(42, "r")
-        List(base, ref) = tx1.eids
+        List(base, ref) <- Ns.int.Refs1.str1.insert(42, "r").map(_.eids)
         _ <- base.touch.map(_ ==> Map(
           ":db/id" -> base,
           ":Ns/refs1" -> List( // <-- notice we have a list of references now (with one ref here)
@@ -153,8 +148,7 @@ object InsertRelated extends AsyncTestSuite {
         // Note that applying multiple values creates multiple base entities with a
         // reference to each new `:Ref1/str` assertion, so that we get the following:
 
-        tx2 <- Ns.int.Refs1.str1.insert.apply(Seq((1, "r"), (2, "s")))
-        List(id1, ref1, id2, ref2) = tx2.eids
+        List(id1, ref1, id2, ref2) <- Ns.int.Refs1.str1.insert(Seq((1, "r"), (2, "s"))).map(_.eids)
         _ <- id1.touch.map(_ ==> Map(
           ":db/id" -> id1,
           ":Ns/refs1" -> List(

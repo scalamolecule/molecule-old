@@ -1,30 +1,15 @@
 package moleculeTests
 
-import java.util
-import molecule.datomic.api.in3_out12._
-import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
-import utest._
-import scala.concurrent.{ExecutionContext, Future}
-import java.util.{Collections, Date, UUID, Iterator => jIterator, List => jList, Map => jMap, Set => jSet}
-import molecule.core.ast.elements._
-import molecule.core.dsl.base.Init
-import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
-import molecule.datomic.base.marshalling._
-import molecule.core.util.Helpers
-import molecule.datomic.base.facade.Conn
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.mutable.ListBuffer
-import molecule.core.util.testing.expectCompileError
-import molecule.datomic.base.transform.Model2Query
-import moleculeTests.dataModels.core.base.schema.CoreTestSchema
-import scala.util.control.NonFatal
-import molecule.core.marshalling.nodes._
 import molecule.core.marshalling.unpackAttr.String2cast
-import molecule.core.marshalling.unpackers.Packed2EntityMap
-import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.Helpers
+import molecule.datomic.api.in3_out12._
 import molecule.datomic.base.marshalling.packers.PackEntityMap
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
+import utest._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
@@ -39,10 +24,34 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
+//        dd <- Log(Some(1000L)).e.a.v.get
+//        _ = println(dd)
+
+//        _ <- Schema.a.get.map(res => println(res.take(10)))
+
+        _ <- Ns.int(1).save
+
+        _ <- Ns.int.get.map(_ ==> List(1))
 
 
       } yield ()
     }
+
+//    "adhocJvm2" - core { implicit futConn =>
+//      for {
+//        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+//        conn <- futConn
+//
+////        dd <- Log(Some(1000L)).e.a.v.get
+////        _ = println(dd)
+//        _ <- Ns.int(2).save
+//        _ <- Ns.int.get.map(_ ==> List(2))
+//
+//
+//      } yield ()
+//    }
+
+
 
 
     //    "adhoc" - products { implicit conn =>

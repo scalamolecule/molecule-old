@@ -19,8 +19,7 @@ object OneOther extends AsyncTestSuite {
     "Save new" - bidirectional { implicit conn =>
       for {
         // Save Ben, Rex and bidirectional references between them
-        tx <- Person.name("Ben").Pet.name("Rex").save
-        List(ben, rex) = tx.eids
+        List(ben, rex) <- Person.name("Ben").Pet.name("Rex").save.map(_.eids)
 
         // Reference in both directions saved
         // Since we use different names for the ref attributes on each end,
@@ -39,8 +38,7 @@ object OneOther extends AsyncTestSuite {
         // Building from the other end gives the same result
 
         // Save Ben, Rex and bidirectional references between them
-        tx <- Animal.name("Rex").Master.name("Ben").save
-        List(rex, ben) = tx.eids
+        List(rex, ben) <- Animal.name("Rex").Master.name("Ben").save.map(_.eids)
 
         // Reference in both directions saved
         // Since we use different names for the ref attributes on each end,
@@ -56,12 +54,10 @@ object OneOther extends AsyncTestSuite {
 
     "Save id" - bidirectional { implicit conn =>
       for {
-        tx1 <- Animal.name.insert("Rex")
-        rex = tx1.eid
+        rex <- Animal.name.insert("Rex").map(_.eid)
 
         // Save Ben with bidirectional ref to existing Rex
-        tx2 <- Person.name("Ben").pet(rex).save
-        ben = tx2.eid
+        ben <- Person.name("Ben").pet(rex).save.map(_.eid)
 
         _ <- animalMaster.get.map(_ ==> List(
           ("Rex", "Ben")
@@ -101,8 +97,7 @@ object OneOther extends AsyncTestSuite {
 
     "Insert id" - bidirectional { implicit conn =>
       for {
-        tx <- Animal.name insert List("Rex", "Zip")
-        List(rex, zip) = tx.eids
+        List(rex, zip) <- Animal.name insert List("Rex", "Zip") map(_.eids)
 
         // Insert 2 new entities and pair them with existing entities
         _ <- Person.name.pet insert List(
@@ -126,8 +121,7 @@ object OneOther extends AsyncTestSuite {
 
       "creating ref to new" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben")
-          ben = tx.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
           _ <- Person(ben).Pet.name("Rex").update
 
           _ <- personPet.get.map(_.sorted ==> List(
@@ -139,8 +133,7 @@ object OneOther extends AsyncTestSuite {
 
           // Insert from other end
 
-          tx2 <- Animal.name.insert("Zip")
-          zip = tx2.eid
+          zip <- Animal.name.insert("Zip").map(_.eid)
           _ <- Animal(zip).Master.name("Kim").update
 
           _ <- personPet.get.map(_.sorted ==> List(
@@ -156,8 +149,7 @@ object OneOther extends AsyncTestSuite {
 
       "replacing ref to new" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name("Ben").Pet.name("Rex").save
-          List(ben, rex) = tx.eids
+          List(ben, rex) <- Person.name("Ben").Pet.name("Rex").save.map(_.eids)
 
           // Bidirectional references created
           _ <- personPet.get.map(_.sorted ==> List(
@@ -186,10 +178,8 @@ object OneOther extends AsyncTestSuite {
       "creating ref to existing" - bidirectional { implicit conn =>
         for {
           // Ben haven't got Rex yet
-          tx1 <- Person.name.insert("Ben")
-          tx2 <- Animal.name.insert("Rex")
-          ben = tx1.eid
-          rex = tx2.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
+          rex <- Animal.name.insert("Rex").map(_.eid)
 
           // Update Ben with creation of bidirectional reference to existing Rex
           _ <- Person(ben).pet(rex).update
@@ -210,8 +200,7 @@ object OneOther extends AsyncTestSuite {
 
       "replacing ref to other existing" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name("Ben").Pet.name("Rex").save
-          List(ben, rex) = tx1.eids
+          List(ben, rex) <- Person.name("Ben").Pet.name("Rex").save.map(_.eids)
 
           // Bidirectional references created
           _ <- personPet.get.map(_.sorted ==> List(
@@ -222,8 +211,7 @@ object OneOther extends AsyncTestSuite {
           ))
 
           // Update Ben, replacing bidirectional reference with Rex to existing Zip
-          tx2 <- Animal.name.insert("Zip")
-          zip = tx2.eid
+          zip <- Animal.name.insert("Zip").map(_.eid)
           _ <- Person(ben).pet(zip).update
 
           // Bidirectional references to Rex have been replaced with refs to/from Zip
@@ -240,8 +228,7 @@ object OneOther extends AsyncTestSuite {
 
     "Update removing reference" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name("Ben").Pet.name("Rex").save
-        List(ben, rex) = tx.eids
+        List(ben, rex) <- Person.name("Ben").Pet.name("Rex").save.map(_.eids)
 
         // Bidirectional references created
         _ <- personPet.get.map(_.sorted ==> List(
@@ -261,12 +248,10 @@ object OneOther extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-        tx1 <- Person.name.insert("Ben")
-        ben = tx1.eid
+        ben <- Person.name.insert("Ben").map(_.eid)
 
         // Create and reference Rex to Ben
-        tx2 <- Person(ben).Pet.name("Rex").update
-        rex = tx2.eid
+        rex <- Person(ben).Pet.name("Rex").update.map(_.eid)
 
         _ <- personPet.get.map(_.sorted ==> List(
           ("Ben", "Rex")

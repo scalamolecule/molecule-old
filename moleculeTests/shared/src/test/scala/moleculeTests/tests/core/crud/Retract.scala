@@ -13,18 +13,17 @@ object Retract extends AsyncTestSuite {
 
     "Implicit entity" - core { implicit conn =>
       for {
-        tx <- Ns.int.str insert List(
+        e1 <- Ns.int.str insert List(
           (1, "a"),
           (2, "b")
-        )
-        e1 = tx.eid
+        ) map(_.eid)
 
         _ <- Ns.int.str.get.map(_.sorted ==> List(
           (1, "a"),
           (2, "b")
         ))
 
-        x <- e1.retract
+        _ <- e1.retract
 
         _ <- Ns.int.str.get.map(_ ==> List(
           (2, "b")
@@ -34,8 +33,7 @@ object Retract extends AsyncTestSuite {
 
     "Explicit entities" - core { implicit conn =>
       for {
-        tx <- Ns.int.insert(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int.insert(1, 2, 3).map(_.eids)
 
         _ <- Ns.int.apply(count).get.map(_ ==> List(3))
 
@@ -47,8 +45,7 @@ object Retract extends AsyncTestSuite {
 
     "Explicit entities with tx data" - core { implicit conn =>
       for {
-        tx <- Ns.int.insert(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int.insert(1, 2, 3).map(_.eids)
 
         _ <- Ns.int(count).get.map(_ ==> List(3))
 
@@ -63,11 +60,10 @@ object Retract extends AsyncTestSuite {
 
       "Card-one" - core { implicit conn =>
         for {
-          tx <- Ns.int.RefSub1.int1 insert List(
+          e1 <- Ns.int.RefSub1.int1 insert List(
             (1, 10),
             (2, 20)
-          )
-          e1 = tx.eid
+          ) map(_.eid)
 
           _ <- Ns.int.RefSub1.int1.get.map(_.sorted ==> List(
             (1, 10),
@@ -87,11 +83,10 @@ object Retract extends AsyncTestSuite {
 
       "Card-many" - core { implicit conn =>
         for {
-          tx <- m(Ns.int.RefsSub1 * Ref1.int1).insert(List(
+          e1 <- m(Ns.int.RefsSub1 * Ref1.int1).insert(List(
             (1, Seq(10, 11)),
             (2, Seq(20, 21))
-          ))
-          e1 = tx.eid
+          )).map(_.eid)
 
           _ <- m(Ns.int.RefsSub1 * Ref1.int1).get.map(_.sortBy(_._1) ==> List(
             (1, Seq(10, 11)),
@@ -111,15 +106,14 @@ object Retract extends AsyncTestSuite {
 
       "Nested" - core { implicit conn =>
         for {
-          tx <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).insert(List(
+          e1 <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).insert(List(
             (1, Seq(
               (10, Seq(100, 101)),
               (11, Seq(110, 111)))),
             (2, Seq(
               (20, Seq(200, 201)),
               (21, Seq(210, 211))))
-          ))
-          e1 = tx.eid
+          )).map(_.eid)
 
           _ <- Ns.int.RefsSub1.*(Ref1.int1.RefsSub2.*(Ref2.int2)).get.map(_ ==> List(
             (1, Seq(
@@ -148,16 +142,14 @@ object Retract extends AsyncTestSuite {
     "Orphan references" - core { implicit conn =>
       for {
         // Create ref
-        tx <- Ns.int(1).Ref1.int1(10).save
-        List(e1, r1) = tx.eids
+        List(e1, r1) <- Ns.int(1).Ref1.int1(10).save.map(_.eids)
         _ <- r1.retract
         // Ref entity with attribute values is gone - no ref orphan exist
         _ <- Ns.int(1).ref1$.get.map(_.head ==> (1, None))
 
 
         // Create another ref
-        tx2 <- Ns.int(2).Ref1.int1(20).save
-        List(e2, r2) = tx2.eids
+        List(e2, r2) <- Ns.int(2).Ref1.int1(20).save.map(_.eids)
 
         // Retract attribute value from ref entity - ref entity still exist
         _ <- Ref1(r2).int1().update

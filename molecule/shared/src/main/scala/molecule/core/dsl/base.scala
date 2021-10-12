@@ -1,5 +1,7 @@
 package molecule.core.dsl
 
+import molecule.core.dsl.attributes.Attr
+
 
 /** Base namespace markers to carry attribute types from one arity to the next. */
 object base {
@@ -7,7 +9,18 @@ object base {
   /** Initial empty property trait for object type buildup */
   trait Init
 
-  trait NS
+  trait NS {
+    def asc1: this.type = ???
+    def asc2: this.type = ???
+    def asc3: this.type = ???
+    def asc4: this.type = ???
+    def asc5: this.type = ???
+    def desc1: this.type = ???
+    def desc2: this.type = ???
+    def desc3: this.type = ???
+    def desc4: this.type = ???
+    def desc5: this.type = ???
+  }
 
   trait FirstNS extends NS {
 

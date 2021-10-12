@@ -11,7 +11,7 @@ Molecule transparently runs a unified Scala interface with only minor difference
 
 Molecule is published with only a dependency on Datomic Free to be freely distributed. To run tests only against the free version, please follow the instructions in `README_free.md`
 
-To run tests against the free and two proprietary systems too, please follow the steps below (some steps are only required once during setup).
+To run tests against the two proprietary systems too, please follow the steps below (some steps are only required once during setup).
 
 
 ## STEP 1 - Give Intellij enough memory (once)
@@ -47,14 +47,14 @@ To enforce using the free version, you can compile molecule with this flag:
 
 To enforce using a specific version, you can compile molecule with one or both of these flags:
 
-`sbt compile -Ddatomic.pro=1.0.6202 -Ddatomic.dev-local=0.9.225`
+`sbt compile -Ddatomic.pro=1.0.6344 -Ddatomic.dev-local=1.0.238`
 
 
 ## STEP 4 - Start transactor
 
 Start Datomic transactor (update path/version number):
 
-    cd <path-to-datomic-downloads>/datomic-pro-1.0.6222
+    cd <path-to-datomic-downloads>/datomic-pro-1.0.6344
     bin/transactor config/samples/dev-transactor-template.properties
 
 While the transactor is running, create a new tab/process in the terminal to run the next steps:
@@ -79,7 +79,7 @@ Run commands below to perform these 3 operations:
 
 ## STEP 6 - Create molecule samples (once)
 
-Run `moleculeTests.restore.RecreateTestDbs` in shared moleculeTests (main) to create sample databases. This is necessary before starting the peer server so that it can "see" the mbrainz-subset db.
+In the IDE, run `moleculeTests.restore.RecreateTestDbs` in jvm moleculeTests (main) to create sample databases for the Peer Server.
 
 
 ## STEP 7 - Start peer server
@@ -101,8 +101,7 @@ Copy all lines below and paste into terminal to start the Peer Server and having
     -d m_modernGraph2,datomic:mem://m_modernGraph2 \
     -d m_productsOrder,datomic:mem://m_productsOrder \
     -d m_seattle,datomic:mem://m_seattle \
-    -d mbrainz-1968-1973,datomic:dev://localhost:4334/mbrainz-1968-1973 \
-    -d mbrainz-subset,datomic:dev://localhost:4334/mbrainz-subset
+    -d mbrainz-1968-1973,datomic:dev://localhost:4334/mbrainz-1968-1973
 
 Now you can run molecule tests or projects against peer, peer-server and dev-local (cloud).
 
@@ -111,7 +110,10 @@ Run asynchronous uTest suites in sbt:
 ```
 sbt
 
-// Test (against scala 2.13 as default)
+// Run all tests (against scala 2.13 as default)
+sbt:molecule> test
+
+// Run selection of tests (against scala 2.13 as default)
 sbt:molecule> testOnly molecule.tests.*
 sbt:molecule> testOnly molecule.tests.core.ref.*
 sbt:molecule> testOnly molecule.tests.core.ref.TwoStepQueries
@@ -122,11 +124,12 @@ sbt:molecule> ++2.13.6; testOnly molecule.tests.core.ref.*
 sbt:molecule> ++2.13.6; testOnly molecule.tests.core.ref.TwoStepQueries
 
 // Test against scala 2.12 
+sbt:molecule> ++2.12.15; test
 sbt:molecule> ++2.12.15; testOnly molecule.tests.*
 sbt:molecule> ++2.12.15; testOnly molecule.tests.core.ref.*
 sbt:molecule> ++2.12.15; testOnly molecule.tests.core.ref.TwoStepQueries
 ```
-Using sbt is about twice as fast and therefore preferable when running all tests. Remember to ctrl-c the sbt process when switching to test in IDE to avoid process locks.
+Remember to ctrl-c the sbt process to avoid process locks if testing in IDE.
 
 ## Further info
 

@@ -350,7 +350,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
         while (lines.hasNext) {
           rows = rows :+ packed2T(lines)
         }
-        rows.toList
+        rows
       }
     }
   )

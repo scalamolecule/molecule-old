@@ -16,8 +16,7 @@ object TxBundle extends AsyncTestSuite {
     "Transact multiple molecules" - core { implicit conn =>
       for {
         // Initial data
-        tx <- Ns.int insert List(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
 
         // State before
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -64,8 +63,7 @@ object TxBundle extends AsyncTestSuite {
     "Inspect" - core { implicit conn =>
       for {
         // Initial data
-        tx <- Ns.int insert List(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
 
         // Print inspect info for group transaction without affecting live db
         _ <- inspectTransactBundle(

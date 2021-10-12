@@ -505,12 +505,9 @@ object Aggregates extends AsyncTestSuite {
       for {
         // card-one
 
-        tx1 <- Ns.int(1).save
-        tx2 <- Ns.int(2).save
-        tx3 <- Ns.int(3).save
-        e1 = tx1.eid
-        e2 = tx2.eid
-        e3 = tx3.eid
+        e1 <- Ns.int(1).save.map(_.eid)
+        e2 <- Ns.int(2).save.map(_.eid)
+        e3 <- Ns.int(3).save.map(_.eid)
 
         _ <- Ns.e.int(count).get.map(_.sorted ==> List(
           (e1, 1),
@@ -520,10 +517,8 @@ object Aggregates extends AsyncTestSuite {
 
         // card-many
 
-        tx4 <- Ns.ints(Seq(1, 2)).save
-        tx5 <- Ns.ints(3).save
-        e4 = tx4.eid
-        e5 = tx5.eid
+        e4 <- Ns.ints(Seq(1, 2)).save.map(_.eid)
+        e5 <- Ns.ints(3).save.map(_.eid)
 
         _ <- Ns.e.ints(count).get.map(_.sortBy(_._2) ==> List(
           (e5, 1),

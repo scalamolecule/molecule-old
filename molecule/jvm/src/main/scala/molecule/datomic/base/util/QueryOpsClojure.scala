@@ -1,20 +1,16 @@
-package molecule.core.util
+package molecule.datomic.base.util
 
-//import datomic.Util
-
+import datomic.Util
 import molecule.datomic.base.ast.query.{CollectionBinding, InVar, Query, RelationBinding}
 import molecule.datomic.base.ops.exception.QueryOpsException
 
-case class QueryOpsClojure(q: Query) extends JavaUtil {
-
+case class QueryOpsClojure(q: Query) {
 
   private def cast(a: Any): AnyRef = a match {
-    case i: Int => i.toLong.asInstanceOf[Object]
-    //    case f: Float                              => f.toDouble.asInstanceOf[Object]
-    //    case s: String if s.startsWith("__enum__") => Util.read(s.drop(8)) // clojure Keyword
+    case i: Int                                => i.toLong.asInstanceOf[Object]
     case bigI: BigInt                          => bigI.bigInteger
     case bigD: BigDecimal                      => bigD.bigDecimal
-    case s: String if s.startsWith("__enum__") => s.drop(8)
+    case s: String if s.startsWith("__enum__") => Util.read(s.drop(8)) // Treat enum as Clojure Keyword
     case other                                 => other.asInstanceOf[Object]
   }
 

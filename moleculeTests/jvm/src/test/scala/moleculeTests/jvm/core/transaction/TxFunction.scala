@@ -182,7 +182,7 @@ object TxFunction extends AsyncTestSuite {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    "Basic inc example" - coreTxFn { implicit conn =>
+    "Basic inc example" - corePeerOnly { implicit conn =>
       // Example from https://www.youtube.com/watch?v=8fY687k7DMA
       for {
         // Existing data
@@ -197,7 +197,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Atomic constraints" - coreTxFn { implicit conn =>
+    "Atomic constraints" - corePeerOnly { implicit conn =>
       for {
         fromAccount <- Ns.int(100).save.map(_.eid)
         toAccount <- Ns.int(700).save.map(_.eid)
@@ -224,7 +224,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Composing multiple tx functions" - coreTxFn { implicit conn =>
+    "Composing multiple tx functions" - corePeerOnly { implicit conn =>
       for {
         // (identical effect as in previous test)
 
@@ -251,7 +251,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Tx fn + 1 tx meta data molecule" - coreTxFn { implicit conn =>
+    "Tx fn + 1 tx meta data molecule" - corePeerOnly { implicit conn =>
       for {
         fromAccount <- Ns.int(100).save.map(_.eid)
         toAccount <- Ns.int(700).save.map(_.eid)
@@ -268,7 +268,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Tx fn + 2 tx meta data molecules" - coreTxFn { implicit conn =>
+    "Tx fn + 2 tx meta data molecules" - corePeerOnly { implicit conn =>
       for {
         fromAccount <- Ns.int(100).save.map(_.eid)
         toAccount <- Ns.int(700).save.map(_.eid)
@@ -292,7 +292,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Constructor" - coreTxFn { implicit conn =>
+    "Constructor" - corePeerOnly { implicit conn =>
       for {
         // Use tx function as a data constructor enforcing some integrity checks
 
@@ -317,7 +317,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Constructor with partial validation" - coreTxFn { implicit conn =>
+    "Constructor with partial validation" - corePeerOnly { implicit conn =>
       for {
         // Use tx function as a data constructor enforcing some integrity checks inside the
         // tx fun and some validation outside the tx function.
@@ -348,7 +348,7 @@ object TxFunction extends AsyncTestSuite {
     }
 
 
-    "Inspecting tx fn call" - coreTxFn { implicit conn =>
+    "Inspecting tx fn call" - corePeerOnly { implicit conn =>
       for {
         eid <- Ns.int(100).save.map(_.eid)
 

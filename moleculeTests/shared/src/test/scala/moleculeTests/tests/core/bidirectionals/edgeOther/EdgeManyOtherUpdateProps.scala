@@ -12,14 +12,9 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
 
   def testData(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Long]] = {
     for {
-      tx1 <- Quality.name("Love").save
-      love = tx1.eid
-
-      tx2 <- Quality.name.insert("Patience", "Humor")
-      List(patience, humor) = tx2.eids
-
-      tx3 <- Animal.name.insert("Rex")
-      rex = tx3.eid
+      love <- Quality.name("Love").save.map(_.eid)
+      List(patience, humor) <- Quality.name.insert("Patience", "Humor").map(_.eids)
+      rex <- Animal.name.insert("Rex").map(_.eid)
 
       List(ann, annRex, rexAnn) <- Person.name("Ann") // New entity
         .CloseTo
@@ -173,8 +168,7 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
 
           // 2. Update reference
 
-          tx <- Quality.name("Trust").save
-          trust = tx.eid
+          trust <- Quality.name("Trust").save.map(_.eid)
           _ <- CloseTo(annRex).coreQuality(trust).update
 
           // New reference/value
@@ -286,8 +280,7 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
 
           // 2. Update reference(s)
 
-          tx <- Quality.name("Sporty").save
-          sporty = tx.eid
+          sporty <- Quality.name("Sporty").save.map(_.eid)
 
           // replace
           _ <- CloseTo(annRex).inCommon.replace(humor -> sporty).update

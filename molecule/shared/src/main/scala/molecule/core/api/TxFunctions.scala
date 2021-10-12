@@ -160,7 +160,10 @@ object TxFunctions extends Helpers with JavaUtil {
 
       // Install transaction function if not installed yet
       txFns <- conn.db.pull("[*]", s":$txFnDatomic")
-      _ <- if (txFns.size() == 1) conn.transactRaw(conn.buildTxFnInstall(txFnDatomic, args)) else Future.unit
+      _ <- if (txFns.size() == 1) {
+        // Only id returned - tx function needs to be installed in db
+        conn.transactRaw(conn.buildTxFnInstall(txFnDatomic, args))
+      } else Future.unit
 
       txMetaStmts <- if (txMolecules.nonEmpty) {
         val txElements = txMolecules.flatMap { mol =>

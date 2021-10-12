@@ -26,8 +26,7 @@ object EdgeManyOtherSave extends AsyncTestSuite {
         }
 
         // Insert entities, each having one or more connected entities with relationship properties
-        tx <- Animal.name.insert("Rex")
-        rex = tx.eid
+        rex <- Animal.name.insert("Rex").map(_.eid)
         _ <- Person.name("Rex").CloseTo.*(CloseTo.weight(7).animal(rex)).save.recover { case VerifyModelException(err) =>
           err ==> s"[noNested]  Nested data structures not allowed in save molecules"
         }
@@ -50,8 +49,7 @@ object EdgeManyOtherSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Rex")
-          rex = tx.eid
+          rex <- Animal.name.insert("Rex").map(_.eid)
 
           // Save Ann with weighed relationship to existing Rex
           _ <- Person.name("Ann").CloseTo.weight(7).animal(rex).save
@@ -68,10 +66,8 @@ object EdgeManyOtherSave extends AsyncTestSuite {
       "new target" - bidirectional { implicit conn =>
         for {
           // Create edges to new target entities
-          tx1 <- CloseTo.weight(7).Animal.name("Gus").save
-          closeToGus = tx1.eid
-          tx2 <- CloseTo.weight(8).Animal.name("Leo").save
-          closeToLeo = tx2.eid
+          closeToGus <- CloseTo.weight(7).Animal.name("Gus").save.map(_.eid)
+          closeToLeo <- CloseTo.weight(8).Animal.name("Leo").save.map(_.eid)
 
           // Connect multiple edges
           _ <- Person.name("Ann").closeTo(closeToGus, closeToLeo).save
@@ -86,14 +82,11 @@ object EdgeManyOtherSave extends AsyncTestSuite {
 
       "existing target" - bidirectional { implicit conn =>
         for{
-          tx1 <- Animal.name.insert("Gus", "Leo")
-          List(gus, leo) = tx1.eids
+          List(gus, leo) <- Animal.name.insert("Gus", "Leo").map(_.eids)
 
           // Create edges to existing target entities
-          tx2 <- CloseTo.weight(7).animal(gus).save
-          closeToGus = tx2.eid
-          tx3 <- CloseTo.weight(8).animal(leo).save
-          closeToLeo = tx3.eid
+          closeToGus <- CloseTo.weight(7).animal(gus).save.map(_.eids)
+          closeToLeo <- CloseTo.weight(8).animal(leo).save.map(_.eids)
 
           // Connect multiple edges
           _ <- Person.name("Ann").closeTo(closeToGus, closeToLeo).save

@@ -90,10 +90,9 @@ object SocialNews extends AsyncTestSuite {
         allStories <- Story.url_.e.get
 
         // Add John and let him upvote all stories
-        tx <- User.email.firstName.lastName.upVotes insert List(
+        john <- User.email.firstName.lastName.upVotes insert List(
           ("john@example.com", "John", "Doe", allStories.toSet)
-        )
-        john = tx.eid
+        ) map(_.eid)
 
         // Users with upvotes
         _ <- User.email.upVotes.get.map(_ ==> List(("john@example.com", Set(s1, s2, s3))))

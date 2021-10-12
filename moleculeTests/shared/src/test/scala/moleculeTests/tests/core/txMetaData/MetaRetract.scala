@@ -39,8 +39,7 @@ object MetaRetract extends AsyncTestSuite {
 
     "Multiple entities without tx meta data" - core { implicit conn =>
       for {
-        tx <- Ns.int insert List(1, 2, 3)
-        List(e1, e2, e3) = tx.eids
+        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
 
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 

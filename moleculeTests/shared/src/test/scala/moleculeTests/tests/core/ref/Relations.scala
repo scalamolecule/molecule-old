@@ -15,12 +15,11 @@ object Relations extends AsyncTestSuite {
     "One-to-One" - core { implicit conn =>
       for {
         // Creating 3 entities referencing 3 other entities
-        tx <- Ns.str.Ref1.str1 insert List(
+        List(a0, a1, b0, b1, c0, c1) <- Ns.str.Ref1.str1.insert(List(
           ("a0", "a1"),
           ("b0", "b1"),
           ("c0", "c1")
-        )
-        List(a0, a1, b0, b1, c0, c1) = tx.eids
+        )).map(_.eids)
 
         // Get attribute values from 2 namespaces
         // Namespace references like `Ref1` starts with Capital letter
@@ -41,8 +40,7 @@ object Relations extends AsyncTestSuite {
 
     "Referenced entity ids" - core { implicit conn =>
       for {
-        tx <- Ref1.str1 insert List("father1", "father2", "father3")
-        List(father1, father2, father3) = tx.eids
+        List(father1, father2, father3) <- Ref1.str1.insert(List("father1", "father2", "father3")).map(_.eids)
 
         // We can insert ref entity ids
         _ <- Ns.str.ref1 insert List(
@@ -70,8 +68,7 @@ object Relations extends AsyncTestSuite {
 
     "Referenced entity ids" - core { implicit conn =>
       for {
-        tx <- Ns.str("a").save
-        id = tx.eid
+        id <- Ns.str("a").save.map(_.eid)
 
         // Avoid mixing update/save semantics
         _ <- Ns(id).Refs1.int1(1).save.recover { case VerifyModelException(err) =>

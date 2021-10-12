@@ -39,20 +39,18 @@ object Friends extends AsyncTestSuite {
       */
 
       // Software
-      tx <- Software.name.lang insert Seq(
+      List(lop, ripple) <- Software.name.lang insert Seq(
         ("lop", "java"),
         ("ripple", "java")
-      )
-      List(lop, ripple) = tx.eids
+      ) map(_.eids)
 
       // People and software created
-      tx2 <- Person.name.age.software insert Seq(
+      List(marko, vadas, josh, peter) <- Person.name.age.software insert Seq(
         ("marko", 29, Set(lop)),
         ("vadas", 27, Set[Long]()),
         ("josh", 32, Set(lop, ripple)),
         ("peter", 35, Set(lop))
-      )
-      List(marko, vadas, josh, peter) = tx2.eids
+      ) map(_.eids)
 
       // Friendships
       _ <- Person(marko).friends(vadas, josh).update

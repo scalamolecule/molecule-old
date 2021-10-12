@@ -6,6 +6,7 @@ import molecule.core.data.SchemaTransaction
 import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
 import molecule.core.util.JavaConversions
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 
 /** Facade to Datomic Peer with selected methods.
@@ -173,8 +174,8 @@ trait Datomic_Peer extends JavaConversions {
     * @group database
     * @param schema       Auto-generated YourDomainSchema Transaction object<br>
     *                     (in package yourdomain.schema of generated source jar)
-    * @param dbIdentifier Optional String identifier to name database (default empty string creates a randomUUID)
     * @param protocol     Datomic protocol. Defaults to "mem" for in-memory database.
+    * @param dbIdentifier Optional String identifier to name database (default empty string creates a randomUUID)
     * @return [[molecule.datomic.base.facade.Conn Conn]]
     */
   def recreateDbFrom(
@@ -213,8 +214,12 @@ trait Datomic_Peer extends JavaConversions {
       _ <- deleteDatabase(protocol, id)
       _ <- createDatabase(protocol, id)
       conn <- connect(protocol, id, connProxy)
-      _ <- Future.sequence(edns.map(edn => conn.transact(edn)))
-    } yield conn
+      _ <- conn.transact(edns.head) //                 partitions/attributes
+      _ = if (edns.size > 1) conn.transact(edns(1)) // attributes/aliases
+      _ = if (edns.size > 2) conn.transact(edns(2)) // aliases
+    } yield {
+      conn
+    }
   }
 
 

@@ -7,9 +7,7 @@
 //import molecule.datomic.base.util.{System, SystemDevLocal, SystemPeer, SystemPeerServer}
 //import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 //import molecule.datomic.peer.facade.Datomic_Peer
-//import moleculeTests.setup.core.CoreData
-//import moleculeTests.setup.examples.datomic.dayOfDatomic.SocialNewsData
-//import moleculeTests.setup.examples.datomic.seattle.SeattleLoader
+//import moleculeBuildInfo.BuildInfo._
 //import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 //import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
 //import moleculeTests.dataModels.core.ref.schema.{NestedSchema, SelfJoinSchema}
@@ -18,7 +16,7 @@
 //import moleculeTests.dataModels.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 //import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 //import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
-//import moleculeBuildInfo.BuildInfo._
+//import moleculeTests.setup.core.CoreData
 //import org.specs2.mutable.Specification
 //import org.specs2.specification.Scope
 //import org.specs2.specification.core.{Fragments, Text}

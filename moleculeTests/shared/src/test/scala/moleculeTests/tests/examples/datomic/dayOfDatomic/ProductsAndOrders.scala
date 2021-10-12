@@ -18,15 +18,13 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested data, 1 level without initial namespace asserts" - products { implicit conn =>
       for {
         // Insert 2 products
-        tx <- Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-        List(chocolateId, whiskyId) = tx.eids
+        List(chocolateId, whiskyId) <- Product.description.insert("Expensive Chocolate", "Cheap Whisky").map(_.eids)
 
         // Insert nested data .................................
 
         // We don't necessarily have to assert a fact of the initial namespace
-        tx2 <- m(Order.LineItems * LineItem.product.price.quantity) insert
-          List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))
-        List(order, l1, l2) = tx2.eids
+        List(order, l1, l2) <- m(Order.LineItems * LineItem.product.price.quantity) insert
+          List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) map (_.eids)
 
         //    println(order.touchQuoted)
         _ <- order.touch.map(_ ==> Map(
@@ -66,8 +64,7 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested Data, 1 level" - products { implicit conn =>
       for {
         // Insert 2 products
-        tx <- Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-        List(chocolateId, whiskyId) = tx.eids
+        List(chocolateId, whiskyId) <- Product.description.insert("Expensive Chocolate", "Cheap Whisky").map(_.eids)
 
         // Template for Order with multiple LineItems
         order = m(Order.orderid.LineItems * LineItem.product.price.quantity)
@@ -75,8 +72,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Insert nested data .................................
 
         // Make order with two line items and return created entity id
-        tx2 <- order.insert(23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)))
-        List(orderId, l1, l2) = tx2.eids
+        List(orderId, l1, l2) <- order.insert(23, List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2))) map (_.eids)
 
         // Find id of order with chocolate
         _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get.map(_.head ==> orderId)
@@ -114,8 +110,8 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested Data, 1 level, with non-asserted values" - products { implicit conn =>
       for {
         // Insert 2 products
-        tx <- Product.description.insert("Expensive Chocolate", "Cheap Whisky", "Licorice")
-        List(chocolateId, whiskyId, licoriceId) = tx.eids
+        List(chocolateId, whiskyId, licoriceId) <-
+          Product.description.insert("Expensive Chocolate", "Cheap Whisky", "Licorice").map(_.eids)
 
         // Template for Order with multiple LineItems and optional quantity
         order = m(Order.orderid.LineItems * LineItem.product.price.quantity$)
@@ -124,16 +120,14 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Insert .................................
 
         // Make order with two line items and return created entity id
-        tx2 <- order insert List(
+        List(order23, l1, l2, l3, order24, ll1, ll2) <- order insert List(
           (23, List(
             (chocolateId, 48.00, Some(1)),
             (whiskyId, 38.00, None),
             (licoriceId, 77.00, Some(2)))),
           (24, List(
             (whiskyId, 38.00, Some(3)),
-            (licoriceId, 77.00, Some(4)))))
-
-        List(order23, l1, l2, l3, order24, ll1, ll2) = tx2.eids
+            (licoriceId, 77.00, Some(4))))) map (_.eids)
 
 
         // Find id of orders containing various products
@@ -225,15 +219,15 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Although we wouldn't like to create redundant products, we'll make some
         // here anyway just to demonstrate that the nested part of a molecule can
         // contain an adjacent card-one reference
-        tx <- m(Order.orderid.LineItems * LineItem.price.quantity$.Product.description) insert List(
-          (23, List(
-            (48.00, Some(1), "Expensive Chocolate"),
-            (38.00, None, "Cheap Whisky"),
-            (77.00, Some(2), "Licorice"))),
-          (24, List(
-            (38.00, Some(3), "Cheap Whisky"),
-            (77.00, Some(4), "Licorice"))))
-        List(order23, l1, p1, l2, p2, l3, p3, order24, ll1, pp1, ll2, pp2) = tx.eids
+        List(order23, l1, p1, l2, p2, l3, p3, order24, ll1, pp1, ll2, pp2) <-
+          m(Order.orderid.LineItems * LineItem.price.quantity$.Product.description) insert List(
+            (23, List(
+              (48.00, Some(1), "Expensive Chocolate"),
+              (38.00, None, "Cheap Whisky"),
+              (77.00, Some(2), "Licorice"))),
+            (24, List(
+              (38.00, Some(3), "Cheap Whisky"),
+              (77.00, Some(4), "Licorice")))) map (_.eids)
 
         // Find id of orders containing various products
         _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get.map(_ ==>
@@ -284,18 +278,17 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested Data, 2 levels" - products { implicit conn =>
       for {
         // Insert 2 products
-        tx <- Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-        List(chocolateId, whiskyId) = tx.eids
+        List(chocolateId, whiskyId) <- Product.description.insert("Expensive Chocolate", "Cheap Whisky").map(_.eids)
 
         // Insert nested data
-        tx2 <- Order.orderid.LineItems * (
-          LineItem.product.price.quantity.Comments * Comment.text) insert List(
-          (23, List(
-            (chocolateId, 48.00, 1, List("first", "product")),
-            (whiskyId, 38.00, 2, List("second", "is", "best"))
-          ))
-        )
-        List(o1, l1, c1, c2, l2, c3, c4, c5) = tx2.eids
+        List(o1, l1, c1, c2, l2, c3, c4, c5) <-
+          Order.orderid.LineItems * (
+            LineItem.product.price.quantity.Comments * Comment.text) insert List(
+            (23, List(
+              (chocolateId, 48.00, 1, List("first", "product")),
+              (whiskyId, 38.00, 2, List("second", "is", "best"))
+            ))
+          ) map (_.eids)
 
         // Order lines with correct products added
         _ <- Order(o1).LineItems.product.get.map(_ ==> List(chocolateId, whiskyId))
@@ -338,11 +331,10 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested Data, 2 levels, multiple attrs" - products { implicit conn =>
       for {
         // Insert 2 products
-        tx <- Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-        List(chocolateId, whiskyId) = tx.eids
+        List(chocolateId, whiskyId) <- Product.description.insert("Expensive Chocolate", "Cheap Whisky").map(_.eids)
 
         // Insert nested data with multiple 2nd level args
-        tx2 <- Order.orderid.LineItems * (
+        List(o1, l1, c1, c2, l2, c3, c4, c5) <- Order.orderid.LineItems * (
           LineItem.product.price.quantity.Comments * Comment.text.descr) insert List(
           (23, List(
             (chocolateId, 48.00, 1, List(
@@ -353,8 +345,7 @@ object ProductsAndOrders extends AsyncTestSuite {
               ("is", "2b"),
               ("best", "2c")))
           ))
-        )
-        List(o1, l1, c1, c2, l2, c3, c4, c5) = tx2.eids
+        ) map (_.eids)
 
         // 2 levels of nested data entered
         _ <- o1.touch.map(_ ==> Map(
@@ -399,24 +390,23 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested Data, 3 levels" - products { implicit conn =>
       for {
         // Insert 2 products
-        tx <- Product.description.insert("Expensive Chocolate", "Cheap Whisky")
-        List(chocolateId, whiskyId) = tx.eids
+        List(chocolateId, whiskyId) <- Product.description.insert("Expensive Chocolate", "Cheap Whisky").map(_.eids)
 
         // Insert nested data in 3 levels
-        tx2 <- Order.orderid.LineItems * (
-          LineItem.product.price.quantity.Comments * (
-            Comment.text.descr.Authors * Person.name)) insert List(
-          (23, List(
-            (chocolateId, 48.00, 1, List(
-              ("first", "1a", List("Marc Grue")),
-              ("product", "1b", List("Marc Grue")))),
-            (whiskyId, 38.00, 2, List(
-              ("second", "2b", List("Don Juan", "Stuart Halloway")),
-              ("is", "2b", List("Nick Smith")),
-              ("best", "2c", List("test"))))
-          ))
-        )
-        List(o1, l1, c1, a1, c2, a2, l2, c3, a3, a4, c4, a5, c5, a6) = tx2.eids
+        List(o1, l1, c1, a1, c2, a2, l2, c3, a3, a4, c4, a5, c5, a6) <-
+          Order.orderid.LineItems * (
+            LineItem.product.price.quantity.Comments * (
+              Comment.text.descr.Authors * Person.name)) insert List(
+            (23, List(
+              (chocolateId, 48.00, 1, List(
+                ("first", "1a", List("Marc Grue")),
+                ("product", "1b", List("Marc Grue")))),
+              (whiskyId, 38.00, 2, List(
+                ("second", "2b", List("Don Juan", "Stuart Halloway")),
+                ("is", "2b", List("Nick Smith")),
+                ("best", "2c", List("test"))))
+            ))
+          ) map (_.eids)
 
         /* 3 levels of nested data entered*/
         _ <- o1.touch.map(_ ==> Map(
@@ -478,22 +468,21 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested Data, empty data sets" - products { implicit conn =>
       for {
         // Insert 2 products
-        tx <- Product.description.insert("Cheap Whisky")
-        whiskyId = tx.eid
+        whiskyId <- Product.description.insert("Cheap Whisky").map(_.eid)
 
         // Insert nested data in 3 levels - passing empty lists of nested date
         // prevents it to be saved
-        tx2 <- Order.orderid.LineItems * (
-          LineItem.product.price.quantity.Comments * (
-            Comment.text.descr.Authors * Person.name)) insert List(
-          (23, List(
-            (whiskyId, 38.00, 2, List(
-              ("second", "2b", List("Don Juan")),
-              ("is", "2b", Nil),
-              ("best", "2c", List())))
-          ))
-        )
-        List(o1, l1, c1, a1, c2, c3) = tx2.eids
+        List(o1, l1, c1, a1, c2, c3) <-
+          Order.orderid.LineItems * (
+            LineItem.product.price.quantity.Comments * (
+              Comment.text.descr.Authors * Person.name)) insert List(
+            (23, List(
+              (whiskyId, 38.00, 2, List(
+                ("second", "2b", List("Don Juan")),
+                ("is", "2b", Nil),
+                ("best", "2c", List())))
+            ))
+          ) map (_.eids)
 
         // 3 levels of nested data entered, some with missing values that are
         // then not asserted
@@ -529,11 +518,10 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Nested Data, non-asserted values" - products { implicit conn =>
       for {
         // Insert product
-        tx <- Product.description.insert("Cheap Whisky")
-        whiskyId = tx.eid
+        whiskyId <- Product.description.insert("Cheap Whisky").map(_.eid)
 
         // We can use an optional attribute (`Comment.descr$`) for missing values
-        tx2 <- Order.orderid.LineItems * (
+        List(o1, l1, c1, a1, c2, a2) <- Order.orderid.LineItems * (
           LineItem.product.price.quantity.Comments * (
             Comment.text.descr$.Authors * Person.name)) insert List(
           (23, List(
@@ -542,8 +530,7 @@ object ProductsAndOrders extends AsyncTestSuite {
               ("chance", Some("foo"), List("Marc"))
             ))
           ))
-        )
-        List(o1, l1, c1, a1, c2, a2) = tx2.eids
+        ) map(_.eids)
 
         // 3 levels of nested data entered, some with missing values that are
         // then not asserted
@@ -593,11 +580,10 @@ object ProductsAndOrders extends AsyncTestSuite {
     "Corner case with flat card-many + nested" - products { implicit conn =>
       for {
         // Insert product
-        tx <- Product.description.insert("Cheap Whisky")
-        whiskyId = tx.eid
+        whiskyId <- Product.description.insert("Cheap Whisky").map(_.eid)
 
         // We can use an optional attribute (`Comment.descr$`) for missing values
-        tx2 <- Order.orderid.LineItems * (
+        _ <- Order.orderid.LineItems * (
           LineItem.product.price.quantity.text.Comments * (
             Comment.text.descr$.Authors * Person.name)) insert List(
           (23, List(
@@ -607,7 +593,6 @@ object ProductsAndOrders extends AsyncTestSuite {
             ))
           ))
         )
-        orderId = tx2.eid
 
         // Combining flat card-many (LineItems.text) + nested
         _ <- Order.orderid_(23).LineItems.text

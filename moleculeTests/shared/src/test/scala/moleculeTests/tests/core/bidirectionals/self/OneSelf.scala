@@ -18,8 +18,7 @@ object OneSelf extends AsyncTestSuite {
     "Save new" - bidirectional { implicit conn =>
       for {
         // Save Adam, Lisa and bidirectional references between them
-        tx <- Person.name("Adam").Spouse.name("Lisa").save
-        List(adam, lisa) = tx.eids
+        List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
         // Reference is bidirectional - both point to each other
         _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
@@ -39,12 +38,10 @@ object OneSelf extends AsyncTestSuite {
 
     "Save id" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name.insert("Lisa")
-        lisa = tx.eid
+        lisa <- Person.name.insert("Lisa").map(_.eid)
 
         // Save Adam with bidirectional ref to existing  Lisa
-        tx2 <- Person.name("Adam").spouse(lisa).save
-        adam = tx2.eid
+        adam <- Person.name("Adam").spouse(lisa).save.map(_.eid)
 
         _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
           ("Adam", "Lisa"),
@@ -81,8 +78,7 @@ object OneSelf extends AsyncTestSuite {
 
     "Insert id" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name insert List("Lisa", "Nina")
-        List(lisa, nina) = tx.eids
+        List(lisa, nina) <- Person.name insert List("Lisa", "Nina") map(_.eids)
 
         // Insert 2 new entities and pair them with existing entities
         _ <- Person.name.spouse insert List(
@@ -105,8 +101,7 @@ object OneSelf extends AsyncTestSuite {
 
       "creating ref to new" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Adam")
-          adam = tx.eid
+          adam <- Person.name.insert("Adam").map(_.eid)
 
           // Update Adam with creation of Lisa and bidirectional reference between Adam and Lisa
           _ <- Person(adam).Spouse.name("Lisa").update
@@ -120,8 +115,7 @@ object OneSelf extends AsyncTestSuite {
 
       "replacing ref to new" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name("Adam").Spouse.name("Lisa").save
-          List(adam, lisa) = tx.eids
+          List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
           // Bidirectional references created
           _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
@@ -147,10 +141,8 @@ object OneSelf extends AsyncTestSuite {
       "creating ref to existing" - bidirectional { implicit conn =>
         for {
           // Adam and Lisa not married yet
-          tx1 <- Person.name.insert("Adam")
-          tx2 <- Person.name.insert("Lisa")
-          adam = tx1.eid
-          lisa = tx2.eid
+          adam <- Person.name.insert("Adam").map(_.eid)
+          lisa <- Person.name.insert("Lisa").map(_.eid)
 
           // Update Adam with creation of bidirectional reference to existing Lisa
           _ <- Person(adam).spouse(lisa).update
@@ -169,8 +161,7 @@ object OneSelf extends AsyncTestSuite {
 
       "replacing ref to other existing" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name("Adam").Spouse.name("Lisa").save
-          List(adam, lisa) = tx.eids
+          List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
           // Bidirectional references created
           _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
@@ -179,8 +170,7 @@ object OneSelf extends AsyncTestSuite {
           ))
 
           // Update Adam, replacing bidirectional reference with Lisa to existing Nina
-          tx <- Person.name.insert("Nina")
-          nina = tx.eid
+          nina <- Person.name.insert("Nina").map(_.eid)
           _ <- Person(adam).spouse(nina).update
 
           // Bidirectional references to Lisa have been replaced with refs to/from Nina
@@ -195,8 +185,7 @@ object OneSelf extends AsyncTestSuite {
 
     "Update removing reference" - bidirectional { implicit conn =>
       for {
-        tx <- Person.name("Adam").Spouse.name("Lisa").save
-        List(adam, lisa) = tx.eids
+        List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
         // Bidirectional references created
         _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(

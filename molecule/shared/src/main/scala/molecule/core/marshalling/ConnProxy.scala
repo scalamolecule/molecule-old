@@ -39,9 +39,10 @@ case class DatomicPeerProxy(
   uuid: String = UUID.randomUUID().toString
 ) extends ConnProxy
 
-case class DatomicDevLocalProxy(
-  system: String,
-  storageDir: String,
+case class DatomicPeerServerProxy(
+  accessKey: String,
+  secret: String,
+  endpoint: String,
   dbName: String,
   schemaPeer: Seq[String] = Nil,
   attrMap: Map[String, (Int, String)] = Map.empty[String, (Int, String)],
@@ -51,10 +52,9 @@ case class DatomicDevLocalProxy(
   uuid: String = UUID.randomUUID().toString
 ) extends ConnProxy
 
-case class DatomicPeerServerProxy(
-  accessKey: String,
-  secret: String,
-  endpoint: String,
+case class DatomicDevLocalProxy(
+  system: String,
+  storageDir: String,
   dbName: String,
   schemaPeer: Seq[String] = Nil,
   attrMap: Map[String, (Int, String)] = Map.empty[String, (Int, String)],

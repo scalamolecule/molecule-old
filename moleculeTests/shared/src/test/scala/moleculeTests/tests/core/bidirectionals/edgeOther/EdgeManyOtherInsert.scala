@@ -31,8 +31,7 @@ object EdgeManyOtherInsert extends AsyncTestSuite {
 
       "existing targets" - bidirectional { implicit conn =>
         for {
-          tx <- Animal.name.insert("Gus", "Leo")
-          List(gus, leo) = tx.eids
+          List(gus, leo) <- Animal.name.insert("Gus", "Leo").map(_.eids)
 
           // Insert 2 Persons and connect them with existing Persons
           _ <- Person.name.CloseTo.*(CloseTo.weight.animal) insert List(("Ann", List((7, gus), (6, leo))))
@@ -65,15 +64,13 @@ object EdgeManyOtherInsert extends AsyncTestSuite {
 
       "existing targets" - bidirectional { implicit conn =>
         for{
-          tx1 <- Animal.name.insert("Gus", "Leo")
-          Seq(gus, leo) = tx1.eids
+          List(gus, leo) <- Animal.name.insert("Gus", "Leo").map(_.eids)
 
           // Create edges to existing target entities
-          tx2 <- CloseTo.weight.animal.insert(List((7, gus), (8, leo)))
-          Seq(
+          List(
           closeToGus, _, // gus edges
           closeToLeo, _  // leo edges
-          ) = tx2.eids
+          ) <- CloseTo.weight.animal.insert(List((7, gus), (8, leo))).map(_.eids)
 
           // Connect base entity to edges
           _ <- Person.name.closeTo.insert("Ann", Set(closeToGus, closeToLeo))

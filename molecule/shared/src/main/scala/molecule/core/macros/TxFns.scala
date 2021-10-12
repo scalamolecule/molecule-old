@@ -16,7 +16,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
 
   import c.universe._
 
-  //    private lazy val xx = InspectMacro("TxFns", 1, 3, mkError = true)
+  //  private lazy val xx = InspectMacro("TxFns", 1, 3, mkError = true)
   //  private lazy val xx = InspectMacro("TxFns", 1, 3)
   //    private lazy val xx = InspectMacro("TxFns", 10, 0)
 
@@ -100,7 +100,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
   }
 
   def typedParam(arg: Tree): Tree = arg match {
-    case vd@ValDef(_, TermName(param), tpe, _) => q"val ${TermName(param)}: $tpe = ${TermName(param + "0")}.asInstanceOf[$tpe]"
-    case other                                 => c.abort(c.enclosingPosition, s"Unrecognized parameter of tx fn: " + other)
+    case ValDef(_, TermName(param), tpe, _) => q"val ${TermName(param)}: $tpe = ${TermName(param + "0")}.asInstanceOf[$tpe]"
+    case other                              => c.abort(c.enclosingPosition, s"Unrecognized parameter of tx fn: " + other)
   }
 }

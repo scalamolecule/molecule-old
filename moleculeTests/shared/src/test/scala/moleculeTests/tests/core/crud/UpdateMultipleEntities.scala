@@ -15,13 +15,12 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.str.int insert List(
+          List(a, b, c, d) <- Ns.str.int insert List(
             ("a", 1),
             ("b", 2),
             ("c", 3),
             ("d", 4)
-          )
-          List(a, b, c, d) = tx.eids
+          ) map(_.eids)
 
           // Apply value to card-one attribute of multiple entities (retracts current values)
           _ <- Ns(a, b).int(5).update
@@ -59,13 +58,12 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.str.int insert List(
+          List(a, b, c, d) <- Ns.str.int insert List(
             ("a", int1),
             ("b", int2),
             ("c", int3),
             ("d", int4)
-          )
-          List(a, b, c, d) = tx.eids
+          ) map(_.eids)
 
           // Apply value (retracts current values)
           _ <- Ns(a, b).int(int5).update
@@ -93,13 +91,12 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
       "assert" - core { implicit conn =>
         for {
-          tx <- Ns.str.ints insert List(
+          List(a, b, c, d) <- Ns.str.ints insert List(
             ("a", Set(1)),
             ("b", Set(2)),
             ("c", Set(3)),
             ("d", Set(4))
-          )
-          List(a, b, c, d) = tx.eids
+          ) map(_.eids)
 
           // Add value
           _ <- Ns(a, b).ints.assert(5).update
@@ -141,13 +138,12 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
       "replace" - core { implicit conn =>
         for {
-          tx <- Ns.str.ints insert List(
+          List(a, b, c, d) <- Ns.str.ints insert List(
             ("a", Set(1, 2, 3)),
             ("b", Set(1, 2, 3)),
             ("c", Set(1, 2, 3)),
             ("d", Set(1, 2, 3))
-          )
-          List(a, b, c, d) = tx.eids
+          ) map(_.eids)
 
           // Replace values
           _ <- Ns(a, b).ints.replace(3 -> 4).update
@@ -189,14 +185,12 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
       "retract" - core { implicit conn =>
         for {
-          tx <- Ns.str.ints insert List(
+          List(a, b, c, d) <- Ns.str.ints insert List(
             ("a", Set(1, 2, 3)),
             ("b", Set(1, 2, 3)),
             ("c", Set(1, 2, 3)),
             ("d", Set(1, 2, 3))
-          )
-          List(a, b, c, d) = tx.eids
-
+          ) map(_.eids)
 
           // Remove values
           _ <- Ns(a, b).ints.retract(1).update
@@ -247,14 +241,12 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          tx <- Ns.str.ints insert List(
+          List(a, b, c, d) <- Ns.str.ints insert List(
             ("a", Set(1, 2, 3)),
             ("b", Set(1, 2, 3)),
             ("c", Set(1, 2, 3)),
             ("d", Set(1, 2, 3))
-          )
-          List(a, b, c, d) = tx.eids
-
+          ) map(_.eids)
 
           // Apply value (retracts all current values!)
           _ <- Ns(a, b).ints(1).update
@@ -297,13 +289,12 @@ object UpdateMultipleEntities extends AsyncTestSuite {
 
     "Optional values" - core { implicit conn =>
       for {
-        tx <- Ns.str.int insert List(
+        List(a, b, c, d) <- Ns.str.int insert List(
           ("a", 1),
           ("b", 2),
           ("c", 3),
           ("d", 4)
-        )
-        List(a, b, c, d) = tx.eids
+        ) map(_.eids)
 
         // Apply Some(value) to card-one attribute of multiple entities (retracts current values)
         _ <- Ns(a, b).str("e").int$(Some(5)).update

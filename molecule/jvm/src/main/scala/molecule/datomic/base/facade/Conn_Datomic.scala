@@ -132,7 +132,7 @@ trait Conn_Datomic extends Conn with JavaConversions {
       case i: Int => i.toLong
       //      case f: Float           => f.toDouble
       case TempId(part, i)    => getTempId(part, i)
-      case Enum(prefix, enum) => prefix + enum
+      case Enum(prefix, enum) => read(prefix + enum)
       case bigInt: BigInt     => bigInt.bigInteger
       case bigDec: BigDecimal => bigDec.bigDecimal
       case other              => other
@@ -141,11 +141,11 @@ trait Conn_Datomic extends Conn with JavaConversions {
     val list: jList[jList[_]] = new java.util.ArrayList[jList[_]](stmts.length)
     stmts.foreach {
       case s: RetractEntity =>
-        list.add(Util.list(s.action, s.e.asInstanceOf[AnyRef]))
+        list.add(Util.list(read(s.action), s.e.asInstanceOf[AnyRef]))
       case s: Cas           =>
-        list.add(Util.list(s.action, s.e.asInstanceOf[AnyRef], s.a, value(s.oldV), value(s.v)))
+        list.add(Util.list(read(s.action), s.e.asInstanceOf[AnyRef], read(s.a), value(s.oldV), value(s.v)))
       case s                =>
-        list.add(Util.list(s.action, eid(s.e), s.a, value(s.v)))
+        list.add(Util.list(read(s.action), eid(s.e), read(s.a), value(s.v)))
     }
     Collections.unmodifiableList(list)
   }

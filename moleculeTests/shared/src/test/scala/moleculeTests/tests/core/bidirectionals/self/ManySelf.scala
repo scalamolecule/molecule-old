@@ -69,8 +69,7 @@ object ManySelf extends AsyncTestSuite {
 
       "1 existing" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben")
-          ben = tx.eid
+          ben <- Person.name.insert("Ben").map(_.eid)
 
           // Save Ann with bidirectional ref to existing Ben
           _ <- Person.name("Ann").friends(ben).save
@@ -95,8 +94,7 @@ object ManySelf extends AsyncTestSuite {
 
       "n existing" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ben", "Joe")
-          benJoe = tx.eids
+          benJoe <- Person.name.insert("Ben", "Joe").map(_.eids)
 
           // Save Ann with bidirectional ref to existing Ben and Joe
           _ <- Person.name("Ann").friends(benJoe).save
@@ -123,8 +121,7 @@ object ManySelf extends AsyncTestSuite {
 
       "1 existing" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name("Ben").save
-          ben = tx.eid
+          ben <- Person.name("Ben").save.map(_.eid)
 
           // Insert Ann with bidirectional ref to existing Ben
           _ <- Person.name.friends.insert("Ann", Set(ben))
@@ -153,8 +150,7 @@ object ManySelf extends AsyncTestSuite {
 
       "multiple existing" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Joe", "Tim")
-          List(joe, tim) = tx.eids
+          List(joe, tim) <- Person.name.insert("Joe", "Tim").map(_.eids)
 
           // Insert 2 entities with bidirectional refs to existing entities
           _ <- Person.name.friends insert List(
@@ -193,8 +189,7 @@ object ManySelf extends AsyncTestSuite {
 
       "nested existing" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name insert List("Ben", "Joe", "Tim")
-          List(ben, joe, tim) = tx.eids
+          List(ben, joe, tim) <- Person.name insert List("Ben", "Joe", "Tim") map(_.eids)
 
           // Insert 2 Persons and connect them with existing Persons
           _ <- Person.name.friends insert List(
@@ -218,8 +213,7 @@ object ManySelf extends AsyncTestSuite {
 
       "assert" - bidirectional { implicit conn =>
         for {
-          tx <- Person.name.insert("Ann", "Ben", "Joe", "Liz", "Tom")
-          List(ann, ben, joe, liz, tom) = tx.eids
+          List(ann, ben, joe, liz, tom) <- Person.name.insert("Ann", "Ben", "Joe", "Liz", "Tom").map(_.eids)
 
           // Add friendships in various ways
 
@@ -244,10 +238,9 @@ object ManySelf extends AsyncTestSuite {
       "retract" - bidirectional { implicit conn =>
         for {
           // Insert Ann and friends
-          tx <- Person.name.Friends.*(Person.name) insert List(
+          List(ann, ben, joe, liz, tom, ulf) <- Person.name.Friends.*(Person.name) insert List(
             ("Ann", List("Ben", "Joe", "Liz", "Tom", "Ulf"))
-          )
-          List(ann, ben, joe, liz, tom, ulf) = tx.eids
+          ) map(_.eids)
 
           // Friendships have been inserted in both directions
           _ <- friendsOf("Ann").get.map(_.sorted ==> List("Ben", "Joe", "Liz", "Tom", "Ulf"))
@@ -280,11 +273,8 @@ object ManySelf extends AsyncTestSuite {
 
       "replace 1" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Friends.*(Person.name).insert("Ann", List("Ben", "Joe"))
-          List(ann, ben, joe) = tx1.eids
-
-          tx2 <- Person.name("Tim").save
-          tim = tx2.eid
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name).insert("Ann", List("Ben", "Joe")).map(_.eids)
+          tim <- Person.name("Tim").save.map(_.eid)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -304,11 +294,8 @@ object ManySelf extends AsyncTestSuite {
 
       "replace multiple" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Friends.*(Person.name).insert("Ann", List("Ben", "Joe"))
-          List(ann, ben, joe) = tx1.eids
-
-          tx2 <- Person.name.insert("Tim", "Tom")
-          List(tim, tom) = tx2.eids
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name).insert("Ann", List("Ben", "Joe")).map(_.eids)
+          List(tim, tom) <- Person.name.insert("Tim", "Tom").map(_.eids)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -331,11 +318,8 @@ object ManySelf extends AsyncTestSuite {
 
       "replace all with 1" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
-          List(ann, ben, joe) = tx1.eids
-
-          tx2 <- Person.name.insert("Liz")
-          liz = tx2.eid
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          liz <- Person.name.insert("Liz").map(_.eid)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -357,11 +341,8 @@ object ManySelf extends AsyncTestSuite {
 
       "replace all with multiple (apply varargs)" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
-          List(ann, ben, joe) = tx1.eids
-
-          tx2 <- Person.name.insert("Liz")
-          liz = tx2.eid
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          liz <- Person.name.insert("Liz").map(_.eid)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -382,11 +363,8 @@ object ManySelf extends AsyncTestSuite {
 
       "replace all with multiple (apply Set)" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
-          List(ann, ben, joe) = tx1.eids
-
-          tx2 <- Person.name.insert("Liz")
-          liz = tx2.eid
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          liz <- Person.name.insert("Liz").map(_.eid)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -407,8 +385,7 @@ object ManySelf extends AsyncTestSuite {
 
       "remove all (apply no values)" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
-          List(ann, ben, joe) = tx1.eids
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -426,8 +403,7 @@ object ManySelf extends AsyncTestSuite {
 
       "remove all (apply empty Set)" - bidirectional { implicit conn =>
         for {
-          tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
-          List(ann, ben, joe) = tx1.eids
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -448,8 +424,7 @@ object ManySelf extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-        tx1 <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe")))
-        List(ann, ben, joe) = tx1.eids
+        List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
 
         _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
         _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
