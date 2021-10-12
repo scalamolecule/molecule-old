@@ -27,15 +27,16 @@ object TestDbAsOf extends AsyncTestSuite {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    "as of now" - core { implicit conn =>
+    "as of now" - core { implicit futConn =>
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e1, e2, e3, counter) <- data
 
         // Live state
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use current state as a test db "branch"
-        _ <- conn.flatMap(_.testDbAsOfNow)
+        _ <- conn.testDbAsOfNow
 
         // Test state is currently same as live state
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
@@ -59,14 +60,15 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 4, 5, 6))
 
         // Live state unchanged
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
 
 
-    "as of: input types" - core { implicit conn =>
+    "as of: input types" - core { implicit futConn =>
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e1, e2, e3, counter) <- data
 
         txR4 <- Ns.int(4).save
@@ -76,37 +78,38 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
 
         // as of tx report
-        _ <- conn.flatMap(_.testDbAsOf(txR1))
+        _ <- conn.testDbAsOf(txR1)
         _ <- Ns.int.get.map(_ ==> List(1))
 
         // as of t
-        _ <- conn.flatMap(_.testDbAsOf(txR2.t))
+        _ <- conn.testDbAsOf(txR2.t)
         _ <- Ns.int.get.map(_ ==> List(1, 2))
 
         // as of tx
-        _ <- conn.flatMap(_.testDbAsOf(txR3.tx))
+        _ <- conn.testDbAsOf(txR3.tx)
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // as of date
-        _ <- conn.flatMap(_.testDbAsOf(txR4.inst))
+        _ <- conn.testDbAsOf(txR4.inst)
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
 
         // Original state unaffected
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
       } yield ()
     }
 
 
-    "as of: operations" - core { implicit conn =>
+    "as of: operations" - core { implicit futConn =>
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e1, e2, e3, counter) <- data
 
         // Live state
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use state as of tx 2 as a test db "branch"
-        _ <- conn.flatMap(_.testDbAsOf(txR2))
+        _ <- conn.testDbAsOf(txR2)
 
         // Test state
         _ <- Ns.int.get.map(_ ==> List(1, 2))
@@ -130,15 +133,16 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6))
 
         // Live state unchanged - and we can continue updating
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
         _ <- Ns.int(7).save
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3, 7))
       } yield ()
     }
 
 
-    "domain: as of now" - core { implicit conn =>
+    "domain: as of now" - core { implicit futConn =>
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e1, e2, e3, counter) <- data
 
         // Live state
@@ -146,7 +150,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use current state as a test db "branch"
-        _ <- conn.flatMap(_.testDbAsOfNow)
+        _ <- conn.testDbAsOfNow
 
         // Test state is same as live state
         // Notice that the test db value propagates to our domain object
@@ -162,7 +166,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(2, 3, 11))
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
 
         // Live state unchanged
         _ <- counter.value.map(_ ==> 1)
@@ -171,8 +175,9 @@ object TestDbAsOf extends AsyncTestSuite {
     }
 
 
-    "domain: as of tx" - core { implicit conn =>
+    "domain: as of tx" - core { implicit futConn =>
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e1, e2, e3, counter) <- data
 
         // Live state
@@ -180,7 +185,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use state as of tx 2 as a test db "branch"
-        _ <- conn.flatMap(_.testDbAsOf(txR2))
+        _ <- conn.testDbAsOf(txR2)
         _ <- Ns.int.get.map(_ ==> List(1, 2))
 
         // Test state is now as of tx1!
@@ -197,7 +202,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(2, 21))
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
 
         // Live state unchanged
         _ <- counter.value.map(_ ==> 1)

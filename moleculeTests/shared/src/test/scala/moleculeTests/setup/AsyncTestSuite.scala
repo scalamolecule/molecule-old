@@ -17,10 +17,10 @@ trait AsyncTestSuite extends TestSuite with CoreData
 
   // Run test suite with Peer connection
   // For tests against durable dbs like MBrainz, a transactor needs to be running. Not necessary for in-mem db tests.
-//    val system: System = SystemPeer // Peer library
+    val system: System = SystemPeer // Peer library
 
   // Run test suite against Client api with local dev-local installation (no running transactor needed)
-  val system: System = SystemDevLocal // Client library
+//  val system: System = SystemDevLocal // Client library
 
   // Since we can't recreate dbs on PeerServer without restarting the Peer Server, we can only
   // test one test at a time so that we avoid asynchronous calls to the same db across tests.

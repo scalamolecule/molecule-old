@@ -22,15 +22,16 @@ object TestDbWith extends AsyncTestSuite {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    "with single tx" - core { implicit conn =>
+    "with single tx" - core { implicit futConn =>
       for {
+        conn <- futConn
         (e1, e2, e3) <- data
 
         // Current live state
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // Use current state with extra save tx as a test db "branch"
-        _ <- conn.flatMap(_.testDbWith(Ns.int(4).getSaveStmts))
+        _ <- conn.testDbWith(Ns.int(4).getSaveStmts)
 
         // Adjusted test state to work on
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
@@ -48,7 +49,7 @@ object TestDbWith extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5))
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
 
         // Current live state is correctly unchanged
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -56,16 +57,17 @@ object TestDbWith extends AsyncTestSuite {
     }
 
 
-    "with multiple txs" - core { implicit conn =>
+    "with multiple txs" - core { implicit futConn =>
       for {
+        conn <- futConn
         (e1, e2, e3) <- data
 
         // Current live state
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
 
-        // Apply a set of transactions to get a
+        // Apply multiple transaction statements to get a
         // test db in a certain state
-        x <- conn.flatMap(_.testDbWith(
+        _ <- conn.testDbWith(
           // --> List(1, 2, 3, 4)
           Ns.int(4).getSaveStmts,
 
@@ -77,7 +79,7 @@ object TestDbWith extends AsyncTestSuite {
 
           // --> List(0, 3, 4, 5, 6)
           e2.getRetractStmts
-        ))
+        )
 
         // Adjusted test state to work on
         _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5, 6))
@@ -104,7 +106,7 @@ object TestDbWith extends AsyncTestSuite {
         // Etc...
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
 
         // Current live state is correctly unchanged
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -112,8 +114,9 @@ object TestDbWith extends AsyncTestSuite {
     }
 
 
-    "with multiple modularized txs" - core { implicit conn =>
+    "with multiple modularized txs" - core { implicit futConn =>
       for {
+        conn <- futConn
         (e1, e2, e3) <- data
 
         // Current live state
@@ -127,12 +130,12 @@ object TestDbWith extends AsyncTestSuite {
         // Apply a set of saved modularized transactions to get a
         // test db in a certain state.
         // Could be combined/ordered flexibly to bring the test db in various states.
-        _ <- conn.flatMap(_.testDbWith(
+        _ <- conn.testDbWith(
           save,
           insert,
           update,
           retract
-        ))
+        )
 
         // Adjusted test state to work on
         _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5, 6))
@@ -156,7 +159,7 @@ object TestDbWith extends AsyncTestSuite {
         // Etc...
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
 
         // Current live state is correctly unchanged
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -166,17 +169,18 @@ object TestDbWith extends AsyncTestSuite {
 
     "Molecules in domain objects" - {
 
-      "with single tx" - core { implicit conn =>
+      "with single tx" - core { implicit futConn =>
         // Some domain object
         val crud = Crud
         for {
+          conn <- futConn
           (e1, e2, e3) <- data
 
           // Current live state
           _ <- crud.read.map(_ ==> List(1, 2, 3))
 
           // Use state with extra save tx as a test db "branch"
-          _ <- conn.flatMap(_.testDbWith(Ns.int(4).getSaveStmts))
+          _ <- conn.testDbWith(Ns.int(4).getSaveStmts)
 
           // Adjusted test state to work on
           _ <- crud.read.map(_ ==> List(1, 2, 3, 4))
@@ -188,7 +192,7 @@ object TestDbWith extends AsyncTestSuite {
           _ <- crud.read.map(_ ==> List(0, 2, 3, 4))
 
           // Discard test db and go back to live db
-          _ <- conn.map(_.useLiveDb())
+          _ = conn.useLiveDb()
 
           // Current live state is correctly unchanged
           _ <- crud.read.map(_ ==> List(1, 2, 3))
@@ -196,10 +200,11 @@ object TestDbWith extends AsyncTestSuite {
       }
 
 
-      "with multiple txs" - core { implicit conn =>
+      "with multiple txs" - core { implicit futConn =>
         // Some domain object
         val crud = Crud
         for {
+          conn <- futConn
           (e1, e2, e3) <- data
 
           // Current live state
@@ -207,7 +212,7 @@ object TestDbWith extends AsyncTestSuite {
 
           // Apply a set of transactions to get a
           // test db in a certain state
-          _ <- conn.flatMap(_.testDbWith(
+          _ <- conn.testDbWith(
             // --> List(1, 2, 3, 4)
             Ns.int(4).getSaveStmts,
 
@@ -219,7 +224,7 @@ object TestDbWith extends AsyncTestSuite {
 
             // --> List(0, 3, 4, 5, 6)
             e2.getRetractStmts
-          ))
+          )
 
           // Adjusted test state to work on
           _ <- crud.read.map(_ ==> List(0, 3, 4, 5, 6))
@@ -252,7 +257,7 @@ object TestDbWith extends AsyncTestSuite {
           // Etc...
 
           // Discard test db and go back to live db
-          _ <- conn.map(_.useLiveDb())
+          _ = conn.useLiveDb()
 
           // Current live state is correctly unchanged
           _ <- crud.read.map(_ ==> List(1, 2, 3))

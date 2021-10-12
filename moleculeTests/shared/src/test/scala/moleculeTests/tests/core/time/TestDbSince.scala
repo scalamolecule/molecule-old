@@ -26,8 +26,9 @@ object TestDbSince extends AsyncTestSuite {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    "since: input types" - core { implicit conn =>
+    "since: input types" - core { implicit futConn =>
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e2, e3) <- data
         // Ensure to match dates beeing at least 1 ms apart
         //    Thread.sleep(1)
@@ -38,37 +39,38 @@ object TestDbSince extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
 
         // since tx report
-        _ <- conn.flatMap(_.testDbSince(txR1))
+        _ <- conn.testDbSince(txR1)
         _ <- Ns.int.get.map(_ ==> List(2, 3, 4, 5))
 
         // since t
-        _ <- conn.map(_.testDbSince(txR2.t))
+        _ <- conn.testDbSince(txR2.t)
         _ <- Ns.int.get.map(_ ==> List(3, 4, 5))
 
         // since tx
-        _ <- conn.map(_.testDbSince(txR3.tx))
+        _ <- conn.testDbSince(txR3.tx)
         _ <- Ns.int.get.map(_ ==> List(4, 5))
 
         // since date
-        _ <- conn.map(_.testDbSince(txR4.inst))
+        _ <- conn.testDbSince(txR4.inst)
         _ <- Ns.int.get.map(_ ==> List(5))
 
         // Live state unaffected
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4, 5))
       } yield ()
     }
 
 
-    "since: operations" - core { implicit conn =>
+    "since: operations" - core { implicit futConn =>
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e2, e3) <- data
 
         // Live state
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
 
         // Use state accumulated since tx1 (exclusive) as a test db "branch"
-        _ <- conn.flatMap(_.testDbSince(txR1))
+        _ <- conn.testDbSince(txR1)
 
         // Test state since tx1 (exclusive)
         _ <- Ns.int.get.map(_.sorted ==> List(2, 3))
@@ -92,23 +94,24 @@ object TestDbSince extends AsyncTestSuite {
         _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6))
 
         // Live state unaffected
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
       } yield ()
     }
 
 
-    "since: testing domain" - core { implicit conn =>
+    "since: testing domain" - core { implicit futConn =>
       // Some domain object
       val crud = Crud
       for {
+        conn <- futConn
         (txR1, txR2, txR3, e2, e3) <- data
 
         // Live state
         _ <- crud.read.map(_ ==> List(1, 2, 3))
 
         // Use state accumulated since tx1 (exclusive) as a test db "branch"
-        _ <- conn.flatMap(_.testDbSince(txR1))
+        _ <- conn.testDbSince(txR1)
 
         // Test state since tx1 (exclusive)
         _ <- crud.read.map(_ ==> List(2, 3))
@@ -133,7 +136,7 @@ object TestDbSince extends AsyncTestSuite {
         _ <- crud.read.map(_ ==> List(2, 6))
 
         // Discard test db and go back to live db
-        _ <- conn.map(_.useLiveDb())
+        _ = conn.useLiveDb()
 
         // Live state unchanged
         _ <- crud.read.map(_ ==> List(1, 2, 3))

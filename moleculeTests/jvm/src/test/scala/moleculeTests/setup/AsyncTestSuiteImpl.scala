@@ -32,23 +32,18 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
         connProxy = DatomicInMemProxy(schema.datomicPeer, schema.attrMap)
       )
 
+      case SystemDevLocal =>
+        // Unique random db names to avoid overlapping asynchronous db calls to same-name dbs
+        val db = UUID.randomUUID().toString
+        Datomic_DevLocal("datomic-samples-temp", datomicHome).recreateDbFrom(
+          schema, db,
+          DatomicDevLocalProxy("datomic-samples-temp", datomicHome, db, schema.datomicPeer, schema.attrMap)
+        )
+
       case SystemPeerServer => CleanPeerServer.getCleanPeerServerConn(
         Datomic_PeerServer("k", "s", "localhost:8998"), db, schema,
         DatomicPeerServerProxy("k", "s", "localhost:8998", db, schema.datomicPeer, schema.attrMap)
       )
-
-      case SystemDevLocal =>
-        // Unique random db names to avoid overlapping asynchronous db calls to same-name dbs
-        val db = UUID.randomUUID().toString
-        Datomic_DevLocal("datomic-samples", datomicHome).recreateDbFrom(
-          schema, db,
-          DatomicDevLocalProxy("datomic-samples", datomicHome, db, schema.datomicPeer, schema.attrMap)
-        )
-
-//        Datomic_DevLocal("datomic-samples", datomicHome).recreateDbFrom(
-//          schema, db,
-//          DatomicDevLocalProxy("datomic-samples", datomicHome, db, schema.datomicPeer, schema.attrMap)
-//        )
     }
   }
 
@@ -88,29 +83,29 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
           DatomicPeerProxy(protocol, dbIdentifier, MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
         )
 
-      case SystemPeerServer =>
-        val dbName = "mbrainz-1968-1973"
-        Datomic_PeerServer("k", "s", "localhost:8998").connect(
-          dbName,
-          DatomicPeerServerProxy("k", "s", "localhost:8998", dbName, MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
-        )
-
       case SystemDevLocal =>
         val dbName = "mbrainz-subset"
         Datomic_DevLocal("datomic-samples", datomicHome).connect(
           dbName,
           DatomicDevLocalProxy("datomic-samples", datomicHome, dbName, MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
         )
+
+      case SystemPeerServer =>
+        val dbName = "mbrainz-1968-1973"
+        Datomic_PeerServer("k", "s", "localhost:8998").connect(
+          dbName,
+          DatomicPeerServerProxy("k", "s", "localhost:8998", dbName, MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
+        )
     }
     for {
       conn <- futConn
-      _ <- Schema.a(":Artist/name").get.collect {
-        case Nil =>
-          // Add uppercase-namespaced attribute names so that we can access the externally
-          // transacted lowercase names with uppercase names of the molecule code.
-          println("Adding uppercase namespace names to MBrainz database..")
-          conn.transact(MBrainzSchemaLowerToUpper.edn)
-      }
+      upperCase <- Schema.a(":Artist/name").get
+      _ <- if (upperCase.isEmpty) {
+        // Add uppercase-namespaced attribute names so that we can access the externally
+        // transacted lowercase names with uppercase names of the molecule code.
+        println("Adding uppercase namespace names to MBrainz database..")
+        conn.transact(MBrainzSchemaLowerToUpper.edn)
+      } else Future.unit
     } yield test(futConn)
   }
 }

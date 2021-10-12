@@ -131,13 +131,8 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Trying to use a non-existing enum not possible
           _ <- Ns(eid).enums.replace("x" -> "enum9").update.recover { case MoleculeException(err, _) =>
-            // On JS platform, attributes and enum values are passed as edn clojure.Keywords (renders without quotes).
-            // On JVM platform, attributes and enum values are passed as Strings in java.util.List (renders with quotes).
-            val enumAttrValue = if (isJsPlatform) ":Ns/enums :Ns.enums/x" else "\":Ns/enums\" \":Ns.enums/x\""
-            err ==>
-//              "java.lang.IllegalArgumentException: " +
-              ":db.error/not-an-entity Unable to resolve entity: " +
-              s":Ns.enums/x in datom [$eid $enumAttrValue]"
+            err ==> ":db.error/not-an-entity Unable to resolve entity: " +
+              s":Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]"
           }
 
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
@@ -154,11 +149,13 @@ object UpdateEnum extends AsyncTestSuite {
           // Can't replace duplicate values
 
           _ = expectCompileError("""Ns(eid).enums.replace("enum7" -> "enum8", "enum8" -> "enum8").update""",
-            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
+            "molecule.core.ops.exception.VerifyRawModelException: " +
+              "Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\nenum8")
 
           _ = expectCompileError("""Ns(eid).enums.replace(Seq("enum7" -> "enum8", "enum8" -> "enum8")).update""",
-            "molecule.core.ops.exception.VerifyRawModelException: Can't replace with duplicate values of attribute `:Ns/enums`:" +
+            "molecule.core.ops.exception.VerifyRawModelException: " +
+              "Can't replace with duplicate values of attribute `:Ns/enums`:" +
               "\nenum8")
         } yield ()
       }
