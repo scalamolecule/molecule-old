@@ -211,8 +211,14 @@ case class Conn_Peer(
       )
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
-      //            debug("t2")
+      debug("t2")
       futScalaStmts.map { scalaStmts =>
+
+
+        javaStmts.forEach(stmt => println(stmt))
+        println(scalaStmts)
+
+
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
         // Continue with updated in-memory db
@@ -254,13 +260,6 @@ case class Conn_Peer(
         updateTestDbView(None, 0)
         _testDb = None
       }
-
-      //      println("================")
-      //      val list = javaStmts.asScala.toList.take(15)
-      //      println("A " + list.last)
-      //      println("A " + list.last.getClass)
-      //      println(list.mkString("\n"))
-
       // Live transaction
       val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
       val p                                                  = Promise[util.Map[_, _]]()

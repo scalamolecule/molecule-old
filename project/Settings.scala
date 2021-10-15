@@ -63,7 +63,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       libraryDependencies ++= Seq(
 
         "org.specs2" %% "specs2-core" % "4.10.6",
-//        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
+        //        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.0",
         "com.typesafe.akka" %% "akka-stream" % "2.6.16",
         "com.typesafe.akka" %% "akka-serialization-jackson" % "2.6.16",
@@ -108,14 +108,14 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     unmanagedSources / excludeFilter := {
       val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
       val allowed     = Seq(
-                sharedTests + "/core/attr",
+        //                sharedTests + "/core/attr",
         //        sharedTests + "/core/attrMap",
         //        sharedTests + "/core/bidirectionals",
         //        sharedTests + "/core/composite",
         //        sharedTests + "/core/crud",
         //        sharedTests + "/core/equality",
         //        sharedTests + "/core/expression",
-        //        sharedTests + "/core/generic",
+        sharedTests + "/core/generic",
         //        sharedTests + "/core/input1",
         //        sharedTests + "/core/input2",
         //        sharedTests + "/core/input3",
@@ -125,7 +125,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         //        sharedTests + "/core/obj",
         //        sharedTests + "/core/runtime",
         //        sharedTests + "/core/schemaDef",
-        //        sharedTests + "/core/time",
+        //                sharedTests + "/core/time",
         //        sharedTests + "/core/transaction",
         //        sharedTests + "/core/txMetaData",
         //        sharedTests + "/examples/datomic/dayOfDatomic",

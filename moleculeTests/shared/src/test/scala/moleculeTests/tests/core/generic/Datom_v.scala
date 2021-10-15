@@ -1,14 +1,9 @@
 package moleculeTests.tests.core.generic
 
-import molecule.core.exceptions.MoleculeException
-import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out12._
-import molecule.datomic.base.facade.Conn
-import molecule.datomic.base.util.{SystemDevLocal, SystemPeerServer}
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** Generic Datom value `v` resolution
@@ -24,8 +19,8 @@ object Datom_v extends AsyncTestSuite {
 
     "Card 1" - core { implicit conn =>
       for {
-        e1 <- Ns.str.int.long.double.bool.date.uri.uuid.bigInt.bigDec.enum.ref1.insert(
-          str1, int1, long1, double1, bool1, date1, uri1, uuid1, bigInt1, bigDec1, enum1, r1
+        e1 <- Ns.str.int.long.double.bool.date.uri.uuid.bigInt.bigDec.ref1.insert(
+          str1, int1, long1, double1, bool1, date1, uri1, uuid1, bigInt1, bigDec1, r1
         ).map(_.eid)
 
         e2 <- Ns.double.bigDec.insert(double11, bigDec11).map(_.eid)
@@ -36,13 +31,15 @@ object Datom_v extends AsyncTestSuite {
           (":Ns/bool", bool1),
           (":Ns/date", date1),
           (":Ns/double", double1),
-          (":Ns/enum", 17592186045418L), // "enum1" entity id
           (":Ns/int", int1),
           (":Ns/long", long1),
           (":Ns/ref1", r1),
           (":Ns/str", str1),
           (":Ns/uri", uri1),
           (":Ns/uuid", uuid1),
+
+          // Generic enum value would be the internal entity id of the enum ident which we don't have much use for
+          // (":Ns/enum", 17592186045418L),
         ))
 
         _ <- Ns(e2).a.v.get.map(_.sortBy(_._1) ==> List(
@@ -137,18 +134,15 @@ object Datom_v extends AsyncTestSuite {
         _ <- Ns(e1).a.v(uri1).get.map(_ ==> List((":Ns/uri", uri1)))
 
         _ <- Ns(e1).a.v(uuid1).get.map(_ ==> List((":Ns/uuid", uuid1)))
-
-        // "enum1" entity id
-        _ <- Ns(e1).a.v(17592186045418L).get.map(_ ==> List((":Ns/enum", 17592186045418L)))
       } yield ()
     }
 
 
     "Card 2" - core { implicit conn =>
       for {
-        e <- Ns.strs.ints.longs.doubles.bools.dates.uris.uuids.bigInts.bigDecs.enums.refs1.insert(
+        e <- Ns.strs.ints.longs.doubles.bools.dates.uris.uuids.bigInts.bigDecs.refs1.insert(
           strs2, ints2, longs2, Set(double1, double11), bools2, dates2, uris2, uuids2,
-          bigInts2, Set(bigDec1, bigDec11), enums2, rs2
+          bigInts2, Set(bigDec1, bigDec11), rs2
         ).map(_.eid)
 
         _ <- Ns(e).a.v.get.map(_.sortBy(res => (res._1, res._2.toString)) ==> List(
@@ -162,8 +156,6 @@ object Datom_v extends AsyncTestSuite {
           (":Ns/dates", date2),
           (":Ns/doubles", double1),
           (":Ns/doubles", double11),
-          (":Ns/enums", 17592186045428L),
-          (":Ns/enums", 17592186045429L),
           (":Ns/ints", int1),
           (":Ns/ints", int2),
           (":Ns/longs", long1),
@@ -262,10 +254,6 @@ object Datom_v extends AsyncTestSuite {
         _ <- Ns(e).a.v(uri1).get.map(_ ==> List((":Ns/uris", uri1)))
 
         _ <- Ns(e).a.v(uuid1).get.map(_ ==> List((":Ns/uuids", uuid1)))
-
-        // Entity id for "enum1" ident
-        _ <- Ns(e).a.v(17592186045428L).get.map(_ ==> List((":Ns/enums", 17592186045428L)))
-
       } yield ()
     }
 

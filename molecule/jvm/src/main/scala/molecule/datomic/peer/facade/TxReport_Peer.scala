@@ -21,7 +21,8 @@ case class TxReport_Peer(
 
   lazy val eids: List[Long] = {
     var ids = List.empty[Long]
-    val tx = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].get(0).asInstanceOf[Datom].tx().asInstanceOf[Long]
+    val tx = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]]
+      .get(0).asInstanceOf[Datom].tx().asInstanceOf[Long]
     rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach { tempId =>
       val eid = tempId.asInstanceOf[Long]
       if (eid != tx) {

@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 // Example domain class getting and manipulating the db with molecules
-// Molecules need an implicit conn object at runtime
+// Molecules need an implicit Future[conn] at runtime
 case class Counter(eid: Long) {
 
   // Live value

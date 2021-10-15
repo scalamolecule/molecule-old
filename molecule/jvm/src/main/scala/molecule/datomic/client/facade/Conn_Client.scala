@@ -238,31 +238,6 @@ case class Conn_Client(
 
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
-  //  def transactAsyncRawOLD(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
-  //                      (implicit ec: ExecutionContext): Future[TxReport] = try {
-  //    Future {
-  //      if (_adhocDb.isDefined) {
-  //        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
-  //
-  //      } else if (_testDb.isDefined) {
-  //        // In-memory "transaction"
-  //        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
-  //
-  //        // Continue with updated in-memory db
-  //        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-  //        //      val dbAfter = txReport.dbAfter
-  //        val dbAfter = txReport.dbAfter.asOf(txReport.t)
-  //        _testDb = Some(dbAfter)
-  //        txReport
-  //
-  //      } else {
-  //        // Live transaction (simply wrapping in future instead using datomic async api)
-  //        TxReport_Client(clientConn.transact(javaStmts))
-  //      }
-  //    }
-  //  } catch {
-  //    case NonFatal(exc) => Future.failed(exc)
-  //  }
 
   def transactRaw(
     javaStmts: jList[_],
@@ -279,13 +254,15 @@ case class Conn_Client(
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
       //      debug("t2")
       futScalaStmts.map { scalaStmts =>
-        //        // In-memory "transaction"
-        //        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
-        //        // Continue with updated in-memory db
-        //        val dbAfter  = txReport.dbAfter.asOf(txReport.t)
-        //        _testDb = Some(dbAfter)
-
-        val txReport = TxReport_Client(_testDb.get.`with`(_testDb.get, javaStmts), scalaStmts)
+        // In-memory "transaction"
+        val withDb = if (withDbInUse) {
+          _testDb.get.`with`(_testDb.get, javaStmts)
+        } else {
+          _testDb.get.`with`(clientConn.withDb, javaStmts)
+        }
+        // Special withDb now in use (important for consequent transaction calls)
+        withDbInUse = true
+        val txReport = TxReport_Client(withDb, scalaStmts)
         _testDb = Some(txReport.dbAfter)
         txReport
       }
@@ -295,11 +272,16 @@ case class Conn_Client(
       //      debug("t3")
       def transactWith: Future[TxReport_Client] = futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
-        val txReport = TxReport_Client(_testDb.getOrElse(clientConn.db).`with`(clientConn.withDb, javaStmts), scalaStmts)
-
-        // Continue with updated in-memory db
-        val dbAfter = txReport.dbAfter.asOf(txReport.t)
-        _testDb = Some(dbAfter)
+        //        val withDb   = _testDb.getOrElse(clientConn.db).`with`(clientConn.withDb, javaStmts)
+        val withDb = if (withDbInUse) {
+          _testDb.get.`with`(_testDb.get, javaStmts)
+        } else {
+          _testDb.get.`with`(clientConn.withDb, javaStmts)
+        }
+        // Special withDb now in use (important for consequent transaction calls)
+        withDbInUse = true
+        val txReport = TxReport_Client(withDb, scalaStmts)
+        _testDb = Some(txReport.dbAfter)
         txReport
       }
 
@@ -313,31 +295,25 @@ case class Conn_Client(
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
-          _testDb = Some(txReport.dbAfter.asOf(txReport.t))
+          _testDb = Some(txReport.dbAfter)
           transactWith
       }
       res
 
     } else {
+      //      debug("t4")
       if (connProxy.testDbStatus == -1) {
         updateTestDbView(None, 0)
         _testDb = None
       }
-
+      // Live transaction
       futScalaStmts.flatMap { scalaStmts =>
-        // Live transaction
-        //      println("================")
-        //      val list = javaStmts.asScala.toList.take(15)
-        //      println("A " + list.last)
-        //      println("A " + list.last.getClass)
-        //      list.foreach(stmt => println(stmt))
-
         val futRawTxReport: Future[datomicScala.client.api.sync.TxReport] = try {
           val rawTxReport = clientConn.transact(javaStmts)
           Future(rawTxReport)
         } catch {
           case e: java.util.concurrent.ExecutionException =>
-            println("---- Conn_Peer.transactRaw ExecutionException: -------------\n")
+            println("---- Conn_Client.transactRaw ExecutionException: -------------\n")
             println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
             // White list of exceptions that can be pickled by BooPickle
             Future.failed(
@@ -349,7 +325,7 @@ case class Conn_Client(
             )
 
           case NonFatal(e) =>
-            println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n")
+            println("---- Conn_Client.transactRaw NonFatal exc: -------------\n")
             println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
             Future.failed(e)
         }
