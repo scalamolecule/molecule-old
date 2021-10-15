@@ -11,6 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object TestDbAsOf extends AsyncTestSuite {
 
+
   def data(implicit conn: Future[Conn], ec: ExecutionContext) = {
     for {
       txR1 <- Ns.int(1).save

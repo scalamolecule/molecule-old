@@ -53,48 +53,6 @@ case class Conn_Client(
   }
 
 
-  // Reset datoms of in-mem with-db from next timePoint after as-of t until end
-  override def cleanFrom(nextTimePoint: Any)
-                        (implicit ec: ExecutionContext): Future[Unit] = {
-    for {
-      txInstants <- db.pull("[:db/id]", ":db/txInstant")
-      txInstId = txInstants.get(read(":db/id"))
-    } yield {
-      blocking {
-        _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
-        val txs            = clientConn.txRangeArray(Some(nextTimePoint))
-        val (retract, add) = (read(":db/retract"), read(":db/add"))
-        def op(datom: Datom) = if (datom.added) retract else add
-        var txStmts = new util.ArrayList[jList[_]]()
-        val size    = txs.length
-        var i       = size - 1
-        // Reverse datoms backwards from last to timePoint right after as-of t
-        while (i >= 0) {
-          val txDatoms = txs(i)._2
-          txStmts = new util.ArrayList[jList[_]](txDatoms.length)
-          txDatoms.foreach { datom =>
-            // Don't reverse timestamps
-            if (datom.a != txInstId) {
-              txStmts.add(
-                list(
-                  op(datom),
-                  datom.e.asInstanceOf[Object],
-                  datom.a.asInstanceOf[Object],
-                  datom.v.asInstanceOf[Object]
-                )
-              )
-            }
-          }
-          // Update in-memory with-db with datoms of this tx
-          _testDb = Some(_testDb.get.`with`(_testDb.get, txStmts).dbAfter)
-          i -= 1
-        }
-        withDbInUse = true
-      }
-    }
-  }
-
-
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(clientConn.db)
   }
@@ -159,14 +117,105 @@ case class Conn_Client(
         baseDb.`with`(clientConn.withDb, txData).dbAfter
     }
     _adhocDbView = None
+    connProxy = defaultConnProxy
     adhocDb
   }
 
 
+  //  def db0: DatomicDb = {
+  //    if (_adhocDbView.isDefined) {
+  //      // Adhoc db
+  //      DatomicDb_Client(getAdhocDb)
+  //
+  //    } else if (_testDb.isDefined) {
+  //      // Test db
+  //      if (sinceT.isDefined) {
+  //        DatomicDb_Client(_testDb.get.since(sinceT.get))
+  //      } else if (sinceD.isDefined) {
+  //        DatomicDb_Client(_testDb.get.since(sinceD.get))
+  //      } else {
+  //        DatomicDb_Client(_testDb.get)
+  //      }
+  //
+  //    } else {
+  //      // Live db
+  //      DatomicDb_Client(clientConn.db)
+  //    }
+  //  }
+
+
+  // Reset datoms of in-mem with-db from next timePoint after as-of t until end
+  override def cleanFrom(nextTimePoint: Any)
+                        (implicit ec: ExecutionContext): Future[Unit] = {
+    for {
+      txInstants <- db.pull("[:db/id]", ":db/txInstant")
+      txInstId = txInstants.get(read(":db/id"))
+    } yield {
+      try {
+        _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+        val txs            = clientConn.txRangeArray(Some(nextTimePoint))
+        val (retract, add) = (read(":db/retract"), read(":db/add"))
+        def op(datom: Datom) = if (datom.added) retract else add
+        var txStmts = new util.ArrayList[jList[_]]()
+        val size    = txs.length
+        var i       = size - 1
+
+        // Reverse datoms backwards from last to timePoint right after as-of t
+        while (i >= 0) {
+          val txDatoms = txs(i)._2
+          txStmts = new util.ArrayList[jList[_]](txDatoms.length)
+          txDatoms.foreach { datom =>
+            // Don't reverse timestamps
+            if (datom.a != txInstId) {
+              txStmts.add(
+                list(
+                  op(datom),
+                  datom.e.asInstanceOf[Object],
+                  datom.a.asInstanceOf[Object],
+                  datom.v.asInstanceOf[Object]
+                )
+              )
+            }
+          }
+          // Update in-memory with-db with datoms of this tx
+          _testDb = Some(_testDb.get.`with`(_testDb.get, txStmts).dbAfter)
+          i -= 1
+        }
+        withDbInUse = true
+      } catch {
+        case NonFatal(ex) => Future.failed(ex)
+      }
+    }
+  }
+
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
+      //      debug("d1", clientConn.db.toString)
       // Adhoc db
       DatomicDb_Client(getAdhocDb)
+
+    } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
+      val tempDb = connProxy.testDbView.get match {
+        case AsOf(TxLong(0))          => Some(clientConn.db) // db as of now
+        case AsOf(TxLong(t))          => Some(clientConn.db.asOf(t))
+        case AsOf(TxDate(d))          => Some(clientConn.db.asOf(d))
+        case Since(TxLong(t))         => Some(clientConn.db.since(t))
+        case Since(TxDate(d))         => Some(clientConn.db.since(d))
+        case History                  => Some(clientConn.db.history)
+        case With(stmtsEdn, uriAttrs) =>
+          val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+          val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
+          Some(txReport.dbAfter.asOf(txReport.t))
+      }
+      //      debug("d2", tempDb.toString)
+      DatomicDb_Client(tempDb.get)
+
+
+    } else if (connProxy.testDbStatus == -1) {
+      //      debug("d3", clientConn.db.toString)
+      _testDb = None
+      updateTestDbView(None, 0)
+      DatomicDb_Client(clientConn.db)
 
     } else if (_testDb.isDefined) {
       // Test db
@@ -175,47 +224,141 @@ case class Conn_Client(
       } else if (sinceD.isDefined) {
         DatomicDb_Client(_testDb.get.since(sinceD.get))
       } else {
+        //        debug("d4", _testDb.toString)
         DatomicDb_Client(_testDb.get)
       }
 
     } else {
+      //      debug("d5", clientConn.db.toString)
       // Live db
       DatomicDb_Client(clientConn.db)
     }
   }
 
-  def entity(id: Any): DatomicEntity =
-    db.entity(this, id)
 
+  def entity(id: Any): DatomicEntity = db.entity(this, id)
+
+  //  def transactAsyncRawOLD(javaStmts: jList[_], scalaStmts: Seq[Statement] = Nil)
+  //                      (implicit ec: ExecutionContext): Future[TxReport] = try {
+  //    Future {
+  //      if (_adhocDb.isDefined) {
+  //        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
+  //
+  //      } else if (_testDb.isDefined) {
+  //        // In-memory "transaction"
+  //        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
+  //
+  //        // Continue with updated in-memory db
+  //        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
+  //        //      val dbAfter = txReport.dbAfter
+  //        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+  //        _testDb = Some(dbAfter)
+  //        txReport
+  //
+  //      } else {
+  //        // Live transaction (simply wrapping in future instead using datomic async api)
+  //        TxReport_Client(clientConn.transact(javaStmts))
+  //      }
+  //    }
+  //  } catch {
+  //    case NonFatal(exc) => Future.failed(exc)
+  //  }
 
   def transactRaw(
     javaStmts: jList[_],
     futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
-  )(implicit ec: ExecutionContext): Future[TxReport] = futScalaStmts.map { scalaStmts =>
+  )(implicit ec: ExecutionContext): Future[TxReport] = try {
+    def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
+
     if (_adhocDbView.isDefined) {
-      TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
+      //      debug("t1")
+      futScalaStmts.map { scalaStmts =>
+        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
+      }
 
-    } else if (_testDb.isDefined) {
-      // In-memory "transaction"
-      val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
+    } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
+      //      debug("t2")
+      futScalaStmts.map { scalaStmts =>
+        //        // In-memory "transaction"
+        //        val txReport = TxReport_Client(_testDb.get.`with`(clientConn.withDb, javaStmts), scalaStmts)
+        //        // Continue with updated in-memory db
+        //        val dbAfter  = txReport.dbAfter.asOf(txReport.t)
+        //        _testDb = Some(dbAfter)
 
-      // Continue with updated in-memory db
-      // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-      //      val dbAfter = txReport.dbAfter
-      val dbAfter = txReport.dbAfter.asOf(txReport.t)
-      _testDb = Some(dbAfter)
-      txReport
+        val txReport = TxReport_Client(_testDb.get.`with`(_testDb.get, javaStmts), scalaStmts)
+        _testDb = Some(txReport.dbAfter)
+        txReport
+      }
+
+
+    } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
+      //      debug("t3")
+      def transactWith: Future[TxReport_Client] = futScalaStmts.map { scalaStmts =>
+        // In-memory "transaction"
+        val txReport = TxReport_Client(_testDb.getOrElse(clientConn.db).`with`(clientConn.withDb, javaStmts), scalaStmts)
+
+        // Continue with updated in-memory db
+        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+        _testDb = Some(dbAfter)
+        txReport
+      }
+
+      val res = connProxy.testDbView.get match {
+        case AsOf(TxLong(0))          => transactWith
+        case AsOf(TxLong(t))          => cleanFrom(t + 1).flatMap(_ => transactWith)
+        case AsOf(TxDate(d))          => cleanFrom(nextDateMs(d)).flatMap(_ => transactWith)
+        case Since(TxLong(t))         => _testDb = Some(clientConn.db.since(t)); transactWith
+        case Since(TxDate(d))         => _testDb = Some(clientConn.db.since(d)); transactWith
+        case History                  => _testDb = Some(clientConn.db.history); transactWith
+        case With(stmtsEdn, uriAttrs) =>
+          val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+          val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
+          _testDb = Some(txReport.dbAfter.asOf(txReport.t))
+          transactWith
+      }
+      res
 
     } else {
-      //      println("================")
-      //      val list = javaStmts.asScala.toList.take(15)
-      //      println("A " + list.last)
-      //      println("A " + list.last.getClass)
-      //      list.foreach(stmt => println(stmt))
+      if (connProxy.testDbStatus == -1) {
+        updateTestDbView(None, 0)
+        _testDb = None
+      }
 
-      // Live transaction
-      TxReport_Client(clientConn.transact(javaStmts), scalaStmts)
+      futScalaStmts.flatMap { scalaStmts =>
+        // Live transaction
+        //      println("================")
+        //      val list = javaStmts.asScala.toList.take(15)
+        //      println("A " + list.last)
+        //      println("A " + list.last.getClass)
+        //      list.foreach(stmt => println(stmt))
+
+        val futRawTxReport: Future[datomicScala.client.api.sync.TxReport] = try {
+          val rawTxReport = clientConn.transact(javaStmts)
+          Future(rawTxReport)
+        } catch {
+          case e: java.util.concurrent.ExecutionException =>
+            println("---- Conn_Peer.transactRaw ExecutionException: -------------\n")
+            println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+            // White list of exceptions that can be pickled by BooPickle
+            Future.failed(
+              e.getCause match {
+                case e: TxFnException     => e
+                case e: MoleculeException => e
+                case e                    => MoleculeException(e.getMessage.trim)
+              }
+            )
+
+          case NonFatal(e) =>
+            println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n")
+            println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+            Future.failed(e)
+        }
+
+        futRawTxReport.map(rawTxReport => TxReport_Client(rawTxReport, scalaStmts))
+      }
     }
+  } catch {
+    case NonFatal(ex) => Future.failed(ex)
   }
 
 
@@ -571,28 +714,17 @@ case class Conn_Client(
     model: Model,
     query: Query,
     _db: Option[DatomicDb]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
-      Future {
-        val p               = Query2String(query).p
-        val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-        val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-        //        val inputsEvaluatedx = inputsEvaluated0.map(v => read(v.toString))
-
-        //    println(model)
-        //    println(query)
-        //        println(inputsEvaluated)
-        //        println(inputsEvaluated.head)
-        //        println(inputsEvaluated.head.getClass)
-
-        val allInputs = rules ++ inputsEvaluated
-        val adhocDb   = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
-
-        clientDatomic.q(query.toMap, adhocDb, allInputs: _*)
-      }
+      val p               = Query2String(query).p
+      val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+      val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
+      val allInputs       = rules ++ inputsEvaluated
+      val clientDb        = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
+      val result          = clientDatomic.q(query.toMap, clientDb, allInputs: _*)
+      Future(result)
     } catch {
-      case NonFatal(exc) =>
-        Future.failed(QueryException(exc, model, query))
+      case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
     }
-  }
+  }.flatten
 }

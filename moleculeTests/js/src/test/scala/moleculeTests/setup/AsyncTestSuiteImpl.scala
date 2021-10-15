@@ -21,29 +21,32 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
   val isJsPlatform_ = true
 
-  def inMem(schema: SchemaTransaction): Future[Conn_Js] = Future(Conn_Js(
+  def inMem[T](
+    test: Future[Conn] => T,
+    schema: SchemaTransaction
+  ): T = test(Future(Conn_Js(
     DatomicInMemProxy(
       schema.datomicPeer,
       schema.attrMap
     )
-  ))
+  )))
 
-  def coreImpl[T](test: Future[Conn] => T): T = test(inMem(CoreTestSchema))
-  def corePeerOnlyImpl[T](test: Future[Conn] => T): T = test(inMem(CoreTestSchema)) // Not used on js platform anyway
-  def bidirectionalImpl[T](test: Future[Conn] => T): T = test(inMem(BidirectionalSchema))
-  def partitionImpl[T](test: Future[Conn] => T): T = test(inMem(PartitionTestSchema))
-  def nestedImpl[T](test: Future[Conn] => T): T = test(inMem(NestedSchema))
-  def selfJoinImpl[T](test: Future[Conn] => T): T = test(inMem(SelfJoinSchema))
-  def aggregateImpl[T](test: Future[Conn] => T): T = test(inMem(AggregatesSchema))
-  def socialNewsImpl[T](test: Future[Conn] => T): T = test(inMem(SocialNewsSchema))
-  def graphImpl[T](test: Future[Conn] => T): T = test(inMem(GraphSchema))
-  def graph2Impl[T](test: Future[Conn] => T): T = test(inMem(Graph2Schema))
-  def modernGraph1Impl[T](test: Future[Conn] => T): T = test(inMem(ModernGraph1Schema))
-  def modernGraph2Impl[T](test: Future[Conn] => T): T = test(inMem(ModernGraph2Schema))
-  def productsImpl[T](test: Future[Conn] => T): T = test(inMem(ProductsOrderSchema))
-  def seattleImpl[T](test: Future[Conn] => T): T = test(inMem(SeattleSchema))
+  def coreImpl[T](test: Future[Conn] => T): T = inMem(test, CoreTestSchema)
+  def corePeerOnlyImpl[T](test: Future[Conn] => T): T = ().asInstanceOf[T] // Not used on js platform anyway
+  def bidirectionalImpl[T](test: Future[Conn] => T): T = inMem(test, BidirectionalSchema)
+  def partitionImpl[T](test: Future[Conn] => T): T = inMem(test, PartitionTestSchema)
+  def nestedImpl[T](test: Future[Conn] => T): T = inMem(test, NestedSchema)
+  def selfJoinImpl[T](test: Future[Conn] => T): T = inMem(test, SelfJoinSchema)
+  def aggregateImpl[T](test: Future[Conn] => T): T = inMem(test, AggregatesSchema)
+  def socialNewsImpl[T](test: Future[Conn] => T): T = inMem(test, SocialNewsSchema)
+  def graphImpl[T](test: Future[Conn] => T): T = inMem(test, GraphSchema)
+  def graph2Impl[T](test: Future[Conn] => T): T = inMem(test, Graph2Schema)
+  def modernGraph1Impl[T](test: Future[Conn] => T): T = inMem(test, ModernGraph1Schema)
+  def modernGraph2Impl[T](test: Future[Conn] => T): T = inMem(test, ModernGraph2Schema)
+  def productsImpl[T](test: Future[Conn] => T): T = inMem(test, ProductsOrderSchema)
+  def seattleImpl[T](test: Future[Conn] => T): T = inMem(test, SeattleSchema)
 
-  def mbrainzImpl[T](test: Future[Conn] => T): Future[T] = Future {
+  def mbrainzImpl[T](test: Future[Conn] => Future[T]): Future[T] = {
     //    val dbName = if (system == SystemDevLocal)
     //      "mbrainz-subset" // dev-local
     //    else

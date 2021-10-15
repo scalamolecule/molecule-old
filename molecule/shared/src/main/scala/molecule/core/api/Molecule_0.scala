@@ -205,7 +205,7 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
           saveStmts <- conn.model2stmts(_model).saveStmts
           result <- {
             //            println(_model)
-            //            saveStmts foreach println
+//            saveStmts foreach println
             conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
           }
         } yield result

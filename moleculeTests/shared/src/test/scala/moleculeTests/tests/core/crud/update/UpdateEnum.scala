@@ -130,9 +130,15 @@ object UpdateEnum extends AsyncTestSuite {
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
 
           // Trying to use a non-existing enum not possible
-          _ <- Ns(eid).enums.replace("x" -> "enum9").update.recover { case MoleculeException(err, _) =>
-            err ==> ":db.error/not-an-entity Unable to resolve entity: " +
-              s":Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]"
+          _ <- Ns(eid).enums.replace("x" -> "enum9").update.recover {
+            // Peer
+            case MoleculeException(err, _) =>
+              err ==> s":db.error/not-an-entity Unable to resolve entity: " +
+                s":Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]"
+
+            // Client
+            case datomicClient.anomaly.Incorrect(err) =>
+              err ==> s"Unable to resolve entity: :Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]"
           }
 
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))

@@ -1,11 +1,11 @@
-package moleculeTests.tests.examples.datomic.dayOfDatomic
+package moleculeTests.tests.examples.datomic.mbrainz
 
 import java.util.UUID
 import molecule.datomic.api.out8._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer}
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

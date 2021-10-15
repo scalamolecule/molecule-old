@@ -13,20 +13,12 @@ trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific implementations (JS/JVM)
   with AsyncTestSuiteImpl {
 
-  // Uncomment system to be tested:
-
-  // Run test suite with Peer connection
-  // For tests against durable dbs like MBrainz, a transactor needs to be running. Not necessary for in-mem db tests.
-    val system: System = SystemPeer // Peer library
-
-  // Run test suite against Client api with local dev-local installation (no running transactor needed)
-//  val system: System = SystemDevLocal // Client library
-
-  // Since we can't recreate dbs on PeerServer without restarting the Peer Server, we can only
-  // test one test at a time so that we avoid asynchronous calls to the same db across tests.
-  // So using SystemPeerServer is
-  // val system: System = SystemPeerServer
-
+  //  val system      : System  = SystemSelection.system
+  val system      : System  = {
+//        SystemPeer
+    SystemDevLocal
+    //    SystemPeerServer
+  }
   val isJsPlatform: Boolean = isJsPlatform_
 
   val platformSystem = {
@@ -36,7 +28,6 @@ trait AsyncTestSuite extends TestSuite with CoreData
       case SystemPeerServer => " PeerServer"
     })
   }
-
 
   override def utestFormatter: Formatter = new Formatter {
     override def formatIcon(success: Boolean): ufansi.Str = {
@@ -58,9 +49,9 @@ trait AsyncTestSuite extends TestSuite with CoreData
   def modernGraph2[T](test: Future[Conn] => T): T = modernGraph2Impl(test)
   def products[T](test: Future[Conn] => T): T = productsImpl(test)
   def seattle[T](test: Future[Conn] => T): T = seattleImpl(test)
-  def mbrainz[T](test: Future[Conn] => T): Future[T] = mbrainzImpl(test)
+  def mbrainz[T](test: Future[Conn] => Future[T]): Future[T] = mbrainzImpl(test)
 
 
-  // create delays between transactions involving Dates to allow dates to be separate by at least 1 ms
+  // At least 1 ms delay between transactions involving Dates to avoid overlapping
   def delay = (1 to 10000).sum
 }

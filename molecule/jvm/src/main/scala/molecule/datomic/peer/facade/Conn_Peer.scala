@@ -60,39 +60,6 @@ case class Conn_Peer(
     _testDb = Some(db.asInstanceOf[DatomicDb_Peer].peerDb)
   }
 
-  // Reset datoms of in-mem with-db from next timePoint after as-of t until end.
-  // Otherwise, transactions on the _testDb will include datoms after the time point.
-  override def cleanFrom(nextTimePoint: Any)
-                        (implicit ec: ExecutionContext): Future[Unit] = try {
-    def op(datom: Datom): String = if (datom.added) ":db/retract" else ":db/add"
-    for {
-      txInstants <- DatomicDb_Peer(_testDb.getOrElse(peerConn.db)).pull("[:db/id]", ":db/txInstant")
-      txInstId = txInstants.get(read(":db/id"))
-    } yield {
-      blocking {
-        _testDb = Some(peerConn.db)
-        val txs     = peerConn.log.txRange(nextTimePoint, null).iterator()
-        var txStmts = new util.ArrayList[jList[_]]()
-        while (txs.hasNext) {
-          val txDatoms = txs.next().get(datomic.Log.DATA).asInstanceOf[jList[Datom]]
-          txStmts = new util.ArrayList[jList[_]](txDatoms.size())
-          txDatoms.forEach { datom =>
-            // Don't reverse timestamps
-            if (datom.a != txInstId) {
-              //              println(s"${datom.e}   ${datom.a}   ${datom.v}   ${datom.added()}")
-              txStmts.add(list(op(datom), datom.e, datom.a, datom.v))
-            }
-          }
-          // Update in-memory with-db with datoms of this tx
-          val txReport = TxReport_Peer(_testDb.get.`with`(txStmts))
-          _testDb = Some(txReport.dbAfter.asOf(txReport.t))
-        }
-      }
-    }
-  } catch {
-    case NonFatal(ex) => Future.failed(ex)
-  }
-
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(peerConn.db)
   }
@@ -152,6 +119,41 @@ case class Conn_Peer(
     }
   }
 
+  // Reset datoms of in-mem with-db from next timePoint after as-of t until end.
+  // Otherwise, transactions on the _testDb will include datoms after the time point.
+  override def cleanFrom(nextTimePoint: Any)
+                        (implicit ec: ExecutionContext): Future[Unit] = {
+    def op(datom: Datom): String = if (datom.added) ":db/retract" else ":db/add"
+    for {
+      //      txInstants <- DatomicDb_Peer(_testDb.getOrElse(peerConn.db)).pull("[:db/id]", ":db/txInstant")
+      txInstants <- db.pull("[:db/id]", ":db/txInstant")
+      txInstId = txInstants.get(read(":db/id"))
+    } yield {
+      try {
+        _testDb = Some(peerConn.db)
+        val txs     = peerConn.log.txRange(nextTimePoint, null).iterator()
+        var txStmts = new util.ArrayList[jList[_]]()
+        while (txs.hasNext) {
+          val txDatoms = txs.next().get(datomic.Log.DATA).asInstanceOf[jList[Datom]]
+          txStmts = new util.ArrayList[jList[_]](txDatoms.size())
+          txDatoms.forEach { datom =>
+            // Don't reverse timestamps
+            if (datom.a != txInstId) {
+              //              println(s"${datom.e}   ${datom.a}   ${datom.v}   ${datom.added()}")
+              txStmts.add(list(op(datom), datom.e, datom.a, datom.v))
+            }
+          }
+
+          // Update in-memory with-db with datoms of this tx
+          val txReport = TxReport_Peer(_testDb.get.`with`(txStmts))
+          _testDb = Some(txReport.dbAfter.asOf(txReport.t))
+        }
+      } catch {
+        case NonFatal(ex) => Future.failed(ex)
+      }
+    }
+  }
+
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
       //      debug("d1", peerConn.db.toString)
@@ -181,7 +183,7 @@ case class Conn_Peer(
       DatomicDb_Peer(peerConn.db)
 
     } else if (_testDb.isDefined) {
-      //      debug("d4", _testDb.toString)
+      //            debug("d4", _testDb.toString)
       // Test db
       DatomicDb_Peer(_testDb.get)
 
@@ -209,32 +211,29 @@ case class Conn_Peer(
       )
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
-      //      debug("t2")
+      //            debug("t2")
       futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
-
         // Continue with updated in-memory db
-        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-        //      val dbAfter = txReport.dbAfter
-        val dbAfter = txReport.dbAfter.asOf(txReport.t)
+        val dbAfter  = txReport.dbAfter.asOf(txReport.t)
         _testDb = Some(dbAfter)
         txReport
       }
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
+      //      debug("t3")
       def transactWith: Future[TxReport_Peer] = futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
 
         // Continue with updated in-memory db
-        // todo: why can't we just say this? Or: why are there 2 db-after db objects?
-        //      val dbAfter = txReport.dbAfter
         val dbAfter = txReport.dbAfter.asOf(txReport.t)
         _testDb = Some(dbAfter)
         //      debug("t", _testDb.toString)
         txReport
       }
+
       val res = connProxy.testDbView.get match {
         case AsOf(TxLong(0))          => transactWith
         case AsOf(TxLong(t))          => cleanFrom(t + 1).flatMap(_ => transactWith)
@@ -256,11 +255,11 @@ case class Conn_Peer(
         _testDb = None
       }
 
-//      println("================")
-//      val list = javaStmts.asScala.toList.take(15)
-//      println("A " + list.last)
-//      println("A " + list.last.getClass)
-//      println(list.mkString("\n"))
+      //      println("================")
+      //      val list = javaStmts.asScala.toList.take(15)
+      //      println("A " + list.last)
+      //      println("A " + list.last.getClass)
+      //      println(list.mkString("\n"))
 
       // Live transaction
       val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
@@ -271,16 +270,6 @@ case class Conn_Peer(
             try {
               p.success(listenableFuture.get())
             } catch {
-              //              case e: java.util.concurrent.ExecutionException =>
-              //                println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
-              //                //                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-              //                p.failure(new RuntimeException(e.getMessage.trim))
-              //
-              //              case NonFatal(e) =>
-              //                println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
-              //                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-              //                p.failure(new RuntimeException(e.toString))
-
               case e: java.util.concurrent.ExecutionException =>
                 println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
@@ -292,10 +281,6 @@ case class Conn_Peer(
                     case e                    => MoleculeException(e.getMessage.trim)
                   }
                 )
-
-              //                p.failure(e.getCause)
-              //                p.failure(MoleculeException(e.getMessage.trim, e.getCause))
-              //                p.failure(MoleculeException(e.getMessage.trim))
 
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
@@ -651,11 +636,10 @@ case class Conn_Peer(
     // Allow exceptions to be wrapped in QueryException
     try {
       val p               = Query2String(query).p
-      val rules           = "[" + (query.i.rules map p mkString " ") + "]"
-      val adhocDb         = _db.getOrElse(db).getDatomicDb
-      val first           = if (query.i.rules.isEmpty) Seq(adhocDb) else Seq(adhocDb, rules)
+      val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
       val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-      val allInputs       = first ++ inputsEvaluated
+      val peerDb          = _db.getOrElse(db).getDatomicDb
+      val allInputs       = Seq(peerDb) ++ rules ++ inputsEvaluated
       val result          = Peer.q(query.toMap, allInputs: _*)
       Future(result)
     } catch {

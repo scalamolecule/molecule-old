@@ -45,7 +45,7 @@ object TxRaw extends AsyncTestSuite {
 
         // Add raw transactional data
         // (Scala integers are internally stored as Longs)
-        _ <- conn.map(_.transactRaw(Util.list(
+        _ <- conn.flatMap(_.transactRaw(Util.list(
           Util.map(Util.read(":Ns/int"), 2L.asInstanceOf[AnyRef]),
           Util.map(Util.read(":Ns/int"), 3L.asInstanceOf[AnyRef])
         ).asInstanceOf[java.util.List[AnyRef]]))
