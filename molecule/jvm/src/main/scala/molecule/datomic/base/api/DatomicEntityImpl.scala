@@ -32,51 +32,45 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
 
   final override def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     var buildMap = Map.empty[String, Any]
-    conn.db.pull("[*]", eid)
-      .map { vs =>
-        vs.forEach {
-          case (k, v) => buildMap = buildMap + (k.toString -> v)
-        }
-        buildMap
+    conn.db.pull("[*]", eid).map { vs =>
+      vs.forEach {
+        case (k, v) => buildMap = buildMap + (k.toString -> v)
       }
-      .recoverWith {
-        // Fetch top level only for cyclic graph stack overflows
-        case MoleculeException("stackoverflow", _)                    => mapOneLevel
-        case Fault("java.lang.StackOverflowError with empty message") => mapOneLevel
-        case unexpected                                               => throw unexpected
-      }
+      buildMap
+    }.recoverWith {
+      // Fetch top level only for cyclic graph stack overflows
+      case MoleculeException("stackoverflow", _)                    => mapOneLevel
+      case Fault("java.lang.StackOverflowError with empty message") => mapOneLevel
+      case unexpected                                               => throw unexpected
+    }
   }
 
   final override def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
-    rawValue(key).flatMap { rawV =>
-      try {
-        rawV match {
-          case None    => Future(None)
-          case Some(v) => Future(Some(v.asInstanceOf[T]))
-          case null    => Future(Option.empty[T])
+    rawValue(key).flatMap {
+      case None    => Future(None)
+      case Some(v) => Future(Some(v.asInstanceOf[T]))
+      case null    => Future(Option.empty[T])
 
-          case results: clojure.lang.PersistentHashSet =>
-            results.toArray.apply(0) match {
-              case _: datomic.Entity =>
-                var list = List.empty[Future[Long]]
-                results.forEach(e =>
-                  list = Future(e.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]) :: list
-                )
-                Future.sequence(list).map(l => Some(l.sorted.asInstanceOf[T]))
+      case results: clojure.lang.PersistentHashSet =>
+        results.toArray.apply(0) match {
+          case _: datomic.Entity =>
+            var list = List.empty[Future[Long]]
+            results.forEach(e =>
+              list = Future(e.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]) :: list
+            )
+            Future.sequence(list).map(l => Some(l.sorted.asInstanceOf[T]))
 
-              case _ =>
-                var list = List.empty[Future[Any]]
-                results.forEach(v1 =>
-                  list = list :+ toScala(key, Some(v1))
-                )
-                Future.sequence(list).map(l => Some(l.asInstanceOf[T]))
-            }
-
-          case result => toScala(key, Some(result)).map(v => Some(v.asInstanceOf[T]))
+          case _ =>
+            var list = List.empty[Future[Any]]
+            results.forEach(v1 =>
+              list = list :+ toScala(key, Some(v1))
+            )
+            Future.sequence(list).map(l => Some(l.asInstanceOf[T]))
         }
-      } catch {
-        case _: NoSuchElementException => Future(Option.empty[T])
-      }
+
+      case result => toScala(key, Some(result)).map(v => Some(v.asInstanceOf[T]))
+    }.recover {
+      case _: NoSuchElementException => Option.empty[T]
     }
   }
 
@@ -214,7 +208,11 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
         val valueFutures = keysSorted.map { key =>
           toScala(key, None, depth, maxDepth, "List").map { scalaValue =>
 
-            println("scalaValue: " + scalaValue)
+            //            println(s"$key: " + scalaValue)
+            //            if(key ==":Ns/refs1") {
+            //              println(scalaValue.asInstanceOf[List[Any]].head)
+            //              println(scalaValue.asInstanceOf[List[Any]].head.getClass)
+            //            }
 
 
             val sortedValue = scalaValue match {

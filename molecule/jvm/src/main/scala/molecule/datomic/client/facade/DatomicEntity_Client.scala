@@ -66,6 +66,7 @@ case class DatomicEntity_Client(
       case s: java.lang.String      => Future(s)
       case i: java.lang.Integer     => Future(i.toLong: Long)
       case l: java.lang.Long        =>
+        //        println("A " + key)
         if (depth < maxDepth && key != ":db/id") {
           DatomicEntity_Client(conn, l)
             .asMap(depth + 1, maxDepth).map { entityMap =>
@@ -98,13 +99,16 @@ case class DatomicEntity_Client(
           conn.db.entity(conn, kw).rawValue(":db/id")
 
       case set: clojure.lang.PersistentHashSet =>
+        //        println("B " + key)
         Future.sequence(
           set.asScala.toList.map(v1 =>
             toScala(key, Some(v1), depth, maxDepth, tpe)
           )
-        ).map(sortList)
+        ).flatMap(sortList)
 
       case map0: clojure.lang.PersistentArrayMap => {
+//        println("C " + key)
+//        println("C " + map0)
         map0 match {
           case m if m.size() == 2 && m.containsKey(ident) =>
             Future(m.get(ident).toString)
@@ -137,11 +141,12 @@ case class DatomicEntity_Client(
       }
 
       case vec: clojure.lang.PersistentVector =>
+        //        println("D " + key)
         Future.sequence(
           vec.asScala.toList.map(v1 =>
             toScala(key, Some(v1), depth, maxDepth, tpe)
           )
-        ).map(sortList)
+        ).flatMap(sortList)
 
       case col: jCollection[_] =>
         Future(
@@ -168,7 +173,7 @@ case class DatomicEntity_Client(
     }
 
     vOpt match {
-      case Some(v) => Future(v)
+      case Some(v) => retrieve(v)
       case _       => rawValue(key).flatMap(retrieve)
     }
   }

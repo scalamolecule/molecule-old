@@ -27,21 +27,11 @@ object Adhoc extends AsyncTestSuite with Helpers {
           ("a", List(1, 2))
         )).map(_.eids)
 
-        _ <- e1.touchList.map(_ ==> List(
+        _ <- e1.touchListMax(1).map(_ ==> List(
           ":db/id" -> e1,
-          ":Ns/refs1" -> List(
-            List(
-              ":db/id" -> r1,
-              ":Ref1/int1" -> 1
-            ),
-            List(
-              ":db/id" -> r2,
-              ":Ref1/int1" -> 2
-            )
-          ),
+          ":Ns/refs1" -> List(r1, r2),
           ":Ns/str" -> "a"
         ))
-
 
       } yield ()
     }
