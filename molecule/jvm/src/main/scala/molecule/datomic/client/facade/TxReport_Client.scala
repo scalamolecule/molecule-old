@@ -2,13 +2,11 @@ package molecule.datomic.client.facade
 
 import java.util.Date
 import datomic.Peer
-import datomic.db.DbId
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Db, TxReport => clientTxReport}
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
-import molecule.datomic.base.facade.exception.DatomicFacadeException
 import molecule.datomic.base.util.Inspect
 
 /** Datomic TxReport facade for client api (peer-server/cloud/dev-local).
@@ -21,7 +19,10 @@ case class TxReport_Client(
   stmts: Seq[Statement] = Nil
 ) extends TxReport with JavaConversions {
 
-  lazy val eids: List[Long] = clientTxReport.tempIds.values.asScala.toList.distinct.sorted
+  lazy val eids: List[Long] = {
+    val txId = tx
+    clientTxReport.tempIds.values.asScala.toList.distinct.filterNot(_ == txId).sorted
+  }
 
   private lazy val txDataRaw: List[Datom] = clientTxReport.txData.iterator().asScala.toList
 

@@ -270,7 +270,11 @@ trait Datomic_Peer extends JavaConversions {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     for {
       conn <- connect(protocol, id, connProxy)
-      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
+//      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
+      edns = schema.datomicPeer
+      _ <- conn.transact(edns.head) //                 partitions/attributes
+      _ = if (edns.size > 1) conn.transact(edns(1)) // attributes/aliases
+      _ = if (edns.size > 2) conn.transact(edns(2)) // aliases
     } yield conn
   }
 }

@@ -38,22 +38,22 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         // Using the entity api
 
         // Get a community id and its related entities
-        eids <- Community.e.name_("Greenlake Community Wiki").Neighborhood.e.District.e.get
-        (communityId, n1, d1) = eids.head
+        (communityId, neighborhoodId, districtId) <-
+          Community.e.name_("Greenlake Community Wiki").Neighborhood.e.District.e.get.map(_.head)
 
         // Use the community id to touch all the entity's attribute values
         _ <- communityId.touch.map(_ ==> Map(
           ":Community/category" -> List("events", "for sale", "services"),
           ":Community/neighborhood" -> Map(
-            ":db/id" -> 17592186045668L,
+            ":db/id" -> neighborhoodId,
             ":Neighborhood/district" -> Map(
-              ":db/id" -> 17592186045669L,
+              ":db/id" -> districtId,
               ":District/name" -> "Northwest",
               ":District/region" -> ":District.region/sw"),
             ":Neighborhood/name" -> "Green Lake"),
           ":Community/orgtype" -> ":Community.orgtype/community",
           ":Community/name" -> "Greenlake Community Wiki",
-          ":db/id" -> 17592186045667L,
+          ":db/id" -> communityId,
           ":Community/url" -> "http://greenlake.wetpaint.com/",
           ":Community/tpe" -> ":Community.tpe/wiki"))
 

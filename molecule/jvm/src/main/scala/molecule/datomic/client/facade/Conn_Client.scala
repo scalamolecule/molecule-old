@@ -313,8 +313,8 @@ case class Conn_Client(
           Future(rawTxReport)
         } catch {
           case e: java.util.concurrent.ExecutionException =>
-            println("---- Conn_Client.transactRaw ExecutionException: -------------\n")
-            println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+            println("---- Conn_Client.transactRaw ExecutionException: -------------")
+            println(javaStmts.asScala.toList.mkString("\n"))
             // White list of exceptions that can be pickled by BooPickle
             Future.failed(
               e.getCause match {
@@ -325,8 +325,8 @@ case class Conn_Client(
             )
 
           case NonFatal(e) =>
-            println("---- Conn_Client.transactRaw NonFatal exc: -------------\n")
-            println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
+            println("---- Conn_Client.transactRaw NonFatal exc: -------------")
+            println(javaStmts.asScala.toList.mkString("\n"))
             Future.failed(e)
         }
 

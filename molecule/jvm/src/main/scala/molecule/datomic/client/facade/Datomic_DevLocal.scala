@@ -88,7 +88,10 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
       _ <- deleteDatabase(dbName)
       _ <- createDatabase(dbName)
       conn <- connect(dbName, connProxy)
-      _ <- Future.sequence(schema.datomicClient.map(edn => conn.transact(edn)))
+      edns = schema.datomicClient
+      _ <- conn.transact(edns.head) //                 partitions/attributes
+      _ = if (edns.size > 1) conn.transact(edns(1)) // attributes/aliases
+      _ = if (edns.size > 2) conn.transact(edns(2)) // aliases
     } yield conn
   }
 

@@ -1,11 +1,9 @@
 package moleculeTests
 
-import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import molecule.datomic.api.in3_out12._
-import molecule.datomic.base.util.SystemPeer
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.examples.datomic.seattle.SeattleTests.seattleData
 import utest._
 import scala.concurrent.Future
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,15 +21,6 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        _ <- Ns.int.apply(1).asc1.str.desc2.get
         //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
-        List(e1, r1, r2) <- Ns.str.Refs1.*(Ref1.int1).insert(List(
-          ("a", List(1, 2))
-        )).map(_.eids)
-
-        _ <- e1.touchListMax(1).map(_ ==> List(
-          ":db/id" -> e1,
-          ":Ns/refs1" -> List(r1, r2),
-          ":Ns/str" -> "a"
-        ))
 
       } yield ()
     }
@@ -54,14 +43,6 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 [error] 	moleculeTests.tests.core.txMetaData.MetaUpdate
 [error] 	moleculeTests.tests.core.txMetaData.MetaRetract
-
-[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.ProductsAndOrders
-[error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
-[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.Provenance
-
-[error] 	moleculeTests.tests.core.runtime.EntityMap
-[error] 	moleculeTests.tests.core.runtime.EntityList
-
 
      */
     //    "adhoc2" - core { implicit futConn =>
@@ -122,6 +103,20 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //
     //      for {
     //        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+    //
+    //
+    //
+    //      } yield ()
+    //    }
+    //
+
+
+    //    "adhoc" - seattle { implicit conn =>
+    //      import moleculeTests.dataModels.examples.datomic.seattle.dsl.Seattle._
+    //
+    //      for {
+    //        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+    //        _ <- Community.name.url.tpe.orgtype$.category$.Neighborhood.name.District.name.region$ insert seattleData
     //
     //
     //
