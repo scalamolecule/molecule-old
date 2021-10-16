@@ -4,6 +4,7 @@ import java.util.Date
 import datomic.Peer
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Db, TxReport => clientTxReport}
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
@@ -20,8 +21,28 @@ case class TxReport_Client(
 ) extends TxReport with JavaConversions {
 
   lazy val eids: List[Long] = {
-    val txId = tx
-    clientTxReport.tempIds.values.asScala.toList.distinct.filterNot(_ == txId).sorted
+    var allIds = List.empty[Long]
+    val datoms = clientTxReport.txData.iterator
+    datoms.next() // skip automatically created first transaction time datom
+    while (datoms.hasNext) {
+      val datom = datoms.next
+      if (datom.added) // only asserted datoms
+        allIds = allIds :+ datom.e
+    }
+    if (stmts.isEmpty) {
+      allIds.distinct
+    } else {
+      val assertStmts = stmts.filterNot(_.isInstanceOf[RetractEntity])
+      if (allIds.size != assertStmts.size) {
+        throw MoleculeException(
+          s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
+        )
+      }
+      val resolvedIds = assertStmts.zip(allIds).collect {
+        case (Add(_: TempId, _, _, _), eid) => eid
+      }.distinct.toList
+      resolvedIds
+    }
   }
 
   private lazy val txDataRaw: List[Datom] = clientTxReport.txData.iterator().asScala.toList

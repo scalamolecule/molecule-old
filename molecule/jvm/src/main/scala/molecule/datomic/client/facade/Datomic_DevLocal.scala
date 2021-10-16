@@ -89,9 +89,9 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
       _ <- createDatabase(dbName)
       conn <- connect(dbName, connProxy)
       edns = schema.datomicClient
-      _ <- conn.transact(edns.head) //                 partitions/attributes
-      _ = if (edns.size > 1) conn.transact(edns(1)) // attributes/aliases
-      _ = if (edns.size > 2) conn.transact(edns(2)) // aliases
+      _ <- conn.transact(edns.head) //                                   partitions/attributes
+      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit // attributes/aliases
+      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
     } yield conn
   }
 

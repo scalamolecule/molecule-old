@@ -3,6 +3,7 @@ package moleculeTests.tests.core.obj
 import molecule.core.util.Helpers
 import molecule.datomic.api.in1_out18._
 import molecule.datomic.base.facade.Conn
+import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
@@ -95,12 +96,14 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         _ <- testData
 
         // :Ns/int attribute
+        intAttrId = if (system == SystemPeer) 73 else 74
+        intIndex = if (system == SystemPeer) Some(true) else None
         _ <- Schema
           .part.id.a(":Ns/int").nsFull.ns.attr.tpe.card.doc
           .index$.unique$.fulltext$.isComponent$.noHistory$.enum$
           .t.tx.txInstant.getObj.map { o1 =>
           o1.part ==> "db.part/user"
-          o1.id ==> 73
+          o1.id ==> intAttrId
           o1.a ==> ":Ns/int"
           o1.nsFull ==> "Ns"
           o1.ns ==> "Ns"
@@ -108,7 +111,7 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
           o1.tpe ==> "long"
           o1.card ==> "one"
           o1.doc ==> "Card one Int attribute"
-          o1.index$ ==> Some(true)
+          o1.index$ ==> intIndex
           o1.unique$ ==> None
           o1.fulltext$ ==> None
           o1.isComponent$ ==> None
@@ -156,7 +159,8 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         txInstant4 = txR4.inst
 
         // :Ns/int attribute
-        _ <- AEVT(":Ns/int").e.a.v.t.tx.txInstant.op.getObjs.collect { case List(d1, d2) =>
+        _ <- AEVT(":Ns/int").e.a.v.t.tx.txInstant.op.getObjs.collect { case datoms =>
+          val List(d1, d2) = datoms.sortBy(_.t)
           d1.e ==> e
           d1.a ==> ":Ns/int"
           d1.v ==> 2

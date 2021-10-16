@@ -8,10 +8,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Fulltext_ extends AsyncTestSuite {
 
-  //  tests = 1
+  // Fulltext search indexing only available for Peer systems.
+
   lazy val tests = Tests {
 
-    "Card one" - core { implicit conn =>
+    "Card one" - corePeerOnly { implicit conn =>
       for {
         _ <- Ns.str insert List("The quick fox jumps", "Ten slow monkeys")
 
@@ -56,7 +57,7 @@ object Fulltext_ extends AsyncTestSuite {
       } yield ()
     }
 
-    "Quoting" - core { implicit conn =>
+    "Quoting" - corePeerOnly { implicit conn =>
       for {
         _ <- Ns.int(1).str("""Hi "Ann"""").save
 
@@ -74,7 +75,7 @@ object Fulltext_ extends AsyncTestSuite {
       } yield ()
     }
 
-    "Card many" - core { implicit conn =>
+    "Card many" - corePeerOnly { implicit conn =>
       for {
         _ <- Ns.int.strs insert List(
           (1, Set("The quick fox jumps", "Ten slow monkeys")),

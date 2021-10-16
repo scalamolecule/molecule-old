@@ -55,8 +55,6 @@ object JsonNested extends AsyncTestSuite {
                  |}""".stripMargin
           }
           if (!variations.contains(result)) {
-            variations foreach println
-            println("------ result: -------")
             println(result)
           }
           variations.contains(result) ==> true
@@ -928,87 +926,83 @@ object JsonNested extends AsyncTestSuite {
 
 
         // Ordering only stable with Peer
-        //        _ <- if (system == SystemPeer) {
-        //          for {
-
-        // Semi-nested A
         _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.int2).getJson.map { result =>
-          val orderings  = List(
-            (11, 12, 22, 21, 32, 31, 42, 41),
-            (11, 12, 22, 21, 32, 31, 41, 42),
-            (12, 11, 22, 21, 32, 31, 42, 41),
-            (12, 11, 21, 22, 32, 31, 41, 42),
-          )
-          val variations = orderings.map {
-            case (a, b, c, d, e, f, g, h) =>
-              s"""{
-                 |  "data": {
-                 |    "Ns": [
-                 |      {
-                 |        "str": "a",
-                 |        "Refs1": [
-                 |          {
-                 |            "int1": 1,
-                 |            "Refs2": {
-                 |              "int2": $a
-                 |            }
-                 |          },
-                 |          {
-                 |            "int1": 1,
-                 |            "Refs2": {
-                 |              "int2": $b
-                 |            }
-                 |          },
-                 |          {
-                 |            "int1": 2,
-                 |            "Refs2": {
-                 |              "int2": $c
-                 |            }
-                 |          },
-                 |          {
-                 |            "int1": 2,
-                 |            "Refs2": {
-                 |              "int2": $d
-                 |            }
-                 |          }
-                 |        ]
-                 |      },
-                 |      {
-                 |        "str": "b",
-                 |        "Refs1": [
-                 |          {
-                 |            "int1": 3,
-                 |            "Refs2": {
-                 |              "int2": $e
-                 |            }
-                 |          },
-                 |          {
-                 |            "int1": 3,
-                 |            "Refs2": {
-                 |              "int2": $f
-                 |            }
-                 |          },
-                 |          {
-                 |            "int1": 4,
-                 |            "Refs2": {
-                 |              "int2": $g
-                 |            }
-                 |          },
-                 |          {
-                 |            "int1": 4,
-                 |            "Refs2": {
-                 |              "int2": $h
-                 |            }
-                 |          }
-                 |        ]
-                 |      }
-                 |    ]
-                 |  }
-                 |}""".stripMargin
+          val variations = for{
+            a <- List(11, 12)
+            b <- List(11, 12) if b != a
+            c <- List(21, 22)
+            d <- List(21, 22) if d != c
+            e <- List(31, 32)
+            f <- List(31, 32) if f != e
+            g <- List(41, 42)
+            h <- List(41, 42) if h != g
+          } yield {
+            s"""{
+               |  "data": {
+               |    "Ns": [
+               |      {
+               |        "str": "a",
+               |        "Refs1": [
+               |          {
+               |            "int1": 1,
+               |            "Refs2": {
+               |              "int2": $a
+               |            }
+               |          },
+               |          {
+               |            "int1": 1,
+               |            "Refs2": {
+               |              "int2": $b
+               |            }
+               |          },
+               |          {
+               |            "int1": 2,
+               |            "Refs2": {
+               |              "int2": $c
+               |            }
+               |          },
+               |          {
+               |            "int1": 2,
+               |            "Refs2": {
+               |              "int2": $d
+               |            }
+               |          }
+               |        ]
+               |      },
+               |      {
+               |        "str": "b",
+               |        "Refs1": [
+               |          {
+               |            "int1": 3,
+               |            "Refs2": {
+               |              "int2": $e
+               |            }
+               |          },
+               |          {
+               |            "int1": 3,
+               |            "Refs2": {
+               |              "int2": $f
+               |            }
+               |          },
+               |          {
+               |            "int1": 4,
+               |            "Refs2": {
+               |              "int2": $g
+               |            }
+               |          },
+               |          {
+               |            "int1": 4,
+               |            "Refs2": {
+               |              "int2": $h
+               |            }
+               |          }
+               |        ]
+               |      }
+               |    ]
+               |  }
+               |}""".stripMargin
           }
           if (!variations.contains(result)) {
-            variations foreach println
-            println("------ result: -------")
             println(result)
           }
           variations.contains(result) ==> true
@@ -1017,70 +1011,72 @@ object JsonNested extends AsyncTestSuite {
 
         // Semi-nested A without intermediary attr `int1`
         _ <- Ns.str.Refs1.*(Ref1.Refs2.int2).getJson.map { result =>
-          val orderings  = List(
-            (12, 11, 22, 21, 32, 31, 41, 42),
-            (11, 12, 22, 21, 31, 32, 41, 42),
-            (11, 12, 22, 21, 32, 31, 42, 41),
-            (11, 12, 21, 22, 32, 31, 42, 41),
-          )
-          val variations = orderings.map {
-            case (a, b, c, d, e, f, g, h) =>
-              s"""{
-                 |  "data": {
-                 |    "Ns": [
-                 |      {
-                 |        "str": "a",
-                 |        "Refs1": [
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $a
-                 |            }
-                 |          },
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $b
-                 |            }
-                 |          },
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $c
-                 |            }
-                 |          },
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $d
-                 |            }
-                 |          }
-                 |        ]
-                 |      },
-                 |      {
-                 |        "str": "b",
-                 |        "Refs1": [
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $e
-                 |            }
-                 |          },
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $f
-                 |            }
-                 |          },
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $g
-                 |            }
-                 |          },
-                 |          {
-                 |            "Refs2": {
-                 |              "int2": $h
-                 |            }
-                 |          }
-                 |        ]
-                 |      }
-                 |    ]
-                 |  }
-                 |}""".stripMargin
+          val variations = for{
+            a <- List(11, 12)
+            b <- List(11, 12) if b != a
+            c <- List(21, 22)
+            d <- List(21, 22) if d != c
+            e <- List(31, 32)
+            f <- List(31, 32) if f != e
+            g <- List(41, 42)
+            h <- List(41, 42) if h != g
+          } yield {
+            s"""{
+               |  "data": {
+               |    "Ns": [
+               |      {
+               |        "str": "a",
+               |        "Refs1": [
+               |          {
+               |            "Refs2": {
+               |              "int2": $a
+               |            }
+               |          },
+               |          {
+               |            "Refs2": {
+               |              "int2": $b
+               |            }
+               |          },
+               |          {
+               |            "Refs2": {
+               |              "int2": $c
+               |            }
+               |          },
+               |          {
+               |            "Refs2": {
+               |              "int2": $d
+               |            }
+               |          }
+               |        ]
+               |      },
+               |      {
+               |        "str": "b",
+               |        "Refs1": [
+               |          {
+               |            "Refs2": {
+               |              "int2": $e
+               |            }
+               |          },
+               |          {
+               |            "Refs2": {
+               |              "int2": $f
+               |            }
+               |          },
+               |          {
+               |            "Refs2": {
+               |              "int2": $g
+               |            }
+               |          },
+               |          {
+               |            "Refs2": {
+               |              "int2": $h
+               |            }
+               |          }
+               |        ]
+               |      }
+               |    ]
+               |  }
+               |}""".stripMargin
           }
           if (!variations.contains(result)) {
             variations foreach println

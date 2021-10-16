@@ -1,7 +1,7 @@
 package moleculeTests.tests.core.json
 
 import molecule.datomic.api.out11._
-import molecule.datomic.base.util.SystemPeerServer
+import molecule.datomic.base.util.{SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
@@ -360,19 +360,27 @@ object JsonAttributes extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.refs1.getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "refs1": [
-             |          $refId2,
-             |          $refId1
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+        _ <- Ns.refs1.getJson.map { result =>
+          val orderings  = List(
+            (refId1, refId2),
+            (refId2, refId1)
+          )
+          val variations = orderings.map { case (r1, r2) =>
+            s"""{
+               |  "data": {
+               |    "Ns": [
+               |      {
+               |        "refs1": [
+               |          $r1,
+               |          $r2
+               |        ]
+               |      }
+               |    ]
+               |  }
+               |}""".stripMargin
+          }
+          variations.contains(result) ==> true
+        }
       } yield ()
     }
 

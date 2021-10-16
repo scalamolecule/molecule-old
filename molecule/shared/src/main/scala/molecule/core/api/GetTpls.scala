@@ -76,9 +76,6 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
             _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           )
         } else {
-//          println(conn.connProxy.testDbStatus)
-//          println(conn)
-
           conn.query(_model, _query).map { jColl =>
             val it  = jColl.iterator
             val buf = new ListBuffer[Tpl]

@@ -125,7 +125,6 @@ case class Conn_Peer(
                         (implicit ec: ExecutionContext): Future[Unit] = {
     def op(datom: Datom): String = if (datom.added) ":db/retract" else ":db/add"
     for {
-      //      txInstants <- DatomicDb_Peer(_testDb.getOrElse(peerConn.db)).pull("[:db/id]", ":db/txInstant")
       txInstants <- db.pull("[:db/id]", ":db/txInstant")
       txInstId = txInstants.get(read(":db/id"))
     } yield {
@@ -139,11 +138,9 @@ case class Conn_Peer(
           txDatoms.forEach { datom =>
             // Don't reverse timestamps
             if (datom.a != txInstId) {
-              //              println(s"${datom.e}   ${datom.a}   ${datom.v}   ${datom.added()}")
               txStmts.add(list(op(datom), datom.e, datom.a, datom.v))
             }
           }
-
           // Update in-memory with-db with datoms of this tx
           val txReport = TxReport_Peer(_testDb.get.`with`(txStmts))
           _testDb = Some(txReport.dbAfter.asOf(txReport.t))
@@ -156,7 +153,6 @@ case class Conn_Peer(
 
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
-      //      debug("d1", peerConn.db.toString)
       DatomicDb_Peer(getAdhocDb)
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
@@ -170,25 +166,22 @@ case class Conn_Peer(
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Peer(peerConn.db.`with`(txData))
-          Some(txReport.dbAfter.asOf(txReport.t))
+//          Some(txReport.dbAfter.asOf(txReport.t))
+          Some(txReport.dbAfter)
       }
-      //      debug("d2", tempDb.toString)
       DatomicDb_Peer(tempDb.get)
 
 
     } else if (connProxy.testDbStatus == -1) {
-      //      debug("d3", peerConn.db.toString)
       _testDb = None
       updateTestDbView(None, 0)
       DatomicDb_Peer(peerConn.db)
 
     } else if (_testDb.isDefined) {
-      //            debug("d4", _testDb.toString)
       // Test db
       DatomicDb_Peer(_testDb.get)
 
     } else {
-      //      debug("d5", peerConn.db.toString)
       // Live db
       DatomicDb_Peer(peerConn.db)
     }
@@ -205,20 +198,12 @@ case class Conn_Peer(
     def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
     if (_adhocDbView.isDefined) {
-      //      debug("t1")
       futScalaStmts.map(scalaStmts =>
         TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
       )
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
-      debug("t2")
       futScalaStmts.map { scalaStmts =>
-
-
-        javaStmts.forEach(stmt => println(stmt))
-        println(scalaStmts)
-
-
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
         // Continue with updated in-memory db
@@ -228,7 +213,6 @@ case class Conn_Peer(
       }
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
-      //      debug("t3")
       def transactWith: Future[TxReport_Peer] = futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
         val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
@@ -236,7 +220,6 @@ case class Conn_Peer(
         // Continue with updated in-memory db
         val dbAfter = txReport.dbAfter.asOf(txReport.t)
         _testDb = Some(dbAfter)
-        //      debug("t", _testDb.toString)
         txReport
       }
 

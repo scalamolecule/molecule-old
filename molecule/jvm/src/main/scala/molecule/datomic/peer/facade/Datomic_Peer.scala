@@ -214,9 +214,9 @@ trait Datomic_Peer extends JavaConversions {
       _ <- deleteDatabase(protocol, id)
       _ <- createDatabase(protocol, id)
       conn <- connect(protocol, id, connProxy)
-      _ <- conn.transact(edns.head) //                 partitions/attributes
-      _ = if (edns.size > 1) conn.transact(edns(1)) // attributes/aliases
-      _ = if (edns.size > 2) conn.transact(edns(2)) // aliases
+      _ <- conn.transact(edns.head) //                                   partitions/attributes
+      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit // attributes/aliases
+      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
     } yield {
       conn
     }
@@ -270,11 +270,12 @@ trait Datomic_Peer extends JavaConversions {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     for {
       conn <- connect(protocol, id, connProxy)
-//      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
+      // todo: why doesn't this work instead of the following 4 lines?
+      //      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
       edns = schema.datomicPeer
-      _ <- conn.transact(edns.head) //                 partitions/attributes
-      _ = if (edns.size > 1) conn.transact(edns(1)) // attributes/aliases
-      _ = if (edns.size > 2) conn.transact(edns(2)) // aliases
+      _ <- conn.transact(edns.head) //                                   partitions/attributes
+      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit // attributes/aliases
+      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
     } yield conn
   }
 }

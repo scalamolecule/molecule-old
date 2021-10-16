@@ -7,6 +7,7 @@ import datomic.db.Datum
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
+import molecule.datomic.base.facade.exception.DatomicFacadeException
 import molecule.datomic.base.util.Inspect
 
 /** Datomic TxReport facade for peer api.
@@ -20,16 +21,27 @@ case class TxReport_Peer(
 ) extends TxReport with JavaConversions {
 
   lazy val eids: List[Long] = {
-    var ids = List.empty[Long]
-    val tx = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]]
-      .get(0).asInstanceOf[Datom].tx().asInstanceOf[Long]
-    rawTxReport.get(TEMPIDS).asInstanceOf[jMap[Any, Any]].values().forEach { tempId =>
-      val eid = tempId.asInstanceOf[Long]
-      if (eid != tx) {
-        ids = ids :+ eid
-      }
+    var allIds = List.empty[Long]
+    val datoms = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].iterator
+    datoms.next() // skip automatically created first transaction time datom
+    while (datoms.hasNext) {
+      val datom = datoms.next.asInstanceOf[Datom]
+      if (datom.added()) // only asserted datoms
+        allIds = allIds :+ datom.e().asInstanceOf[Long]
     }
-    ids.distinct.sorted
+    if (scalaStmts.isEmpty) {
+      allIds.distinct
+    } else {
+      val assertStmts = scalaStmts.filterNot(_.isInstanceOf[RetractEntity])
+      if (allIds.size != assertStmts.size)
+        throw new DatomicFacadeException(
+          s"Unexpected different counts of ${allIds.size} ids and ${assertStmts.size} stmts."
+        )
+      val resolvedIds = assertStmts.zip(allIds).collect {
+        case (Add(_: TempId, _, _, _), eid) => eid
+      }.distinct.toList
+      resolvedIds
+    }
   }
 
   private lazy val txDataRaw: List[Datum] =

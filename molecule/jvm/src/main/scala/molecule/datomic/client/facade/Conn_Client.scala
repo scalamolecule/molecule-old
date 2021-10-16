@@ -122,28 +122,6 @@ case class Conn_Client(
   }
 
 
-  //  def db0: DatomicDb = {
-  //    if (_adhocDbView.isDefined) {
-  //      // Adhoc db
-  //      DatomicDb_Client(getAdhocDb)
-  //
-  //    } else if (_testDb.isDefined) {
-  //      // Test db
-  //      if (sinceT.isDefined) {
-  //        DatomicDb_Client(_testDb.get.since(sinceT.get))
-  //      } else if (sinceD.isDefined) {
-  //        DatomicDb_Client(_testDb.get.since(sinceD.get))
-  //      } else {
-  //        DatomicDb_Client(_testDb.get)
-  //      }
-  //
-  //    } else {
-  //      // Live db
-  //      DatomicDb_Client(clientConn.db)
-  //    }
-  //  }
-
-
   // Reset datoms of in-mem with-db from next timePoint after as-of t until end
   override def cleanFrom(nextTimePoint: Any)
                         (implicit ec: ExecutionContext): Future[Unit] = {
@@ -190,7 +168,6 @@ case class Conn_Client(
 
   def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
-      //      debug("d1", clientConn.db.toString)
       // Adhoc db
       DatomicDb_Client(getAdhocDb)
 
@@ -205,14 +182,13 @@ case class Conn_Client(
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
-          Some(txReport.dbAfter.asOf(txReport.t))
+//          Some(txReport.dbAfter.asOf(txReport.t))
+          Some(txReport.dbAfter)
       }
-      //      debug("d2", tempDb.toString)
       DatomicDb_Client(tempDb.get)
 
 
     } else if (connProxy.testDbStatus == -1) {
-      //      debug("d3", clientConn.db.toString)
       _testDb = None
       updateTestDbView(None, 0)
       DatomicDb_Client(clientConn.db)
@@ -224,12 +200,10 @@ case class Conn_Client(
       } else if (sinceD.isDefined) {
         DatomicDb_Client(_testDb.get.since(sinceD.get))
       } else {
-        //        debug("d4", _testDb.toString)
         DatomicDb_Client(_testDb.get)
       }
 
     } else {
-      //      debug("d5", clientConn.db.toString)
       // Live db
       DatomicDb_Client(clientConn.db)
     }
@@ -246,13 +220,11 @@ case class Conn_Client(
     def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
     if (_adhocDbView.isDefined) {
-      //      debug("t1")
       futScalaStmts.map { scalaStmts =>
         TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
       }
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
-      //      debug("t2")
       futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
         val withDb = if (withDbInUse) {
@@ -269,10 +241,8 @@ case class Conn_Client(
 
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
-      //      debug("t3")
       def transactWith: Future[TxReport_Client] = futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
-        //        val withDb   = _testDb.getOrElse(clientConn.db).`with`(clientConn.withDb, javaStmts)
         val withDb = if (withDbInUse) {
           _testDb.get.`with`(_testDb.get, javaStmts)
         } else {
@@ -301,7 +271,6 @@ case class Conn_Client(
       res
 
     } else {
-      //      debug("t4")
       if (connProxy.testDbStatus == -1) {
         updateTestDbView(None, 0)
         _testDb = None

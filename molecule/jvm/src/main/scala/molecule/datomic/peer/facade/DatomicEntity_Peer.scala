@@ -64,19 +64,6 @@ case class DatomicEntity_Peer(
             tpe match {
               case "Map"  => ent.asMap(depth + 1, maxDepth)
               case "List" => ent.asList(depth + 1, maxDepth)
-              //              case "Map" =>
-              //                ent.asMap(depth + 1, maxDepth).map(map =>
-              //                  if (map.contains(":db/ident"))
-              //                    map(":db/ident") // enum
-              //                  else
-              //                    map
-              //                )
-              //
-              //              case "List" =>
-              //                ent.asList(depth + 1, maxDepth).map {
-              //                  case List((":db/id", _), (":db/ident", enum)) => enum
-              //                  case other                                    => other
-              //                }
             }
           }
         } else {

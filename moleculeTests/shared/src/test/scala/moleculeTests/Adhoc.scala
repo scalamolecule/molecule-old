@@ -3,7 +3,6 @@ package moleculeTests
 import molecule.core.util.Helpers
 import molecule.datomic.api.in3_out12._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.examples.datomic.seattle.SeattleTests.seattleData
 import utest._
 import scala.concurrent.Future
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,27 +23,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
       } yield ()
     }
-    /*
-[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherSave
-[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherUpdateProps
 
-[error] 	moleculeTests.tests.core.json.JsonRef
-[error] 	moleculeTests.tests.core.json.JsonNested
-[error] 	moleculeTests.tests.core.json.JsonAttributes
-
-[error] 	moleculeTests.tests.core.expression.Fulltext_
-
-[error] 	moleculeTests.tests.core.composite.CompositeRef
-[error] 	moleculeTests.tests.core.composite.CompositeArities
-
-[error] 	moleculeTests.tests.core.obj.ObjGeneric
-
-[error] 	moleculeTests.tests.core.crud.insert.InsertRelated
-
-[error] 	moleculeTests.tests.core.txMetaData.MetaUpdate
-[error] 	moleculeTests.tests.core.txMetaData.MetaRetract
-
-     */
     //    "adhoc2" - core { implicit futConn =>
     //
     //      for {
@@ -76,6 +55,16 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //      } yield ()
     //    }
     //
+
+    //        "adhoc" - socialNews { implicit conn =>
+    //          import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.SocialNews._
+    //
+    //          for {
+    //
+    //
+    //          } yield ()
+    //        }
+    //
     //
     //    "mbrainz" - mbrainz { implicit conn =>
     //      import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._
@@ -98,18 +87,17 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //    }
     //
     //
-    //    "adhoc" - bidirectional { implicit conn =>
-    //      import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
+    //        "adhoc" - bidirectional { implicit conn =>
+    //          import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
     //
-    //      for {
-    //        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
+    //          for {
+    //            _ <- Future(1 ==> 1) // dummy to start monad chain if needed
     //
     //
+    //          } yield ()
+    //        }
     //
-    //      } yield ()
-    //    }
     //
-
 
     //    "adhoc" - seattle { implicit conn =>
     //      import moleculeTests.dataModels.examples.datomic.seattle.dsl.Seattle._

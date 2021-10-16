@@ -20,7 +20,6 @@ object EdgeManyOtherSave extends AsyncTestSuite {
 
       "no nesting in save molecules" - bidirectional { implicit conn =>
         for{
-//          _ <- Future(1)
         _ <- Person.name("Ann").CloseTo.*(CloseTo.weight(7)).save.recover { case VerifyModelException(err) =>
           err ==> s"[noNested]  Nested data structures not allowed in save molecules"
         }
@@ -73,10 +72,9 @@ object EdgeManyOtherSave extends AsyncTestSuite {
           _ <- Person.name("Ann").closeTo(closeToGus, closeToLeo).save
 
           // Ann and Gus know each other with a weight of 7
-          //          _ <- animalsCloseTo("Ann").get.map(_.head.sorted ==> List(List((7, "Gus"), (8, "Leo"))))
-          _ <- animalsCloseTo("Ann").get.map(_ ==> List(List((7, "Gus"), (8, "Leo"))))
-          _ <- personsCloseTo("Gus").get.map(_ ==> List(List((7, "Ann"))))
-          _ <- personsCloseTo("Leo").get.map(_ ==> List(List((8, "Ann"))))
+          _ <- animalsCloseTo("Ann").get.map(_.head.sortBy(_._1) ==> List((7, "Gus"), (8, "Leo")))
+          _ <- personsCloseTo("Gus").get.map(_.head ==> List((7, "Ann")))
+          _ <- personsCloseTo("Leo").get.map(_.head ==> List((8, "Ann")))
         } yield ()
       }
 
@@ -92,9 +90,9 @@ object EdgeManyOtherSave extends AsyncTestSuite {
           _ <- Person.name("Ann").closeTo(closeToGus, closeToLeo).save
 
           // Ann and Gus know each other with a weight of 7
-          _ <- animalsCloseTo("Ann").get.map(_ ==> List(List((7, "Gus"), (8, "Leo"))))
-          _ <- personsCloseTo("Gus").get.map(_ ==> List(List((7, "Ann"))))
-          _ <- personsCloseTo("Leo").get.map(_ ==> List(List((8, "Ann"))))
+          _ <- animalsCloseTo("Ann").get.map(_.head.sortBy(_._1) ==> List((7, "Gus"), (8, "Leo")))
+          _ <- personsCloseTo("Gus").get.map(_.head ==> List((7, "Ann")))
+          _ <- personsCloseTo("Leo").get.map(_.head ==> List((8, "Ann")))
         } yield ()
       }
     }

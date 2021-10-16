@@ -285,11 +285,11 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           // replace
           _ <- CloseTo(annRex).inCommon.replace(humor -> sporty).update
           _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List(("Rex", Seq("Waiting ability", "Sporty")))
+            _.map(p => (p._1, p._2.sorted)) ==> List(("Rex", Seq("Sporty", "Waiting ability")))
           )
 
           _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List(("Ann", Seq("Waiting ability", "Sporty")))
+            _.map(p => (p._1, p._2.sorted)) ==> List(("Ann", Seq("Sporty", "Waiting ability")))
           )
 
           // remove
@@ -300,21 +300,21 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           // add
           _ <- CloseTo(annRex).inCommon.assert(patience).update
           _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List(("Rex", Seq("Waiting ability", "Sporty")))
+            _.map(p => (p._1, p._2.sorted)) ==> List(("Rex", Seq("Sporty", "Waiting ability")))
           )
 
           _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List(("Ann", Seq("Waiting ability", "Sporty")))
+            _.map(p => (p._1, p._2.sorted)) ==> List(("Ann", Seq("Sporty", "Waiting ability")))
           )
 
           // Apply new values
           _ <- CloseTo(annRex).inCommon(sporty, humor).update
           _ <- Person.name_("Ann").CloseTo.Animal.name._CloseTo.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List(("Rex", Seq("Funny", "Sporty")))
+            _.map(p => (p._1, p._2.sorted)) ==> List(("Rex", Seq("Funny", "Sporty")))
           )
 
           _ <- Animal.name_("Rex").CloseTo.Person.name._CloseTo.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1.sorted, p._2)) ==> List(("Ann", Seq("Funny", "Sporty")))
+            _.map(p => (p._1, p._2.sorted)) ==> List(("Ann", Seq("Funny", "Sporty")))
           )
 
           // Retract all references

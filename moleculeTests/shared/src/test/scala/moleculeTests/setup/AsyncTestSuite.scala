@@ -13,7 +13,6 @@ trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific implementations (JS/JVM)
   with AsyncTestSuiteImpl {
 
-  //  val system      : System  = SystemSelection.system
   val system      : System  = {
 //        SystemPeer
     SystemDevLocal
