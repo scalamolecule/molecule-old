@@ -231,12 +231,12 @@ object LogTest extends Base {
           for {
             // Start - t3 (exclusive)
             // Includes all Datomic database bootstrapping and schema transactions
-            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 552)
+            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 544)
 
             // Start - end !! The whole database!
-            _ <- Log(None, None).t.get.map(_.size ==> 583)
+            _ <- Log(None, None).t.get.map(_.size ==> 575)
             // Same as this shortcut
-            res <- Log().t.get.map(_.size ==> 583)
+            res <- Log().t.get.map(_.size ==> 575)
           } yield res
         } else Future.unit
       } yield ()

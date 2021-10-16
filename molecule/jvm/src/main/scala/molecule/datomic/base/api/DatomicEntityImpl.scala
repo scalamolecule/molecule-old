@@ -213,6 +213,10 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
         val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
         val valueFutures = keysSorted.map { key =>
           toScala(key, None, depth, maxDepth, "List").map { scalaValue =>
+
+            println("scalaValue: " + scalaValue)
+
+
             val sortedValue = scalaValue match {
               case l: Seq[_] => l.head match {
                 case l0: Seq[_] => l0.head match {

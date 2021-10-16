@@ -13,7 +13,7 @@ object Schema_Attr extends AsyncTestSuite {
   val List(attrCount, a1, a2, a3, card1count, card2count) = system match {
     //    case SystemPeer       => List(68, 106, 108, 109, 30, 38)
     case SystemPeer       => List(69, 106, 108, 109, 30, 39)
-    case SystemDevLocal   => List(71, 105, 107, 108, 31, 40)
+    case SystemDevLocal   => List(69, 107, 109, 110, 30, 39)
     case SystemPeerServer => List(71, 104, 106, 107, 31, 40)
   }
 
@@ -213,10 +213,7 @@ object Schema_Attr extends AsyncTestSuite {
     "attr" - core { implicit conn =>
       for {
         _ <- Schema.attr.get.map(_.size ==> attrCount)
-        _ <- if (system == SystemPeer)
-          Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates", "enum"))
-        else
-          Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates"))
+        _ <- Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates", "enum"))
 
         _ <- Schema.attr("str").get.map(_ ==> List("str"))
         _ <- Schema.attr("str", "int").get.map(_ ==> List("str", "int"))

@@ -86,7 +86,7 @@ trait SettingsDatomic {
             s"the system libraries to local .m2 repository.")
     }
     // Get list of Datomic system version names
-    dir.listFiles.filter(_.isDirectory).map(_.getName)
+    dir.listFiles.filter(_.isDirectory).map(_.getName).toList.sorted
   }
 
   // print current datomic setup to console when running sbt commands from terminal

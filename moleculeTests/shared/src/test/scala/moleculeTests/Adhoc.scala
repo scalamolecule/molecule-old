@@ -23,38 +23,56 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        _ <- Ns.int.apply(1).asc1.str.desc2.get
         //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
+        List(e1, r1, r2) <- Ns.str.Refs1.*(Ref1.int1).insert(List(
+          ("a", List(1, 2))
+        )).map(_.eids)
 
+        _ <- e1.touchList.map(_ ==> List(
+          ":db/id" -> e1,
+          ":Ns/refs1" -> List(
+            List(
+              ":db/id" -> r1,
+              ":Ref1/int1" -> 1
+            ),
+            List(
+              ":db/id" -> r2,
+              ":Ref1/int1" -> 2
+            )
+          ),
+          ":Ns/str" -> "a"
+        ))
 
 
       } yield ()
     }
     /*
-[error] 	moleculeTests.tests.core.json.JsonRef
-[error] 	moleculeTests.tests.core.txMetaData.MetaUpdate
 [error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherSave
-[error] 	moleculeTests.tests.core.json.JsonNested
-[error] 	moleculeTests.tests.core.expression.Fulltext_
-[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.ProductsAndOrders
-[error] 	moleculeTests.tests.core.runtime.EntityMap
-[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.Provenance
-[error] 	moleculeTests.tests.core.json.JsonAttributes
 [error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherUpdateProps
+
+[error] 	moleculeTests.tests.core.json.JsonRef
+[error] 	moleculeTests.tests.core.json.JsonNested
+[error] 	moleculeTests.tests.core.json.JsonAttributes
+
+[error] 	moleculeTests.tests.core.expression.Fulltext_
+
 [error] 	moleculeTests.tests.core.composite.CompositeRef
-[error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
 [error] 	moleculeTests.tests.core.composite.CompositeArities
+
 [error] 	moleculeTests.tests.core.obj.ObjGeneric
+
 [error] 	moleculeTests.tests.core.crud.insert.InsertRelated
+
+[error] 	moleculeTests.tests.core.txMetaData.MetaUpdate
 [error] 	moleculeTests.tests.core.txMetaData.MetaRetract
+
+[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.ProductsAndOrders
+[error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
+[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.Provenance
+
+[error] 	moleculeTests.tests.core.runtime.EntityMap
 [error] 	moleculeTests.tests.core.runtime.EntityList
 
-[error] 	moleculeTests.tests.core.generic.Index_VAET
-[error] 	moleculeTests.tests.core.generic.Schema_AttrOptions
-[error] 	moleculeTests.tests.core.generic.Schema_Attr
-[error] 	moleculeTests.tests.core.generic.LogTest
-[error] 	moleculeTests.tests.core.generic.Index
-[error] 	moleculeTests.tests.core.generic.Index_EAVT
-[error] 	moleculeTests.tests.core.generic.Index_AVET
-[error] 	moleculeTests.tests.core.generic.Index_AEVT
+
      */
     //    "adhoc2" - core { implicit futConn =>
     //

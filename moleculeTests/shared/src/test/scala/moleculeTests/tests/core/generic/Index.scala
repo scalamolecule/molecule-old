@@ -31,10 +31,10 @@ object Index extends Base {
 
           case SystemDevLocal =>
             for {
-              _ <- EAVT.a.get.map(_.size ==> 569)
-              _ <- AEVT.a.get.map(_.size ==> 569)
-              _ <- VAET.a.get.map(_.size ==> 317)
-              r <- AVET.a.get.map(_.size ==> 569)
+              _ <- EAVT.a.get.map(_.size ==> 561)
+              _ <- AEVT.a.get.map(_.size ==> 561)
+              _ <- VAET.a.get.map(_.size ==> 311)
+              r <- AVET.a.get.map(_.size ==> 561)
             } yield r
 
           case _ => Future.unit // Peer Server (growing across tests, so we can't test deterministically here)

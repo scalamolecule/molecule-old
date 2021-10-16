@@ -648,15 +648,15 @@ case class Conn_Client(
 
       // Convert Datoms to standard list of rows so that we can use the same Molecule query API
       var rows = List.empty[Future[jList[AnyRef]]]
-
-      val jColl: jCollection[jList[AnyRef]] = new util.ArrayList[jList[AnyRef]]()
       api match {
         case "datoms" =>
           val datom2row_ = datom2row(None)
           val raw        = db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1)
-          raw.map { datoms =>
-            datoms.forEach(datom => datom2row_(datom).foreach(row => jColl.add(row)))
-            jColl
+          raw.flatMap { datoms =>
+            datoms.forEach(datom =>
+              rows = rows :+ datom2row_(datom)
+            )
+            Future.sequence(rows).map(_.asJavaCollection)
           }
 
         case "indexRange" =>
@@ -665,9 +665,11 @@ case class Conn_Client(
           val startValue = args(1).asInstanceOf[Option[Any]]
           val endValue   = args(2).asInstanceOf[Option[Any]]
           val raw        = db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1)
-          raw.map { datoms =>
-            datoms.forEach(datom => datom2row_(datom).foreach(row => jColl.add(row)))
-            jColl
+          raw.flatMap { datoms =>
+            datoms.forEach(datom =>
+              rows = rows :+ datom2row_(datom)
+            )
+            Future.sequence(rows).map(_.asJavaCollection)
           }
 
         case "txRange" =>
@@ -677,7 +679,9 @@ case class Conn_Client(
           clientConn.txRangeArray(from, until, limit = -1).foreach {
             case (t, datoms) =>
               val datom2row_ = datom2row(Some(t))
-              datoms.foreach(datom => rows = rows :+ datom2row_(datom))
+              datoms.foreach(datom =>
+                rows = rows :+ datom2row_(datom)
+              )
           }
           Future.sequence(rows).map(_.asJavaCollection)
       }
@@ -685,6 +689,7 @@ case class Conn_Client(
       case NonFatal(ex) => Future.failed(ex)
     }
   }.flatten
+
 
   private[molecule] override def _query(
     model: Model,
