@@ -14,16 +14,42 @@ object Adhoc extends AsyncTestSuite with Helpers {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     "adhoc" - core { implicit futConn =>
+      import moleculeTests.dataModels.core.base.dsl.CoreTest._
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
         //        _ <- Ns.int.apply(1).asc1.str.desc2.get
         //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
+//        _ <- Ns.int(1).save
+//        _ <- Ns.int.get.map(_ ==> List(1))
+
+//        txR1 <- Ns.int.Tx(Ref2.str2_("a")) insert List(1, 2, 3)
+//        tx1 = txR1.tx
+//        t1 = txR1.t
+//        List(e1, e2, e3) = txR1.eids
+
+        txR1 <- Ns.int.Tx(Ns.str_("a").Ref1.int1_(7)) insert List(1, 2, 3)
+        List(e1, e2, e3) = txR1.eids
 
       } yield ()
     }
+/*
 
+[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherInsert
+[error] 	moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfInsert
+[error] 	moleculeTests.tests.examples.gremlin.gettingStarted.Friends2
+[error] 	moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfSave
+[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherSave
+[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.QueryTour
+[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.Provenance
+[error] 	moleculeTests.tests.core.nested.NestedRef
+[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherUpdateProps
+[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeOneOtherInsert
+[error] 	moleculeTests.tests.core.composite.CompositeArities
+[error] 	moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeManySelfInsert
+[error] 	moleculeTests.tests.core.txMetaData.MetaRetract
+ */
     //    "adhoc2" - core { implicit futConn =>
     //
     //      for {

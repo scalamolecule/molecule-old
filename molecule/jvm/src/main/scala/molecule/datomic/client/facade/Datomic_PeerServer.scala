@@ -2,7 +2,7 @@ package molecule.datomic.client.facade
 
 import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
-import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
+import molecule.core.marshalling.ConnProxy
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process._
 import scala.util.control.NonFatal
@@ -20,12 +20,7 @@ case class Datomic_PeerServer(
   secret: String,
   endpoint: String,
   validateHostnames: Boolean = false
-) extends Datomic_Client(
-  Datomic.clientPeerServer(accessKey, secret, endpoint, validateHostnames),
-  AsyncDatomic.clientPeerServer(accessKey, secret, endpoint, validateHostnames)
-) {
-
-  private val inMemConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+) extends Datomic_Client(Datomic.clientPeerServer(accessKey, secret, endpoint, validateHostnames)) {
 
   def connectionError(msg: String) = throw new RuntimeException(
     "\nPeer Server not running. Please start it with something like" +
@@ -34,8 +29,10 @@ case class Datomic_PeerServer(
   )
 
 
-  def connect(dbName: String, connProxy: ConnProxy = inMemConnProxy)
-             (implicit ec: ExecutionContext): Future[Conn_Client] = try {
+  def connect(
+    dbName: String,
+    connProxy: ConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Client] = try {
     s"curl -k -S -s https://$endpoint/health".!!.trim match {
       case "ok" =>
         getServedDatabases().map { servedDbs =>
@@ -48,7 +45,7 @@ case class Datomic_PeerServer(
                 servedDbs.mkString("\n")
             )
 
-          Conn_Client(client, clientAsync, dbName, endpoint, connProxy)
+          Conn_Client(client, connProxy, dbName, endpoint)
         }
       case err  => Future.failed(connectionError(err))
     }

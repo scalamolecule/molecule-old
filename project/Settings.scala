@@ -4,6 +4,8 @@ import sbt._
 import sbt.Keys._
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 
+import scala.collection.mutable.ArrayBuffer
+
 object Settings extends SettingsDatomic with SettingsMolecule {
 
   val baseSettings: Seq[Def.Setting[_]] = Seq(
@@ -61,7 +63,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val jvm: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
-
         "org.specs2" %% "specs2-core" % "4.10.6",
         //        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.0",
@@ -72,7 +73,11 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-slf4j" % "2.6.16",
         "com.typesafe.akka" %% "akka-protobuf-v3" % "2.6.16",
         "com.typesafe.akka" %% "akka-http" % "10.2.6",
-        "ch.megard" %% "akka-http-cors" % "1.1.2"
+        "ch.megard" %% "akka-http-cors" % "1.1.2",
+
+        // Proprietary Client dev-local dependency needed for tests against dev-local
+        // Please download from https://cognitect.com/dev-tools and install locally per included instructions
+        "com.datomic" % "dev-local" % datomicDevLocalVersion
       ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, 13)) => Nil
         case _             =>
@@ -100,44 +105,46 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "com.lihaoyi" %%% "utest" % "0.7.10",
       "io.suzaku" %%% "boopickle" % "1.4.0",
       "com.github.cornerman" %%% "sloth" % "0.3.0",
-      "org.specs2" %%% "specs2-core" % "4.10.6"
+      "org.specs2" %%% "specs2-core" % "4.10.6",
     ),
+
+
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-    //    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
-    //    unmanagedSources / excludeFilter := {
-    //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-    //      val allowed     = Seq(
-    //        sharedTests + "/core/attr",
-    //        sharedTests + "/core/attrMap",
-    //        sharedTests + "/core/bidirectionals",
-    //        sharedTests + "/core/composite",
-    //        sharedTests + "/core/crud",
-    //        sharedTests + "/core/equality",
-    //        sharedTests + "/core/expression",
-    //        sharedTests + "/core/generic",
-    //        sharedTests + "/core/input1",
-    //        sharedTests + "/core/input2",
-    //        sharedTests + "/core/input3",
-    //        sharedTests + "/core/ref",
-    //        sharedTests + "/core/json",
-    //        sharedTests + "/core/nested",
-    //        sharedTests + "/core/obj",
-    //        sharedTests + "/core/runtime",
-    //        sharedTests + "/core/schemaDef",
-    //        sharedTests + "/core/time",
-    //        sharedTests + "/core/transaction",
-    //        sharedTests + "/core/txMetaData",
-    //        sharedTests + "/examples/datomic/dayOfDatomic",
-    //        sharedTests + "/examples/datomic/mbrainz",
-    //        sharedTests + "/examples/datomic/seattle",
-    //        sharedTests + "/examples/gremlin/gettingStarted",
-    //        sharedTests + "/Adhoc.scala",
-    //      )
-    //      new SimpleFileFilter(f =>
-    //        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-    //      )
-    //    },
+//    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
+//    unmanagedSources / excludeFilter := {
+//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+//      val allowed     = Seq(
+//        //            sharedTests + "/core/attr",
+//        //            sharedTests + "/core/attrMap",
+//        //            sharedTests + "/core/bidirectionals",
+//        //            sharedTests + "/core/composite",
+//        //                    sharedTests + "/core/crud",
+//        //            sharedTests + "/core/equality",
+//        //            sharedTests + "/core/expression",
+//        //            sharedTests + "/core/generic",
+//        //            sharedTests + "/core/input1",
+//        //            sharedTests + "/core/input2",
+//        //            sharedTests + "/core/input3",
+//        //            sharedTests + "/core/ref",
+//        //            sharedTests + "/core/json",
+//        //            sharedTests + "/core/nested",
+//        //            sharedTests + "/core/obj",
+//        //            sharedTests + "/core/runtime",
+//        //            sharedTests + "/core/schemaDef",
+//        //            sharedTests + "/core/time",
+//        //            sharedTests + "/core/transaction",
+//        //            sharedTests + "/core/txMetaData",
+//        //            sharedTests + "/examples/datomic/dayOfDatomic",
+//        //            sharedTests + "/examples/datomic/mbrainz",
+//        //            sharedTests + "/examples/datomic/seattle",
+//        //            sharedTests + "/examples/gremlin/gettingStarted",
+//        sharedTests + "/Adhoc.scala",
+//      )
+//      new SimpleFileFilter(f =>
+//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+//      )
+//    },
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,
@@ -153,12 +160,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
 
   val tests: Seq[Def.Setting[_]] = Seq(
-    libraryDependencies ++= Seq(
-      // Proprietary Client dev-local dependency needed for tests against dev-local
-      // Please download from https://cognitect.com/dev-tools and install locally per included instructions
-      "com.datomic" % "dev-local" % datomicDevLocalVersion
-    ),
-
     // Find scala version specific jars in respective libs
     unmanagedBase := {
       CrossVersion.partialVersion(scalaVersion.value) match {

@@ -5,13 +5,12 @@ import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Peer
 import datomic.Util._
 import datomic.db.DbId
-import datomicClient.anomaly.CognitectAnomaly
-import datomicScala.client.api.async.{AsyncClient, AsyncConnection}
+import datomicClient.anomaly._
 import datomicScala.client.api.sync.{Client, Db, Datomic => clientDatomic}
 import datomicScala.client.api.{Datom, sync}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
+import molecule.core.marshalling.ConnProxy
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -29,14 +28,12 @@ import scala.util.control.NonFatal
   * */
 case class Conn_Client(
   client: Client,
-  clientAsync: AsyncClient,
+  defaultConnProxy: ConnProxy,
   dbName: String,
   system: String = "",
-  defaultConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
 ) extends Conn_Datomic with JavaConversions {
 
-  lazy val clientConn     : sync.Connection                                   = client.connect(dbName)
-  lazy val clientConnAsync: Future[Either[CognitectAnomaly, AsyncConnection]] = clientAsync.connect(dbName)
+  lazy val clientConn: sync.Connection = client.connect(dbName)
 
   // In-memory fixed test db for integration testing of domain model
   // (takes precedence over live db)
@@ -57,7 +54,7 @@ case class Conn_Client(
     _testDb = Some(clientConn.db)
   }
 
-  // Temporary since time points - needs to be applied later to queries in order
+  // Temporary `since` time points - needs to be applied later to queries in order
   // to maintain special withdb
   private var sinceT = Option.empty[Long]
   private var sinceD = Option.empty[Date]
@@ -182,7 +179,7 @@ case class Conn_Client(
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
-//          Some(txReport.dbAfter.asOf(txReport.t))
+          //          Some(txReport.dbAfter.asOf(txReport.t))
           Some(txReport.dbAfter)
       }
       DatomicDb_Client(tempDb.get)
@@ -221,7 +218,7 @@ case class Conn_Client(
 
     if (_adhocDbView.isDefined) {
       futScalaStmts.map { scalaStmts =>
-        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
+        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts, javaStmts)
       }
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
@@ -234,7 +231,7 @@ case class Conn_Client(
         }
         // Special withDb now in use (important for consequent transaction calls)
         withDbInUse = true
-        val txReport = TxReport_Client(withDb, scalaStmts)
+        val txReport = TxReport_Client(withDb, scalaStmts, javaStmts)
         _testDb = Some(txReport.dbAfter)
         txReport
       }
@@ -250,7 +247,7 @@ case class Conn_Client(
         }
         // Special withDb now in use (important for consequent transaction calls)
         withDbInUse = true
-        val txReport = TxReport_Client(withDb, scalaStmts)
+        val txReport = TxReport_Client(withDb, scalaStmts, javaStmts)
         _testDb = Some(txReport.dbAfter)
         txReport
       }
@@ -296,10 +293,23 @@ case class Conn_Client(
           case NonFatal(e) =>
             println("---- Conn_Client.transactRaw NonFatal exc: -------------")
             println(javaStmts.asScala.toList.mkString("\n"))
-            Future.failed(e)
+            Future.failed(
+              e match {
+                case NotFound(msg)    => MoleculeException("[Datomic NotFound] " + msg)
+                case Unavailable(msg) => MoleculeException("[Datomic Unavailable] " + msg)
+                case Interrupted(msg) => MoleculeException("[Datomic Interrupted] " + msg)
+                case Incorrect(msg)   => MoleculeException("[Datomic Incorrect] " + msg)
+                case Unsupported(msg) => MoleculeException("[Datomic Unsupported] " + msg)
+                case Conflict(msg)    => MoleculeException("[Datomic Conflict] " + msg)
+                case Fault(msg)       => MoleculeException("[Datomic Fault] " + msg)
+                case Busy(msg)        => MoleculeException("[Datomic Busy] " + msg)
+                case e                => MoleculeException(e.getMessage)
+                //                case e                => e
+              }
+            )
         }
 
-        futRawTxReport.map(rawTxReport => TxReport_Client(rawTxReport, scalaStmts))
+        futRawTxReport.map(rawTxReport => TxReport_Client(rawTxReport, scalaStmts, javaStmts))
       }
     }
   } catch {

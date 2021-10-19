@@ -6,9 +6,10 @@ import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
+import datomicClient.anomaly._
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.marshalling._
+import molecule.core.marshalling.{DatomicPeerProxy, _}
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -18,7 +19,7 @@ import molecule.datomic.base.facade.{Conn_Datomic, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
-import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 
@@ -26,16 +27,12 @@ import scala.util.control.NonFatal
 object Conn_Peer {
 
   def apply(
-    uri: String
-  ): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), uri)
-
-  def apply(
     uri: String,
     defaultConnProxy: ConnProxy
-  ): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), uri, defaultConnProxy)
+  ): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), defaultConnProxy, uri)
 
-  // Constructor for transaction functions where db is supplied inside transaction by transactor
-  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null) {
+  // Dummy constructor for transaction functions where db is supplied inside transaction by transactor
+  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null, DatomicPeerProxy("mem", "")) {
     testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
   }
 }
@@ -45,8 +42,8 @@ object Conn_Peer {
   * */
 case class Conn_Peer(
   peerConn: datomic.Connection,
-  system: String = "",
-  defaultConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
+  defaultConnProxy: ConnProxy,
+  system: String = ""
 ) extends Conn_Datomic with JavaConversions {
 
   // In-memory fixed test db for integration testing
@@ -112,7 +109,6 @@ case class Conn_Peer(
 
   def updateDbProxyStatus(newStatus: Int) = {
     connProxy = connProxy match {
-      case p: DatomicInMemProxy      => p.copy(testDbStatus = newStatus)
       case p: DatomicPeerProxy       => p.copy(testDbStatus = newStatus)
       case p: DatomicDevLocalProxy   => p.copy(testDbStatus = newStatus)
       case p: DatomicPeerServerProxy => p.copy(testDbStatus = newStatus)
@@ -166,7 +162,7 @@ case class Conn_Peer(
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Peer(peerConn.db.`with`(txData))
-//          Some(txReport.dbAfter.asOf(txReport.t))
+          //          Some(txReport.dbAfter.asOf(txReport.t))
           Some(txReport.dbAfter)
       }
       DatomicDb_Peer(tempDb.get)
@@ -199,13 +195,13 @@ case class Conn_Peer(
 
     if (_adhocDbView.isDefined) {
       futScalaStmts.map(scalaStmts =>
-        TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
+        TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts, javaStmts)
       )
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
       futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
-        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
+        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts, javaStmts)
         // Continue with updated in-memory db
         val dbAfter  = txReport.dbAfter.asOf(txReport.t)
         _testDb = Some(dbAfter)
@@ -215,7 +211,7 @@ case class Conn_Peer(
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
       def transactWith: Future[TxReport_Peer] = futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
-        val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
+        val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts, javaStmts)
 
         // Continue with updated in-memory db
         val dbAfter = txReport.dbAfter.asOf(txReport.t)
@@ -267,7 +263,20 @@ case class Conn_Peer(
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(e)
+                p.failure(
+                  e match {
+                    case NotFound(msg)    => MoleculeException("[Datomic NotFound] " + msg)
+                    case Unavailable(msg) => MoleculeException("[Datomic Unavailable] " + msg)
+                    case Interrupted(msg) => MoleculeException("[Datomic Interrupted] " + msg)
+                    case Incorrect(msg)   => MoleculeException("[Datomic Incorrect] " + msg)
+                    case Unsupported(msg) => MoleculeException("[Datomic Unsupported] " + msg)
+                    case Conflict(msg)    => MoleculeException("[Datomic Conflict] " + msg)
+                    case Fault(msg)       => MoleculeException("[Datomic Fault] " + msg)
+                    case Busy(msg)        => MoleculeException("[Datomic Busy] " + msg)
+                    case e                => MoleculeException(e.getMessage)
+                    //                case e                => e
+                  }
+                )
             }
           }
         },
@@ -277,7 +286,7 @@ case class Conn_Peer(
         moleculeInvocationResult <- p.future
         scalaStmts <- futScalaStmts
       } yield {
-        TxReport_Peer(moleculeInvocationResult, scalaStmts)
+        TxReport_Peer(moleculeInvocationResult, scalaStmts, javaStmts)
       }
     }
   } catch {

@@ -3,10 +3,9 @@ package molecule.datomic.peer.facade
 import java.util.UUID.randomUUID
 import datomic.Peer
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
+import molecule.core.marshalling.ConnProxy
 import molecule.core.util.JavaConversions
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 
 /** Facade to Datomic Peer with selected methods.
@@ -15,8 +14,6 @@ import scala.util.control.NonFatal
   * @groupprio 10
   * */
 trait Datomic_Peer extends JavaConversions {
-
-  private val inMemConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
 
   /** Connect to Peer database
     *
@@ -40,9 +37,9 @@ trait Datomic_Peer extends JavaConversions {
     * @return
     */
   def connect(
+    connProxy: ConnProxy,
     protocol: String = "mem",
     dbIdentifier: String = "",
-    connProxy: ConnProxy = inMemConnProxy
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = Future {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     Conn_Peer(s"datomic:$protocol://$id", connProxy)
@@ -172,19 +169,19 @@ trait Datomic_Peer extends JavaConversions {
     *     `implicit val conn = recreateDbFrom(YourDomainSchema)`
     *
     * @group database
-    * @param schema       Auto-generated YourDomainSchema Transaction object<br>
+    * @param schemaTx       Auto-generated YourDomainSchema Transaction object<br>
     *                     (in package yourdomain.schema of generated source jar)
     * @param protocol     Datomic protocol. Defaults to "mem" for in-memory database.
     * @param dbIdentifier Optional String identifier to name database (default empty string creates a randomUUID)
     * @return [[molecule.datomic.base.facade.Conn Conn]]
     */
   def recreateDbFrom(
-    schema: SchemaTransaction,
+    schemaTx: SchemaTransaction,
+    connProxy: ConnProxy,
     protocol: String = "mem",
     dbIdentifier: String = "",
-    connProxy: ConnProxy = inMemConnProxy
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
-    recreateDbFromEdn(schema.datomicPeer, protocol, dbIdentifier, connProxy)
+    recreateDbFromEdn(connProxy, schemaTx.datomicPeer, protocol, dbIdentifier)
   }
 
 
@@ -204,16 +201,16 @@ trait Datomic_Peer extends JavaConversions {
     * @return
     */
   def recreateDbFromEdn(
+    connProxy: ConnProxy,
     edns: Seq[String],
     protocol: String = "mem",
-    dbIdentifier: String = "",
-    connProxy: ConnProxy = inMemConnProxy
+    dbIdentifier: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     for {
       _ <- deleteDatabase(protocol, id)
       _ <- createDatabase(protocol, id)
-      conn <- connect(protocol, id, connProxy)
+      conn <- connect(connProxy, protocol, id)
       _ <- conn.transact(edns.head) //                                   partitions/attributes
       _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit // attributes/aliases
       _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
@@ -239,15 +236,15 @@ trait Datomic_Peer extends JavaConversions {
     */
   def recreateDbFromRaw(
     schemaData: java.util.List[_],
+    connProxy: ConnProxy,
     protocol: String = "mem",
-    dbIdentifier: String = "",
-    connProxy: ConnProxy = inMemConnProxy
+    dbIdentifier: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     for {
       _ <- deleteDatabase(protocol, id)
       _ <- createDatabase(protocol, id)
-      conn <- connect(protocol, id, connProxy)
+      conn <- connect(connProxy, protocol, id)
       _ <- conn.transactRaw(schemaData)
     } yield conn
   }
@@ -263,13 +260,13 @@ trait Datomic_Peer extends JavaConversions {
     */
   def transactSchema(
     schema: SchemaTransaction,
+    connProxy: ConnProxy,
     protocol: String = "mem",
-    dbIdentifier: String = "",
-    connProxy: ConnProxy = inMemConnProxy
+    dbIdentifier: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
     for {
-      conn <- connect(protocol, id, connProxy)
+      conn <- connect(connProxy, protocol, id)
       // todo: why doesn't this work instead of the following 4 lines?
       //      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
       edns = schema.datomicPeer

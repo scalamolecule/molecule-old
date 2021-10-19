@@ -11,9 +11,7 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView.DbView
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
-import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.TempIdFactory
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -43,7 +41,6 @@ trait Conn extends ColOps with Serializations {
   private[molecule] def updateAdhocDbView(adhocDbView: Option[DbView]): Unit = {
     _adhocDbView = adhocDbView
     connProxy = connProxy match {
-      case p: DatomicInMemProxy      => p.copy(adhocDbView = adhocDbView)
       case p: DatomicPeerProxy       => p.copy(adhocDbView = adhocDbView)
       case p: DatomicDevLocalProxy   => p.copy(adhocDbView = adhocDbView)
       case p: DatomicPeerServerProxy => p.copy(adhocDbView = adhocDbView)
@@ -52,7 +49,6 @@ trait Conn extends ColOps with Serializations {
 
   private[molecule] def updateTestDbView(testDbView: Option[DbView], status: Int = 1): Unit = {
     connProxy = connProxy match {
-      case p: DatomicInMemProxy      => p.copy(testDbStatus = status, testDbView = testDbView)
       case p: DatomicPeerProxy       => p.copy(testDbStatus = status, testDbView = testDbView)
       case p: DatomicDevLocalProxy   => p.copy(testDbStatus = status, testDbView = testDbView)
       case p: DatomicPeerServerProxy => p.copy(testDbStatus = status, testDbView = testDbView)

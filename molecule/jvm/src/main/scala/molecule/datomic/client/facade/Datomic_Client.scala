@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @param client
  * @param clientAsync
  */
-abstract class Datomic_Client(val client: Client, val clientAsync: AsyncClient)
+abstract class Datomic_Client(val client: Client)
   extends ClojureBridge with JavaConversions {
 
   def connect(dbName: String, connProxy: ConnProxy)(implicit ec: ExecutionContext): Future[Conn_Client]

@@ -1,14 +1,13 @@
 package moleculeTests.setup
 
-import java.util.UUID
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicInMemProxy, DatomicPeerProxy, DatomicPeerServerProxy}
+import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
-import moleculeBuildInfo.BuildInfo.datomicHome
+import moleculeBuildInfo.BuildInfo.{datomicHome, datomicProtocol}
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
 import moleculeTests.dataModels.core.ref.schema.{NestedSchema, SelfJoinSchema}
@@ -17,6 +16,7 @@ import moleculeTests.dataModels.examples.datomic.dayOfDatomic.schema._
 import moleculeTests.dataModels.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
+import moleculeTests.setup.CleanPeerServer.cleanPeerServerConn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -27,28 +27,24 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
   def inMem[T](
     test: Future[Conn] => T,
-    schema: SchemaTransaction,
-    db: String
-  ): T = system match {
-    case SystemPeer =>
-      test(Datomic_Peer.recreateDbFrom(
-        schema,
-        connProxy = DatomicInMemProxy(schema.datomicPeer, schema.attrMap)
-      ))
+    schemaTx: SchemaTransaction,
+    peerServerDb: String
+  ): T = {
+    val (peerSchema, clientSchema, attrMap) = (schemaTx.datomicPeer, schemaTx.datomicClient, schemaTx.attrMap)
+    val futConn = system match {
+      case SystemPeer       =>
+        val connProxy = DatomicPeerProxy("mem", "", peerSchema, attrMap)
+        Datomic_Peer.recreateDbFrom(schemaTx, connProxy)
 
-    case SystemDevLocal =>
-      // Unique random db names to avoid overlapping asynchronous db calls to same-name dbs
-      val db = UUID.randomUUID().toString
-      test(Datomic_DevLocal("datomic-samples-temp", datomicHome).recreateDbFrom(
-        schema, db,
-        DatomicDevLocalProxy("datomic-samples-temp", datomicHome, db, schema.datomicPeer, schema.attrMap)
-      ))
+      case SystemDevLocal   =>
+        val connProxy = DatomicDevLocalProxy("mem", "datomic-samples-temp", datomicHome, "", clientSchema, attrMap)
+        Datomic_DevLocal("datomic-samples-temp", datomicHome).recreateDbFrom(schemaTx, connProxy)
 
-    case SystemPeerServer =>
-      test(CleanPeerServer.getCleanPeerServerConn(
-        Datomic_PeerServer("k", "s", "localhost:8998"), db, schema,
-        DatomicPeerServerProxy("k", "s", "localhost:8998", db, schema.datomicPeer, schema.attrMap)
-      ))
+      case SystemPeerServer =>
+        val connProxy = DatomicPeerServerProxy("k", "s", "localhost:8998", peerServerDb, clientSchema, attrMap)
+        cleanPeerServerConn(Datomic_PeerServer("k", "s", "localhost:8998"), peerServerDb, schemaTx, connProxy)
+    }
+    test(futConn)
   }
 
   def coreImpl[T](test: Future[Conn] => T): T = inMem(test, CoreTestSchema, "m_coretests")
@@ -70,27 +66,20 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
   // Connecting to existing MBrainz database without recreating it
   def mbrainzImpl[T](test: Future[Conn] => Future[T]): Future[T] = {
     implicit val futConn: Future[Conn] = system match {
-      case SystemPeer =>
-        val protocol     = "dev" // or "free" if running free transactor
-        val dbIdentifier = "localhost:4334/mbrainz-1968-1973"
-        Datomic_Peer.connect(
-          protocol, dbIdentifier,
-          DatomicPeerProxy(protocol, dbIdentifier, MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
-        )
+      case SystemPeer       =>
+        val connProxy = DatomicPeerProxy(datomicProtocol, "localhost:4334/mbrainz-1968-1973",
+          MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
+        Datomic_Peer.connect(connProxy, datomicProtocol, "localhost:4334/mbrainz-1968-1973")
 
-      case SystemDevLocal =>
-        val dbName = "mbrainz-subset"
-        Datomic_DevLocal("datomic-samples", datomicHome).connect(
-          dbName,
-          DatomicDevLocalProxy("datomic-samples", datomicHome, dbName, MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
-        )
+      case SystemDevLocal   =>
+        val connProxy = DatomicDevLocalProxy(datomicProtocol, "datomic-samples-temp", datomicHome, "mbrainz-subset",
+          MBrainzSchema.datomicClient, MBrainzSchema.attrMap)
+        Datomic_DevLocal("datomic-samples", datomicHome).connect("mbrainz-subset", connProxy)
 
       case SystemPeerServer =>
-        val dbName = "mbrainz-1968-1973"
-        Datomic_PeerServer("k", "s", "localhost:8998").connect(
-          dbName,
-          DatomicPeerServerProxy("k", "s", "localhost:8998", dbName, MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
-        )
+        val connProxy = DatomicPeerServerProxy("k", "s", "localhost:8998", "mbrainz-1968-1973",
+          MBrainzSchema.datomicClient, MBrainzSchema.attrMap)
+        Datomic_PeerServer("k", "s", "localhost:8998").connect("mbrainz-1968-1973", connProxy)
     }
     for {
       conn <- futConn

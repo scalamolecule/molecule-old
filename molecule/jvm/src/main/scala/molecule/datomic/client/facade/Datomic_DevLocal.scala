@@ -1,10 +1,11 @@
 package molecule.datomic.client.facade
 
+import java.util.UUID.randomUUID
 import datomic.Peer
 import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{ConnProxy, DatomicInMemProxy}
+import molecule.core.marshalling.ConnProxy
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -15,22 +16,18 @@ import scala.concurrent.{ExecutionContext, Future}
   *                   overrides :storage-dir in ~/.datomic/dev-local.edn
   */
 case class Datomic_DevLocal(system: String, storageDir: String = "")
-  extends Datomic_Client(
-    Datomic.clientDevLocal(system, storageDir),
-    AsyncDatomic.clientDevLocal(system, storageDir)
-  ) {
-
-  private val inMemConnProxy: ConnProxy = DatomicInMemProxy(Nil, Map.empty[String, (Int, String)])
-
+  extends Datomic_Client(Datomic.clientDevLocal(system, storageDir)) {
 
   /** Retrieve DevLocal Client connection
     *
     * @param dbName
     * @return
     */
-  def connect(dbName: String, connProxy: ConnProxy = inMemConnProxy)
-             (implicit ec: ExecutionContext): Future[Conn_Client] = Future {
-    Conn_Client(client, clientAsync, dbName, system, connProxy)
+  def connect(
+    dbName: String,
+    connProxy: ConnProxy
+  )(implicit ec: ExecutionContext): Future[Conn_Client] = Future {
+    Conn_Client(client, connProxy, dbName, system)
   }
 
   def getDatabaseNames(
@@ -81,18 +78,28 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     */
   def recreateDbFrom(
     schema: SchemaTransaction,
-    dbName: String,
-    connProxy: ConnProxy = inMemConnProxy
+    connProxy: ConnProxy,
+    dbName: String = ""
+  )(implicit ec: ExecutionContext): Future[Conn_Client] =
+    recreateDbFromEdn(schema.datomicClient, connProxy, dbName)
+
+
+  def recreateDbFromEdn(
+    edns: Seq[String],
+    connProxy: ConnProxy,
+    dbName0: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Client] = {
+    val dbName = if (dbName0 == "") randomUUID().toString else dbName0
     for {
       _ <- deleteDatabase(dbName)
       _ <- createDatabase(dbName)
       conn <- connect(dbName, connProxy)
-      edns = schema.datomicClient
       _ <- conn.transact(edns.head) //                                   partitions/attributes
       _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit // attributes/aliases
       _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
-    } yield conn
+    } yield {
+      conn
+    }
   }
 
   /** Deletes existing database (!) and creates a new empty db with schema from schema data structure.
@@ -109,9 +116,10 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
     */
   def recreateDbFromRaw(
     schemaData: java.util.List[_],
-    dbName: String,
-    connProxy: ConnProxy = inMemConnProxy
+    connProxy: ConnProxy,
+    dbName0: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Client] = {
+    val dbName = if (dbName0 == "") randomUUID().toString else dbName0
     for {
       _ <- deleteDatabase(dbName)
       _ <- createDatabase(dbName)

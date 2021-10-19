@@ -29,8 +29,8 @@ object Index_AEVT extends Base {
         // Entities having :Ns/int asserted
         _ <- AEVT(":Ns/int").e.get.map(_.sorted ==> List(e1, e2).sorted)
 
-        // All values of attribute :Ns/int (Int's are represented as Long's in Datomic)
-        _ <- AEVT(":Ns/int").v.get.map(_.asInstanceOf[List[Long]].sorted ==> List(2, 5))
+        // All values of attribute :Ns/int
+        _ <- AEVT(":Ns/int").v.get.map(_.map(_.toString.toInt).sorted ==> List(2, 5))
 
         // All transactions where attribute :Ns/int is asserted
         _ <- AEVT(":Ns/int").t.get.map(_.sorted ==> List(t3, t5))

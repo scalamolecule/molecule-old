@@ -553,6 +553,10 @@ object DatomicRpc extends MoleculeRpc
     getDatomicEntity(connProxy, eid).flatMap(_.asList(depth, maxDepth)).map(entityList2packed2)
   }
 
+  private def getDatomicEntity(connProxy: ConnProxy, eid: Any): Future[DatomicEntity] = {
+    getConn(connProxy).map(conn => conn.db.entity(conn, eid))
+  }
+
   def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = ???
 
 
@@ -565,32 +569,30 @@ object DatomicRpc extends MoleculeRpc
     //    println("Connection pool cleared")
   }
 
-  private def getFreshConn(connProxy: ConnProxy): Future[Conn] = {
-    connProxy match {
-      case proxy@DatomicInMemProxy(schemaPeer, _, _, _, _, _) =>
-        //            println("==============================================")
-        Datomic_Peer.recreateDbFromEdn(schemaPeer, connProxy = proxy)
+  private def getFreshConn(connProxy: ConnProxy): Future[Conn] = connProxy match {
+    case proxy@DatomicPeerProxy(protocol, dbIdentifier, schema, _, _, _, _, _) =>
+      protocol match {
+        case "mem"             => Datomic_Peer.recreateDbFromEdn(proxy, schema)
+        case `datomicProtocol` => Datomic_Peer.connect(proxy, protocol, dbIdentifier)
+        case other             => throw new RuntimeException(
+          s"\nCan't serve Peer protocol `$other` since the current project is built with " +
+            s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
+        )
+      }
 
-      case proxy@DatomicPeerProxy(protocol, dbIdentifier, _, _, _, _, _, _) =>
-        if (datomicProtocol != protocol) {
-          throw new RuntimeException(
-            s"\nProject is built with datomic `$datomicProtocol` protocol and " +
-              s"cannot serve supplied `$protocol` protocol. " +
-              s"\nPlease change the build setup or your Conn_Js protocol"
-          )
-        }
-        protocol match {
-          case "dev" | "free" => Datomic_Peer.connect(protocol, dbIdentifier, proxy)
-          case "mem"          => throw new IllegalArgumentException(
-            "Please connect with `DatomicInMemProxy` to get an in-memory db.")
-        }
+    case proxy@DatomicDevLocalProxy(protocol, system, storageDir, dbName, schema, _, _, _, _, _) =>
+      val devLocal = Datomic_DevLocal(system, storageDir)
+      protocol match {
+        case "mem"             => devLocal.recreateDbFromEdn(schema, proxy)
+        case `datomicProtocol` => devLocal.connect(dbName, proxy)
+        case other             => throw new RuntimeException(
+          s"\nCan't serve DevLocal protocol `$other` since the current project is built with " +
+            s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
+        )
+      }
 
-      case proxy@DatomicDevLocalProxy(system, storageDir, dbName, _, _, _, _, _, _) =>
-        Datomic_DevLocal(system, storageDir).connect(dbName, proxy)
-
-      case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
-        Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName, proxy)
-    }
+    case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
+      Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName, proxy)
   }
 
   private def getConn(
@@ -604,10 +606,6 @@ object DatomicRpc extends MoleculeRpc
     }
     connectionPool(connProxy.uuid) = futConnTimeAdjusted
     futConnTimeAdjusted
-  }
-
-  private def getDatomicEntity(connProxy: ConnProxy, eid: Any): Future[DatomicEntity] = {
-    getConn(connProxy).map(conn => conn.db.entity(conn, eid))
   }
 
 

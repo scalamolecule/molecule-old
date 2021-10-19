@@ -124,7 +124,7 @@ object MetaRetract extends AsyncTestSuite {
       for {
         // Insert multiple entities with tx meta data including ref
         txR1 <- Ns.int.Tx(Ns.str_("a").Ref1.int1_(7)) insert List(1, 2, 3)
-        List(e1, e2, e3, r1) = txR1.eids
+        List(e1, e2, e3) = txR1.eids
         tx1 = txR1.tx
 
         // Add tx meta data to retracting multiple entities

@@ -1,5 +1,6 @@
 package moleculeTests.restore
 
+import molecule.core.marshalling.DatomicPeerProxy
 import molecule.core.util.testing.TxCount.schema.TxCountSchema
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo.datomicProtocol
@@ -34,7 +35,8 @@ object RecreateTestDbs extends App {
       "m_seattle" -> SeattleSchema,
     ).map {
       case (db, schema) =>
-        Datomic_Peer.recreateDbFrom(schema, datomicProtocol, "localhost:4334/" + db)
+        val connProxy =  DatomicPeerProxy("mem", "", schema.datomicPeer, schema.attrMap)
+        Datomic_Peer.recreateDbFrom(schema, connProxy, datomicProtocol, "localhost:4334/" + db)
           .map(_ => println("Created database: " + db))
     }), 1.minute)
 }

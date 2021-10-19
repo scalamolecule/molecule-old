@@ -1,24 +1,24 @@
 package moleculeTests.setup
 
-import java.util.concurrent.atomic.AtomicLong
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{System, SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.core.CoreData
 import utest._
 import utest.framework.Formatter
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 
 trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific implementations (JS/JVM)
   with AsyncTestSuiteImpl {
 
-  val system      : System  = {
-//        SystemPeer
-    SystemDevLocal
+  val isJsPlatform: Boolean = isJsPlatform_
+
+  val system: System = {
+    SystemPeer
+//        SystemDevLocal
     //    SystemPeerServer
   }
-  val isJsPlatform: Boolean = isJsPlatform_
 
   val platformSystem = {
     (if (isJsPlatform) "JS" else "JVM") + (system match {
@@ -52,5 +52,6 @@ trait AsyncTestSuite extends TestSuite with CoreData
 
 
   // At least 1 ms delay between transactions involving Dates to avoid overlapping
+  // (can't use Thread.sleep(1000) on js platform)
   def delay = (1 to 10000).sum
 }

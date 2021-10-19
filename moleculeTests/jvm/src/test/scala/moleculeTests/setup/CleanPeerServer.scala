@@ -1,7 +1,7 @@
 package moleculeTests.setup
 
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.DatomicPeerServerProxy
+import molecule.core.marshalling.ConnProxy
 import molecule.core.util.testing.TxCount._
 import molecule.core.util.testing.TxCount.schema._
 import molecule.datomic.api.out3._
@@ -15,14 +15,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object CleanPeerServer {
 
-  def getCleanPeerServerConn(
+  def cleanPeerServerConn(
     peerServer: Datomic_PeerServer,
     dbIdentifier: String,
     schema: SchemaTransaction,
-    proxy: DatomicPeerServerProxy
+    connProxy: ConnProxy
   )(implicit ec: ExecutionContext): Future[Conn_Client] = Future {
-    val futDataConn    = peerServer.connect(dbIdentifier)
-    val futTxCountConn = peerServer.connect("m_txCount")
+    val futDataConn    = peerServer.connect(dbIdentifier, connProxy)
+    val futTxCountConn = peerServer.connect("m_txCount", connProxy)
     for {
       dataConn <- futDataConn
       // Using synchronous api since we are within a Future here
@@ -77,7 +77,7 @@ object CleanPeerServer {
         }).flatten
       }
     } yield {
-      cleanPeerServerConn.connProxy = proxy
+      cleanPeerServerConn.connProxy = connProxy
       cleanPeerServerConn
     }
   }.flatten
