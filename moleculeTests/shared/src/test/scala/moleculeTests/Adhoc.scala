@@ -21,16 +21,12 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        _ <- Ns.int.apply(1).asc1.str.desc2.get
         //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
-//        _ <- Ns.int(1).save
-//        _ <- Ns.int.get.map(_ ==> List(1))
+        //        _ <- Ns.int(1).save
+        //        _ <- Ns.int.get.map(_ ==> List(1))
 
-//        txR1 <- Ns.int.Tx(Ref2.str2_("a")) insert List(1, 2, 3)
-//        tx1 = txR1.tx
-//        t1 = txR1.t
-//        List(e1, e2, e3) = txR1.eids
 
-        txR1 <- Ns.int.Tx(Ns.str_("a").Ref1.int1_(7)) insert List(1, 2, 3)
-        List(e1, e2, e3) = txR1.eids
+
+
 
       } yield ()
     }

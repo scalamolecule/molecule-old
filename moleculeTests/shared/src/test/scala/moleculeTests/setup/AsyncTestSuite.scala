@@ -15,8 +15,8 @@ trait AsyncTestSuite extends TestSuite with CoreData
   val isJsPlatform: Boolean = isJsPlatform_
 
   val system: System = {
-    SystemPeer
-//        SystemDevLocal
+//    SystemPeer
+        SystemDevLocal
     //    SystemPeerServer
   }
 

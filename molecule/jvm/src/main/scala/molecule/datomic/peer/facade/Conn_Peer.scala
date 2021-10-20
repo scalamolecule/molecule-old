@@ -9,7 +9,7 @@ import datomic.{Database, Datom, ListenableFuture, Peer}
 import datomicClient.anomaly._
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
-import molecule.core.marshalling.{DatomicPeerProxy, _}
+import molecule.core.marshalling._
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -195,13 +195,13 @@ case class Conn_Peer(
 
     if (_adhocDbView.isDefined) {
       futScalaStmts.map(scalaStmts =>
-        TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts, javaStmts)
+        TxReport_Peer(getAdhocDb.`with`(javaStmts), scalaStmts)
       )
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
       futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
-        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts, javaStmts)
+        val txReport = TxReport_Peer(_testDb.get.`with`(javaStmts), scalaStmts)
         // Continue with updated in-memory db
         val dbAfter  = txReport.dbAfter.asOf(txReport.t)
         _testDb = Some(dbAfter)
@@ -211,7 +211,7 @@ case class Conn_Peer(
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
       def transactWith: Future[TxReport_Peer] = futScalaStmts.map { scalaStmts =>
         // In-memory "transaction"
-        val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts, javaStmts)
+        val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
 
         // Continue with updated in-memory db
         val dbAfter = txReport.dbAfter.asOf(txReport.t)
@@ -286,7 +286,7 @@ case class Conn_Peer(
         moleculeInvocationResult <- p.future
         scalaStmts <- futScalaStmts
       } yield {
-        TxReport_Peer(moleculeInvocationResult, scalaStmts, javaStmts)
+        TxReport_Peer(moleculeInvocationResult, scalaStmts)
       }
     }
   } catch {

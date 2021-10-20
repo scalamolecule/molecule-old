@@ -6,8 +6,10 @@ import java.util
 import java.util.{Collections, Date, UUID, List => jList}
 import datomic.Peer.toT
 import datomic.Util._
-import datomic.{Database, Datom, Util}
+import datomic.core.db.{Db => ClientDb}
+import datomic.{Util, Database => PeerDb, Datom => PeerDatom}
 import datomicClient.ClojureBridge
+import datomicScala.client.api.{Datom => ClientDatom}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
 import molecule.core.marshalling.nodes.Obj
@@ -16,14 +18,13 @@ import molecule.core.util.{DateHandling, Helpers, JavaConversions}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.PackEntityMap
-import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
+import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
 import moleculeBuildInfo.BuildInfo._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-
 
 object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal
@@ -48,11 +49,10 @@ object DatomicRpc extends MoleculeRpc
 
       _ = println(stmtsEdn)
 
-      txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
+      javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
+      txReport <- conn.transactRaw(javaStmts)
     } yield {
-      TxReportRPC(
-        txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
-      )
+      TxReportRPC(txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString)
     }
   }
 
@@ -113,14 +113,6 @@ object DatomicRpc extends MoleculeRpc
       //      log("rowCountAll : " + rowCountAll)
       //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
       //      log("rowCount    : " + rowCount)
-
-      //      val allRows2 = allRows
-      //      val it       = allRows2.iterator()
-      //      //            it.next()
-      //      val v        = it.next().get(0)
-      //      println(s"v1: $v  ${v.getClass}")
-
-      //      val rows = new jArrayList(allRows).subList(0, maxRows)
 
       log("-------------------------------")
       //      log(obj.toString)
@@ -267,24 +259,22 @@ object DatomicRpc extends MoleculeRpc
       for {
         conn <- getConn(connProxy)
         packed <- {
-          val adhocDb = conn.db
-          lazy val attrMap = conn.connProxy.attrMap ++ Seq(
-            ":db/txInstant" -> (1, "Date")
-          )
+          val adhocDb: DatomicDb = conn.db
+          lazy val attrMap = conn.connProxy.attrMap ++ Seq(":db/txInstant" -> (1, "Date"))
 
-          def datomElement2packed(
+          def peerDatomElement2packed(
             tOpt: Option[Long],
             attr: String
-          ): (StringBuffer, Datom) => Future[StringBuffer] = attr match {
-            case "e"                   => (sb: StringBuffer, d: Datom) => Future(add(sb, d.e.toString))
-            case "a"                   => (sb: StringBuffer, d: Datom) =>
+          ): (StringBuffer, PeerDatom) => Future[StringBuffer] = attr match {
+            case "e"                   => (sb: StringBuffer, d: PeerDatom) => Future(add(sb, d.e.toString))
+            case "a"                   => (sb: StringBuffer, d: PeerDatom) =>
               Future {
-                add(sb, adhocDb.getDatomicDb.asInstanceOf[Database].ident(d.a).toString)
+                add(sb, adhocDb.getDatomicDb.asInstanceOf[PeerDb].ident(d.a).toString)
                 end(sb)
               }
-            case "v"                   => (sb: StringBuffer, d: Datom) =>
+            case "v"                   => (sb: StringBuffer, d: PeerDatom) =>
               Future {
-                val a         = adhocDb.getDatomicDb.asInstanceOf[Database].ident(d.a).toString
+                val a         = adhocDb.getDatomicDb.asInstanceOf[PeerDb].ident(d.a).toString
                 val (_, tpe)  = attrMap.getOrElse(a,
                   throw MoleculeException(s"Unexpected attribute `$a` not found in attrMap.")
                 )
@@ -295,39 +285,73 @@ object DatomicRpc extends MoleculeRpc
                   case _        => add(sb, tpePrefix + d.v.toString)
                 }
               }
-            case "t" if tOpt.isDefined => (sb: StringBuffer, _: Datom) => Future(add(sb, tOpt.get.toString))
-            case "t"                   => (sb: StringBuffer, d: Datom) => Future(add(sb, toT(d.tx).toString))
-            case "tx"                  => (sb: StringBuffer, d: Datom) => Future(add(sb, d.tx.toString))
-            case "txInstant"           => (sb: StringBuffer, d: Datom) =>
+            case "t" if tOpt.isDefined => (sb: StringBuffer, _: PeerDatom) => Future(add(sb, tOpt.get.toString))
+            case "t"                   => (sb: StringBuffer, d: PeerDatom) => Future(add(sb, toT(d.tx).toString))
+            case "tx"                  => (sb: StringBuffer, d: PeerDatom) => Future(add(sb, d.tx.toString))
+            case "txInstant"           => (sb: StringBuffer, d: PeerDatom) =>
               adhocDb.entity(conn, d.tx).rawValue(":db/txInstant").map { v =>
                 add(sb, date2str(v.asInstanceOf[Date]))
               }
-            case "op"                  => (sb: StringBuffer, d: Datom) => Future(add(sb, d.added.toString))
-            case x                     => throw MoleculeException("Unexpected Datom element: " + x)
+            case "op"                  => (sb: StringBuffer, d: PeerDatom) => Future(add(sb, d.added.toString))
+            case x                     => throw MoleculeException("Unexpected PeerDatom element: " + x)
           }
 
-          def getDatom2packed(tOpt: Option[Long]): (StringBuffer, Datom) => Future[StringBuffer] = attrs.length match {
+          def clientDatomElement2packed(
+            tOpt: Option[Long],
+            attr: String
+          ): (StringBuffer, ClientDatom) => Future[StringBuffer] = attr match {
+            case "e"                   => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.e.toString))
+            case "a"                   => (sb: StringBuffer, d: ClientDatom) =>
+              Future {
+                add(sb, adhocDb.getDatomicDb.asInstanceOf[ClientDb].ident(d.a).toString)
+                end(sb)
+              }
+            case "v"                   => (sb: StringBuffer, d: ClientDatom) =>
+              Future {
+                val a         = adhocDb.getDatomicDb.asInstanceOf[ClientDb].ident(d.a).toString
+                val (_, tpe)  = attrMap.getOrElse(a,
+                  throw MoleculeException(s"Unexpected attribute `$a` not found in attrMap.")
+                )
+                val tpePrefix = tpe + " " * (10 - tpe.length)
+                tpe match {
+                  case "String" => add(sb, tpePrefix + d.v.toString); end(sb)
+                  case "Date"   => add(sb, tpePrefix + date2str(d.v.asInstanceOf[Date]))
+                  case _        => add(sb, tpePrefix + d.v.toString)
+                }
+              }
+            case "t" if tOpt.isDefined => (sb: StringBuffer, _: ClientDatom) => Future(add(sb, tOpt.get.toString))
+            case "t"                   => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, toT(d.tx).toString))
+            case "tx"                  => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.tx.toString))
+            case "txInstant"           => (sb: StringBuffer, d: ClientDatom) =>
+              adhocDb.entity(conn, d.tx).rawValue(":db/txInstant").map { v =>
+                add(sb, date2str(v.asInstanceOf[Date]))
+              }
+            case "op"                  => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.added.toString))
+            case x                     => throw MoleculeException("Unexpected ClientDatom element: " + x)
+          }
+
+          def getPeerDatom2packed(tOpt: Option[Long]): (StringBuffer, PeerDatom) => Future[StringBuffer] = attrs.length match {
             case 1 =>
-              val x1 = datomElement2packed(tOpt, attrs.head)
-              (sb: StringBuffer, d: Datom) =>
+              val x1 = peerDatomElement2packed(tOpt, attrs.head)
+              (sb: StringBuffer, d: PeerDatom) =>
                 for {
                   sb1 <- x1(sb, d)
                 } yield sb1
 
             case 2 =>
-              val x1 = datomElement2packed(tOpt, attrs.head)
-              val x2 = datomElement2packed(tOpt, attrs(1))
-              (sb: StringBuffer, d: Datom) =>
+              val x1 = peerDatomElement2packed(tOpt, attrs.head)
+              val x2 = peerDatomElement2packed(tOpt, attrs(1))
+              (sb: StringBuffer, d: PeerDatom) =>
                 for {
                   sb1 <- x1(sb, d)
                   sb2 <- x2(sb1, d)
                 } yield sb2
 
             case 3 =>
-              val x1 = datomElement2packed(tOpt, attrs.head)
-              val x2 = datomElement2packed(tOpt, attrs(1))
-              val x3 = datomElement2packed(tOpt, attrs(2))
-              (sb: StringBuffer, d: Datom) =>
+              val x1 = peerDatomElement2packed(tOpt, attrs.head)
+              val x2 = peerDatomElement2packed(tOpt, attrs(1))
+              val x3 = peerDatomElement2packed(tOpt, attrs(2))
+              (sb: StringBuffer, d: PeerDatom) =>
                 for {
                   sb1 <- x1(sb, d)
                   sb2 <- x2(sb1, d)
@@ -335,11 +359,11 @@ object DatomicRpc extends MoleculeRpc
                 } yield sb3
 
             case 4 =>
-              val x1 = datomElement2packed(tOpt, attrs.head)
-              val x2 = datomElement2packed(tOpt, attrs(1))
-              val x3 = datomElement2packed(tOpt, attrs(2))
-              val x4 = datomElement2packed(tOpt, attrs(3))
-              (sb: StringBuffer, d: Datom) =>
+              val x1 = peerDatomElement2packed(tOpt, attrs.head)
+              val x2 = peerDatomElement2packed(tOpt, attrs(1))
+              val x3 = peerDatomElement2packed(tOpt, attrs(2))
+              val x4 = peerDatomElement2packed(tOpt, attrs(3))
+              (sb: StringBuffer, d: PeerDatom) =>
                 for {
                   sb1 <- x1(sb, d)
                   sb2 <- x2(sb1, d)
@@ -348,12 +372,12 @@ object DatomicRpc extends MoleculeRpc
                 } yield sb4
 
             case 5 =>
-              val x1 = datomElement2packed(tOpt, attrs.head)
-              val x2 = datomElement2packed(tOpt, attrs(1))
-              val x3 = datomElement2packed(tOpt, attrs(2))
-              val x4 = datomElement2packed(tOpt, attrs(3))
-              val x5 = datomElement2packed(tOpt, attrs(4))
-              (sb: StringBuffer, d: Datom) =>
+              val x1 = peerDatomElement2packed(tOpt, attrs.head)
+              val x2 = peerDatomElement2packed(tOpt, attrs(1))
+              val x3 = peerDatomElement2packed(tOpt, attrs(2))
+              val x4 = peerDatomElement2packed(tOpt, attrs(3))
+              val x5 = peerDatomElement2packed(tOpt, attrs(4))
+              (sb: StringBuffer, d: PeerDatom) =>
                 for {
                   sb1 <- x1(sb, d)
                   sb2 <- x2(sb1, d)
@@ -363,13 +387,13 @@ object DatomicRpc extends MoleculeRpc
                 } yield sb5
 
             case 6 =>
-              val x1 = datomElement2packed(tOpt, attrs.head)
-              val x2 = datomElement2packed(tOpt, attrs(1))
-              val x3 = datomElement2packed(tOpt, attrs(2))
-              val x4 = datomElement2packed(tOpt, attrs(3))
-              val x5 = datomElement2packed(tOpt, attrs(4))
-              val x6 = datomElement2packed(tOpt, attrs(5))
-              (sb: StringBuffer, d: Datom) =>
+              val x1 = peerDatomElement2packed(tOpt, attrs.head)
+              val x2 = peerDatomElement2packed(tOpt, attrs(1))
+              val x3 = peerDatomElement2packed(tOpt, attrs(2))
+              val x4 = peerDatomElement2packed(tOpt, attrs(3))
+              val x5 = peerDatomElement2packed(tOpt, attrs(4))
+              val x6 = peerDatomElement2packed(tOpt, attrs(5))
+              (sb: StringBuffer, d: PeerDatom) =>
                 for {
                   sb1 <- x1(sb, d)
                   sb2 <- x2(sb1, d)
@@ -380,14 +404,107 @@ object DatomicRpc extends MoleculeRpc
                 } yield sb6
 
             case 7 =>
-              val x1 = datomElement2packed(tOpt, attrs.head)
-              val x2 = datomElement2packed(tOpt, attrs(1))
-              val x3 = datomElement2packed(tOpt, attrs(2))
-              val x4 = datomElement2packed(tOpt, attrs(3))
-              val x5 = datomElement2packed(tOpt, attrs(4))
-              val x6 = datomElement2packed(tOpt, attrs(5))
-              val x7 = datomElement2packed(tOpt, attrs(6))
-              (sb: StringBuffer, d: Datom) =>
+              val x1 = peerDatomElement2packed(tOpt, attrs.head)
+              val x2 = peerDatomElement2packed(tOpt, attrs(1))
+              val x3 = peerDatomElement2packed(tOpt, attrs(2))
+              val x4 = peerDatomElement2packed(tOpt, attrs(3))
+              val x5 = peerDatomElement2packed(tOpt, attrs(4))
+              val x6 = peerDatomElement2packed(tOpt, attrs(5))
+              val x7 = peerDatomElement2packed(tOpt, attrs(6))
+              (sb: StringBuffer, d: PeerDatom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                  sb5 <- x5(sb4, d)
+                  sb6 <- x6(sb5, d)
+                  sb7 <- x7(sb6, d)
+                } yield sb7
+          }
+
+          def getClientDatom2packed(tOpt: Option[Long]): (StringBuffer, ClientDatom) => Future[StringBuffer] = attrs.length match {
+            case 1 =>
+              val x1 = clientDatomElement2packed(tOpt, attrs.head)
+              (sb: StringBuffer, d: ClientDatom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                } yield sb1
+
+            case 2 =>
+              val x1 = clientDatomElement2packed(tOpt, attrs.head)
+              val x2 = clientDatomElement2packed(tOpt, attrs(1))
+              (sb: StringBuffer, d: ClientDatom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                } yield sb2
+
+            case 3 =>
+              val x1 = clientDatomElement2packed(tOpt, attrs.head)
+              val x2 = clientDatomElement2packed(tOpt, attrs(1))
+              val x3 = clientDatomElement2packed(tOpt, attrs(2))
+              (sb: StringBuffer, d: ClientDatom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                } yield sb3
+
+            case 4 =>
+              val x1 = clientDatomElement2packed(tOpt, attrs.head)
+              val x2 = clientDatomElement2packed(tOpt, attrs(1))
+              val x3 = clientDatomElement2packed(tOpt, attrs(2))
+              val x4 = clientDatomElement2packed(tOpt, attrs(3))
+              (sb: StringBuffer, d: ClientDatom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                } yield sb4
+
+            case 5 =>
+              val x1 = clientDatomElement2packed(tOpt, attrs.head)
+              val x2 = clientDatomElement2packed(tOpt, attrs(1))
+              val x3 = clientDatomElement2packed(tOpt, attrs(2))
+              val x4 = clientDatomElement2packed(tOpt, attrs(3))
+              val x5 = clientDatomElement2packed(tOpt, attrs(4))
+              (sb: StringBuffer, d: ClientDatom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                  sb5 <- x5(sb4, d)
+                } yield sb5
+
+            case 6 =>
+              val x1 = clientDatomElement2packed(tOpt, attrs.head)
+              val x2 = clientDatomElement2packed(tOpt, attrs(1))
+              val x3 = clientDatomElement2packed(tOpt, attrs(2))
+              val x4 = clientDatomElement2packed(tOpt, attrs(3))
+              val x5 = clientDatomElement2packed(tOpt, attrs(4))
+              val x6 = clientDatomElement2packed(tOpt, attrs(5))
+              (sb: StringBuffer, d: ClientDatom) =>
+                for {
+                  sb1 <- x1(sb, d)
+                  sb2 <- x2(sb1, d)
+                  sb3 <- x3(sb2, d)
+                  sb4 <- x4(sb3, d)
+                  sb5 <- x5(sb4, d)
+                  sb6 <- x6(sb5, d)
+                } yield sb6
+
+            case 7 =>
+              val x1 = clientDatomElement2packed(tOpt, attrs.head)
+              val x2 = clientDatomElement2packed(tOpt, attrs(1))
+              val x3 = clientDatomElement2packed(tOpt, attrs(2))
+              val x4 = clientDatomElement2packed(tOpt, attrs(3))
+              val x5 = clientDatomElement2packed(tOpt, attrs(4))
+              val x6 = clientDatomElement2packed(tOpt, attrs(5))
+              val x7 = clientDatomElement2packed(tOpt, attrs(6))
+              (sb: StringBuffer, d: ClientDatom) =>
                 for {
                   sb1 <- x1(sb, d)
                   sb2 <- x2(sb1, d)
@@ -402,42 +519,84 @@ object DatomicRpc extends MoleculeRpc
           // Pack Datoms
           val sbFut = api match {
             case "datoms" =>
-              val datomicIndex = index match {
-                case "EAVT" => datomic.Database.EAVT
-                case "AEVT" => datomic.Database.AEVT
-                case "AVET" => datomic.Database.AVET
-                case "VAET" => datomic.Database.VAET
-              }
-              val datom2packed = getDatom2packed(None)
-              adhocDb.asInstanceOf[DatomicDb_Peer].datoms(datomicIndex, datomArgs: _*).flatMap { datoms =>
-                datoms.asScala.foldLeft(Future(new StringBuffer())) {
-                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
-                }
+              adhocDb match {
+                case adhocDb: DatomicDb_Peer   =>
+                  val datomicIndex = index match {
+                    case "EAVT" => datomic.Database.EAVT
+                    case "AEVT" => datomic.Database.AEVT
+                    case "AVET" => datomic.Database.AVET
+                    case "VAET" => datomic.Database.VAET
+                  }
+                  val datom2packed = getPeerDatom2packed(None)
+                  adhocDb.datoms(datomicIndex, datomArgs: _*).flatMap { datoms =>
+                    datoms.asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
+                  }
+                case adhocDb: DatomicDb_Client =>
+                  val datomicIndex = index match {
+                    case "EAVT" => ":eavt"
+                    case "AEVT" => ":aevt"
+                    case "AVET" => ":avet"
+                    case "VAET" => ":vaet"
+                  }
+                  val datom2packed = getClientDatom2packed(None)
+                  adhocDb.datoms(datomicIndex, datomArgs).flatMap { datoms =>
+                    datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
+                  }
               }
 
             case "indexRange" =>
-              val datom2packed = getDatom2packed(None)
-              val startValue   = if (args.v.isEmpty) null else castTpeV(args.tpe, args.v)
-              val endValue     = if (args.v2.isEmpty) null else castTpeV(args.tpe2, args.v2)
-              adhocDb.asInstanceOf[DatomicDb_Peer].indexRange(args.a, startValue, endValue).flatMap { datoms =>
-                datoms.asScala.foldLeft(Future(new StringBuffer())) {
-                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
-                }
+              adhocDb match {
+                case adhocDb: DatomicDb_Peer   =>
+                  val datom2packed = getPeerDatom2packed(None)
+                  val startValue   = if (args.v.isEmpty) null else castTpeV(args.tpe, args.v)
+                  val endValue     = if (args.v2.isEmpty) null else castTpeV(args.tpe2, args.v2)
+                  adhocDb.indexRange(args.a, startValue, endValue).flatMap { datoms =>
+                    datoms.asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
+                  }
+                case adhocDb: DatomicDb_Client =>
+                  val datom2packed = getClientDatom2packed(None)
+                  val startValue  = if (args.v.isEmpty) None else Some(castTpeV(args.tpe, args.v))
+                  val endValue = if (args.v2.isEmpty) None else Some(castTpeV(args.tpe2, args.v2))
+                  adhocDb.indexRange(args.a, startValue, endValue).flatMap { datoms =>
+                    datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
+                  }
               }
 
             case "txRange" =>
-              val from  = if (args.v.isEmpty) null else castTpeV(args.tpe, args.v)
-              val until = if (args.v2.isEmpty) null else castTpeV(args.tpe2, args.v2)
               // Loop transactions
-              conn.asInstanceOf[Conn_Peer].peerConn.log.txRange(from, until).asScala
-                .foldLeft(Future(new StringBuffer())) {
-                  case (sbFut, txMap) =>
-                    // Flatten transaction datoms to uniform tuples return type
-                    val datom2packed = getDatom2packed(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
-                    txMap.get(datomic.Log.DATA).asInstanceOf[jList[Datom]].asScala.foldLeft(sbFut) {
-                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
-                    }
-                }
+              conn match {
+                case conn: Conn_Peer =>
+                  val from  = if (args.v.isEmpty) null else castTpeV(args.tpe, args.v)
+                  val until = if (args.v2.isEmpty) null else castTpeV(args.tpe2, args.v2)
+                  conn.peerConn.log.txRange(from, until).asScala.foldLeft(Future(new StringBuffer())) {
+                    case (sbFut, txMap) =>
+                      // Flatten transaction datoms to uniform tuples return type
+                      val datom2packed = getPeerDatom2packed(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
+                      txMap.get(datomic.Log.DATA).asInstanceOf[jList[PeerDatom]].asScala.foldLeft(sbFut) {
+                        case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                      }
+                  }
+
+                case conn: Conn_Client =>
+                  val from  = if (args.v.isEmpty) None else Some(castTpeV(args.tpe, args.v))
+                  val until = if (args.v2.isEmpty) None else Some(castTpeV(args.tpe2, args.v2))
+                  conn.clientConn.txRange(from, until).foldLeft(Future(new StringBuffer())) {
+                    case (sbFut, (t, datoms)) =>
+                      // Flatten transaction datoms to uniform tuples return type
+                      val datom2packed: (StringBuffer, ClientDatom) => Future[StringBuffer] = getClientDatom2packed(Some(t))
+                      datoms.foldLeft(sbFut) {
+                        case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                      }
+                  }
+              }
           }
 
           sbFut.map(_.toString)
@@ -522,7 +681,8 @@ object DatomicRpc extends MoleculeRpc
     println(stmtsEdn)
     for {
       conn <- getConn(connProxy)
-      txReport <- conn.transactRaw(getJavaStmts(stmtsEdn, uriAttrs))
+      javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
+      txReport <- conn.transactRaw(javaStmts)
     } yield TxReportRPC(
       txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
     )

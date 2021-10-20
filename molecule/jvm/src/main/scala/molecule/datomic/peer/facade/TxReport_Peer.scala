@@ -1,79 +1,52 @@
 package molecule.datomic.peer.facade
 
-import java.util.{Date, ArrayList => jArrayList, List => jList, Map => jMap}
-import clojure.lang.Keyword
-import datomic.Connection.TEMPIDS
+import java.util.{Date, List => jList, Map => jMap}
+import datomic.Connection.{DB_AFTER, DB_BEFORE, TEMPIDS, TX_DATA}
 import datomic._
-import datomic.db.{Datum, DbId}
+import datomic.db.Datum
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
-import molecule.datomic.base.facade.exception.DatomicFacadeException
 import molecule.datomic.base.util.Inspect
+import scala.collection.mutable
 
 /** Datomic TxReport facade for peer api.
-  *
-  * @param rawTxReport
-  * @param scalaStmts
-  */
+ *
+ * @param rawTxReport
+ * @param scalaStmts
+ */
 case class TxReport_Peer(
   rawTxReport: jMap[_, _],
-  scalaStmts: Seq[Statement] = Nil,
-  javaStmts: jList[_] = new jArrayList[Any](0)
+  scalaStmts: Seq[Statement] = Nil
 ) extends TxReport with JavaConversions {
 
   lazy val eids: List[Long] = {
-    var allIds = List.empty[Long]
-    val datoms = rawTxReport.get(Connection.TX_DATA).asInstanceOf[jList[_]].iterator
-    datoms.next() // skip automatically created first transaction time datom
-    while (datoms.hasNext) {
-      val datom = datoms.next.asInstanceOf[Datom]
-      if (datom.added()) // only asserted datoms
-        allIds = allIds :+ datom.e().asInstanceOf[Long]
+    // Fast lookups with mutable Buffers
+    // https://www.lihaoyi.com/post/BenchmarkingScalaCollections.html#lookup-performance
+    var allIds       = mutable.Buffer.empty[Long]
+    val datoms       = rawTxReport.get(TX_DATA).asInstanceOf[jList[_]].iterator
+    val tempIds      = rawTxReport.get(TEMPIDS).asInstanceOf[jMap[_, _]].values().asScala.toBuffer
+    val tx           = datoms.next().asInstanceOf[Datom].e().asInstanceOf[Long] // txInstant datom
+    var txMetaData   = false
+    var datom: Datom = null
+    var e            = 0L
+    // Filter out tx meta data assertions
+    while (!txMetaData && datoms.hasNext) {
+      datom = datoms.next.asInstanceOf[Datom]
+      e = datom.e().asInstanceOf[Long]
+      if (e == tx)
+        txMetaData = true
+      if (
+        !txMetaData
+          && datom.added()
+          && !allIds.contains(e)
+      ) {
+        if (tempIds.contains(e)) {
+          allIds = allIds :+ e
+        }
+      }
     }
-    if (scalaStmts.nonEmpty) {
-      val addStmts = scalaStmts.filter(_.isInstanceOf[Add])
-      if (allIds.size != addStmts.size)
-        throw DatomicFacadeException(
-          s"Unexpected different counts of ${allIds.size} ids and ${addStmts.size} scala stmts."
-        )
-      val resolvedIds = addStmts.zip(allIds).foldLeft(Seq.empty[Long], false) {
-        case ((acc, true), _)                               => (acc, true) // ignore tx meta data
-        case ((acc, _), (Add("datomic.tx", _, _, _), _))    => (acc, true)
-        case ((acc, false), (Add(_: TempId, _, _, _), eid)) => (acc :+ eid, false)
-        case ((acc, isTxMetaData), _)                       => (acc, isTxMetaData)
-      }._1.distinct.toList
-
-      //      println("------------------------------------------")
-      //      txDataRaw.map(datom2string) foreach println
-      //      println("--------")
-      //      allIds foreach println
-      //      println("--------")
-      //      scalaStmts foreach println
-      //      println("--------")
-      //      addStmts foreach println
-      //      println("--------")
-      //      resolvedIds foreach println
-
-      resolvedIds
-    } else if (!javaStmts.isEmpty) {
-      val addKw = Keyword.intern("db", "add")
-      val addEs = javaStmts.asScala.toList.map(_.asInstanceOf[jList[Any]]).filter(_.get(0) == addKw).map(_.get(1))
-      if (allIds.size != addEs.size)
-        throw DatomicFacadeException(
-          s"Unexpected different counts of ${allIds.size} ids and ${addEs.size} java stmts."
-        )
-      addEs.zip(allIds).foldLeft(Seq.empty[Long], false) {
-        case ((acc, true), _)               => (acc, true) // ignore tx meta data
-        case ((acc, _), ("datomic.tx", _))  => (acc, true)
-        case ((acc, false), (_: DbId, eid)) => (acc :+ eid, false)
-        case ((acc, isTxMetaData), _)       => (acc, isTxMetaData)
-      }._1.distinct.toList
-    } else {
-      throw DatomicFacadeException(
-        s"Can't extract eids from tx report without Scala/Java statements."
-      )
-    }
+    allIds.toList
   }
 
   private lazy val txDataRaw: List[Datum] =
@@ -96,16 +69,16 @@ case class TxReport_Peer(
        |  dbAfter   : $dbAfter
        |  dbAfter.t : ${dbAfter.basisT}
        |  txData    : ${txDataRaw.map(d => datom2string(d)).mkString(",\n              ")}
-       |  tempids   : ${rawTxReport.get(TEMPIDS).asInstanceOf[AnyRef]}
+       |  tempIds   : ${rawTxReport.get(TEMPIDS).asInstanceOf[AnyRef]}
        |  eids      : $eids
        |}""".stripMargin
   }
 
   /** Get database value before transaction. */
-  lazy val dbBefore: Database = rawTxReport.get(Connection.DB_BEFORE).asInstanceOf[Database]
+  lazy val dbBefore: Database = rawTxReport.get(DB_BEFORE).asInstanceOf[Database]
 
   /** Get database value after transaction. */
-  lazy val dbAfter: Database = rawTxReport.get(Connection.DB_AFTER).asInstanceOf[Database]
+  lazy val dbAfter: Database = rawTxReport.get(DB_AFTER).asInstanceOf[Database]
 
   lazy val t: Long = dbAfter.basisT
 

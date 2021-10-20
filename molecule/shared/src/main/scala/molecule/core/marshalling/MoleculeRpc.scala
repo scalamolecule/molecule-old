@@ -33,7 +33,7 @@ trait MoleculeRpc {
     ll: Seq[(Int, String, Seq[String])],
     lll: Seq[(Int, String, Seq[Seq[String]])],
     maxRows: Int,
-    obj : Obj,
+    obj: Obj,
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],

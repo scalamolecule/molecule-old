@@ -179,7 +179,6 @@ case class Conn_Client(
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
-          //          Some(txReport.dbAfter.asOf(txReport.t))
           Some(txReport.dbAfter)
       }
       DatomicDb_Client(tempDb.get)
@@ -218,7 +217,7 @@ case class Conn_Client(
 
     if (_adhocDbView.isDefined) {
       futScalaStmts.map { scalaStmts =>
-        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts, javaStmts)
+        TxReport_Client(getAdhocDb.`with`(clientConn.withDb, javaStmts), scalaStmts)
       }
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
@@ -231,7 +230,7 @@ case class Conn_Client(
         }
         // Special withDb now in use (important for consequent transaction calls)
         withDbInUse = true
-        val txReport = TxReport_Client(withDb, scalaStmts, javaStmts)
+        val txReport = TxReport_Client(withDb, scalaStmts)
         _testDb = Some(txReport.dbAfter)
         txReport
       }
@@ -247,7 +246,7 @@ case class Conn_Client(
         }
         // Special withDb now in use (important for consequent transaction calls)
         withDbInUse = true
-        val txReport = TxReport_Client(withDb, scalaStmts, javaStmts)
+        val txReport = TxReport_Client(withDb, scalaStmts)
         _testDb = Some(txReport.dbAfter)
         txReport
       }
@@ -275,8 +274,7 @@ case class Conn_Client(
       // Live transaction
       futScalaStmts.flatMap { scalaStmts =>
         val futRawTxReport: Future[datomicScala.client.api.sync.TxReport] = try {
-          val rawTxReport = clientConn.transact(javaStmts)
-          Future(rawTxReport)
+          Future(clientConn.transact(javaStmts))
         } catch {
           case e: java.util.concurrent.ExecutionException =>
             println("---- Conn_Client.transactRaw ExecutionException: -------------")
@@ -309,7 +307,7 @@ case class Conn_Client(
             )
         }
 
-        futRawTxReport.map(rawTxReport => TxReport_Client(rawTxReport, scalaStmts, javaStmts))
+        futRawTxReport.map(rawTxReport => TxReport_Client(rawTxReport, scalaStmts))
       }
     }
   } catch {
