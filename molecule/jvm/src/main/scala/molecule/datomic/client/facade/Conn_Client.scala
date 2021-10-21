@@ -25,7 +25,7 @@ import scala.util.control.NonFatal
 
 
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
-  * */
+ * */
 case class Conn_Client(
   client: Client,
   defaultConnProxy: ConnProxy,
@@ -274,7 +274,9 @@ case class Conn_Client(
       // Live transaction
       futScalaStmts.flatMap { scalaStmts =>
         val futRawTxReport: Future[datomicScala.client.api.sync.TxReport] = try {
-          Future(clientConn.transact(javaStmts))
+          // Catch exceptions before wrapping in inner Future
+          val rawTxReport = clientConn.transact(javaStmts)
+          Future(rawTxReport)
         } catch {
           case e: java.util.concurrent.ExecutionException =>
             println("---- Conn_Client.transactRaw ExecutionException: -------------")
@@ -302,7 +304,6 @@ case class Conn_Client(
                 case Fault(msg)       => MoleculeException("[Datomic Fault] " + msg)
                 case Busy(msg)        => MoleculeException("[Datomic Busy] " + msg)
                 case e                => MoleculeException(e.getMessage)
-                //                case e                => e
               }
             )
         }

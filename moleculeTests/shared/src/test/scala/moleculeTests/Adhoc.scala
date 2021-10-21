@@ -3,6 +3,8 @@ package moleculeTests
 import molecule.core.util.Helpers
 import molecule.datomic.api.in3_out12._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.crud.update.UpdateBigDecimal.bigDec2
+import moleculeTests.tests.core.crud.update.UpdateBigInt.bigInt2
 import utest._
 import scala.concurrent.Future
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -25,6 +27,8 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        _ <- Ns.int.get.map(_ ==> List(1))
 
 
+//        eid <- Ns.bigDec(bigDec2).save.map(_.eid)
+        eid <- Ns.bigInt(bigInt2).save.map(_.eid)
 
 
 

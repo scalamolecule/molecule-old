@@ -65,7 +65,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       libraryDependencies ++= Seq(
         "org.specs2" %% "specs2-core" % "4.10.6",
         //        "org.scalamolecule" %% "datomic-client-api-java-scala" % "0.7.0",
-        "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.1",
+//        "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.1",
+        "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.2-SNAPSHOT",
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1",
         "com.typesafe.akka" %% "akka-stream" % "2.6.17",
         "com.typesafe.akka" %% "akka-serialization-jackson" % "2.6.17",
