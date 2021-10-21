@@ -229,37 +229,37 @@ object DatomicRpc extends MoleculeRpc
       case "EAVT" => args match {
         case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
         case IndexArgs(e, "", "", "", -1L, -1L, _, _)   => Seq(e)
-        case IndexArgs(e, a, "", "", -1L, -1L, _, _)    => Seq(e, a)
-        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(e, a, castTpeV(tpe, v))
-        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(e, a, castTpeV(tpe, v), t)
-        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(e, a, castTpeV(tpe, v), new Date(inst))
+        case IndexArgs(e, a, "", "", -1L, -1L, _, _)    => Seq(e, read(a))
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(e, read(a), castTpeV(tpe, v))
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(e, read(a), castTpeV(tpe, v), t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(e, read(a), castTpeV(tpe, v), new Date(inst))
         case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
       }
       case "AEVT" => args match {
         case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
-        case IndexArgs(-1L, a, "", "", -1L, -1L, _, _)  => Seq(a)
-        case IndexArgs(e, a, "", "", -1L, -1L, _, _)    => Seq(a, e)
-        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(a, e, castTpeV(tpe, v))
-        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(a, e, castTpeV(tpe, v), t)
-        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(a, e, castTpeV(tpe, v), new Date(inst))
+        case IndexArgs(-1L, a, "", "", -1L, -1L, _, _)  => Seq(read(a))
+        case IndexArgs(e, a, "", "", -1L, -1L, _, _)    => Seq(read(a), e)
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(read(a), e, castTpeV(tpe, v))
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(read(a), e, castTpeV(tpe, v), t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(read(a), e, castTpeV(tpe, v), new Date(inst))
         case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
       }
       case "AVET" => args match {
         case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
-        case IndexArgs(-1L, a, "", "", -1L, -1L, _, _)  => Seq(a)
-        case IndexArgs(-1L, a, v, tpe, -1L, -1L, _, _)  => Seq(a, castTpeV(tpe, v))
-        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(a, castTpeV(tpe, v), e)
-        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(a, castTpeV(tpe, v), e, t)
-        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(a, castTpeV(tpe, v), e, new Date(inst))
+        case IndexArgs(-1L, a, "", "", -1L, -1L, _, _)  => Seq(read(a))
+        case IndexArgs(-1L, a, v, tpe, -1L, -1L, _, _)  => Seq(read(a), castTpeV(tpe, v))
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(read(a), castTpeV(tpe, v), e)
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(read(a), castTpeV(tpe, v), e, t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(read(a), castTpeV(tpe, v), e, new Date(inst))
         case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
       }
       case "VAET" => args match {
         case IndexArgs(-1L, "", "", "", -1L, -1L, _, _) => Nil
         case IndexArgs(-1L, "", v, tpe, -1L, -1L, _, _) => Seq(castTpeV(tpe, v))
-        case IndexArgs(-1L, a, v, tpe, -1L, -1L, _, _)  => Seq(castTpeV(tpe, v), a)
-        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(castTpeV(tpe, v), a, e)
-        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(castTpeV(tpe, v), a, e, t)
-        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(castTpeV(tpe, v), a, e, new Date(inst))
+        case IndexArgs(-1L, a, v, tpe, -1L, -1L, _, _)  => Seq(castTpeV(tpe, v), read(a))
+        case IndexArgs(e, a, v, tpe, -1L, -1L, _, _)    => Seq(castTpeV(tpe, v), read(a), e)
+        case IndexArgs(e, a, v, tpe, t, -1L, _, _)      => Seq(castTpeV(tpe, v), read(a), e, t)
+        case IndexArgs(e, a, v, tpe, -1L, inst, _, _)   => Seq(castTpeV(tpe, v), read(a), e, new Date(inst))
         case other                                      => throw MoleculeException("Unexpected IndexArgs: " + other)
       }
       case other  => throw MoleculeException("Unexpected index name: " + other)

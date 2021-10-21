@@ -368,13 +368,13 @@ case class Conn_Client(
           attr match {
             case "range" =>
               ("indexRange", "", value match {
-                case Eq(Seq(a, None, None))  => Seq(a, None, None)
-                case Eq(Seq(a, from, None))  => Seq(a, Some(from), None)
-                case Eq(Seq(a, None, until)) => Seq(a, None, Some(until))
+                case Eq(Seq(a, None, None))  => Seq(read(a.toString), None, None)
+                case Eq(Seq(a, from, None))  => Seq(read(a.toString), Some(from), None)
+                case Eq(Seq(a, None, until)) => Seq(read(a.toString), None, Some(until))
                 case Eq(Seq(a, from, until)) =>
                   if (from.getClass != until.getClass)
                     throw MoleculeException("Please supply range arguments of same type as attribute.")
-                  Seq(a, Some(from), Some(until))
+                  Seq(read(a.toString), Some(from), Some(until))
                 case v                       => throw MoleculeException("Unexpected AVET range value: " + v)
               })
             case _       =>
@@ -620,8 +620,7 @@ case class Conn_Client(
       api match {
         case "datoms" =>
           val datom2row_ = datom2row(None)
-          val raw        = db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1)
-          raw.flatMap { datoms =>
+          db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1).flatMap { datoms =>
             datoms.forEach(datom =>
               rows = rows :+ datom2row_(datom)
             )
@@ -633,8 +632,7 @@ case class Conn_Client(
           val attrId     = args.head.toString
           val startValue = args(1).asInstanceOf[Option[Any]]
           val endValue   = args(2).asInstanceOf[Option[Any]]
-          val raw        = db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1)
-          raw.flatMap { datoms =>
+          db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1).flatMap { datoms =>
             datoms.forEach(datom =>
               rows = rows :+ datom2row_(datom)
             )

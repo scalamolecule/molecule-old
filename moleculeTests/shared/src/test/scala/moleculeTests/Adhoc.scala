@@ -35,8 +35,6 @@ object Adhoc extends AsyncTestSuite with Helpers {
 /*
 
 [error] 	moleculeTests.tests.core.obj.ObjGeneric
-[error] 	moleculeTests.tests.core.generic.Index_EAVT
-[error] 	moleculeTests.tests.core.generic.Index_AVET
 [error] 	moleculeTests.tests.core.runtime.EntityMap
 [error] 	moleculeTests.tests.core.runtime.EntityList
 [error] 	moleculeTests.tests.core.generic.Index_AEVT
