@@ -179,7 +179,7 @@ object EntityMap extends AsyncTestSuite {
         // Testing ref id that is not in the database will return a failed future with a MoleculeException:
         e2 <- Ns.ref1(12345L).save.map(_.eid)
         _ <- e2.touch.recover { case MoleculeException(msg, _) =>
-          msg ==> "Entity id `12345` not found in database."
+          msg ==> "Entity id 12345 not found in database."
         }
 
         // Touching a real ref id

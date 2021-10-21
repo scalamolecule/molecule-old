@@ -163,7 +163,6 @@ case class Conn_Peer(
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Peer(peerConn.db.`with`(txData))
-          //          Some(txReport.dbAfter.asOf(txReport.t))
           Some(txReport.dbAfter)
       }
       DatomicDb_Peer(tempDb.get)
@@ -215,8 +214,7 @@ case class Conn_Peer(
         val txReport = TxReport_Peer(_testDb.getOrElse(peerConn.db).`with`(javaStmts), scalaStmts)
 
         // Continue with updated in-memory db
-        val dbAfter = txReport.dbAfter.asOf(txReport.t)
-        _testDb = Some(dbAfter)
+        _testDb = Some(txReport.dbAfter.asOf(txReport.t))
         txReport
       }
 

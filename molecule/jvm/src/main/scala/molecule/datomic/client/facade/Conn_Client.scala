@@ -20,6 +20,7 @@ import molecule.datomic.base.facade.{Conn_Datomic, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
+import molecule.datomic.peer.facade.TxReport_Peer
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.util.control.NonFatal
 
@@ -164,6 +165,7 @@ case class Conn_Client(
   }
 
   def db: DatomicDb = {
+    //    debug("d ", _testDb.toString)
     if (_adhocDbView.isDefined) {
       // Adhoc db
       DatomicDb_Client(getAdhocDb)
@@ -192,10 +194,13 @@ case class Conn_Client(
     } else if (_testDb.isDefined) {
       // Test db
       if (sinceT.isDefined) {
+        //        debug("d1", sinceT.toString)
         DatomicDb_Client(_testDb.get.since(sinceT.get))
       } else if (sinceD.isDefined) {
+        //        debug("d2", sinceD.toString)
         DatomicDb_Client(_testDb.get.since(sinceD.get))
       } else {
+        //        debug("d3", _testDb.toString)
         DatomicDb_Client(_testDb.get)
       }
 
@@ -221,33 +226,32 @@ case class Conn_Client(
       }
 
     } else if (_testDb.isDefined && connProxy.testDbStatus != -1) {
+      //      debug("t1", s"$withDbInUse   ${_testDb}")
       futScalaStmts.map { scalaStmts =>
-        // In-memory "transaction"
         val withDb = if (withDbInUse) {
           _testDb.get.`with`(_testDb.get, javaStmts)
         } else {
           _testDb.get.`with`(clientConn.withDb, javaStmts)
         }
-        // Special withDb now in use (important for consequent transaction calls)
         withDbInUse = true
         val txReport = TxReport_Client(withDb, scalaStmts)
-        _testDb = Some(txReport.dbAfter)
+        _testDb = Some(txReport.dbAfter) // don't add .asOf(txReport.t) - destroys with-db!
         txReport
       }
 
 
     } else if (connProxy.testDbStatus == 1 && _testDb.isEmpty) {
+      //      debug("t2", s"$withDbInUse   ${_testDb}")
       def transactWith: Future[TxReport_Client] = futScalaStmts.map { scalaStmts =>
-        // In-memory "transaction"
-        val withDb = if (withDbInUse) {
-          _testDb.get.`with`(_testDb.get, javaStmts)
+        val testDb = _testDb.getOrElse(clientConn.db)
+        val withDb = if (withDbInUse && _testDb.nonEmpty) {
+          testDb.`with`(testDb, javaStmts)
         } else {
-          _testDb.get.`with`(clientConn.withDb, javaStmts)
+          testDb.`with`(clientConn.withDb, javaStmts)
         }
-        // Special withDb now in use (important for consequent transaction calls)
         withDbInUse = true
         val txReport = TxReport_Client(withDb, scalaStmts)
-        _testDb = Some(txReport.dbAfter)
+        _testDb = Some(txReport.dbAfter) // don't add .asOf(txReport.t) - destroys with-db!
         txReport
       }
 
@@ -255,12 +259,19 @@ case class Conn_Client(
         case AsOf(TxLong(0))          => transactWith
         case AsOf(TxLong(t))          => cleanFrom(t + 1).flatMap(_ => transactWith)
         case AsOf(TxDate(d))          => cleanFrom(nextDateMs(d)).flatMap(_ => transactWith)
-        case Since(TxLong(t))         => _testDb = Some(clientConn.db.since(t)); transactWith
-        case Since(TxDate(d))         => _testDb = Some(clientConn.db.since(d)); transactWith
+        case Since(TxLong(t))         =>
+          sinceT = Some(t)
+          _testDb = Some(clientConn.db.since(t))
+          transactWith
+        case Since(TxDate(d))         =>
+          sinceD = Some(d)
+          _testDb = Some(clientConn.db.since(d))
+          transactWith
         case History                  => _testDb = Some(clientConn.db.history); transactWith
         case With(stmtsEdn, uriAttrs) =>
           val txData   = getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
+          withDbInUse = true
           _testDb = Some(txReport.dbAfter)
           transactWith
       }

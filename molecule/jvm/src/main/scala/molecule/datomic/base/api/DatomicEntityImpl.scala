@@ -169,7 +169,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
   def asMap(depth: Int, maxDepth: Int)
            (implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     keys.flatMap {
-      case Nil  => Future.failed(MoleculeException(s"Entity id `$eid` not found in database."))
+      case Nil  => Future.failed(MoleculeException(s"Entity id $eid not found in database."))
       case keys =>
         val keysSorted   = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
         val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
@@ -201,7 +201,7 @@ abstract class DatomicEntityImpl(conn: Conn, eid: Any)
   def asList(depth: Int, maxDepth: Int)
             (implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
     keys.flatMap {
-      case Nil   => Future.failed(MoleculeException(s"Entity id `$eid` not found in database."))
+      case Nil   => Future.failed(MoleculeException(s"Entity id $eid not found in database."))
       case keys2 =>
         val keysSorted   = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
         val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil

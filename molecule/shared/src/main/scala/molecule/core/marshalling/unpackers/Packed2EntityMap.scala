@@ -8,7 +8,20 @@ import scala.collection.mutable.ListBuffer
 
 class Packed2EntityMap(conn: Conn) extends DateHandling {
 
-  private val attrs = conn.connProxy.attrMap + (":molecule_Meta/otherEdge" -> (1, "ref"))
+  private val attrs = {
+    // Add backrefs
+    conn.connProxy.attrMap.flatMap {
+      case (ref, (card, "ref")) =>
+        val backRef = ref.replace("/", "/_")
+        Seq(
+          (ref, (card, "ref")),
+          (backRef, (card, "ref"))
+        )
+      case (attr, (card, tpe))  => Seq((attr, (card, tpe)))
+    } +
+    // Add internal bidirectional edge ref attribute
+    (":molecule_Meta/otherEdge" -> (1, "ref"))
+  }
 
   private lazy val buf = new StringBuffer
 

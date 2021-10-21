@@ -25,24 +25,22 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        _ <- Ns.int.get.map(_ ==> List(1))
 
 
-//        eid <- Ns.bigDec(bigDec2).save.map(_.eid)
-        eid <- Ns.bigInt(bigInt2).save.map(_.eid)
-
 
 
       } yield ()
     }
-/*
+    /*
 
-[error] 	moleculeTests.tests.core.obj.ObjGeneric
-[error] 	moleculeTests.tests.core.runtime.EntityMap
-[error] 	moleculeTests.tests.core.runtime.EntityList
-[error] 	moleculeTests.tests.core.generic.Index_AEVT
-[error] 	moleculeTests.tests.core.time.TestDbSince
-[error] 	moleculeTests.tests.core.time.TestDbWith
-[error] 	moleculeTests.tests.core.time.TestDbAsOf
-[error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
- */
+    [error] 	moleculeTests.tests.core.generic.Index_AEVT
+    [error] 	moleculeTests.tests.core.obj.ObjGeneric
+    [error] 	moleculeTests.tests.core.runtime.EntityMap
+    [error] 	moleculeTests.tests.core.runtime.EntityList
+    [error] 	moleculeTests.tests.core.time.TestDbSince
+    [error] 	moleculeTests.tests.core.time.TestDbWith
+    [error] 	moleculeTests.tests.core.time.TestDbAsOf
+
+    [error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
+     */
     //    "adhoc2" - core { implicit futConn =>
     //
     //      for {
