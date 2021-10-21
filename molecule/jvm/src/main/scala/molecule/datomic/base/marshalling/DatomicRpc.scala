@@ -69,84 +69,87 @@ object DatomicRpc extends MoleculeRpc
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]]
-  ): Future[String] = try {
-    val log = new log
-    val t   = TimerPrint("DatomicRpc")
+  ): Future[String] = Future {
+    try {
+      val log = new log
+      val t   = TimerPrint("DatomicRpc")
 
-    //    println("------------------------------")
-    //    println("================================================================================")
-    //    println(datalogQuery)
-    //    if (rules.nonEmpty) {
-    //      println("Rules:")
-    //      rules foreach println
-    //    }
-    //    println("l  : " + l)
-    //    println("ll : " + ll)
-    //    println("lll: " + lll)
+      //    println("------------------------------")
+      //    println("================================================================================")
+      //      println(datalogQuery)
+      //      if (rules.nonEmpty) {
+      //        println("Rules:")
+      //        rules foreach println
+      //      }
+      //      println("l  : " + l)
+      //      println("ll : " + ll)
+      //      println("lll: " + lll)
 
-    val inputs    = unmarshallInputs(l ++ ll ++ lll)
-    val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
-    //    inputs.foreach(i => println(s"$i   " + i.getClass))
+      val inputs    = unmarshallInputs(l ++ ll ++ lll)
+      val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
 
-    for {
-      conn <- getConn(connProxy)
-      allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
-    } yield {
-      val rowCountAll = allRows.size
-      val maxRows     = if (maxRows0 == -1 || rowCountAll < maxRows0) rowCountAll else maxRows0
-      val queryTime   = t.delta
-      val space       = " " * (70 - datalogQuery.split('\n').last.length)
-      val time        = qTime(queryTime)
-      val timeRight   = " " * (8 - time.length) + time
+      //      inputs.foreach(i => println(s"$i   " + i.getClass))
 
-      log("================================================================================")
-      log(datalogQuery + space + timeRight)
-      if (allInputs.nonEmpty)
-        log(allInputs.mkString("Inputs:\n", "\n", ""))
+      for {
+        conn <- getConn(connProxy)
+        allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
+      } yield {
+        val rowCountAll = allRows.size
+        val maxRows     = if (maxRows0 == -1 || rowCountAll < maxRows0) rowCountAll else maxRows0
+        val queryTime   = t.delta
+        val space       = " " * (70 - datalogQuery.split('\n').last.length)
+        val time        = qTime(queryTime)
+        val timeRight   = " " * (8 - time.length) + time
 
-      //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
-      //      log(s"\n---- Querying Datomic... --------------------")
-      //      log(datalogQuery)
-      //      log(qTime(queryTime) + "  " + datalogQuery)
-      //      log("connProxy uuid: " + connProxy.uuid)
-      //      log("Query time  : " + thousands(queryTime) + " ms")
-      //      log("rowCountAll : " + rowCountAll)
-      //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
-      //      log("rowCount    : " + rowCount)
+        log("================================================================================")
+        log(datalogQuery + space + timeRight)
+        if (allInputs.nonEmpty)
+          log(allInputs.mkString("Inputs:\n", "\n", ""))
 
-      log("-------------------------------")
-      //      log(obj.toString)
-      //      log("-------------------------------")
-      //      log(refIndexes.mkString("\n"))
-      //      log("-------------------------------")
-      //      log(tacitIndexes.mkString("\n"))
-      //      log("-------------------------------")
-      allRows.forEach(row => log(row.toString))
-      log.print
+        //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
+        //      log(s"\n---- Querying Datomic... --------------------")
+        //      log(datalogQuery)
+        //      log(qTime(queryTime) + "  " + datalogQuery)
+        //      log("connProxy uuid: " + connProxy.uuid)
+        //      log("Query time  : " + thousands(queryTime) + " ms")
+        //      log("rowCountAll : " + rowCountAll)
+        //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
+        //      log("rowCount    : " + rowCount)
 
-      val packed = if (isOptNested) {
-        OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked
-      } else if (nestedLevels == 0) {
-        // Flat and composites
-        Flat2packed(obj, allRows, maxRows).getPacked
-      } else {
-        Nested2packed(obj, allRows, nestedLevels).getPacked
+        log("-------------------------------")
+        //      log(obj.toString)
+        //      log("-------------------------------")
+        //      log(refIndexes.mkString("\n"))
+        //      log("-------------------------------")
+        //      log(tacitIndexes.mkString("\n"))
+        //      log("-------------------------------")
+        allRows.forEach(row => log(row.toString))
+        log.print
+
+        val packed = if (isOptNested) {
+          OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked
+        } else if (nestedLevels == 0) {
+          // Flat and composites
+          Flat2packed(obj, allRows, maxRows).getPacked
+        } else {
+          Nested2packed(obj, allRows, nestedLevels).getPacked
+        }
+
+        //      println("-------------------------------" + packed)
+        //        log("Sending data to client... Total server time: " + t.msTotal)
+        packed
       }
-
-      //      println("-------------------------------" + packed)
-      //        log("Sending data to client... Total server time: " + t.msTotal)
-      packed
+    } catch {
+      case NonFatal(exc) => Future.failed(exc)
     }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  }.flatten
 
   // Unmarshall to Datomic types
   private def unmarshallInputs(lists: Seq[(Int, String, Any)]): Seq[Object] = {
     lists.sortBy(_._1).map {
       case (_, tpe, vs) =>
         val cast = tpe match {
-          case "String"     => (v: String) => stripEnum(v).asInstanceOf[Object]
+          case "String"     => (v: String) => possiblyEnum(v)
           case "Int"        => (v: String) => new java.lang.Long(v)
           case "Long"       => (v: String) => new java.lang.Long(v)
           case "Double"     => (v: String) => new java.lang.Double(v)
@@ -159,7 +162,7 @@ object DatomicRpc extends MoleculeRpc
           case "Any"        => (s: String) =>
             val v = s.drop(10)
             s.take(10) match {
-              case "String    " => v //.asInstanceOf[Object]
+              case "String    " => v
               case "Int       " => new java.lang.Long(v)
               case "Long      " => new java.lang.Long(v)
               case "Double    " => new java.lang.Double(v)
@@ -189,6 +192,13 @@ object DatomicRpc extends MoleculeRpc
     }
   }
 
+  private def possiblyEnum(s: String): AnyRef = if (s.startsWith("__enum__"))
+    s match {
+      case r"__enum__:([A-Za-z0-9\.]+)$ns/([A-Za-z0-9]+)$enum" => clojure.lang.Keyword.intern(ns, enum)
+      case other                                               =>
+        throw MoleculeException(s"Unexpected enum input: `$other`")
+    }
+  else s
 
   def index2packed(
     connProxy: ConnProxy,
@@ -199,7 +209,7 @@ object DatomicRpc extends MoleculeRpc
   ): Future[String] = {
     def castTpeV(tpe: String, v: String): Object = {
       (tpe, v) match {
-        case ("String", v)     => stripEnum(v).asInstanceOf[Object]
+        case ("String", v)     => possiblyEnum(v)
         case ("Int", v)        => v.toInt.asInstanceOf[Object]
         case ("Long", v)       => v.toLong.asInstanceOf[Object]
         case ("Double", v)     => v.toDouble.asInstanceOf[Object]
@@ -561,8 +571,8 @@ object DatomicRpc extends MoleculeRpc
                   }
                 case adhocDb: DatomicDb_Client =>
                   val datom2packed = getClientDatom2packed(None)
-                  val startValue  = if (args.v.isEmpty) None else Some(castTpeV(args.tpe, args.v))
-                  val endValue = if (args.v2.isEmpty) None else Some(castTpeV(args.tpe2, args.v2))
+                  val startValue   = if (args.v.isEmpty) None else Some(castTpeV(args.tpe, args.v))
+                  val endValue     = if (args.v2.isEmpty) None else Some(castTpeV(args.tpe2, args.v2))
                   adhocDb.indexRange(args.a, startValue, endValue).flatMap { datoms =>
                     datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
                       case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))

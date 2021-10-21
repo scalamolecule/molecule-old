@@ -293,19 +293,7 @@ case class Conn_Client(
           case NonFatal(e) =>
             println("---- Conn_Client.transactRaw NonFatal exc: -------------")
             println(javaStmts.asScala.toList.mkString("\n"))
-            Future.failed(
-              e match {
-                case NotFound(msg)    => MoleculeException("[Datomic NotFound] " + msg)
-                case Unavailable(msg) => MoleculeException("[Datomic Unavailable] " + msg)
-                case Interrupted(msg) => MoleculeException("[Datomic Interrupted] " + msg)
-                case Incorrect(msg)   => MoleculeException("[Datomic Incorrect] " + msg)
-                case Unsupported(msg) => MoleculeException("[Datomic Unsupported] " + msg)
-                case Conflict(msg)    => MoleculeException("[Datomic Conflict] " + msg)
-                case Fault(msg)       => MoleculeException("[Datomic Fault] " + msg)
-                case Busy(msg)        => MoleculeException("[Datomic Busy] " + msg)
-                case e                => MoleculeException(e.getMessage)
-              }
-            )
+            Future.failed(MoleculeException(e.getMessage))
         }
 
         futRawTxReport.map(rawTxReport => TxReport_Client(rawTxReport, scalaStmts))
@@ -327,14 +315,17 @@ case class Conn_Client(
       case bi: BigInt      => new java.math.BigInteger(bi.toString)
       case v               => v
     }
-    blocking(
-      clientDatomic.q(
+    try {
+      val result = clientDatomic.q(
         query,
         db.asInstanceOf[DatomicDb_Client].clientDb,
         inputs.asInstanceOf[Seq[AnyRef]]: _*
       )
-    )
-  }
+      Future(result)
+    } catch {
+      case NonFatal(e) => Future.failed(MoleculeException(e.getMessage))
+    }
+  }.flatten
 
   def query(model: Model, query: Query)
            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {

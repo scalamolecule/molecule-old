@@ -133,10 +133,7 @@ object UpdateEnum extends AsyncTestSuite {
             err ==> (if (system == SystemPeer)
               s":db.error/not-an-entity Unable to resolve entity: " +
                 s":Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]"
-            else
-              s"[Datomic Incorrect] Unable to resolve entity: " +
-                s":Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]"
-              )
+            else s"Unable to resolve entity: :Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]")
           }
 
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))

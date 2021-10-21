@@ -3,8 +3,6 @@ package moleculeTests
 import molecule.core.util.Helpers
 import molecule.datomic.api.in3_out12._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.crud.update.UpdateBigDecimal.bigDec2
-import moleculeTests.tests.core.crud.update.UpdateBigInt.bigInt2
 import utest._
 import scala.concurrent.Future
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,19 +34,16 @@ object Adhoc extends AsyncTestSuite with Helpers {
     }
 /*
 
-[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherInsert
-[error] 	moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfInsert
-[error] 	moleculeTests.tests.examples.gremlin.gettingStarted.Friends2
-[error] 	moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfSave
-[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherSave
-[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.QueryTour
-[error] 	moleculeTests.tests.examples.datomic.dayOfDatomic.Provenance
-[error] 	moleculeTests.tests.core.nested.NestedRef
-[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeManyOtherUpdateProps
-[error] 	moleculeTests.tests.core.bidirectionals.edgeOther.EdgeOneOtherInsert
-[error] 	moleculeTests.tests.core.composite.CompositeArities
-[error] 	moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeManySelfInsert
-[error] 	moleculeTests.tests.core.txMetaData.MetaRetract
+[error] 	moleculeTests.tests.core.obj.ObjGeneric
+[error] 	moleculeTests.tests.core.generic.Index_EAVT
+[error] 	moleculeTests.tests.core.generic.Index_AVET
+[error] 	moleculeTests.tests.core.runtime.EntityMap
+[error] 	moleculeTests.tests.core.runtime.EntityList
+[error] 	moleculeTests.tests.core.generic.Index_AEVT
+[error] 	moleculeTests.tests.core.time.TestDbSince
+[error] 	moleculeTests.tests.core.time.TestDbWith
+[error] 	moleculeTests.tests.core.time.TestDbAsOf
+[error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
  */
     //    "adhoc2" - core { implicit futConn =>
     //

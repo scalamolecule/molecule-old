@@ -19,6 +19,7 @@ import molecule.datomic.base.facade.{Conn_Datomic, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
+import molecule.datomic.client.facade.DatomicDb_Client
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
@@ -39,7 +40,7 @@ object Conn_Peer {
 
 
 /** Facade to Datomic connection for peer api.
-  * */
+ * */
 case class Conn_Peer(
   peerConn: datomic.Connection,
   defaultConnProxy: ConnProxy,
@@ -302,8 +303,23 @@ case class Conn_Peer(
       case it: Iterable[_] => it.asJava
       case v               => v
     }
-    Peer.q(query, db.getDatomicDb +: inputs.asInstanceOf[Seq[AnyRef]]: _*)
-  }
+    try {
+      val result = Peer.q(query, db.getDatomicDb +: inputs.asInstanceOf[Seq[AnyRef]]: _*)
+      Future(result)
+    } catch {
+      case e: java.util.concurrent.ExecutionException =>
+        // White list of exceptions that can be pickled by BooPickle
+        Future.failed(
+          e.getCause match {
+            case e: TxFnException     => e
+            case e: MoleculeException => e
+            case e                    => MoleculeException(e.getMessage.trim)
+          }
+        )
+
+      case NonFatal(e) => Future.failed(MoleculeException(e.getMessage))
+    }
+  }.flatten
 
   def query(model: Model, query: Query)
            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {

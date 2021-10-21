@@ -40,8 +40,6 @@ trait Helpers extends DateHandling {
     case other                               => other
   }
 
-  def stripEnum(s: String): String = if (s.startsWith("__enum__")) s.drop(8) else s
-
   def escStr(s: String) =
     s.replace("""\""", """\\""").replace(""""""", """\"""")
 
