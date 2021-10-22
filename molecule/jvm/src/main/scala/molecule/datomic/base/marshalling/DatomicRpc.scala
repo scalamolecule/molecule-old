@@ -194,8 +194,8 @@ object DatomicRpc extends MoleculeRpc
 
   private def possiblyEnum(s: String): AnyRef = if (s.startsWith("__enum__"))
     s match {
-      case r"__enum__:([A-Za-z0-9\.]+)$ns/([A-Za-z0-9]+)$enum" => clojure.lang.Keyword.intern(ns, enum)
-      case other                                               =>
+      case r"__enum__:([A-Za-z0-9\._]+)$ns/([A-Za-z0-9_]+)$enum" => clojure.lang.Keyword.intern(ns, enum)
+      case other                                                 =>
         throw MoleculeException(s"Unexpected enum input: `$other`")
     }
   else s
@@ -742,27 +742,42 @@ object DatomicRpc extends MoleculeRpc
   private def getFreshConn(connProxy: ConnProxy): Future[Conn] = connProxy match {
     case proxy@DatomicPeerProxy(protocol, dbIdentifier, schema, _, _, _, _, _) =>
       protocol match {
-        case "mem"             => Datomic_Peer.recreateDbFromEdn(proxy, schema)
-        case `datomicProtocol` => Datomic_Peer.connect(proxy, protocol, dbIdentifier)
-        case other             => throw new RuntimeException(
-          s"\nCan't serve Peer protocol `$other` since the current project is built with " +
-            s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
-        )
+        case "mem" =>
+          Datomic_Peer.recreateDbFromEdn(proxy, schema)
+            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+
+        case `datomicProtocol` =>
+          Datomic_Peer.connect(proxy, protocol, dbIdentifier)
+            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+
+        case other =>
+          Future.failed(MoleculeException(
+            s"\nCan't serve Peer protocol `$other` since the current project is built with " +
+              s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
+          ))
       }
 
     case proxy@DatomicDevLocalProxy(protocol, system, storageDir, dbName, schema, _, _, _, _, _) =>
       val devLocal = Datomic_DevLocal(system, storageDir)
       protocol match {
-        case "mem"             => devLocal.recreateDbFromEdn(schema, proxy)
-        case `datomicProtocol` => devLocal.connect(dbName, proxy)
-        case other             => throw new RuntimeException(
-          s"\nCan't serve DevLocal protocol `$other` since the current project is built with " +
-            s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
-        )
+        case "mem" =>
+          devLocal.recreateDbFromEdn(schema, proxy)
+            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+
+        case `datomicProtocol` =>
+          devLocal.connect(dbName, proxy)
+            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+
+        case other =>
+          Future.failed(MoleculeException(
+            s"\nCan't serve DevLocal protocol `$other` since the current project is built with " +
+              s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
+          ))
       }
 
     case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
       Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName, proxy)
+        .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
   }
 
   private def getConn(

@@ -262,20 +262,7 @@ case class Conn_Peer(
               case NonFatal(e) =>
                 println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
                 println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(
-                  e match {
-                    case NotFound(msg)    => MoleculeException("[Datomic NotFound] " + msg)
-                    case Unavailable(msg) => MoleculeException("[Datomic Unavailable] " + msg)
-                    case Interrupted(msg) => MoleculeException("[Datomic Interrupted] " + msg)
-                    case Incorrect(msg)   => MoleculeException("[Datomic Incorrect] " + msg)
-                    case Unsupported(msg) => MoleculeException("[Datomic Unsupported] " + msg)
-                    case Conflict(msg)    => MoleculeException("[Datomic Conflict] " + msg)
-                    case Fault(msg)       => MoleculeException("[Datomic Fault] " + msg)
-                    case Busy(msg)        => MoleculeException("[Datomic Busy] " + msg)
-                    case e                => MoleculeException(e.getMessage)
-                    //                case e                => e
-                  }
-                )
+                p.failure(MoleculeException(e.getMessage))
             }
           }
         },

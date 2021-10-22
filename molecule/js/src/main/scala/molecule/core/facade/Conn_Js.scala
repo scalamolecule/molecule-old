@@ -19,7 +19,7 @@ import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future}
 
 
-/** Client db connection.
+/** Client connection.
   *
   * Used to cary information enabling marshalling on both client and server side.
   *

@@ -49,15 +49,14 @@ trait Conn extends ColOps with Serializations {
 
   private[molecule] def updateTestDbView(testDbView: Option[DbView], status: Int = 1): Unit = {
     connProxy = connProxy match {
-      case p: DatomicPeerProxy       => p.copy(testDbStatus = status, testDbView = testDbView)
-      case p: DatomicDevLocalProxy   => p.copy(testDbStatus = status, testDbView = testDbView)
-      case p: DatomicPeerServerProxy => p.copy(testDbStatus = status, testDbView = testDbView)
+      case p: DatomicPeerProxy       => p.copy(testDbView = testDbView, testDbStatus = status)
+      case p: DatomicDevLocalProxy   => p.copy(testDbView = testDbView, testDbStatus = status)
+      case p: DatomicPeerServerProxy => p.copy(testDbView = testDbView, testDbStatus = status)
     }
   }
 
   protected def debug(prefix: String, suffix: String = "") = {
     val p = prefix + " " * (4 - prefix.length)
-    //    println(p + connProxy.adhocDbView + "   " + suffix)
     println(s"$p  ${connProxy.testDbStatus}  ${connProxy.testDbView}   " + suffix)
   }
 

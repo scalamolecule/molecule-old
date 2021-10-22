@@ -2,7 +2,9 @@ package moleculeTests
 
 import molecule.core.util.Helpers
 import molecule.datomic.api.in3_out12._
+import molecule.datomic.api.out6.m
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.generic.Datom.delay
 import utest._
 import scala.concurrent.Future
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -26,21 +28,9 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
 
-
       } yield ()
     }
-    /*
 
-    [error] 	moleculeTests.tests.core.generic.Index_AEVT
-    [error] 	moleculeTests.tests.core.obj.ObjGeneric
-    [error] 	moleculeTests.tests.core.runtime.EntityMap
-    [error] 	moleculeTests.tests.core.runtime.EntityList
-    [error] 	moleculeTests.tests.core.time.TestDbSince
-    [error] 	moleculeTests.tests.core.time.TestDbWith
-    [error] 	moleculeTests.tests.core.time.TestDbAsOf
-
-    [error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
-     */
     //    "adhoc2" - core { implicit futConn =>
     //
     //      for {
