@@ -18,13 +18,15 @@ trait DatomicEntity {
 
   private[molecule] def keys(implicit ec: ExecutionContext): Future[List[String]] = ???
 
-  private[molecule] def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = ???
-
-  private[molecule] def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = ???
-
-  private[molecule] def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] = ???
-
   private[molecule] def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = ???
+
+
+  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = ???
+
+  def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = ???
+
+  def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] = ???
+
 
   /** Asynchronously retract single entity using entity id.
     * <br><br>

@@ -6,7 +6,7 @@ import scala.reflect.macros.blackbox
 
 
 /** Macro to make output molecules. */
-class MakeMoleculeDynamic(val c: blackbox.Context) extends Base with TreeTransformer {
+class MakeMoleculeDynamic(val c: blackbox.Context) extends MakeBase with TreeTransformer {
 
   import c.universe._
 

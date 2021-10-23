@@ -16,7 +16,6 @@ import moleculeTests.dataModels.examples.datomic.dayOfDatomic.schema._
 import moleculeTests.dataModels.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
-import moleculeTests.setup.CleanPeerServer.cleanPeerServerConn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -42,7 +41,7 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
       case SystemPeerServer =>
         val connProxy = DatomicPeerServerProxy("k", "s", "localhost:8998", peerServerDb, clientSchema, attrMap)
-        cleanPeerServerConn(Datomic_PeerServer("k", "s", "localhost:8998"), peerServerDb, schemaTx, connProxy)
+        Datomic_PeerServer("k", "s", "localhost:8998").connect(peerServerDb, connProxy)
     }
     test(futConn)
   }

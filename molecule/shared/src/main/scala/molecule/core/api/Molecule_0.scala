@@ -303,17 +303,11 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
   protected def _insert(conn: Future[Conn], dataRows: Iterable[Seq[Any]])
                        (implicit ec: ExecutionContext): Future[TxReport] = try {
     VerifyModel(_model, "insert")
-    val res = conn.flatMap { conn =>
+    conn.flatMap { conn =>
       if (conn.isJsPlatform) {
         for {
           insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
           (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
-          //          _ = {
-          //            insertStmts foreach println
-          //            println("------------")
-          //            println(stmtsEdn)
-          //            println(stmtsEdn.length)
-          //          }
           result <- conn.rpc.transact(conn.connProxy, stmtsEdn, uriAttrs)
         } yield result
       } else {
@@ -322,10 +316,7 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
         )
       }
     }
-    //    res.foreach(r => println("@@@@@@@@@@@@ INSERT  " + r))
-    res
   } catch {
-    // Catch failed model verification
     case NonFatal(exc) => Future.failed(exc)
   }
 

@@ -2,22 +2,18 @@ package molecule.datomic.base.facade
 
 import java.io.{Reader, StringReader}
 import java.net.URI
-import java.util.{Collections, Date, Collection => jCollection, List => jList}
+import java.util.{Collections, Date, Collection => jCollection, List => jList, Map => jMap}
 import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Peer.function
 import datomic.Util.{list, read, readAll}
 import datomic.{Peer, Util}
+import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
-import java.util.{Collection => jCollection, Map => jMap}
-import molecule.core.util.JavaConversions
 
-trait Conn_Datomic extends Conn with JavaConversions {
-
-  val isJsPlatform: Boolean = false
-
+private[molecule] trait Conn_Jvm extends Conn with JavaConversions {
 
   // Reset datoms of in-mem with-db from next timePoint after as-of t until end
   protected def cleanFrom(nextTimePoint: Any)(implicit ec: ExecutionContext): Future[Unit]
@@ -32,48 +28,50 @@ trait Conn_Datomic extends Conn with JavaConversions {
   }
 
 
-  def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] =
-    transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
-
-  def transact(edn: String, scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] =
-    transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
-
-  def transact(stmtsReader: Reader)
-              (implicit ec: ExecutionContext): Future[TxReport] =
-    transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
-
   def transact(edn: String)
               (implicit ec: ExecutionContext): Future[TxReport] =
-    transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]])
+
+  override def transact(stmtsReader: Reader)
+              (implicit ec: ExecutionContext): Future[TxReport] =
+    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]])
+
+  override def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] =
+    transact(javaStmts, Future.successful(Seq.empty[Statement]))
+
+
+  override def transact(edn: String, scalaStmts: Future[Seq[Statement]])
+              (implicit ec: ExecutionContext): Future[TxReport] =
+    transact(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
+
+  override def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
+              (implicit ec: ExecutionContext): Future[TxReport] =
+    transact(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
+
 
   def transact(scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] = {
-    scalaStmts.flatMap { stmts =>
-      transactRaw(stmts2java(stmts), scalaStmts)
-    }
+              (implicit ec: ExecutionContext): Future[TxReport] = scalaStmts.flatMap { stmts =>
+    transact(stmts2java(stmts), scalaStmts)
   }
 
 
-  override def jsGetAttrValues(
+  def getAttrValues(
     datalogQuery: String,
     card: Int,
     tpe: String
   )(implicit ec: ExecutionContext): Future[List[String]] =
-    q(datalogQuery).map(_.map(_.head.toString))
+    query(datalogQuery).map(_.map(_.head.toString))
 
 
-  override def q(query: String, inputs: Any*)
-       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] =
-    q(db, query, inputs.toSeq)
+  def getEntityAttrKeys(
+    datalogQuery: String
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    query(datalogQuery).map(rows => rows.map(_.head.toString))
 
-  def q(
-    db: DatomicDb,
-    query: String,
-    inputs: Seq[Any]
-  )(implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {
-    qRaw(db, query, inputs).map { raw =>
+
+  override def query(datalogQuery: String, inputs: Any*)
+           (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {
+    rawQuery(datalogQuery, inputs: _*).map { raw =>
       if (raw.isInstanceOf[PersistentVector]
         && !raw.asInstanceOf[PersistentVector].isEmpty
         && raw.asInstanceOf[PersistentVector].nth(0).isInstanceOf[PersistentArrayMap]) {
@@ -94,12 +92,8 @@ trait Conn_Datomic extends Conn with JavaConversions {
     }
   }
 
-  override def qRaw(query: String, inputs: Any*)
-          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
-    qRaw(db, query, inputs)
 
-
-  private[molecule] def buildTxFnInstall(txFnDatomic: String, args: Seq[Any]): jList[_] = {
+  private[molecule] override def buildTxFnInstall(txFnDatomic: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)
     Util.list(Util.map(
       read(":db/ident"), read(s":$txFnDatomic"),
@@ -112,7 +106,7 @@ trait Conn_Datomic extends Conn with JavaConversions {
   }
 
 
-  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = {
+  override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = {
     var tempIds = Map.empty[Int, AnyRef]
 
     def getTempId(part: String, i: Int): AnyRef = tempIds.getOrElse(i, {
@@ -150,7 +144,7 @@ trait Conn_Datomic extends Conn with JavaConversions {
     Collections.unmodifiableList(list)
   }
 
- override def inspect(
+  override def inspect(
     header: String,
     threshold: Int,
     max: Int = 9999,

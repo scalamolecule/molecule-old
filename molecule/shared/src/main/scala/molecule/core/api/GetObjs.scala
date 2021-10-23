@@ -48,9 +48,9 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJsObj(_model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
+          conn.jsQueryObj(_model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
         } else {
-          conn.query(_model, _query).map { jColl =>
+          conn.jvmQuery(_model, _query).map { jColl =>
             val it  = jColl.iterator
             val buf = new ListBuffer[Obj]
             while (it.hasNext) {
@@ -81,12 +81,12 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJsObj(_model, _query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
+          conn.jsQueryObj(_model, _query, _datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj)
         } else {
           if (n == -1) {
             getObjs(futConn, ec)
           } else {
-            conn.query(_model, _query).map { jColl =>
+            conn.jvmQuery(_model, _query).map { jColl =>
               val size = jColl.size
               val max  = if (size < n) size else n
               if (max == 0) {

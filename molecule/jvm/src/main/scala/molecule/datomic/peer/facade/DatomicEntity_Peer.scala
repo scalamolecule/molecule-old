@@ -2,7 +2,7 @@ package molecule.datomic.peer.facade
 
 import java.util.{Date, UUID, Collection => jCollection}
 import molecule.core.api.exception.EntityException
-import molecule.datomic.base.api.DatomicEntityImpl
+import molecule.datomic.base.facade.DatomicEntity_Jvm
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
 
@@ -19,7 +19,7 @@ case class DatomicEntity_Peer(
   conn: Conn_Peer,
   eid: Any,
   showKW: Boolean = true
-) extends DatomicEntityImpl(conn, eid) {
+) extends DatomicEntity_Jvm(conn, eid) {
 
   final override def keySet(implicit ec: ExecutionContext): Future[Set[String]] =
     Future(datomicEntity.keySet().asScala.toSet)

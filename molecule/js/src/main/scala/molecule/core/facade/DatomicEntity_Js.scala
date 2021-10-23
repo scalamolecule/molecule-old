@@ -24,10 +24,10 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
     case NonFatal(exc) => Future.failed(exc)
   }
 
+
   def retract(implicit ec: ExecutionContext): Future[TxReport] = withEid(eid =>
     rpc.transact(conn.connProxy, Stmts2Edn(List(RetractEntity(eid)), conn))
   )
-
 
   def retract(txMeta: Molecule)
              (implicit ec: ExecutionContext): Future[TxReport] = withEid { eid =>

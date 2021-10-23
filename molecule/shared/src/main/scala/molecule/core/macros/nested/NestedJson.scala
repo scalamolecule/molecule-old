@@ -141,7 +141,7 @@ object NestedJson {
     final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _query)
+        data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -200,7 +200,7 @@ object NestedJson {
     final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _query)
+        data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -266,7 +266,7 @@ object NestedJson {
     final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _query)
+        data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -340,7 +340,7 @@ object NestedJson {
     final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _query)
+        data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -423,7 +423,7 @@ object NestedJson {
     final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _query)
+        data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -516,7 +516,7 @@ object NestedJson {
     final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _query)
+        data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
@@ -620,7 +620,7 @@ object NestedJson {
     final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
-        data <- conn.query(_model, _query)
+        data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)

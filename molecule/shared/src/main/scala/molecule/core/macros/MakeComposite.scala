@@ -6,7 +6,7 @@ import scala.language.higherKinds
 import scala.reflect.macros.blackbox
 
 /** Macro to make composite molecules. */
-class MakeComposite(val c: blackbox.Context) extends Base {
+class MakeComposite(val c: blackbox.Context) extends MakeBase {
 
   import c.universe._
 

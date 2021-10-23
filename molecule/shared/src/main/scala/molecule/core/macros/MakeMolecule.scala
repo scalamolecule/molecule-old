@@ -4,7 +4,7 @@ import molecule.datomic.base.transform.Model2Query
 import scala.language.higherKinds // necessary for scala 2.12
 import scala.reflect.macros.blackbox
 
-class MakeMolecule(val c: blackbox.Context) extends Base {
+class MakeMolecule(val c: blackbox.Context) extends MakeBase {
 
   import c.universe._
 

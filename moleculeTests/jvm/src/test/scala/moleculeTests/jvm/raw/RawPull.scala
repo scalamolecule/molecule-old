@@ -1,4 +1,4 @@
-package moleculeTests.jvm.examples.datomic.dayOfDatomic
+package moleculeTests.jvm.raw
 
 import java.util.UUID
 import datomic.Util
@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   https://docs.datomic.com/on-prem/pull.html
 */
 
-object Pull extends AsyncTestSuite {
+object RawPull extends AsyncTestSuite {
 
   val ledZeppelinUUID = UUID.fromString("678d88b2-87b0-403b-b63d-5da7465aecc3")
 

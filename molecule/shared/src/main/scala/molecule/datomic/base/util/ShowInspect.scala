@@ -166,13 +166,13 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
       for {
         conn <- futConn
-        rows <- if (conn.isJsPlatform) jsRows(conn) else conn._index(_model)
+        rows <- if (conn.isJsPlatform) jsRows(conn) else conn.indexQuery(_model)
       } yield render(rows)
     }
 
     def jsRows(conn: Conn): Future[jCollection[_ <: jList[_]]] = {
       // Converting tuples to java list (for now - not critical for inspection of 500 rows)
-      conn.queryJsTpl(
+      conn.jsQueryTpl(
         _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
       ).map { listOfTuples =>
         listOfTuples.map {
@@ -340,7 +340,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         val db  = conn.db
 
         for{
-          rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn._query(_model, _query, Some(db))
+          rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn.datalogQuery(_model, _query, Some(db))
           rows = resolve(rawRows.asScala.take(maxRows))
         } yield {
           val rulesOut: String = if (_query.i.rules.isEmpty)

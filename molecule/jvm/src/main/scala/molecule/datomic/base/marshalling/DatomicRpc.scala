@@ -50,7 +50,7 @@ object DatomicRpc extends MoleculeRpc
       _ = println(stmtsEdn)
 
       javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
-      txReport <- conn.transactRaw(javaStmts)
+      txReport <- conn.transact(javaStmts)
     } yield {
       TxReportRPC(txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString)
     }
@@ -92,7 +92,7 @@ object DatomicRpc extends MoleculeRpc
 
       for {
         conn <- getConn(connProxy)
-        allRows <- conn.qRaw(conn.db, datalogQuery, allInputs)
+        allRows <- conn.rawQuery(datalogQuery, allInputs)
       } yield {
         val rowCountAll = allRows.size
         val maxRows     = if (maxRows0 == -1 || rowCountAll < maxRows0) rowCountAll else maxRows0
@@ -631,7 +631,7 @@ object DatomicRpc extends MoleculeRpc
   ): Future[List[String]] = {
     for {
       conn <- getConn(connProxy)
-      rows0 <- conn.qRaw(conn.db, datalogQuery, Nil)
+      rows0 <- conn.rawQuery(datalogQuery, Nil)
     } yield {
       val cast = if (tpe == "Date" && card != 3)
         (v: Any) => date2strLocal(v.asInstanceOf[Date])
@@ -643,15 +643,14 @@ object DatomicRpc extends MoleculeRpc
     }
   }
 
-  def entityAttrKeys(
+  def getEntityAttrKeys(
     connProxy: ConnProxy,
-    eid: Long
+    query: String
   ): Future[List[String]] = {
-    val datalogQuery = s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
     var list         = List.empty[String]
     for {
       conn <- getConn(connProxy)
-      rows <- conn.qRaw(conn.db, datalogQuery, Nil)
+      rows <- conn.rawQuery(query, Nil)
     } yield {
       rows.forEach { row =>
         list = row.get(0).toString :: list
@@ -692,7 +691,7 @@ object DatomicRpc extends MoleculeRpc
     for {
       conn <- getConn(connProxy)
       javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
-      txReport <- conn.transactRaw(javaStmts)
+      txReport <- conn.transact(javaStmts)
     } yield TxReportRPC(
       txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
     )

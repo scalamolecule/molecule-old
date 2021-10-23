@@ -13,7 +13,6 @@ trait MoleculeRpc {
 
   def clearConnPool(): Future[Unit]
 
-
   def transact(
     connProxy: ConnProxy,
     stmtsEdn: String,
@@ -57,9 +56,9 @@ trait MoleculeRpc {
   ): Future[List[String]]
 
 
-  def entityAttrKeys(
+  def getEntityAttrKeys(
     connProxy: ConnProxy,
-    eid: Long
+    query: String
   ): Future[List[String]]
 
 
@@ -69,14 +68,8 @@ trait MoleculeRpc {
 
   def txInstant(connProxy: ConnProxy): Future[Date]
 
-  //  def entity(connProxy: DbProxy): Future[DatomicEntity] = ???
-
-  //  def pull(pattern: String, eid: Any): Future[]
-
 
   // Entity api
-
-  def retract(connProxy: ConnProxy, eid: Long) = ???
 
   def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
 

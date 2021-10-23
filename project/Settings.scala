@@ -1,10 +1,8 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import sbt._
 import sbt.Keys._
+import sbt._
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
-
-import scala.collection.mutable.ArrayBuffer
 
 object Settings extends SettingsDatomic with SettingsMolecule {
 
@@ -63,7 +61,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val jvm: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
-        "org.specs2" %% "specs2-core" % "4.10.6",
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.2",
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1",
         "com.typesafe.akka" %% "akka-stream" % "2.6.17",
@@ -111,10 +108,10 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-//    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
-//    unmanagedSources / excludeFilter := {
-//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-//      val allowed     = Seq(
+    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
+    unmanagedSources / excludeFilter := {
+      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+      val allowed     = Seq(
 //        sharedTests + "/core/attr",
 //        sharedTests + "/core/attrMap",
 //        sharedTests + "/core/bidirectionals",
@@ -126,25 +123,27 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 //        sharedTests + "/core/input1",
 //        sharedTests + "/core/input2",
 //        sharedTests + "/core/input3",
-//        sharedTests + "/core/ref",
+//        sharedTests + "/core/inspect",
 //        sharedTests + "/core/json",
 //        sharedTests + "/core/nested",
 //        sharedTests + "/core/obj",
+//        sharedTests + "/core/raw",
+//        sharedTests + "/core/ref",
 //        sharedTests + "/core/runtime",
 //        sharedTests + "/core/schemaDef",
 //        sharedTests + "/core/time",
 //        sharedTests + "/core/transaction",
 //        sharedTests + "/core/txMetaData",
 //        sharedTests + "/examples/datomic/dayOfDatomic",
-//        sharedTests + "/examples/datomic/mbrainz",
+        sharedTests + "/examples/datomic/mbrainz",
 //        sharedTests + "/examples/datomic/seattle",
 //        sharedTests + "/examples/gremlin/gettingStarted",
-//        sharedTests + "/Adhoc.scala",
-//      )
-//      new SimpleFileFilter(f =>
-//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-//      )
-//    },
+        sharedTests + "/Adhoc.scala",
+      )
+      new SimpleFileFilter(f =>
+        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+      )
+    },
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,

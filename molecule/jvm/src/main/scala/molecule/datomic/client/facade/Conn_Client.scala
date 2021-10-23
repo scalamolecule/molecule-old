@@ -5,7 +5,6 @@ import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Peer
 import datomic.Util._
 import datomic.db.DbId
-import datomicClient.anomaly._
 import datomicScala.client.api.sync.{Client, Db, Datomic => clientDatomic}
 import datomicScala.client.api.{Datom, sync}
 import molecule.core.ast.elements._
@@ -16,23 +15,22 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn_Datomic, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn_Jvm, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
-import molecule.datomic.peer.facade.TxReport_Peer
-import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
  * */
-case class Conn_Client(
+private[molecule] case class Conn_Client(
   client: Client,
-  defaultConnProxy: ConnProxy,
+  override val defaultConnProxy: ConnProxy,
   dbName: String,
   system: String = "",
-) extends Conn_Datomic with JavaConversions {
+) extends Conn_Jvm with JavaConversions {
 
   lazy val clientConn: sync.Connection = client.connect(dbName)
 
@@ -44,11 +42,11 @@ case class Conn_Client(
   protected var withDbInUse = false
 
 
-  def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
+  override def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
-  def testDb(db: DatomicDb): Unit = {
-    _testDb = Some(db.asInstanceOf[DatomicDb_Client].clientDb)
-  }
+//  override def testDb(db: DatomicDb): Unit = {
+//    _testDb = Some(db.asInstanceOf[DatomicDb_Client].clientDb)
+//  }
 
 
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
@@ -214,9 +212,9 @@ case class Conn_Client(
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transactRaw(
+  override def transact(
     javaStmts: jList[_],
-    futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
+    futScalaStmts: Future[Seq[Statement]]
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
     def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
@@ -315,10 +313,9 @@ case class Conn_Client(
   }
 
 
-  def qRaw(
-    db: DatomicDb,
+  override def rawQuery(
     query: String,
-    inputs0: Seq[Any]
+    inputs0: Any*
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     val inputs = inputs0.map {
       case it: Iterable[_] => it.toList.asJava
@@ -338,18 +335,25 @@ case class Conn_Client(
     }
   }.flatten
 
-  def query(model: Model, query: Query)
-           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+
+  override def jvmQuery(
+    model: Model,
+    query: Query
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => _index(model)
-      case _                                                           => _query(model, query)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) =>
+        indexQuery(model)
+
+      case _ =>
+        datalogQuery(model, query)
     }
   }
 
 
   // Datoms API providing direct access to indexes
-  private[molecule] override def _index(model: Model)
-                                       (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
+  override def indexQuery(
+    model: Model
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
       val (api, index, args) = model.elements.head match {
         case Generic("EAVT", _, _, value) =>
@@ -454,11 +458,12 @@ case class Conn_Client(
         // for fast lookups in an array by index = attr id.
         // 5000 slots should satisfy any schema.
         val array = new Array[String](5000)
-        qRaw(
+        rawQuery(
           """[:find  ?id ?idIdent
             | :where [_ :db.install/attribute ?id]
             |        [?id :db/ident ?idIdent]
-            |        ]""".stripMargin, db.getDatomicDb).map { rows =>
+            |        ]""".stripMargin).map { rows =>
+          //            |        ]""".stripMargin, db.getDatomicDb).map { rows =>
           rows.forEach { row =>
             array(row.get(0).asInstanceOf[Long].toInt) = row.get(1).toString
           }
@@ -669,7 +674,7 @@ case class Conn_Client(
   }.flatten
 
 
-  private[molecule] override def _query(
+  private[molecule] override def datalogQuery(
     model: Model,
     query: Query,
     _db: Option[DatomicDb]

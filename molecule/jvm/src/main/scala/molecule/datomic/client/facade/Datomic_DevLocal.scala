@@ -124,7 +124,7 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
       _ <- deleteDatabase(dbName)
       _ <- createDatabase(dbName)
       conn <- connect(dbName, connProxy)
-      _ <- conn.transactRaw(schemaData)
+      _ <- conn.transact(schemaData)
     } yield conn
   }
 }

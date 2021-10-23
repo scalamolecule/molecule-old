@@ -7,7 +7,7 @@ import com.cognitect.transit.impl.URIImpl
 import datomic.Util
 import molecule.core.api.exception.EntityException
 import molecule.core.util.{JavaConversions, RegexMatching}
-import molecule.datomic.base.api.DatomicEntityImpl
+import molecule.datomic.base.facade.DatomicEntity_Jvm
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
 
@@ -21,7 +21,7 @@ case class DatomicEntity_Client(
   conn: Conn_Client,
   eid: Any,
   showKW: Boolean = true
-) extends DatomicEntityImpl(conn, eid) with RegexMatching with JavaConversions {
+) extends DatomicEntity_Jvm(conn, eid) with RegexMatching with JavaConversions {
 
   final override def keySet(implicit ec: ExecutionContext): Future[Set[String]] =
     entityMap.map(_.keySet)

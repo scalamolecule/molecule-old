@@ -72,11 +72,11 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
           //          println("----------------")
           //          println(_datalog)
 
-          conn.queryJsTpl(
+          conn.jsQueryTpl(
             _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           )
         } else {
-          conn.query(_model, _query).map { jColl =>
+          conn.jvmQuery(_model, _query).map { jColl =>
             val it  = jColl.iterator
             val buf = new ListBuffer[Tpl]
             while (it.hasNext) {
@@ -110,14 +110,14 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.queryJsTpl(
+          conn.jsQueryTpl(
             _model, _query, _datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           )
         } else {
           if (maxRows == -1) {
             get(futConn, ec)
           } else {
-            conn.query(_model, _query).map { jColl =>
+            conn.jvmQuery(_model, _query).map { jColl =>
               val size = jColl.size
               val max  = if (size < maxRows) size else maxRows
               if (max == 0) {

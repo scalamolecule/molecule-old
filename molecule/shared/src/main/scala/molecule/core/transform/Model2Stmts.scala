@@ -10,8 +10,8 @@ import scala.concurrent.Future
 
 
 /** Model to Statements transformer.
-  *
-  * */
+ *
+ * */
 case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends GenericStmts(conn, model) {
 
   private def getPairs(e: Any, a: String, key: String = ""): Future[Map[String, String]] = {
@@ -48,7 +48,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         case "URI"             => (v: String) => new java.net.URI(v).asInstanceOf[AnyRef]
       }
     }
-    conn.jsGetAttrValues(query, card, tpe).map { stringValues =>
+    conn.getAttrValues(query, card, tpe).map { stringValues =>
       stringValues.map(unMarshall)
     }
   }
@@ -105,7 +105,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         if (conn.isJsPlatform) {
           getAttrValues(query, attr)
         } else {
-          conn.q(query).map(rows => rows.map(_.head))
+          conn.query(query).map(rows => rows.map(_.head))
         }
       }
     }
@@ -129,13 +129,10 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
       }
     }
 
-    def entityAttrKeys(eid: Any): Future[List[String]] = {
-      if (conn.isJsPlatform) {
-        conn.jsEntityAttrKeys(eid.toString.toLong)
-      } else {
-        conn.q(s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]").map(rows => rows.map(_.head.toString))
-      }
-    }
+    def entityAttrKeys(eid: Any): Future[List[String]] = conn.getEntityAttrKeys(
+      s"[:find ?a1 :where [$eid ?a _][?a :db/ident ?a1]]"
+    )
+
 
     def otherEdge(edgeA: Any): Future[AnyRef] = {
       // Look for special attribute injected by Molecule if data model contains bidirectional refs
@@ -143,7 +140,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
       val futResult = if (conn.isJsPlatform) {
         getAttrValues(query, ":molecule_Meta/otherEdge")
       } else {
-        conn.q(query).map(rows => rows.map(_.head))
+        conn.query(query).map(rows => rows.map(_.head))
       }
       futResult.flatMap {
         case List(edgeB) => Future(edgeB)

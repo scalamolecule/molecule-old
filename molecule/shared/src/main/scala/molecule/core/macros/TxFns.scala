@@ -66,7 +66,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
             import scala.concurrent.{Await, Future}
 
             // Make connection with current db available to tx function code
-            val conn: Conn = Conn_Peer(txDb)
+            val conn = Conn_Peer(txDb)
             implicit val futConn: Future[Conn] = Future(conn)
 
             // Typed arguments

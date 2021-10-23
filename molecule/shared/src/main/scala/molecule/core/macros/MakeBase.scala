@@ -5,7 +5,7 @@ import molecule.core.transform.Dsl2Model
 import scala.reflect.macros.blackbox
 
 
-private[molecule] trait Base extends Dsl2Model {
+private[molecule] trait MakeBase extends Dsl2Model {
   val c: blackbox.Context
 
   import c.universe._

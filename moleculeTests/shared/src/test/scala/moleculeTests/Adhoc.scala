@@ -2,9 +2,7 @@ package moleculeTests
 
 import molecule.core.util.Helpers
 import molecule.datomic.api.in3_out12._
-import molecule.datomic.api.out6.m
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.generic.Datom.delay
 import utest._
 import scala.concurrent.Future
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,9 +21,48 @@ object Adhoc extends AsyncTestSuite with Helpers {
         //        _ <- Ns.int.apply(1).asc1.str.desc2.get
         //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
-        //        _ <- Ns.int(1).save
-        //        _ <- Ns.int.get.map(_ ==> List(1))
+                _ <- Ns.int(1).save
+                _ <- Ns.int.get.map(_ ==> List(1))
 
+
+        _ = {
+          conn
+        }
+
+//        _ <- Ns.str.int insert List(("a", 1), ("b", 2))
+//
+//        // Scala List of rows/Lists returned
+//        _ <- conn.qRaw("[:find ?s :where [_ :Ns/str ?s]]").map(_ ==> List(
+//          List("a"), // row 1
+//          List("b"), // row 2
+//        ))
+//
+//        _ <- conn.qRaw("[:find ?i :where [_ :Ns/int ?i]]").map(_ ==> List(List(1), List(2)))
+//
+//        _ <- conn.qRaw("[:find ?s ?i :where [?e :Ns/str ?s] [?e :Ns/int ?i]]").map(_ ==> List(
+//          List("a", 1),
+//          List("b", 2)
+//        ))
+//
+//        _ <- conn.qRaw(
+//          "[:find ?i :in $ ?s :where [?e :Ns/str ?s] [?e :Ns/int ?i]]",
+//          "a"
+//        ).map(_ ==> List(List(1)))
+//
+//        _ <- conn.qRaw(
+//          "[:find ?s :in $ ?i :where [?e :Ns/str ?s] [?e :Ns/int ?i]]",
+//          1
+//        ).map(_ ==> List(List("a")))
+//
+//        _ <- conn.qRaw(
+//          "[:find ?s ?i :in $ ?s ?i :where [?e :Ns/str ?s] [?e :Ns/int ?i]]",
+//          "a", 1
+//        ).map(_ ==> List(List("a", 1)))
+//
+//        _ <- conn.qRaw(
+//          "[:find ?s ?i :in $ ?s ?i :where [?e :Ns/str ?s] [?e :Ns/int ?i]]",
+//          "a", 42
+//        ).map(_ ==> Nil)
 
 
       } yield ()

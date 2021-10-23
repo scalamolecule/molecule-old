@@ -1,5 +1,4 @@
-package molecule.datomic.base.api
-
+package molecule.datomic.base.facade
 
 import java.net.URI
 import java.util.{Date, UUID}
@@ -11,20 +10,20 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Serializations
 import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, JavaConversions, Quoted}
+import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.transactionModel.RetractEntity
-import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 
-abstract class DatomicEntityImpl(conn: Conn, eid: Any)
+abstract class DatomicEntity_Jvm(conn: Conn, eid: Any)
   extends DatomicEntity with Quoted with Helpers with Serializations with JavaConversions {
 
   // Get ================================================================
 
   final override def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    conn.q(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]").map(_
+    conn.query(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]").map(_
       .map(l => (l.head.toString, l(1)))
       .toMap + (":db/id" -> eid)
     )

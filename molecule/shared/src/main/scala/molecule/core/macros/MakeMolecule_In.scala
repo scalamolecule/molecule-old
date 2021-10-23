@@ -9,7 +9,7 @@ import scala.reflect.macros.blackbox
 
 
 /** Macro to make input molecules. */
-class MakeMolecule_In(val c: blackbox.Context) extends Base {
+class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
 
   import c.universe._
 

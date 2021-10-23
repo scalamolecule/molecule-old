@@ -6,7 +6,6 @@ import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer}
-import datomicClient.anomaly._
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.marshalling._
@@ -15,25 +14,27 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn_Datomic, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn_Jvm, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
-import molecule.datomic.client.facade.DatomicDb_Client
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 
-/** Factory methods to create facade to Datomic Connection. */
+/** Factory methods to create facade to Datomic Connection.
+ *
+ * (Public since TxFns needs it)
+ * */
 object Conn_Peer {
 
   def apply(
     uri: String,
     defaultConnProxy: ConnProxy
-  ): Conn_Peer = new Conn_Peer(datomic.Peer.connect(uri), defaultConnProxy, uri)
+  ): Conn_Peer = Conn_Peer(datomic.Peer.connect(uri), defaultConnProxy, uri)
 
   // Dummy constructor for transaction functions where db is supplied inside transaction by transactor
-  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null, DatomicPeerProxy("mem", "")) {
+  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null, DatomicPeerProxy("dummy", "")) {
     testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
   }
 }
@@ -41,21 +42,22 @@ object Conn_Peer {
 
 /** Facade to Datomic connection for peer api.
  * */
-case class Conn_Peer(
+private[molecule] case class Conn_Peer(
   peerConn: datomic.Connection,
-  defaultConnProxy: ConnProxy,
+  override val defaultConnProxy: ConnProxy,
   system: String = ""
-) extends Conn_Datomic with JavaConversions {
+) extends Conn_Jvm with JavaConversions {
 
   // In-memory fixed test db for integration testing
   // (takes precedence over live db)
   private var _testDb: Option[Database] = None
 
-  def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
+  override def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
   // For transaction functions
-  def testDb(db: DatomicDb): Unit = {
-    _testDb = Some(db.asInstanceOf[DatomicDb_Peer].peerDb)
+//  override def testDb(db: DatomicDb): Unit = {
+   protected def testDb(db: DatomicDb_Peer): Unit = {
+    _testDb = Some(db.peerDb)
   }
 
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
@@ -187,9 +189,9 @@ case class Conn_Peer(
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transactRaw(
+  override def transact(
     javaStmts: jList[_],
-    futScalaStmts: Future[Seq[Statement]] = Future.successful(Seq.empty[Statement])
+    futScalaStmts: Future[Seq[Statement]]
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
     def nextDateMs(d: Date): Date = new Date(d.toInstant.plusMillis(1).toEpochMilli)
 
@@ -279,17 +281,16 @@ case class Conn_Peer(
     case NonFatal(ex) => Future.failed(ex)
   }
 
-  def qRaw(
-    db: DatomicDb,
+  override def rawQuery(
     query: String,
-    inputs0: Seq[Any]
+    inputs0: Any*
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-    val inputs = inputs0.map {
+    val inputs = inputs0.toSeq.map {
       case it: Iterable[_] => it.asJava
       case v               => v
-    }
+    }.asInstanceOf[Seq[AnyRef]]
     try {
-      val result = Peer.q(query, db.getDatomicDb +: inputs.asInstanceOf[Seq[AnyRef]]: _*)
+      val result = Peer.q(query, db.getDatomicDb +: inputs: _*)
       Future(result)
     } catch {
       case e: java.util.concurrent.ExecutionException =>
@@ -306,16 +307,22 @@ case class Conn_Peer(
     }
   }.flatten
 
-  def query(model: Model, query: Query)
-           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+
+  override def jvmQuery(
+    model: Model,
+    query: Query
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => _index(model)
-      case _                                                           => _query(model, query)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) =>
+        indexQuery(model)
+
+      case _ =>
+        datalogQuery(model, query)
     }
   }
 
   // Datoms API providing direct access to indexes
-  private[molecule] override def _index(
+  override def indexQuery(
     model: Model
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
@@ -620,7 +627,7 @@ case class Conn_Peer(
 
 
   // Datalog query execution
-  private[molecule] override def _query(
+  private[molecule] override def datalogQuery(
     model: Model,
     query: Query,
     _db: Option[DatomicDb] = None

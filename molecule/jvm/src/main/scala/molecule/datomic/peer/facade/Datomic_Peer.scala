@@ -245,7 +245,7 @@ trait Datomic_Peer extends JavaConversions {
       _ <- deleteDatabase(protocol, id)
       _ <- createDatabase(protocol, id)
       conn <- connect(connProxy, protocol, id)
-      _ <- conn.transactRaw(schemaData)
+      _ <- conn.transact(schemaData)
     } yield conn
   }
 

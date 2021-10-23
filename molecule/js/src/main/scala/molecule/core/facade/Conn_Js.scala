@@ -1,8 +1,7 @@
 package molecule.core.facade
 
-import java.io.Reader
 import java.net.URI
-import java.util.{Date, UUID, Collection => jCollection, List => jList}
+import java.util.{Date, UUID}
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
@@ -20,27 +19,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Client connection.
-  *
-  * Used to cary information enabling marshalling on both client and server side.
-  *
-  * Make a similar subclass of ConnProxy like this one in order to use an
-  * alternative rpc implementation.
-  *
-  * @param defaultConnProxy Db coordinates to access db on server side
-  */
-case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with Helpers {
+ *
+ * Used to cary information enabling marshalling on both client and server side.
+ *
+ * Make a similar subclass of ConnProxy like this one in order to use an
+ * alternative rpc implementation.
+ *
+ * @param defaultConnProxy Db coordinates to access db on server side
+ */
+case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with ColOps with Helpers {
 
-  def ???(i: Int): Nothing = throw MoleculeException(s"Unexpected method call ($i) on JS side in Conn_Js")
-  def noJs(method: String): Nothing = throw MoleculeException(
-    s"Method `$method` returns untyped data and is therefore not implemented on the JS side.")
+  private[molecule] override val isJsPlatform: Boolean = true
 
-  val isJsPlatform: Boolean = true
-
-  override lazy val rpc: MoleculeRpc = MoleculeWebClient.rpc
-
-  def liveDbUsed: Boolean = ???(1)
-
-  def testDb(db: DatomicDb): Unit = ???(2)
+  private[molecule] override lazy val rpc: MoleculeRpc = MoleculeWebClient.rpc
 
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(AsOf(TxLong(0))))
@@ -85,36 +76,19 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
   def entity(id: Any): DatomicEntity = db.entity(this, id)
 
 
-  def transactRaw(
-    javaStmts: jList[_],
-    scalaStmts: Future[Seq[Statement]]
-  )(implicit ec: ExecutionContext): Future[TxReport] = ???(3)
-
-  def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] = ???(3)
-
-  def transact(edn: String, scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] = ???(4)
-
-  def transact(stmtsReader: Reader)
-              (implicit ec: ExecutionContext): Future[TxReport] = ???(5)
 
   def transact(edn: String)
               (implicit ec: ExecutionContext): Future[TxReport] =
     rpc.transact(connProxy, (edn, Set.empty[String]))
 
-  def transact(scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] = {
-    for {
-      stmts <- scalaStmts
-      result <- rpc.transact(connProxy, Stmts2Edn(stmts, this))
-    } yield result
-  }
-
-  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = ???(6)
+  private[molecule] def transact(scalaStmts: Future[Seq[Statement]])
+              (implicit ec: ExecutionContext): Future[TxReport] = for {
+    stmts <- scalaStmts
+    txReport <- rpc.transact(connProxy, Stmts2Edn(stmts, this))
+  } yield txReport
 
 
-  private[molecule] def _index(model: Model): Future[String] = {
+  private[molecule] def indexQuery(model: Model): Future[String] = {
     def p(v: Any): (String, String) = v match {
       case _: String     => (v.toString, "String")
       case _: Int        => (v.toString, "Int")
@@ -263,7 +237,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     rpc.index2packed(connProxy, api, index, indexArgs, attrs)
   }
 
-  private[molecule] def _query(
+  private[molecule] def datalogQuery(
     query: Query,
     datalog: String,
     maxRows: Int,
@@ -297,7 +271,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
   }
 
 
-  private def jsGetRaw(
+  private def jsMoleculeQuery(
     model: Model,
     query: Query,
     datalog: String,
@@ -309,9 +283,10 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     tacitIndexes: List[List[Int]]
   ): Future[String] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => _index(model)
-      case _                                                           =>
-        _query(query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => indexQuery(model)
+      case _                                                           => datalogQuery(
+        query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+      )
     }
   }
 
@@ -339,7 +314,9 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     tacitIndexes: List[List[Int]],
     packed2T: Iterator[String] => T,
   )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
-    jsGetRaw(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes).map { packed =>
+    jsMoleculeQuery(
+      model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+    ).map { packed =>
       if (packed.isEmpty) {
         List.empty[T]
       } else {
@@ -354,7 +331,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     }
   )
 
-  override def queryJsTpl[Tpl](
+  override def jsQueryTpl[Tpl](
     model: Model,
     query: Query,
     datalog: String,
@@ -369,7 +346,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
   )
 
-  override def queryJsObj[Obj](
+  override def jsQueryObj[Obj](
     model: Model,
     query: Query,
     datalog: String,
@@ -384,7 +361,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
   )
 
-  override def queryJsJson(
+  override def jsQueryJson(
     model: Model,
     query: Query,
     datalog: String,
@@ -395,25 +372,22 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]]
   )(implicit ec: ExecutionContext): Future[String] = withDbView(
-    jsGetRaw(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
+    jsMoleculeQuery(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
   )
 
-  def q(query: String, inputs: Any*)
-       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = noJs("q")
+  private[molecule] def getAttrValues(
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    rpc.getAttrValues(connProxy, datalogQuery, card, tpe)
 
-  def q(db: DatomicDb, query: String, inputs: Seq[Any])
-       (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = noJs("q")
 
-  def qRaw(query: String, inputs: Any*)
-          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = noJs("qRaw")
+  private[molecule] def getEntityAttrKeys(
+      query: String
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    rpc.getEntityAttrKeys(connProxy, query)
 
-  def qRaw(db: DatomicDb, query: String, inputs0: Seq[Any])
-          (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = noJs("qRaw")
-
-  def query(model: Model, query: Query)
-           (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = noJs("query")
-
-  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = noJs("stmts2java")
 
   def inspect(
     header: String,
@@ -422,6 +396,7 @@ case class Conn_Js(defaultConnProxy: ConnProxy) extends Conn with ColOps with He
     showStackTrace: Boolean,
     maxLevel: Int,
     showBi: Boolean
-  )(id: Int, params: Any*): Unit =
-    Inspect(header, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
+  )(id: Int, params: Any*): Unit = Inspect(
+    header, threshold, max, showStackTrace, maxLevel, showBi
+  )(id, params: _*)
 }

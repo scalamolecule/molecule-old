@@ -26,7 +26,7 @@ case class DatomicDb_Peer(peerDb: Database) extends DatomicDb with JavaConversio
 
   def entity(conn: Conn, id: Any): DatomicEntity =
     DatomicEntity_Peer(
-      peerDb.entity(id), // Datomic Entity is lazy
+      peerDb.entity(id), // lazy
       conn.asInstanceOf[Conn_Peer],
       id
     )

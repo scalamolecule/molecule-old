@@ -262,7 +262,7 @@ object Pull extends AsyncTestSuite {
 
         _ <- if (!isJsPlatform && system == SystemPeer) {
           // Using a dynamic query
-          conn.flatMap(_.q(
+          conn.flatMap(_.query(
             """[:find [(pull ?e pattern) ...]
               |       :in $ ?artist pattern
               |       :where [?e :release/artists ?artist]]""".stripMargin,
