@@ -315,19 +315,21 @@ private[molecule] case class Conn_Client(
 
   override def rawQuery(
     query: String,
-    inputs0: Any*
+    //    inputs0: Any*
+    inputs: Seq[AnyRef]
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-    val inputs = inputs0.map {
-      case it: Iterable[_] => it.toList.asJava
-      case dbId: DbId      => dbId.idx.toString
-      case bi: BigInt      => new java.math.BigInteger(bi.toString)
-      case v               => v
-    }
+//    val inputs1 = inputs.map {
+//      case it: Iterable[_] => it.toList.asJava
+//      case dbId: DbId      => dbId.idx.toString
+//      case bi: BigInt      => new java.math.BigInteger(bi.toString)
+//      case v               => v
+//    }
     try {
       val result = clientDatomic.q(
         query,
         db.asInstanceOf[DatomicDb_Client].clientDb,
-        inputs.asInstanceOf[Seq[AnyRef]]: _*
+        inputs: _*
+//        inputs.asInstanceOf[Seq[AnyRef]]: _*
       )
       Future(result)
     } catch {
@@ -449,7 +451,8 @@ private[molecule] case class Conn_Client(
             case v => throw MoleculeException("Unexpected Log value: " + v)
           })
 
-        case other => throw MoleculeException(s"Only Index queries accepted (EAVT, AEVT, AVET, VAET, Log). Found `$other`")
+        case other => throw MoleculeException(
+          s"Only Index queries accepted (EAVT, AEVT, AVET, VAET, Log). Found `$other`")
       }
 
 
@@ -463,7 +466,6 @@ private[molecule] case class Conn_Client(
             | :where [_ :db.install/attribute ?id]
             |        [?id :db/ident ?idIdent]
             |        ]""".stripMargin).map { rows =>
-          //            |        ]""".stripMargin, db.getDatomicDb).map { rows =>
           rows.forEach { row =>
             array(row.get(0).asInstanceOf[Long].toInt) = row.get(1).toString
           }
@@ -476,7 +478,8 @@ private[molecule] case class Conn_Client(
 
       def date(tx: Long): Future[Date] = {
         // We can't index all txInstants
-        // Some initial transactions lack tx time it seems, so there we default to time 0 (Thu Jan 01 01:00:00 CET 1970)
+        // Some initial transactions lack tx time it seems, so there we default
+        // to time 0 (Thu Jan 01 01:00:00 CET 1970)
         db.pull("[:db/txInstant]", tx).map {
           case null => defaultDate
           case res  => res.get(txInstant).asInstanceOf[Date]

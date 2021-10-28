@@ -6,6 +6,7 @@ import molecule.core.marshalling.nodes.Obj
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, DatomicDb, TxReportRPC}
+import sloth.PathName
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -69,7 +70,16 @@ trait MoleculeRpc {
   def txInstant(connProxy: ConnProxy): Future[Date]
 
 
-  // Entity api
+  // Entity api ....................................
+
+  def rawValue(connProxy: ConnProxy, eid: Long, attr: String): Future[String]
+
+  def attrs(connProxy: ConnProxy, eid: Long): Future[List[String]]
+
+  def apply(connProxy: ConnProxy, eid: Long, attr: String): Future[String]
+
+  @PathName("apply-many") // sloth wants this for overloaded method name
+  def apply(connProxy: ConnProxy, eid: Long, attrs: List[String]): Future[List[String]]
 
   def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
 
@@ -82,6 +92,4 @@ trait MoleculeRpc {
   def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
 
   def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
-
-  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String]
 }

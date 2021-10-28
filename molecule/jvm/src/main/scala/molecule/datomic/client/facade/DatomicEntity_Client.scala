@@ -5,7 +5,9 @@ import java.util.{Date, UUID, Collection => jCollection}
 import clojure.lang.{MapEntry, PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util
+import datomicClient.anomaly.Fault
 import molecule.core.api.exception.EntityException
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.{JavaConversions, RegexMatching}
 import molecule.datomic.base.facade.DatomicEntity_Jvm
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,16 +25,34 @@ case class DatomicEntity_Client(
   showKW: Boolean = true
 ) extends DatomicEntity_Jvm(conn, eid) with RegexMatching with JavaConversions {
 
-  final override def keySet(implicit ec: ExecutionContext): Future[Set[String]] =
-    entityMap.map(_.keySet)
 
-  final override def keys(implicit ec: ExecutionContext): Future[List[String]] =
-    entityMap.map(_.keySet.toList)
+  final private def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
+    conn.query(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]").map(_
+      .map(l => l.head.toString -> l(1))
+      .toMap + (":db/id" -> eid)
+    )
+  }
 
-  final override def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = {
-    key match {
+  final private def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
+    var buildMap = Map.empty[String, Any]
+    conn.db.pull("[*]", eid).map { vs =>
+      vs.forEach {
+        case (k, v) => buildMap = buildMap + (k.toString -> v)
+      }
+      buildMap
+    }.recoverWith {
+      // Fetch top level only for cyclic graph stack overflows
+      case MoleculeException("stackoverflow", _)                    => mapOneLevel
+      case Fault("java.lang.StackOverflowError with empty message") => mapOneLevel
+      case unexpected                                               => throw unexpected
+    }
+  }
+
+  private[molecule] final def rawValue(kw: String)(implicit ec: ExecutionContext): Future[Any] = {
+    kw match {
+      // Backref
       case r":[^/]+/_.+" =>
-        conn.db.pull(s"[$key]", eid).map(raw =>
+        conn.db.pull(s"[$kw]", eid).map(raw =>
           Some(
             raw.asInstanceOf[PersistentArrayMap].values().iterator().next()
               .asInstanceOf[PersistentVector].asScala.toList
@@ -43,6 +63,14 @@ case class DatomicEntity_Client(
       case k => entityMap.map(_.apply(k))
     }
   }
+
+  //  final override def keySet(implicit ec: ExecutionContext): Future[Set[String]] =
+  //    entityMap.map(_.keySet)
+
+  final def attrs(implicit ec: ExecutionContext): Future[List[String]] =
+    entityMap.map(_.keySet.toList)
+
+
 
   def isAttrDef(entityMap: Map[String, Any]): Boolean = {
     entityMap.keys.toList.intersect(List(

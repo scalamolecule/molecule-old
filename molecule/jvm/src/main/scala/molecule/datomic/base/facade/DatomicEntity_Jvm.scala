@@ -8,79 +8,63 @@ import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Serializations
+import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, JavaConversions, Quoted}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 
-abstract class DatomicEntity_Jvm(conn: Conn, eid: Any)
-  extends DatomicEntity with Quoted with Helpers with Serializations with JavaConversions {
+abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(conn)
+  with DatomicEntity with Quoted with Helpers with Serializations with JavaConversions {
 
-  // Get ================================================================
 
-  final override def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    conn.query(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]").map(_
-      .map(l => (l.head.toString, l(1)))
-      .toMap + (":db/id" -> eid)
-    )
-  }
+  final override def apply[T](attr: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
 
-  final override def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    var buildMap = Map.empty[String, Any]
-    conn.db.pull("[*]", eid).map { vs =>
-      vs.forEach {
-        case (k, v) => buildMap = buildMap + (k.toString -> v)
+    attrDefinitions.get(attr).fold(
+      Future.failed[Option[T]](MoleculeException(s"Attribute `$attr` not found in schema."))
+    ) { case (card, tpe) =>
+      rawValue(attr).flatMap {
+        case None    => Future(None)
+        case Some(v) => Future(Some(v.asInstanceOf[T]))
+        case null    => Future(Option.empty[T])
+
+        case results: clojure.lang.PersistentHashSet =>
+          results.toArray.apply(0) match {
+            case _: datomic.Entity =>
+              var list = List.empty[Future[Long]]
+              results.forEach(e =>
+                list = Future(e.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]) :: list
+              )
+              Future.sequence(list).map(l => Some(l.toSet.asInstanceOf[T]))
+
+            case _ =>
+              var list = List.empty[Future[Any]]
+              results.forEach(v1 => list = list :+ toScala(attr, Some(v1)))
+              Future.sequence(list).map(l =>
+                getTypedValue(card, tpe, l) match {
+                  case Success(v)   => Some(v.asInstanceOf[T])
+                  case Failure(exc) => throw exc
+                }
+              )
+          }
+
+        case result => toScala(attr, Some(result)).map(v => Some(v.asInstanceOf[T]))
+      }.recover {
+        case _: NoSuchElementException => Option.empty[T]
       }
-      buildMap
-    }.recoverWith {
-      // Fetch top level only for cyclic graph stack overflows
-      case MoleculeException("stackoverflow", _)                    => mapOneLevel
-      case Fault("java.lang.StackOverflowError with empty message") => mapOneLevel
-      case unexpected                                               => throw unexpected
     }
   }
 
-  final override def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
-    rawValue(key).flatMap {
-      case None    => Future(None)
-      case Some(v) => Future(Some(v.asInstanceOf[T]))
-      case null    => Future(Option.empty[T])
-
-      case results: clojure.lang.PersistentHashSet =>
-        results.toArray.apply(0) match {
-          case _: datomic.Entity =>
-            var list = List.empty[Future[Long]]
-            results.forEach(e =>
-              list = Future(e.asInstanceOf[datomic.Entity].get(":db/id").asInstanceOf[Long]) :: list
-            )
-            Future.sequence(list).map(l => Some(l.sorted.asInstanceOf[T]))
-
-          case _ =>
-            var list = List.empty[Future[Any]]
-            results.forEach(v1 =>
-              list = list :+ toScala(key, Some(v1))
-            )
-            Future.sequence(list).map(l => Some(l.asInstanceOf[T]))
-        }
-
-      case result => toScala(key, Some(result)).map(v => Some(v.asInstanceOf[T]))
-    }.recover {
-      case _: NoSuchElementException => Option.empty[T]
-    }
-  }
-
-
-  final override def apply(kw1: String, kw2: String, kws: String*)
+  final override def apply(attr1: String, attr2: String, moreAttrs: String*)
                           (implicit ec: ExecutionContext): Future[List[Option[Any]]] = {
-    Future.sequence((kw1 +: kw2 +: kws.toList) map apply[Any])
+    Future.sequence((attr1 +: attr2 +: moreAttrs.toList) map apply)
   }
 
-
-  // Retract =========================================================
 
   def retract(implicit ec: ExecutionContext): Future[TxReport] = {
     conn.transact(getRetractStmts)
@@ -126,12 +110,8 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any)
   def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] =
     asMap(1, 5)
 
-  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    //    val res = asMap(1, maxDepth)
-    //    res.map(l => println(l.mkString("====== asMap\n", "\n", "")))
-    //    res
+  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
     asMap(1, maxDepth)
-  }
 
   def touchQuoted(implicit ec: ExecutionContext): Future[String] =
     asMap(1, 5).map(quote(_))
@@ -142,12 +122,8 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any)
   def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
     asList(1, 5)
 
-  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
-    //    val res = asList(1, maxDepth)
-    //    res.map(l => println(l.mkString("====== asList\n", "\n", "")))
-    //    res
+  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
     asList(1, maxDepth)
-  }
 
   def touchListQuoted(implicit ec: ExecutionContext): Future[String] =
     asList(1, 5).map(quote(_))
@@ -167,7 +143,7 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any)
 
   def asMap(depth: Int, maxDepth: Int)
            (implicit ec: ExecutionContext): Future[Map[String, Any]] = {
-    keys.flatMap {
+    attrs.flatMap {
       case Nil  => Future.failed(MoleculeException(s"Entity id $eid not found in database."))
       case keys =>
         val keysSorted   = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
@@ -199,21 +175,13 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any)
 
   def asList(depth: Int, maxDepth: Int)
             (implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
-    keys.flatMap {
+    attrs.flatMap {
       case Nil   => Future.failed(MoleculeException(s"Entity id $eid not found in database."))
       case keys2 =>
         val keysSorted   = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
         val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
         val valueFutures = keysSorted.map { key =>
           toScala(key, None, depth, maxDepth, "List").map { scalaValue =>
-
-            //            println(s"$key: " + scalaValue)
-            //            if(key ==":Ns/refs1") {
-            //              println(scalaValue.asInstanceOf[List[Any]].head)
-            //              println(scalaValue.asInstanceOf[List[Any]].head.getClass)
-            //            }
-
-
             val sortedValue = scalaValue match {
               case l: Seq[_] => l.head match {
                 case l0: Seq[_] => l0.head match {
@@ -251,7 +219,8 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any)
 
   lazy protected val ident = Keyword.intern("db", "ident")
 
-  final override def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
+  //  final override def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
+  final protected def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
     l.head match {
       case _: String               => l.asInstanceOf[List[String]].sorted
       case _: Long                 => l.asInstanceOf[List[Long]].sorted

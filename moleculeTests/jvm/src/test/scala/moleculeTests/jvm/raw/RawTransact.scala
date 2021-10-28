@@ -13,7 +13,7 @@ object RawTransact extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "Transact edn string" - core { implicit futConn =>
+    "Edn string" - core { implicit futConn =>
       for {
         conn <- futConn
 
@@ -29,7 +29,7 @@ object RawTransact extends AsyncTestSuite {
     }
 
 
-    "Transact edn in file" - core { implicit futConn =>
+    "Edn in file" - core { implicit futConn =>
       for {
         conn <- futConn
 
@@ -47,7 +47,7 @@ object RawTransact extends AsyncTestSuite {
     }
 
 
-    "Transact java data" - core { implicit conn =>
+    "Java data" - core { implicit conn =>
       for {
         // Initial data
         _ <- Ns.int(1).save

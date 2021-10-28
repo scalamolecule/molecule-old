@@ -55,7 +55,7 @@ private[molecule] trait Conn_Jvm extends Conn with JavaConversions {
   }
 
 
-  def getAttrValues(
+  private[molecule] def getAttrValues(
     datalogQuery: String,
     card: Int,
     tpe: String
@@ -63,7 +63,7 @@ private[molecule] trait Conn_Jvm extends Conn with JavaConversions {
     query(datalogQuery).map(_.map(_.head.toString))
 
 
-  def getEntityAttrKeys(
+  private[molecule] def getEntityAttrKeys(
     datalogQuery: String
   )(implicit ec: ExecutionContext): Future[List[String]] =
     query(datalogQuery).map(rows => rows.map(_.head.toString))
@@ -71,7 +71,7 @@ private[molecule] trait Conn_Jvm extends Conn with JavaConversions {
 
   override def query(datalogQuery: String, inputs: Any*)
            (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {
-    rawQuery(datalogQuery, inputs: _*).map { raw =>
+    rawQuery(datalogQuery, inputs.toSeq.asInstanceOf[Seq[AnyRef]]).map { raw =>
       if (raw.isInstanceOf[PersistentVector]
         && !raw.asInstanceOf[PersistentVector].isEmpty
         && raw.asInstanceOf[PersistentVector].nth(0).isInstanceOf[PersistentArrayMap]) {

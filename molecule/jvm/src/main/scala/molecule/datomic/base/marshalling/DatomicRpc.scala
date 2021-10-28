@@ -84,11 +84,29 @@ object DatomicRpc extends MoleculeRpc
       //      println("l  : " + l)
       //      println("ll : " + ll)
       //      println("lll: " + lll)
+      /*
+[:find  ?b ?d
+ :in    $ [?b ...]
+ :where [?a :Track/name ?b]
+        [?a :Track/artists ?c]
+        [?c :Artist/name ?d]
+        [(.compareTo ^String ?d "The Who") ?d_1]
+        [(!= ?d_1 0)]]
 
+
+
+
+       */
       val inputs    = unmarshallInputs(l ++ ll ++ lll)
       val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
 
       //      inputs.foreach(i => println(s"$i   " + i.getClass))
+
+      //      if (inputs.nonEmpty) {
+      //        println("----------")
+      //        println(inputs.head.asInstanceOf[jList[_]].size)
+      //        println(inputs.head.asInstanceOf[jList[_]].get(0))
+      //      }
 
       for {
         conn <- getConn(connProxy)
@@ -144,12 +162,12 @@ object DatomicRpc extends MoleculeRpc
     }
   }.flatten
 
-  // Unmarshall to Datomic types
+  // Unmarshall to Datomic java types
   private def unmarshallInputs(lists: Seq[(Int, String, Any)]): Seq[Object] = {
     lists.sortBy(_._1).map {
-      case (_, tpe, vs) =>
+      case (_, tpe, rawValue) =>
         val cast = tpe match {
-          case "String"     => (v: String) => possiblyEnum(v)
+          case "String"     => if (isEnum(rawValue)) (v: String) => getEnum(v) else (v: String) => v
           case "Int"        => (v: String) => new java.lang.Long(v)
           case "Long"       => (v: String) => new java.lang.Long(v)
           case "Double"     => (v: String) => new java.lang.Double(v)
@@ -162,7 +180,7 @@ object DatomicRpc extends MoleculeRpc
           case "Any"        => (s: String) =>
             val v = s.drop(10)
             s.take(10) match {
-              case "String    " => v
+              case "String    " => if (isEnum(v)) getEnum(v) else v
               case "Int       " => new java.lang.Long(v)
               case "Long      " => new java.lang.Long(v)
               case "Double    " => new java.lang.Double(v)
@@ -176,14 +194,14 @@ object DatomicRpc extends MoleculeRpc
           case _            => throw MoleculeException(s"Unexpected type to cast: $tpe")
         }
 
-        vs match {
+        rawValue match {
           case l: Seq[_] =>
             Util.list(l.collect {
               case l2: Seq[_] =>
-                val Seq(k, v: String) = l2
-                Util.list(k.toString.asInstanceOf[Object], cast(v))
+                val Seq(k, v2: String) = l2
+                Util.list(k.toString.asInstanceOf[Object], cast(v2))
 
-              case v: String => cast(v)
+              case v1: String => cast(v1)
             }: _*)
 
           case v: String => cast(v)
@@ -192,13 +210,23 @@ object DatomicRpc extends MoleculeRpc
     }
   }
 
-  private def possiblyEnum(s: String): AnyRef = if (s.startsWith("__enum__"))
-    s match {
-      case r"__enum__:([A-Za-z0-9\._]+)$ns/([A-Za-z0-9_]+)$enum" => clojure.lang.Keyword.intern(ns, enum)
-      case other                                                 =>
-        throw MoleculeException(s"Unexpected enum input: `$other`")
+  private def isEnum(rawValue: Any) = {
+    // Check enum prefix on any of 3 possible levels
+    rawValue match {
+      case l: Seq[_] => l.headOption.fold(false) {
+        case l2: Seq[_] => l2.headOption.fold(false)(v => v.toString.startsWith("__enum__"))
+        case v: String  => v.startsWith("__enum__")
+      }
+      case v: String => v.startsWith("__enum__")
+      case _         => false
     }
-  else s
+  }
+
+  private def getEnum(s: String): AnyRef = s match {
+    case r"__enum__:([A-Za-z0-9\._]+)$ns/([A-Za-z0-9_]+)$enum" => clojure.lang.Keyword.intern(ns, enum)
+    case other                                                 =>
+      throw MoleculeException(s"Unexpected enum input: `$other`")
+  }
 
   def index2packed(
     connProxy: ConnProxy,
@@ -209,7 +237,7 @@ object DatomicRpc extends MoleculeRpc
   ): Future[String] = {
     def castTpeV(tpe: String, v: String): Object = {
       (tpe, v) match {
-        case ("String", v)     => possiblyEnum(v)
+        case ("String", v)     => getEnum(v)
         case ("Int", v)        => v.toInt.asInstanceOf[Object]
         case ("Long", v)       => v.toLong.asInstanceOf[Object]
         case ("Double", v)     => v.toDouble.asInstanceOf[Object]
@@ -631,7 +659,7 @@ object DatomicRpc extends MoleculeRpc
   ): Future[List[String]] = {
     for {
       conn <- getConn(connProxy)
-      rows0 <- conn.rawQuery(datalogQuery, Nil)
+      rows0 <- conn.rawQuery(datalogQuery)
     } yield {
       val cast = if (tpe == "Date" && card != 3)
         (v: Any) => date2strLocal(v.asInstanceOf[Date])
@@ -647,10 +675,10 @@ object DatomicRpc extends MoleculeRpc
     connProxy: ConnProxy,
     query: String
   ): Future[List[String]] = {
-    var list         = List.empty[String]
+    var list = List.empty[String]
     for {
       conn <- getConn(connProxy)
-      rows <- conn.rawQuery(query, Nil)
+      rows <- conn.rawQuery(query)
     } yield {
       rows.forEach { row =>
         list = row.get(0).toString :: list
@@ -698,6 +726,44 @@ object DatomicRpc extends MoleculeRpc
   }
 
 
+  // Entity api ....................................
+
+
+  def rawValue(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
+    getDatomicEntity(connProxy, eid)
+      .flatMap(_.rawValue(attr))
+      .map(res => entityList2packed2(List(attr -> res)))
+  }
+
+
+  def attrs(connProxy: ConnProxy, eid: Long): Future[List[String]] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.attrs)
+  }
+
+
+  def apply(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
+    getDatomicEntity(connProxy, eid)
+      .flatMap(_.apply[Any](attr))
+      .map(optV => packOptV(attr, optV))
+  }
+
+  def apply(connProxy: ConnProxy, eid: Long, attrs: List[String]): Future[List[String]] = {
+    val attr1 :: attr2 :: moreAttrs = attrs
+    getDatomicEntity(connProxy, eid)
+      .flatMap(_.apply(attr1, attr2, moreAttrs: _*))
+      .map { optValues =>
+        attrs.zip(optValues).map { case (attr, optV) => packOptV(attr, optV) }
+      }
+  }
+
+  private def packOptV(attr: String, optV: Option[Any]): String = {
+    optV.fold("") {
+      case v: Map[_, _] => entityMap2packed2(v.asInstanceOf[Map[String, Any]])
+      case v            => entityList2packed2(List(":db/id" -> 0, attr -> v))
+    }
+
+  }
+
   def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
     getDatomicEntity(connProxy, eid).flatMap(_.touchMax(maxDepth)).map(entityMap2packed2)
   }
@@ -726,7 +792,7 @@ object DatomicRpc extends MoleculeRpc
     getConn(connProxy).map(conn => conn.db.entity(conn, eid))
   }
 
-  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = ???
+  //  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = ???
 
 
   // Connection pool ---------------------------------------------

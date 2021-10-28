@@ -76,7 +76,7 @@ private[molecule] trait ConnBase extends ColOps with Serializations {
 
   private[molecule] def rawQuery(
     query: String,
-    inputs: Any*
+    inputs: Seq[AnyRef] = Nil
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = ???
 
   private[molecule] def jvmQuery(

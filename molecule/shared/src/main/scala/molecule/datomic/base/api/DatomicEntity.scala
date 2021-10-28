@@ -10,22 +10,19 @@ import scala.util.control.NonFatal
 
 trait DatomicEntity {
 
-  private[molecule] def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???
+//  private[molecule] def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???
 
-  private[molecule] def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???
+//  private[molecule] def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = ???
 
-  private[molecule] def keySet(implicit ec: ExecutionContext): Future[Set[String]] = ???
+//  private[molecule] def keySet(implicit ec: ExecutionContext): Future[Set[String]] = ???
 
-  private[molecule] def keys(implicit ec: ExecutionContext): Future[List[String]] = ???
+  private[molecule] def rawValue(kw: String)(implicit ec: ExecutionContext): Future[Any]
 
-  private[molecule] def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = ???
+  def attrs(implicit ec: ExecutionContext): Future[List[String]]
+
+//  private[molecule] def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = ???
 
 
-  def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] = ???
-
-  def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] = ???
-
-  def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] = ???
 
 
   /** Asynchronously retract single entity using entity id.
@@ -91,6 +88,13 @@ trait DatomicEntity {
   def inspectRetract(implicit ec: ExecutionContext): Future[Unit]
 
   def inspectRetract(txMeta: Molecule)(implicit ec: ExecutionContext): Future[Unit]
+
+
+  // Entity api ....................................
+
+  def apply[T](attr: String)(implicit ec: ExecutionContext): Future[Option[T]]
+
+  def apply(attr1: String, attr2: String, moreAttrs: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]]
 
   /** Get entity graph as Map.
     * <br><br>

@@ -7,8 +7,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait DatomicDb {
 
-  def getDatomicDb: AnyRef
-
   def t(implicit ec: ExecutionContext): Future[Long]
 
   def tx(implicit ec: ExecutionContext): Future[Long]
@@ -18,4 +16,6 @@ trait DatomicDb {
   def entity(conn: Conn, id: Any): DatomicEntity
 
   def pull(pattern: String, eid: Any)(implicit ec: ExecutionContext): Future[util.Map[_, _]]
+
+  private[molecule] def getDatomicDb: AnyRef
 }

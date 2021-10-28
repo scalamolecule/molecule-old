@@ -2,25 +2,93 @@ package molecule.core.marshalling.unpackers
 
 import java.net.URI
 import java.util.{Date, UUID}
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.DateHandling
 import molecule.datomic.base.facade.Conn
 import scala.collection.mutable.ListBuffer
+import scala.util.{Failure, Try}
 
 class Packed2EntityMap(conn: Conn) extends DateHandling {
 
-  private val attrs = {
+  protected val attrDefinitions: Map[String, (Int, String)] = {
     // Add backrefs
     conn.connProxy.attrMap.flatMap {
       case (ref, (card, "ref")) =>
         val backRef = ref.replace("/", "/_")
         Seq(
           (ref, (card, "ref")),
-          (backRef, (card, "ref"))
+          (backRef, (2, "ref")) // Backrefs are cardinality-many
         )
       case (attr, (card, tpe))  => Seq((attr, (card, tpe)))
     } +
-    // Add internal bidirectional edge ref attribute
-    (":molecule_Meta/otherEdge" -> (1, "ref"))
+      // Recognise internal bidirectional edge ref attribute
+      (":molecule_Meta/otherEdge" -> (1, "ref"))
+  }
+
+  def getTypedValue(card: Int, tpe: String, v: Any): Try[Any] = card match {
+    case 1 => tpe match {
+      case "String" | "enum" => Try(v.toString)
+      case "Int"             => Try(v.toString.toInt)
+      case "Long" | "ref"    => Try(v.toString.toLong)
+      case "Double"          => Try(v.toString.toDouble)
+      case "Boolean"         => Try(v.toString.toBoolean)
+      case "Date"            => Try(str2date(v.toString))
+      case "UUID"            => Try(UUID.fromString(v.toString))
+      case "URI"             => Try(new URI(v.toString))
+      case "BigInt"          => Try(BigInt(v.toString))
+      case "BigDecimal"      => Try(BigDecimal(v.toString))
+      case other             => Failure(MoleculeException("Unexpected other type: " + other))
+    }
+    case 2 =>
+      def mkList[T](cast: String => T): Try[Set[T]] = Try(
+        v.asInstanceOf[List[_]].map(v => cast(v.toString)).toSet
+      )
+      tpe match {
+        case "String" | "enum" => mkList((s: String) => s)
+        case "Int"             => mkList((s: String) => s.toInt)
+        case "Long" | "ref"    => mkList((s: String) => s.toLong)
+        case "Double"          => mkList((s: String) => s.toDouble)
+        case "Boolean"         => mkList((s: String) => s.toBoolean)
+        case "Date"            => mkList((s: String) => str2date(s))
+        case "UUID"            => mkList((s: String) => UUID.fromString(s))
+        case "URI"             => mkList((s: String) => new URI(s))
+        case "BigInt"          => mkList((s: String) => BigInt(s))
+        case "BigDecimal"      => mkList((s: String) => BigDecimal(s))
+        case other             => Failure(MoleculeException("Unexpected other type: " + other))
+      }
+    case 3 =>
+      def mkMap[T](cast: String => T): Try[Map[String, T]] = Try(
+        v.asInstanceOf[List[_]].map { v =>
+          val pair = v.toString.split("@", 2)
+          pair(0) -> cast(pair(1))
+        }.toMap
+      )
+      tpe match {
+        case "String" | "enum" => mkMap((s: String) => s)
+        case "Int"             => mkMap((s: String) => s.toInt)
+        case "Long" | "ref"    => mkMap((s: String) => s.toLong)
+        case "Double"          => mkMap((s: String) => s.toDouble)
+        case "Boolean"         => mkMap((s: String) => s.toBoolean)
+        case "Date"            => mkMap((s: String) => str2date(s))
+        case "UUID"            => mkMap((s: String) => UUID.fromString(s))
+        case "URI"             => mkMap((s: String) => new URI(s))
+        case "BigInt"          => mkMap((s: String) => BigInt(s))
+        case "BigDecimal"      => mkMap((s: String) => BigDecimal(s))
+        case other             => Failure(MoleculeException("Unexpected other type: " + other))
+      }
+  }
+
+  def getTypedNone(tpe: String): Option[Any] = tpe match {
+    case "String" | "enum" => Option.empty[String]
+    case "Int"             => Option.empty[Int]
+    case "Long" | "ref"    => Option.empty[Long]
+    case "Double"          => Option.empty[Double]
+    case "Boolean"         => Option.empty[Boolean]
+    case "Date"            => Option.empty[Date]
+    case "UUID"            => Option.empty[UUID]
+    case "URI"             => Option.empty[URI]
+    case "BigInt"          => Option.empty[BigInt]
+    case "BigDecimal"      => Option.empty[BigDecimal]
   }
 
   private lazy val buf = new StringBuffer
@@ -137,7 +205,10 @@ class Packed2EntityMap(conn: Conn) extends DateHandling {
       case "►" => vs.next()
       case v   => v
     }
-    //    println("ATTR: " + attr)
+    //    if (attr != ":db/id") {
+    //      val (card, tpe) = attrDefinitions(attr)
+    //      println("ATTR: " + attr + "   CARD: " + card + "   TPE: " + tpe)
+    //    }
     val v     = vs.next()
     val value = attr match {
       case ":db/id"        => unpackOneLong(v)
@@ -150,7 +221,7 @@ class Packed2EntityMap(conn: Conn) extends DateHandling {
       case "op"            => unpackOneBoolean(v)
 
       case attr =>
-        attrs(attr) match {
+        attrDefinitions(attr) match {
           case (1, tpe) => tpe match {
             case "String" | "enum" => unpackOneString(v, vs)
             case "ref"             => unpackOneRef(v, vs, unpackCol)
@@ -210,13 +281,13 @@ class Packed2EntityMap(conn: Conn) extends DateHandling {
     }
 
   def packed2entityList(packed: String): List[(String, Any)] = {
-    //    println(packed + "\n-----------------------------")
+    //    println("\n---------- packed2EntityList -------------\n" + packed + "\n-----------------------------")
     val vs = packed.linesIterator
     unpackList[List[(String, Any)]](vs.next(), vs)._2
   }
 
   def packed2entityMap(packed: String): Map[String, Any] = {
-    //    println(packed + "\n-----------------------------")
+    //    println("\n---------- packed2entityMap   -------------\n" + packed + "\n-----------------------------")
     val vs = packed.linesIterator
     unpackMap[Map[String, Any]](vs.next(), vs)._2
   }

@@ -1,7 +1,7 @@
 package molecule.datomic.peer.facade
 
 import java.util
-import java.util.{Date, Collection => jCollection, List => jList}
+import java.util.{Collections, Date, Collection => jCollection, List => jList}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
@@ -55,8 +55,8 @@ private[molecule] case class Conn_Peer(
   override def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
   // For transaction functions
-//  override def testDb(db: DatomicDb): Unit = {
-   protected def testDb(db: DatomicDb_Peer): Unit = {
+  //  override def testDb(db: DatomicDb): Unit = {
+  protected def testDb(db: DatomicDb_Peer): Unit = {
     _testDb = Some(db.peerDb)
   }
 
@@ -281,14 +281,14 @@ private[molecule] case class Conn_Peer(
     case NonFatal(ex) => Future.failed(ex)
   }
 
-  override def rawQuery(
+  private[molecule] override def rawQuery(
     query: String,
-    inputs0: Any*
+    inputs: Seq[AnyRef]
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-    val inputs = inputs0.toSeq.map {
-      case it: Iterable[_] => it.asJava
-      case v               => v
-    }.asInstanceOf[Seq[AnyRef]]
+    //    val inputs1 = inputs.map {
+    //      case it: Iterable[_] => it.asJava
+    //      case v               => v
+    //    }
     try {
       val result = Peer.q(query, db.getDatomicDb +: inputs: _*)
       Future(result)
@@ -308,7 +308,7 @@ private[molecule] case class Conn_Peer(
   }.flatten
 
 
-  override def jvmQuery(
+  private[molecule] override def jvmQuery(
     model: Model,
     query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
@@ -322,7 +322,7 @@ private[molecule] case class Conn_Peer(
   }
 
   // Datoms API providing direct access to indexes
-  override def indexQuery(
+  private[molecule] override def indexQuery(
     model: Model
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
@@ -639,6 +639,9 @@ private[molecule] case class Conn_Peer(
       val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
       val peerDb          = _db.getOrElse(db).getDatomicDb
       val allInputs       = Seq(peerDb) ++ rules ++ inputsEvaluated
+      //      println(inputsEvaluated.mkString(query.datalog + "\n--------------\n", "\n", ""))
+      //      println(inputsEvaluated.getClass)
+      //      inputsEvaluated.foreach(v => println(v.getClass))
       val result          = Peer.q(query.toMap, allInputs: _*)
       Future(result)
     } catch {

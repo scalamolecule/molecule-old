@@ -24,16 +24,20 @@ trait EntityOps {
   implicit class long2DatomicEntity(
     id: Long
   )(implicit conn: Future[Conn], ec: ExecutionContext) extends DatomicEntity {
-    lazy private val datomicEntity: Future[DatomicEntity] = conn.map(_.entity(id))
+    private val datomicEntity: Future[DatomicEntity] = conn.map(_.entity(id))
 
-    override def rawValue(key: String)(implicit ec: ExecutionContext): Future[Any] =
-      datomicEntity.flatMap(_.rawValue(key))
+    override def rawValue(attr: String)(implicit ec: ExecutionContext): Future[Any] =
+      datomicEntity.flatMap(_.rawValue(attr))
 
-    override def apply[T](key: String)(implicit ec: ExecutionContext): Future[Option[T]] =
-      datomicEntity.flatMap(_.apply(key))
+    override def attrs(implicit ec: ExecutionContext): Future[List[String]] =
+      datomicEntity.flatMap(_.attrs)
 
-    override def apply(kw1: String, kw2: String, kws: String*)(implicit ec: ExecutionContext): Future[List[Option[Any]]] =
-      datomicEntity.flatMap(_.apply(kw1, kw2, kws: _*))
+    override def apply[T](attr: String)(implicit ec: ExecutionContext): Future[Option[T]] =
+      datomicEntity.flatMap(_.apply(attr))
+
+    override def apply(attr1: String, attr2: String, moreAttrs: String*)
+                      (implicit ec: ExecutionContext): Future[List[Option[Any]]] =
+      datomicEntity.flatMap(_.apply(attr1, attr2, moreAttrs: _*))
 
     def retract(implicit ec: ExecutionContext): Future[TxReport] =
       datomicEntity.flatMap(_.retract)

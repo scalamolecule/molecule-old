@@ -7,7 +7,7 @@ import molecule.datomic.base.marshalling.PackBase
 
 trait PackEntityMap extends PackBase with Helpers {
 
-  private def resolveMapValue(sb: StringBuffer, v: Any): StringBuffer = v match {
+  protected def resolveMapValue(sb: StringBuffer, v: Any): StringBuffer = v match {
     case v: String => add(sb, v); end(sb) // end of text lines
     case d: Date   => add(sb, date2str(d))
 
@@ -44,7 +44,7 @@ trait PackEntityMap extends PackBase with Helpers {
     case _ => add(sb, v.toString)
   }
 
-  private def resolveListValue(sb: StringBuffer, v: Any): StringBuffer = v match {
+  protected def resolveListValue(sb: StringBuffer, v: Any): StringBuffer = v match {
     case v: String => add(sb, v); end(sb) // end of text lines
     case d: Date   => add(sb, date2str(d))
 
@@ -85,6 +85,25 @@ trait PackEntityMap extends PackBase with Helpers {
           next(sb) // end of collection
       }
       sb
+
+
+//    case m: Map[_, _] =>
+//      println("MAP: " + m)
+//
+//      m.foreach {
+//        case (ref: String, refMap: Map[_, _]) =>
+//          add(sb, ref)
+//          next(sb) // next ref Map
+//          resolveListValue(sb, refMap)
+//          nil(sb) // end of ref Map
+//
+//        case (attr: String, v) =>
+//          println(s"$attr  $v")
+//          add(sb, attr)
+//          resolveListValue(sb, v)
+//      }
+//
+//      sb
 
     case _ => add(sb, v.toString)
   }
