@@ -87,14 +87,16 @@ object EdgeManyOtherInsert extends AsyncTestSuite {
 
     "base - edge - <missing target>" - bidirectional { implicit conn =>
       // Can't allow edge without ref to target entity
-      Person.name.CloseTo.weight.insert("Don", 5).recover { case VerifyModelException(err) =>
+      Person.name.CloseTo.weight.insert("Don", 5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace after edge namespace `CloseTo`."
       }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
       // Edge always have to have a ref to a target entity
-      CloseTo.weight.insert(5).recover { case VerifyModelException(err) =>
+      CloseTo.weight.insert(5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `CloseTo/weight`."
       }
     }

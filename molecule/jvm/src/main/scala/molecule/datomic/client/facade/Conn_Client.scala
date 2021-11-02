@@ -44,11 +44,6 @@ private[molecule] case class Conn_Client(
 
   override def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
 
-//  override def testDb(db: DatomicDb): Unit = {
-//    _testDb = Some(db.asInstanceOf[DatomicDb_Client].clientDb)
-//  }
-
-
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(clientConn.db)
   }
@@ -318,18 +313,11 @@ private[molecule] case class Conn_Client(
     //    inputs0: Any*
     inputs: Seq[AnyRef]
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-//    val inputs1 = inputs.map {
-//      case it: Iterable[_] => it.toList.asJava
-//      case dbId: DbId      => dbId.idx.toString
-//      case bi: BigInt      => new java.math.BigInteger(bi.toString)
-//      case v               => v
-//    }
     try {
       val result = clientDatomic.q(
         query,
         db.asInstanceOf[DatomicDb_Client].clientDb,
         inputs: _*
-//        inputs.asInstanceOf[Seq[AnyRef]]: _*
       )
       Future(result)
     } catch {

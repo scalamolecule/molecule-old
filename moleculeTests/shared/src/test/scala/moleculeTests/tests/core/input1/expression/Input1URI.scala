@@ -75,7 +75,8 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uri1, uri2, uri3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(uri3))
-            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(uri2, uri3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -87,7 +88,8 @@ object Input1URI extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uri1, uri2, uri3))
             _ <- inputMolecule(List(uri2)).get.map(_.sorted ==> List(uri2, uri3))
-            _ <- inputMolecule(List(uri2, uri3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(uri2, uri3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()

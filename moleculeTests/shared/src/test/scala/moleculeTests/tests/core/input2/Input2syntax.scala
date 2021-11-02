@@ -197,7 +197,8 @@ object Input2syntax extends AsyncTestSuite {
 
           // Multiple pairs
           // Compare functions expects only one argument, so multiple input pairs are not allowed
-          _ <- inputExpression((1, 2L), (1, 3L)).get.recover { case Molecule_2_Exception(err) =>
+          _ <- inputExpression((1, 2L), (1, 3L)).get
+            .map(_ ==> "Unexpected success").recover { case Molecule_2_Exception(err) =>
             err ==> "Can't apply multiple pairs to input attributes with one or more expressions (<, >, <=, >=, !=)"
           }
         } yield ()
@@ -320,11 +321,13 @@ object Input2syntax extends AsyncTestSuite {
 
           // Comparison functions set limit on inputs
 
-          _ <- inputExpression(2L, Set(1, 2)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputExpression(2L, Set(1, 2)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
 
-          _ <- inputExpression((1L, Set(1)), (2L, Set(2))).get.recover { case Molecule_2_Exception(err) =>
+          _ <- inputExpression((1L, Set(1)), (2L, Set(2))).get
+            .map(_ ==> "Unexpected success").recover { case Molecule_2_Exception(err) =>
             err ==> "Can't apply multiple pairs to input attributes with one or more expressions (<, >, <=, >=, !=)"
           }
 

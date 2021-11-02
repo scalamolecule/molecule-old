@@ -227,20 +227,20 @@ object EdgeManySelfUpdate extends AsyncTestSuite {
         Seq(ann, knowsBen, knowsDon, knowsGil, knowsHan, knowsJoe, knowsRon, knowsTom) <- testData
 
         // Can't update multiple values of cardinality-one attribute `name`
-        _ <- Person(ann).Knows.weight(7).Person.name("Joe", "Liz").update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-              "\n  Person ... name(Joe, Liz)"
+        _ <- Person(ann).Knows.weight(7).Person.name("Joe", "Liz").update
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+          err ==> s"[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+            "\n  Person ... name(Joe, Liz)"
         }
 
-        _ <- Person(ann).Knows.*(Knows.weight(4).Person.name("Joe")).update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Knows`."
+        _ <- Person(ann).Knows.*(Knows.weight(4).Person.name("Joe")).update
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+          err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Knows`."
         }
 
-        _ <- Person(ann).Knows.*(Knows.weight(4).person(42L)).update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Knows`."
+        _ <- Person(ann).Knows.*(Knows.weight(4).person(42L)).update
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+          err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Knows`."
         }
 
         // Note that an edge always have only one target entity.

@@ -87,14 +87,16 @@ object EdgeManySelfInsert extends AsyncTestSuite {
 
     "base/edge - <missing target>" - bidirectional { implicit conn =>
       // Can't allow edge without ref to target entity
-      Person.name.Knows.weight.insert("Don", 5).recover { case VerifyModelException(err) =>
+      Person.name.Knows.weight.insert("Don", 5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Knows`."
       }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
       // Edge always have to have a ref to a target entity
-      Knows.weight.insert(5).recover { case VerifyModelException(err) =>
+      Knows.weight.insert(5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Knows/weight`."
       }
     }

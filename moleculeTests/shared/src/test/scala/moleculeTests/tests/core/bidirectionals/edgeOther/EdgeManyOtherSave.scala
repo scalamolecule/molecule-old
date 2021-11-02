@@ -19,16 +19,18 @@ object EdgeManyOtherSave extends AsyncTestSuite {
     "base/edge/target" - {
 
       "no nesting in save molecules" - bidirectional { implicit conn =>
-        for{
-        _ <- Person.name("Ann").CloseTo.*(CloseTo.weight(7)).save.recover { case VerifyModelException(err) =>
-          err ==> s"[noNested]  Nested data structures not allowed in save molecules"
-        }
+        for {
+          _ <- Person.name("Ann").CloseTo.*(CloseTo.weight(7)).save
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+            err ==> s"[noNested]  Nested data structures not allowed in save molecules"
+          }
 
-        // Insert entities, each having one or more connected entities with relationship properties
-        rex <- Animal.name.insert("Rex").map(_.eid)
-        _ <- Person.name("Rex").CloseTo.*(CloseTo.weight(7).animal(rex)).save.recover { case VerifyModelException(err) =>
-          err ==> s"[noNested]  Nested data structures not allowed in save molecules"
-        }
+          // Insert entities, each having one or more connected entities with relationship properties
+          rex <- Animal.name.insert("Rex").map(_.eid)
+          _ <- Person.name("Rex").CloseTo.*(CloseTo.weight(7).animal(rex)).save
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+            err ==> s"[noNested]  Nested data structures not allowed in save molecules"
+          }
         } yield ()
       }
 
@@ -79,7 +81,7 @@ object EdgeManyOtherSave extends AsyncTestSuite {
       }
 
       "existing target" - bidirectional { implicit conn =>
-        for{
+        for {
           List(gus, leo) <- Animal.name.insert("Gus", "Leo").map(_.eids)
 
           // Create edges to existing target entities
@@ -101,14 +103,16 @@ object EdgeManyOtherSave extends AsyncTestSuite {
 
     "base - edge - <missing target>" - bidirectional { implicit conn =>
       // Can't allow edge without ref to target entity
-      Person.name("Gus").CloseTo.weight(5).save.recover { case VerifyModelException(err) =>
+      Person.name("Gus").CloseTo.weight(5).save
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace after edge namespace `CloseTo`."
       }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
       // Edge always have to have a ref to a target entity
-      CloseTo.weight(7).save.recover { case VerifyModelException(err) =>
+      CloseTo.weight(7).save
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `CloseTo/weight`."
       }
     }

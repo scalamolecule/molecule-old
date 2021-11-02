@@ -39,12 +39,12 @@ object Provenance extends AsyncTestSuite {
         ))
 
         // We can also traverse the generated entity ids to see what is saved
-        _ <- elasticacheStory.touch.map(_ ==> Map(
+        _ <- elasticacheStory.graph.map(_ ==> Map(
           ":db/id" -> elasticacheStory,
           ":Story/title" -> "ElastiCache in 6 minutes",
           ":Story/url" -> "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html"))
 
-        _ <- chocolateStory.touch.map(_ ==> Map(
+        _ <- chocolateStory.graph.map(_ ==> Map(
           ":db/id" -> chocolateStory,
           ":Story/title" -> "Keep Chocolate Love Atomic",
           ":Story/url" -> "http://blog.datomic.com/2012/08/atomic-chocolate.html"))
@@ -53,7 +53,7 @@ object Provenance extends AsyncTestSuite {
         stuTxInstant <- User(stuTxId).txInstant.get.map(_.head)
 
         // Limit entity traversal 1 level deep
-        _ <- stuTxId.touchMax(1).map(_ ==> Map(
+        _ <- stuTxId.graphDepth(1).map(_ ==> Map(
           ":db/id" -> stuTxId,
           ":db/txInstant" -> stuTxInstant,
           ":MetaData/usecase" -> "AddStories",
@@ -61,7 +61,7 @@ object Provenance extends AsyncTestSuite {
         ))
 
         // Or full traversal to Stu's data
-        _ <- stuTxId.touch.map(_ ==> Map(
+        _ <- stuTxId.graph.map(_ ==> Map(
           ":db/id" -> stuTxId,
           ":db/txInstant" -> stuTxInstant,
           ":MetaData/usecase" -> "AddStories",

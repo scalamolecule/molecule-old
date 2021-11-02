@@ -42,8 +42,8 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           Community.e.name_("Greenlake Community Wiki").Neighborhood.e.District.e.get.map(_.head)
 
         // Use the community id to touch all the entity's attribute values
-        _ <- communityId.touch.map(_ ==> Map(
-          ":Community/category" -> List("events", "for sale", "services"),
+        _ <- communityId.graph.map(_ ==> Map(
+          ":Community/category" -> Set("events", "for sale", "services"),
           ":Community/neighborhood" -> Map(
             ":db/id" -> neighborhoodId,
             ":Neighborhood/district" -> Map(

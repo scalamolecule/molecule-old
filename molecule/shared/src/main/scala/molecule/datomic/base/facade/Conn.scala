@@ -17,8 +17,8 @@ trait Conn extends ConnBase {
 
   def transact(edn: String)(implicit ec: ExecutionContext): Future[TxReport]
 
+  // jvm only
   def transact(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] = ???
-
   def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] = ???
 
 
@@ -62,12 +62,6 @@ trait Conn extends ConnBase {
 
 
   // Test db ........................................................
-
-//  /** Manually apply a database to use.
-//   *
-//   * @param db
-//   */
-//  def testDb(db: DatomicDb): Unit = ()
 
   /** Use test database as of now. */
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit]

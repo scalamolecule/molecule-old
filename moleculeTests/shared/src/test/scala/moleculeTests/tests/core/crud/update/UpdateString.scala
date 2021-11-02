@@ -34,7 +34,8 @@ object UpdateString extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).str("b", "c").update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).str("b", "c").update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... str(b, c)"
           }
@@ -64,7 +65,8 @@ object UpdateString extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).str(str2, str3).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).str(str2, str3).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... str($str2, $str3)"
           }
@@ -310,17 +312,17 @@ object UpdateString extends AsyncTestSuite {
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = str8
 
-          _ <- Ns(eid).strs.replace(str7 -> str8, str8 -> other8).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
-                "\nh"
+          _ <- Ns(eid).strs.replace(str7 -> str8, str8 -> other8).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
+              "\nh"
           }
 
           // Conflicting new values
-          _ <- Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> other8)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
-                "\nh"
+          _ <- Ns(eid).strs.replace(Seq(str7 -> str8, str8 -> other8)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/strs`:" +
+              "\nh"
           }
         } yield ()
       }

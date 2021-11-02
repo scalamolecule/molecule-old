@@ -117,7 +117,7 @@ object Input3examples extends AsyncTestSuite {
     "2 inputs" - core { implicit conn =>
       val inputMolecule = m(Ns.int.longs_(?).enums_(?).uris_(?))
       for {
-        _ <-  Ns.int.longs$.enums$.uris$ insert List(
+        _ <- Ns.int.longs$.enums$.uris$ insert List(
           (1, Some(Set(long1, long2, long3)), Some(Set(enum1, enum2, enum3)), Some(Set(uri1, uri2, uri3))),
           (2, Some(Set(long2, long3, long4)), Some(Set(enum2, enum3, enum4)), Some(Set(uri2, uri3, uri4))),
           (3, Some(Set(long3, long4, long5)), Some(Set(enum3, enum4, enum5)), Some(Set(uri3, uri4, uri5))),
@@ -139,14 +139,14 @@ object Input3examples extends AsyncTestSuite {
           List(Set(uri3)) // 1, 2, 3, 6
         ).get.map(_ ==> List(3))
 
-        _ <- m(Ns.int.ints(?).longs(?).strs(?)).apply(Nil, List(Set(1L)), List(Set("a"))).get.recover {
-          case Molecule_3_Exception(err) =>
-            err ==> "Can only apply empty list (Nil) to a tacit input attribute. Please make input attr tacit: `ints` --> `ints_`"
+        _ <- m(Ns.int.ints(?).longs(?).strs(?)).apply(Nil, List(Set(1L)), List(Set("a"))).get
+          .map(_ ==> "Unexpected success").recover { case Molecule_3_Exception(err) =>
+          err ==> "Can only apply empty list (Nil) to a tacit input attribute. Please make input attr tacit: `ints` --> `ints_`"
         }
 
         _ <- m(Ns.int.ints_.<=(?).longs_(?).strs_(?)).apply(
           List(Set(1), Set(2)), List(Set(1L)), List(Set("a"))
-        ).get.recover { case Molecule_3_Exception(err) =>
+        ).get.map(_ ==> "Unexpected success").recover { case Molecule_3_Exception(err) =>
           err ==> s"Can't apply multiple values to input attribute `:Ns/ints` having expression (<, >, <=, >=, !=)"
         }
       } yield ()

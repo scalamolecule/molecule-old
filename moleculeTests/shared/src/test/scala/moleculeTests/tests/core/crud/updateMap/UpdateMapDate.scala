@@ -60,22 +60,22 @@ object UpdateMapDate extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).dateMap.assert(str1 -> date1, str1x -> date2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> 2001-07-01" +
-                "\na -> 2002-01-01"
+          _ <- Ns(eid).dateMap.assert(str1 -> date1, str1x -> date2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+              "\na -> 2001-07-01" +
+              "\na -> 2002-01-01"
           }
 
 
           // Seq
-          _ <- Ns(eid).dateMap.assert(Seq(str1 -> date1, str1x -> date2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> 2001-07-01" +
-                "\na -> 2002-01-01"
+          _ <- Ns(eid).dateMap.assert(Seq(str1 -> date1, str1x -> date2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't assert multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+              "\na -> 2001-07-01" +
+              "\na -> 2002-01-01"
           }
         } yield ()
       }
@@ -186,22 +186,22 @@ object UpdateMapDate extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).dateMap(str1 -> date1, str1 -> date2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> 2001-07-01" +
-                "\na -> 2002-01-01"
+          _ <- Ns(eid).dateMap(str1 -> date1, str1 -> date2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+              "\na -> 2001-07-01" +
+              "\na -> 2002-01-01"
           }
 
 
           // Seq
-          _ <- Ns(eid).dateMap(Seq(str1 -> date1, str1 -> date2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
-                "\na -> 2001-07-01" +
-                "\na -> 2002-01-01"
+          _ <- Ns(eid).dateMap(Seq(str1 -> date1, str1 -> date2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't apply multiple key/value pairs with the same key for attribute `:Ns/dateMap`:" +
+              "\na -> 2001-07-01" +
+              "\na -> 2002-01-01"
           }
         } yield ()
       }

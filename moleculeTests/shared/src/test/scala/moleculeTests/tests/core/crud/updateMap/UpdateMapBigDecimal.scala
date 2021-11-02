@@ -59,22 +59,22 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1x -> bigDec2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).bigDecMap.assert(str1 -> bigDec1, str1x -> bigDec2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
 
 
           // Seq
-          _ <- Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1x -> bigDec2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).bigDecMap.assert(Seq(str1 -> bigDec1, str1x -> bigDec2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
         } yield ()
       }
@@ -184,20 +184,20 @@ object UpdateMapBigDecimal extends AsyncTestSuite {
 
           // Can't apply pairs with duplicate keys
 
-          _ <- Ns(eid).bigDecMap(str1 -> bigDec1, str1 -> bigDec2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).bigDecMap(str1 -> bigDec1, str1 -> bigDec2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
 
-          _ <- Ns(eid).bigDecMap(Seq(str1 -> bigDec1, str1 -> bigDec2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).bigDecMap(Seq(str1 -> bigDec1, str1 -> bigDec2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigDecMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
         } yield ()
       }

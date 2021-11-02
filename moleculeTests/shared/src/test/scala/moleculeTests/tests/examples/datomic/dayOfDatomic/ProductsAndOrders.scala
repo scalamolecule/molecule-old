@@ -12,9 +12,6 @@ object ProductsAndOrders extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    //  peerOnly = true
-    //  devLocalOnly = true
-
     "Nested data, 1 level without initial namespace asserts" - products { implicit conn =>
       for {
         // Insert 2 products
@@ -27,9 +24,9 @@ object ProductsAndOrders extends AsyncTestSuite {
           List((chocolateId, 48.00, 1), (whiskyId, 38.00, 2)) map (_.eids)
 
         //    println(order.touchQuoted)
-        _ <- order.touch.map(_ ==> Map(
+        _ <- order.graph.map(_ ==> Map(
           ":db/id" -> order,
-          ":Order/lineItems" -> List(Map(
+          ":Order/lineItems" -> Set(Map(
             ":db/id" -> l1,
             ":LineItem/price" -> 48.0,
             ":LineItem/product" -> Map(
@@ -61,6 +58,7 @@ object ProductsAndOrders extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Nested Data, 1 level" - products { implicit conn =>
       for {
         // Insert 2 products
@@ -82,9 +80,9 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // Get all attributes/values of this entity. Sub-component values are
         // recursively retrieved
-        _ <- orderId.touch.map(_ ==> Map(
+        _ <- orderId.graph.map(_ ==> Map(
           ":db/id" -> orderId,
-          ":Order/lineItems" -> List(
+          ":Order/lineItems" -> Set(
             Map(":db/id" -> l1, ":LineItem/price" -> 48.0, ":LineItem/product" ->
               Map(":db/id" -> chocolateId, ":Product/description" -> "Expensive Chocolate"), ":LineItem/quantity" -> 1),
             Map(":db/id" -> l2, ":LineItem/price" -> 38.0, ":LineItem/product" ->
@@ -141,9 +139,9 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Touch ................................
 
         // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-        _ <- order23.touch.map(_ ==> Map(
+        _ <- order23.graph.map(_ ==> Map(
           ":db/id" -> order23,
-          ":Order/lineItems" -> List(
+          ":Order/lineItems" -> Set(
             Map(":db/id" -> l1, ":LineItem/price" -> 48.0, ":LineItem/product" ->
               Map(":db/id" -> chocolateId, ":Product/description" -> "Expensive Chocolate"), ":LineItem/quantity" -> 1),
             Map(":db/id" -> l2, ":LineItem/price" -> 38.0, ":LineItem/product" ->
@@ -153,9 +151,9 @@ object ProductsAndOrders extends AsyncTestSuite {
               Map(":db/id" -> licoriceId, ":Product/description" -> "Licorice"), ":LineItem/quantity" -> 2)),
           ":Order/orderid" -> 23))
 
-        _ <- order24.touch.map(_ ==> Map(
+        _ <- order24.graph.map(_ ==> Map(
           ":db/id" -> order24,
-          ":Order/lineItems" -> List(
+          ":Order/lineItems" -> Set(
             Map(":db/id" -> ll1, ":LineItem/price" -> 38.0, ":LineItem/product" ->
               Map(":db/id" -> whiskyId, ":Product/description" -> "Cheap Whisky"), ":LineItem/quantity" -> 3),
             Map(":db/id" -> ll2, ":LineItem/price" -> 77.0, ":LineItem/product" ->
@@ -241,9 +239,9 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // Get all attributes/values of this entity. Sub-component values are
         // recursively retrieved
-        _ <- order23.touch.map(_ ==> Map(
+        _ <- order23.graph.map(_ ==> Map(
           ":db/id" -> order23,
-          ":Order/lineItems" -> List(
+          ":Order/lineItems" -> Set(
             Map(":db/id" -> l1, ":LineItem/price" -> 48.0, ":LineItem/product" ->
               Map(":db/id" -> p1, ":Product/description" -> "Expensive Chocolate"), ":LineItem/quantity" -> 1),
             Map(":db/id" -> l2, ":LineItem/price" -> 38.0, ":LineItem/product" ->
@@ -252,9 +250,9 @@ object ProductsAndOrders extends AsyncTestSuite {
               Map(":db/id" -> p3, ":Product/description" -> "Licorice"), ":LineItem/quantity" -> 2)),
           ":Order/orderid" -> 23))
 
-        _ <- order24.touch.map(_ ==> Map(
+        _ <- order24.graph.map(_ ==> Map(
           ":db/id" -> order24,
-          ":Order/lineItems" -> List(
+          ":Order/lineItems" -> Set(
             Map(":db/id" -> ll1, ":LineItem/price" -> 38.0, ":LineItem/product" ->
               Map(":db/id" -> pp1, ":Product/description" -> "Cheap Whisky"), ":LineItem/quantity" -> 3),
             Map(":db/id" -> ll2, ":LineItem/price" -> 77.0, ":LineItem/product" ->
@@ -297,16 +295,16 @@ object ProductsAndOrders extends AsyncTestSuite {
         _ <- LineItem.product_(chocolateId).Comments.text.get.map(_ ==> List("first", "product"))
 
         // 2 levels of nested data entered
-        _ <- o1.touch.map(_ ==> Map(
+        _ <- o1.graph.map(_ ==> Map(
           ":db/id" -> o1,
-          ":Order/lineItems" -> List(
-            Map(":LineItem/comments" -> List(
+          ":Order/lineItems" -> Set(
+            Map(":LineItem/comments" -> Set(
               Map(":db/id" -> c1, ":Comment/text" -> "first"),
               Map(":db/id" -> c2, ":Comment/text" -> "product")),
               ":LineItem/price" -> 48.0, ":LineItem/quantity" -> 1, ":LineItem/product" ->
                 Map(":db/id" -> chocolateId, ":Product/description" -> "Expensive Chocolate"),
               ":db/id" -> l1),
-            Map(":LineItem/comments" -> List(
+            Map(":LineItem/comments" -> Set(
               Map(":db/id" -> c3, ":Comment/text" -> "second"),
               Map(":db/id" -> c4, ":Comment/text" -> "is"),
               Map(":db/id" -> c5, ":Comment/text" -> "best")),
@@ -348,10 +346,10 @@ object ProductsAndOrders extends AsyncTestSuite {
         ) map (_.eids)
 
         // 2 levels of nested data entered
-        _ <- o1.touch.map(_ ==> Map(
+        _ <- o1.graph.map(_ ==> Map(
           ":db/id" -> o1,
-          ":Order/lineItems" -> List(
-            Map(":LineItem/comments" -> List(
+          ":Order/lineItems" -> Set(
+            Map(":LineItem/comments" -> Set(
               Map(":db/id" -> c1, ":Comment/descr" -> "1a", ":Comment/text" -> "first"),
               Map(":db/id" -> c2, ":Comment/descr" -> "1b", ":Comment/text" -> "product")),
               ":LineItem/price" -> 48.0,
@@ -359,7 +357,7 @@ object ProductsAndOrders extends AsyncTestSuite {
               ":LineItem/product" ->
                 Map(":db/id" -> chocolateId, ":Product/description" -> "Expensive Chocolate"),
               ":db/id" -> l1),
-            Map(":LineItem/comments" -> List(
+            Map(":LineItem/comments" -> Set(
               Map(":db/id" -> c3, ":Comment/descr" -> "2b", ":Comment/text" -> "second"),
               Map(":db/id" -> c4, ":Comment/descr" -> "2b", ":Comment/text" -> "is"),
               Map(":db/id" -> c5, ":Comment/descr" -> "2c", ":Comment/text" -> "best")),
@@ -409,17 +407,17 @@ object ProductsAndOrders extends AsyncTestSuite {
           ) map (_.eids)
 
         /* 3 levels of nested data entered*/
-        _ <- o1.touch.map(_ ==> Map(
+        _ <- o1.graph.map(_ ==> Map(
           ":db/id" -> o1,
-          ":Order/lineItems" -> List(
+          ":Order/lineItems" -> Set(
             Map(
-              ":LineItem/comments" -> List(
+              ":LineItem/comments" -> Set(
                 Map(
-                  ":db/id" -> c1, ":Comment/authors" -> List(
+                  ":db/id" -> c1, ":Comment/authors" -> Set(
                     Map(":db/id" -> a1, ":Person/name" -> "Marc Grue")),
                   ":Comment/descr" -> "1a",
                   ":Comment/text" -> "first"),
-                Map(":db/id" -> c2, ":Comment/authors" -> List(
+                Map(":db/id" -> c2, ":Comment/authors" -> Set(
                   Map(":db/id" -> a2, ":Person/name" -> "Marc Grue")),
                   ":Comment/descr" -> "1b",
                   ":Comment/text" -> "product")),
@@ -428,17 +426,17 @@ object ProductsAndOrders extends AsyncTestSuite {
               ":LineItem/product" ->
                 Map(":db/id" -> chocolateId, ":Product/description" -> "Expensive Chocolate"),
               ":db/id" -> l1),
-            Map(":LineItem/comments" -> List(
-              Map(":db/id" -> c3, ":Comment/authors" -> List(
+            Map(":LineItem/comments" -> Set(
+              Map(":db/id" -> c3, ":Comment/authors" -> Set(
                 Map(":db/id" -> a3, ":Person/name" -> "Don Juan"),
                 Map(":db/id" -> a4, ":Person/name" -> "Stuart Halloway")),
                 ":Comment/descr" -> "2b",
                 ":Comment/text" -> "second"),
-              Map(":db/id" -> c4, ":Comment/authors" -> List(
+              Map(":db/id" -> c4, ":Comment/authors" -> Set(
                 Map(":db/id" -> a5, ":Person/name" -> "Nick Smith")),
                 ":Comment/descr" -> "2b",
                 ":Comment/text" -> "is"),
-              Map(":db/id" -> c5, ":Comment/authors" -> List(
+              Map(":db/id" -> c5, ":Comment/authors" -> Set(
                 Map(":db/id" -> a6, ":Person/name" -> "test")),
                 ":Comment/descr" -> "2c",
                 ":Comment/text" -> "best")),
@@ -486,11 +484,11 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // 3 levels of nested data entered, some with missing values that are
         // then not asserted
-        _ <- o1.touch.map(_ ==> Map(
+        _ <- o1.graph.map(_ ==> Map(
           ":db/id" -> o1,
-          ":Order/lineItems" -> List(
-            Map(":LineItem/comments" -> List(
-              Map(":db/id" -> c1, ":Comment/authors" -> List(
+          ":Order/lineItems" -> Set(
+            Map(":LineItem/comments" -> Set(
+              Map(":db/id" -> c1, ":Comment/authors" -> Set(
                 Map(":db/id" -> a1, ":Person/name" -> "Don Juan")),
                 ":Comment/descr" -> "2b",
                 ":Comment/text" -> "second"),
@@ -534,14 +532,14 @@ object ProductsAndOrders extends AsyncTestSuite {
 
         // 3 levels of nested data entered, some with missing values that are
         // then not asserted
-        _ <- o1.touch.map(_ ==> Map(
+        _ <- o1.graph.map(_ ==> Map(
           ":db/id" -> o1,
-          ":Order/lineItems" -> List(
-            Map(":LineItem/comments" -> List(
-              Map(":db/id" -> c1, ":Comment/authors" -> List(
+          ":Order/lineItems" -> Set(
+            Map(":LineItem/comments" -> Set(
+              Map(":db/id" -> c1, ":Comment/authors" -> Set(
                 Map(":db/id" -> a1, ":Person/name" -> "Don Juan")),
                 ":Comment/text" -> "second"),
-              Map(":db/id" -> c2, ":Comment/authors" -> List(
+              Map(":db/id" -> c2, ":Comment/authors" -> Set(
                 Map(":db/id" -> a2, ":Person/name" -> "Marc")),
                 ":Comment/descr" -> "foo",
                 ":Comment/text" -> "chance")),

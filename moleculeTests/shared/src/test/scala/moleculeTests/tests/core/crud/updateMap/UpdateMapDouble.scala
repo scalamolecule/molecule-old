@@ -159,19 +159,19 @@ object UpdateMapDouble extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).doubleMap("str1" -> 1.0, "str1" -> 2.0).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
-                "\nstr1 -> 1.0" +
-                "\nstr1 -> 2.0"
+          _ <- Ns(eid).doubleMap("str1" -> 1.0, "str1" -> 2.0).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
+              "\nstr1 -> 1.0" +
+              "\nstr1 -> 2.0"
           }
 
           // Seq
-          _ <- Ns(eid).doubleMap(Seq("str1" -> 1.0, "str1" -> 2.0)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
-                "\nstr1 -> 1.0" +
-                "\nstr1 -> 2.0"
+          _ <- Ns(eid).doubleMap(Seq("str1" -> 1.0, "str1" -> 2.0)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
+              "\nstr1 -> 1.0" +
+              "\nstr1 -> 2.0"
           }
         } yield ()
       }
@@ -222,19 +222,19 @@ object UpdateMapDouble extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).doubleMap.assert(str1 -> double1, str1x -> double2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).doubleMap.assert(str1 -> double1, str1x -> double2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
 
           // Seq
-          _ <- Ns(eid).doubleMap.assert(Seq(str1 -> double1, str1x -> double2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).doubleMap.assert(Seq(str1 -> double1, str1x -> double2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
         } yield ()
       }
@@ -343,19 +343,19 @@ object UpdateMapDouble extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).doubleMap(str1 -> double1, str1 -> double2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).doubleMap(str1 -> double1, str1 -> double2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
 
           // Seq
-          _ <- Ns(eid).doubleMap(Seq(str1 -> double1, str1 -> double2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
-                "\na -> 1.0" +
-                "\na -> 2.0"
+          _ <- Ns(eid).doubleMap(Seq(str1 -> double1, str1 -> double2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/doubleMap`:" +
+              "\na -> 1.0" +
+              "\na -> 2.0"
           }
         } yield ()
       }

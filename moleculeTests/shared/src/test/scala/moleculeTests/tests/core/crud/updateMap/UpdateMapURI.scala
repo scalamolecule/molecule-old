@@ -58,7 +58,8 @@ object UpdateMapURI extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).uriMap.assert(str1 -> uri1, str1x -> uri2).update.recover {
+          _ <- Ns(eid).uriMap.assert(str1 -> uri1, str1x -> uri2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
                 "\na -> " + uri1 +
@@ -67,7 +68,8 @@ object UpdateMapURI extends AsyncTestSuite {
 
 
           // Seq
-          _ <- Ns(eid).uriMap.assert(Seq(str1 -> uri1, str1x -> uri2)).update.recover {
+          _ <- Ns(eid).uriMap.assert(Seq(str1 -> uri1, str1x -> uri2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
                 "\na -> " + uri1 +
@@ -179,14 +181,16 @@ object UpdateMapURI extends AsyncTestSuite {
 
           // Can't apply pairs with duplicate keys
 
-          _ <- Ns(eid).uriMap(str1 -> uri1, str1 -> uri2).update.recover {
+          _ <- Ns(eid).uriMap(str1 -> uri1, str1 -> uri2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
                 "\na -> " + uri1 +
                 "\na -> " + uri2
           }
 
-          _ <- Ns(eid).uriMap(Seq(str1 -> uri1, str1 -> uri2)).update.recover {
+          _ <- Ns(eid).uriMap(Seq(str1 -> uri1, str1 -> uri2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/uriMap`:" +
                 "\na -> " + uri1 +

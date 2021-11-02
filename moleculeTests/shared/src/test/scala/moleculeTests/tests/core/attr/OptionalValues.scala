@@ -374,49 +374,62 @@ object OptionalValues extends AsyncTestSuite {
       }
 
       "No tacit attributes in insert molecule" - core { implicit conn =>
-        m(Ns.str_.int$).insert(Some(1)).recover { case VerifyModelException(err) =>
+        m(Ns.str_.int$).insert(Some(1))
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
           err ==> "[noTacitAttrs]  Tacit attributes like `str_` not allowed in insert molecules."
         }
       }
     }
 
-    "Ns without attribute" - core { implicit conn =>
+    "Optional insert before ref" - core { implicit conn =>
       for {
-        _ <- Ns.str.Ref1.int1 insert List(
-          ("a", 1),
-          ("b", 2))
+        // Optional before ref
+        _ <- Ns.str$.Ref1.int1 insert List(
+          (Some("a"), 1),
+          (None, 2)
+        )
+        _ <- Ns.str$.Ref1.int1.get.map(_.sortBy(_._2) ==> List((Some("a"), 1), (None, 2)))
+      } yield ()
+    }
 
-        _ <- Ref1.int1.get.map(_ ==> List(1, 2))
+    "Optional insert after ref" - core { implicit conn =>
+      for {
+        List(e1, r1, e2) <- Ref2.str2.Ref3.int3$ insert List(
+          ("c", Some(3)),
+          ("d", None) // asserts "d", but no relationship is created!
+        ) map (_.eids)
 
-        // Adding unnecessary Ns gives same result
-        _ <- Ns.Ref1.int1.get.map(_ ==> List(1, 2))
+        // Entities created for both "c" and "d"
+        _ <- Ref2.e.str2.get.map(_.sortBy(_._2) ==> List((e1, "c"), (e2, "d")))
 
-        // First namespace without any attributes not allowed
-        _ <- m(Ns.Ref1.int1).insert(1).recover { case VerifyModelException(err) =>
-          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of first namespace."
-        }
+        // No relationship created for "d"
+        _ <- Ref2.e.str2.ref3.get.map(_ ==> List((e1, "c", r1)))
+        _ <- Ref2.str2.Ref3.int3$.get.map(_ ==> List(("c", Some(3))))
+      } yield ()
+    }
 
-        // First namespace without any mandatory attributes not allowed
-        _ <- Ns.str$.Ref1.int1.insert(Some("a"), 1).recover { case VerifyModelException(err) =>
-          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of first namespace."
-        }
 
-        // If at least 1 mandatory attribute is present we can have optional attributes too
-        _ <- Ns.str$.int.insert(Some("a"), 1)
-        _ <- Ns.str$.int.get.map(_ ==> List((Some("a"), 1)))
+    "Optional save before ref" - core { implicit conn =>
+      for {
+        _ <- Ns.str$(Some("a")).Ref1.int1(1).save
+        _ <- Ns.str$(None).Ref1.int1(2).save
 
-        _ <- Ns.int.str$.insert(2, None)
-        _ <- Ns.int.str$.get.map(_.sortBy(_._1) ==> List((1, Some("a")), (2, None)))
+        _ <- Ns.str$.Ref1.int1.get.map(_.sortBy(_._2) ==> List((Some("a"), 1), (None, 2)))
+      } yield ()
+    }
 
-        // First namespace without any mandatory attributes not allowed
-        _ <- Ns.str_.Ref1.int1.insert(1).recover { case VerifyModelException(err) =>
-          err ==> "[noTacitAttrs]  Tacit attributes like `str_` not allowed in insert molecules."
-        }
+    "Optional save after ref" - core { implicit conn =>
+      for {
+        List(e1, r1) <- Ref2.str2("c").Ref3.int3$(Some(3)).save.map(_.eids)
+        // asserts "d", but no relationship is created!
+        List(e2) <- Ref2.str2("d").Ref3.int3$(None).save.map(_.eids)
 
-        // Last namespace without any mandatory attributes not allowed
-        _ <- Ns.str.Ref1.int1$.insert("a", Some(1)).recover { case VerifyModelException(err) =>
-          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of last namespace."
-        }
+        // Entities created for both "c" and "d"
+        _ <- Ref2.e.str2.get.map(_.sortBy(_._2) ==> List((e1, "c"), (e2, "d")))
+
+        // No relationship created for "d"
+        _ <- Ref2.e.str2.ref3.get.map(_ ==> List((e1, "c", r1)))
+        _ <- Ref2.str2.Ref3.int3$.get.map(_ ==> List(("c", Some(3))))
       } yield ()
     }
 

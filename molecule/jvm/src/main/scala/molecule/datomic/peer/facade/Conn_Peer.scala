@@ -1,7 +1,7 @@
 package molecule.datomic.peer.facade
 
 import java.util
-import java.util.{Collections, Date, Collection => jCollection, List => jList}
+import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
@@ -285,10 +285,6 @@ private[molecule] case class Conn_Peer(
     query: String,
     inputs: Seq[AnyRef]
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-    //    val inputs1 = inputs.map {
-    //      case it: Iterable[_] => it.asJava
-    //      case v               => v
-    //    }
     try {
       val result = Peer.q(query, db.getDatomicDb +: inputs: _*)
       Future(result)
@@ -639,9 +635,6 @@ private[molecule] case class Conn_Peer(
       val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
       val peerDb          = _db.getOrElse(db).getDatomicDb
       val allInputs       = Seq(peerDb) ++ rules ++ inputsEvaluated
-      //      println(inputsEvaluated.mkString(query.datalog + "\n--------------\n", "\n", ""))
-      //      println(inputsEvaluated.getClass)
-      //      inputsEvaluated.foreach(v => println(v.getClass))
       val result          = Peer.q(query.toMap, allInputs: _*)
       Future(result)
     } catch {

@@ -81,7 +81,8 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Updating edge properties from the base entity is not allowed
-          _ <- Person(ann).Loves.howWeMet("inSchool").update.recover { case VerifyModelException(err) =>
+          _ <- Person(ann).Loves.howWeMet("inSchool").update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_edgeComplete]  Can't update edge `Loves` " +
               s"of base entity `Person` without knowing which target entity the edge is pointing too. " +
               s"Please update the edge itself, like `Loves(<edgeId>).edgeProperty(<new value>).update`."
@@ -142,7 +143,8 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           ))
 
           // We can't update across namespaces
-          _ <- Loves(annBen).CoreQuality.name("Compassion").update.recover { case VerifyModelException(err) =>
+          _ <- Loves(annBen).CoreQuality.name("Compassion").update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Quality`."
           }
 

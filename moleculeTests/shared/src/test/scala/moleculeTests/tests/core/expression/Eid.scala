@@ -13,7 +13,7 @@ object Eid extends AsyncTestSuite {
 
     "Entity id" - core { implicit conn =>
       for {
-        List(e1, e2, e3, e4) <- Ns.int insert List(1, 2, 3, 4) map(_.eids)
+        List(e1, e2, e3, e4) <- Ns.int insert List(1, 2, 3, 4) map (_.eids)
         seq = Set(e1, e2)
         set = Seq(e3, e4)
         iterable = Iterable(e3, e4)
@@ -97,7 +97,7 @@ object Eid extends AsyncTestSuite {
 
     "e" - core { implicit conn =>
       for {
-        List(e1, e2) <- Ns.int insert List(1, 2) map(_.eids)
+        List(e1, e2) <- Ns.int insert List(1, 2) map (_.eids)
 
         _ <- Ns.e.int.get.map(_.sorted ==> List((e1, 1), (e2, 2)))
 
@@ -144,11 +144,13 @@ object Eid extends AsyncTestSuite {
 
     "Saving generic `e` values not allowed" - core { implicit conn =>
       for {
-        _ <- Ns(42L).str("man").save.recover { case VerifyModelException(err) =>
+        _ <- Ns(42L).str("man").save
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
           err ==> s"[unexpectedAppliedId]  Applying an eid is only allowed for updates."
         }
 
-        _ <- Ns.e(42L).str("man").save.recover { case VerifyModelException(err) =>
+        _ <- Ns.e(42L).str("man").save
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
           err ==> s"[unexpectedAppliedId]  Applying an eid is only allowed for updates."
         }
       } yield ()

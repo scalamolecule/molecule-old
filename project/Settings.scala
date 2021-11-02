@@ -108,43 +108,39 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
-    unmanagedSources / excludeFilter := {
-      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-      val allowed     = Seq(
-//        sharedTests + "/core/attr",
-//        sharedTests + "/core/attrMap",
-//        sharedTests + "/core/bidirectionals",
-//        sharedTests + "/core/composite",
-//        sharedTests + "/core/crud",
-//        sharedTests + "/core/equality",
-//        sharedTests + "/core/expression",
-//        sharedTests + "/core/generic",
-//        sharedTests + "/core/input1",
-//        sharedTests + "/core/input2",
-//        sharedTests + "/core/input3",
-//        sharedTests + "/core/inspect",
-//        sharedTests + "/core/json",
-//        sharedTests + "/core/nested",
-//        sharedTests + "/core/obj",
-//        sharedTests + "/core/raw",
-//        sharedTests + "/core/ref",
-//        sharedTests + "/core/runtime",
-//        sharedTests + "/core/schemaDef",
-//        sharedTests + "/core/time",
-//        sharedTests + "/core/transaction",
-//        sharedTests + "/core/txMetaData",
-        sharedTests + "/datomic",
-//        sharedTests + "/examples/datomic/dayOfDatomic",
-//        sharedTests + "/examples/datomic/mbrainz",
-//        sharedTests + "/examples/datomic/seattle",
-//        sharedTests + "/examples/gremlin/gettingStarted",
-        sharedTests + "/Adhoc.scala",
-      )
-      new SimpleFileFilter(f =>
-        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-      )
-    },
+//    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
+//    unmanagedSources / excludeFilter := {
+//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+//      val allowed     = Seq(
+////        sharedTests + "/core/attr",
+////        sharedTests + "/core/attrMap",
+////        sharedTests + "/core/bidirectionals",
+////        sharedTests + "/core/crud",
+////        sharedTests + "/core/equality",
+////        sharedTests + "/core/expression",
+////        sharedTests + "/core/input1",
+////        sharedTests + "/core/input2",
+////        sharedTests + "/core/input3",
+////        sharedTests + "/core/json",
+////        sharedTests + "/core/nested",
+////        sharedTests + "/core/obj",
+////        sharedTests + "/core/ref",
+////        sharedTests + "/db/datomic/composite",
+////        sharedTests + "/db/datomic/entity",
+////        sharedTests + "/db/datomic/generic",
+////        sharedTests + "/db/datomic/schemaDef",
+////        sharedTests + "/db/datomic/time",
+////        sharedTests + "/db/datomic/txMetaData",
+////        sharedTests + "/examples/datomic/dayOfDatomic",
+////        sharedTests + "/examples/datomic/mbrainz",
+////        sharedTests + "/examples/datomic/seattle",
+////        sharedTests + "/examples/gremlin/gettingStarted",
+//        sharedTests + "/Adhoc.scala",
+//      )
+//      new SimpleFileFilter(f =>
+//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+//      )
+//    },
 
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion,

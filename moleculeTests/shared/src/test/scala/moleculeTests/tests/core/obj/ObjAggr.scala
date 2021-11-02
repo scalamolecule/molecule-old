@@ -70,7 +70,7 @@ object ObjAggr extends AsyncTestSuite with Helpers {
         _ <- Ns.int(count).getObj.map(_.int ==> 3)
         _ <- Ns.int(countDistinct).getObj.map(_.int ==> 3)
 
-        _ <- Ns.double(count).getObj.map(_.double).recover { case MoleculeException(err, _) =>
+        _ <- Ns.double(count).getObj.map(_.double).map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
           err ==> "Object property `double` not available since the aggregate changes its type to `Int`. " +
             "Please use tuple output instead to access aggregate value."
         }
@@ -92,7 +92,7 @@ object ObjAggr extends AsyncTestSuite with Helpers {
         _ <- Ns.double(variance).getObj.map(_.double ==> 0.6666666666666666)
         _ <- Ns.double(stddev).getObj.map(_.double ==> 0.816496580927726)
 
-        _ <- Ns.int(avg).getObj.map(_.int).recover { case MoleculeException(err, _) =>
+        _ <- Ns.int(avg).getObj.map(_.int).map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
           err ==> "Object property `int` not available since the aggregate changes its type to `Double`. " +
             "Please use tuple output instead to access aggregate value."
         }
@@ -109,7 +109,7 @@ object ObjAggr extends AsyncTestSuite with Helpers {
         _ <- data
         // Can be accessed as tuple data only
 
-        _ <- Ns.int(min(2)).getObj.map(_.int).recover { case MoleculeException(err, _) =>
+        _ <- Ns.int(min(2)).getObj.map(_.int).map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
           err ==> "Object property `int` not available since the aggregate changes its type to `List[Int]`. " +
             "Please use tuple output instead to access aggregate value."
         }

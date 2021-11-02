@@ -57,20 +57,20 @@ object UpdateMapBoolean extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).boolMap.assert(str1 -> bool1, str1x -> bool2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-                "\na -> true" +
-                "\na -> false"
+          _ <- Ns(eid).boolMap.assert(str1 -> bool1, str1x -> bool2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+              "\na -> true" +
+              "\na -> false"
           }
 
 
           // Seq
-          _ <- Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1x -> bool2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
-                "\na -> true" +
-                "\na -> false"
+          _ <- Ns(eid).boolMap.assert(Seq(str1 -> bool1, str1x -> bool2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/boolMap`:" +
+              "\na -> true" +
+              "\na -> false"
           }
         } yield ()
       }
@@ -176,18 +176,18 @@ object UpdateMapBoolean extends AsyncTestSuite {
           _ <- Ns.boolMap.get.map(_ ==> List())
 
           // Can't apply pairs with duplicate keys
-          _ <- Ns(eid).longMap(str1 -> long1, str1 -> long2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
-                "\na -> 1" +
-                "\na -> 2"
+          _ <- Ns(eid).longMap(str1 -> long1, str1 -> long2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
+              "\na -> 1" +
+              "\na -> 2"
           }
 
-          _ <- Ns(eid).longMap(Seq(str1 -> long1, str1 -> long2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
-                "\na -> 1" +
-                "\na -> 2"
+          _ <- Ns(eid).longMap(Seq(str1 -> long1, str1 -> long2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
+              "\na -> 1" +
+              "\na -> 2"
           }
         } yield ()
       }

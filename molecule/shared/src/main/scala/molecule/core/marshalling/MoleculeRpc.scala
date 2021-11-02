@@ -1,16 +1,12 @@
 package molecule.core.marshalling
 
 import java.util.Date
-import molecule.core.ast.elements.Model
 import molecule.core.marshalling.nodes.Obj
-import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.transactionModel.Statement
-import molecule.datomic.base.facade.{Conn, DatomicDb, TxReportRPC}
+import molecule.datomic.base.facade.TxReportRPC
 import sloth.PathName
-import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-trait MoleculeRpc {
+private[molecule] trait MoleculeRpc {
 
   def clearConnPool(): Future[Unit]
 
@@ -74,6 +70,10 @@ trait MoleculeRpc {
 
   def rawValue(connProxy: ConnProxy, eid: Long, attr: String): Future[String]
 
+  def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
+
+  def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
+
   def attrs(connProxy: ConnProxy, eid: Long): Future[List[String]]
 
   def apply(connProxy: ConnProxy, eid: Long, attr: String): Future[String]
@@ -81,15 +81,7 @@ trait MoleculeRpc {
   @PathName("apply-many") // sloth wants this for overloaded method name
   def apply(connProxy: ConnProxy, eid: Long, attrs: List[String]): Future[List[String]]
 
-  def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
+  def graphDepth(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
 
-  def touchQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
-
-  def touchListMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
-
-  def touchListQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
-
-  def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
-
-  def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String]
+  def graphCode(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
 }

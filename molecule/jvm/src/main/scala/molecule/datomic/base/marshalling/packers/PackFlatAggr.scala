@@ -1,13 +1,16 @@
 package molecule.datomic.base.marshalling.packers
 
-import java.util.{Date, Iterator => jIterator, List => jList, Set => jSet}
-import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
+import java.util.{Date, List => jList, Set => jSet}
+import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.PackBase
 
-trait PackFlatAggr extends PackBase {
+trait PackFlatAggr extends PackBase with Helpers {
 
-  protected val packAggrInt    = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
-  protected val packAggrDouble = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
+  protected val packAggrInt =
+    (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
+
+  protected val packAggrDouble =
+    (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)
 
   // packAggrOneList -----------------------------------------------------
 
@@ -30,7 +33,7 @@ trait PackFlatAggr extends PackBase {
   protected val packAggrOneListDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -56,7 +59,7 @@ trait PackFlatAggr extends PackBase {
   protected val packAggrManyListDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -83,7 +86,7 @@ trait PackFlatAggr extends PackBase {
   protected val packAggrOneListDistinctDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -109,7 +112,7 @@ trait PackFlatAggr extends PackBase {
   protected val packAggrManyListDistinctDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -135,7 +138,7 @@ trait PackFlatAggr extends PackBase {
   protected val packAggrOneListRandDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -161,7 +164,7 @@ trait PackFlatAggr extends PackBase {
   protected val packAggrManyListRandDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     val vs = row.get(colIndex).asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -178,26 +181,23 @@ trait PackFlatAggr extends PackBase {
   }
 
   protected val packAggrSingleSampleDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
+    add(sb, date2str(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
 
   // packAggrOneSingle -----------------------------------------------------
 
   protected val packAggrOneSingleString = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-//    add(sb, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[String])
     add(sb, row.get(colIndex).toString)
     end(sb)
   }
 
   protected val packAggrOneSingle = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-//    add(sb, row.get(colIndex).asInstanceOf[jList[_]].iterator.next.toString)
     add(sb, row.get(colIndex).toString)
   }
 
   protected val packAggrOneSingleDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-//    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
-    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
+    add(sb, date2str(row.get(colIndex).asInstanceOf[Date]))
   }
 
 
@@ -215,7 +215,7 @@ trait PackFlatAggr extends PackBase {
   }
 
   protected val packAggrManySingleDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
+    add(sb, date2str(row.get(colIndex).asInstanceOf[Date]))
     end(sb) // end of elements list
   }
 }

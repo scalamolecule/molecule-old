@@ -17,12 +17,12 @@ object InsertRelated extends AsyncTestSuite {
         // one in the `Ns` namespace (no references between the two are made):
 
         a0 <- Ns.str.insert("a0").map(_.eid)
-        _ <- a0.touch.map(_ ==> Map(
+        _ <- a0.graph.map(_ ==> Map(
           ":db/id" -> a0,
           ":Ns/str" -> "a0"))
 
         b0 <- Ref1.str1.insert("b0").map(_.eid)
-        _ <- b0.touch.map(_ ==> Map(
+        _ <- b0.graph.map(_ ==> Map(
           ":db/id" -> b0,
           ":Ref1/str1" -> "b0"))
 
@@ -31,7 +31,7 @@ object InsertRelated extends AsyncTestSuite {
         // with another :Ref1/str assertion ("b1") in namespace `Ref1`:
 
         List(a0ref, b1ref) <- Ns.str.Ref1.str1.insert("a0", "b1").map(_.eids)
-        _ <- a0ref.touch.map(_ ==> Map(
+        _ <- a0ref.graph.map(_ ==> Map(
           ":db/id" -> a0ref,
           ":Ns/str" -> "a0",
           ":Ns/ref1" -> Map(
@@ -42,7 +42,7 @@ object InsertRelated extends AsyncTestSuite {
 
         // We can expand our graph one level deeper
         List(a0refs, b1ref1, c2ref2) <- Ns.str.Ref1.str1.Ref2.str2.insert("a0", "b1", "c2").map(_.eids)
-        _ <- a0refs.touch.map(_ ==> Map(
+        _ <- a0refs.graph.map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> Map(
             ":db/id" -> b1ref1,
@@ -56,7 +56,7 @@ object InsertRelated extends AsyncTestSuite {
 
         // We can limit the depth of the retrieved graph
 
-        _ <- a0refs.touchMax(3).map(_ ==> Map(
+        _ <- a0refs.graphDepth(3).map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> Map(
             ":db/id" -> b1ref1,
@@ -67,7 +67,7 @@ object InsertRelated extends AsyncTestSuite {
           ":Ns/str" -> "a0"
         ))
 
-        _ <- a0refs.touchMax(2).map(_ ==> Map(
+        _ <- a0refs.graphDepth(2).map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> Map(
             ":db/id" -> b1ref1,
@@ -76,18 +76,11 @@ object InsertRelated extends AsyncTestSuite {
           ":Ns/str" -> "a0"
         ))
 
-        _ <- a0refs.touchMax(1).map(_ ==> Map(
+        _ <- a0refs.graphDepth(1).map(_ ==> Map(
           ":db/id" -> a0refs,
           ":Ns/ref1" -> b1ref1,
           ":Ns/str" -> "a0"
         ))
-
-        // Use `touchQ` to generate a quoted graph that you can paste into your tests
-        _ <- a0refs.touchQuotedMax(1).map(_ ==>
-          s"""Map(
-             |  ":db/id" -> ${a0refs}L,
-             |  ":Ns/ref1" -> ${b1ref1}L,
-             |  ":Ns/str" -> "a0")""".stripMargin)
       } yield ()
     }
 
@@ -102,7 +95,7 @@ object InsertRelated extends AsyncTestSuite {
         // Address example
         List(addressE, streetE, countryE) <-
           Ns.str.Ref1.int1.str1.Ref2.str2.insert("273 Broadway", 10700, "New York", "USA").map(_.eids)
-        _ <- addressE.touch.map(_ ==> Map(
+        _ <- addressE.graph.map(_ ==> Map(
           ":db/id" -> addressE,
           ":Ns/ref1" -> Map(
             ":db/id" -> streetE,
@@ -137,9 +130,9 @@ object InsertRelated extends AsyncTestSuite {
     "Card many references" - core { implicit conn =>
       for {
         List(base, ref) <- Ns.int.Refs1.str1.insert(42, "r").map(_.eids)
-        _ <- base.touch.map(_ ==> Map(
+        _ <- base.graph.map(_ ==> Map(
           ":db/id" -> base,
-          ":Ns/refs1" -> List( // <-- notice we have a list of references now (with one ref here)
+          ":Ns/refs1" -> Set(
             Map(":db/id" -> ref, ":Ref1/str1" -> "r")),
           ":Ns/int" -> 42
         ))
@@ -149,15 +142,15 @@ object InsertRelated extends AsyncTestSuite {
         // reference to each new `:Ref1/str` assertion, so that we get the following:
 
         List(id1, ref1, id2, ref2) <- Ns.int.Refs1.str1.insert(Seq((1, "r"), (2, "s"))).map(_.eids)
-        _ <- id1.touch.map(_ ==> Map(
+        _ <- id1.graph.map(_ ==> Map(
           ":db/id" -> id1,
-          ":Ns/refs1" -> List(
+          ":Ns/refs1" -> Set(
             Map(":db/id" -> ref1, ":Ref1/str1" -> "r")),
           ":Ns/int" -> 1
         ))
-        _ <- id2.touch.map(_ ==> Map(
+        _ <- id2.graph.map(_ ==> Map(
           ":db/id" -> id2,
-          ":Ns/refs1" -> List(
+          ":Ns/refs1" -> Set(
             Map(":db/id" -> ref2, ":Ref1/str1" -> "s")),
           ":Ns/int" -> 2
         ))

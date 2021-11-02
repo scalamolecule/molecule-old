@@ -80,14 +80,16 @@ object EdgeOneOtherInsert extends AsyncTestSuite {
 
     "base/edge - <missing target>" - bidirectional { implicit conn =>
       // Can't allow edge without ref to target entity
-      Person.name.Favorite.weight.insert("Don", 5).recover { case VerifyModelException(err) =>
+      Person.name.Favorite.weight.insert("Don", 5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Favorite`."
       }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
       // Edge always have to have a ref to a target entity
-      Favorite.weight.insert(5).recover { case VerifyModelException(err) =>
+      Favorite.weight.insert(5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Favorite/weight`."
       }
     }

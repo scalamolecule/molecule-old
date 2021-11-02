@@ -36,19 +36,19 @@ object EdgeOneSelfSave extends AsyncTestSuite {
             ("Ben", 7, "Ann")
           ))
 
-          _ <- ann.touchMax(1).map(_ ==> Map(
+          _ <- ann.graphDepth(1).map(_ ==> Map(
             ":db/id" -> ann,
             ":Person/loves" -> annLovesBen,
             ":Person/name" -> "Ann"
           ))
 
-          _ <- ben.touchMax(1).map(_ ==> Map(
+          _ <- ben.graphDepth(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLovesAnn,
             ":Person/name" -> "Ben"
           ))
 
-          _ <- ann.touchMax(2).map(_ ==> Map(
+          _ <- ann.graphDepth(2).map(_ ==> Map(
             ":db/id" -> ann,
             ":Person/loves" -> Map(
               ":db/id" -> annLovesBen,
@@ -92,13 +92,13 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           List(lovesBen, benLoves, ben) <- Loves.weight(7).Person.name("Ben").save.map(_.eids)
 
           // lovesBen edge points to Ben
-          _ <- ben.touchMax(1).map(_ ==> Map(
+          _ <- ben.graphDepth(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
 
-          _ <- lovesBen.touchMax(1).map(_ ==> Map(
+          _ <- lovesBen.graphDepth(1).map(_ ==> Map(
             ":db/id" -> lovesBen,
             ":Loves/person" -> ben,
             ":Loves/weight" -> 7,
@@ -106,14 +106,14 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           ))
 
           // Ben points to edge benLoves
-          _ <- ben.touchMax(1).map(_ ==> Map(
+          _ <- ben.graphDepth(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
 
           // benLoves edge is ready to point back to a base entity (Ann)
-          _ <- benLoves.touchMax(1).map(_ ==> Map(
+          _ <- benLoves.graphDepth(1).map(_ ==> Map(
             ":db/id" -> benLoves,
             ":Loves/weight" -> 7,
             ":molecule_Meta/otherEdge" -> lovesBen // To be able to find the other edge later
@@ -126,14 +126,15 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           // Base entity Ann points to one of the edges (doesn't matter which of them)
           ann <- Person.name("Ann").loves(lovesBen).save.map(_.eid)
 
-          _ <- ben.touchMax(1).map(_ ==> Map(
+          _ <- ben.graphDepth(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
 
           // Narcissistic tendencies not allowed
-          _ <- Person(ann).loves(ann).update.recover { case Model2TransactionException(err) =>
+          _ <- Person(ann).loves(ann).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
             err ==> s"[valueStmts:biEdgeRefAttr]  Current entity and referenced entity ids can't be the same."
           }
 

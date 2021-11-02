@@ -159,7 +159,8 @@ object UpdateMapString extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).strMap("str1" -> "a", "str1" -> "b").update.recover {
+          _ <- Ns(eid).strMap("str1" -> "a", "str1" -> "b").update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
                 "\nstr1 -> a" +
@@ -167,7 +168,8 @@ object UpdateMapString extends AsyncTestSuite {
           }
 
           // Seq
-          _ <- Ns(eid).strMap(Seq("str1" -> "a", "str1" -> "b")).update.recover {
+          _ <- Ns(eid).strMap(Seq("str1" -> "a", "str1" -> "b")).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
                 "\nstr1 -> a" +
@@ -223,7 +225,8 @@ object UpdateMapString extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).strMap.assert(str1 -> str1, str1x -> str2).update.recover {
+          _ <- Ns(eid).strMap.assert(str1 -> str1, str1x -> str2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
                 "\na -> a" +
@@ -231,7 +234,8 @@ object UpdateMapString extends AsyncTestSuite {
           }
 
           // Seq
-          _ <- Ns(eid).strMap.assert(Seq(str1 -> str1, str1x -> str2)).update.recover {
+          _ <- Ns(eid).strMap.assert(Seq(str1 -> str1, str1x -> str2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
                 "\na -> a" +
@@ -344,7 +348,8 @@ object UpdateMapString extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).strMap(str1 -> str1, str1 -> str2).update.recover {
+          _ <- Ns(eid).strMap(str1 -> str1, str1 -> str2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
                 "\na -> a" +
@@ -352,7 +357,8 @@ object UpdateMapString extends AsyncTestSuite {
           }
 
           // Seq
-          _ <- Ns(eid).strMap(Seq(str1 -> str1, str1 -> str2)).update.recover {
+          _ <- Ns(eid).strMap(Seq(str1 -> str1, str1 -> str2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/strMap`:" +
                 "\na -> a" +

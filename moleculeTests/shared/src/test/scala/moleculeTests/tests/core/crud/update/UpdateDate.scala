@@ -35,7 +35,8 @@ object UpdateDate extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).date(date2, date3).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).date(date2, date3).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... date($date2, $date3)"
           }
@@ -136,13 +137,15 @@ object UpdateDate extends AsyncTestSuite {
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = date8
 
-          _ <- Ns(eid).dates.replace(date7 -> date8, date8 -> other8).update.recover { case Model2TransactionException(err) =>
+          _ <- Ns(eid).dates.replace(date7 -> date8, date8 -> other8).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
             err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
               "\n2008-01-01"
           }
 
           // Conflicting new values
-          _ <- Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> other8)).update.recover { case Model2TransactionException(err) =>
+          _ <- Ns(eid).dates.replace(Seq(date7 -> date8, date8 -> other8)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
             err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/dates`:" +
               "\n2008-01-01"
           }

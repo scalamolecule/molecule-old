@@ -41,7 +41,8 @@ object Save extends AsyncTestSuite {
 
         // Applying multiple values to card-one attr not allowed when saving
 
-        _ <- Ns.str("a", "b").save.recover { case VerifyModelException(err) =>
+        _ <- Ns.str("a", "b").save
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
           err ==> "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
             s"\n  Ns ... str(a, b)"
         }
@@ -201,7 +202,7 @@ object Save extends AsyncTestSuite {
       for {
         List(addressE, streetE, countyE) <-
           Ns.str("273 Broadway").Ref1.int1(10700).str1("New York").Ref2.str2("USA").save.map(_.eids)
-        _ <- addressE.touch.map(_ ==> Map(
+        _ <- addressE.graph.map(_ ==> Map(
           ":db/id" -> addressE,
           ":Ns/ref1" -> Map(
             ":db/id" -> streetE,
@@ -429,7 +430,8 @@ object Save extends AsyncTestSuite {
     }
 
     "Nested data not allowed in save" - core { implicit conn =>
-      Ns.int(0).Refs1.*(Ref1.int1(1)).save.recover { case VerifyModelException(err) =>
+      Ns.int(0).Refs1.*(Ref1.int1(1)).save
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> "[noNested]  Nested data structures not allowed in save molecules"
       }
     }

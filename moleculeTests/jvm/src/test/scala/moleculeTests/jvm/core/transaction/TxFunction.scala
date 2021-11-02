@@ -203,7 +203,8 @@ object TxFunction extends AsyncTestSuite {
         toAccount <- Ns.int(700).save.map(_.eid)
         tooBigAmount = 200
 
-        _ <- transactFn(transfer(fromAccount, toAccount, tooBigAmount)).recover { case TxFnException(msg) =>
+        _ <- transactFn(transfer(fromAccount, toAccount, tooBigAmount))
+          .map(_ ==> "Unexpected success").recover { case TxFnException(msg) =>
           msg ==> s"Can't transfer 200 from account $fromAccount having a balance of only 100."
         }
 
@@ -232,7 +233,8 @@ object TxFunction extends AsyncTestSuite {
         toAccount <- Ns.int(700).save.map(_.eid)
         tooBigAmount = 200
 
-        _ <- transactFn(transferComposed(fromAccount, toAccount, tooBigAmount)).recover { case TxFnException(msg) =>
+        _ <- transactFn(transferComposed(fromAccount, toAccount, tooBigAmount))
+          .map(_ ==> "Unexpected success").recover { case TxFnException(msg) =>
           msg ==> s"Can't transfer 200 from account $fromAccount having a balance of only 100."
         }
 
@@ -300,12 +302,14 @@ object TxFunction extends AsyncTestSuite {
         _ <- Ns.str("Ben").int(28).save
 
         // User existence validation in transaction
-        _ <- transactFn(addUser("Ben", 22)).recover { case TxFnException(msg) =>
+        _ <- transactFn(addUser("Ben", 22))
+          .map(_ ==> "Unexpected success").recover { case TxFnException(msg) =>
           msg ==> "Username `Ben` is already taken. Please choose another username."
         }
 
         // Age validation in tx fn
-        _ <- transactFn(addUser("Liz", 17)).recover { case TxFnException(msg) =>
+        _ <- transactFn(addUser("Liz", 17))
+          .map(_ ==> "Unexpected success").recover { case TxFnException(msg) =>
           msg ==> "Users have to be at least 18 years old to register."
         }
 
@@ -325,7 +329,8 @@ object TxFunction extends AsyncTestSuite {
         // Existing user
         _ <- Ns.str("Ben").int(28).save
 
-        _ <- transactFn(addUserPartiallyChecked("Ben", 22)).recover { case TxFnException(msg) =>
+        _ <- transactFn(addUserPartiallyChecked("Ben", 22))
+          .map(_ ==> "Unexpected success").recover { case TxFnException(msg) =>
           msg ==> "Username `Ben` is already taken. Please choose another username."
         }
 

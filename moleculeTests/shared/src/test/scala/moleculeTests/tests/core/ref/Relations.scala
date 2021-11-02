@@ -5,6 +5,7 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.tests.core.attr.OptionalValues.core
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -38,6 +39,7 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Referenced entity ids" - core { implicit conn =>
       for {
         List(father1, father2, father3) <- Ref1.str1.insert(List("father1", "father2", "father3")).map(_.eids)
@@ -66,22 +68,26 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Referenced entity ids" - core { implicit conn =>
       for {
         id <- Ns.str("a").save.map(_.eid)
 
         // Avoid mixing update/save semantics
-        _ <- Ns(id).Refs1.int1(1).save.recover { case VerifyModelException(err) =>
+        _ <- Ns(id).Refs1.int1(1).save
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
           err ==> "[unexpectedAppliedId]  Applying an eid is only allowed for updates."
         }
 
         // Updating across namespaces not allowed
 
-        _ <- Ns(id).Refs1.int1(1).update.recover { case VerifyModelException(err) =>
+        _ <- Ns(id).Refs1.int1(1).update
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
           err ==> "[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Ref1`."
         }
       } yield ()
     }
+
 
     "Ref enum after ref" - core { implicit conn =>
       for {
@@ -90,12 +96,14 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Ref enum after attr" - core { implicit conn =>
       for {
         _ <- Ns.str.Ref1.int1.enum1 insert List(("c", 11, "enum11"))
         _ <- Ns.str.Ref1.int1.enum1.get.map(_ ==> List(("c", 11, "enum11")))
       } yield ()
     }
+
 
     "BackRef" - core { implicit conn =>
       for {
@@ -113,6 +121,7 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
+
     "BackRef, 2 levels" - core { implicit conn =>
       for {
         _ <- Ns.str.Ref1.str1.Ref2.str2._Ref1._Ns.Refs1.int1 insert List(
@@ -125,6 +134,7 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Back ref, Adjacent" - core { implicit conn =>
       for {
         _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1) insert List(("book", "John", "Marc"))
@@ -132,6 +142,39 @@ object Relations extends AsyncTestSuite {
         _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).get.map(_ ==> List(("book", "John", List("Marc"))))
       } yield ()
     }
+
+
+    "Ns with only ref" - core { implicit conn =>
+      for {
+        // Relationship with Ns having a normal attribute value (for str)
+        _ <- Ns.str.Ref1.int1 insert List(
+          ("a", 1),
+          ("b", 2))
+
+        // Ref1 value without Ns -> Ref1 relationship
+        _ <- Ref1.int1(3).save
+
+        // Values where Ns -> Ref1 relationship is not guaranteed
+        _ <- Ref1.int1.get.map(_ ==> List(1, 2, 3))
+
+        // Values where Ns -> Ref1 relationship is guaranteed
+        _ <- Ns.Ref1.int1.get.map(_ ==> List(1, 2))
+
+        // Adding ref value where Ns -> Ref1 relationship is estabished too
+        _ <- Ns.Ref1.int1(4).save
+
+        // Values where Ns -> Ref1 relationship is not guaranteed
+        _ <- Ref1.int1.get.map(_ ==> List(1, 2, 3, 4))
+
+        // Values where Ns -> Ref1 relationship is guaranteed
+        _ <- Ns.Ref1.int1.get.map(_ ==> List(1, 2, 4))
+
+        // Values where :Ns/str is asserted and Ns -> Ref1 relationship is guaranteed
+        _ <- Ns.str_.Ref1.int1.get.map(_ ==> List(1, 2))
+
+      } yield ()
+    }
+
 
     "Adjacent ref without attribute" - core { implicit conn =>
       for {
@@ -146,23 +189,6 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
-    "Expecting mandatory attributes after card-one ref" - core { implicit conn =>
-      for {
-        _ <- m(Ns.str.Ref1.int1) insert List(
-          ("a", 1),
-          ("b", 2))
-
-        // Ok to ask for an optional referenced value
-        _ <- m(Ns.str.Ref1.int1$).get.map(_.sortBy(_._1) ==> List(
-          ("a", Some(1)),
-          ("b", Some(2))))
-
-        // But in insert molecules we don't want to create referenced orphan entities
-        _ <- m(Ns.str.Ref1.int1$).insert("a", Some(1)).recover { case VerifyModelException(err) =>
-          err ==> "[missingAttrInStartEnd]  Missing mandatory attributes of last namespace."
-        }
-      } yield ()
-    }
 
     "Aggregates one" - core { implicit conn =>
       for {
@@ -176,6 +202,7 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Aggregates many" - core { implicit conn =>
       for {
         _ <- m(Ns.str.refs1) insert List(
@@ -187,6 +214,7 @@ object Relations extends AsyncTestSuite {
           ("b", 2)))
       } yield ()
     }
+
 
     "Self-refs" - core { implicit conn =>
       for {
@@ -200,6 +228,7 @@ object Relations extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Many attribute + ref" - core { implicit conn =>
       for {
         _ <- m(Ns.str.Refs1.*(Ref1.int1)) insert List(("a", List(1, 2)))
@@ -211,6 +240,7 @@ object Relations extends AsyncTestSuite {
           "molecule.core.ops.exception.VerifyRawModelException: Instead of getting the ref id with `refs1` please get it via the referenced namespace: `Refs1.e ...`")
       } yield ()
     }
+
 
     "Molecule has to end with attribute" - {
       "Ending with ref" - core { implicit conn =>

@@ -1,9 +1,6 @@
 package molecule.datomic.base.facade
 
-import java.net.URI
-import java.util.{Date, UUID}
-import clojure.lang.{Keyword, PersistentArrayMap}
-import datomicClient.anomaly.Fault
+import java.util.{Collection => jCollection}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.exceptions.MoleculeException
@@ -15,8 +12,8 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.transactionModel.RetractEntity
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 
 abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(conn)
@@ -24,16 +21,15 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
 
 
   final override def apply[T](attr: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
-
     attrDefinitions.get(attr).fold(
       Future.failed[Option[T]](MoleculeException(s"Attribute `$attr` not found in schema."))
     ) { case (card, tpe) =>
       rawValue(attr).flatMap {
-        case None    => Future(None)
-        case Some(v) => Future(Some(v.asInstanceOf[T]))
-        case null    => Future(Option.empty[T])
-
-        case results: clojure.lang.PersistentHashSet =>
+        case None                    => Future(None)
+        case Some(v: List[_])        => Future(Some(v.toSet.asInstanceOf[T]))
+        case Some(v)                 => Future(Some(v.asInstanceOf[T]))
+        case null                    => Future(Option.empty[T])
+        case results: jCollection[_] =>
           results.toArray.apply(0) match {
             case _: datomic.Entity =>
               var list = List.empty[Future[Long]]
@@ -45,12 +41,13 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
             case _ =>
               var list = List.empty[Future[Any]]
               results.forEach(v1 => list = list :+ toScala(attr, Some(v1)))
-              Future.sequence(list).map(l =>
-                getTypedValue(card, tpe, l) match {
-                  case Success(v)   => Some(v.asInstanceOf[T])
+              Future.sequence(list).map { v =>
+                getTypedValue(card, tpe, v) match {
+                  case Success(v)   =>
+                    Some(v.asInstanceOf[T])
                   case Failure(exc) => throw exc
                 }
-              )
+              }
           }
 
         case result => toScala(attr, Some(result)).map(v => Some(v.asInstanceOf[T]))
@@ -105,35 +102,26 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
   }
 
 
-  // Touch - traverse entity attributes ========================================
+  // Entity graph -------------------------------------------------
 
-  def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+  def graph(implicit ec: ExecutionContext): Future[Map[String, Any]] =
     asMap(1, 5)
 
-  def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+  def graphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
     asMap(1, maxDepth)
 
-  def touchQuoted(implicit ec: ExecutionContext): Future[String] =
-    asMap(1, 5).map(quote(_))
+  def inspectGraph(implicit ec: ExecutionContext): Future[Unit] =
+    graphCode(5).map(println)
 
-  def touchQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
+  def inspectGraphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Unit] =
+    graphCode(maxDepth).map(println)
+
+  private[molecule] final override def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
     asMap(1, maxDepth).map(quote(_))
-
-  def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
-    asList(1, 5)
-
-  def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
-    asList(1, maxDepth)
-
-  def touchListQuoted(implicit ec: ExecutionContext): Future[String] =
-    asList(1, 5).map(quote(_))
-
-  def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
-    asList(1, maxDepth).map(quote(_))
 
 
   private[molecule] def toScala(
-    key: String,
+    attr: String,
     vOpt: Option[Any],
     depth: Int = 1,
     maxDepth: Int = 5,
@@ -141,15 +129,17 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
   )(implicit ec: ExecutionContext): Future[Any]
 
 
-  def asMap(depth: Int, maxDepth: Int)
-           (implicit ec: ExecutionContext): Future[Map[String, Any]] = {
+  private[molecule] final override def asMap(
+    depth: Int,
+    maxDepth: Int
+  )(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     attrs.flatMap {
-      case Nil  => Future.failed(MoleculeException(s"Entity id $eid not found in database."))
-      case keys =>
-        val keysSorted   = keys.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
-        val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
-        val valueFutures = keysSorted.map { key =>
-          toScala(key, None, depth, maxDepth).map { scalaValue =>
+      case Nil   => Future.failed(MoleculeException(s"Entity id $eid not found in database."))
+      case attrs =>
+        val attrsSorted  = attrs.filterNot(_ == ":db/id").sortWith((x, y) => x.toLowerCase < y.toLowerCase)
+        val valueFutures = attrsSorted.map { attr =>
+          val (_, tpe) = attrDefinitions.getOrElse(attr, (0, ""))
+          toScala(attr, None, depth, maxDepth).map { scalaValue =>
             val sortedValue = scalaValue match {
               case l: Seq[_] => l.head match {
                 case m1: Map[_, _]
@@ -160,28 +150,35 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
                         .apply(":db/id").asInstanceOf[Long] ->
                         m2.asInstanceOf[Map[String, Any]]
                   }
-                  indexedRefMaps.sortBy(_._1).map(_._2)
+                  indexedRefMaps.map(_._2).toSet
 
                 case _ => l
               }
-              case other     => other
+
+              case ident: String if tpe == "ref" =>
+                // Failed Future for ref ids interpreted as ident
+                throw new NumberFormatException(s"For input string: \"$ident\"")
+
+              case v => v
             }
-            key -> sortedValue
+            attr -> sortedValue
           }
         }
-        Future.sequence(futId ++ valueFutures).map(_.toMap)
+        // Id first
+        Future.sequence(rawValue(":db/id").map(":db/id" -> _) +: valueFutures).map(_.toMap)
     }
   }
 
-  def asList(depth: Int, maxDepth: Int)
-            (implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
+  private[molecule] final override def asList(
+    depth: Int,
+    maxDepth: Int
+  )(implicit ec: ExecutionContext): Future[List[(String, Any)]] = {
     attrs.flatMap {
       case Nil   => Future.failed(MoleculeException(s"Entity id $eid not found in database."))
-      case keys2 =>
-        val keysSorted   = keys2.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
-        val futId        = if (keysSorted.head != ":db/id") List(rawValue(":db/id").map(":db/id" -> _)) else Nil
-        val valueFutures = keysSorted.map { key =>
-          toScala(key, None, depth, maxDepth, "List").map { scalaValue =>
+      case attrs =>
+        val attrsSorted  = attrs.filterNot(_ == ":db/id").sortWith((x, y) => x.toLowerCase < y.toLowerCase)
+        val valueFutures = attrsSorted.map { attr =>
+          toScala(attr, None, depth, maxDepth, "List").map { scalaValue =>
             val sortedValue = scalaValue match {
               case l: Seq[_] => l.head match {
                 case l0: Seq[_] => l0.head match {
@@ -189,7 +186,8 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
                     // Make typed Seq
                     val typedSeq: Seq[Seq[(String, Any)]] = l.collect {
                       case l1: Seq[_] => l1.collect {
-                        case (k: String, v) => (k, v)
+                        case (k: String, v) =>
+                          (k, v)
                       }
                     }
                     if (typedSeq.head.map(_._1).contains(":db/id")) {
@@ -198,51 +196,27 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
                         subSeq => subSeq.toMap.apply(":db/id").asInstanceOf[Long] -> subSeq
                       }
                       // Sort sub Seq's by :db/id
-                      indexedRefLists.sortBy(_._1).map(_._2)
+                      indexedRefLists.sortBy(_._1).map(_._2).toSet
+
                     } else {
-                      typedSeq
+                      typedSeq.toSet
                     }
-                  case other     =>
+
+                  case other =>
                     // Propagates to failed Future
                     throw new Exception("Expected pairs of values. Found: " + other)
                 }
-                case _          => l
+
+                case _ => l
               }
-              case other     => other
+
+              case v => v
             }
-            key -> sortedValue
+            attr -> sortedValue
           }
         }
-        Future.sequence(futId ++ valueFutures)
-    }
-  }
-
-  lazy protected val ident = Keyword.intern("db", "ident")
-
-  //  final override def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
-  final protected def sortList(l: List[Any])(implicit ec: ExecutionContext): Future[List[Any]] = Future {
-    l.head match {
-      case _: String               => l.asInstanceOf[List[String]].sorted
-      case _: Long                 => l.asInstanceOf[List[Long]].sorted
-      case _: Double               => l.asInstanceOf[List[Double]].sorted
-      case _: Boolean              => l.asInstanceOf[List[Boolean]].sorted
-      case _: Date                 => l.asInstanceOf[List[Date]].sorted
-      case _: UUID                 => l.asInstanceOf[List[UUID]].sorted
-      case _: URI                  => l.asInstanceOf[List[URI]].sorted
-      case _: java.math.BigInteger => l.asInstanceOf[List[java.math.BigInteger]].map(BigInt(_)).sorted
-      case _: java.math.BigDecimal => l.asInstanceOf[List[java.math.BigDecimal]].map(BigDecimal(_)).sorted
-      case _: BigInt               => l.asInstanceOf[List[BigInt]].sorted
-      case _: BigDecimal           => l.asInstanceOf[List[BigDecimal]].sorted
-
-      // Float not allowed (because of imprecision on JS platform)
-      //    case _: Float                => l.asInstanceOf[List[Float]].sorted
-
-      case m: PersistentArrayMap if m.containsKey(ident) =>
-        l.asInstanceOf[List[PersistentArrayMap]].map(pam =>
-          pam.get(ident).toString
-        ).sorted
-
-      case _ => l
+        // Id first
+        Future.sequence(rawValue(":db/id").map(":db/id" -> _) +: valueFutures)
     }
   }
 }

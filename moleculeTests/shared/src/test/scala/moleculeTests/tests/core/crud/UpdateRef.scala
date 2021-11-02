@@ -21,19 +21,23 @@ object UpdateRef extends AsyncTestSuite {
         // Instead you need to expressively change the referenced entity itself with
         // its own entity id.
         for {
-          _ <- Ns(42L).str("b").Ref1.int1(2).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(42L).str("b").Ref1.int1(2).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Ref1`."
           }
 
-          _ <- Ns(42L).str("b").Refs1.int1(2).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(42L).str("b").Refs1.int1(2).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Ref1`."
           }
 
-          _ <- Ns(42L).str("b").Refs1.*(Ref1.int1(2)).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(42L).str("b").Refs1.*(Ref1.int1(2)).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `Ref1`."
           }
 
-          _ <- m(Ns(42L).str("b") + Ref2.int2(2)).update.recover { case VerifyModelException(err) =>
+          _ <- m(Ns(42L).str("b") + Ref2.int2(2)).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_onlyOneNs]  Update molecules can't be composites."
           }
         } yield ()

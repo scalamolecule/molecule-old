@@ -19,9 +19,9 @@ object EdgeManySelfSave extends AsyncTestSuite {
         for {
           // Insert entities, each having one or more connected entities with relationship properties
           ben <- Person.name.insert("Ben").map(_.eid)
-          _ <- Person.name("Ben").Knows.*(Knows.weight(7).person(ben)).save.recover {
-            case VerifyModelException(err) =>
-              err ==> s"[noNested]  Nested data structures not allowed in save molecules"
+          _ <- Person.name("Ben").Knows.*(Knows.weight(7).person(ben)).save
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+            err ==> s"[noNested]  Nested data structures not allowed in save molecules"
           }
         } yield ()
       }
@@ -106,13 +106,15 @@ object EdgeManySelfSave extends AsyncTestSuite {
     "base/edge - <missing target>" - bidirectional { implicit conn =>
       // Can't save edge missing the target namespace (`Person`)
       // The edge needs to be complete at all times to preserve consistency.
-      Person.name("Ann").Knows.weight(5).save.recover { case VerifyModelException(err) =>
+      Person.name("Ann").Knows.weight(5).save
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Knows`."
       }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
-      Knows.weight(7).save.recover { case VerifyModelException(err) =>
+      Knows.weight(7).save
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Knows/weight`."
       }
     }

@@ -63,10 +63,6 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
   }
 
 
-  private[molecule] final def rawValue(attr: String)(implicit ec: ExecutionContext): Future[Any] = withEid(eid =>
-    rpc.rawValue(conn.connProxy, eid, attr).map(packed => packed2entityList(packed).head._2)
-  )
-
   final def attrs(implicit ec: ExecutionContext): Future[List[String]] = withEid(eid =>
     rpc.attrs(conn.connProxy, eid)
   )
@@ -77,16 +73,9 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
         val typedValue = attrDefinitions.get(attr).fold(
           throw MoleculeException(s"Attribute `$attr` not found in schema.")
         ) {
-          case (card, tpe) => packed match {
+          case (_, tpe) => packed match {
             case "" => getTypedNone(tpe).asInstanceOf[Option[T]]
-            case _  => tpe match {
-              case "ref" if !attr.contains("/_") => Some(packed2entityMap(packed).asInstanceOf[T])
-              case _                             =>
-                getTypedValue(card, tpe, packed2entityList(packed)(1)._2) match {
-                  case Success(v)   => Some(v.asInstanceOf[T])
-                  case Failure(exc) => throw exc
-                }
-            }
+            case _  => Some(packed2entityMap(packed).head._2.asInstanceOf[T])
           }
         }
         Future(typedValue)
@@ -105,16 +94,9 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
           attrDefinitions.get(attr).fold(
             throw MoleculeException(s"Attribute `$attr` not found in schema.")
           ) {
-            case (card, tpe) => packed match {
+            case (_, tpe) => packed match {
               case "" => getTypedNone(tpe)
-              case _  => tpe match {
-                case "ref" if !attr.contains("/_") => Some(packed2entityMap(packed))
-                case _                             =>
-                  getTypedValue(card, tpe, packed2entityList(packed)(1)._2) match {
-                    case Success(v)   => Some(v)
-                    case Failure(exc) => throw exc
-                  }
-              }
+              case _  => Some(packed2entityMap(packed).head._2)
             }
           }
         }
@@ -125,46 +107,25 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any) extends Packed2EntityMap(co
     }
   }
 
-  final def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] = withEid(eid =>
-    rpc.touchMax(conn.connProxy, eid, 5).map(packed2entityMap)
+  final def graph(implicit ec: ExecutionContext): Future[Map[String, Any]] = withEid(eid =>
+    rpc.graphDepth(conn.connProxy, eid, 5).map(packed2entityMap)
   )
 
-  final def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] = withEid(eid =>
-    rpc.touchMax(conn.connProxy, eid, maxDepth).map(packed2entityMap)
+  final def graphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] = withEid(eid =>
+    rpc.graphDepth(conn.connProxy, eid, maxDepth).map(packed2entityMap)
   )
 
-  final def touchQuoted(implicit ec: ExecutionContext): Future[String] = withEid(eid =>
-    rpc.touchQuotedMax(conn.connProxy, eid, 5)
-  )
+  final def inspectGraph(implicit ec: ExecutionContext): Future[Unit] = {
+    graphCode(5).map(println)
+  }
 
-  final def touchQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = withEid(eid =>
-    rpc.touchQuotedMax(conn.connProxy, eid, maxDepth)
-  )
+  final def inspectGraphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Unit] = {
+    graphCode(maxDepth).map(println)
+  }
 
-  final def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] = withEid(eid =>
-    rpc.touchListMax(conn.connProxy, eid, 5).map(packed2entityList)
+  private[molecule] final override def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = withEid(eid =>
+    rpc.graphCode(conn.connProxy, eid, maxDepth)
   )
-
-  final def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] = withEid(eid =>
-    rpc.touchListMax(conn.connProxy, eid, maxDepth).map(packed2entityList)
-  )
-
-  final def touchListQuoted(implicit ec: ExecutionContext): Future[String] = withEid(eid =>
-    rpc.touchListQuotedMax(conn.connProxy, eid, 5)
-  )
-
-  final def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = withEid(eid =>
-    rpc.touchListQuotedMax(conn.connProxy, eid, maxDepth)
-  )
-
-  final def asMap(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] = withEid(eid =>
-    rpc.asMap(conn.connProxy, eid, depth, maxDepth).map(packed2entityMap)
-  )
-
-  final def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] = withEid(eid =>
-    rpc.asList(conn.connProxy, eid, depth, maxDepth).map(packed2entityList)
-  )
-
 
   private final def withEid[T](body: Long => Future[T]): Future[T] = try {
     eidAny match {

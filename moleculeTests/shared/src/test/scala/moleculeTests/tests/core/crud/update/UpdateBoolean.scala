@@ -28,7 +28,8 @@ object UpdateBoolean extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).bool(true, false).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).bool(true, false).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... bool(true, false)"
           }
@@ -53,7 +54,8 @@ object UpdateBoolean extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).bool(bool2, bool3).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).bool(bool2, bool3).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... bool($bool2, $bool3)"
           }

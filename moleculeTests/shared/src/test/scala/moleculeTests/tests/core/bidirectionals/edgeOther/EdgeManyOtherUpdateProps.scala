@@ -98,7 +98,8 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, rex, ann, annRex, rexAnn) <- testData
 
           // Updating edge properties from the base entity is not allowed
-          _ <- Person(ann).CloseTo.howWeMet("inSchool").update.recover { case VerifyModelException(err) =>
+          _ <- Person(ann).CloseTo.howWeMet("inSchool").update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_edgeComplete]  Can't update edge `CloseTo` " +
               s"of base entity `Person` without knowing which target entity the edge is pointing too. " +
               s"Please update the edge itself, like `CloseTo(<edgeId>).edgeProperty(<new value>).update`."
@@ -151,7 +152,8 @@ object EdgeManyOtherUpdateProps extends AsyncTestSuite {
           _ <- Animal.name_("Rex").CloseTo.CoreQuality.name._CloseTo.Person.name.get.map(_ ==> List(("Love", "Ann")))
 
           // We can't update across namespaces
-          _ <- CloseTo(annRex).CoreQuality.name("Compassion").update.recover { case VerifyModelException(err) =>
+          _ <- CloseTo(annRex).CoreQuality.name("Compassion").update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[update_onlyOneNs]  Update molecules can't span multiple namespaces like `Quality`."
           }
 

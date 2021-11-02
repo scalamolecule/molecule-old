@@ -81,6 +81,7 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with C
               (implicit ec: ExecutionContext): Future[TxReport] =
     rpc.transact(connProxy, (edn, Set.empty[String]))
 
+
   private[molecule] def transact(scalaStmts: Future[Seq[Statement]])
               (implicit ec: ExecutionContext): Future[TxReport] = for {
     stmts <- scalaStmts

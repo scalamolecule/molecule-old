@@ -1,10 +1,10 @@
 package molecule.datomic.base.marshalling.packers
 
 import java.util.{Date, Iterator => jIterator, List => jList, Set => jSet}
-import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
+import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.PackBase
 
-trait PackOptNestedAggr extends PackBase {
+trait PackOptNestedAggr extends PackBase with Helpers {
 
   protected val packAggrInt    = (sb: StringBuffer, it: jIterator[_]) => add(sb, it.next.toString)
   protected val packAggrDouble = (sb: StringBuffer, it: jIterator[_]) => add(sb, it.next.toString)
@@ -30,7 +30,7 @@ trait PackOptNestedAggr extends PackBase {
   protected val packOptNestedAggrOneListDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -56,7 +56,7 @@ trait PackOptNestedAggr extends PackBase {
   protected val packOptNestedAggrManyListDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -83,7 +83,7 @@ trait PackOptNestedAggr extends PackBase {
   protected val packOptNestedAggrOneListDistinctDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -109,7 +109,7 @@ trait PackOptNestedAggr extends PackBase {
   protected val packOptNestedAggrManyListDistinctDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jSet[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -135,7 +135,7 @@ trait PackOptNestedAggr extends PackBase {
   protected val packOptNestedAggrOneListRandDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -161,7 +161,7 @@ trait PackOptNestedAggr extends PackBase {
   protected val packOptNestedAggrManyListRandDate = (sb: StringBuffer, it: jIterator[_]) => {
     val vs = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext)
-      add(sb, date2strLocal(vs.next.asInstanceOf[Date]))
+      add(sb, date2str(vs.next.asInstanceOf[Date]))
     end(sb)
   }
 
@@ -178,7 +178,7 @@ trait PackOptNestedAggr extends PackBase {
   }
 
   protected val packOptNestedAggrSingleSampleDate = (sb: StringBuffer, it: jIterator[_]) => {
-    add(sb, date2strLocal(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
+    add(sb, date2str(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
 
@@ -194,7 +194,7 @@ trait PackOptNestedAggr extends PackBase {
   }
 
   protected val packOptNestedAggrOneSingleDate = (sb: StringBuffer, it: jIterator[_]) => {
-    add(sb, date2strLocal(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
+    add(sb, date2str(it.next.asInstanceOf[jList[_]].iterator.next.asInstanceOf[Date]))
   }
 
 
@@ -210,6 +210,6 @@ trait PackOptNestedAggr extends PackBase {
   }
 
   protected val packOptNestedAggrManySingleDate = (sb: StringBuffer, it: jIterator[_]) => {
-    add(sb, date2strLocal(it.next.asInstanceOf[Date]))
+    add(sb, date2str(it.next.asInstanceOf[Date]))
   }
 }

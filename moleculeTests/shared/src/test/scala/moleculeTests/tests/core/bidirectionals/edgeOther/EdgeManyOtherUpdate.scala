@@ -231,20 +231,20 @@ object EdgeManyOtherUpdate extends AsyncTestSuite {
         Seq(ann, closeToBob, closeToDot, _, _, _, _, _) <- testData
 
         // Can't update multiple values of cardinality-one attribute `name`
-        _ <- Person(ann).CloseTo.weight(7).Animal.name("Max", "Liz").update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-              "\n  Animal ... name(Max, Liz)"
+        _ <- Person(ann).CloseTo.weight(7).Animal.name("Max", "Liz").update
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+          err ==> s"[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
+            "\n  Animal ... name(Max, Liz)"
         }
 
-        _ <- Person(ann).CloseTo.*(CloseTo.weight(4).Animal.name("Max")).update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `CloseTo`."
+        _ <- Person(ann).CloseTo.*(CloseTo.weight(4).Animal.name("Max")).update
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+          err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `CloseTo`."
         }
 
-        _ <- Person(ann).CloseTo.*(CloseTo.weight(4).animal(42L)).update.recover {
-          case VerifyModelException(err) =>
-            err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `CloseTo`."
+        _ <- Person(ann).CloseTo.*(CloseTo.weight(4).animal(42L)).update
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
+          err ==> s"[update_onlyOneNs]  Update molecules can't have nested data structures like `CloseTo`."
         }
       } yield ()
 

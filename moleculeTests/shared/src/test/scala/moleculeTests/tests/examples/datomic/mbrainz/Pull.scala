@@ -78,19 +78,19 @@ object Pull extends AsyncTestSuite {
         _ <- Release.e_(darkSideOfTheMoon).media.get.map { res =>
           val darkSideMedia = res.head
           /*
-          // Touching the darkSideMedia entity pulls related tracks since
+          // Getting the darkSideMedia entity graph pulls related tracks since
           // :medium/tracks is a component attribute: (commented out for brevity)
 
-          darkSideMedia.touch === Map(
+          darkSideMedia.graph === Map(
             ":db/id" -> 927987813949629L,
             ":Medium/format" -> ":Medium.format/vinyl12",
             ":Medium/position" -> 1,
             ":Medium/trackCount" -> 10,
-            ":Medium/tracks" -> List(
+            ":Medium/tracks" -> Set(
               Map(
                 ":Track/name" -> "Us and Them",
                 ":track/artistCredit" -> "Pink Floyd",
-                ":Track/artists" -> List(Map(
+                ":Track/artists" -> Set(Map(
                   ":Artist/gid" -> "83d91898-7763-47d7-b03b-b92132375c47",
                   ":Artist/country" -> ":country/GB",
                   ":Artist/type" -> ":Artist.type/group",
@@ -104,7 +104,7 @@ object Pull extends AsyncTestSuite {
               Map(
                 ":Track/name" -> "Speak to Me",
                 ":track/artistCredit" -> "Pink Floyd",
-                ":Track/artists" -> List(Map(
+                ":Track/artists" -> Set(Map(
                   ":Artist/gid" -> "83d91898-7763-47d7-b03b-b92132375c47",
                   ":Artist/country" -> ":country/GB",
                   ":Artist/type" -> ":Artist.type/group",
@@ -173,7 +173,7 @@ object Pull extends AsyncTestSuite {
 
 
         // Wildcard specification
-        //     concertForBangladeshEid.touch === Map(<big data graph for Bangladesh concert>)
+        //     concertForBangladeshEid.graph === Map(<big data graph for Bangladesh concert>)
 
         // Wildcard + map specification
         // Using optional attributes

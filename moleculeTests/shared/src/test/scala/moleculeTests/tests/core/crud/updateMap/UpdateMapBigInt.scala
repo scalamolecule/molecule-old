@@ -57,20 +57,20 @@ object UpdateMapBigInt extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).bigIntMap.assert(str1 -> bigInt1, str1x -> bigInt2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                "\na -> " + bigInt1 +
-                "\na -> " + bigInt2
+          _ <- Ns(eid).bigIntMap.assert(str1 -> bigInt1, str1x -> bigInt2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\na -> " + bigInt1 +
+              "\na -> " + bigInt2
           }
 
 
           // Seq
-          _ <- Ns(eid).bigIntMap.assert(Seq(str1 -> bigInt1, str1x -> bigInt2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                "\na -> " + bigInt1 +
-                "\na -> " + bigInt2
+          _ <- Ns(eid).bigIntMap.assert(Seq(str1 -> bigInt1, str1x -> bigInt2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\na -> " + bigInt1 +
+              "\na -> " + bigInt2
           }
         } yield ()
       }
@@ -178,18 +178,18 @@ object UpdateMapBigInt extends AsyncTestSuite {
 
           // Can't apply pairs with duplicate keys
 
-          _ <- Ns(eid).bigIntMap(str1 -> bigInt1, str1 -> bigInt2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                "\na -> " + bigInt1 +
-                "\na -> " + bigInt2
+          _ <- Ns(eid).bigIntMap(str1 -> bigInt1, str1 -> bigInt2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\na -> " + bigInt1 +
+              "\na -> " + bigInt2
           }
 
-          _ <- Ns(eid).bigIntMap(Seq(str1 -> bigInt1, str1 -> bigInt2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
-                "\na -> " + bigInt1 +
-                "\na -> " + bigInt2
+          _ <- Ns(eid).bigIntMap(Seq(str1 -> bigInt1, str1 -> bigInt2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/bigIntMap`:" +
+              "\na -> " + bigInt1 +
+              "\na -> " + bigInt2
           }
         } yield ()
       }

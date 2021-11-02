@@ -77,7 +77,8 @@ object OneMany extends AsyncTestSuite {
             _ <- m(Ns.int.str_(?).longs_(?)).apply(Nil).get.map(_ ==> List(8))
 
             // Mandatory attribute will not match Nil
-            _ <- m(Ns.int.str_(?).longs(?)).apply(Nil).get.recover { case Molecule_2_Exception(err) =>
+            _ <- m(Ns.int.str_(?).longs(?)).apply(Nil).get
+              .map(_ ==> "Unexpected success").recover { case Molecule_2_Exception(err) =>
               err ==> "Can only apply empty list of pairs (Nil) to two tacit attributes"
             }
           } yield ()
@@ -280,17 +281,20 @@ object OneMany extends AsyncTestSuite {
             // Applying multiple pairs to input molecules with expression not allowed
 
             // Card one
-            _ <- m(Ns.int.str_.not(?).longs(?))(Seq(("a", Set(1L)), ("b", Set(2L)))).get.recover { case Molecule_2_Exception(err) =>
+            _ <- m(Ns.int.str_.not(?).longs(?))(Seq(("a", Set(1L)), ("b", Set(2L)))).get
+              .map(_ ==> "Unexpected success").recover { case Molecule_2_Exception(err) =>
               err ==> "Can't apply multiple pairs to input attributes with one or more expressions (<, >, <=, >=, !=)"
             }
 
             // Card many
-            _ <- m(Ns.int.str_(?).longs.not(?))(Seq(("a", Set(1L)), ("b", Set(2L)))).get.recover { case Molecule_2_Exception(err) =>
+            _ <- m(Ns.int.str_(?).longs.not(?))(Seq(("a", Set(1L)), ("b", Set(2L)))).get
+              .map(_ ==> "Unexpected success").recover { case Molecule_2_Exception(err) =>
               err ==> "Can't apply multiple pairs to input attributes with one or more expressions (<, >, <=, >=, !=)"
             }
 
             // Card one + many
-            _ <- m(Ns.int.str_.not(?).longs.not(?))(Seq(("a", Set(1L)), ("b", Set(2L)))).get.recover { case Molecule_2_Exception(err) =>
+            _ <- m(Ns.int.str_.not(?).longs.not(?))(Seq(("a", Set(1L)), ("b", Set(2L)))).get
+              .map(_ ==> "Unexpected success").recover { case Molecule_2_Exception(err) =>
               err ==> "Can't apply multiple pairs to input attributes with one or more expressions (<, >, <=, >=, !=)"
             }
           } yield ()
@@ -320,7 +324,8 @@ object OneMany extends AsyncTestSuite {
             _ <- m(Ns.int.str_(?).longs.<(?))("a", Set(3L)).get.map(_ ==> List((1, Set(1L, 2L)), (2, Set(2L))))
 
             // Can't apply multiple values to comparison function
-            _ <- m(Ns.int.str_(?).longs.<(?))("a", Set(2L, 3L)).get.recover { case MoleculeException(err, _) =>
+            _ <- m(Ns.int.str_(?).longs.<(?))("a", Set(2L, 3L)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()

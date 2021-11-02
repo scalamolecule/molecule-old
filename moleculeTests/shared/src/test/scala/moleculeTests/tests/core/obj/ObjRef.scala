@@ -183,7 +183,8 @@ object ObjRef extends AsyncTestSuite with Helpers {
         _ <- (Ns.int + Ns.double.str + Ref1.int1.str1).insert(1, (2.2, "a"), (3, "b"))
 
         // Multiple same-name namespace composites not allowed for object output
-        _ <- m(Ns.int + Ns.double.str + Ref1.int1.str1).getObj.recover { case MoleculeException(err, _) =>
+        _ <- m(Ns.int + Ns.double.str + Ref1.int1.str1).getObj
+          .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
           err ==> "Molecule objects are not allowed to have multiple same-named namespaces. Please use tuples instead that allow this."
         }
 

@@ -96,12 +96,12 @@ object UpdateMapInt extends AsyncTestSuite {
               "\nstr1 -> 1" +
               "\nstr1 -> 2")
 
-          _ <- Ns(eid).intMap.replace("unknownKey" -> 42).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  " +
-                "Can't replace non-existing keys of map attribute `:Ns/intMap`:" +
-                "\nunknownKey" +
-                "\nYou might want to apply the values instead to replace all current values?"
+          _ <- Ns(eid).intMap.replace("unknownKey" -> 42).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  " +
+              "Can't replace non-existing keys of map attribute `:Ns/intMap`:" +
+              "\nunknownKey" +
+              "\nYou might want to apply the values instead to replace all current values?"
           }
         } yield ()
       }
@@ -167,19 +167,19 @@ object UpdateMapInt extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).intMap("str1" -> 1, "str1" -> 2).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
-                "\nstr1 -> 1" +
-                "\nstr1 -> 2"
+          _ <- Ns(eid).intMap("str1" -> 1, "str1" -> 2).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
+              "\nstr1 -> 1" +
+              "\nstr1 -> 2"
           }
 
           // Seq
-          _ <- Ns(eid).intMap(Seq("str1" -> 1, "str1" -> 2)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
-                "\nstr1 -> 1" +
-                "\nstr1 -> 2"
+          _ <- Ns(eid).intMap(Seq("str1" -> 1, "str1" -> 2)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
+              "\nstr1 -> 1" +
+              "\nstr1 -> 2"
           }
         } yield ()
       }
@@ -230,7 +230,8 @@ object UpdateMapInt extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).intMap.assert(str1 -> int1, str1x -> int2).update.recover {
+          _ <- Ns(eid).intMap.assert(str1 -> int1, str1x -> int2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
                 "\na -> 1" +
@@ -239,7 +240,8 @@ object UpdateMapInt extends AsyncTestSuite {
 
 
           // Seq
-          _ <- Ns(eid).intMap.assert(Seq(str1 -> int1, str1x -> int2)).update.recover {
+          _ <- Ns(eid).intMap.assert(Seq(str1 -> int1, str1x -> int2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
                 "\na -> 1" +
@@ -352,7 +354,8 @@ object UpdateMapInt extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).intMap(str1 -> int1, str1 -> int2).update.recover {
+          _ <- Ns(eid).intMap(str1 -> int1, str1 -> int2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
                 "\na -> 1" +
@@ -360,7 +363,8 @@ object UpdateMapInt extends AsyncTestSuite {
           }
 
           // Seq
-          _ <- Ns(eid).intMap(Seq(str1 -> int1, str1 -> int2)).update.recover {
+          _ <- Ns(eid).intMap(Seq(str1 -> int1, str1 -> int2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/intMap`:" +
                 "\na -> 1" +

@@ -56,6 +56,7 @@ object QueryTour extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Schema-aware joins" - socialNews { implicit conn =>
       for {
         (txR2, tx1, s1, s2, s3, stu, ed, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) <- SocialNews.data
@@ -89,6 +90,7 @@ object QueryTour extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Entities" - socialNews { implicit conn =>
       for {
         (txR2, tx1, s1, s2, s3, stu, ed, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) <- SocialNews.data
@@ -105,7 +107,7 @@ object QueryTour extends AsyncTestSuite {
 
         // 13. Touching an entity
         // Get all attributes/values of this entity. Sub-component values are recursively retrieved
-        _ <- editor.touch.map(_ ==> Map(
+        _ <- editor.graph.map(_ ==> Map(
           ":db/id" -> ed,
           ":User/email" -> "editor@example.com",
           ":User/firstName" -> "Ed",
@@ -136,6 +138,7 @@ object QueryTour extends AsyncTestSuite {
         _ <- m(Comment.author_(editor) + Parent.e.comment_).get.map(_.sorted ==> List(c2, c5, c7, c11))
       } yield ()
     }
+
 
     "Time travel" - socialNews { implicit conn =>
       for {

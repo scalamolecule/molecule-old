@@ -5,15 +5,16 @@ import molecule.core.api.exception.EntityException
 import molecule.datomic.base.facade.DatomicEntity_Jvm
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
+import scala.util.{Failure, Success}
 
 
 /** Datomic Entity facade for the Datomic Peer api.
-  *
-  * @param datomicEntity
-  * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-  * @param eid  Entity id of type Object
-  * @param showKW
-  */
+ *
+ * @param datomicEntity
+ * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+ * @param eid  Entity id of type Object
+ * @param showKW
+ */
 case class DatomicEntity_Peer(
   datomicEntity: datomic.Entity,
   conn: Conn_Peer,
@@ -22,14 +23,16 @@ case class DatomicEntity_Peer(
 ) extends DatomicEntity_Jvm(conn, eid) {
 
 
-  private[molecule] final def rawValue(kw: String)(implicit ec: ExecutionContext): Future[Any] =
+  private[molecule] final override def rawValue(
+    kw: String
+  )(implicit ec: ExecutionContext): Future[Any] =
     Future(datomicEntity.get(kw))
 
   final def attrs(implicit ec: ExecutionContext): Future[List[String]] =
     Future(datomicEntity.keySet().asScala.toList)
 
   private[molecule] final def toScala(
-    key: String,
+    attr: String,
     vOpt: Option[Any],
     depth: Int = 1,
     maxDepth: Int = 5,
@@ -48,7 +51,6 @@ case class DatomicEntity_Peer(
       case bi: java.math.BigInteger => Future(BigInt(bi))
       case bd: java.math.BigDecimal => Future(BigDecimal(bd))
       case bytes: Array[Byte]       => Future(bytes)
-
       case kw: clojure.lang.Keyword =>
         if (showKW)
           Future(kw.toString)
@@ -69,27 +71,30 @@ case class DatomicEntity_Peer(
         }
 
       case set: clojure.lang.PersistentHashSet =>
-        Future.sequence(
-          set.asScala.toList.map(v1 =>
-            toScala(key, Some(v1), depth, maxDepth, tpe)
-          )
-        ).flatMap(sortList)
+        val (card, attrTpe) = attrDefinitions(attr)
+        card match {
+          case 3 =>
+            getTypedValue(card, attrTpe, set.asScala.toList) match {
+              case Success(v)   => Future(v)
+              case Failure(exc) => Future.failed(exc)
+            }
+
+          case _ => Future.sequence(set.asScala.toSet.map(retrieve))
+        }
 
       case vec: clojure.lang.PersistentVector =>
         Future.sequence(
-          vec.asScala.toList.map(v1 =>
-            toScala(key, Some(v1), depth, maxDepth, tpe)
-          )
-        ).flatMap(sortList)
+          vec.asScala.toList.map(retrieve)
+        )
 
       case col: jCollection[_] =>
         Future(
           new Iterable[Any] {
-            override def iterator = new Iterator[Any] {
+            override def iterator: Iterator[Any] = new Iterator[Any] {
               private val jIter = col.iterator.asInstanceOf[java.util.Iterator[AnyRef]]
               override def hasNext = jIter.hasNext
               override def next() = if (depth < maxDepth)
-                toScala(key, Some(jIter.next()), depth, maxDepth, tpe)
+                retrieve(jIter.next())
               else
                 jIter.next()
             }
@@ -108,7 +113,7 @@ case class DatomicEntity_Peer(
 
     vOpt match {
       case Some(v) => retrieve(v)
-      case _       => rawValue(key).flatMap(retrieve)
+      case _       => rawValue(attr).flatMap(retrieve)
     }
   }
 }

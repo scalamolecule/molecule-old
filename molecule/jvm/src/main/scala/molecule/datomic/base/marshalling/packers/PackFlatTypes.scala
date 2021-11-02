@@ -4,7 +4,6 @@ import java.util.{Date, UUID, List => jList, Map => jMap, Set => jSet}
 import clojure.lang.Keyword
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
-import molecule.datomic.base.marshalling.DatomicRpc.date2strLocal
 import molecule.datomic.base.marshalling.PackBase
 
 trait PackFlatTypes extends PackBase with Helpers {
@@ -16,8 +15,9 @@ trait PackFlatTypes extends PackBase with Helpers {
     end(sb)
   }
 
-  protected lazy val packOneDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) =>
-    add(sb, date2strLocal(row.get(colIndex).asInstanceOf[Date]))
+  protected lazy val packOneDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
+    add(sb, date2str(row.get(colIndex).asInstanceOf[Date]))
+  }
 
   // Generic `v` attribute value converted to String with appended type to be unpacked on JS side
   protected lazy val packOneAny = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
@@ -27,7 +27,7 @@ trait PackFlatTypes extends PackBase with Helpers {
       case v: java.lang.Long       => add(sb, "Long      " + v.toString)
       case v: java.lang.Double     => add(sb, "Double    " + v.toString)
       case v: java.lang.Boolean    => add(sb, "Boolean   " + v.toString)
-      case v: Date                 => add(sb, "Date      " + date2strLocal(v))
+      case v: Date                 => add(sb, "Date      " + date2str(v))
       case v: java.net.URI         => add(sb, "URI       " + v.toString)
       case v: UUID                 => add(sb, "UUID      " + v.toString)
       case v: java.math.BigInteger => add(sb, "BigInt    " + v.toString)
@@ -62,7 +62,7 @@ trait PackFlatTypes extends PackBase with Helpers {
     row.get(colIndex) match {
       case null => end(sb)
       case v    => add(sb,
-        date2strLocal(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Date])
+        date2str(v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Date])
       )
     }
   }
@@ -108,7 +108,7 @@ trait PackFlatTypes extends PackBase with Helpers {
   }
 
   protected lazy val packManyDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
-    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(sb, date2strLocal(v.asInstanceOf[Date])))
+    row.get(colIndex).asInstanceOf[jSet[_]].forEach(v => add(sb, date2str(v.asInstanceOf[Date])))
     end(sb)
   }
 
@@ -149,7 +149,7 @@ trait PackFlatTypes extends PackBase with Helpers {
       case vs   =>
         val it = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it.hasNext)
-          add(sb, date2strLocal(it.next.asInstanceOf[Date]))
+          add(sb, date2str(it.next.asInstanceOf[Date]))
     }
     end(sb)
   }
@@ -254,7 +254,7 @@ trait PackFlatTypes extends PackBase with Helpers {
   protected lazy val packOptApplyOneDate = (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => {
     row.get(colIndex) match {
       case null => end(sb)
-      case v    => add(sb, date2strLocal(v.asInstanceOf[Date]))
+      case v    => add(sb, date2str(v.asInstanceOf[Date]))
     }
   }
 
@@ -292,7 +292,7 @@ trait PackFlatTypes extends PackBase with Helpers {
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext)
-          add(sb, date2strLocal(it.next.asInstanceOf[Date]))
+          add(sb, date2str(it.next.asInstanceOf[Date]))
     }
     end(sb)
   }
@@ -330,7 +330,7 @@ trait PackFlatTypes extends PackBase with Helpers {
       case vs   =>
         val it = vs.asInstanceOf[jSet[_]].iterator
         while (it.hasNext)
-          add(sb, date2strLocal(it.next.asInstanceOf[Date]))
+          add(sb, date2str(it.next.asInstanceOf[Date]))
     }
     end(sb)
   }

@@ -37,7 +37,8 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).enum("enum2", "enum3").update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).enum("enum2", "enum3").update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... enum(enum2, enum3)"
           }
@@ -67,7 +68,8 @@ object UpdateEnum extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).enum(enum2, enum3).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).enum(enum2, enum3).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... enum($enum2, $enum3)"
           }
@@ -129,7 +131,8 @@ object UpdateEnum extends AsyncTestSuite {
           _ <- Ns.enums.get.map(_.head.toList.sorted ==> List("enum1", "enum2", "enum6", "enum7", "enum8"))
 
           // Trying to use a non-existing enum not possible
-          _ <- Ns(eid).enums.replace("x" -> "enum9").update.recover { case MoleculeException(err, _) =>
+          _ <- Ns(eid).enums.replace("x" -> "enum9").update
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> (if (system == SystemPeer)
               s":db.error/not-an-entity Unable to resolve entity: " +
                 s":Ns.enums/x in datom [$eid :Ns/enums :Ns.enums/x]"
@@ -318,17 +321,17 @@ object UpdateEnum extends AsyncTestSuite {
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = enum8
 
-          _ <- Ns(eid).enums.replace(enum7 -> enum8, enum8 -> other8).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
-                "\nenum8"
+          _ <- Ns(eid).enums.replace(enum7 -> enum8, enum8 -> other8).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
+              "\nenum8"
           }
 
           // Conflicting new values
-          _ <- Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> other8)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
-                "\nenum8"
+          _ <- Ns(eid).enums.replace(Seq(enum7 -> enum8, enum8 -> other8)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/enums`:" +
+              "\nenum8"
           }
         } yield ()
       }

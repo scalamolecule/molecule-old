@@ -26,16 +26,13 @@ trait EntityOps {
   )(implicit conn: Future[Conn], ec: ExecutionContext) extends DatomicEntity {
     private val datomicEntity: Future[DatomicEntity] = conn.map(_.entity(id))
 
-    override def rawValue(attr: String)(implicit ec: ExecutionContext): Future[Any] =
-      datomicEntity.flatMap(_.rawValue(attr))
-
-    override def attrs(implicit ec: ExecutionContext): Future[List[String]] =
+    def attrs(implicit ec: ExecutionContext): Future[List[String]] =
       datomicEntity.flatMap(_.attrs)
 
-    override def apply[T](attr: String)(implicit ec: ExecutionContext): Future[Option[T]] =
+    def apply[T](attr: String)(implicit ec: ExecutionContext): Future[Option[T]] =
       datomicEntity.flatMap(_.apply(attr))
 
-    override def apply(attr1: String, attr2: String, moreAttrs: String*)
+    def apply(attr1: String, attr2: String, moreAttrs: String*)
                       (implicit ec: ExecutionContext): Future[List[Option[Any]]] =
       datomicEntity.flatMap(_.apply(attr1, attr2, moreAttrs: _*))
 
@@ -54,35 +51,17 @@ trait EntityOps {
     def inspectRetract(implicit ec: ExecutionContext): Future[Unit] =
       datomicEntity.flatMap(_.inspectRetract)
 
-    def touch(implicit ec: ExecutionContext): Future[Map[String, Any]] =
-      datomicEntity.flatMap(_.touch)
+    def graph(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+      datomicEntity.flatMap(_.graph)
 
-    def touchMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
-      datomicEntity.flatMap(_.touchMax(maxDepth))
+    def graphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
+      datomicEntity.flatMap(_.graphDepth(maxDepth))
 
-    def touchQuoted(implicit ec: ExecutionContext): Future[String] =
-      datomicEntity.flatMap(_.touchQuoted)
+    def inspectGraph(implicit ec: ExecutionContext): Future[Unit] =
+      datomicEntity.flatMap(_.inspectGraph)
 
-    def touchQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
-      datomicEntity.flatMap(_.touchQuotedMax(maxDepth))
-
-    def touchList(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
-      datomicEntity.flatMap(_.touchList)
-
-    def touchListMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
-      datomicEntity.flatMap(_.touchListMax(maxDepth))
-
-    def touchListQuoted(implicit ec: ExecutionContext): Future[String] =
-      datomicEntity.flatMap(_.touchListQuoted)
-
-    def touchListQuotedMax(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
-      datomicEntity.flatMap(_.touchListQuotedMax(maxDepth))
-
-    def asMap(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]] =
-      datomicEntity.flatMap(_.asMap(depth, maxDepth))
-
-    def asList(depth: Int, maxDepth: Int)(implicit ec: ExecutionContext): Future[List[(String, Any)]] =
-      datomicEntity.flatMap(_.asList(depth, maxDepth))
+    def inspectGraphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Unit] =
+      datomicEntity.flatMap(_.inspectGraphDepth(maxDepth))
   }
 
 

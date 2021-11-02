@@ -55,32 +55,43 @@ object JsonRef extends AsyncTestSuite {
         )
 
         // Flat
-        _ <- Ns.str.Refs1.int1.getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "int1": 1
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 2
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 3
-            |        }
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin
-        )
+        _ <- Ns.str.Refs1.int1.getJson.map { result =>
+          val orderings  = List(
+            ("a", "b", "b", 1, 2, 3),
+            ("b", "a", "b", 2, 1, 3),
+          )
+          val variations = orderings.map {
+            case (a, b, c, d, e, f) =>
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      {
+                 |        "str": "$a",
+                 |        "Refs1": {
+                 |          "int1": $d
+                 |        }
+                 |      },
+                 |      {
+                 |        "str": "$b",
+                 |        "Refs1": {
+                 |          "int1": $e
+                 |        }
+                 |      },
+                 |      {
+                 |        "str": "$c",
+                 |        "Refs1": {
+                 |          "int1": $f
+                 |        }
+                 |      }
+                 |    ]
+                 |  }
+                 |}""".stripMargin
+          }
+          if (!variations.contains(result)) {
+            println(result)
+          }
+          variations.contains(result) ==> true
+        }
 
         // Nested
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>

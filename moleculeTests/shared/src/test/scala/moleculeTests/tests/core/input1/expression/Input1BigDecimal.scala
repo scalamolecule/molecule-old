@@ -75,7 +75,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(bigDec3))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -87,7 +88,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(bigDec2, bigDec3))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -99,7 +101,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))
             _ <- inputMolecule(List(bigDec2)).get.map(_ ==> List(bigDec1))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -111,7 +114,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(bigDec1, bigDec2))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -149,7 +153,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(str3))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -161,7 +166,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(str2, str3))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -173,7 +179,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_ ==> List(str1))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -185,7 +192,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
             _ <- inputMolecule(List(bigDec2)).get.map(_.sorted ==> List(str1, str2))
-            _ <- inputMolecule(List(bigDec2, bigDec3)).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(bigDec2, bigDec3)).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -358,11 +366,13 @@ object Input1BigDecimal extends AsyncTestSuite {
             // (bigDec3, bigDec4), (bigDec4, bigDec5), (bigDec4, bigDec5, bigDec6)
             _ <- inputMolecule(List(Set(bigDec2))).get.map(_ ==> List((bigDec2, Set(bigDec3)), (bigDec3, Set(bigDec4, bigDec3)), (bigDec4, Set(bigDec4, bigDec5)), (bigDec5, Set(bigDec4, bigDec6, bigDec5))))
 
-            _ <- inputMolecule(List(Set(bigDec2, bigDec3))).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(Set(bigDec2, bigDec3))).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
 
-            _ <- inputMolecule(List(Set(bigDec2), Set(bigDec3))).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(Set(bigDec2), Set(bigDec3))).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
           } yield ()
@@ -378,7 +388,8 @@ object Input1BigDecimal extends AsyncTestSuite {
             // (bigDec2, bigDec4), (bigDec3, bigDec4), (bigDec4, bigDec5), (bigDec4, bigDec5, bigDec6)
             _ <- inputMolecule(List(Set(bigDec2))).get.map(_ ==> List((bigDec1, Set(bigDec2)), (bigDec2, Set(bigDec3, bigDec2)), (bigDec3, Set(bigDec4, bigDec3)), (bigDec4, Set(bigDec4, bigDec5)), (bigDec5, Set(bigDec4, bigDec6, bigDec5))))
 
-            _ <- inputMolecule(List(Set(bigDec2, bigDec3))).get.recover { case MoleculeException(err, _) =>
+            _ <- inputMolecule(List(Set(bigDec2, bigDec3))).get
+              .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
 

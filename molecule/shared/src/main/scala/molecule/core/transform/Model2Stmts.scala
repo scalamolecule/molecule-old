@@ -63,16 +63,6 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
     otherEdgeId: Option[AnyRef]
   ): Future[Seq[Statement]] = {
 
-    //    println(
-    //      s"""e            : $e
-    //         |a            : $a
-    //         |arg          : $arg
-    //         |prefix       : $prefix
-    //         |bidirectional: $bidirectional
-    //         |otherEdgeId  : $otherEdgeId
-    //         |""".stripMargin
-    //    )
-
     def p(v: Any): Any = v match {
       case f: Float                                           => f.toString.toDouble
       case _ if prefix.isDefined                              => Enum(prefix.get, v.toString)
@@ -146,10 +136,10 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         case List(edgeB) => Future(edgeB)
         case Nil         =>
           val otherId = conn.entity(edgeA)
-          otherId.touchQuotedMax(2).map(touched =>
+          otherId.inspectGraphDepth(2).map(graph =>
             err("valueStmts:biEdgeRef",
               s"Supplied id $edgeA doesn't appear to be a property edge id (couldn't find reverse edge id). " +
-                s"Could it be another entity?:\n$touched" +
+                s"Could it be another entity?:\n$graph" +
                 "\n" + stmts.size + " statements so far:\n" + stmts.mkString("\n")
             )
           )
@@ -865,24 +855,16 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
         futCurValues.map { curValues =>
           val newValueStrings = newValues.map(v => str(v).toString)
           val curValueStrings = curValues.map(v => str(v).toString)
-
-          //          println("...............................................")
-          //          println("newValueStrings: " + newValueStrings)
-          //          println("curValueStrings: " + curValueStrings)
-
-
-          val retracts = if (card == 2 || (newValues.isEmpty && curValues.nonEmpty))
+          val retracts        = if (card == 2 || (newValues.isEmpty && curValues.nonEmpty))
             curValues.flatMap {
               case curValue if newValueStrings.contains(str(curValue).toString) =>
-                //                println("  curValue     : " + d(curValue))
                 Nil
               case obsoleteValue                                                =>
-                //                println("  obsoleteValue: " + d(obsoleteValue))
                 Seq(Retract(e, a, p(obsoleteValue), Card(card)))
             }
           else
             Nil
-          val adds     = newValues.flatMap {
+          val adds            = newValues.flatMap {
             case newValue if curValueStrings.contains(str(newValue).toString) =>
               Nil
             case newValue                                                     =>
@@ -919,11 +901,6 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
            |arg: $arg
          """.stripMargin)
     }
-    //    futNewStmts.map { newStmts =>
-    //      println(stmts.mkString("---------- stmts\n", "\n", ""))
-    //      println(newStmts.mkString("---------- newStmts\n", "\n", "\n======================"))
-    //      stmts ++ newStmts
-    //    }
     futNewStmts.map(stmts ++ _)
   }
 
@@ -1321,6 +1298,14 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
           (backRef, edgeB, futStmts.flatMap(valueStmts(_, tempId(a), a, vs, pf, bi, edgeB)))
       }
 
+      case Add("__tempId", a, refNs: String, bi) if !refNs.startsWith("__") => bi match {
+        case _: BiEdgePropAttr =>
+          val edgeB1 = Some(tempId(a))
+          (backRef, edgeB1, futStmts.flatMap(valueStmts(_, tempId(a), a, tempId(refNs), None, bi, edgeB1)))
+        case _                 =>
+          (backRef, edgeB, futStmts.flatMap(valueStmts(_, tempId(a), a, tempId(refNs), None, bi, edgeB)))
+      }
+
       case Add(e, a, "__tempId", bi) => (backRef, edgeB, e match {
         case "e" => futStmts.flatMap(stmts =>
           valueStmts(stmts, lastE(stmts, a, 0L, bi), a, tempId(a), None, bi, edgeB)
@@ -1347,7 +1332,11 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
 
         case _ =>
           val futStmts2 = futStmts.flatMap { stmts =>
-            if (backRef.isEmpty) {
+            val isLastStmt = genericStmts.length == stmts.length + 1
+            if (isLastStmt) {
+              // Skip making ref to no asserted ref attributes
+              Future(stmts)
+            } else if (backRef.isEmpty) {
               valueStmts(stmts, lastE(stmts, a, 0L, bi, e), a, tempId(refNs), None, bi, edgeB)
             } else {
               val forcedE = stmts.reverse.collectFirst {

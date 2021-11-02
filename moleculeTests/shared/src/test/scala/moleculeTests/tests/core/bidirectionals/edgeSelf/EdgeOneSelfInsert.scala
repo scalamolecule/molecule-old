@@ -56,7 +56,7 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           */
 
           // lovesBen edge points to Ben
-          _ <- lovesBen.touchMax(1).map(_ ==> Map(
+          _ <- lovesBen.graphDepth(1).map(_ ==> Map(
             ":db/id" -> lovesBen,
             ":Loves/person" -> ben,
             ":Loves/weight" -> 7,
@@ -64,14 +64,14 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           ))
 
           // Ben points to edge benLoves
-          _ <- ben.touchMax(1).map(_ ==> Map(
+          _ <- ben.graphDepth(1).map(_ ==> Map(
             ":db/id" -> ben,
             ":Person/loves" -> benLoves,
             ":Person/name" -> "Ben"
           ))
 
           // benLoves edge is ready to point back to a base entity (Ann)
-          _ <- benLoves.touchMax(1).map(_ ==> Map(
+          _ <- benLoves.graphDepth(1).map(_ ==> Map(
             ":db/id" -> benLoves,
             ":Loves/weight" -> 7,
             ":molecule_Meta/otherEdge" -> lovesBen // To be able to find the other edge later
@@ -113,14 +113,16 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
 
     "base/edge - <missing target>" - bidirectional { implicit conn =>
       // Can't allow edge without ref to target entity
-      Person.name.Loves.weight.insert("Don", 5).recover { case VerifyModelException(err) =>
+      Person.name.Loves.weight.insert("Don", 5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace after edge namespace `Loves`."
       }
     }
 
     "<missing base> - edge - <missing target>" - bidirectional { implicit conn =>
       // Edge always have to have a ref to a target entity
-      Loves.weight.insert(5).recover { case VerifyModelException(err) =>
+      Loves.weight.insert(5)
+        .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
         err ==> s"[edgeComplete]  Missing target namespace somewhere after edge property `Loves/weight`."
       }
     }

@@ -70,7 +70,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum3))
 
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()
@@ -82,7 +83,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum2, enum3))
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()
@@ -94,7 +96,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_ ==> List(enum1))
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()
@@ -106,7 +109,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum1, enum2))
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()
@@ -155,7 +159,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
           _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str3))
 
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()
@@ -167,7 +172,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
           _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str2, str3))
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()
@@ -179,7 +185,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
           _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str1))
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()
@@ -191,7 +198,8 @@ object EnumCard1 extends AsyncTestSuite {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
           _ <- inputMolecule(List(enum2)).get.map(_ ==> List(str1, str2))
-          _ <- inputMolecule(List(enum2, enum3)).get.recover { case MoleculeException(err, _) =>
+          _ <- inputMolecule(List(enum2, enum3)).get
+            .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
           }
         } yield ()

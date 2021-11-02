@@ -151,7 +151,7 @@ object model {
       * <br><br>
       * When you retract an entity with :db/retractEntity, all subcomponents are also retracted.
       * <br><br>
-      * When you touch an entity, all its subcomponent entities are touched recursively.
+      * When you get the graph of an entity, all its subcomponent entities are fetched recursively.
       */
     lazy val isComponent: RefType = ???
   }

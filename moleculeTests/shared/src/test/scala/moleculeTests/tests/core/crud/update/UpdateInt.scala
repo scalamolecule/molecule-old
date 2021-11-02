@@ -35,11 +35,11 @@ object UpdateInt extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).int.update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).int.update.map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[onlyAtomsWithValue]  Update molecule can only have attributes with some value(s) applied/added/replaced etc."
           }
 
-          _ <- Ns(eid).int(2, 3).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).int(2, 3).update.map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... int(2, 3)"
           }
@@ -68,7 +68,8 @@ object UpdateInt extends AsyncTestSuite {
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).int(int2, int3).update.recover { case VerifyModelException(err) =>
+          _ <- Ns(eid).int(int2, int3).update
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
               s"\n  Ns ... int($int2, $int3)"
           }
@@ -324,17 +325,17 @@ object UpdateInt extends AsyncTestSuite {
           // If duplicate values are added with non-equally-named variables we can still catch them at runtime
           other8 = 8
 
-          _ <- Ns(eid).ints.replace(int7 -> int8, int8 -> other8).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
-                "\n8"
+          _ <- Ns(eid).ints.replace(int7 -> int8, int8 -> other8).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
+              "\n8"
           }
 
           // Conflicting new values
-          _ <- Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> other8)).update.recover {
-            case Model2TransactionException(err) =>
-              err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
-                "\n8"
+          _ <- Ns(eid).ints.replace(Seq(int7 -> int8, int8 -> other8)).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
+            err ==> "[valueStmts:default]  Can't replace with duplicate new values of attribute `:Ns/ints`:" +
+              "\n8"
           }
         } yield ()
       }

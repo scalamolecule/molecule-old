@@ -209,7 +209,6 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       (0 to levels).toList.map(level => (1, false, false, false)) ++ outMatrix
     }
 
-//    def resolve(rawRows: Iterable[jList[AnyRef]]): Seq[ListBuffer[Any]] = {
     def resolve(rawRows: Iterable[_ <: jList[_]]): Seq[ListBuffer[Any]] = {
       def cardOneOpt(v: Any, isDate: Boolean): Option[String] = {
         if (v == null) {

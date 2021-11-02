@@ -50,7 +50,8 @@ object OneSelf extends AsyncTestSuite {
 
         // Saving reference to generic `e` not allowed.
         // (instead apply ref to ref attribute as shown above)
-        _ <- Person.name("Adam").Spouse.e(lisa).save.recover { case VerifyModelException(err) =>
+        _ <- Person.name("Adam").Spouse.e(lisa).save
+          .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
           err ==> s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
             s"not allowed in save molecules. Found `e($lisa)`"
         }
@@ -78,7 +79,7 @@ object OneSelf extends AsyncTestSuite {
 
     "Insert id" - bidirectional { implicit conn =>
       for {
-        List(lisa, nina) <- Person.name insert List("Lisa", "Nina") map(_.eids)
+        List(lisa, nina) <- Person.name insert List("Lisa", "Nina") map (_.eids)
 
         // Insert 2 new entities and pair them with existing entities
         _ <- Person.name.spouse insert List(
@@ -153,7 +154,8 @@ object OneSelf extends AsyncTestSuite {
           ))
 
           // Referencing the same id is not allowed
-          _ <- Person(adam).spouse(adam).update.recover { case Model2TransactionException(err) =>
+          _ <- Person(adam).spouse(adam).update
+            .map(_ ==> "Unexpected success").recover { case Model2TransactionException(err) =>
             err ==> "[valueStmts:biSelfRef]  Current entity and referenced entity ids can't be the same."
           }
         } yield ()

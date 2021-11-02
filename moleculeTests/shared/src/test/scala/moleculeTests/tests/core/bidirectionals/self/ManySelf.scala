@@ -40,7 +40,8 @@ object ManySelf extends AsyncTestSuite {
           // Can't save multiple values to cardinality-one attribute
           // It could become unwieldy if different referenced attributes had different number of
           // values (arities) - how many related entities should be created then?
-          _ <- Person.name("Ann").Friends.name("Ben", "Joe").save.recover { case VerifyModelException(err) =>
+          _ <- Person.name("Ann").Friends.name("Ben", "Joe").save
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't save multiple values for cardinality-one attribute:" +
               "\n  Person ... name(Ben, Joe)"
           }
@@ -58,7 +59,8 @@ object ManySelf extends AsyncTestSuite {
           _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
 
           // Can't `save` nested data structures - use nested `insert` instead for that (see tests further down)
-          _ <- Person.name("Ann").Friends.*(Person.name("Ben")).save.recover { case VerifyModelException(err) =>
+          _ <- Person.name("Ann").Friends.*(Person.name("Ben")).save
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[noNested]  Nested data structures not allowed in save molecules"
           }
 
@@ -85,7 +87,8 @@ object ManySelf extends AsyncTestSuite {
 
           // Saveing reference to generic `e` not allowed.
           // (instead apply ref to ref attribute as shown above)
-          _ <- Person.name("Ann").Friends.e(ben).save.recover { case VerifyModelException(err) =>
+          _ <- Person.name("Ann").Friends.e(ben).save
+            .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> s"[noGenerics]  Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
               s"not allowed in save molecules. Found `e($ben)`"
           }
@@ -189,7 +192,7 @@ object ManySelf extends AsyncTestSuite {
 
       "nested existing" - bidirectional { implicit conn =>
         for {
-          List(ben, joe, tim) <- Person.name insert List("Ben", "Joe", "Tim") map(_.eids)
+          List(ben, joe, tim) <- Person.name insert List("Ben", "Joe", "Tim") map (_.eids)
 
           // Insert 2 Persons and connect them with existing Persons
           _ <- Person.name.friends insert List(
@@ -240,7 +243,7 @@ object ManySelf extends AsyncTestSuite {
           // Insert Ann and friends
           List(ann, ben, joe, liz, tom, ulf) <- Person.name.Friends.*(Person.name) insert List(
             ("Ann", List("Ben", "Joe", "Liz", "Tom", "Ulf"))
-          ) map(_.eids)
+          ) map (_.eids)
 
           // Friendships have been inserted in both directions
           _ <- friendsOf("Ann").get.map(_.sorted ==> List("Ben", "Joe", "Liz", "Tom", "Ulf"))
@@ -318,7 +321,7 @@ object ManySelf extends AsyncTestSuite {
 
       "replace all with 1" - bidirectional { implicit conn =>
         for {
-          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map (_.eids)
           liz <- Person.name.insert("Liz").map(_.eid)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
@@ -341,7 +344,7 @@ object ManySelf extends AsyncTestSuite {
 
       "replace all with multiple (apply varargs)" - bidirectional { implicit conn =>
         for {
-          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map (_.eids)
           liz <- Person.name.insert("Liz").map(_.eid)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
@@ -363,7 +366,7 @@ object ManySelf extends AsyncTestSuite {
 
       "replace all with multiple (apply Set)" - bidirectional { implicit conn =>
         for {
-          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map (_.eids)
           liz <- Person.name.insert("Liz").map(_.eid)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
@@ -385,7 +388,7 @@ object ManySelf extends AsyncTestSuite {
 
       "remove all (apply no values)" - bidirectional { implicit conn =>
         for {
-          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map (_.eids)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -403,7 +406,7 @@ object ManySelf extends AsyncTestSuite {
 
       "remove all (apply empty Set)" - bidirectional { implicit conn =>
         for {
-          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+          List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map (_.eids)
 
           _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
@@ -424,7 +427,7 @@ object ManySelf extends AsyncTestSuite {
 
     "Retract" - bidirectional { implicit conn =>
       for {
-        List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map(_.eids)
+        List(ann, ben, joe) <- Person.name.Friends.*(Person.name) insert List(("Ann", List("Ben", "Joe"))) map (_.eids)
 
         _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe"))
         _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))

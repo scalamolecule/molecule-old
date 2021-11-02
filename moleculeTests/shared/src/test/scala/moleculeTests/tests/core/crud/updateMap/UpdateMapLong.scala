@@ -158,14 +158,16 @@ object UpdateMapLong extends AsyncTestSuite {
 
           // Can't apply pairs with duplicate keys
 
-          _ <- Ns(eid).longMap("str1" -> 1L, "str1" -> 2L).update.recover {
+          _ <- Ns(eid).longMap("str1" -> 1L, "str1" -> 2L).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
                 "\nstr1 -> 1" +
                 "\nstr1 -> 2"
           }
 
-          _ <- Ns(eid).longMap(Seq("str1" -> 1L, "str1" -> 2L)).update.recover {
+          _ <- Ns(eid).longMap(Seq("str1" -> 1L, "str1" -> 2L)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
                 "\nstr1 -> 1" +
@@ -221,7 +223,8 @@ object UpdateMapLong extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).longMap.assert(str1 -> long1, str1x -> long2).update.recover {
+          _ <- Ns(eid).longMap.assert(str1 -> long1, str1x -> long2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
                 "\na -> 1" +
@@ -229,7 +232,8 @@ object UpdateMapLong extends AsyncTestSuite {
           }
 
           // Seq
-          _ <- Ns(eid).longMap.assert(Seq(str1 -> long1, str1x -> long2)).update.recover {
+          _ <- Ns(eid).longMap.assert(Seq(str1 -> long1, str1x -> long2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
                 "\na -> 1" +
@@ -341,14 +345,16 @@ object UpdateMapLong extends AsyncTestSuite {
 
           // Can't apply pairs with duplicate keys
 
-          _ <- Ns(eid).longMap(str1 -> long1, str1 -> long2).update.recover {
+          _ <- Ns(eid).longMap(str1 -> long1, str1 -> long2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
                 "\na -> 1" +
                 "\na -> 2"
           }
 
-          _ <- Ns(eid).longMap(Seq(str1 -> long1, str1 -> long2)).update.recover {
+          _ <- Ns(eid).longMap(Seq(str1 -> long1, str1 -> long2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/longMap`:" +
                 "\na -> 1" +

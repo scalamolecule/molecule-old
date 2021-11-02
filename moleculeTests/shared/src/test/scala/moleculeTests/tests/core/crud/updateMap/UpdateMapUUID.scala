@@ -58,7 +58,8 @@ object UpdateMapUUID extends AsyncTestSuite {
           str1x = str1
 
           // vararg
-          _ <- Ns(eid).uuidMap.assert(str1 -> uuid1, str1x -> uuid2).update.recover {
+          _ <- Ns(eid).uuidMap.assert(str1 -> uuid1, str1x -> uuid2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
                 "\na -> " + uuid1 +
@@ -66,7 +67,8 @@ object UpdateMapUUID extends AsyncTestSuite {
           }
 
           // Seq
-          _ <- Ns(eid).uuidMap.assert(Seq(str1 -> uuid1, str1x -> uuid2)).update.recover {
+          _ <- Ns(eid).uuidMap.assert(Seq(str1 -> uuid1, str1x -> uuid2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
                 "\na -> " + uuid1 +
@@ -179,7 +181,8 @@ object UpdateMapUUID extends AsyncTestSuite {
           // Can't apply pairs with duplicate keys
 
           // vararg
-          _ <- Ns(eid).uuidMap(str1 -> uuid1, str1 -> uuid2).update.recover {
+          _ <- Ns(eid).uuidMap(str1 -> uuid1, str1 -> uuid2).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
                 "\na -> " + uuid1 +
@@ -187,7 +190,8 @@ object UpdateMapUUID extends AsyncTestSuite {
           }
 
           // Seq
-          _ <- Ns(eid).uuidMap(Seq(str1 -> uuid1, str1 -> uuid2)).update.recover {
+          _ <- Ns(eid).uuidMap(Seq(str1 -> uuid1, str1 -> uuid2)).update
+            .map(_ ==> "Unexpected success").recover {
             case Model2TransactionException(err) =>
               err ==> "[valueStmts:default]  Can't apply multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
                 "\na -> " + uuid1 +
@@ -195,15 +199,15 @@ object UpdateMapUUID extends AsyncTestSuite {
           }
 
           // todo?
-//          _ = expectCompileError("""Ns(eid).uuidMap(str1 -> uuid1, str1 -> uuid2).update""",
-//            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
-//              "\n__ident__str1 -> __ident__uuid1" +
-//              "\n__ident__str1 -> __ident__uuid2")
-//
-//          _ = expectCompileError("""Ns(eid).uuidMap(Seq(str1 -> uuid1, str1 -> uuid2)).update""",
-//            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
-//              "\n__ident__str1 -> __ident__uuid1" +
-//              "\n__ident__str1 -> __ident__uuid2")
+          //          _ = expectCompileError("""Ns(eid).uuidMap(str1 -> uuid1, str1 -> uuid2).update""",
+          //            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
+          //              "\n__ident__str1 -> __ident__uuid1" +
+          //              "\n__ident__str1 -> __ident__uuid2")
+          //
+          //          _ = expectCompileError("""Ns(eid).uuidMap(Seq(str1 -> uuid1, str1 -> uuid2)).update""",
+          //            "molecule.core.ops.exception.VerifyRawModelException: Can't assert multiple key/value pairs with the same key for attribute `:Ns/uuidMap`:" +
+          //              "\n__ident__str1 -> __ident__uuid1" +
+          //              "\n__ident__str1 -> __ident__uuid2")
         } yield ()
       }
     }

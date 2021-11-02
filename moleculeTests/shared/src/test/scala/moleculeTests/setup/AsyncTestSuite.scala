@@ -16,10 +16,10 @@ trait AsyncTestSuite extends TestSuite with CoreData
 
   val system: System = {
     SystemPeer
-//        SystemDevLocal
+//    SystemDevLocal
 
     // Since we run asynchronous tests, the Peer Server can only be tested reliably by
-    // restarting the Peer Server and test a single test.
+    // restarting the Peer Server and test a single test at a time.
     //    SystemPeerServer
   }
 

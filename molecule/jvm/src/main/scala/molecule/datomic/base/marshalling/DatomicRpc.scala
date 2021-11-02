@@ -14,10 +14,10 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
 import molecule.core.marshalling.nodes.Obj
 import molecule.core.util.testing.TimerPrint
-import molecule.core.util.{DateHandling, Helpers, JavaConversions}
+import molecule.core.util.{DateHandling, Helpers, JavaConversions, Quoted}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
-import molecule.datomic.base.marshalling.packers.PackEntityMap
+import molecule.datomic.base.marshalling.packers.PackEntityGraph
 import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
 import moleculeBuildInfo.BuildInfo._
@@ -29,7 +29,7 @@ import scala.util.control.NonFatal
 object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal
   with Helpers with ClojureBridge
-  with PackEntityMap
+  with PackEntityGraph with Quoted
   with Serializations
   with PackBase
   with JavaConversions {
@@ -84,19 +84,7 @@ object DatomicRpc extends MoleculeRpc
       //      println("l  : " + l)
       //      println("ll : " + ll)
       //      println("lll: " + lll)
-      /*
-[:find  ?b ?d
- :in    $ [?b ...]
- :where [?a :Track/name ?b]
-        [?a :Track/artists ?c]
-        [?c :Artist/name ?d]
-        [(.compareTo ^String ?d "The Who") ?d_1]
-        [(!= ?d_1 0)]]
 
-
-
-
-       */
       val inputs    = unmarshallInputs(l ++ ll ++ lll)
       val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
 
@@ -153,7 +141,7 @@ object DatomicRpc extends MoleculeRpc
           Nested2packed(obj, allRows, nestedLevels).getPacked
         }
 
-        //      println("-------------------------------" + packed)
+        //        println("-------------------------------" + packed)
         //        log("Sending data to client... Total server time: " + t.msTotal)
         packed
       }
@@ -237,7 +225,7 @@ object DatomicRpc extends MoleculeRpc
   ): Future[String] = {
     def castTpeV(tpe: String, v: String): Object = {
       (tpe, v) match {
-        case ("String", v)     => getEnum(v)
+        case ("String", v)     => if (isEnum(v)) getEnum(v) else v
         case ("Int", v)        => v.toInt.asInstanceOf[Object]
         case ("Long", v)       => v.toLong.asInstanceOf[Object]
         case ("Double", v)     => v.toDouble.asInstanceOf[Object]
@@ -629,7 +617,8 @@ object DatomicRpc extends MoleculeRpc
                   conn.clientConn.txRange(from, until).foldLeft(Future(new StringBuffer())) {
                     case (sbFut, (t, datoms)) =>
                       // Flatten transaction datoms to uniform tuples return type
-                      val datom2packed: (StringBuffer, ClientDatom) => Future[StringBuffer] = getClientDatom2packed(Some(t))
+                      val datom2packed: (StringBuffer, ClientDatom) => Future[StringBuffer] =
+                        getClientDatom2packed(Some(t))
                       datoms.foldLeft(sbFut) {
                         case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
                       }
@@ -640,7 +629,7 @@ object DatomicRpc extends MoleculeRpc
           sbFut.map(_.toString)
         }
       } yield {
-        println("-------------------------------" + packed)
+        //        println("-------------------------------" + packed)
         packed
       }
     } catch {
@@ -662,7 +651,7 @@ object DatomicRpc extends MoleculeRpc
       rows0 <- conn.rawQuery(datalogQuery)
     } yield {
       val cast = if (tpe == "Date" && card != 3)
-        (v: Any) => date2strLocal(v.asInstanceOf[Date])
+        (v: Any) => date2str(v.asInstanceOf[Date])
       else
         (v: Any) => v.toString
       var vs   = List.empty[String]
@@ -726,13 +715,20 @@ object DatomicRpc extends MoleculeRpc
   }
 
 
-  // Entity api ....................................
-
+  // Entity api ---------------------------------------------------
 
   def rawValue(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
     getDatomicEntity(connProxy, eid)
       .flatMap(_.rawValue(attr))
-      .map(res => entityList2packed2(List(attr -> res)))
+      .map(res => entityList2packed(List(attr -> res)))
+  }
+
+  def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.asMap(depth, maxDepth)).map(entityMap2packed)
+  }
+
+  def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.asList(depth, maxDepth)).map(entityList2packed)
   }
 
 
@@ -744,7 +740,7 @@ object DatomicRpc extends MoleculeRpc
   def apply(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
     getDatomicEntity(connProxy, eid)
       .flatMap(_.apply[Any](attr))
-      .map(optV => packOptV(attr, optV))
+      .map(_.fold("")(v => entityMap2packed(Map(attr -> v))))
   }
 
   def apply(connProxy: ConnProxy, eid: Long, attrs: List[String]): Future[List[String]] = {
@@ -752,47 +748,24 @@ object DatomicRpc extends MoleculeRpc
     getDatomicEntity(connProxy, eid)
       .flatMap(_.apply(attr1, attr2, moreAttrs: _*))
       .map { optValues =>
-        attrs.zip(optValues).map { case (attr, optV) => packOptV(attr, optV) }
+        attrs.zip(optValues).map { case (attr, optV) =>
+          optV.fold("")(v => entityMap2packed(Map(attr -> v)))
+        }
       }
   }
 
-  private def packOptV(attr: String, optV: Option[Any]): String = {
-    optV.fold("") {
-      case v: Map[_, _] => entityMap2packed2(v.asInstanceOf[Map[String, Any]])
-      case v            => entityList2packed2(List(":db/id" -> 0, attr -> v))
-    }
-
+  def graphDepth(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+    // Use list to guarantee order of attributes for packing
+    getDatomicEntity(connProxy, eid).flatMap(_.asList(1, maxDepth)).map(entityList2packed)
   }
 
-  def touchMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
-    getDatomicEntity(connProxy, eid).flatMap(_.touchMax(maxDepth)).map(entityMap2packed2)
-  }
-
-  def touchQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
-    getDatomicEntity(connProxy, eid).flatMap(_.touchQuotedMax(maxDepth))
-  }
-
-  def touchListMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
-    getDatomicEntity(connProxy, eid).flatMap(_.touchListMax(maxDepth)).map(entityList2packed2)
-  }
-
-  def touchListQuotedMax(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
-    getDatomicEntity(connProxy, eid).flatMap(_.touchListQuotedMax(maxDepth))
-  }
-
-  def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
-    getDatomicEntity(connProxy, eid).flatMap(_.asMap(depth, maxDepth)).map(entityMap2packed2)
-  }
-
-  def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
-    getDatomicEntity(connProxy, eid).flatMap(_.asList(depth, maxDepth)).map(entityList2packed2)
+  def graphCode(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+    getDatomicEntity(connProxy, eid).flatMap(_.graphCode(maxDepth))
   }
 
   private def getDatomicEntity(connProxy: ConnProxy, eid: Any): Future[DatomicEntity] = {
     getConn(connProxy).map(conn => conn.db.entity(conn, eid))
   }
-
-  //  def sortList(connProxy: ConnProxy, eid: Long, l: String): Future[String] = ???
 
 
   // Connection pool ---------------------------------------------
