@@ -284,8 +284,9 @@ object DatomicRpc extends MoleculeRpc
     try {
       for {
         conn <- getConn(connProxy)
+        db <- conn.db
         packed <- {
-          val adhocDb: DatomicDb = conn.db
+          val adhocDb: DatomicDb = db
           lazy val attrMap = conn.connProxy.attrMap ++ Seq(":db/txInstant" -> (1, "Date"))
 
           def peerDatomElement2packed(
@@ -680,21 +681,24 @@ object DatomicRpc extends MoleculeRpc
   def t(connProxy: ConnProxy): Future[Long] = {
     for {
       conn <- getConn(connProxy)
-      t <- conn.db.t
+      db <- conn.db
+      t <- db.t
     } yield t
   }
 
   def tx(connProxy: ConnProxy): Future[Long] = {
     for {
       conn <- getConn(connProxy)
-      tx <- conn.db.tx
+      db <- conn.db
+      tx <- db.tx
     } yield tx
   }
 
   def txInstant(connProxy: ConnProxy): Future[Date] = {
     for {
       conn <- getConn(connProxy)
-      txInstant <- conn.db.txInstant
+      db <- conn.db
+      txInstant <- db.txInstant
     } yield txInstant
   }
 
@@ -764,7 +768,10 @@ object DatomicRpc extends MoleculeRpc
   }
 
   private def getDatomicEntity(connProxy: ConnProxy, eid: Any): Future[DatomicEntity] = {
-    getConn(connProxy).map(conn => conn.db.entity(conn, eid))
+    for {
+      conn <- getConn(connProxy)
+      db <- conn.db
+    } yield db.entity(conn, eid)
   }
 
 

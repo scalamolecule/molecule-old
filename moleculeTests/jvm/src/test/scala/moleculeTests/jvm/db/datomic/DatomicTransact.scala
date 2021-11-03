@@ -1,4 +1,4 @@
-package moleculeTests.jvm.raw
+package moleculeTests.jvm.db.datomic
 
 import java.io.FileReader
 import datomic.Util
@@ -47,18 +47,20 @@ object DatomicTransact extends AsyncTestSuite {
     }
 
 
-    "Java data" - core { implicit conn =>
+    "Java data" - core { implicit futConn =>
       for {
+        conn <- futConn
+
         // Initial data
         _ <- Ns.int(1).save
         _ <- Ns.int.get.map(_ ==> List(1))
 
         // Add raw transactional data
         // (Scala integers are internally stored as Longs)
-        _ <- conn.flatMap(_.transact(Util.list(
+        _ <- conn.transact(Util.list(
           Util.map(Util.read(":Ns/int"), 2L.asInstanceOf[AnyRef]),
           Util.map(Util.read(":Ns/int"), 3L.asInstanceOf[AnyRef])
-        ).asInstanceOf[java.util.List[AnyRef]]))
+        ).asInstanceOf[java.util.List[AnyRef]])
 
         // Raw data has been added
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))

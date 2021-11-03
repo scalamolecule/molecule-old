@@ -336,9 +336,9 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         Model2Query(_model)
 
         val ins = QueryOps(_query).inputs
-        val db  = conn.db
 
         for{
+          db <- conn.db
           rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn.datalogQuery(_model, _query, Some(db))
           rows = resolve(rawRows.asScala.take(maxRows))
         } yield {

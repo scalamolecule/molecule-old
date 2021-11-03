@@ -157,9 +157,10 @@ object TxFunctions extends Helpers with JavaUtil {
   )(implicit futConn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
     for {
       conn <- futConn
+      db <- conn.db
 
       // Install transaction function if not installed yet
-      txFns <- conn.db.pull("[*]", s":$txFnDatomic")
+      txFns <- db.pull("[*]", s":$txFnDatomic")
       _ <- if (txFns.size() == 1) {
         // Only id returned - tx function needs to be installed in db
         conn.transact(conn.buildTxFnInstall(txFnDatomic, args))

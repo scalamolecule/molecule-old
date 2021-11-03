@@ -493,9 +493,10 @@ object Schema_Attr extends AsyncTestSuite {
       if (system != SystemPeerServer) {
         for {
           conn <- futConn
-          t <- conn.db.t
-          tx <- conn.db.tx
-          txInstant <- conn.db.txInstant
+          db <- conn.db
+          t <- db.t
+          tx <- db.tx
+          txInstant <- db.txInstant
 
           // Schema transaction time t
           _ <- Schema.t.get.map(_ ==> List(t))

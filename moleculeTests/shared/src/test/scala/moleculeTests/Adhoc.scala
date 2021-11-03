@@ -32,7 +32,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
         e <- Ns.int(1).save.map(_.eid)
         _ <- Ns.int.get.map(_ ==> List(1))
          _ = {
-           conn
+           conn.sync
          }
 
 

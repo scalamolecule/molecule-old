@@ -24,7 +24,7 @@ trait EntityOps {
   implicit class long2DatomicEntity(
     id: Long
   )(implicit conn: Future[Conn], ec: ExecutionContext) extends DatomicEntity {
-    private val datomicEntity: Future[DatomicEntity] = conn.map(_.entity(id))
+    private val datomicEntity: Future[DatomicEntity] = conn.flatMap(_.entity(id))
 
     def attrs(implicit ec: ExecutionContext): Future[List[String]] =
       datomicEntity.flatMap(_.attrs)

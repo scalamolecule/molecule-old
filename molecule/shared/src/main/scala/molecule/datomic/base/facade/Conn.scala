@@ -96,17 +96,19 @@ trait Conn extends ColOps with Serializations {
 
   // Datomic facade ------------------------------------------------------------
 
-  /** Get current test/live db. */
-  def db: DatomicDb
+  /** Get current adhoc/test/live db. */
+  def db(implicit ec: ExecutionContext): Future[DatomicDb]
 
 
   def transact(edn: String)(implicit ec: ExecutionContext): Future[TxReport]
 
 
-  def transact(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] = jvmOnly
+  def transact(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("transact(stmtsReader: Reader)"))
 
 
-  def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] = jvmOnly
+  def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("transact(javaStmts: jList[_])"))
 
 
   /** Query Datomic directly with optional Scala inputs.
@@ -145,21 +147,130 @@ trait Conn extends ColOps with Serializations {
   def query(
     datalogQuery: String,
     inputs: Any*
-  )(implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[List[List[AnyRef]]] =
+    Future.failed(jvmOnly("query"))
 
 
-//  def sync: ListenableFuture[Database]
-//
-//  def sync(t: Long): ListenableFuture[Database]
-//
-//  def syncIndex(t: Long): ListenableFuture[Database]
+  /** Synchronize database to have all transactions completed up until now.
+   *
+   * Sets a flag on the connection to do the synchronization on the first
+   * subsequent query. Hereafter the flag is removed.
+   *
+   * The synchronization guarantees to include all transactions that are
+   * complete when the synchronization query is made. Before the query is executed,
+   * the connection communicates with the transactor to do the synchronization.
+   *
+   * A Future with the synchronized database is returned for the query to use. The future
+   * can take arbitrarily long to complete. Waiting code should specify a timeout.
+   *
+   * Only use `sync` when the following two conditions hold:
+   *
+   *   1. coordination of multiple peer/client processes is required
+   *      2. peers/clients have no way to agree on a basis t for coordination
+   *
+   * @param ec an implicit execution context.
+   * @return Connection with synchronization flag set
+   */
+  def sync(implicit ec: ExecutionContext): Conn
+
+
+  /** Synchronize database to have all transactions completed up to and including time t.
+   *
+   * Sets a flag with a time t on the connection to do the synchronization
+   * on the first subsequent query. Hereafter the flag is removed.
+   *
+   * The synchronization guarantees to include all transactions that are complete
+   * up to and including time t. `sync` does not communicate with the transactor,
+   * but it can block (within the Future) if the peer/client has not yet been notified
+   * of transactions up to time t.
+   *
+   * A Future with the synchronized database is returned for the query to use. The future
+   * can take arbitrarily long to complete. Waiting code should specify a timeout.
+   *
+   * Only use `sync(t)` when coordination of multiple peer/client processes is required.
+   *
+   * If peers/clients do not share a basis t, prefer `sync`.
+   *
+   * @param ec an implicit execution context.
+   * @return Connection with synchronization flag set
+   */
+  def sync(t: Long)(implicit ec: ExecutionContext): Conn
+
+
+  /** Synchronize Peer database to have been indexed through time t.
+   *
+   * (only implemented for Peer api)
+   *
+   * Sets a flag with a time t on the connection to do the synchronization
+   * on the first subsequent query. Hereafter the flag is removed.
+   *
+   * The synchronization guarantees a database that has been indexed through time t.
+   * The synchronization does not involve calling the transactor.
+   *
+   * A Future with the synchronized database is returned for the query to use. The future
+   * can take arbitrarily long to complete. Waiting code should specify a timeout.
+   *
+   * Only use `syncIndex` when coordination of multiple peer/client processes is required.
+   *
+   * @param ec an implicit execution context.
+   * @return Connection with synchronization flag set
+   */
+  def syncIndex(t: Long)(implicit ec: ExecutionContext): Conn =
+    throw jvmPeerOnly("syncIndex(t: Long)")
+
+
+  /** Synchronize Peer database to be aware of all schema changes up to time t.
+   *
+   * (only implemented for Peer api)
+   *
+   * Sets a flag with a time t on the connection to do the synchronization
+   * on the first subsequent query. Hereafter the flag is removed.
+   *
+   * The synchronization guarantees a database aware of all schema changes up to
+   * time t. The synchronization does not involve calling the transactor.
+   *
+   * A Future with the synchronized database is returned for the query to use. The future
+   * can take arbitrarily long to complete. Waiting code should specify a timeout.
+   *
+   * Only use `syncSchema` when coordination of multiple peer/client processes is required.
+   *
+   * @param ec an implicit execution context.
+   * @return Connection with synchronization flag set
+   */
+  def syncSchema(t: Long)(implicit ec: ExecutionContext): Conn =
+    throw jvmPeerOnly("syncSchema(t: Long)")
+
+
+  /** Synchronize Peer database to be aware of all excisions up to time t.
+   *
+   * (only implemented for Peer api)
+   *
+   * Sets a flag with a time t on the connection to do the synchronization
+   * on the first subsequent query. Hereafter the flag is removed.
+   *
+   * The synchronization guarantees a database aware of all excisions up to a time t.
+   * The synchronization does not involve calling the transactor.
+   *
+   * A Future with the synchronized database is returned for the query to use. The future
+   * can take arbitrarily long to complete. Waiting code should specify a timeout.
+   *
+   * Only use `syncSchema` when coordination of multiple peer/client processes is required.
+   *
+   * @param ec an implicit execution context.
+   * @return Connection with synchronization flag set
+   */
+  def syncExcise(t: Long)(implicit ec: ExecutionContext): Conn =
+    throw jvmPeerOnly("syncExcise(t: Long)")
+
 
   // Tx fn helpers -------------------------------------------------------------
 
   // Used by txFns. todo: can we avoid public exposure?
-  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = jvmPeerOnly
+  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] =
+    throw jvmPeerOnly("stmts2java(stmts: Seq[Statement])")
 
-  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] = jvmPeerOnly
+  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] =
+    throw jvmPeerOnly("buildTxFnInstall(txFn: String, args: Seq[Any])")
 
 
 
@@ -173,18 +284,18 @@ trait Conn extends ColOps with Serializations {
 
   private[molecule] var connProxy: ConnProxy = defaultConnProxy
 
+
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over _testDb in Conn_Peer and Conn_Client)
   private[molecule] var _adhocDbView: Option[DbView] = None
 
-  private[molecule] lazy val rpc: MoleculeRpc = jsOnly
+  private[molecule] lazy val rpc: MoleculeRpc = throw jsOnly("rpc")
 
 
   private[molecule] def usingAdhocDbView(dbView: DbView): Conn = {
     updateAdhocDbView(Some(dbView))
     this
   }
-
 
   private[molecule] def updateAdhocDbView(adhocDbView: Option[DbView]): Unit = {
     _adhocDbView = adhocDbView
@@ -215,42 +326,46 @@ trait Conn extends ColOps with Serializations {
   private[molecule] def transact(
     edn: String,
     scalaStmts: Future[Seq[Statement]]
-  )(implicit ec: ExecutionContext): Future[TxReport] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("transact(edn: String, scalaStmts: Future[Seq[Statement]])"))
 
   private[molecule] def transact(
     stmtsReader: Reader,
     scalaStmts: Future[Seq[Statement]]
-  )(implicit ec: ExecutionContext): Future[TxReport] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])"))
 
   private[molecule] def transactRaw(
     javaStmts: jList[_],
     scalaStmts: Future[Seq[Statement]]
-  )(implicit ec: ExecutionContext): Future[TxReport] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("transactRaw(javaStmts: jList[_], scalaStmts: Future[Seq[Statement]])"))
 
 
   private[molecule] def rawQuery(
     query: String,
     inputs: Seq[AnyRef] = Nil
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
+    Future.failed(jvmOnly("def rawQuery(query: String, inputs: Seq[AnyRef] = Nil)"))
 
   private[molecule] def jvmQuery(
     model: Model,
     query: Query
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
+    Future.failed(jvmOnly("jvmQuery(model: Model, query: Query)"))
 
   private[molecule] def indexQuery(
     model: Model
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
+    Future.failed(jvmOnly("indexQuery(model: Model)"))
 
   private[molecule] def datalogQuery(
     model: Model,
     query: Query,
     _db: Option[DatomicDb] = None
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = jvmOnly
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
+    Future.failed(jvmOnly("datalogQuery(model: Model, query: Query, _db: Option[DatomicDb] = None)"))
 
-
-  // JS query rpc api .........................................
-  // (only used on js side)
 
   private[molecule] def jsQueryTpl[Tpl](
     model: Model,
@@ -263,7 +378,7 @@ trait Conn extends ColOps with Serializations {
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     packed2tpl: Iterator[String] => Tpl,
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = jsOnly
+  )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future.failed(jsOnly("jsQueryTpl"))
 
   private[molecule] def jsQueryObj[Obj](
     model: Model,
@@ -276,7 +391,7 @@ trait Conn extends ColOps with Serializations {
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     packed2obj: Iterator[String] => Obj,
-  )(implicit ec: ExecutionContext): Future[List[Obj]] = jsOnly
+  )(implicit ec: ExecutionContext): Future[List[Obj]] = Future.failed(jsOnly("jsQueryObj"))
 
   private[molecule] def jsQueryJson(
     model: Model,
@@ -288,11 +403,11 @@ trait Conn extends ColOps with Serializations {
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]]
-  )(implicit ec: ExecutionContext): Future[String] = jsOnly
+  )(implicit ec: ExecutionContext): Future[String] = Future.failed(jsOnly("jsQueryJson"))
 
 
-  // Internal convenience method conn.entity(id) for conn.db.entity(conn, id)
-  private[molecule] def entity(id: Any): DatomicEntity
+  // Internal convenience method
+  private[molecule] def entity(id: Any)(implicit ec: ExecutionContext): Future[DatomicEntity]
 
 
   private[molecule] def inspect(
@@ -316,9 +431,14 @@ trait Conn extends ColOps with Serializations {
     query: String
   )(implicit ec: ExecutionContext): Future[List[String]]
 
-  private def jvmOnly = throw MoleculeException("Method only implemented on JVM platform.")
-  private def jvmPeerOnly = throw MoleculeException("Method only implemented on JVM platform for Peer api.")
-  private def jsOnly = throw MoleculeException("Method only implemented for JS platform.")
+  private def jsOnly(method: String): MoleculeException =
+    MoleculeException(s"`$method` only implemented on JS platform.")
+
+  private def jvmOnly(method: String): MoleculeException =
+    MoleculeException(s"`$method` only implemented on JVM platform.")
+
+  private def jvmPeerOnly(method: String): MoleculeException =
+    MoleculeException(s"`$method` only implemented on JVM platform for Peer api.")
 
   protected def debug(prefix: String, suffix: String = "") = {
     val p = prefix + " " * (4 - prefix.length)

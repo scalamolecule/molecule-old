@@ -36,16 +36,28 @@ case class DatomicEntity_Client(
 
   final private def entityMap(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     var buildMap = Map.empty[String, Any]
-    conn.db.pull("[*]", eid).map { vs =>
+    for {
+      db <- conn.db
+      vs <- db.pull("[*]", eid)
+    } yield {
       vs.forEach {
         case (k, v) => buildMap = buildMap + (k.toString -> v)
       }
       buildMap
-    }.recoverWith {
-      // Fetch top level only for cyclic graph stack overflows
-      case MoleculeException("stackoverflow", _)                    => mapOneLevel
-      case Fault("java.lang.StackOverflowError with empty message") => mapOneLevel
-      case unexpected                                               => throw unexpected
+    }
+    conn.db.flatMap { db =>
+      db.pull("[*]", eid)
+        .map { vs =>
+          vs.forEach {
+            case (k, v) => buildMap = buildMap + (k.toString -> v)
+          }
+          buildMap
+        }.recoverWith {
+        // Fetch top level only for cyclic graph stack overflows
+        case MoleculeException("stackoverflow", _)                    => mapOneLevel
+        case Fault("java.lang.StackOverflowError with empty message") => mapOneLevel
+        case unexpected                                               => throw unexpected
+      }
     }
   }
 
@@ -54,8 +66,8 @@ case class DatomicEntity_Client(
   )(implicit ec: ExecutionContext): Future[Any] = {
     kw match {
       // Backref
-      case r":[^/]+/_.+" =>
-        conn.db.pull(s"[$kw]", eid).map(raw =>
+      case r":[^/]+/_.+" => conn.db.flatMap { db =>
+        db.pull(s"[$kw]", eid).map(raw =>
           Some(
             raw.asInstanceOf[PersistentArrayMap].values().iterator().next()
               .asInstanceOf[PersistentVector].asScala.toList
@@ -63,6 +75,7 @@ case class DatomicEntity_Client(
               .toSet // Set of card-many back refs
           )
         )
+      }
 
       case k => entityMap.map(_.apply(k))
     }
@@ -131,7 +144,7 @@ case class DatomicEntity_Client(
           if (showKW)
             Future(kw.toString)
           else
-            conn.db.entity(conn, kw).rawValue(":db/id")
+            conn.db.flatMap(_.entity(conn, kw).rawValue(":db/id"))
 
         case set: clojure.lang.PersistentHashSet =>
           val (card, attrTpe) = attrDefinitions(attr)
@@ -175,7 +188,9 @@ case class DatomicEntity_Client(
 
             case m =>
               val id = m.iterator().next().asInstanceOf[MapEntry].getValue.asInstanceOf[Long]
-              conn.db.entity(conn, id).apply[Long](":db/ident").map(_.getOrElse(id))
+              conn.db.flatMap { db =>
+                db.entity(conn, id).apply[Long](":db/ident").map(_.getOrElse(id))
+              }
           }
 
         case vec: clojure.lang.PersistentVector =>

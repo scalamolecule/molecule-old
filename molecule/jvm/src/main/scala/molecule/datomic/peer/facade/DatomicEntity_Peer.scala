@@ -55,7 +55,7 @@ case class DatomicEntity_Peer(
         if (showKW)
           Future(kw.toString)
         else
-          conn.db.entity(conn, kw).rawValue(":db/id")
+          conn.db.flatMap(_.entity(conn, kw).rawValue(":db/id"))
 
       case e: datomic.Entity =>
         if (depth < maxDepth) {

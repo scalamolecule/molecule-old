@@ -134,8 +134,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
       }
       futResult.flatMap {
         case List(edgeB) => Future(edgeB)
-        case Nil         =>
-          val otherId = conn.entity(edgeA)
+        case Nil         => conn.entity(edgeA).flatMap { otherId =>
           otherId.inspectGraphDepth(2).map(graph =>
             err("valueStmts:biEdgeRef",
               s"Supplied id $edgeA doesn't appear to be a property edge id (couldn't find reverse edge id). " +
@@ -143,6 +142,7 @@ case class Model2Stmts(isJsPlatform: Boolean, conn: Conn, model: Model) extends 
                 "\n" + stmts.size + " statements so far:\n" + stmts.mkString("\n")
             )
           )
+        }
         case ids         =>
           err("valueStmts:biEdgeRef",
             "Unexpectedly found multiple reverse edge ids:\n" + ids.mkString("\n"))

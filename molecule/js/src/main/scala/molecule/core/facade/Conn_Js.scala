@@ -60,7 +60,7 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
   }
 
   final def testDbWith(txMolecules: Future[Seq[Statement]]*)
-                (implicit ec: ExecutionContext): Future[Unit] = {
+                      (implicit ec: ExecutionContext): Future[Unit] = {
     Future.sequence(txMolecules).map { stmtss =>
       val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, this)
       updateTestDbView(Some(With(stmtsEdn, uriAttrs)))
@@ -72,12 +72,23 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
 
   // Datomic facade ------------------------------------------------------------
 
-  final def db: DatomicDb = DatomicDb_Js(rpc, connProxy)
+  final def db(implicit ec: ExecutionContext): Future[DatomicDb] =
+    Future(DatomicDb_Js(rpc, connProxy))
 
 
   final def transact(edn: String)
-              (implicit ec: ExecutionContext): Future[TxReport] =
+                    (implicit ec: ExecutionContext): Future[TxReport] =
     rpc.transact(connProxy, (edn, Set.empty[String]))
+
+
+  final def sync(implicit ec: ExecutionContext): Conn = {
+    // Sync with current t
+    usingAdhocDbView(Sync(0))
+  }
+
+  final def sync(t: Long)(implicit ec: ExecutionContext): Conn = {
+    usingAdhocDbView(Sync(t))
+  }
 
 
   // Internal ------------------------------------------------------------------
@@ -88,7 +99,7 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
 
 
   private[molecule] def transact(scalaStmts: Future[Seq[Statement]])
-              (implicit ec: ExecutionContext): Future[TxReport] = for {
+                                (implicit ec: ExecutionContext): Future[TxReport] = for {
     stmts <- scalaStmts
     txReport <- rpc.transact(connProxy, Stmts2Edn(stmts, this))
   } yield txReport
@@ -299,7 +310,9 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
 
 
   // Internal convenience method conn.entity(id) for conn.db.entity(conn, id)
-  private[molecule] final def entity(id: Any): DatomicEntity = db.entity(this, id)
+  private[molecule] final def entity(
+    id: Any
+  )(implicit ec: ExecutionContext): Future[DatomicEntity] = db.map(_.entity(this, id))
 
 
   private def queryJs[T](
@@ -387,6 +400,7 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
     header, threshold, max, showStackTrace, maxLevel, showBi
   )(id, params: _*)
 
+
   private[molecule] def getAttrValues(
     datalogQuery: String,
     card: Int,
@@ -396,10 +410,9 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
 
 
   private[molecule] def getEntityAttrKeys(
-      query: String
+    query: String
   )(implicit ec: ExecutionContext): Future[List[String]] =
     rpc.getEntityAttrKeys(connProxy, query)
-
 
 
   private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext): Future[T] = Future {

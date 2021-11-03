@@ -1,4 +1,4 @@
-package moleculeTests.jvm.raw
+package moleculeTests.jvm.db.datomic
 
 import java.util.UUID
 import datomic.Util
@@ -20,17 +20,16 @@ object DatomicPull extends AsyncTestSuite {
     "raw pull" - mbrainz { implicit conn =>
       for {
         // Pull raw java.util.Map's with clojure.lang.Keyword -> <data> pairs
-        _ <- conn.flatMap( conn =>
-          conn.db.pull(
-            "[:Artist/name :Artist/gid]", Util.list(Util.read(":Artist/gid"), ledZeppelinUUID)
-          )
+        conn <- conn
+        db <- conn.db
+        _ <- db.pull(
+          "[:Artist/name :Artist/gid]",
+          Util.list(Util.read(":Artist/gid"), ledZeppelinUUID)
         ).map(_ ==> Util.map(
           Util.read(":Artist/name"), "Led Zeppelin",
           Util.read(":Artist/gid"), ledZeppelinUUID
         ))
       } yield ()
     }
-
-
   }
 }

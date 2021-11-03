@@ -1,4 +1,4 @@
-package moleculeTests.jvm.raw
+package moleculeTests.jvm.db.datomic
 
 import java.util.UUID
 import molecule.datomic.api.out2._

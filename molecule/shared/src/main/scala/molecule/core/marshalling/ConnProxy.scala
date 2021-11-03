@@ -10,9 +10,9 @@ sealed trait ConnProxy {
   val attrMap: Map[String, (Int, String)]
 
   /** 0 inactive
-    * 1 active
-    * -1 de-activate signal
-    */
+   * 1 active
+   * -1 de-activate signal
+   */
   val testDbStatus: Int
   val testDbView  : Option[DbView]
   val adhocDbView : Option[DbView]
