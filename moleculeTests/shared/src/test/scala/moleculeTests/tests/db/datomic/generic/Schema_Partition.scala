@@ -90,10 +90,10 @@ object Schema_Partition extends AsyncTestSuite {
         ))
 
         // Enum
-        _ <- Schema.part_("gen").ns_("Person").attr_("gender").enum.get.map(_ ==> List("female", "male"))
+        _ <- Schema.part_("gen").ns_("Person").attr_("gender").enumm.get.map(_ ==> List("female", "male"))
 
         // All enums grouped by attribute
-        _ <- Schema.a.enum.get.map(_.groupBy(_._1).map(g => g._1 -> g._2.map(_._2).sorted) ==> Map(
+        _ <- Schema.a.enumm.get.map(_.groupBy(_._1).map(g => g._1 -> g._2.map(_._2).sorted) ==> Map(
           ":gen_Person/gender" -> List("female", "male"),
           ":lit_Book/cat" -> List("bad", "good")
         ))

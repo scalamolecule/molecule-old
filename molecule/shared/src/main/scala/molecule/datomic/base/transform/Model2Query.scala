@@ -8,13 +8,13 @@ import molecule.core.util.Helpers
 
 
 /** Model to Query transformation.
-  * <br><br>
-  * Second transformation in Molecules series of transformations from
-  * custom boilerplate DSL constructs to Datomic queries:
-  * <br><br>
-  * Custom DSL molecule --> Model --> Query --> Datomic query string
-  *
-  * */
+ * <br><br>
+ * Second transformation in Molecules series of transformations from
+ * custom boilerplate DSL constructs to Datomic queries:
+ * <br><br>
+ * Custom DSL molecule --> Model --> Query --> Datomic query string
+ *
+ * */
 object Model2Query extends Helpers {
 
   var nestedEntityClauses: List[Funct] = List.empty[Funct]
@@ -360,7 +360,7 @@ object Model2Query extends Helpers {
     case "fulltext"    => resolveSchemaMandatory(g, q.schemaFulltext, "Boolean")
     case "isComponent" => resolveSchemaMandatory(g, q.schemaIsComponent, "Boolean")
     case "noHistory"   => resolveSchemaMandatory(g, q.schemaNoHistory, "Boolean")
-    case "enum"        => resolveSchemaMandatory(g, q.schemaEnum, "String")
+    case "enumm"       => resolveSchemaMandatory(g, q.schemaEnum, "String")
     case "t"           => resolveSchemaMandatory(g, q.schemaT, "Long")
     case "tx"          => resolveSchemaMandatory(g, q.schema, "Long")
     case "txInstant"   => resolveSchemaMandatory(g, q.schemaTxInstant, "Date")
@@ -379,7 +379,7 @@ object Model2Query extends Helpers {
     case "fulltext_"    => resolveSchemaTacit(g, q.schemaFulltext, "Boolean")
     case "isComponent_" => resolveSchemaTacit(g, q.schemaIsComponent, "Boolean")
     case "noHistory_"   => resolveSchemaTacit(g, q.schemaNoHistory, "Boolean")
-    case "enum_"        => resolveSchemaTacit(g, q.schemaEnum, "String")
+    case "enumm_"       => resolveSchemaTacit(g, q.schemaEnum, "String")
     case "t_"           => resolveSchemaTacit(g, q.schemaT, "Long")
     case "tx_"          => resolveSchemaTacit(g, q.schema, "Long")
     case "txInstant_"   => resolveSchemaTacit(g, q.schemaTxInstant, "Date")
@@ -740,7 +740,7 @@ object Model2Query extends Helpers {
     a.value match {
       case EnumVal      => q.pullEnum(e, a)
       case Fn("not", _) => q.pullEnum(e, a).not(e, a) // None
-      case Eq(args)     => q.findD(v2).enum(e, a, v).orRules(e, a, args)
+      case Eq(args)     => q.findD(v2).enumm(e, a, v).orRules(e, a, args)
       case other        => abort("Unresolved optional cardinality-many enum Atom$:\nAtom$   : " + s"$a\nElement: $other")
     }
   }
@@ -750,8 +750,8 @@ object Model2Query extends Helpers {
     a.value match {
       case EnumVal        => q.pullEnum(e, a)
       case Fn("not", _)   => q.pullEnum(e, a).not(e, a) // None
-      case Eq(arg :: Nil) => q.find(v2).enum(e, a, v).where(e, a, Val("__enum__" + prefix + arg))
-      case Eq(args)       => q.find(v2).enum(e, a, v).orRules(e, a, args)
+      case Eq(arg :: Nil) => q.find(v2).enumm(e, a, v).where(e, a, Val("__enum__" + prefix + arg))
+      case Eq(args)       => q.find(v2).enumm(e, a, v).orRules(e, a, args)
       case other          => abort("Unresolved optional cardinality-one enum Atom$:\nAtom$   : " + s"$a\nElement: $other")
     }
   }
@@ -759,85 +759,85 @@ object Model2Query extends Helpers {
   def resolveEnumTacit(q: Query, e: String, a0: Atom, v: String, v2: String, v3: String, prefix: String): Query = {
     val a = a0.copy(attr = a0.attr.init)
     a.value match {
-      case Qm                                      => q.enum(e, a, v).in(e, a, Some(prefix), v2)
-      case Neq(Seq(Qm))                            => q.enum(e, a, v).compareTo("!=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Gt(Qm)                                  => q.enum(e, a, v).compareTo(">", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Ge(Qm)                                  => q.enum(e, a, v).compareTo(">=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Lt(Qm)                                  => q.enum(e, a, v).compareTo("<", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Le(Qm)                                  => q.enum(e, a, v).compareTo("<=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case EnumVal                                 => q.enum(e, a, v)
-      case Neq(args)                               => q.enum(e, a, v).compareToMany("!=", a, v2, args)
+      case Qm                                      => q.enumm(e, a, v).in(e, a, Some(prefix), v2)
+      case Neq(Seq(Qm))                            => q.enumm(e, a, v).compareTo("!=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Gt(Qm)                                  => q.enumm(e, a, v).compareTo(">", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Ge(Qm)                                  => q.enumm(e, a, v).compareTo(">=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Lt(Qm)                                  => q.enumm(e, a, v).compareTo("<", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Le(Qm)                                  => q.enumm(e, a, v).compareTo("<=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case EnumVal                                 => q.enumm(e, a, v)
+      case Neq(args)                               => q.enumm(e, a, v).compareToMany("!=", a, v2, args)
       case Fn("not", _)                            => q.not(e, a)
       case Eq(Nil)                                 => q.not(e, a)
       case Eq((set: Set[_]) :: Nil) if set.isEmpty => q.not(e, a)
       case Eq((seq: Seq[_]) :: Nil) if seq.isEmpty => q.not(e, a)
-      case Eq((set: Set[_]) :: Nil)                => q.enum(e, a, v).whereAnd(e, a, v, set.toSeq.map("__enum__" + prefix + _))
+      case Eq((set: Set[_]) :: Nil)                => q.enumm(e, a, v).whereAnd(e, a, v, set.toSeq.map("__enum__" + prefix + _))
       case Eq(arg :: Nil)                          => q.where(e, a, Val("__enum__" + prefix + arg))
       case Eq(args)                                => q.orRules(e, a, args)
-      case And(args) if a.card == 2                => q.enum(e, a, v).whereAnd(e, a, v, args.map("__enum__" + prefix + _))
-      case Gt(arg)                                 => q.enum(e, a, v).compareTo(">", a, v2, Val(arg), 1)
-      case Ge(arg)                                 => q.enum(e, a, v).compareTo(">=", a, v2, Val(arg), 1)
-      case Lt(arg)                                 => q.enum(e, a, v).compareTo("<", a, v2, Val(arg), 1)
-      case Le(arg)                                 => q.enum(e, a, v).compareTo("<=", a, v2, Val(arg), 1)
+      case And(args) if a.card == 2                => q.enumm(e, a, v).whereAnd(e, a, v, args.map("__enum__" + prefix + _))
+      case Gt(arg)                                 => q.enumm(e, a, v).compareTo(">", a, v2, Val(arg), 1)
+      case Ge(arg)                                 => q.enumm(e, a, v).compareTo(">=", a, v2, Val(arg), 1)
+      case Lt(arg)                                 => q.enumm(e, a, v).compareTo("<", a, v2, Val(arg), 1)
+      case Le(arg)                                 => q.enumm(e, a, v).compareTo("<=", a, v2, Val(arg), 1)
       case other                                   => abort(s"Unresolved tacit enum Atom_:\nAtom_  : $a\nElement: $other")
     }
   }
 
   def resolveEnumMandatory2(q: Query, e: String, a: Atom, v: String, v2: String, v3: String, prefix: String): Query = {
     a.value match {
-      case Qm                                          => q.findD(v2).enum(e, a, v).in(e, a, Some(prefix), v2)
-      case Neq(Seq(Qm))                                => q.findD(v2).enum(e, a, v).compareTo("!=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Gt(Qm)                                      => q.findD(v2).enum(e, a, v).compareTo(">", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Ge(Qm)                                      => q.findD(v2).enum(e, a, v).compareTo(">=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Lt(Qm)                                      => q.findD(v2).enum(e, a, v).compareTo("<", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Le(Qm)                                      => q.findD(v2).enum(e, a, v).compareTo("<=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case EnumVal                                     => q.findD(v2).enum(e, a, v)
-      case Fn("not", _)                                => q.findD(v2).enum(e, a, v).not(e, a)
-      case Eq(Nil)                                     => q.findD(v2).enum(e, a, v).not(e, a)
-      case Eq((set: Set[_]) :: Nil) if set.isEmpty     => q.findD(v2).enum(e, a, v).not(e, a)
-      case Eq((seq: Seq[_]) :: Nil) if seq.isEmpty     => q.findD(v2).enum(e, a, v).not(e, a)
-      case Eq((set: Set[_]) :: Nil)                    => q.findD(v2).enum(e, a, v).whereAnd(e, a, v, set.toSeq.map("__enum__" + prefix + _))
-      case Eq(args)                                    => q.findD(v2).enum(e, a, v).orRules(e, a, args)
+      case Qm                                          => q.findD(v2).enumm(e, a, v).in(e, a, Some(prefix), v2)
+      case Neq(Seq(Qm))                                => q.findD(v2).enumm(e, a, v).compareTo("!=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Gt(Qm)                                      => q.findD(v2).enumm(e, a, v).compareTo(">", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Ge(Qm)                                      => q.findD(v2).enumm(e, a, v).compareTo(">=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Lt(Qm)                                      => q.findD(v2).enumm(e, a, v).compareTo("<", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Le(Qm)                                      => q.findD(v2).enumm(e, a, v).compareTo("<=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case EnumVal                                     => q.findD(v2).enumm(e, a, v)
+      case Fn("not", _)                                => q.findD(v2).enumm(e, a, v).not(e, a)
+      case Eq(Nil)                                     => q.findD(v2).enumm(e, a, v).not(e, a)
+      case Eq((set: Set[_]) :: Nil) if set.isEmpty     => q.findD(v2).enumm(e, a, v).not(e, a)
+      case Eq((seq: Seq[_]) :: Nil) if seq.isEmpty     => q.findD(v2).enumm(e, a, v).not(e, a)
+      case Eq((set: Set[_]) :: Nil)                    => q.findD(v2).enumm(e, a, v).whereAnd(e, a, v, set.toSeq.map("__enum__" + prefix + _))
+      case Eq(args)                                    => q.findD(v2).enumm(e, a, v).orRules(e, a, args)
       case And(args)                                   => q.findD(v2).whereAndEnum(e, a, v, prefix, args)
-      case Neq(Nil)                                    => q.findD(v2).enum(e, a, v)
-      case Neq(sets) if sets.head.isInstanceOf[Set[_]] => q.findD(v2).enum(e, a, v).nots(e, a, v2, sets)
-      case Neq(arg :: Nil) if uri(a.tpe)               => q.findD(v2).enum(e, a, v).compareTo("!=", a, v2, Val(arg))
-      case Neq(arg :: Nil)                             => q.findD(v2).enum(e, a, v).compareTo("!=", a, v2, Val(arg))
-      case Neq(args)                                   => q.findD(v2).enum(e, a, v).compareToMany("!=", a, v2, args)
-      case Gt(arg)                                     => q.findD(v2).enum(e, a, v).compareTo(">", a, v2, Val(arg), 1)
-      case Ge(arg)                                     => q.findD(v2).enum(e, a, v).compareTo(">=", a, v2, Val(arg), 1)
-      case Lt(arg)                                     => q.findD(v2).enum(e, a, v).compareTo("<", a, v2, Val(arg), 1)
-      case Le(arg)                                     => q.findD(v2).enum(e, a, v).compareTo("<=", a, v2, Val(arg), 1)
-      case Fn(fn, Some(i))                             => q.find(fn, Seq(i), v2).enum(e, a, v)
-      case Fn(fn, _) if coalesce(fn)                   => q.aggrV(a).fold(q.find(fn, Nil, v2).enum(e, a, v).widh(e))(q.find(fn, Nil, _).widh(e))
-      case Fn(fn, _)                                   => q.find(fn, Nil, v2).enum(e, a, v)
+      case Neq(Nil)                                    => q.findD(v2).enumm(e, a, v)
+      case Neq(sets) if sets.head.isInstanceOf[Set[_]] => q.findD(v2).enumm(e, a, v).nots(e, a, v2, sets)
+      case Neq(arg :: Nil) if uri(a.tpe)               => q.findD(v2).enumm(e, a, v).compareTo("!=", a, v2, Val(arg))
+      case Neq(arg :: Nil)                             => q.findD(v2).enumm(e, a, v).compareTo("!=", a, v2, Val(arg))
+      case Neq(args)                                   => q.findD(v2).enumm(e, a, v).compareToMany("!=", a, v2, args)
+      case Gt(arg)                                     => q.findD(v2).enumm(e, a, v).compareTo(">", a, v2, Val(arg), 1)
+      case Ge(arg)                                     => q.findD(v2).enumm(e, a, v).compareTo(">=", a, v2, Val(arg), 1)
+      case Lt(arg)                                     => q.findD(v2).enumm(e, a, v).compareTo("<", a, v2, Val(arg), 1)
+      case Le(arg)                                     => q.findD(v2).enumm(e, a, v).compareTo("<=", a, v2, Val(arg), 1)
+      case Fn(fn, Some(i))                             => q.find(fn, Seq(i), v2).enumm(e, a, v)
+      case Fn(fn, _) if coalesce(fn)                   => q.aggrV(a).fold(q.find(fn, Nil, v2).enumm(e, a, v).widh(e))(q.find(fn, Nil, _).widh(e))
+      case Fn(fn, _)                                   => q.find(fn, Nil, v2).enumm(e, a, v)
       case other                                       => abort(s"Unresolved cardinality-many enum Atom:\nAtom   : $a\nElement: $other")
     }
   }
 
   def resolveEnumMandatory1(q: Query, e: String, a: Atom, v: String, v2: String, v3: String, prefix: String): Query = {
     a.value match {
-      case Qm                                      => q.find(v2).enum(e, a, v).in(e, a, Some(prefix), v2)
-      case Neq(Seq(Qm))                            => q.find(v2).enum(e, a, v).compareTo("!=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Gt(Qm)                                  => q.find(v2).enum(e, a, v).compareTo(">", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Ge(Qm)                                  => q.find(v2).enum(e, a, v).compareTo(">=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Lt(Qm)                                  => q.find(v2).enum(e, a, v).compareTo("<", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case Le(Qm)                                  => q.find(v2).enum(e, a, v).compareTo("<=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
-      case EnumVal                                 => q.find(v2).enum(e, a, v)
-      case Fn("not", _)                            => q.find(v2).enum(e, a, v).not(e, a)
-      case Eq(Nil)                                 => q.find(v2).enum(e, a, v).not(e, a)
-      case Eq((seq: Seq[_]) :: Nil) if seq.isEmpty => q.find(v2).enum(e, a, v).not(e, a)
-      case Eq((seq: Seq[_]) :: Nil)                => q.find(v2).enum(e, a, v).orRules(e, a, seq)
-      case Eq(arg :: Nil)                          => q.find(v2).enum(e, a, v).where(e, a, Val("__enum__" + prefix + arg))
-      case Eq(args)                                => q.find(v2).enum(e, a, v).orRules(e, a, args)
-      case Neq(args)                               => q.find(v2).enum(e, a, v).compareToMany("!=", a, v2, args)
-      case Gt(arg)                                 => q.find(v2).enum(e, a, v).compareTo(">", a, v2, Val(arg), 1)
-      case Ge(arg)                                 => q.find(v2).enum(e, a, v).compareTo(">=", a, v2, Val(arg), 1)
-      case Lt(arg)                                 => q.find(v2).enum(e, a, v).compareTo("<", a, v2, Val(arg), 1)
-      case Le(arg)                                 => q.find(v2).enum(e, a, v).compareTo("<=", a, v2, Val(arg), 1)
-      case Fn(fn, Some(i))                         => q.find(fn, Seq(i), v2).enum(e, a, v)
-      case Fn(fn, _) if coalesce(fn)               => q.aggrV(a).fold(q.find(fn, Nil, v2).enum(e, a, v).widh(e))(q.find(fn, Nil, _).widh(e))
-      case Fn(fn, _)                               => q.find(fn, Nil, v2).enum(e, a, v)
+      case Qm                                      => q.find(v2).enumm(e, a, v).in(e, a, Some(prefix), v2)
+      case Neq(Seq(Qm))                            => q.find(v2).enumm(e, a, v).compareTo("!=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Gt(Qm)                                  => q.find(v2).enumm(e, a, v).compareTo(">", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Ge(Qm)                                  => q.find(v2).enumm(e, a, v).compareTo(">=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Lt(Qm)                                  => q.find(v2).enumm(e, a, v).compareTo("<", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case Le(Qm)                                  => q.find(v2).enumm(e, a, v).compareTo("<=", a, v2, Var(v3), 1).in(e, a, Some(prefix), v3)
+      case EnumVal                                 => q.find(v2).enumm(e, a, v)
+      case Fn("not", _)                            => q.find(v2).enumm(e, a, v).not(e, a)
+      case Eq(Nil)                                 => q.find(v2).enumm(e, a, v).not(e, a)
+      case Eq((seq: Seq[_]) :: Nil) if seq.isEmpty => q.find(v2).enumm(e, a, v).not(e, a)
+      case Eq((seq: Seq[_]) :: Nil)                => q.find(v2).enumm(e, a, v).orRules(e, a, seq)
+      case Eq(arg :: Nil)                          => q.find(v2).enumm(e, a, v).where(e, a, Val("__enum__" + prefix + arg))
+      case Eq(args)                                => q.find(v2).enumm(e, a, v).orRules(e, a, args)
+      case Neq(args)                               => q.find(v2).enumm(e, a, v).compareToMany("!=", a, v2, args)
+      case Gt(arg)                                 => q.find(v2).enumm(e, a, v).compareTo(">", a, v2, Val(arg), 1)
+      case Ge(arg)                                 => q.find(v2).enumm(e, a, v).compareTo(">=", a, v2, Val(arg), 1)
+      case Lt(arg)                                 => q.find(v2).enumm(e, a, v).compareTo("<", a, v2, Val(arg), 1)
+      case Le(arg)                                 => q.find(v2).enumm(e, a, v).compareTo("<=", a, v2, Val(arg), 1)
+      case Fn(fn, Some(i))                         => q.find(fn, Seq(i), v2).enumm(e, a, v)
+      case Fn(fn, _) if coalesce(fn)               => q.aggrV(a).fold(q.find(fn, Nil, v2).enumm(e, a, v).widh(e))(q.find(fn, Nil, _).widh(e))
+      case Fn(fn, _)                               => q.find(fn, Nil, v2).enumm(e, a, v)
       case other                                   => abort(s"Unresolved cardinality-one enum Atom:\nAtom   : $a\nElement: $other")
     }
   }

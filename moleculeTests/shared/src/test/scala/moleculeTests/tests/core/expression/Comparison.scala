@@ -159,15 +159,15 @@ object Comparison extends Base {
         // Comparison of URIs not implemented
 
 
-        _ <- Ns.enum.<("enum1").get.map(_.sorted ==> List("enum0"))
-        _ <- Ns.enum.>("enum1").get.map(_.sorted ==> List("enum2"))
-        _ <- Ns.enum.<=("enum1").get.map(_.sorted ==> List("enum0", "enum1"))
-        _ <- Ns.enum.>=("enum1").get.map(_.sorted ==> List("enum1", "enum2"))
+        _ <- Ns.enumm.<("enum1").get.map(_.sorted ==> List("enum0"))
+        _ <- Ns.enumm.>("enum1").get.map(_.sorted ==> List("enum2"))
+        _ <- Ns.enumm.<=("enum1").get.map(_.sorted ==> List("enum0", "enum1"))
+        _ <- Ns.enumm.>=("enum1").get.map(_.sorted ==> List("enum1", "enum2"))
 
-        _ <- Ns.enum.<(enum1).get.map(_.sorted ==> List("enum0"))
-        _ <- Ns.enum.>(enum1).get.map(_.sorted ==> List("enum2"))
-        _ <- Ns.enum.<=(enum1).get.map(_.sorted ==> List("enum0", "enum1"))
-        _ <- Ns.enum.>=(enum1).get.map(_.sorted ==> List("enum1", "enum2"))
+        _ <- Ns.enumm.<(enum1).get.map(_.sorted ==> List("enum0"))
+        _ <- Ns.enumm.>(enum1).get.map(_.sorted ==> List("enum2"))
+        _ <- Ns.enumm.<=(enum1).get.map(_.sorted ==> List("enum0", "enum1"))
+        _ <- Ns.enumm.>=(enum1).get.map(_.sorted ==> List("enum1", "enum2"))
 
 
         _ <- Ns.bigInt.<(bigInt1).get.map(_.sorted ==> List(bigInt0))

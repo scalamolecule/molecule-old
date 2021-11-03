@@ -20,7 +20,7 @@ trait Base extends AsyncTestSuite {
       _ <- Ns.bigDec insert List(bigDec0, bigDec1, bigDec2)
       _ <- Ns.uuid insert List(uuid0, uuid1, uuid2)
       _ <- Ns.uri insert List(uri0, uri1, uri2)
-      _ <- Ns.enum insert List("enum0", "enum1", "enum2")
+      _ <- Ns.enumm insert List("enum0", "enum1", "enum2")
     } yield ()
   }
 
@@ -79,7 +79,7 @@ trait Base extends AsyncTestSuite {
         (uri2, Set(uri2, uri3)),
         (uri3, Set(uri2, uri4)))
 
-      _ <- Ns.enum.enums insert List(
+      _ <- Ns.enumm.enums insert List(
         ("enum1", Set("enum1", "enum2")),
         ("enum2", Set("enum2", "enum3")),
         ("enum3", Set("enum2", "enum4")))

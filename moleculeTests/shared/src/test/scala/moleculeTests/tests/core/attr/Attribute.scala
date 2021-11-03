@@ -22,7 +22,7 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.date insert date1
         _ <- Ns.uuid insert uuid1
         _ <- Ns.uri insert uri1
-        _ <- Ns.enum insert enum1
+        _ <- Ns.enumm insert enum1
 
         // Get one value (RuntimeException if no value)
         _ <- Ns.str.get.map(_ ==> List(str1))
@@ -33,7 +33,7 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.date.get.map(_ ==> List(date1))
         _ <- Ns.uuid.get.map(_ ==> List(uuid1))
         _ <- Ns.uri.get.map(_ ==> List(uri1))
-        _ <- Ns.enum.get.map(_ ==> List(enum1))
+        _ <- Ns.enumm.get.map(_ ==> List(enum1))
       } yield ()
     }
 
@@ -76,7 +76,7 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.date insert List(date1, date2)
         _ <- Ns.uuid insert List(uuid1, uuid2)
         _ <- Ns.uri insert List(uri1, uri2)
-        _ <- Ns.enum insert List(enum1, enum2)
+        _ <- Ns.enumm insert List(enum1, enum2)
 
         // Get attribute values as tuples (order not guaranteed)
         _ <- Ns.str.get.map(_ ==> List(str1, str2))
@@ -87,7 +87,7 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.date.get.map(_.sorted ==> List(date1, date2))
         _ <- Ns.uuid.get.map(_.sortBy(_.toString) ==> List(uuid1, uuid2))
         _ <- Ns.uri.get.map(_ ==> List(uri1, uri2))
-        _ <- Ns.enum.get.map(_ ==> List(enum2, enum1))
+        _ <- Ns.enumm.get.map(_ ==> List(enum2, enum1))
       } yield ()
     }
 
@@ -122,11 +122,11 @@ object Attribute extends AsyncTestSuite {
     "Multiple cardinality-1 attributes - one entity" - core { implicit conn =>
       for {
         // Insert single molecule with comma-separated values
-        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.insert(
+        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm.insert(
           str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1)
 
         // Get single molecule as tuple of values
-        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.get.map(_ ==> List(
+        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm.get.map(_ ==> List(
           (str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1)
         ))
       } yield ()
@@ -150,13 +150,13 @@ object Attribute extends AsyncTestSuite {
     "Multiple cardinality-1 attributes - multiple entities" - core { implicit conn =>
       for {
         // Insert two molecules with tuples of values
-        _ <- Ns.str.int.long.double.date.uuid.uri.enum insert List(
+        _ <- Ns.str.int.long.double.date.uuid.uri.enumm insert List(
           (str1, int1, long1, double1, date1, uuid1, uri1, enum1),
           (str2, int2, long2, double2, date2, uuid2, uri2, enum2)
         )
 
         // Get two molecules as tuples of values
-        _ <- Ns.str.int.long.double.date.uuid.uri.enum.get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.int.long.double.date.uuid.uri.enumm.get.map(_.sortBy(_._1) ==> List(
           (str1, int1, long1, double1, date1, uuid1, uri1, enum1),
           (str2, int2, long2, double2, date2, uuid2, uri2, enum2)
         ))

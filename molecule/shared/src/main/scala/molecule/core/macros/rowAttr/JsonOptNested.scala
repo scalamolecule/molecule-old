@@ -36,8 +36,8 @@ private[molecule] trait JsonOptNested extends JsonBase {
   }
 
   protected def jsonOptNestedOneEnum(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
-    val enum = getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
-    quotedPair(sb, field, enum)
+    val enumm = getKwName(it.next.asInstanceOf[jMap[_, _]].values().iterator().next.toString)
+    quotedPair(sb, field, enumm)
   }
 
   protected def jsonOptNestedOneRefAttr(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {

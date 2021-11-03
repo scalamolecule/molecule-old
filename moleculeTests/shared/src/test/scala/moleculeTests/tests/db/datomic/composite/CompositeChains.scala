@@ -13,18 +13,18 @@ object CompositeChains extends AsyncTestSuite {
     "Arity 22+" - core { implicit conn =>
       for {
         // A single molecule can have up to 22 attributes
-        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums insert List(
+        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums insert List(
           (str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1, r1, r2, strs1, ints1, longs1, doubles1, bools1, dates1, uuids1, uris1, enums1),
           (str2, int2, long2, double2, bool2, date2, uuid2, uri2, enum2, r3, r4, strs2, ints2, longs2, doubles2, bools2, dates2, uuids2, uris2, enums2)
         )
 
-        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums.get.map(_ ==> List(
+        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums.get.map(_ ==> List(
           (str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1, r1, r2, strs1, ints1, longs1, doubles1, bools1, dates1, uuids1, uris1, enums1),
           (str2, int2, long2, double2, bool2, date2, uuid2, uri2, enum2, r3, r4, strs2, ints2, longs2, doubles2, bools2, dates2, uuids2, uris2, enums2)
         ))
 
         // Molecules needing more than 22 attributes can be composed as composites. Here we compose a composite molecule with 22 + 9 = 31 attributes in total:
-        _ <- (Ns.str.int.long.double.bool.date.uuid.uri.enum.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums +
+        _ <- (Ns.str.int.long.double.bool.date.uuid.uri.enumm.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums +
           Ref1.str1.int1.enum1.ref2.refSub2.strs1.ints1.refs2.refsSub2) insert List(
           (
             (str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1, r1, r2, strs1, ints1, longs0, doubles1, bools1, dates1, uuids1, uris1, enums1),
@@ -34,7 +34,7 @@ object CompositeChains extends AsyncTestSuite {
 
 
         // Retrieving composite data as Lists of tuples of two sub tuples, first of arity 22, and second of arity 9
-        _ <- (Ns.str.int.long.double.bool.date.uuid.uri.enum.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums +
+        _ <- (Ns.str.int.long.double.bool.date.uuid.uri.enumm.ref1.refSub1.strs.ints.longs.doubles.bools.dates.uuids.uris.enums +
           Ref1.str1.int1.enum1.ref2.refSub2.strs1.ints1.refs2.refsSub2).get.map(_ ==> List(
           (
             (str1, int1, long1, double1, bool1, date1, uuid1, uri1, enum1, r1, r2, strs1, ints1, longs0, doubles1, bools1, dates1, uuids1, uris1, enums1),
@@ -47,7 +47,7 @@ object CompositeChains extends AsyncTestSuite {
     "Split into 3" - core { implicit conn =>
       for {
         // Insert composite data with 3 sub-molecules (23 attributes in total)
-        _ <- (Ns.bool.bools.date.dates.double.doubles.enum.enums +
+        _ <- (Ns.bool.bools.date.dates.double.doubles.enumm.enums +
           Ns.int.ints.long.longs.ref1.refSub1 +
           Ns.str.strs.uri.uris.uuid.uuids.refs1) insert Seq(
           // Two rows with tuples of 3 sub-tuples that type-safely match the 3 sub-molecules above
@@ -64,7 +64,7 @@ object CompositeChains extends AsyncTestSuite {
         )
 
         // Retrieve composite data with the same 3 sub-molecules
-        _ <- (Ns.bool.bools.date.dates.double.doubles.enum.enums +
+        _ <- (Ns.bool.bools.date.dates.double.doubles.enumm.enums +
           Ns.int.ints.long.longs.ref1.refSub1 +
           Ns.str.strs.uri.uris.uuid.uuids.refs1).get.map(_ ==> List(
           (

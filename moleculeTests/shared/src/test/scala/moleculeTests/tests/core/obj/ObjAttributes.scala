@@ -30,7 +30,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         _ <- Ns.uri insert uri1
         _ <- Ns.bigInt insert bigInt1
         _ <- Ns.bigDec insert bigDec1
-        _ <- Ns.enum insert enum1
+        _ <- Ns.enumm insert enum1
         _ <- Ns.ref1(refId).save
 
         // Get all objects
@@ -47,7 +47,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         _ <- Ns.uri.getObj.map(_.uri ==> uri1)
         _ <- Ns.bigInt.getObj.map(_.bigInt ==> bigInt1)
         _ <- Ns.bigDec.getObj.map(_.bigDec ==> bigDec1)
-        _ <- Ns.enum.getObj.map(_.enum ==> enum1)
+        _ <- Ns.enumm.getObj.map(_.enumm ==> enum1)
         _ <- Ns.ref1.getObj.map(_.ref1 ==> refId)
       } yield ()
     }
@@ -124,7 +124,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         _ <- Ns.int.uri$ insert List((8, None), (8, Some(uri1)))
         _ <- Ns.int.bigInt$ insert List((9, None), (9, Some(bigInt1)))
         _ <- Ns.int.bigDec$ insert List((10, None), (10, Some(bigDec1)))
-        _ <- Ns.int.enum$ insert List((11, None), (11, Some(enum1)))
+        _ <- Ns.int.enumm$ insert List((11, None), (11, Some(enum1)))
         _ <- Ns.int.ref1$ insert List((12, None), (12, Some(refId)))
 
 
@@ -258,17 +258,17 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.bigDec ==> bigDec1
         }
 
-        _ <- Ns.int(11).enum$.getObjs.map { oo =>
+        _ <- Ns.int(11).enumm$.getObjs.map { oo =>
           val List(o1, o2) = oo
           o1.int ==> 11
-          o1.enum$ ==> None
+          o1.enumm$ ==> None
           o2.int ==> 11
-          o2.enum$ ==> Some(enum1)
+          o2.enumm$ ==> Some(enum1)
         }
-        _ <- Ns.int(11).enum.getObjs.map { oo =>
+        _ <- Ns.int(11).enumm.getObjs.map { oo =>
           val o = oo.head
           o.int ==> 11
-          o.enum ==> enum1
+          o.enumm ==> enum1
         }
 
         _ <- Ns.int(12).ref1$.getObjs.map { oo =>

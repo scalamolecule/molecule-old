@@ -56,7 +56,7 @@ object Aggregates extends AsyncTestSuite {
         (uri2, Set(uri2, uri3)),
         (uri3, Set(uri2, uri4)))
 
-      _ <- Ns.enum.enums insert List(
+      _ <- Ns.enumm.enums insert List(
         (enum1, Set(enum1, enum2)),
         (enum2, Set(enum2, enum3)),
         (enum3, Set(enum2, enum4)))
@@ -158,7 +158,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.uri(min).get.map(_.head ==> uri1)
         _ <- Ns.bigInt(min).get.map(_.head ==> bigInt1)
         _ <- Ns.bigDec(min).get.map(_.head ==> bigDec1)
-        _ <- Ns.enum(min).get.map(_.head ==> enum1)
+        _ <- Ns.enumm(min).get.map(_.head ==> enum1)
 
         _ <- Ns.str(min(2)).get.map(_.head ==> List("str1", "str2"))
         _ <- Ns.int(min(2)).get.map(_.head ==> List(1, 2))
@@ -170,7 +170,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.uri(min(2)).get.map(_.head ==> List(uri1, uri2))
         _ <- Ns.bigInt(min(2)).get.map(_.head ==> List(bigInt1, bigInt2))
         _ <- Ns.bigDec(min(2)).get.map(_.head ==> List(bigDec1, bigDec2))
-        _ <- Ns.enum(min(2)).get.map(_.head ==> List(enum1, enum2))
+        _ <- Ns.enumm(min(2)).get.map(_.head ==> List(enum1, enum2))
 
 
         // card many
@@ -256,7 +256,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(max).get.map(_.head ==> date3)
         _ <- Ns.uuid(max).get.map(_.head ==> uuid3)
         _ <- Ns.uri(max).get.map(_.head ==> uri3)
-        _ <- Ns.enum(max).get.map(_.head ==> enum3)
+        _ <- Ns.enumm(max).get.map(_.head ==> enum3)
         _ <- Ns.bigInt(max).get.map(_.head ==> bigInt3)
         _ <- Ns.bigDec(max).get.map(_.head ==> bigDec3)
 
@@ -268,7 +268,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(max(2)).get.map(_.head ==> List(date3, date2))
         _ <- Ns.uuid(max(2)).get.map(_.head ==> List(uuid3, uuid2))
         _ <- Ns.uri(max(2)).get.map(_.head ==> List(uri3, uri2))
-        _ <- Ns.enum(max(2)).get.map(_.head ==> List(enum3, enum2))
+        _ <- Ns.enumm(max(2)).get.map(_.head ==> List(enum3, enum2))
         _ <- Ns.bigInt(max(2)).get.map(_.head ==> List(bigInt3, bigInt2))
         _ <- Ns.bigDec(max(2)).get.map(_.head ==> List(bigDec3, bigDec2))
 
@@ -366,7 +366,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(rand).get.map(list => dates.contains(list.head) ==> true)
         _ <- Ns.uuid(rand).get.map(list => uuids.contains(list.head) ==> true)
         _ <- Ns.uri(rand).get.map(list => uris.contains(list.head) ==> true)
-        _ <- Ns.enum(rand).get.map(list => enums.contains(list.head) ==> true)
+        _ <- Ns.enumm(rand).get.map(list => enums.contains(list.head) ==> true)
         _ <- Ns.bigInt(rand).get.map(list => bigInts.contains(list.head) ==> true)
         _ <- Ns.bigDec(rand).get.map(list => bigDecs.contains(list.head) ==> true)
 
@@ -378,7 +378,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(rand(2)).get.map(list => dates.intersect(list.head).nonEmpty ==> true)
         _ <- Ns.uuid(rand(2)).get.map(list => uuids.intersect(list.head).nonEmpty ==> true)
         _ <- Ns.uri(rand(2)).get.map(list => uris.intersect(list.head).nonEmpty ==> true)
-        _ <- Ns.enum(rand(2)).get.map(list => enums.intersect(list.head).nonEmpty ==> true)
+        _ <- Ns.enumm(rand(2)).get.map(list => enums.intersect(list.head).nonEmpty ==> true)
         _ <- Ns.bigInt(rand(2)).get.map(list => bigInts.intersect(list.head).nonEmpty ==> true)
         _ <- Ns.bigDec(rand(2)).get.map(list => bigDecs.intersect(list.head).nonEmpty ==> true)
       } yield ()
@@ -396,7 +396,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(sample).get.map(list => dates.contains(list.head) ==> true)
         _ <- Ns.uuid(sample).get.map(list => uuids.contains(list.head) ==> true)
         _ <- Ns.uri(sample).get.map(list => uris.contains(list.head) ==> true)
-        _ <- Ns.enum(sample).get.map(list => enums.contains(list.head) ==> true)
+        _ <- Ns.enumm(sample).get.map(list => enums.contains(list.head) ==> true)
         _ <- Ns.bigInt(sample).get.map(list => bigInts.contains(list.head) ==> true)
         _ <- Ns.bigDec(sample).get.map(list => bigDecs.contains(list.head) ==> true)
 
@@ -408,7 +408,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.date(sample(2)).get.map(list => dates.intersect(list.head).size ==> 2)
         _ <- Ns.uuid(sample(2)).get.map(list => uuids.intersect(list.head).size ==> 2)
         _ <- Ns.uri(sample(2)).get.map(list => uris.intersect(list.head).size ==> 2)
-        _ <- Ns.enum(sample(2)).get.map(list => enums.intersect(list.head).size ==> 2)
+        _ <- Ns.enumm(sample(2)).get.map(list => enums.intersect(list.head).size ==> 2)
         _ <- Ns.bigInt(sample(2)).get.map(list => bigInts.intersect(list.head).size ==> 2)
         _ <- Ns.bigDec(sample(2)).get.map(list => bigDecs.intersect(list.head).size ==> 2)
       } yield ()

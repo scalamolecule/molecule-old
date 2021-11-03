@@ -22,7 +22,7 @@ object JsonNestedTypes extends AsyncTestSuite {
         _ <- Ns.date.Refs1.*(Ref1.int1).insert(date1, Seq(1))
         _ <- Ns.uuid.Refs1.*(Ref1.int1).insert(uuid1, Seq(1))
         _ <- Ns.uri.Refs1.*(Ref1.int1).insert(uri1, Seq(1))
-        _ <- Ns.enum.Refs1.*(Ref1.int1).insert(enum1, Seq(1))
+        _ <- Ns.enumm.Refs1.*(Ref1.int1).insert(enum1, Seq(1))
 
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
@@ -152,12 +152,12 @@ object JsonNestedTypes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.enum.Refs1.*(Ref1.int1).getJson.map(_ ==>
+        _ <- Ns.enumm.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
             |      {
-            |        "enum": "enum1",
+            |        "enumm": "enum1",
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -633,7 +633,7 @@ object JsonNestedTypes extends AsyncTestSuite {
         _ <- Ns.int.date$.Refs1.*(Ref1.int1).insert(List((7, None, Seq(1)), (7, Some(date2), Seq(2))))
         _ <- Ns.int.uuid$.Refs1.*(Ref1.int1).insert(List((8, None, Seq(1)), (8, Some(uuid2), Seq(2))))
         _ <- Ns.int.uri$.Refs1.*(Ref1.int1).insert(List((9, None, Seq(1)), (9, Some(uri2), Seq(2))))
-        _ <- Ns.int.enum$.Refs1.*(Ref1.int1).insert(List((10, None, Seq(1)), (10, Some(enum2), Seq(2))))
+        _ <- Ns.int.enumm$.Refs1.*(Ref1.int1).insert(List((10, None, Seq(1)), (10, Some(enum2), Seq(2))))
         _ <- Ns.int.bigInt$.Refs1.*(Ref1.int1).insert(List((11, None, Seq(1)), (11, Some(bigInt2), Seq(2))))
         _ <- Ns.int.bigDec$.Refs1.*(Ref1.int1).insert(List((12, None, Seq(1)), (12, Some(bigDec2), Seq(2))))
 
@@ -863,13 +863,13 @@ object JsonNestedTypes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.int(10).enum$.Refs1.*(Ref1.int1).getJson.map(_ ==>
+        _ <- Ns.int(10).enumm$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
             |      {
             |        "int": 10,
-            |        "enum$": null,
+            |        "enumm$": null,
             |        "Refs1": [
             |          {
             |            "int1": 1
@@ -878,7 +878,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 10,
-            |        "enum$": "enum2",
+            |        "enumm$": "enum2",
             |        "Refs1": [
             |          {
             |            "int1": 2

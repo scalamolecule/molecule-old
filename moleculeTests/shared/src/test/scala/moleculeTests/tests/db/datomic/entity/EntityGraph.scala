@@ -77,8 +77,8 @@ object EntityGraph extends AsyncTestSuite {
         e10 <- Ns.uri(uri1).save.map(_.eid)
         _ <- e10.graph.map(_ ==> Map(":db/id" -> e10, ":Ns/uri" -> uri1))
 
-        e11 <- Ns.enum("enum1").save.map(_.eid)
-        _ <- e11.graph.map(_ ==> Map(":db/id" -> e11, ":Ns/enum" -> ":Ns.enum/enum1"))
+        e11 <- Ns.enumm("enum1").save.map(_.eid)
+        _ <- e11.graph.map(_ ==> Map(":db/id" -> e11, ":Ns/enumm" -> ":Ns.enumm/enum1"))
       } yield ()
     }
 

@@ -136,7 +136,7 @@ object QueryOps extends Helpers with JavaUtil {
 
 
     def whereAndEnum[T](e: String, a: Atom, v: String, prefix: String, args: Seq[T]): Query = {
-      args.foldLeft(q) { case (q1, arg) => q1.where(e, a, Val("__enum__" + prefix + arg)) }.enum(e, a, v)
+      args.foldLeft(q) { case (q1, arg) => q1.where(e, a, Val("__enum__" + prefix + arg)) }.enumm(e, a, v)
     }
 
 
@@ -240,7 +240,7 @@ object QueryOps extends Helpers with JavaUtil {
         .func("namespace", Seq(Var("enumIdent")), ScalarBinding(Var("enumNs")))
         .func("str", Seq(Var("nsFull"), Val("."), Var("attr")), ScalarBinding(Var("enumSubNs")))
         .func("=", Seq(Var("enumSubNs"), Var("enumNs")))
-        .func("name", Seq(Var("enumIdent")), ScalarBinding(Var("enum")))
+        .func("name", Seq(Var("enumIdent")), ScalarBinding(Var("enumm")))
     }
 
     def schemaT: Query = q.schema
@@ -453,7 +453,7 @@ object QueryOps extends Helpers with JavaUtil {
 
     // Extra ..........................................
 
-    def enum(e: String, a: Atom, v: String): Query =
+    def enumm(e: String, a: Atom, v: String): Query =
       q.where(e, a, v).ident(v, v + 1).kw(v + 1, v + 2)
 
     def ident(v: String, v1: String): Query =

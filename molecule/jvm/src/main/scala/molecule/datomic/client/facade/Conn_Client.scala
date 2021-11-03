@@ -30,28 +30,14 @@ private[molecule] case class Conn_Client(
   override val defaultConnProxy: ConnProxy,
   dbName: String,
   system: String = "",
-) extends Conn_Jvm with JavaConversions {
+) extends Conn_Jvm {
 
-  lazy val clientConn: sync.Connection = client.connect(dbName)
-
-  // In-memory fixed test db for integration testing of domain model
-  // (takes precedence over live db)
-  protected var _testDb: Option[Db] = None
-
-  // Flag to indicate if special withDb is in use for testDb
-  protected var withDbInUse = false
-
-
-  override def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
+  // Molecule api --------------------------------------------------------------
 
   def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(clientConn.db)
   }
 
-  // Temporary `since` time points - needs to be applied later to queries in order
-  // to maintain special withdb
-  private var sinceT = Option.empty[Long]
-  private var sinceD = Option.empty[Date]
 
   def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
     sinceT = Some(t)
@@ -95,67 +81,7 @@ private[molecule] case class Conn_Client(
   }
 
 
-  private def getAdhocDb: Db = {
-    val baseDb : Db = _testDb.getOrElse(clientConn.db)
-    val adhocDb: Db = _adhocDbView.get match {
-      case AsOf(TxLong(t))          => baseDb.asOf(t)
-      case AsOf(TxDate(d))          => baseDb.asOf(d)
-      case Since(TxLong(t))         => baseDb.since(t)
-      case Since(TxDate(d))         => baseDb.since(d)
-      case History                  => baseDb.history
-      case With(stmtsEdn, uriAttrs) =>
-        val txData = getJavaStmts(stmtsEdn, uriAttrs)
-        baseDb.`with`(clientConn.withDb, txData).dbAfter
-    }
-    _adhocDbView = None
-    connProxy = defaultConnProxy
-    adhocDb
-  }
-
-
-  // Reset datoms of in-mem with-db from next timePoint after as-of t until end
-  override def cleanFrom(nextTimePoint: Any)
-                        (implicit ec: ExecutionContext): Future[Unit] = {
-    for {
-      txInstants <- db.pull("[:db/id]", ":db/txInstant")
-      txInstId = txInstants.get(read(":db/id"))
-    } yield {
-      try {
-        _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
-        val txs            = clientConn.txRangeArray(Some(nextTimePoint))
-        val (retract, add) = (read(":db/retract"), read(":db/add"))
-        def op(datom: Datom) = if (datom.added) retract else add
-        var txStmts = new util.ArrayList[jList[_]]()
-        val size    = txs.length
-        var i       = size - 1
-
-        // Reverse datoms backwards from last to timePoint right after as-of t
-        while (i >= 0) {
-          val txDatoms = txs(i)._2
-          txStmts = new util.ArrayList[jList[_]](txDatoms.length)
-          txDatoms.foreach { datom =>
-            // Don't reverse timestamps
-            if (datom.a != txInstId) {
-              txStmts.add(
-                list(
-                  op(datom),
-                  datom.e.asInstanceOf[Object],
-                  datom.a.asInstanceOf[Object],
-                  datom.v.asInstanceOf[Object]
-                )
-              )
-            }
-          }
-          // Update in-memory with-db with datoms of this tx
-          _testDb = Some(_testDb.get.`with`(_testDb.get, txStmts).dbAfter)
-          i -= 1
-        }
-        withDbInUse = true
-      } catch {
-        case NonFatal(ex) => Future.failed(ex)
-      }
-    }
-  }
+  // Datomic facade ------------------------------------------------------------
 
   def db: DatomicDb = {
     //    debug("d ", _testDb.toString)
@@ -204,10 +130,43 @@ private[molecule] case class Conn_Client(
   }
 
 
-  def entity(id: Any): DatomicEntity = db.entity(this, id)
+  // Internal ------------------------------------------------------------------
+
+  // In-memory fixed test db for integration testing of domain model
+  // (takes precedence over live db)
+  protected var _testDb: Option[Db] = None
+
+  // Flag to indicate if special withDb is in use for testDb
+  protected var withDbInUse = false
 
 
-  override def transact(
+  private[molecule] lazy val clientConn: sync.Connection = client.connect(dbName)
+
+  // Temporary `since` time points - needs to be applied later to queries in order
+  // to maintain special withdb
+  private var sinceT = Option.empty[Long]
+  private var sinceD = Option.empty[Date]
+
+
+  private def getAdhocDb: Db = {
+    val baseDb : Db = _testDb.getOrElse(clientConn.db)
+    val adhocDb: Db = _adhocDbView.get match {
+      case AsOf(TxLong(t))          => baseDb.asOf(t)
+      case AsOf(TxDate(d))          => baseDb.asOf(d)
+      case Since(TxLong(t))         => baseDb.since(t)
+      case Since(TxDate(d))         => baseDb.since(d)
+      case History                  => baseDb.history
+      case With(stmtsEdn, uriAttrs) =>
+        val txData = getJavaStmts(stmtsEdn, uriAttrs)
+        baseDb.`with`(clientConn.withDb, txData).dbAfter
+    }
+    _adhocDbView = None
+    connProxy = defaultConnProxy
+    adhocDb
+  }
+
+
+  private[molecule] final override def transactRaw(
     javaStmts: jList[_],
     futScalaStmts: Future[Seq[Statement]]
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
@@ -285,6 +244,11 @@ private[molecule] case class Conn_Client(
           case e: java.util.concurrent.ExecutionException =>
             println("---- Conn_Client.transactRaw ExecutionException: -------------")
             println(javaStmts.asScala.toList.mkString("\n"))
+
+            println("---- Conn_Client.transactRaw ExecutionException: -------------\n" + e +
+               "\n---- javaStmts: ----\n" + javaStmts.asScala.toList.mkString("\n")
+            )
+
             // White list of exceptions that can be pickled by BooPickle
             Future.failed(
               e.getCause match {
@@ -308,7 +272,7 @@ private[molecule] case class Conn_Client(
   }
 
 
-  override def rawQuery(
+  private[molecule] final override def rawQuery(
     query: String,
     //    inputs0: Any*
     inputs: Seq[AnyRef]
@@ -326,7 +290,7 @@ private[molecule] case class Conn_Client(
   }.flatten
 
 
-  override def jvmQuery(
+  private[molecule] final override def jvmQuery(
     model: Model,
     query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
@@ -341,7 +305,7 @@ private[molecule] case class Conn_Client(
 
 
   // Datoms API providing direct access to indexes
-  override def indexQuery(
+  private[molecule] final override def indexQuery(
     model: Model
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
@@ -682,4 +646,54 @@ private[molecule] case class Conn_Client(
       case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
     }
   }.flatten
+
+
+  // Internal convenience method conn.entity(id) for conn.db.entity(conn, id)
+  private[molecule] final def entity(id: Any): DatomicEntity = db.entity(this, id)
+
+
+  // Reset datoms of in-mem with-db from next timePoint after as-of t until end
+  protected final override def cleanFrom(nextTimePoint: Any)
+                        (implicit ec: ExecutionContext): Future[Unit] = {
+    for {
+      txInstants <- db.pull("[:db/id]", ":db/txInstant")
+      txInstId = txInstants.get(read(":db/id"))
+    } yield {
+      try {
+        _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+        val txs            = clientConn.txRangeArray(Some(nextTimePoint))
+        val (retract, add) = (read(":db/retract"), read(":db/add"))
+        def op(datom: Datom) = if (datom.added) retract else add
+        var txStmts = new util.ArrayList[jList[_]]()
+        val size    = txs.length
+        var i       = size - 1
+
+        // Reverse datoms backwards from last to timePoint right after as-of t
+        while (i >= 0) {
+          val txDatoms = txs(i)._2
+          txStmts = new util.ArrayList[jList[_]](txDatoms.length)
+          txDatoms.foreach { datom =>
+            // Don't reverse timestamps
+            if (datom.a != txInstId) {
+              txStmts.add(
+                list(
+                  op(datom),
+                  datom.e.asInstanceOf[Object],
+                  datom.a.asInstanceOf[Object],
+                  datom.v.asInstanceOf[Object]
+                )
+              )
+            }
+          }
+          // Update in-memory with-db with datoms of this tx
+          _testDb = Some(_testDb.get.`with`(_testDb.get, txStmts).dbAfter)
+          i -= 1
+        }
+        withDbInUse = true
+      } catch {
+        case NonFatal(ex) => Future.failed(ex)
+      }
+    }
+  }
+
 }

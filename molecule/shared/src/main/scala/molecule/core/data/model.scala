@@ -458,7 +458,7 @@ object model {
 
   // Enum ---------------------------------------------------------
 
-  private[molecule] trait enum extends optionBuilder[enum] {
+  private[molecule] trait enumm extends optionBuilder[enumm] {
     // Require at least 2 enum values (any use case for only 1 enum??)
     def apply(e1: String, e2: String, es: String*) = this
   }
@@ -468,7 +468,7 @@ object model {
     *
     * @group one
     */
-  trait oneEnum extends enum
+  trait oneEnum extends enumm
   object oneEnum extends oneEnum
 
 
@@ -476,7 +476,7 @@ object model {
     *
     * @group many
     */
-  trait manyEnum extends enum
+  trait manyEnum extends enumm
   object manyEnum extends manyEnum
 
 

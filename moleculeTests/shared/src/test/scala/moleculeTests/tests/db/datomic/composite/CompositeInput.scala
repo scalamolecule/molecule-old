@@ -116,26 +116,26 @@ object CompositeInput extends AsyncTestSuite {
 
     "3" - core { implicit conn =>
       for {
-        _ <- Ref2.int2.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int.str.enum insert List(
+        _ <- Ref2.int2.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int.str.enumm insert List(
           ((1, "a", "enum21"), (11, "aa", "enum11"), (111, "aaa", "enum1")),
           ((2, "b", "enum22"), (22, "bb", "enum11"), (222, "bbb", "enum2"))
         )
 
-        _ <- m(Ref2.int2.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int.str.enum).get.map(_.sorted ==> List(
+        _ <- m(Ref2.int2.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int.str.enumm).get.map(_.sorted ==> List(
           ((1, "a", "enum21"), (11, "aa", "enum11"), (111, "aaa", "enum1")),
           ((2, "b", "enum22"), (22, "bb", "enum11"), (222, "bbb", "enum2"))
         ))
 
         // 3 + 0 + 0
-        _ <- m(Ref2.int2(?).str2(?).enum2(?) + Ref1.int1.str1.enum1 + Ns.int.str.enum).apply(1, "a", "enum21").get.map(_ ==> List(
+        _ <- m(Ref2.int2(?).str2(?).enum2(?) + Ref1.int1.str1.enum1 + Ns.int.str.enumm).apply(1, "a", "enum21").get.map(_ ==> List(
           ((1, "a", "enum21"), (11, "aa", "enum11"), (111, "aaa", "enum1"))
         ))
         // 0 + 3 + 0
-        _ <- m(Ref2.int2.str2.enum2 + Ref1.int1(?).str1(?).enum1(?) + Ns.int.str.enum).apply(11, "aa", "enum11").get.map(_ ==> List(
+        _ <- m(Ref2.int2.str2.enum2 + Ref1.int1(?).str1(?).enum1(?) + Ns.int.str.enumm).apply(11, "aa", "enum11").get.map(_ ==> List(
           ((1, "a", "enum21"), (11, "aa", "enum11"), (111, "aaa", "enum1"))
         ))
         // 0 + 0 + 3
-        _ <- m(Ref2.int2.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int(?).str(?).enum(?)).apply(111, "aaa", "enum1").get.map(_ ==> List(
+        _ <- m(Ref2.int2.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int(?).str(?).enumm(?)).apply(111, "aaa", "enum1").get.map(_ ==> List(
           ((1, "a", "enum21"), (11, "aa", "enum11"), (111, "aaa", "enum1"))
         ))
       } yield ()

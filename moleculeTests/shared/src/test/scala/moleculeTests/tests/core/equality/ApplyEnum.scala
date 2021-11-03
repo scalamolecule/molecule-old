@@ -17,7 +17,7 @@ object ApplyEnum extends AsyncTestSuite {
 
       "Mandatory" - core { implicit conn =>
         for {
-          _ <- Ns.int.enum$ insert List(
+          _ <- Ns.int.enumm$ insert List(
             (1, Some("enum1")),
             (2, Some("enum2")),
             (3, Some("enum3")),
@@ -25,28 +25,28 @@ object ApplyEnum extends AsyncTestSuite {
           )
 
           // Varargs
-          _ <- Ns.enum.apply("enum1").get.map(_ ==> List("enum1"))
-          _ <- Ns.enum.apply("enum2").get.map(_ ==> List("enum2"))
-          _ <- Ns.enum.apply("enum1", "enum2").get.map(_ ==> List("enum2", "enum1"))
+          _ <- Ns.enumm.apply("enum1").get.map(_ ==> List("enum1"))
+          _ <- Ns.enumm.apply("enum2").get.map(_ ==> List("enum2"))
+          _ <- Ns.enumm.apply("enum1", "enum2").get.map(_ ==> List("enum2", "enum1"))
 
           // `or`
-          _ <- Ns.enum.apply("enum1" or "enum2").get.map(_ ==> List("enum2", "enum1"))
-          _ <- Ns.enum.apply("enum1" or "enum2" or "enum3").get.map(_ ==> List("enum3", "enum2", "enum1"))
+          _ <- Ns.enumm.apply("enum1" or "enum2").get.map(_ ==> List("enum2", "enum1"))
+          _ <- Ns.enumm.apply("enum1" or "enum2" or "enum3").get.map(_ ==> List("enum3", "enum2", "enum1"))
 
           // Seq
-          _ <- Ns.enum.apply().get.map(_ ==> Nil)
-          _ <- Ns.enum.apply(Nil).get.map(_ ==> Nil)
-          _ <- Ns.enum.apply(List("enum1")).get.map(_ ==> List("enum1"))
-          _ <- Ns.enum.apply(List("enum2")).get.map(_ ==> List("enum2"))
-          _ <- Ns.enum.apply(List("enum1", "enum2")).get.map(_ ==> List("enum2", "enum1"))
-          _ <- Ns.enum.apply(List("enum1"), List("enum2")).get.map(_ ==> List("enum2", "enum1"))
-          _ <- Ns.enum.apply(List("enum1", "enum2"), List("enum3")).get.map(_ ==> List("enum3", "enum2", "enum1"))
-          _ <- Ns.enum.apply(List("enum1"), List("enum2", "enum3")).get.map(_ ==> List("enum3", "enum2", "enum1"))
-          _ <- Ns.enum.apply(List("enum1", "enum2", "enum3")).get.map(_ ==> List("enum3", "enum2", "enum1"))
+          _ <- Ns.enumm.apply().get.map(_ ==> Nil)
+          _ <- Ns.enumm.apply(Nil).get.map(_ ==> Nil)
+          _ <- Ns.enumm.apply(List("enum1")).get.map(_ ==> List("enum1"))
+          _ <- Ns.enumm.apply(List("enum2")).get.map(_ ==> List("enum2"))
+          _ <- Ns.enumm.apply(List("enum1", "enum2")).get.map(_ ==> List("enum2", "enum1"))
+          _ <- Ns.enumm.apply(List("enum1"), List("enum2")).get.map(_ ==> List("enum2", "enum1"))
+          _ <- Ns.enumm.apply(List("enum1", "enum2"), List("enum3")).get.map(_ ==> List("enum3", "enum2", "enum1"))
+          _ <- Ns.enumm.apply(List("enum1"), List("enum2", "enum3")).get.map(_ ==> List("enum3", "enum2", "enum1"))
+          _ <- Ns.enumm.apply(List("enum1", "enum2", "enum3")).get.map(_ ==> List("enum3", "enum2", "enum1"))
 
           // Applying a non-existing enum value ("zzz") won't compile!
-          _ = expectCompileError("""m(Ns.enum("zzz"))""",
-            """molecule.core.transform.exception.Dsl2ModelException: 'zzz' is not among available enum values of attribute :Ns/enum:
+          _ = expectCompileError("""m(Ns.enumm("zzz"))""",
+            """molecule.core.transform.exception.Dsl2ModelException: 'zzz' is not among available enum values of attribute :Ns/enumm:
               |  enum0
               |  enum1
               |  enum2
@@ -62,7 +62,7 @@ object ApplyEnum extends AsyncTestSuite {
 
       "Tacit" - core { implicit conn =>
         for {
-          _ <- Ns.int.enum$ insert List(
+          _ <- Ns.int.enumm$ insert List(
             (1, Some("enum1")),
             (2, Some("enum2")),
             (3, Some("enum3")),
@@ -70,24 +70,24 @@ object ApplyEnum extends AsyncTestSuite {
           )
 
           // Varargs
-          _ <- Ns.int.enum_.apply("enum1").get.map(_ ==> List(1))
-          _ <- Ns.int.enum_.apply("enum2").get.map(_ ==> List(2))
-          _ <- Ns.int.enum_.apply("enum1", "enum2").get.map(_ ==> List(1, 2))
+          _ <- Ns.int.enumm_.apply("enum1").get.map(_ ==> List(1))
+          _ <- Ns.int.enumm_.apply("enum2").get.map(_ ==> List(2))
+          _ <- Ns.int.enumm_.apply("enum1", "enum2").get.map(_ ==> List(1, 2))
 
           // `or`
-          _ <- Ns.int.enum_.apply("enum1" or "enum2").get.map(_ ==> List(1, 2))
-          _ <- Ns.int.enum_.apply("enum1" or "enum2" or "enum3").get.map(_ ==> List(1, 2, 3))
+          _ <- Ns.int.enumm_.apply("enum1" or "enum2").get.map(_ ==> List(1, 2))
+          _ <- Ns.int.enumm_.apply("enum1" or "enum2" or "enum3").get.map(_ ==> List(1, 2, 3))
 
           // Seq
-          _ <- Ns.int.enum_.apply().get.map(_ ==> List(4))
-          _ <- Ns.int.enum_.apply(Nil).get.map(_ ==> List(4))
-          _ <- Ns.int.enum_.apply(List("enum1")).get.map(_ ==> List(1))
-          _ <- Ns.int.enum_.apply(List("enum2")).get.map(_ ==> List(2))
-          _ <- Ns.int.enum_.apply(List("enum1", "enum2")).get.map(_ ==> List(1, 2))
-          _ <- Ns.int.enum_.apply(List("enum1"), List("enum2")).get.map(_ ==> List(1, 2))
-          _ <- Ns.int.enum_.apply(List("enum1", "enum2"), List("enum3")).get.map(_ ==> List(1, 2, 3))
-          _ <- Ns.int.enum_.apply(List("enum1"), List("enum2", "enum3")).get.map(_ ==> List(1, 2, 3))
-          _ <- Ns.int.enum_.apply(List("enum1", "enum2", "enum3")).get.map(_ ==> List(1, 2, 3))
+          _ <- Ns.int.enumm_.apply().get.map(_ ==> List(4))
+          _ <- Ns.int.enumm_.apply(Nil).get.map(_ ==> List(4))
+          _ <- Ns.int.enumm_.apply(List("enum1")).get.map(_ ==> List(1))
+          _ <- Ns.int.enumm_.apply(List("enum2")).get.map(_ ==> List(2))
+          _ <- Ns.int.enumm_.apply(List("enum1", "enum2")).get.map(_ ==> List(1, 2))
+          _ <- Ns.int.enumm_.apply(List("enum1"), List("enum2")).get.map(_ ==> List(1, 2))
+          _ <- Ns.int.enumm_.apply(List("enum1", "enum2"), List("enum3")).get.map(_ ==> List(1, 2, 3))
+          _ <- Ns.int.enumm_.apply(List("enum1"), List("enum2", "enum3")).get.map(_ ==> List(1, 2, 3))
+          _ <- Ns.int.enumm_.apply(List("enum1", "enum2", "enum3")).get.map(_ ==> List(1, 2, 3))
         } yield ()
       }
     }

@@ -1,6 +1,12 @@
+
 lazy val moleculeRoot = (project in file("."))
-  .aggregate(molecule.js, molecule.jvm)
-  .settings(publish / skip := true)
+  .aggregate(
+    molecule.js,
+    molecule.jvm,
+    moleculeTests.js,
+    moleculeTests.jvm
+  )
+  .settings(Publish.not)
 
 
 lazy val molecule = crossProject(JSPlatform, JVMPlatform)
@@ -25,4 +31,3 @@ lazy val moleculeTests = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(Settings.js)
   .jvmSettings(Settings.jvm)
-

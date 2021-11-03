@@ -42,7 +42,7 @@ object transactionModel extends JavaUtil {
     override def toString: String = s"""TempId("$part", $i)"""
   }
 
-  case class Enum(prefix: String, enum: String)
+  case class Enum(prefix: String, enumm: String)
 
   trait AbstractValue
   case class Eid(id: Long) extends AbstractValue

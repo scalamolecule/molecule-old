@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object EnumCard2coalesce extends AsyncTestSuite {
 
   def manyData(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
-    Ns.enum.enums$ insert List(
+    Ns.enumm.enums$ insert List(
       (enum1, Some(Set(enum1, enum2))),
       (enum2, Some(Set(enum2, enum3))),
       (enum3, Some(Set(enum3, enum4))),
@@ -55,7 +55,7 @@ object EnumCard2coalesce extends AsyncTestSuite {
     "!=" - core { implicit conn =>
       val inputMolecule = m(Ns.enums.not(?)) // or m(Ns.enums.!=(?))
       for {
-        _ <- Ns.enum.enums insert List(
+        _ <- Ns.enumm.enums insert List(
           (enum1, Set(enum1, enum2, enum3)),
           (enum2, Set(enum2, enum3, enum4)),
           (enum3, Set(enum3, enum4, enum5))

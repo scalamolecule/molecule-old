@@ -16,7 +16,7 @@ object CoreTestDataModel {
     val uri     = oneURI
     val bigInt  = oneBigInt
     val bigDec  = oneBigDecimal
-    val enum    = oneEnum("enum0", "enum1", "enum2", "enum3", "enum4", "enum5", "enum6", "enum7", "enum8", "enum9")
+    val enumm   = oneEnum("enum0", "enum1", "enum2", "enum3", "enum4", "enum5", "enum6", "enum7", "enum8", "enum9")
     val parent  = one[Ns]
     val ref1    = one[Ref1]
     val refSub1 = one[Ref1].isComponent

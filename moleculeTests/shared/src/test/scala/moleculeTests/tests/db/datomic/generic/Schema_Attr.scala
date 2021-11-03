@@ -213,7 +213,7 @@ object Schema_Attr extends AsyncTestSuite {
     "attr" - core { implicit conn =>
       for {
         _ <- Schema.attr.get.map(_.size ==> attrCount)
-        _ <- Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates", "enum"))
+        _ <- Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates", "int"))
 
         _ <- Schema.attr("str").get.map(_ ==> List("str"))
         _ <- Schema.attr("str", "int").get.map(_ ==> List("str", "int"))
@@ -397,16 +397,16 @@ object Schema_Attr extends AsyncTestSuite {
     "enum" - core { implicit conn =>
       for {
         // Attribute/enum values in namespace `ref2`
-        _ <- Schema.ns_("Ref2").attr.enum.get.map(_.sorted ==> List(
+        _ <- Schema.ns_("Ref2").attr.enumm.get.map(_.sorted ==> List(
           ("enum2", "enum20"),
           ("enum2", "enum21"),
           ("enum2", "enum22"),
         ))
 
         // All enums grouped by ident
-        _ <- Schema.a.enum.get.map(_.groupBy(_._1).map(g => g._1 -> g._2.map(_._2).sorted)
+        _ <- Schema.a.enumm.get.map(_.groupBy(_._1).map(g => g._1 -> g._2.map(_._2).sorted)
           .toList.sortBy(_._1) ==> List(
-          ":Ns/enum" -> List("enum0", "enum1", "enum2", "enum3", "enum4",
+          ":Ns/enumm" -> List("enum0", "enum1", "enum2", "enum3", "enum4",
             "enum5", "enum6", "enum7", "enum8", "enum9"),
           ":Ns/enums" -> List("enum0", "enum1", "enum2", "enum3", "enum4",
             "enum5", "enum6", "enum7", "enum8", "enum9"),
@@ -418,25 +418,25 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // Enums of a specific attribute
-        _ <- Schema.a_(":Ns/enum").enum.get.map(_.sorted ==> List(
+        _ <- Schema.a_(":Ns/enumm").enumm.get.map(_.sorted ==> List(
           "enum0", "enum1", "enum2", "enum3", "enum4",
           "enum5", "enum6", "enum7", "enum8", "enum9"
         ))
 
-        _ <- Schema.a.enum("enum0").get.map(_ ==> List(
+        _ <- Schema.a.enumm("enum0").get.map(_ ==> List(
           (":Ns/enums", "enum0"),
-          (":Ns/enum", "enum0")
+          (":Ns/enumm", "enum0")
         ))
 
-        _ <- Schema.a.enum("enum0", "enum1").get.map(_.sortBy(r => (r._1, r._2)) ==> List(
-          (":Ns/enum", "enum0"),
-          (":Ns/enum", "enum1"),
+        _ <- Schema.a.enumm("enum0", "enum1").get.map(_.sortBy(r => (r._1, r._2)) ==> List(
+          (":Ns/enumm", "enum0"),
+          (":Ns/enumm", "enum1"),
           (":Ns/enums", "enum0"),
           (":Ns/enums", "enum1")
         ))
 
         // Enums per namespace
-        _ <- Schema.ns.enum.get.map(_.groupBy(_._1)
+        _ <- Schema.ns.enumm.get.map(_.groupBy(_._1)
           .map { case (k, v) => k -> v.length }.toList
           .sortBy(_._1) ==> List(
           ("Ns", 10),
@@ -447,10 +447,10 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // Enums per namespace per attribute
-        _ <- Schema.ns.attr.enum.get.map(_.groupBy { case (n, a, _) => (n, a) }
+        _ <- Schema.ns.attr.enumm.get.map(_.groupBy { case (n, a, _) => (n, a) }
           .map { case (pair, vs) => (pair._1, pair._2, vs.length) }.toList
           .sortBy(t => (t._1, t._2)) ==> List(
-          ("Ns", "enum", 10),
+          ("Ns", "enumm", 10),
           ("Ns", "enums", 10),
           ("Ref1", "enum1", 3),
           ("Ref1", "enums1", 3),
@@ -460,14 +460,14 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // Attributes with some enum value
-        _ <- Schema.a.enum_("enum0").get.map(_.sorted ==> List(
-          ":Ns/enum", ":Ns/enums"))
-        _ <- Schema.a.enum_("enum0", "enum1").get.map(_.sorted ==> List(
-          ":Ns/enum", ":Ns/enums"))
+        _ <- Schema.a.enumm_("enum0").get.map(_.sorted ==> List(
+          ":Ns/enumm", ":Ns/enums"))
+        _ <- Schema.a.enumm_("enum0", "enum1").get.map(_.sorted ==> List(
+          ":Ns/enumm", ":Ns/enums"))
 
         // Excluding one enum value will still match the other values
-        _ <- Schema.a.enum_.not("enum0").get.map(_.sorted ==> List(
-          ":Ns/enum",
+        _ <- Schema.a.enumm_.not("enum0").get.map(_.sorted ==> List(
+          ":Ns/enumm",
           ":Ns/enums",
           ":Ref1/enum1",
           ":Ref1/enums1",
@@ -477,8 +477,8 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // If we exclude all enum values of an attribute it won't be returned
-        _ <- Schema.a.enum_.not("enum10", "enum11", "enum12").get.map(_.sorted ==> List(
-          ":Ns/enum",
+        _ <- Schema.a.enumm_.not("enum10", "enum11", "enum12").get.map(_.sorted ==> List(
+          ":Ns/enumm",
           ":Ns/enums",
           ":Ref2/enum2",
           ":Ref3/enum3",

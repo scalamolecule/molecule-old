@@ -218,30 +218,30 @@ object NestedAttrs1 extends AsyncTestSuite {
 
     "Enum" - core { implicit conn =>
       for {
-        _ <- m(Ref1.str1.Nss * Ns.int.enum$) insert List(
+        _ <- m(Ref1.str1.Nss * Ns.int.enumm$) insert List(
           ("A", List((1, Some("enum1")), (2, None))),
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.enum$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.enumm$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some("enum1")), (2, None)))
         ))
-        _ <- m(Ref1.str1.Nss * Ns.int.enum).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.enumm).get.map(_ ==> List(
           ("A", List((1, "enum1")))
         ))
-        _ <- m(Ref1.str1.Nss * Ns.int.enum_).get.map(_ ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.enumm_).get.map(_ ==> List(
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.enum$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss *? Ns.int.enumm$).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, Some("enum1")), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.enum).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss *? Ns.int.enumm).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, "enum1"))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.enum_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss *? Ns.int.enumm_).get.map(_.sortBy(_._1) ==> List(
           ("A", List(1)),
           ("B", List())
         ))

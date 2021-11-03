@@ -28,9 +28,12 @@ object Adhoc extends AsyncTestSuite with Helpers {
         conn <- futConn
         //        _ <- Ns.int.apply(1).asc1.str.desc2.get
         //        _ <- Ns.int.not(1).asc1.str.desc2.get
-        //
-        //        e <- Ns.int(1).save.map(_.eid)
-        //        _ <- Ns.int.get.map(_ ==> List(1))
+
+        e <- Ns.int(1).save.map(_.eid)
+        _ <- Ns.int.get.map(_ ==> List(1))
+         _ = {
+           conn
+         }
 
 
       } yield ()

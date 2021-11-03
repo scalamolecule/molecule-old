@@ -34,7 +34,7 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.uri insert uri1
         _ <- Ns.bigInt insert bigInt1
         _ <- Ns.bigDec insert bigDec1
-        _ <- Ns.enum insert enum1
+        _ <- Ns.enumm insert enum1
         refId <- Ref1.int1(1).save.map(_.eid)
         _ <- Ns.ref1(refId).save
 
@@ -148,12 +148,12 @@ object JsonAttributes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.enum.getJson.map(_ ==>
+        _ <- Ns.enumm.getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
             |      {
-            |        "enum": "enum1"
+            |        "enumm": "enum1"
             |      }
             |    ]
             |  }
@@ -553,7 +553,7 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.int.uri$ insert List((8, None), (8, Some(uri2)))
         _ <- Ns.int.bigInt$ insert List((9, None), (9, Some(bigInt2)))
         _ <- Ns.int.bigDec$ insert List((10, None), (10, Some(bigDec2)))
-        _ <- Ns.int.enum$ insert List((11, None), (11, Some(enum1)))
+        _ <- Ns.int.enumm$ insert List((11, None), (11, Some(enum1)))
         _ <- Ns.int.ref1$ insert List((12, None), (12, Some(refId)))
 
         _ <- Ns.int(1).str$.getJson.map(_ ==>
@@ -720,17 +720,17 @@ object JsonAttributes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- Ns.int(11).enum$.getJson.map(_ ==>
+        _ <- Ns.int(11).enumm$.getJson.map(_ ==>
           s"""{
              |  "data": {
              |    "Ns": [
              |      {
              |        "int": 11,
-             |        "enum$$": null
+             |        "enumm$$": null
              |      },
              |      {
              |        "int": 11,
-             |        "enum$$": "$enum1"
+             |        "enumm$$": "$enum1"
              |      }
              |    ]
              |  }

@@ -11,8 +11,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
     ThisBuild / version := "1.0.0-SNAPSHOT",
-    crossScalaVersions := Seq("2.12.15", "2.13.6"),
-    ThisBuild / scalaVersion := "2.13.6",
+    crossScalaVersions := Seq("2.12.15", "2.13.7"),
+    ThisBuild / scalaVersion := "2.13.7",
     scalacOptions := List(
       "-feature",
       //      "-unchecked",

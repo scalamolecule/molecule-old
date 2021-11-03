@@ -25,7 +25,7 @@ object Save extends AsyncTestSuite {
         _ <- Ns.uri(uri1).save
         _ <- Ns.bigInt(bigInt1).save
         _ <- Ns.bigDec(bigDec1).save
-        _ <- Ns.enum("enum1").save
+        _ <- Ns.enumm("enum1").save
 
         _ <- Ns.str.get.map(_.head ==> "a")
         _ <- Ns.int.get.map(_.head ==> 1)
@@ -37,7 +37,7 @@ object Save extends AsyncTestSuite {
         _ <- Ns.uri.get.map(_.head ==> uri1)
         _ <- Ns.bigInt.get.map(_.head ==> bigInt1)
         _ <- Ns.bigDec.get.map(_.head ==> bigDec1)
-        _ <- Ns.enum.get.map(_.head ==> "enum1")
+        _ <- Ns.enumm.get.map(_.head ==> "enum1")
 
         // Applying multiple values to card-one attr not allowed when saving
 
@@ -261,7 +261,7 @@ object Save extends AsyncTestSuite {
           _ <- Ns.ints(9).date$(Some(date1)).save
           _ <- Ns.ints(10).uuid$(Some(uuid1)).save
           _ <- Ns.ints(11).uri$(Some(uri1)).save
-          _ <- Ns.ints(12).enum$(Some(enum1)).save
+          _ <- Ns.ints(12).enumm$(Some(enum1)).save
           _ <- Ns.ints(13).ref1$(Some(1L)).save
 
           _ <- Ns.ints(1).str$(Some("a")).get.map(_.head ==> (Set(1), Some("a")))
@@ -274,7 +274,7 @@ object Save extends AsyncTestSuite {
           _ <- Ns.ints(9).date$(Some(date1)).get.map(_.head ==> (Set(9), Some(date1)))
           _ <- Ns.ints(10).uuid$(Some(uuid1)).get.map(_.head ==> (Set(10), Some(uuid1)))
           _ <- Ns.ints(11).uri$(Some(uri1)).get.map(_.head ==> (Set(11), Some(uri1)))
-          _ <- Ns.ints(12).enum$(Some(enum1)).get.map(_.head ==> (Set(12), Some(enum1)))
+          _ <- Ns.ints(12).enumm$(Some(enum1)).get.map(_.head ==> (Set(12), Some(enum1)))
           _ <- Ns.ints(13).ref1$(Some(1L)).get.map(_.head ==> (Set(13), Some(1L)))
         } yield ()
       }

@@ -28,7 +28,7 @@ trait Schema extends GenericNs {
   final class fulltext    [Stay, Next] extends OneBoolean[Stay, Next] with Indexed
   final class isComponent [Stay, Next] extends OneBoolean[Stay, Next] with Indexed
   final class noHistory   [Stay, Next] extends OneBoolean[Stay, Next] with Indexed
-  final class enum        [Stay, Next] extends OneString [Stay, Next] with Indexed
+  final class enumm       [Stay, Next] extends OneString [Stay, Next] with Indexed
   final class t           [Stay, Next] extends OneLong   [Stay, Next] with Indexed
   final class tx          [Stay, Next] extends OneLong   [Stay, Next] with Indexed
   final class txInstant   [Stay, Next] extends OneDate   [Stay, Next] with Indexed
@@ -47,7 +47,7 @@ trait Schema extends GenericNs {
   final class fulltext$   [Stay, Next] extends OneBoolean$[Stay] with Indexed
   final class isComponent$[Stay, Next] extends OneBoolean$[Stay] with Indexed
   final class noHistory$  [Stay, Next] extends OneBoolean$[Stay] with Indexed
-  final class enum$       [Stay, Next] extends OneString$ [Stay] with Indexed
+  final class enumm$      [Stay, Next] extends OneString$ [Stay] with Indexed
   final class t$          [Stay, Next] extends OneLong$   [Stay] with Indexed
   final class tx$         [Stay, Next] extends OneLong$   [Stay] with Indexed
   final class txInstant$  [Stay, Next] extends OneDate$   [Stay] with Indexed
@@ -69,7 +69,7 @@ trait Schema_unique       { lazy val unique      : String  = ??? }
 trait Schema_fulltext     { lazy val fulltext    : Boolean = ??? }
 trait Schema_isComponent  { lazy val isComponent : Boolean = ??? }
 trait Schema_noHistory    { lazy val noHistory   : Boolean = ??? }
-trait Schema_enum         { lazy val enum        : String  = ??? }
+trait Schema_enumm        { lazy val enumm       : String  = ??? }
 trait Schema_t            { lazy val t           : Long    = ??? }
 trait Schema_tx           { lazy val tx          : Long    = ??? }
 trait Schema_txInstant    { lazy val txInstant   : Date    = ??? }
@@ -90,7 +90,7 @@ trait Schema_unique_      { lazy val unique$     : Option[String ] = ??? }
 trait Schema_fulltext_    { lazy val fulltext$   : Option[Boolean] = ??? }
 trait Schema_isComponent_ { lazy val isComponent$: Option[Boolean] = ??? }
 trait Schema_noHistory_   { lazy val noHistory$  : Option[Boolean] = ??? }
-trait Schema_enum_        { lazy val enum$       : Option[String ] = ??? }
+trait Schema_enumm_       { lazy val enumm$      : Option[String ] = ??? }
 trait Schema_t_           { lazy val t$          : Option[Long   ] = ??? }
 trait Schema_tx_          { lazy val tx$         : Option[Long   ] = ??? }
 trait Schema_txInstant_   { lazy val txInstant$  : Option[Date   ] = ??? }

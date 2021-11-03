@@ -95,10 +95,10 @@ object OptionalValues extends AsyncTestSuite {
 
       "Enum" - core { implicit conn =>
         for {
-          _ <- Ns.int.enum$ insert List((1, Some("enum1")), (2, None))
+          _ <- Ns.int.enumm$ insert List((1, Some("enum1")), (2, None))
 
-          _ <- Ns.int.enum$.get.map(_.sortBy(_._1) ==> List((1, Some("enum1")), (2, None)))
-          _ <- Ns.int.enum.get.map(_ ==> List((1, "enum1")))
+          _ <- Ns.int.enumm$.get.map(_.sortBy(_._1) ==> List((1, Some("enum1")), (2, None)))
+          _ <- Ns.int.enumm.get.map(_ ==> List((1, "enum1")))
         } yield ()
       }
 
@@ -452,11 +452,11 @@ object OptionalValues extends AsyncTestSuite {
         _ <- m(Ns.str.int$(None)).get.map(_ ==> List(("Ben", None)))
 
 
-        _ <- Ns.int.enum$ insert List((1, Some("enum1")), (2, None))
-        _ <- m(Ns.int(1).enum$(Some("enum1"))).get.map(_ ==> List((1, Some("enum1"))))
-        _ <- m(Ns.int(2).enum$(None)).get.map(_ ==> List((2, None)))
+        _ <- Ns.int.enumm$ insert List((1, Some("enum1")), (2, None))
+        _ <- m(Ns.int(1).enumm$(Some("enum1"))).get.map(_ ==> List((1, Some("enum1"))))
+        _ <- m(Ns.int(2).enumm$(None)).get.map(_ ==> List((2, None)))
         noEnum = Option.empty[String]
-        _ <- m(Ns.int(2).enum$(noEnum)).get.map(_ ==> List((2, None)))
+        _ <- m(Ns.int(2).enumm$(noEnum)).get.map(_ ==> List((2, None)))
 
         _ <- Ns.int.enums$ insert List((3, Some(Set("enum1"))), (4, None))
         _ <- m(Ns.int(3).enums$(Some(Set("enum1")))).get.map(_ ==> List((3, Some(Set("enum1")))))

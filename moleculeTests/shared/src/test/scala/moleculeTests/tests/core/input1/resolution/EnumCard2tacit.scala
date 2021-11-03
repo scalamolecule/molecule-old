@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object EnumCard2tacit extends AsyncTestSuite {
 
   def manyData(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
-    Ns.enum.enums$ insert List(
+    Ns.enumm.enums$ insert List(
       (enum1, Some(Set(enum1, enum2))),
       (enum2, Some(Set(enum2, enum3))),
       (enum3, Some(Set(enum3, enum4))),
@@ -26,21 +26,21 @@ object EnumCard2tacit extends AsyncTestSuite {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     "Eq" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums_(?))
+      val inputMolecule = m(Ns.enumm.enums_(?))
       for {
         _ <- manyData
-        _ <- Ns.enum.enums$(None).get.map(_ ==> List(("enum6", None)))
+        _ <- Ns.enumm.enums$(None).get.map(_ ==> List(("enum6", None)))
 
         // Note semantic differences:
 
         // Can return other mandatory attribute values having missing tacit attribute value
-        _ <- Ns.enum.enums_().get.map(_ ==> List(enum6))
-        _ <- Ns.enum.enums_(Nil).get.map(_ ==> List(enum6))
-        _ <- Ns.enum.enums$(None).get.map(_ ==> List((enum6, None)))
+        _ <- Ns.enumm.enums_().get.map(_ ==> List(enum6))
+        _ <- Ns.enumm.enums_(Nil).get.map(_ ==> List(enum6))
+        _ <- Ns.enumm.enums$(None).get.map(_ ==> List((enum6, None)))
 
         // Can't return mandatory attribute value that is missing
-        _ <- Ns.enum.enums().get.map(_ ==> Nil)
-        // Ns.enum.enums(Nil).get.map(_ ==> Nil) // not allowed to compile (mandatory/Nil is contradictive)
+        _ <- Ns.enumm.enums().get.map(_ ==> Nil)
+        // Ns.enumm.enums(Nil).get.map(_ ==> Nil) // not allowed to compile (mandatory/Nil is contradictive)
         // same as
         _ <- inputMolecule(Nil).get.map(_ ==> List(enum6))
         _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(enum6))
@@ -73,9 +73,9 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     "!=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums_.not(?)) // or m(Ns.enum.enums_.!=(?))
+      val inputMolecule = m(Ns.enumm.enums_.not(?)) // or m(Ns.enumm.enums_.!=(?))
       for {
-        _ <- Ns.enum.enums insert List(
+        _ <- Ns.enumm.enums insert List(
           (enum1, Set(enum1, enum2, enum3)),
           (enum2, Set(enum2, enum3, enum4)),
           (enum3, Set(enum3, enum4, enum5))
@@ -104,7 +104,7 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     ">" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums_.>(?))
+      val inputMolecule = m(Ns.enumm.enums_.>(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
@@ -124,7 +124,7 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     ">=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums_.>=(?))
+      val inputMolecule = m(Ns.enumm.enums_.>=(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
@@ -144,7 +144,7 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     "<" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums_.<(?))
+      val inputMolecule = m(Ns.enumm.enums_.<(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
@@ -163,7 +163,7 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     "<=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums_.<=(?))
+      val inputMolecule = m(Ns.enumm.enums_.<=(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))

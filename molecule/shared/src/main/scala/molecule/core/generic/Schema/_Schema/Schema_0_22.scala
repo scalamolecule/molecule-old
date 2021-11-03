@@ -32,7 +32,7 @@ trait Schema_0_22_L0[o0[_], p0, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, 
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???
@@ -57,7 +57,7 @@ trait Schema_0_22_L1[o0[_], p0, o1[_], p1, A, B, C, D, E, F, G, H, I, J, K, L, M
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???
@@ -82,7 +82,7 @@ trait Schema_0_22_L2[o0[_], p0, o1[_], p1, o2[_], p2, A, B, C, D, E, F, G, H, I,
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???
@@ -107,7 +107,7 @@ trait Schema_0_22_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, A, B, C, D, E, 
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???
@@ -132,7 +132,7 @@ trait Schema_0_22_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, A, B
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???
@@ -157,7 +157,7 @@ trait Schema_0_22_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???
@@ -182,7 +182,7 @@ trait Schema_0_22_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???
@@ -207,7 +207,7 @@ trait Schema_0_22_L7[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_
   final lazy val fulltext_    : Stay[fulltext    , Schema_fulltext   , Boolean] = ???
   final lazy val isComponent_ : Stay[isComponent , Schema_isComponent, Boolean] = ???
   final lazy val noHistory_   : Stay[noHistory   , Schema_noHistory  , Boolean] = ???
-  final lazy val enum_        : Stay[enum        , Schema_enum       , String ] = ???
+  final lazy val enumm_       : Stay[enumm       , Schema_enumm      , String ] = ???
   final lazy val t_           : Stay[t           , Schema_t          , Long   ] = ???
   final lazy val tx_          : Stay[tx          , Schema_tx         , Long   ] = ???
   final lazy val txInstant_   : Stay[txInstant   , Schema_txInstant  , Date   ] = ???

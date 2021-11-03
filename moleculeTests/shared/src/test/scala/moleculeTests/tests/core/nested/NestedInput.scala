@@ -145,25 +145,25 @@ object NestedInput extends AsyncTestSuite {
 
     "3 inputs on a level" - core { implicit conn =>
       for {
-        _ <- (Ns.int.str.enum.Refs1 * (Ref1.int1.str1.enum1.Refs2 * Ref2.int2.str2.enum2)) insert List(
+        _ <- (Ns.int.str.enumm.Refs1 * (Ref1.int1.str1.enum1.Refs2 * Ref2.int2.str2.enum2)) insert List(
           (1, "a", "enum1", List(
             (11, "aa", "enum11", List((111, "aaa", "enum21"), (112, "aab", "enum22"))),
             (12, "ab", "enum12", List((122, "abb", "enum21"), (123, "abc", "enum22")))))
         )
 
         // 3 + 0 + 0
-        _ <- m(Ns.int(?).str(?).enum(?).Refs1 * (Ref1.int1.str1.enum1.Refs2 * Ref2.int2.str2.enum2)).apply(1, "a", "enum1").get.map(_ ==> List(
+        _ <- m(Ns.int(?).str(?).enumm(?).Refs1 * (Ref1.int1.str1.enum1.Refs2 * Ref2.int2.str2.enum2)).apply(1, "a", "enum1").get.map(_ ==> List(
           (1, "a", "enum1", List(
             (11, "aa", "enum11", List((111, "aaa", "enum21"), (112, "aab", "enum22"))),
             (12, "ab", "enum12", List((122, "abb", "enum21"), (123, "abc", "enum22")))))
         ))
         // 0 + 3 + 0
-        _ <- m(Ns.int.str.enum.Refs1 * (Ref1.int1(?).str1(?).enum1(?).Refs2 * Ref2.int2.str2.enum2)).apply(11, "aa", "enum11").get.map(_ ==> List(
+        _ <- m(Ns.int.str.enumm.Refs1 * (Ref1.int1(?).str1(?).enum1(?).Refs2 * Ref2.int2.str2.enum2)).apply(11, "aa", "enum11").get.map(_ ==> List(
           (1, "a", "enum1", List(
             (11, "aa", "enum11", List((111, "aaa", "enum21"), (112, "aab", "enum22")))))
         ))
         // 0 + 0 + 3
-        _ <- m(Ns.int.str.enum.Refs1 * (Ref1.int1.str1.enum1.Refs2 * Ref2.int2(?).str2(?).enum2(?))).apply(111, "aaa", "enum21").get.map(_ ==> List(
+        _ <- m(Ns.int.str.enumm.Refs1 * (Ref1.int1.str1.enum1.Refs2 * Ref2.int2(?).str2(?).enum2(?))).apply(111, "aaa", "enum21").get.map(_ ==> List(
           (1, "a", "enum1", List(
             (11, "aa", "enum11", List((111, "aaa", "enum21")))))
         ))

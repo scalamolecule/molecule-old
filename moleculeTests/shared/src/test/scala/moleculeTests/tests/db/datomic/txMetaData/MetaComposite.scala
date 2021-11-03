@@ -443,7 +443,7 @@ object MetaComposite extends AsyncTestSuite {
               .dates_(Set(date8, date9))
               .double_(7.7)
               .doubles_(Set(8.8, 9.9))
-              .enum_(enum7)
+              .enumm_(enum7)
               .enums_(Set(enum8, enum9))
               +
               Ns

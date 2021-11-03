@@ -100,7 +100,7 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         intIndex = if (system == SystemPeer) Some(true) else None
         _ <- Schema
           .part.id.a(":Ns/int").nsFull.ns.attr.tpe.card.doc
-          .index$.unique$.fulltext$.isComponent$.noHistory$.enum$
+          .index$.unique$.fulltext$.isComponent$.noHistory$.enumm$
           .t.tx.txInstant.getObj.map { o1 =>
           o1.part ==> "db.part/user"
           o1.id ==> intAttrId
@@ -116,7 +116,7 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
           o1.fulltext$ ==> None
           o1.isComponent$ ==> None
           o1.noHistory$ ==> None
-          o1.enum$ ==> None
+          o1.enumm$ ==> None
           o1.t // t of creation transaction
           o1.tx // tx of creation transaction
           o1.txInstant // txInstant of creation transaction

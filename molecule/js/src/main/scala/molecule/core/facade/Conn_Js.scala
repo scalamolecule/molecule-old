@@ -7,7 +7,6 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.marshalling.nodes.Obj
-import molecule.core.ops.ColOps
 import molecule.core.util.{Helpers, Inspect}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -27,41 +26,40 @@ import scala.concurrent.{ExecutionContext, Future}
  *
  * @param defaultConnProxy Db coordinates to access db on server side
  */
-case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with ColOps with Helpers {
+case class Conn_Js(override val defaultConnProxy: ConnProxy)
+  extends Conn with Helpers {
 
-  private[molecule] override val isJsPlatform: Boolean = true
+  // Molecule api --------------------------------------------------------------
 
-  private[molecule] override lazy val rpc: MoleculeRpc = MoleculeWebClient.rpc
-
-  def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(AsOf(TxLong(0))))
   }
 
-  def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbAsOf(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(AsOf(TxLong(t))))
   }
 
-  def testDbAsOf(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbAsOf(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(AsOf(TxDate(d))))
   }
 
-  def testDbAsOf(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbAsOf(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(AsOf(TxLong(txR.t))))
   }
 
-  def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(Since(TxLong(t))))
   }
 
-  def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(Since(TxDate(d))))
   }
 
-  def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
     updateTestDbView(Some(Since(TxLong(txR.t))))
   }
 
-  def testDbWith(txMolecules: Future[Seq[Statement]]*)
+  final def testDbWith(txMolecules: Future[Seq[Statement]]*)
                 (implicit ec: ExecutionContext): Future[Unit] = {
     Future.sequence(txMolecules).map { stmtss =>
       val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, this)
@@ -69,17 +67,24 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with C
     }
   }
 
-  def useLiveDb(): Unit = updateTestDbView(None, -1)
-
-  def db: DatomicDb = DatomicDb_Js(rpc, connProxy)
-
-  def entity(id: Any): DatomicEntity = db.entity(this, id)
+  final def useLiveDb(): Unit = updateTestDbView(None, -1)
 
 
+  // Datomic facade ------------------------------------------------------------
 
-  def transact(edn: String)
+  final def db: DatomicDb = DatomicDb_Js(rpc, connProxy)
+
+
+  final def transact(edn: String)
               (implicit ec: ExecutionContext): Future[TxReport] =
     rpc.transact(connProxy, (edn, Set.empty[String]))
+
+
+  // Internal ------------------------------------------------------------------
+
+  private[molecule] final val isJsPlatform: Boolean = true
+
+  private[molecule] final override lazy val rpc: MoleculeRpc = MoleculeWebClient.rpc
 
 
   private[molecule] def transact(scalaStmts: Future[Seq[Statement]])
@@ -89,7 +94,27 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with C
   } yield txReport
 
 
-  private[molecule] def indexQuery(model: Model): Future[String] = {
+  private def jsMoleculeQuery(
+    model: Model,
+    query: Query,
+    datalog: String,
+    maxRows: Int,
+    obj: Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]]
+  ): Future[String] = {
+    model.elements.head match {
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => indexQuery(model)
+      case _                                                           => datalogQuery(
+        query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+      )
+    }
+  }
+
+
+  private final def indexQuery(model: Model): Future[String] = {
     def p(v: Any): (String, String) = v match {
       case _: String     => (v.toString, "String")
       case _: Int        => (v.toString, "Int")
@@ -238,7 +263,8 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with C
     rpc.index2packed(connProxy, api, index, indexArgs, attrs)
   }
 
-  private[molecule] def datalogQuery(
+
+  private final def datalogQuery(
     query: Query,
     datalog: String,
     maxRows: Int,
@@ -272,36 +298,9 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with C
   }
 
 
-  private def jsMoleculeQuery(
-    model: Model,
-    query: Query,
-    datalog: String,
-    maxRows: Int,
-    obj: Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
-  ): Future[String] = {
-    model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => indexQuery(model)
-      case _                                                           => datalogQuery(
-        query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
-      )
-    }
-  }
+  // Internal convenience method conn.entity(id) for conn.db.entity(conn, id)
+  private[molecule] final def entity(id: Any): DatomicEntity = db.entity(this, id)
 
-  private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext): Future[T] = Future {
-    if (connProxy.adhocDbView.isDefined) {
-      // Reset adhoc db view
-      updateAdhocDbView(None)
-    }
-    if (connProxy.testDbStatus == -1) {
-      // Reset test db view
-      updateTestDbView(None, 0)
-    }
-    futResult
-  }.flatten
 
   private def queryJs[T](
     model: Model,
@@ -376,6 +375,18 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with C
     jsMoleculeQuery(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
   )
 
+
+  def inspect(
+    header: String,
+    threshold: Int,
+    max: Int,
+    showStackTrace: Boolean,
+    maxLevel: Int,
+    showBi: Boolean
+  )(id: Int, params: Any*): Unit = Inspect(
+    header, threshold, max, showStackTrace, maxLevel, showBi
+  )(id, params: _*)
+
   private[molecule] def getAttrValues(
     datalogQuery: String,
     card: Int,
@@ -390,14 +401,16 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy) extends Conn with C
     rpc.getEntityAttrKeys(connProxy, query)
 
 
-  def inspect(
-    header: String,
-    threshold: Int,
-    max: Int,
-    showStackTrace: Boolean,
-    maxLevel: Int,
-    showBi: Boolean
-  )(id: Int, params: Any*): Unit = Inspect(
-    header, threshold, max, showStackTrace, maxLevel, showBi
-  )(id, params: _*)
+
+  private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext): Future[T] = Future {
+    if (connProxy.adhocDbView.isDefined) {
+      // Reset adhoc db view
+      updateAdhocDbView(None)
+    }
+    if (connProxy.testDbStatus == -1) {
+      // Reset test db view
+      updateTestDbView(None, 0)
+    }
+    futResult
+  }.flatten
 }

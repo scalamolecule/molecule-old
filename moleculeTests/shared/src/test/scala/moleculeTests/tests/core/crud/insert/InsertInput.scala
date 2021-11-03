@@ -24,7 +24,7 @@ object InsertInput extends AsyncTestSuite {
         _ <- Ns.str.get.map(_.sorted ==> List("a", "b", "c"))
 
 
-        insertAll = Ns.str.int.long.double.bool.date.uuid.uri.enum.insert
+        insertAll = Ns.str.int.long.double.bool.date.uuid.uri.enumm.insert
 
         // Var-arg for single entity
         _ <- insertAll(" ", 0, 0L, 0.0, false, date0, uuid0, uri0, "enum0")
@@ -35,7 +35,7 @@ object InsertInput extends AsyncTestSuite {
           ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")
         ))
 
-        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm.get.map(_.sortBy(_._1) ==> List(
           (" ", 0, 0L, 0.0, false, date0, uuid0, uri0, "enum0"),
           ("a", 1, 1L, 1.0, true, date1, uuid1, uri1, "enum1"),
           ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")

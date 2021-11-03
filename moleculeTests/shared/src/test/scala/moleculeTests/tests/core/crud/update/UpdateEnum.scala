@@ -20,27 +20,27 @@ object UpdateEnum extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          eid <- Ns.enum("enum2").save.map(_.eid)
+          eid <- Ns.enumm("enum2").save.map(_.eid)
 
           // Apply value (retracts current value)
-          _ <- Ns(eid).enum("enum1").update
-          _ <- Ns.enum.get.map(_.head ==> "enum1")
+          _ <- Ns(eid).enumm("enum1").update
+          _ <- Ns.enumm.get.map(_.head ==> "enum1")
 
           // Apply new value
-          _ <- Ns(eid).enum("enum2").update
-          _ <- Ns.enum.get.map(_.head ==> "enum2")
+          _ <- Ns(eid).enumm("enum2").update
+          _ <- Ns.enumm.get.map(_.head ==> "enum2")
 
           // Delete value (apply no value)
-          _ <- Ns(eid).enum().update
-          _ <- Ns.enum.get.map(_ ==> List())
+          _ <- Ns(eid).enumm().update
+          _ <- Ns.enumm.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).enum("enum2", "enum3").update
+          _ <- Ns(eid).enumm("enum2", "enum3").update
             .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-              s"\n  Ns ... enum(enum2, enum3)"
+              s"\n  Ns ... enumm(enum2, enum3)"
           }
         } yield ()
       }
@@ -51,27 +51,27 @@ object UpdateEnum extends AsyncTestSuite {
 
       "apply" - core { implicit conn =>
         for {
-          eid <- Ns.enum(enum2).save.map(_.eid)
+          eid <- Ns.enumm(enum2).save.map(_.eid)
 
           // Apply value (retracts current value)
-          _ <- Ns(eid).enum(enum1).update
-          _ <- Ns.enum.get.map(_.head ==> enum1)
+          _ <- Ns(eid).enumm(enum1).update
+          _ <- Ns.enumm.get.map(_.head ==> enum1)
 
           // Apply new value
-          _ <- Ns(eid).enum(enum2).update
-          _ <- Ns.enum.get.map(_.head ==> enum2)
+          _ <- Ns(eid).enumm(enum2).update
+          _ <- Ns.enumm.get.map(_.head ==> enum2)
 
           // Delete value (apply no value)
-          _ <- Ns(eid).enum().update
-          _ <- Ns.enum.get.map(_ ==> List())
+          _ <- Ns(eid).enumm().update
+          _ <- Ns.enumm.get.map(_ ==> List())
 
 
           // Applying multiple values to card-one attribute not allowed
 
-          _ <- Ns(eid).enum(enum2, enum3).update
+          _ <- Ns(eid).enumm(enum2, enum3).update
             .map(_ ==> "Unexpected success").recover { case VerifyModelException(err) =>
             err ==> "[noConflictingCardOneValues]  Can't update multiple values for cardinality-one attribute:" +
-              s"\n  Ns ... enum($enum2, $enum3)"
+              s"\n  Ns ... enumm($enum2, $enum3)"
           }
         } yield ()
       }

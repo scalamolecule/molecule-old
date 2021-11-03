@@ -125,14 +125,14 @@ object Negation extends Base {
         _ <- Ns.uri.not(uris).get.map(_.sortBy(_.toString) ==> List(uri2))
 
 
-        _ <- Ns.enum.not("enum0").get.map(_.sorted ==> List(enum1, enum2))
-        _ <- Ns.enum.not("enum0", "enum1").get.map(_.sorted ==> List(enum2))
-        _ <- Ns.enum.not(Seq("enum0", "enum1")).get.map(_.sorted ==> List(enum2))
-        _ <- Ns.enum.not(enum0).get.map(_.sorted ==> List(enum1, enum2))
-        _ <- Ns.enum.not(enum0, enum1).get.map(_.sorted ==> List(enum2))
-        _ <- Ns.enum.not(Seq(enum0, enum1)).get.map(_.sorted ==> List(enum2))
+        _ <- Ns.enumm.not("enum0").get.map(_.sorted ==> List(enum1, enum2))
+        _ <- Ns.enumm.not("enum0", "enum1").get.map(_.sorted ==> List(enum2))
+        _ <- Ns.enumm.not(Seq("enum0", "enum1")).get.map(_.sorted ==> List(enum2))
+        _ <- Ns.enumm.not(enum0).get.map(_.sorted ==> List(enum1, enum2))
+        _ <- Ns.enumm.not(enum0, enum1).get.map(_.sorted ==> List(enum2))
+        _ <- Ns.enumm.not(Seq(enum0, enum1)).get.map(_.sorted ==> List(enum2))
         enums = Seq(enum0, enum1)
-        _ <- Ns.enum.not(enums).get.map(_.sorted ==> List(enum2))
+        _ <- Ns.enumm.not(enums).get.map(_.sorted ==> List(enum2))
 
 
         _ <- Ns.bigInt.not(bigInt3).get.map(_.sortBy(_.toString) ==> List(bigInt0, bigInt1, bigInt2))

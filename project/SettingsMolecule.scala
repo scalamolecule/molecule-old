@@ -7,7 +7,7 @@ trait SettingsMolecule {
 
   // Paths to folders where `dataModel/<..>DataModel` files reside for your domain.
 
-  lazy val moleculeTests: Seq[Def.Setting[_]] = Seq(
+  val moleculeTests: Seq[Def.Setting[_]] = Seq(
 
     // Generate Molecule boilerplate code with `sbt clean compile -Dmolecule=true`
     moleculePluginActive := sys.props.get("molecule").contains("true"),
@@ -22,17 +22,15 @@ trait SettingsMolecule {
       "moleculeTests/dataModels/examples/datomic/seattle",
       "moleculeTests/dataModels/examples/gremlin/gettingStarted"
 
-      //      "molecule/tests/core/generic"
+      //      "moleculeTests/tests/core/generic"
     ),
-//        moleculeMakeJars := false,
+    //    moleculeMakeJars := true, // true is default
     //    moleculeGenericPkg := "molecule.core.generic",
 
-    // Let IDE detect created jars in unmanaged lib directory
-    exportJars := true
   )
 
   /*
-To re-generate generic dsl code:
+To re-generate internal generic dsl code:
 
 1. In SettingsMolecule, set:
 

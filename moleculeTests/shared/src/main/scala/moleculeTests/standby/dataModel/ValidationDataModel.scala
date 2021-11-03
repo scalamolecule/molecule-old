@@ -1,4 +1,4 @@
-package moleculeTests.dataModels.core.standby.dataModel
+package moleculeTests.standby.dataModel
 
 import molecule.core.data.model._
 
@@ -46,7 +46,7 @@ object ValidationDataModel {
     val date    = oneDate
     val uuid    = oneUUID
     val uri     = oneURI
-    val enum    = oneEnum("enum0", "enum1", "enum2", "enum3", "enum4", "enum5", "enum6", "enum7", "enum8", "enum9")
+    val enumm    = oneEnum("enum0", "enum1", "enum2", "enum3", "enum4", "enum5", "enum6", "enum7", "enum8", "enum9")
     val parent  = one[StringValue]
     val ref1    = one[Ref1]
     val refSub1 = one[Ref1].isComponent

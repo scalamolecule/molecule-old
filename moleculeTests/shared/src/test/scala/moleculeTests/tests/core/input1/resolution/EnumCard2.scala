@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object EnumCard2 extends AsyncTestSuite {
 
   def manyData(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
-    Ns.enum.enums$ insert List(
+    Ns.enumm.enums$ insert List(
       (enum1, Some(Set(enum1, enum2))),
       (enum2, Some(Set(enum2, enum3))),
       (enum3, Some(Set(enum3, enum4))),
@@ -26,7 +26,7 @@ object EnumCard2 extends AsyncTestSuite {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     "Eq" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums(?))
+      val inputMolecule = m(Ns.enumm.enums(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -145,7 +145,7 @@ object EnumCard2 extends AsyncTestSuite {
     }
 
     ">" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums.>(?))
+      val inputMolecule = m(Ns.enumm.enums.>(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_ ==> List((enum1, Set(enum1, enum2)), (enum2, Set(enum3, enum2)), (enum3, Set(enum4, enum3)), (enum4, Set(enum4, enum5)), (enum5, Set(enum4, enum6, enum5))))
@@ -167,7 +167,7 @@ object EnumCard2 extends AsyncTestSuite {
     }
 
     ">=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums.>=(?))
+      val inputMolecule = m(Ns.enumm.enums.>=(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_ ==> List((enum1, Set(enum1, enum2)), (enum2, Set(enum3, enum2)), (enum3, Set(enum4, enum3)), (enum4, Set(enum4, enum5)), (enum5, Set(enum4, enum6, enum5))))
@@ -189,7 +189,7 @@ object EnumCard2 extends AsyncTestSuite {
     }
 
     "<" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums.<(?))
+      val inputMolecule = m(Ns.enumm.enums.<(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_ ==> List((enum1, Set(enum1, enum2)), (enum2, Set(enum3, enum2)), (enum3, Set(enum4, enum3)), (enum4, Set(enum4, enum5)), (enum5, Set(enum4, enum6, enum5))))
@@ -210,7 +210,7 @@ object EnumCard2 extends AsyncTestSuite {
     }
 
     "<=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enum.enums.<=(?))
+      val inputMolecule = m(Ns.enumm.enums.<=(?))
       for {
         _ <- manyData
         _ <- inputMolecule(Nil).get.map(_ ==> List((enum1, Set(enum1, enum2)), (enum2, Set(enum3, enum2)), (enum3, Set(enum4, enum3)), (enum4, Set(enum4, enum5)), (enum5, Set(enum4, enum6, enum5))))

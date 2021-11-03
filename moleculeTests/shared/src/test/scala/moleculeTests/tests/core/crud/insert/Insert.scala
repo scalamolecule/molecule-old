@@ -89,12 +89,12 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.uri.get.map(_.sorted ==> List(uri1, uri2, uri3, uri4, uri5))
 
 
-          _ <- Ns.enum.insert("enum1")
-          _ <- Ns.enum.insert("enum2", "enum3")
-          _ <- Ns.enum.insert(List("enum4"))
-          _ <- Ns.enum.insert(List("enum5", "enum1"))
+          _ <- Ns.enumm.insert("enum1")
+          _ <- Ns.enumm.insert("enum2", "enum3")
+          _ <- Ns.enumm.insert(List("enum4"))
+          _ <- Ns.enumm.insert(List("enum5", "enum1"))
           // Unique values coalesced
-          _ <- Ns.enum.get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
+          _ <- Ns.enumm.get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
         } yield ()
       }
 
@@ -188,13 +188,13 @@ object Insert extends AsyncTestSuite {
         for {
           // Insert 3 entities as tuples of values
           // Note that values are typechecked against the attribute types of the molecule
-          _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum insert List(
+          _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm insert List(
             (" ", 0, 0L, 0.0, false, date0, uuid0, uri0, "enum0"),
             ("a", 1, 1L, 1.0, true, date1, uuid1, uri1, "enum1"),
             ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")
           )
 
-          _ <- Ns.str.int.long.double.bool.date.uuid.uri.enum.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm.get.map(_.sortBy(_._1) ==> List(
             (" ", 0, 0L, 0.0, false, date0, uuid0, uri0, "enum0"),
             ("a", 1, 1L, 1.0, true, date1, uuid1, uri1, "enum1"),
             ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")

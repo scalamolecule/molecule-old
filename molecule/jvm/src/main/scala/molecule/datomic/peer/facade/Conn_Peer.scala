@@ -1,11 +1,11 @@
 package molecule.datomic.peer.facade
 
 import java.util
-import java.util.{Date, Collection => jCollection, List => jList}
+import java.util.{Collections, Date, Collection => jCollection, List => jList}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
 import datomic.Util._
-import datomic.{Database, Datom, ListenableFuture, Peer}
+import datomic.{Database, Datom, ListenableFuture, Peer, Util}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.marshalling._
@@ -22,135 +22,52 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 
-/** Factory methods to create facade to Datomic Connection.
- *
- * (Public since TxFns needs it)
- * */
-object Conn_Peer {
-
-  def apply(
-    uri: String,
-    defaultConnProxy: ConnProxy
-  ): Conn_Peer = Conn_Peer(datomic.Peer.connect(uri), defaultConnProxy, uri)
-
-  // Dummy constructor for transaction functions where db is supplied inside transaction by transactor
-  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null, DatomicPeerProxy("dummy", "")) {
-    testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
-  }
-}
-
-
 /** Facade to Datomic connection for peer api.
  * */
 private[molecule] case class Conn_Peer(
   peerConn: datomic.Connection,
   override val defaultConnProxy: ConnProxy,
   system: String = ""
-) extends Conn_Jvm with JavaConversions {
+) extends Conn_Jvm {
 
-  // In-memory fixed test db for integration testing
-  // (takes precedence over live db)
-  private var _testDb: Option[Database] = None
+  // Molecule api --------------------------------------------------------------
 
-  override def liveDbUsed: Boolean = _adhocDbView.isEmpty && _testDb.isEmpty
-
-  // For transaction functions
-  //  override def testDb(db: DatomicDb): Unit = {
-  protected def testDb(db: DatomicDb_Peer): Unit = {
-    _testDb = Some(db.peerDb)
-  }
-
-  def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbAsOfNow(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(peerConn.db)
   }
 
-  def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(peerConn.db.since(t))
   }
 
-  def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(peerConn.db.since(d))
   }
 
-  def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
     _testDb = Some(peerConn.db.since(txR.t))
   }
 
-  def testDbWith(txMolecules: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit] = {
+  final def testDbWith(txMolecules: Future[Seq[Statement]]*)(implicit ec: ExecutionContext): Future[Unit] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
       testDbWith(stmts2java(stmtss.flatten))
     }
   }
 
   /** Use test database with temporary raw Java transaction data. */
-  def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit] = Future {
+  final def testDbWith(txDataJava: jList[jList[_]])(implicit ec: ExecutionContext): Future[Unit] = Future {
     tempId.reset()
     _testDb = Some(peerConn.db.`with`(txDataJava).get(DB_AFTER).asInstanceOf[Database])
   }
 
-  def useLiveDb(): Unit = {
+  final def useLiveDb(): Unit = {
     _testDb = None
   }
 
-  private def getAdhocDb: Database = {
-    val baseDb : Database = _testDb.getOrElse(peerConn.db)
-    val adhocDb: Database = _adhocDbView.get match {
-      case AsOf(TxLong(t))          => baseDb.asOf(t)
-      case AsOf(TxDate(d))          => baseDb.asOf(d)
-      case Since(TxLong(t))         => baseDb.since(t)
-      case Since(TxDate(d))         => baseDb.since(d)
-      case History                  => baseDb.history()
-      case With(stmtsEdn, uriAttrs) =>
-        val txData   = getJavaStmts(stmtsEdn, uriAttrs)
-        val txReport = TxReport_Peer(baseDb.`with`(txData))
-        txReport.dbAfter.asOf(txReport.t)
-    }
-    _adhocDbView = None
-    connProxy = defaultConnProxy
-    adhocDb
-  }
 
-  def updateDbProxyStatus(newStatus: Int) = {
-    connProxy = connProxy match {
-      case p: DatomicPeerProxy       => p.copy(testDbStatus = newStatus)
-      case p: DatomicDevLocalProxy   => p.copy(testDbStatus = newStatus)
-      case p: DatomicPeerServerProxy => p.copy(testDbStatus = newStatus)
-    }
-  }
+  // Datomic facade ------------------------------------------------------------
 
-  // Reset datoms of in-mem with-db from next timePoint after as-of t until end.
-  // Otherwise, transactions on the _testDb will include datoms after the time point.
-  override def cleanFrom(nextTimePoint: Any)
-                        (implicit ec: ExecutionContext): Future[Unit] = {
-    def op(datom: Datom): String = if (datom.added) ":db/retract" else ":db/add"
-    for {
-      txInstants <- db.pull("[:db/id]", ":db/txInstant")
-      txInstId = txInstants.get(read(":db/id"))
-    } yield {
-      try {
-        _testDb = Some(peerConn.db)
-        val txs     = peerConn.log.txRange(nextTimePoint, null).iterator()
-        var txStmts = new util.ArrayList[jList[_]]()
-        while (txs.hasNext) {
-          val txDatoms = txs.next().get(datomic.Log.DATA).asInstanceOf[jList[Datom]]
-          txStmts = new util.ArrayList[jList[_]](txDatoms.size())
-          txDatoms.forEach { datom =>
-            // Don't reverse timestamps
-            if (datom.a != txInstId) {
-              txStmts.add(list(op(datom), datom.e, datom.a, datom.v))
-            }
-          }
-          // Update in-memory with-db with datoms of this tx
-          val txReport = TxReport_Peer(_testDb.get.`with`(txStmts))
-          _testDb = Some(txReport.dbAfter.asOf(txReport.t))
-        }
-      } catch {
-        case NonFatal(ex) => Future.failed(ex)
-      }
-    }
-  }
-
-  def db: DatomicDb = {
+  final def db: DatomicDb = {
     if (_adhocDbView.isDefined) {
       DatomicDb_Peer(getAdhocDb)
 
@@ -186,10 +103,99 @@ private[molecule] case class Conn_Peer(
   }
 
 
-  def entity(id: Any): DatomicEntity = db.entity(this, id)
+//  final def sync: ListenableFuture[Database] = peerConn.sync()
+//
+//  final def sync(t: Long): ListenableFuture[Database] = peerConn.sync(t)
+//
+//  final def syncIndex(t: Long): ListenableFuture[Database] = peerConn.syncIndex(t)
+//  final def syncSchema(t: Long): ListenableFuture[Database] = peerConn.syncSchema(t)
+//  final def syncExcise(t: Long): ListenableFuture[Database] = peerConn.syncExcise(t)
 
 
-  override def transact(
+  // Tx fn helpers -------------------------------------------------------------
+
+  private[molecule] final override def buildTxFnInstall(txFnDatomic: String, args: Seq[Any]): jList[_] = {
+    val params = args.indices.map(i => ('a' + i).toChar.toString)
+    Util.list(Util.map(
+      read(":db/ident"), read(s":$txFnDatomic"),
+      read(":db/fn"), function(Util.map(
+        read(":lang"), "java",
+        read(":params"), list(read("txDb") +: read("txMetaData") +: params.map(read): _*),
+        read(":code"), s"return $txFnDatomic(txDb, txMetaData, ${params.mkString(", ")});"
+      ))
+    ))
+  }
+
+  final override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = {
+    var tempIds = Map.empty[Int, AnyRef]
+
+    def getTempId(part: String, i: Int): AnyRef = tempIds.getOrElse(i, {
+      val tempId = Peer.tempid(read(part))
+      tempIds = tempIds + (i -> tempId)
+      tempId
+    })
+
+    def eid(e: Any): AnyRef = (e match {
+      case l: Long         => l
+      case TempId(part, i) => getTempId(part, i)
+      case "datomic.tx"    => "datomic.tx"
+      case other           => throw new Exception("Unexpected entity id: " + other)
+    }).asInstanceOf[AnyRef]
+
+    def value(v: Any): AnyRef = (v match {
+      case i: Int => i.toLong
+      //      case f: Float           => f.toDouble
+      case TempId(part, i)    => getTempId(part, i)
+      case Enum(prefix, enum) => read(prefix + enum)
+      case bigInt: BigInt     => bigInt.bigInteger
+      case bigDec: BigDecimal => bigDec.bigDecimal
+      case other              => other
+    }).asInstanceOf[AnyRef]
+
+    val list: jList[jList[_]] = new java.util.ArrayList[jList[_]](stmts.length)
+    stmts.foreach {
+      case s: RetractEntity =>
+        list.add(Util.list(read(s.action), s.e.asInstanceOf[AnyRef]))
+      case s: Cas           =>
+        list.add(Util.list(read(s.action), s.e.asInstanceOf[AnyRef], read(s.a), value(s.oldV), value(s.v)))
+      case s                =>
+        list.add(Util.list(read(s.action), eid(s.e), read(s.a), value(s.v)))
+    }
+    Collections.unmodifiableList(list)
+  }
+
+
+  // Internal ------------------------------------------------------------------
+
+  // In-memory fixed test db for integration testing
+  // (takes precedence over live db)
+  private var _testDb: Option[Database] = None
+
+  // For transaction functions. Has to be public since tx fns are compiled in the user domain
+  protected def testDb(db: DatomicDb_Peer): Unit = {
+    _testDb = Some(db.peerDb)
+  }
+
+  private def getAdhocDb: Database = {
+    val baseDb : Database = _testDb.getOrElse(peerConn.db)
+    val adhocDb: Database = _adhocDbView.get match {
+      case AsOf(TxLong(t))          => baseDb.asOf(t)
+      case AsOf(TxDate(d))          => baseDb.asOf(d)
+      case Since(TxLong(t))         => baseDb.since(t)
+      case Since(TxDate(d))         => baseDb.since(d)
+      case History                  => baseDb.history()
+      case With(stmtsEdn, uriAttrs) =>
+        val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+        val txReport = TxReport_Peer(baseDb.`with`(txData))
+        txReport.dbAfter.asOf(txReport.t)
+    }
+    _adhocDbView = None
+    connProxy = defaultConnProxy
+    adhocDb
+  }
+
+
+  private[molecule] final override def transactRaw(
     javaStmts: jList[_],
     futScalaStmts: Future[Seq[Statement]]
   )(implicit ec: ExecutionContext): Future[TxReport] = try {
@@ -241,37 +247,8 @@ private[molecule] case class Conn_Peer(
         _testDb = None
       }
       // Live transaction
-      val listenableFuture: ListenableFuture[util.Map[_, _]] = peerConn.transactAsync(javaStmts)
-      val p                                                  = Promise[util.Map[_, _]]()
-      listenableFuture.addListener(
-        new java.lang.Runnable {
-          override def run: Unit = {
-            try {
-              p.success(listenableFuture.get())
-            } catch {
-              case e: java.util.concurrent.ExecutionException =>
-                println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenableFuture)
-                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                // White list of exceptions that can be pickled by BooPickle
-                p.failure(
-                  e.getCause match {
-                    case e: TxFnException     => e
-                    case e: MoleculeException => e
-                    case e                    => MoleculeException(e.getMessage.trim)
-                  }
-                )
-
-              case NonFatal(e) =>
-                println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenableFuture)
-                println("---- javaStmts:\n" + javaStmts.asScala.toList.mkString("\n"))
-                p.failure(MoleculeException(e.getMessage))
-            }
-          }
-        },
-        (arg0: Runnable) => ec.execute(arg0)
-      )
       for {
-        moleculeInvocationResult <- p.future
+        moleculeInvocationResult <- bridgeDatomicFuture(peerConn.transactAsync(javaStmts), Some(javaStmts))
         scalaStmts <- futScalaStmts
       } yield {
         TxReport_Peer(moleculeInvocationResult, scalaStmts)
@@ -281,7 +258,8 @@ private[molecule] case class Conn_Peer(
     case NonFatal(ex) => Future.failed(ex)
   }
 
-  private[molecule] override def rawQuery(
+
+  private[molecule] final override def rawQuery(
     query: String,
     inputs: Seq[AnyRef]
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
@@ -304,21 +282,19 @@ private[molecule] case class Conn_Peer(
   }.flatten
 
 
-  private[molecule] override def jvmQuery(
+  private[molecule] final override def jvmQuery(
     model: Model,
     query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) =>
-        indexQuery(model)
-
-      case _ =>
-        datalogQuery(model, query)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => indexQuery(model)
+      case _                                                           => datalogQuery(model, query)
     }
   }
 
+
   // Datoms API providing direct access to indexes
-  private[molecule] override def indexQuery(
+  private[molecule] final override def indexQuery(
     model: Model
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
@@ -623,7 +599,7 @@ private[molecule] case class Conn_Peer(
 
 
   // Datalog query execution
-  private[molecule] override def datalogQuery(
+  private[molecule] final override def datalogQuery(
     model: Model,
     query: Query,
     _db: Option[DatomicDb] = None
@@ -643,9 +619,94 @@ private[molecule] case class Conn_Peer(
   }.flatten
 
 
-  def sync: ListenableFuture[Database] = peerConn.sync()
+  // Internal convenience method conn.entity(id) for conn.db.entity(conn, id)
+  private[molecule] final def entity(id: Any): DatomicEntity = db.entity(this, id)
 
-  def sync(t: Long): ListenableFuture[Database] = peerConn.sync(t)
 
-  def syncIndex(t: Long): ListenableFuture[Database] = peerConn.syncIndex(t)
+  // Reset datoms of in-mem with-db from next timePoint after as-of t until end.
+  // Otherwise, transactions on the _testDb will include datoms after the time point.
+  protected final override def cleanFrom(nextTimePoint: Any)
+                                        (implicit ec: ExecutionContext): Future[Unit] = {
+    def op(datom: Datom): String = if (datom.added) ":db/retract" else ":db/add"
+    for {
+      txInstants <- db.pull("[:db/id]", ":db/txInstant")
+      txInstId = txInstants.get(read(":db/id"))
+    } yield {
+      try {
+        _testDb = Some(peerConn.db)
+        val txs     = peerConn.log.txRange(nextTimePoint, null).iterator()
+        var txStmts = new util.ArrayList[jList[_]]()
+        while (txs.hasNext) {
+          val txDatoms = txs.next().get(datomic.Log.DATA).asInstanceOf[jList[Datom]]
+          txStmts = new util.ArrayList[jList[_]](txDatoms.size())
+          txDatoms.forEach { datom =>
+            // Don't reverse timestamps
+            if (datom.a != txInstId) {
+              txStmts.add(list(op(datom), datom.e, datom.a, datom.v))
+            }
+          }
+          // Update in-memory with-db with datoms of this tx
+          val txReport = TxReport_Peer(_testDb.get.`with`(txStmts))
+          _testDb = Some(txReport.dbAfter.asOf(txReport.t))
+        }
+      } catch {
+        case NonFatal(ex) => Future.failed(ex)
+      }
+    }
+  }
+
+  private def bridgeDatomicFuture[T](
+    listenF: ListenableFuture[T],
+    javaStmts: Option[jList[_]] = None
+  )(implicit ec: ExecutionContext): Future[T] = {
+    val p = Promise[T]()
+    listenF.addListener(
+      new java.lang.Runnable {
+        override def run: Unit = {
+          try {
+            p.success(listenF.get())
+          } catch {
+            case e: java.util.concurrent.ExecutionException =>
+              println("---- Conn_Peer.transactRaw ExecutionException: -------------\n" + listenF +
+                javaStmts.fold("")(stmts => "\n---- javaStmts: ----\n" +
+                  stmts.asScala.toList.mkString("\n"))
+              )
+              // White list of exceptions that can be pickled by BooPickle
+              p.failure(
+                e.getCause match {
+                  case e: TxFnException     => e
+                  case e: MoleculeException => e
+                  case e                    => MoleculeException(e.getMessage.trim)
+                }
+              )
+
+            case NonFatal(e) =>
+              println("---- Conn_Peer.transactRaw NonFatal exc: -------------\n" + listenF +
+                javaStmts.fold("")(stmts => "\n---- javaStmts: ----\n" + stmts.asScala.toList.mkString("\n"))
+              )
+              p.failure(MoleculeException(e.getMessage))
+          }
+        }
+      },
+      (arg0: Runnable) => ec.execute(arg0)
+    )
+    p.future
+  }
+}
+
+
+/** Connection factory methods used by tx functions.
+ *
+ * */
+object Conn_Peer {
+
+  def apply(
+    uri: String,
+    defaultConnProxy: ConnProxy
+  ): Conn_Peer = Conn_Peer(datomic.Peer.connect(uri), defaultConnProxy, uri)
+
+  // Dummy constructor for transaction functions where db is supplied inside transaction by transactor
+  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null, DatomicPeerProxy("dummy", "")) {
+    testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
+  }
 }
