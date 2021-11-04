@@ -155,7 +155,7 @@ case class DatomicEntity_Client(
                 case Failure(exc) => Future.failed(exc)
               }
 
-            case _ => Future.sequence(set.asScala.toSet.map(retrieve))
+            case _ => Future.sequence(set.asScala.map(retrieve).toSet)
           }
 
         case map0: clojure.lang.PersistentArrayMap =>
@@ -201,7 +201,7 @@ case class DatomicEntity_Client(
               case Failure(exc) => Future.failed(exc)
             }
 
-            case 2 => Future.sequence(vec.asScala.toSet.map(retrieve))
+            case 2 => Future.sequence(vec.asScala.map(retrieve).toSet)
           }
 
         case col: jCollection[_] =>

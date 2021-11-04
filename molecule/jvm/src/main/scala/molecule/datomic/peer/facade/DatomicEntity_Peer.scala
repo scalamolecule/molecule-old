@@ -79,13 +79,11 @@ case class DatomicEntity_Peer(
               case Failure(exc) => Future.failed(exc)
             }
 
-          case _ => Future.sequence(set.asScala.toSet.map(retrieve))
+          case _ => Future.sequence(set.asScala.map(retrieve).toSet)
         }
 
       case vec: clojure.lang.PersistentVector =>
-        Future.sequence(
-          vec.asScala.toList.map(retrieve)
-        )
+        Future.sequence(vec.asScala.map(retrieve).toList)
 
       case col: jCollection[_] =>
         Future(

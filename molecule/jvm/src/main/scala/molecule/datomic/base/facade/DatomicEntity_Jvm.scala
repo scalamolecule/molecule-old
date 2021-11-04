@@ -157,7 +157,7 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
 
               case ident: String if tpe == "ref" =>
                 // Failed Future for ref ids interpreted as ident
-                throw new NumberFormatException(s"For input string: \"$ident\"")
+                throw new NumberFormatException(s"""For input string: "$ident"""")
 
               case v => v
             }

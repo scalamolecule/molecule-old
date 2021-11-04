@@ -789,11 +789,11 @@ object DatomicRpc extends MoleculeRpc
       protocol match {
         case "mem" =>
           Datomic_Peer.recreateDbFromEdn(proxy, schema)
-            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case `datomicProtocol` =>
           Datomic_Peer.connect(proxy, protocol, dbIdentifier)
-            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case other =>
           Future.failed(MoleculeException(
@@ -807,11 +807,11 @@ object DatomicRpc extends MoleculeRpc
       protocol match {
         case "mem" =>
           devLocal.recreateDbFromEdn(schema, proxy)
-            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case `datomicProtocol` =>
           devLocal.connect(dbName, proxy)
-            .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case other =>
           Future.failed(MoleculeException(
@@ -822,7 +822,7 @@ object DatomicRpc extends MoleculeRpc
 
     case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
       Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName, proxy)
-        .recoverWith(exc => Future.failed(MoleculeException(exc.getMessage)))
+        .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
   }
 
   private def getConn(

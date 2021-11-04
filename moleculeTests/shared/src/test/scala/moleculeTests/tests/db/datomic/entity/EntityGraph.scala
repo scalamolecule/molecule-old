@@ -160,7 +160,7 @@ object EntityGraph extends AsyncTestSuite {
         // the Datomic database! In this case, the internal Datomic attribute :db/add has id 1:
         e <- Ns.ref1(1L).save.map(_.eid)
         _ <- e.graph.map(_ ==> "Unexpected success").recover { case exc: NumberFormatException =>
-          exc.getMessage ==> "For input string: \":db/add\""
+          exc.getMessage ==> """For input string: ":db/add""""
         }
 
         e2 <- Ns.ref1(12345L).save.map(_.eid)

@@ -110,7 +110,7 @@ object Stmts2Edn extends Helpers {
 
     def eid(e: Any): String = e match {
       case TempId(part, i) => s"#db/id[$part $i]"
-      case "datomic.tx"    => "\"datomic.tx\""
+      case "datomic.tx"    => """"datomic.tx""""
       case e               => s"$e"
     }
 
