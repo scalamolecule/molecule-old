@@ -13,7 +13,7 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport, TxReportQueue}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
@@ -23,7 +23,7 @@ import scala.util.control.NonFatal
 
 /** Facade to Datomic connection for client api (peer-server/cloud/dev-local).
  * */
-private[molecule] case class Conn_Client(
+case class Conn_Client(
   client: Client,
   override val defaultConnProxy: ConnProxy,
   dbName: String,
@@ -173,6 +173,9 @@ private[molecule] case class Conn_Client(
       }
       case Sync(0)                  => Future(clientConn.sync(clientConn.db.t))
       case Sync(t: Long)            => Future(clientConn.sync(t))
+      case SyncIndex(_)             => Future.failed(peerOnly("SyncIndex"))
+      case SyncSchema(_)            => Future.failed(peerOnly("SyncSchema"))
+      case SyncExcise(_)            => Future.failed(peerOnly("SyncExcise"))
       case other                    =>
         Future.failed(MoleculeException("Unexpected getAdhocDbDbView: " + other))
     }).map { db =>

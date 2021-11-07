@@ -59,11 +59,7 @@ private[molecule] trait MoleculeRpc {
   ): Future[List[String]]
 
 
-  def t(connProxy: ConnProxy): Future[Long]
-
-  def tx(connProxy: ConnProxy): Future[Long]
-
-  def txInstant(connProxy: ConnProxy): Future[Date]
+  def basisT(connProxy: ConnProxy): Future[Long]
 
 
   // Entity api ....................................

@@ -13,7 +13,7 @@ import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Sta
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
 
-private[molecule] trait Conn_Jvm extends Conn with JavaConversions {
+trait Conn_Jvm extends Conn with JavaConversions {
 
   // Molecule api --------------------------------------------------------------
 
@@ -72,6 +72,7 @@ private[molecule] trait Conn_Jvm extends Conn with JavaConversions {
 
   // Internal ------------------------------------------------------------------
 
+
   private[molecule] val isJsPlatform: Boolean = false
 
   private[molecule] final override def transact(edn: String, scalaStmts: Future[Seq[Statement]])
@@ -100,6 +101,45 @@ private[molecule] trait Conn_Jvm extends Conn with JavaConversions {
   )(id: Int, params: Any*): Unit =
     Inspect(header, threshold, max, showStackTrace, maxLevel, showBi)(id, params: _*)
 
+
+  // Needs to be public since tx functions use id
+  final override def stmts2java(stmts: Seq[Statement]): jList[jList[_]] = {
+    var tempIds = Map.empty[Int, AnyRef]
+
+    def getTempId(part: String, i: Int): AnyRef = tempIds.getOrElse(i, {
+      val tempId = Peer.tempid(read(part))
+      tempIds = tempIds + (i -> tempId)
+      tempId
+    })
+
+    def eid(e: Any): AnyRef = (e match {
+      case l: Long         => l
+      case TempId(part, i) => getTempId(part, i)
+      case "datomic.tx"    => "datomic.tx"
+      case other           => throw new Exception("Unexpected entity id: " + other)
+    }).asInstanceOf[AnyRef]
+
+    def value(v: Any): AnyRef = (v match {
+      case i: Int => i.toLong
+      //      case f: Float           => f.toDouble
+      case TempId(part, i)    => getTempId(part, i)
+      case Enum(prefix, enum) => read(prefix + enum)
+      case bigInt: BigInt     => bigInt.bigInteger
+      case bigDec: BigDecimal => bigDec.bigDecimal
+      case other              => other
+    }).asInstanceOf[AnyRef]
+
+    val list: jList[jList[_]] = new java.util.ArrayList[jList[_]](stmts.length)
+    stmts.foreach {
+      case s: RetractEntity =>
+        list.add(Util.list(read(s.action), s.e.asInstanceOf[AnyRef]))
+      case s: Cas           =>
+        list.add(Util.list(read(s.action), s.e.asInstanceOf[AnyRef], read(s.a), value(s.oldV), value(s.v)))
+      case s                =>
+        list.add(Util.list(read(s.action), eid(s.e), read(s.a), value(s.v)))
+    }
+    Collections.unmodifiableList(list)
+  }
 
   private[molecule] final def getAttrValues(
     datalogQuery: String,

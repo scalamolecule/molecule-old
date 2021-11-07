@@ -7,6 +7,7 @@ import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.Helpers
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.in3_out12._
+import molecule.datomic.base.api.Datom
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -17,6 +18,7 @@ import scala.util.{Failure, Success}
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
+
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -26,14 +28,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
-        //        _ <- Ns.int.apply(1).asc1.str.desc2.get
-        //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
-        e <- Ns.int(1).save.map(_.eid)
-        _ <- Ns.int.get.map(_ ==> List(1))
-         _ = {
-           conn.sync
-         }
 
 
       } yield ()
@@ -44,32 +39,6 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //      import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
     //
     //      for {
-    //
-    ////        List(o1, l1, c1) <- Order.orderid.LineItems * (
-    ////          LineItem.quantity.Comments * Comment.text) insert List(
-    ////          (23, List((2, List("second"))))
-    ////        ) map (_.eids)
-    ////
-    ////        _ <- o1.graph.map(_ ==>
-    ////          Map(
-    ////            ":db/id" -> o1,
-    ////            ":Order/lineItems" ->
-    ////              Set(
-    ////                Map(
-    ////                  ":db/id" -> l1,
-    ////                  ":LineItem/comments" ->
-    ////                    Set(
-    ////                      Map(
-    ////                        ":db/id" -> c1,
-    ////                        ":Comment/text" -> "second"
-    ////                      ),
-    ////                    ),
-    ////                  ":LineItem/quantity" -> 2,
-    ////                )
-    ////              ),
-    ////            ":Order/orderid" -> 23
-    ////          )
-    ////        )
     //
     //
     //      } yield ()
@@ -209,16 +178,6 @@ object Adhoc extends AsyncTestSuite with Helpers {
     //
     //              } yield ()
     //            }
-
-
-    /*
-
-
-
-    Map(:db/id -> 87960930222204, :Person/loves -> HashMap(:Loves/person -> 87960930222207, :Person/name -> Ann, :db/id -> 87960930222205, :molecule_Meta/otherEdge -> 87960930222206, :Loves/weight -> 7)) !=
-    Map(:db/id -> 87960930222204, :Person/loves ->     Map(:db/id -> 87960930222205, :Loves/person -> 87960930222207, :Loves/weight -> 7, :molecule_Meta/otherEdge -> 87960930222206), :Person/name -> Ann)
-     */
-
 
     //    "seattle" - seattle { implicit conn =>
     //      import moleculeTests.dataModels.examples.datomic.seattle.dsl.Seattle._

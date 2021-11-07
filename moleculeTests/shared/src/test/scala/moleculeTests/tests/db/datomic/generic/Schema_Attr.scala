@@ -494,9 +494,9 @@ object Schema_Attr extends AsyncTestSuite {
         for {
           conn <- futConn
           db <- conn.db
-          t <- db.t
-          tx <- db.tx
-          txInstant <- db.txInstant
+          t <- db.basisT
+          // Fetch schema transaction tx and date
+          (tx, txInstant) <- Log(Some(t)).tx.txInstant.get.map(_.head)
 
           // Schema transaction time t
           _ <- Schema.t.get.map(_ ==> List(t))

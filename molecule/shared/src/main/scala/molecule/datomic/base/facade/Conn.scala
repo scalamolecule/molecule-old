@@ -94,7 +94,7 @@ trait Conn extends ColOps with Serializations {
   def useLiveDb(): Unit
 
 
-  // Datomic facade ------------------------------------------------------------
+  // Datomic shared Peer/Client api --------------------------------------------
 
   /** Get current adhoc/test/live db. */
   def db(implicit ec: ExecutionContext): Future[DatomicDb]
@@ -197,81 +197,15 @@ trait Conn extends ColOps with Serializations {
   def sync(t: Long)(implicit ec: ExecutionContext): Conn
 
 
-  /** Synchronize Peer database to have been indexed through time t.
-   *
-   * (only implemented for Peer api)
-   *
-   * Sets a flag with a time t on the connection to do the synchronization
-   * on the first subsequent query. Hereafter the flag is removed.
-   *
-   * The synchronization guarantees a database that has been indexed through time t.
-   * The synchronization does not involve calling the transactor.
-   *
-   * A Future with the synchronized database is returned for the query to use. The future
-   * can take arbitrarily long to complete. Waiting code should specify a timeout.
-   *
-   * Only use `syncIndex` when coordination of multiple peer/client processes is required.
-   *
-   * @param ec an implicit execution context.
-   * @return Connection with synchronization flag set
-   */
-  def syncIndex(t: Long)(implicit ec: ExecutionContext): Conn =
-    throw jvmPeerOnly("syncIndex(t: Long)")
-
-
-  /** Synchronize Peer database to be aware of all schema changes up to time t.
-   *
-   * (only implemented for Peer api)
-   *
-   * Sets a flag with a time t on the connection to do the synchronization
-   * on the first subsequent query. Hereafter the flag is removed.
-   *
-   * The synchronization guarantees a database aware of all schema changes up to
-   * time t. The synchronization does not involve calling the transactor.
-   *
-   * A Future with the synchronized database is returned for the query to use. The future
-   * can take arbitrarily long to complete. Waiting code should specify a timeout.
-   *
-   * Only use `syncSchema` when coordination of multiple peer/client processes is required.
-   *
-   * @param ec an implicit execution context.
-   * @return Connection with synchronization flag set
-   */
-  def syncSchema(t: Long)(implicit ec: ExecutionContext): Conn =
-    throw jvmPeerOnly("syncSchema(t: Long)")
-
-
-  /** Synchronize Peer database to be aware of all excisions up to time t.
-   *
-   * (only implemented for Peer api)
-   *
-   * Sets a flag with a time t on the connection to do the synchronization
-   * on the first subsequent query. Hereafter the flag is removed.
-   *
-   * The synchronization guarantees a database aware of all excisions up to a time t.
-   * The synchronization does not involve calling the transactor.
-   *
-   * A Future with the synchronized database is returned for the query to use. The future
-   * can take arbitrarily long to complete. Waiting code should specify a timeout.
-   *
-   * Only use `syncSchema` when coordination of multiple peer/client processes is required.
-   *
-   * @param ec an implicit execution context.
-   * @return Connection with synchronization flag set
-   */
-  def syncExcise(t: Long)(implicit ec: ExecutionContext): Conn =
-    throw jvmPeerOnly("syncExcise(t: Long)")
-
 
   // Tx fn helpers -------------------------------------------------------------
 
-  // Used by txFns. todo: can we avoid public exposure?
+  // Needs to be public since tx functions use id
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]] =
     throw jvmPeerOnly("stmts2java(stmts: Seq[Statement])")
 
   private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] =
     throw jvmPeerOnly("buildTxFnInstall(txFn: String, args: Seq[Any])")
-
 
 
   // Internal ------------------------------------------------------------------
@@ -431,14 +365,17 @@ trait Conn extends ColOps with Serializations {
     query: String
   )(implicit ec: ExecutionContext): Future[List[String]]
 
-  private def jsOnly(method: String): MoleculeException =
+  protected def jsOnly(method: String): MoleculeException =
     MoleculeException(s"`$method` only implemented on JS platform.")
 
-  private def jvmOnly(method: String): MoleculeException =
+  protected def jvmOnly(method: String): MoleculeException =
     MoleculeException(s"`$method` only implemented on JVM platform.")
 
-  private def jvmPeerOnly(method: String): MoleculeException =
+  protected def jvmPeerOnly(method: String): MoleculeException =
     MoleculeException(s"`$method` only implemented on JVM platform for Peer api.")
+
+  protected def peerOnly(method: String): MoleculeException =
+    MoleculeException(s"`$method` only implemented for Peer api.")
 
   protected def debug(prefix: String, suffix: String = "") = {
     val p = prefix + " " * (4 - prefix.length)

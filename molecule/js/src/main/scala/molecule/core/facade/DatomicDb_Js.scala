@@ -11,16 +11,8 @@ case class DatomicDb_Js(rpc: MoleculeRpc, connProxy: ConnProxy) extends DatomicD
 
   def getDatomicDb: AnyRef = connProxy
 
-  def t(implicit ec: ExecutionContext): Future[Long] = {
-    rpc.t(connProxy)
-  }
-
-  def tx(implicit ec: ExecutionContext): Future[Long] = {
-    rpc.tx(connProxy)
-  }
-
-  def txInstant(implicit ec: ExecutionContext): Future[Date] = {
-    rpc.txInstant(connProxy)
+  def basisT(implicit ec: ExecutionContext): Future[Long] = {
+    rpc.basisT(connProxy)
   }
 
   def entity(conn: Conn, eid: Any): DatomicEntity = {

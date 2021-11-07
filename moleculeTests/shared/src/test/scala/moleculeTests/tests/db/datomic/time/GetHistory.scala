@@ -309,9 +309,9 @@ object GetHistory extends AsyncTestSuite {
         ))
 
         // Transaction dates
-        date2 = tx2.inst
-        date3 = tx3.inst
-        date5 = tx5.inst
+        date2 = tx2.txInstant
+        date3 = tx3.txInstant
+        date5 = tx5.txInstant
 
         _ <- Ns.e.a.v.txInstant.op_(false).getHistory.map(_.sortBy(t => (t._2, t._4)) ==> List(
           (e1, ":Ns/int", 1, date3),

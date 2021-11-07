@@ -91,7 +91,7 @@ object TestDbAsOf extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
 
         // as of date
-        _ <- conn.testDbAsOf(txR4.inst)
+        _ <- conn.testDbAsOf(txR4.txInstant)
         _ <- Ns.int.get.map(_ ==> List(1, 2, 3, 4))
 
         // Original state unaffected

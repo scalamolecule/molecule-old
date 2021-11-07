@@ -19,7 +19,6 @@ import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGr
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
 trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
   val isJsPlatform_ = false
@@ -30,12 +29,12 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
     peerServerDb: String
   ): T = {
     val (peerSchema, clientSchema, attrMap) = (schemaTx.datomicPeer, schemaTx.datomicClient, schemaTx.attrMap)
-    val futConn = system match {
-      case SystemPeer       =>
+    val futConn                             = system match {
+      case SystemPeer =>
         val connProxy = DatomicPeerProxy("mem", "", peerSchema, attrMap)
         Datomic_Peer.recreateDbFrom(schemaTx, connProxy)
 
-      case SystemDevLocal   =>
+      case SystemDevLocal =>
         val connProxy = DatomicDevLocalProxy("mem", "datomic-samples-temp", datomicHome, "", clientSchema, attrMap)
         Datomic_DevLocal("datomic-samples-temp", datomicHome).recreateDbFrom(schemaTx, connProxy)
 
@@ -65,12 +64,12 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
   // Connecting to existing MBrainz database without recreating it
   def mbrainzImpl[T](test: Future[Conn] => Future[T]): Future[T] = {
     implicit val futConn: Future[Conn] = system match {
-      case SystemPeer       =>
+      case SystemPeer =>
         val connProxy = DatomicPeerProxy(datomicProtocol, "localhost:4334/mbrainz-1968-1973",
           MBrainzSchema.datomicPeer, MBrainzSchema.attrMap)
         Datomic_Peer.connect(connProxy, datomicProtocol, "localhost:4334/mbrainz-1968-1973")
 
-      case SystemDevLocal   =>
+      case SystemDevLocal =>
         val connProxy = DatomicDevLocalProxy(datomicProtocol, "datomic-samples-temp", datomicHome, "mbrainz-subset",
           MBrainzSchema.datomicClient, MBrainzSchema.attrMap)
         Datomic_DevLocal("datomic-samples", datomicHome).connect("mbrainz-subset", connProxy)

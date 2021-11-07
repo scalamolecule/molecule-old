@@ -52,7 +52,8 @@ object DatomicRpc extends MoleculeRpc
       javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
       txReport <- conn.transact(javaStmts)
     } yield {
-      TxReportRPC(txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString)
+      TxReportRPC(txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.txData, txReport.toString)
+//      TxReportRPC(txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.toString)
     }
   }
 
@@ -678,28 +679,12 @@ object DatomicRpc extends MoleculeRpc
   }
 
 
-  def t(connProxy: ConnProxy): Future[Long] = {
+  def basisT(connProxy: ConnProxy): Future[Long] = {
     for {
       conn <- getConn(connProxy)
       db <- conn.db
-      t <- db.t
+      t <- db.basisT
     } yield t
-  }
-
-  def tx(connProxy: ConnProxy): Future[Long] = {
-    for {
-      conn <- getConn(connProxy)
-      db <- conn.db
-      tx <- db.tx
-    } yield tx
-  }
-
-  def txInstant(connProxy: ConnProxy): Future[Date] = {
-    for {
-      conn <- getConn(connProxy)
-      db <- conn.db
-      txInstant <- db.txInstant
-    } yield txInstant
   }
 
 
@@ -714,7 +699,8 @@ object DatomicRpc extends MoleculeRpc
       javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
       txReport <- conn.transact(javaStmts)
     } yield TxReportRPC(
-      txReport.eids, txReport.t, txReport.tx, txReport.inst, txReport.toString
+      txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.txData, txReport.toString
+//      txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.toString
     )
   }
 

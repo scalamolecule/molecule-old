@@ -20,13 +20,8 @@ case class DatomicDb_Client(clientDb: Db) extends DatomicDb with JavaConversions
 
   def getDatomicDb: AnyRef = clientDb.datomicDb
 
-  def t(implicit ec: ExecutionContext): Future[Long] = Future(clientDb.t)
+  def basisT(implicit ec: ExecutionContext): Future[Long] = Future(clientDb.t)
 
-  def tx(implicit ec: ExecutionContext): Future[Long] = t.map(t => Peer.toTx(t).asInstanceOf[Long])
-
-  def txInstant(implicit ec: ExecutionContext): Future[Date] = tx.map(tx =>
-    clientDb.pull("[:db/txInstant]", tx).get(Util.read(":db/txInstant")).asInstanceOf[Date]
-  )
 
   def entity(conn: Conn, id: Any): DatomicEntity =
     DatomicEntity_Client(conn.asInstanceOf[Conn_Client], id)

@@ -18,17 +18,17 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
       e = txR.eid
       t = txR.t
       tx = txR.tx
-      txInstant = txR.inst
+      txInstant = txR.txInstant
 
       txR2 <- Ns(e).int(2).update
       t2 = txR2.t
       tx2 = txR2.tx
-      txInstant2 = txR2.inst
+      txInstant2 = txR2.txInstant
 
       txR3 <- Ns(e).str("a").update
       t3 = txR3.t
       tx3 = txR3.tx
-      txInstant3 = txR3.inst
+      txInstant3 = txR3.txInstant
     } yield {
       (e, t, tx, txInstant, t2, tx2, txInstant2, t3, tx3, txInstant3)
     }
@@ -156,7 +156,7 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         e4 = txR4.eid
         t4 = txR4.t
         tx4 = txR4.tx
-        txInstant4 = txR4.inst
+        txInstant4 = txR4.txInstant
 
         // :Ns/int attribute
         _ <- AEVT(":Ns/int").e.a.v.t.tx.txInstant.op.getObjs.collect { case datoms =>
@@ -205,7 +205,7 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         txR4 <- Ns(e).ref1(ref).update
         t4 = txR4.t
         tx4 = txR4.tx
-        txInstant4 = txR4.inst
+        txInstant4 = txR4.txInstant
 
         // Reference
         _ <- VAET(ref).e.a.v.t.tx.txInstant.op.getObj.map { d1 =>

@@ -28,19 +28,19 @@ object Datom extends AsyncTestSuite {
       tx1 = txR1.tx
       e1 = txR1.eid
       t1 = txR1.t
-      d1 = txR1.inst
+      d1 = txR1.txInstant
       _ = delay
 
       txR2 <- Ns(e1).str("b").update
       tx2 = txR2.tx
       t2 = txR2.t
-      d2 = txR2.inst
+      d2 = txR2.txInstant
       _ = delay
 
       txR3 <- Ns(e1).int(3).update
       tx3 = txR3.tx
       t3 = txR3.t
-      d3 = txR3.inst
+      d3 = txR3.txInstant
       _ = delay
 
       // Second entity
@@ -48,13 +48,13 @@ object Datom extends AsyncTestSuite {
       tx4 = txR4.tx
       e2 = txR4.eid
       t4 = txR4.t
-      d4 = txR4.inst
+      d4 = txR4.txInstant
       _ = delay
 
       txR5 <- Ns(e2).int(5).update
       tx5 = txR5.tx
       t5 = txR5.t
-      d5 = txR5.inst
+      d5 = txR5.txInstant
       _ = delay
 
       // Third entity, a ref
@@ -62,13 +62,13 @@ object Datom extends AsyncTestSuite {
       r1 = txR6.eid
       tx6 = txR6.tx
       t6 = txR6.t
-      d6 = txR6.inst
+      d6 = txR6.txInstant
       _ = delay
 
       txR7 <- Ns(e2).ref1(r1).update
       tx7 = txR7.tx
       t7 = txR7.t
-      d7 = txR7.inst
+      d7 = txR7.txInstant
     } yield {
       (
         (tx1, e1, t1, d1, tx2, t2, d2, tx3, t3, d3),

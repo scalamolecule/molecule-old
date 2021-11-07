@@ -106,34 +106,6 @@ object DatomicQuery extends AsyncTestSuite {
             List(":Release/name" -> "Led Zeppelin"),
           ))
         } else Future.unit
-
-        //        _ <-
-        //          conn.query(
-        //            // Dynamic query
-        //            """[:find [(pull ?e pattern) ...]
-        //              |       :in $ ?artist pattern
-        //              |       :where [?e :release/artists ?artist]]""".stripMargin,
-        //            ledZeppelin,
-        //            "[:Release/name]"
-        //          ).map(_ ==> List(
-        //            List(":Release/name" -> "Led Zeppelin II"),
-        //            List(":Release/name" -> "Led Zeppelin II"),
-        //            List(":Release/name" -> "Led Zeppelin II"),
-        //            List(":Release/name" -> "Led Zeppelin II"),
-        //            List(":Release/name" -> "Immigrant Song / Hey Hey What Can I Do"),
-        //            List(":Release/name" -> "Immigrant Song / Hey Hey What Can I Do"),
-        //            List(":Release/name" -> "Houses of the Holy"),
-        //            List(":Release/name" -> "Heartbreaker / Bring It On Home"),
-        //            List(":Release/name" -> "Led Zeppelin III"),
-        //            List(":Release/name" -> "Led Zeppelin III"),
-        //            List(":Release/name" -> "Led Zeppelin III"),
-        //            List(":Release/name" -> "Whole Lotta Love / Living Loving Maid"),
-        //            List(":Release/name" -> "Led Zeppelin IV"),
-        //            List(":Release/name" -> "Led Zeppelin IV"),
-        //            List(":Release/name" -> "Led Zeppelin"),
-        //            List(":Release/name" -> "Led Zeppelin"),
-        //            List(":Release/name" -> "Led Zeppelin"),
-        //          ))
       } yield ()
     }
   }

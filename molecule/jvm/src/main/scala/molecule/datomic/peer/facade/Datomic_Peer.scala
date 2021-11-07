@@ -275,6 +275,8 @@ trait Datomic_Peer extends JavaConversions {
       _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
     } yield conn
   }
+
+
 }
 
 object Datomic_Peer extends Datomic_Peer

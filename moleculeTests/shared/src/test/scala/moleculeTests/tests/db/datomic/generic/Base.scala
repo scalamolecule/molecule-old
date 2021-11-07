@@ -20,20 +20,20 @@ trait Base extends AsyncTestSuite {
       tx1 = txR1.tx
       e1 = txR1.eid
       t1 = txR1.t
-      d1 = txR1.inst
+      d1 = txR1.txInstant
       _ = delay
 
 
       txR2 <- Ns(e1).str("b").update
       tx2 = txR2.tx
       t2 = txR2.t
-      d2 = txR2.inst
+      d2 = txR2.txInstant
       _ = delay
 
       txR3 <- Ns(e1).int(2).update
       tx3 = txR3.tx
       t3 = txR3.t
-      d3 = txR3.inst
+      d3 = txR3.txInstant
       _ = delay
 
 
@@ -43,13 +43,13 @@ trait Base extends AsyncTestSuite {
       tx4 = txR4.tx
       e2 = txR4.eid
       t4 = txR4.t
-      d4 = txR4.inst
+      d4 = txR4.txInstant
       _ = delay
 
       txR5 <- Ns(e2).int(5).update
       tx5 = txR5.tx
       t5 = txR5.t
-      d5 = txR5.inst
+      d5 = txR5.txInstant
       _ = delay
 
 
@@ -58,7 +58,7 @@ trait Base extends AsyncTestSuite {
       txR6 <- Ref1.str1("hello").save
       tx6 = txR6.tx
       t6 = txR6.t
-      d6 = txR6.inst
+      d6 = txR6.txInstant
       e3 = txR6.eid
       _ = delay
 
@@ -66,7 +66,7 @@ trait Base extends AsyncTestSuite {
       txR7 <- Ns(e2).ref1(e3).update
       tx7 = txR7.tx
       t7 = txR7.t
-      d7 = txR7.inst
+      d7 = txR7.txInstant
       _ = delay
 
 
@@ -97,14 +97,14 @@ trait Base extends AsyncTestSuite {
       txR12 <- Ns(e2).ref1(e4).update
       tx12 = txR12.tx
       t12 = txR12.t
-      d12 = txR12.inst
+      d12 = txR12.txInstant
       _ = delay
 
       // e1 also points to e4
       txR13 <- Ns(e2).refs1(e4).update
       tx13 = txR13.tx
       t13 = txR13.t
-      d13 = txR13.inst
+      d13 = txR13.txInstant
 
     } yield {
       (

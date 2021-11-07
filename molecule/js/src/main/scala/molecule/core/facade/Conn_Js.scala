@@ -70,7 +70,7 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
   final def useLiveDb(): Unit = updateTestDbView(None, -1)
 
 
-  // Datomic facade ------------------------------------------------------------
+  // Datomic shared Peer/Client api --------------------------------------------
 
   final def db(implicit ec: ExecutionContext): Future[DatomicDb] =
     Future(DatomicDb_Js(rpc, connProxy))
@@ -81,14 +81,11 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
     rpc.transact(connProxy, (edn, Set.empty[String]))
 
 
-  final def sync(implicit ec: ExecutionContext): Conn = {
-    // Sync with current t
+  final def sync(implicit ec: ExecutionContext): Conn =
     usingAdhocDbView(Sync(0))
-  }
 
-  final def sync(t: Long)(implicit ec: ExecutionContext): Conn = {
+  final def sync(t: Long)(implicit ec: ExecutionContext): Conn =
     usingAdhocDbView(Sync(t))
-  }
 
 
   // Internal ------------------------------------------------------------------

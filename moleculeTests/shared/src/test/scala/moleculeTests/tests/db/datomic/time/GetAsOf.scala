@@ -138,16 +138,16 @@ object GetAsOf extends AsyncTestSuite with JavaUtil {
         // Insert
         tx1 <- Ns.str.int insert List(("Ben", 42), ("Liz", 37))
         ben = tx1.eid
-        afterInsert = tx1.inst
+        afterInsert = tx1.txInstant
 
         _ = delay
 
         // Update
-        afterUpdate <- Ns(ben).int(43).update.map(_.inst)
+        afterUpdate <- Ns(ben).int(43).update.map(_.txInstant)
         _ = delay
 
         // Retract
-        afterRetract <- ben.retract.map(_.inst)
+        afterRetract <- ben.retract.map(_.txInstant)
 
         // Let retraction register before querying
         // (Peer is fast, and dates are only precise by the ms)

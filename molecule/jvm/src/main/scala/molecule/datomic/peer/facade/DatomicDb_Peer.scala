@@ -16,13 +16,7 @@ case class DatomicDb_Peer(peerDb: Database) extends DatomicDb with JavaConversio
 
   def getDatomicDb: AnyRef = peerDb
 
-  def t(implicit ec: ExecutionContext): Future[Long] = Future(peerDb.basisT())
-
-  def tx(implicit ec: ExecutionContext): Future[Long] = t.map(t => Peer.toTx(t).asInstanceOf[Long])
-
-  def txInstant(implicit ec: ExecutionContext): Future[Date] = tx.map(tx =>
-    peerDb.pull("[:db/txInstant]", tx).get(Util.read(":db/txInstant")).asInstanceOf[Date]
-  )
+  def basisT(implicit ec: ExecutionContext): Future[Long] = Future(peerDb.basisT())
 
   def entity(conn: Conn, id: Any): DatomicEntity =
     DatomicEntity_Peer(
@@ -30,7 +24,6 @@ case class DatomicDb_Peer(peerDb: Database) extends DatomicDb with JavaConversio
       conn.asInstanceOf[Conn_Peer],
       id
     )
-
 
   def pull(pattern: String, eid: Any)(implicit ec: ExecutionContext): Future[util.Map[_, _]] = Future(
     peerDb.pull(pattern, eid)

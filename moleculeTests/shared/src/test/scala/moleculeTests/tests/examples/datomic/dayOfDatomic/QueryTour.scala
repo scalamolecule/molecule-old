@@ -162,7 +162,7 @@ object QueryTour extends AsyncTestSuite {
           // datomic.Peer.toT(tx3)
 
           // 18. Getting a Tx Instant
-          txInstant ==> txR3.inst
+          txInstant ==> txR3.txInstant
 
           (tx, t, txInstant)
         }

@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.crud
 
+import molecule.core.exceptions.TxFnException
 import molecule.datomic.api.out3._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
@@ -16,7 +17,7 @@ object TxBundle extends AsyncTestSuite {
     "Transact multiple molecules" - core { implicit conn =>
       for {
         // Initial data
-        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
+        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map (_.eids)
 
         // State before
         _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
@@ -43,27 +44,25 @@ object TxBundle extends AsyncTestSuite {
         ))
 
         // Can't transact conflicting datoms
-        // (different systems throws different exceptions)
+        // (different systems throw different exceptions)
         _ <- if (system == SystemPeer) {
           transactBundle(
             Ns(e3).int(31).getUpdateStmts,
             Ns(e3).int(32).getUpdateStmts
-          ).failed.collect { case e: RuntimeException => e.getMessage.contains(
+          ).map(_ ==> "Unexpected success").recover { case e: RuntimeException => e.getMessage.contains(
             ":db.error/datoms-conflict Two datoms in the same transaction conflict") ==> true
-//            e.getMessage ==> "java.lang.IllegalArgumentException: " +
-//              ":db.error/datoms-conflict Two datoms in the same transaction conflict\n" +
-//              s"{:d1 [$e3 :Ns/int 31 13194139534350 true],\n" +
-//              s" :d2 [$e3 :Ns/int 32 13194139534350 true]}"
           }
-        } else Future.unit
-      } yield ()
+        }
+        else Future.unit
+      }
+      yield ()
     }
 
 
     "Inspect" - core { implicit conn =>
       for {
         // Initial data
-        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
+        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map (_.eids)
 
         // Print inspect info for group transaction without affecting live db
         _ <- inspectTransactBundle(

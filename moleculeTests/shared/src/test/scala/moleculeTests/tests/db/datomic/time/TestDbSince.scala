@@ -51,7 +51,7 @@ object TestDbSince extends AsyncTestSuite {
         _ <- Ns.int.get.map(_ ==> List(4, 5))
 
         // since date
-        _ <- conn.testDbSince(txR4.inst)
+        _ <- conn.testDbSince(txR4.txInstant)
         _ <- Ns.int.get.map(_ ==> List(5))
 
         // Live state unaffected

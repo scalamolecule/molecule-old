@@ -1,10 +1,6 @@
-package moleculeTests
+package moleculeTests.jvm.db.datomic.peer
 
-import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
-import molecule.core.marshalling.unpackAttr.String2cast
-import molecule.core.util.Helpers
-import molecule.datomic.api.in3_out12._
-import molecule.datomic.base.marshalling.packers.PackEntityGraph
+import molecule.datomic.api.out1._
 import molecule.datomic.peer.facade.Conn_Peer
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
@@ -13,14 +9,48 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-object AdhocJvm extends AsyncTestSuite with Helpers
-  with String2cast with CastTypes with CastOptNested with JsonBase
-  with PackEntityGraph {
-
+object TxReportQueue extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "adhocJvmPeer" - corePeerOnly { implicit futConn =>
+    "Take one tx report" - corePeerOnly { implicit futConn =>
+      for {
+        peerConn <- futConn.map(_.asInstanceOf[Conn_Peer])
+
+        // Data before initialising the tx report queue
+        _ <- Ns.int(0).save
+
+        // Initialise tx report queue
+        queue = peerConn.txReportQueue
+
+        // The txReportQueue is empty when initialized
+        _ = queue.isEmpty ==> true
+
+        // Each transaction hereafter is added to the queue
+        _ <- Ns.int(1).save
+        _ <- Ns.int(2).save
+        _ <- Ns.int(3).save
+
+        // Queue has been populated
+        _ = queue.isEmpty ==> false
+
+        // Take head of tx report, one at a time (on a FIFO basis)
+        _ = queue.take // head of queue is a TxReport instance
+          .txData // get tx data of tx report - a list of Datoms
+          .last // get last Datom of tx data
+          .v ==> 1 // get value of Datom
+        _ = queue.take.txData.last.v ==> 2
+        _ = queue.take.txData.last.v ==> 3
+
+        _ = peerConn.removeTxReportQueue()
+
+        // Data from before and after calling txReportQueue not affected
+        _ <- Ns.int.get.map(_ ==> List(0, 1, 2, 3))
+      } yield ()
+    }
+
+
+    "Watch tx reports" - corePeerOnly { implicit futConn =>
       import moleculeTests.dataModels.core.base.dsl.CoreTest._
       for {
         _ <- Future(1 ==> 1) // dummy to start monad chain if needed
@@ -55,7 +85,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         _ <- Ns.int(3).save
 
         /*
-        Will print the 3 tx reports:
+        Tx reports for the last 3 transactions are printed by the queue listener:
 
         TxReport {
           dbBefore  : datomic.db.Db@7dced5ae
@@ -87,7 +117,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers
           tempIds   : {-9223350046623220405 17592186045459}
           eids      : List(17592186045459)
         }
-         */
+        */
 
         // The last transaction has not been popped of the queue yet
         _ = queue.isEmpty ==> false
@@ -102,84 +132,5 @@ object AdhocJvm extends AsyncTestSuite with Helpers
         _ = conn.removeTxReportQueue()
       } yield ()
     }
-
-//    "adhocJvm" - core { implicit futConn =>
-//      for {
-//        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-//        conn <- futConn
-//
-////        dd <- Log(Some(1000L)).e.a.v.get
-////        _ = println(dd)
-//
-////        _ <- Schema.a.get.map(res => println(res.take(10)))
-//
-//        _ <- Ns.int(1).save
-//
-//        _ <- Ns.int.get.map(_ ==> List(1))
-//
-//
-//      } yield ()
-//    }
-
-//    "adhocJvm2" - core { implicit futConn =>
-//      for {
-//        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-//        conn <- futConn
-//
-////        dd <- Log(Some(1000L)).e.a.v.get
-////        _ = println(dd)
-//        _ <- Ns.int(2).save
-//        _ <- Ns.int.get.map(_ ==> List(2))
-//
-//
-//      } yield ()
-//    }
-
-
-
-
-    //    "adhoc" - products { implicit conn =>
-    //      import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
-    //
-    //      for {
-    //
-    //      } yield ()
-    //    }
-
-
-    //    "mbrainz" - mbrainz { implicit conn =>
-    //      import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._
-    //      val ledZeppelinUUID = UUID.fromString("678d88b2-87b0-403b-b63d-5da7465aecc3")
-    //
-    //      for {
-    //        ledZeppelin <- Artist.e.gid_(ledZeppelinUUID).get
-    //        mccartney <- Artist.e.gid_(UUID.fromString("ba550d0e-adac-4864-b88b-407cab5e76af")).get
-    //        darkSideOfTheMoon <- Release.e.gid_(UUID.fromString("24824319-9bb8-3d1e-a2c5-b8b864dafd1b")).get
-    //        dylanHarrisonSessions <- Release.e.gid_(UUID.fromString("67bbc160-ac45-4caf-baae-a7e9f5180429")).get
-    //        concertForBangladesh <- Release.e.gid_(UUID.fromString("f3bdff34-9a85-4adc-a014-922eef9cdaa5")).get
-    //        dylanHarrisonCd <- Release(dylanHarrisonSessions).media.get
-    //        ghosotRiders <- Release(dylanHarrisonSessions).Media.Tracks.e.position_(11).get
-    //        gb <- Country.e.name_("United Kingdom").get
-    //        georgeHarrison <- Artist.e.name_("George Harrison").get
-    //        bobDylan <- Artist.e.name_("Bob Dylan").get
-    //
-    //
-    //      } yield ()
-    //    }
-
-    //
-    //
-    //    "adhoc" - bidirectional { implicit conn =>
-    //      import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
-    //
-    //      for {
-    //        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-    //
-    //
-    //
-    //
-    //      } yield ()
-    //    }
-
   }
 }

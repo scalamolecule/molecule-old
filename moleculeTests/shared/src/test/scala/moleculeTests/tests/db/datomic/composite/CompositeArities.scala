@@ -182,7 +182,7 @@ object CompositeArities extends AsyncTestSuite {
 
         _ <- txId.graph.map(_ ==> Map(
           ":db/id" -> txId,
-          ":db/txInstant" -> tx.inst,
+          ":db/txInstant" -> tx.txInstant,
           ":Ns/str" -> "Tx meta data"
         ))
         _ <- e1.graph.map(_ ==> Map(

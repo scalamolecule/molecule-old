@@ -19,9 +19,9 @@ object ObjTime extends AsyncTestSuite with Helpers {
       t1 = tx1.t
       t2 = tx2.t
       t3 = tx3.t
-      d1 = tx1.inst
-      d2 = tx2.inst
-      d3 = tx3.inst
+      d1 = tx1.txInstant
+      d2 = tx2.txInstant
+      d3 = tx3.txInstant
     } yield {
       (tx1, tx2, tx3, t1, t2, t3, d1, d2, d3)
     }

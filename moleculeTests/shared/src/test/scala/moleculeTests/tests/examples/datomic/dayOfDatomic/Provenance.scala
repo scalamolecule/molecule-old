@@ -135,7 +135,7 @@ object Provenance extends AsyncTestSuite {
         _ <- Story.url_(ecURL).title.get.map(_.head ==> "ElastiCache in 5 minutes")
 
         // Title before (using database as of the first transaction)
-        _ <- Story.url_(ecURL).title.getAsOf(stuTx.inst).map(_.head ==> "ElastiCache in 6 minutes")
+        _ <- Story.url_(ecURL).title.getAsOf(stuTx.txInstant).map(_.head ==> "ElastiCache in 6 minutes")
 
         _ <- if (system != SystemPeerServer) {
           for {

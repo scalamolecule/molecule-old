@@ -37,7 +37,7 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
   }
 
   def coreImpl[T](test: Future[Conn] => T): T = inMem(test, CoreTestSchema, "m_coretests")
-  def corePeerOnlyImpl[T](test: Future[Conn] => T): T = ().asInstanceOf[T] // Not used on js platform anyway
+  def corePeerOnlyImpl[T](test: Future[Conn] => T): T = if (system == SystemPeer) coreImpl(test) else ().asInstanceOf[T]
   def bidirectionalImpl[T](test: Future[Conn] => T): T = inMem(test, BidirectionalSchema, "m_bidirectional")
   def partitionImpl[T](test: Future[Conn] => T): T = inMem(test, PartitionTestSchema, "m_partitions")
   def nestedImpl[T](test: Future[Conn] => T): T = inMem(test, NestedSchema, "m_nested")
