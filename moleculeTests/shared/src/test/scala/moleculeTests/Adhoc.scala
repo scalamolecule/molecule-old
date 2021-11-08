@@ -15,6 +15,8 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success}
 //import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.duration.DurationInt
+
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
@@ -22,6 +24,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
+    2.minutes
 
     "core" - core { implicit futConn =>
       import moleculeTests.dataModels.core.base.dsl.CoreTest._

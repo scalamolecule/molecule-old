@@ -194,6 +194,7 @@ case class Conn_Peer(
   final def syncExcise(t: Long)(implicit ec: ExecutionContext): Conn_Peer =
     usingAdhocDbView(SyncExcise(t)).asInstanceOf[Conn_Peer]
 
+
   /**
    * Gets the single transaction report queue associated with this connection,
    * creating it if necessary.
@@ -213,7 +214,7 @@ case class Conn_Peer(
    * @return TxReportQueue
    */
   final def txReportQueue: TxReportQueue =
-    TxReportQueue_Peer(peerConn.txReportQueue())
+    TxReportQueue(peerConn.txReportQueue())
 
   /**
    * Removes the tx report queue associated with this connection.
@@ -264,6 +265,7 @@ case class Conn_Peer(
 
 
   // Internal ------------------------------------------------------------------
+
 
   // In-memory fixed test db for integration testing
   // Takes precedence over live db (<molecule>.get etc).

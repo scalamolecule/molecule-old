@@ -218,7 +218,6 @@ trait Conn extends ColOps with Serializations {
 
   private[molecule] var connProxy: ConnProxy = defaultConnProxy
 
-
   // Temporary db for ad-hoc queries against time variation dbs
   // (takes precedence over _testDb in Conn_Peer and Conn_Client)
   private[molecule] var _adhocDbView: Option[DbView] = None

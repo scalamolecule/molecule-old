@@ -13,7 +13,7 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport, TxReportQueue}
+import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure

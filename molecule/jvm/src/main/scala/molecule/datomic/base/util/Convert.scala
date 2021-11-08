@@ -17,7 +17,7 @@ private[molecule] object Convert extends JavaConversions {
     case bi: clojure.lang.BigInt  => BigInt(bi.toBigInteger)
     case bi: java.math.BigInteger => BigInt(bi)
     case bd: java.math.BigDecimal => BigDecimal(bd)
-//    case f: java.lang.Float       => f: Float
-    case other => throw MoleculeException("Unexpected Datom java value type to convert: " + other.getClass)
+    case other                    => throw MoleculeException(
+      "Unexpected Datom java value type to convert: " + other.getClass)
   }
 }

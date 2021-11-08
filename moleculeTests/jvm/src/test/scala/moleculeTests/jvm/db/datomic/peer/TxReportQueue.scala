@@ -15,13 +15,13 @@ object TxReportQueue extends AsyncTestSuite {
 
     "Take one tx report" - corePeerOnly { implicit futConn =>
       for {
-        peerConn <- futConn.map(_.asInstanceOf[Conn_Peer])
+        conn <- futConn.map(_.asInstanceOf[Conn_Peer])
 
         // Data before initialising the tx report queue
         _ <- Ns.int(0).save
 
         // Initialise tx report queue
-        queue = peerConn.txReportQueue
+        queue = conn.txReportQueue
 
         // The txReportQueue is empty when initialized
         _ = queue.isEmpty ==> true
@@ -42,10 +42,14 @@ object TxReportQueue extends AsyncTestSuite {
         _ = queue.take.txData.last.v ==> 2
         _ = queue.take.txData.last.v ==> 3
 
-        _ = peerConn.removeTxReportQueue()
+        // Queue has been emptied
+        _ = queue.isEmpty ==> true
+
+        // Remove queue
+        _ = conn.removeTxReportQueue()
 
         // Data from before and after calling txReportQueue not affected
-        _ <- Ns.int.get.map(_ ==> List(0, 1, 2, 3))
+        _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 2, 3))
       } yield ()
     }
 
@@ -53,10 +57,7 @@ object TxReportQueue extends AsyncTestSuite {
     "Watch tx reports" - corePeerOnly { implicit futConn =>
       import moleculeTests.dataModels.core.base.dsl.CoreTest._
       for {
-        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn.map(_.asInstanceOf[Conn_Peer])
-        //        _ <- Ns.int.apply(1).asc1.str.desc2.get
-        //        _ <- Ns.int.not(1).asc1.str.desc2.get
 
         // Data before initialising the tx report queue
         _ <- Ns.int(0).save
@@ -64,22 +65,17 @@ object TxReportQueue extends AsyncTestSuite {
         // Initialise tx report queue
         queue = conn.txReportQueue
 
-        // The txReportQueue is empty when initialized
-        _ = queue.isEmpty ==> true
-
         // Let queue listen in a separate thread
         _ = Future {
-          while (true) {
-            try {
-              // Do stuff with tx report when it becomes available (blocks until then)
-              println(queue.take)
-            } catch {
-              case _: InterruptedException => println("interrupted")
-            }
-          }
+          // Listening to the first 3 transactions (could be an infinite loop too)
+          (1 to 3).foreach(_ =>
+            // Do stuff with tx report when it becomes available.
+            // `take` blocks until a tx report is available on the queue
+            println(queue.take)
+          )
         }
 
-        // Each transaction is added to the queue and printed in the above listener
+        // Each transaction is added to the queue and printed by the above listener
         _ <- Ns.int(1).save
         _ <- Ns.int(2).save
         _ <- Ns.int(3).save
@@ -119,17 +115,11 @@ object TxReportQueue extends AsyncTestSuite {
         }
         */
 
-        // The last transaction has not been popped of the queue yet
-        _ = queue.isEmpty ==> false
-
-        // Data from before and after calling txReportQueue not affected
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 2, 3))
-
-        // Confirming that queue has been emptied
-        _ = queue.isEmpty ==> true
-
-        // Interrupt queue
+        // Inactivate and remove queue from connection
         _ = conn.removeTxReportQueue()
+
+        // Data from before and after calling txReportQueue is not affected
+        _ <- Ns.int.get.map(_.sorted ==> List(0, 1, 2, 3))
       } yield ()
     }
   }

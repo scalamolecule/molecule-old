@@ -1,4 +1,4 @@
-package moleculeTests.jvm.core.transaction
+package moleculeTests.jvm.db.datomic.peer
 
 import molecule.core.exceptions.TxFnException
 import molecule.core.macros.TxFns
