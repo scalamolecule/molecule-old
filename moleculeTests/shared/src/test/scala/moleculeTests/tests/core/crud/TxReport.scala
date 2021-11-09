@@ -2,6 +2,7 @@ package moleculeTests.tests.core.crud
 
 import molecule.datomic.api.out10._
 import molecule.datomic.base.api.Datom
+import molecule.datomic.base.util.SystemPeer
 import moleculeTests.Adhoc.{bigDec5, bigDec6, bigInt4, bigInt5, date1, date2, uri1, uri2, uuid1, uuid2}
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
@@ -11,6 +12,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object TxReport extends AsyncTestSuite {
   val txInstAttrId = 50
+
+  // Attribute ids for dev-local 1 higher
+  val d = if (system == SystemPeer) 0 else 1
 
   lazy val tests = Tests {
 
@@ -25,16 +29,16 @@ object TxReport extends AsyncTestSuite {
 
         _ = txReport.txData ==> List(
           Datom(tx, txInstAttrId, txInstant, tx, true),
-          Datom(e, 72, "a", tx, true),
-          Datom(e, 73, 1, tx, true),
-          Datom(e, 74, 2L, tx, true),
-          Datom(e, 75, 3.3, tx, true),
-          Datom(e, 76, true, tx, true),
-          Datom(e, 77, date1, tx, true),
-          Datom(e, 78, uuid1, tx, true),
-          Datom(e, 79, uri1, tx, true),
-          Datom(e, 80, bigInt4, tx, true),
-          Datom(e, 81, bigDec5, tx, true)
+          Datom(e, 72 + d, "a", tx, true),
+          Datom(e, 73 + d, 1, tx, true),
+          Datom(e, 74 + d, 2L, tx, true),
+          Datom(e, 75 + d, 3.3, tx, true),
+          Datom(e, 76 + d, true, tx, true),
+          Datom(e, 77 + d, date1, tx, true),
+          Datom(e, 78 + d, uuid1, tx, true),
+          Datom(e, 79 + d, uri1, tx, true),
+          Datom(e, 80 + d, bigInt4, tx, true),
+          Datom(e, 81 + d, bigDec5, tx, true)
         )
       } yield ()
     }
@@ -56,33 +60,32 @@ object TxReport extends AsyncTestSuite {
             Set(bigDec5, bigDec6),
           )
         )
-
         e = txReport.eid
         tx = txReport.tx
         txInstant = txReport.txInstant
 
         _ = txReport.txData ==> List(
           Datom(tx, txInstAttrId, txInstant, tx, true),
-          Datom(e, 86, "a", tx, true),
-          Datom(e, 86, "b", tx, true),
-          Datom(e, 87, 1, tx, true),
-          Datom(e, 87, 2, tx, true),
-          Datom(e, 88, 2L, tx, true),
-          Datom(e, 88, 3L, tx, true),
-          Datom(e, 89, 3.3, tx, true),
-          Datom(e, 89, 4.4, tx, true),
-          Datom(e, 90, true, tx, true),
-          Datom(e, 90, false, tx, true),
-          Datom(e, 91, date1, tx, true),
-          Datom(e, 91, date2, tx, true),
-          Datom(e, 92, uuid1, tx, true),
-          Datom(e, 92, uuid2, tx, true),
-          Datom(e, 93, uri1, tx, true),
-          Datom(e, 93, uri2, tx, true),
-          Datom(e, 94, bigInt4, tx, true),
-          Datom(e, 94, bigInt5, tx, true),
-          Datom(e, 95, bigDec5, tx, true),
-          Datom(e, 95, bigDec6, tx, true)
+          Datom(e, 86 + d, "a", tx, true),
+          Datom(e, 86 + d, "b", tx, true),
+          Datom(e, 87 + d, 1, tx, true),
+          Datom(e, 87 + d, 2, tx, true),
+          Datom(e, 88 + d, 2L, tx, true),
+          Datom(e, 88 + d, 3L, tx, true),
+          Datom(e, 89 + d, 3.3, tx, true),
+          Datom(e, 89 + d, 4.4, tx, true),
+          Datom(e, 90 + d, true, tx, true),
+          Datom(e, 90 + d, false, tx, true),
+          Datom(e, 91 + d, date1, tx, true),
+          Datom(e, 91 + d, date2, tx, true),
+          Datom(e, 92 + d, uuid1, tx, true),
+          Datom(e, 92 + d, uuid2, tx, true),
+          Datom(e, 93 + d, uri1, tx, true),
+          Datom(e, 93 + d, uri2, tx, true),
+          Datom(e, 94 + d, bigInt4, tx, true),
+          Datom(e, 94 + d, bigInt5, tx, true),
+          Datom(e, 95 + d, bigDec5, tx, true),
+          Datom(e, 95 + d, bigDec6, tx, true)
         )
       } yield ()
     }
@@ -102,10 +105,10 @@ object TxReport extends AsyncTestSuite {
 
         _ = txReport.txData ==> List(
           Datom(tx, txInstAttrId, txInstant, tx, true),
-          Datom(e, 100, "en@Hi there", tx, true),
-          Datom(e, 100, "da@Hejsa", tx, true),
-          Datom(e, 101, "en@10", tx, true),
-          Datom(e, 101, "da@30", tx, true),
+          Datom(e, 100 + d, "en@Hi there", tx, true),
+          Datom(e, 100 + d, "da@Hejsa", tx, true),
+          Datom(e, 101 + d, "en@10", tx, true),
+          Datom(e, 101 + d, "da@30", tx, true),
         )
       } yield ()
     }

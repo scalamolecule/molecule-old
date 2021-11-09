@@ -716,7 +716,6 @@ case class Conn_Peer(
   }.flatten
 
 
-  // Datalog query execution
   private[molecule] final override def datalogQuery(
     model: Model,
     query: Query,

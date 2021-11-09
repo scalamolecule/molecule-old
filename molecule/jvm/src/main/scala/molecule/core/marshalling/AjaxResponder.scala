@@ -63,48 +63,49 @@ object AjaxResponder extends App with Serializations {
     }
   }
 
-  def futureArrayByte(method: String, data: ByteString): Future[Array[Byte]] = try {
-    val path       = List(MoleculeRpc, method)
-    val args       = Unpickle.apply[ByteBuffer].fromBytes(data.asByteBuffer)
-    val callResult = router.apply(Request[ByteBuffer](path, args))
-    callResult.toEither match {
-      case Right(byteBufferResultFuture) => byteBufferResultFuture
-        .map { bytes =>
-          val dataLength                    = bytes.remaining()
-          val bytesAsByteArray: Array[Byte] = Array.ofDim[Byte](dataLength + 1)
+  def futureArrayByte(method: String, data: ByteString): Future[Array[Byte]] = Future {
+    try {
+      val path       = List(MoleculeRpc, method)
+      val args       = Unpickle.apply[ByteBuffer].fromBytes(data.asByteBuffer)
+      val callResult = router.apply(Request[ByteBuffer](path, args))
+      callResult.toEither match {
+        case Right(byteBufferResultFuture) => byteBufferResultFuture
+          .map { bytes =>
+            val dataLength                    = bytes.remaining()
+            val bytesAsByteArray: Array[Byte] = Array.ofDim[Byte](dataLength + 1)
 
-          // Reserve first byte for exception flag
-          bytes.get(bytesAsByteArray, 1, dataLength)
+            // Reserve first byte for exception flag
+            bytes.get(bytesAsByteArray, 1, dataLength)
 
-          // Set first byte as a flag (0) for no exception thrown
-          bytesAsByteArray.update(0, 0)
-          bytesAsByteArray
-        }
-        .recover {
-          case exc: Throwable =>
-            println("---- Error in AjaxResponder ---------------------\n" + exc)
-            println(exc.getStackTrace.mkString("\n"))
-            try {
-              serializeException(exc)
-            } catch {
-              case NonFatal(exceptionSerializationException) =>
-                println("Internal unexpected exception serialization error:\n" + exceptionSerializationException)
-                serializeException(exceptionSerializationException)
-            }
-        }
+            // Set first byte as a flag (0) for no exception thrown
+            bytesAsByteArray.update(0, 0)
+            bytesAsByteArray
+          }
+          .recover {
+            case exc: Throwable =>
+              println("---- Error in AjaxResponder ---------------------\n" + exc)
+              println(exc.getStackTrace.mkString("\n"))
+              try {
+                serializeException(exc)
+              } catch {
+                case NonFatal(exceptionSerializationException) =>
+                  println("Internal unexpected exception serialization error:\n" + exceptionSerializationException)
+                  serializeException(exceptionSerializationException)
+              }
+          }
 
-      case Left(err) =>
-        println(s"##### ServerFailure: " + err)
-        err match {
-          case PathNotFound(path: List[String])  => Future.failed(new RuntimeException(s"PathNotFound($path)"))
-          case HandlerError(exc: Throwable)      => Future.failed(exc)
-          case DeserializerError(exc: Throwable) => Future.failed(exc)
-        }
+        case Left(err) =>
+          println(s"##### ServerFailure: " + err)
+          err match {
+            case PathNotFound(path: List[String])  => Future.failed(new RuntimeException(s"PathNotFound($path)"))
+            case HandlerError(exc: Throwable)      => Future.failed(exc)
+            case DeserializerError(exc: Throwable) => Future.failed(exc)
+          }
+      }
+    } catch {
+      case NonFatal(exc) => Future.failed(exc)
     }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
+  }.flatten
 
   def serializeException(exc: Throwable) = {
     val bytes            = Pickle.intoBytes(exc)

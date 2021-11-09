@@ -297,18 +297,20 @@ case class Conn_Client(
   private[molecule] final override def rawQuery(
     query: String,
     inputs: Seq[AnyRef]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-    try {
-      val result = clientDatomic.q(
-        query,
-        db.asInstanceOf[DatomicDb_Client].clientDb,
-        inputs: _*
-      )
-      Future(result)
-    } catch {
-      case NonFatal(e) => Future.failed(MoleculeException(e.getMessage))
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    db.flatMap { db =>
+      try {
+        val result = clientDatomic.q(
+          query,
+          db.asInstanceOf[DatomicDb_Client].clientDb,
+          inputs: _*
+        )
+        Future(result)
+      } catch {
+        case NonFatal(e) => Future.failed(MoleculeException(e.getMessage))
+      }
     }
-  }.flatten
+  }
 
 
   private[molecule] final override def jvmQuery(
@@ -658,19 +660,21 @@ case class Conn_Client(
     model: Model,
     query: Query,
     _db: Option[DatomicDb]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
-    try {
-      val p               = Query2String(query).p
-      val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
-      val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-      val allInputs       = rules ++ inputsEvaluated
-      val clientDb        = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
-      val result          = clientDatomic.q(query.toMap, clientDb, allInputs: _*)
-      Future(result)
-    } catch {
-      case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    db.flatMap { db =>
+      try {
+        val p               = Query2String(query).p
+        val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
+        val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
+        val allInputs       = rules ++ inputsEvaluated
+        val clientDb        = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
+        val result          = clientDatomic.q(query.toMap, clientDb, allInputs: _*)
+        Future(result)
+      } catch {
+        case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
+      }
     }
-  }.flatten
+  }
 
 
   // Internal convenience method conn.entity(id) for conn.db.entity(conn, id)
