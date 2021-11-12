@@ -166,7 +166,6 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
     }
 
 
-    //    val moleculeClass = if (levels == 1 || txMetas > 0)
     val outMoleculeClass = if (levels == 1)
       mkFlat
     else if (isOptNested)

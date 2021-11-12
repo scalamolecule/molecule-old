@@ -51,12 +51,11 @@ trait DatomicEntity {
    *   eid <- Ns.int(1).save.map(_.eid)
    *
    *   // Retract entity with tx meta data
-   *   tx <- eid.retract(Ref2.str2("meta")).map(_.tx)
+   *   tx <- eid.retract(Ref2.str2("meta2"), Ref1.str1("meta1")).map(_.tx)
    *
    *   // What was retracted and with what tx meta data
-   *   _ <- Ns.e.int.tx.op.Tx(Ref2.str2).getHistory.map(_ ==> List(
-   *     // 1 was retracted with tx meta data "meta"
-   *     (eid, 1, tx, false, "meta")
+   *   _ <- Ns.e.int.tx.op_(false).Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
+   *     (eid, 1, tx, "meta2", "meta1")
    *   ))
    * } yield ()
    * }}}
@@ -68,7 +67,8 @@ trait DatomicEntity {
    * `retract(eids, txMetaDataMolecules*)` in molecule.datomic.base.api.EntityOps.
    *
    * @group retract
-   * @param txMeta One or more tx meta molecules
+   * @param txMeta1 tx meta data molecule
+   * @param txMetaMore Optional additional tx meta data molecules
    * @param ec Implicit [[ExecutionContext]]
    * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
    */
@@ -84,13 +84,13 @@ trait DatomicEntity {
    *   benId <- Person.e.name_("Ben").get.map(_.eid)
    *
    *   // Retraction transaction data
-   *   _ <- benId.getRetractStmts.map(_ ==> List(List(RetractEntity(17592186045445))))
+   *   _ <- benId.getRetractStmts.map(_ ==> List(RetractEntity(17592186045453)))
    * } yield ()
    * }}}
    *
    * @group retract
    * @param ec Implicit [[ExecutionContext]]
-   * @return List[Retractentity[Long]]
+   * @return Future[Seq[Statement]]
    * */
   def getRetractStmts(implicit ec: ExecutionContext): Future[Seq[Statement]]
 
@@ -104,14 +104,17 @@ trait DatomicEntity {
    *   benId <- Person.e.name_("Ben").get.map(_.eid)
    *
    *   // Retraction transaction data
-   *   _ <- benId.getRetractStmts.map(_ ==> List(List(RetractEntity(17592186045445))))
+   *   _ <- benId.getRetractStmts().map(_ ==> List(
+   *     RetractEntity(17592186045453)
+   *   ))
    * } yield ()
    * }}}
    *
    * @group retract
-   * @param txMeta One or more tx meta molecules
+   * @param txMeta1 tx meta data molecule
+   * @param txMetaMore Optional additional tx meta data molecules
    * @param ec Implicit [[ExecutionContext]]
-   * @return List[Retractentity[Long]]
+   * @return Future[Seq[Statement]]
    * */
   def getRetractStmts(txMeta1: Molecule, txMetaMore: Molecule*)(implicit ec: ExecutionContext): Future[Seq[Statement]]
 
@@ -125,15 +128,15 @@ trait DatomicEntity {
    * This will print generated Datomic transaction statements in a readable format to output:
    * {{{
    * ## 1 ## Inspect `retract` on entity
-   * ========================================================================
-   * 1          List(
-   *   1          List(
-   *     1          :db/retractEntity   17592186045445))
-   * ========================================================================
+   * =============================================================================
+   * list(
+   *   RetractEntity(17592186045453))
+   * =============================================================================
    * }}}
    *
-   * @param ec Implicit [[ExecutionContext]]
    * @group retract
+   * @param ec Implicit [[ExecutionContext]]
+   * @return Unit (prints data to console)
    */
   def inspectRetract(implicit ec: ExecutionContext): Future[Unit]
 
@@ -142,23 +145,25 @@ trait DatomicEntity {
    * {{{
    * for {
    *   // Inspect retraction of an entity
-   *   _ <- eid.inspectRetract
+   *   _ <- eid.inspectRetract(Ref2.str2("meta2") + Ref1.str1("meta1"))
    * } yield ()
    * }}}
    * This will print generated Datomic transaction statements in a readable format to output:
    * {{{
-   * ## 1 ## Inspect `retract` on entity
-   * ========================================================================
-   * 1          List(
-   *   1          List(
-   *     1          :db/retractEntity   17592186045445))
-   * ========================================================================
+   * ## 1 ## Inspect `retract` on entity with tx meta data
+   * =============================================================================
+   * list(
+   *   RetractEntity(17592186045453),
+   *   Add(datomic.tx,:Ref2/str2,meta2,Card(1)),
+   *   Add(datomic.tx,:Ref1/str1,meta1,Card(1)))
+   =============================================================================
    * }}}
    *
    * @group retract
-   * @param txMeta One or more tx meta molecules
+   * @param txMeta1 tx meta data molecule
+   * @param txMetaMore Optional additional tx meta data molecules
    * @param ec Implicit [[ExecutionContext]]
-   * @return Unit
+   * @return Unit (prints data to console)
    */
   def inspectRetract(txMeta1: Molecule, txMetaMore: Molecule*)(implicit ec: ExecutionContext): Future[Unit]
 
@@ -308,7 +313,7 @@ trait DatomicEntity {
   def inspectGraphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Unit]
 
 
-  def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = ???
+  def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String]
 
   // Internal --------------------------------------------------
 

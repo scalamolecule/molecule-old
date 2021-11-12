@@ -68,16 +68,21 @@ trait EntityOps {
 
     def inspectGraphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Unit] =
       datomicEntity.flatMap(_.inspectGraphDepth(maxDepth))
+
+    def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
+      datomicEntity.flatMap(_.graphCode(maxDepth))
   }
 
 
   /** Retract multiple entities with optional transaction meta data.
     * <br><br>
-    * 0 or more transaction meta data molecules can be asserted together with a retraction of entities.
+    * 0 or more transaction meta data molecules can be asserted together with a
+   * retraction of entities.
     * <br><br>
-    * Here we asynchronously retract two comment entities with transaction meta data asserting that the retraction was done by Ben Goodman:
+    * Here we asynchronously retract two comment entities with transaction meta data
+   * asserting that the retraction was done by Ben Goodman:
     * {{{
-    * retractAsync(Seq(commentEid1, commentEid2), MetaData.user("Ben Goodman"))
+    * retract(Seq(commentEid1, commentEid2), MetaData.user("Ben Goodman"))
     * }}}
     * We can then later see what comments Ben Goodman retracted (`op_(false)`):
     * {{{
@@ -117,29 +122,35 @@ trait EntityOps {
 
   /** Inspect retracting multiple entities with optional transaction meta data.
     * <br><br>
-    * Without affecting the database, a multiple entity retract action can be inspected by calling the `inspectRetract` method.
+    * Without affecting the database, a multiple entity retract action can be
+   * inspected by calling the `inspectRetract` method.
     * <br><br>
-    * Here we inspect a possible retraction of two comment entities with transaction meta data asserting that the retraction was done by Ben Goodman:
+    * Here we inspect a possible retraction of two comment entities with
+   * transaction meta data asserting that the retraction was done by Ben Goodman:
     * {{{
-    * inspectRetract(Seq(commentEid1, commentEid2), MetaData.user("Ben Goodman"))
+    * inspectRetract(eids, Ref2.str2("meta2"), Ref1.str1("meta1"))
     * }}}
     * This will print inspecting info about the retraction to output (without affecting the database):
     * {{{
-    *   ## 1 ## molecule.Datomic.inspectRetract
-    *   ===================================================================================================================
-    *   1      Model(
-    *     1      TxMetaData(
-    *       1      Atom(metaData,user,String,1,Eq(List(Ben Goodman)),None,List(),List())))
-    *   ------------------------------------------------
-    *   2      List(
-    *     1      :db/add     'tx                             :MetaData/user     Values(Eq(List(Ben Goodman)),None)   Card(1))
-    *   ------------------------------------------------
-    *   3      List(
-    *     1      List(
-    *       1      :db/retractEntity   17592186045445
-    *       2      :db/retractEntity   17592186045446
-    *       3      :db/add   #db/id[:db.part/tx -1000097]    :MetaData/user     b                                    Card(1)))
-    *   ===================================================================================================================
+    * ## 1 ## molecule.core.Datomic.inspectRetract
+    * =============================================================================
+    * Model(
+    *   TxMetaData(
+    *     Atom("Ref2", "str2", "String", 1, Eq(Seq("meta2")), None, Seq(), Seq()))
+    *   TxMetaData(
+    *     Atom("Ref1", "str1", "String", 1, Eq(Seq("meta1")), None, Seq(), Seq())))
+    * -----------------------------------------------------------------------------
+    * List(
+    *   Add(tx,:Ref2/str2,Values(Eq(Seq("meta2")),None),Card(1)),
+    *   Add(tx,:Ref1/str1,Values(Eq(Seq("meta1")),None),Card(1)))
+    * -----------------------------------------------------------------------------
+    * List(
+    *   list(
+    *     RetractEntity(17592186045453),
+    *     RetractEntity(17592186045454),
+    *     Add(datomic.tx,:Ref2/str2,meta2,Card(1)),
+    *     Add(datomic.tx,:Ref1/str1,meta1,Card(1))))
+    * =============================================================================
     * }}}
     *
     * @group entityOps

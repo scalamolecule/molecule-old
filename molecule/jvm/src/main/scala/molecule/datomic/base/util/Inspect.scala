@@ -43,11 +43,9 @@ private[molecule] case class Inspect(
             indent + ":db/add" + padS(10, ":db/add") + e + padS(32, e.toString) + a + padS(20, a) + s"list($biStr\n" +
               stmts.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
 
-          case add: Add     => indent + add
-          case ret: Retract => indent + ret
-
-          case RetractEntity(e) =>
-            indent + ":db/retractEntity" + padS(22, ":db/retractEntity") + e
+          case add: Add           => indent + add
+          case ret: Retract       => indent + ret
+          case ret: RetractEntity => indent + ret
 
           case l: java.util.List[_] if l.size() == 4 && l.asScala.head.toString.take(4) == ":db/" => {
             val List(action, e, a, v) = l.asScala.toList
@@ -86,11 +84,12 @@ private[molecule] case class Inspect(
                 indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString(",\n") + ")"
             }
 
-          case Nested(bond, nested)   => indent + "Nested(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
-          case TxMetaData(elements)   => indent + "TxMetaData(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
-          case Composite(elements)    => indent + "Composite(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
-          case m: Model               => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
-          case m: java.util.Map[_, _] => {
+          case Nested(bond, nested)           => indent + "Nested(\n" + (bond +: nested).zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
+          case TxMetaData(elements)           => indent + "TxMetaData(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
+          case Composite(elements)            => indent + "Composite(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
+          case m: Model if m.elements.isEmpty => indent + "Model()"
+          case m: Model                       => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
+          case m: java.util.Map[_, _]         => {
             if (m.size() == 4 && m.asScala.keys.map(_.toString).toSeq.contains(":db-before")) {
               val tx = m.asScala.toList
               indent + "Transaction(\n" +

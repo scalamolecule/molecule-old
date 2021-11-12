@@ -37,11 +37,9 @@ private[molecule] case class Inspect(
             indent + ":db/add" + padS(10, ":db/add") + e + padS(32, e.toString) + a + padS(20, a) + s"list($biStr\n" +
               stmts.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
 
-          case add: Add     => indent + add
-          case ret: Retract => indent + ret
-
-          case RetractEntity(e) =>
-            indent + ":db/retractEntity" + padS(22, ":db/retractEntity") + e
+          case add: Add           => indent + add
+          case ret: Retract       => indent + ret
+          case ret: RetractEntity => indent + ret
 
           case l: java.util.List[_] if l.size() == 4 && l.asScala.head.toString.take(4) == ":db/" => {
             val List(action, e, a, v) = l.asScala.toList

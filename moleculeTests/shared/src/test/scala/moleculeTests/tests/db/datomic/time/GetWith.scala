@@ -1,12 +1,12 @@
 package moleculeTests.tests.db.datomic.time
 
+import molecule.core.ast.elements.Card
 import molecule.datomic.api.out3._
-import molecule.datomic.base.facade.Conn
-import moleculeTests.setup.AsyncTestSuite
+import molecule.datomic.base.ast.transactionModel.{Add, RetractEntity}
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
 
 object GetWith extends AsyncTestSuite {
 
@@ -106,6 +106,25 @@ object GetWith extends AsyncTestSuite {
         _ <- Ns.str.int.get.map(_.sortBy(_._2) ==> List(
           ("a", 1),
           ("b", 2)
+        ))
+      } yield ()
+    }
+
+
+    "getRetractStmts with tx meta data" - core { implicit conn =>
+      for {
+        eid <- Ns.int(1).save.map(_.eid)
+
+        // without tx meta data
+        _ <- eid.getRetractStmts.map(_ ==> List(
+          RetractEntity(eid)
+        ))
+
+        // with tx meta data
+        _ <- eid.getRetractStmts(Ref2.str2("meta2") + Ref1.str1("meta1")).map(_ ==> List(
+          RetractEntity(eid),
+          Add("datomic.tx", ":Ref2/str2", "meta2", Card(1)),
+          Add("datomic.tx", ":Ref1/str1", "meta1", Card(1))
         ))
       } yield ()
     }

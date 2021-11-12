@@ -22,11 +22,14 @@ case class DatomicEntity_Peer(
   showKW: Boolean = true
 ) extends DatomicEntity_Jvm(conn, eid) {
 
-  // Internal --------------------------------------------------
 
-  private[molecule] final def attrs(implicit ec: ExecutionContext): Future[List[String]] =
+  // Entity api -------------------------------------------------
+
+  final def attrs(implicit ec: ExecutionContext): Future[List[String]] =
     Future(datomicEntity.keySet().asScala.toList)
 
+
+  // Internal --------------------------------------------------
 
   private[molecule] final override def rawValue(
     kw: String

@@ -167,5 +167,19 @@ object Retract extends AsyncTestSuite {
         _ <- Ns.int(2).Ref1.e.int1.get.map(_.head ==> (2, r2, 21))
       } yield ()
     }
+
+
+    "Multiple entities" - core { implicit conn =>
+      for {
+        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
+
+        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
+
+        // Retract multiple entities (without tx meta data)
+        _ <- retract(Seq(e1, e2))
+
+        _ <- Ns.int.get.map(_ ==> List(3))
+      } yield ()
+    }
   }
 }

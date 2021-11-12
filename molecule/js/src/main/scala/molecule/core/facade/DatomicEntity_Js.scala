@@ -7,7 +7,7 @@ import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.ops.VerifyModel
 import molecule.datomic.base.api.DatomicEntity
-import molecule.datomic.base.ast.transactionModel.RetractEntity
+import molecule.datomic.base.ast.transactionModel.{RetractEntity, Statement}
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -25,27 +25,34 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any)
 
   final def retract(txMeta1: Molecule, txMetaMore: Molecule*)
                    (implicit ec: ExecutionContext): Future[TxReport] = withEid { eid =>
-    val retractStmts = Seq(RetractEntity(eid))
+    val retractStmt     = RetractEntity(eid)
     val txMetaDataModel = Model((txMeta1 +: txMetaMore).map(m => TxMetaData(m._model.elements)))
     try {
       VerifyModel(txMetaDataModel, "save") // can throw exception
       for {
         txMetaStmts <- conn.model2stmts(txMetaDataModel).saveStmts
-        txReport <- rpc.transact(conn.connProxy, Stmts2Edn(retractStmts ++ txMetaStmts, conn))
+        txReport <- rpc.transact(conn.connProxy, Stmts2Edn(retractStmt +: txMetaStmts, conn))
       } yield txReport
     } catch {
       case NonFatal(exc) => Future.failed(exc)
     }
   }
 
-  final def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = withEid(eid =>
+  final def getRetractStmts(implicit ec: ExecutionContext): Future[Seq[Statement]] = withEid(eid =>
     Future(List(RetractEntity(eid)))
   )
 
   final def getRetractStmts(txMeta1: Molecule, txMetaMore: Molecule*)
-                           (implicit ec: ExecutionContext): Future[List[RetractEntity]] = withEid(eid =>
-    Future(List(RetractEntity(eid)))
-  )
+                           (implicit ec: ExecutionContext): Future[Seq[Statement]] = withEid { eid =>
+    val retractStmt     = RetractEntity(eid)
+    val txMetaDataModel = Model((txMeta1 +: txMetaMore).map(m => TxMetaData(m._model.elements)))
+    try {
+      VerifyModel(txMetaDataModel, "save") // can throw exception
+      conn.model2stmts(txMetaDataModel).saveStmts.map(txMetaStmts => retractStmt +: txMetaStmts)
+    } catch {
+      case NonFatal(exc) => Future.failed(exc)
+    }
+  }
 
 
   final def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = {
@@ -56,14 +63,14 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any)
 
   final def inspectRetract(txMeta1: Molecule, txMetaMore: Molecule*)
                           (implicit ec: ExecutionContext): Future[Unit] = withEid { eid =>
-    val retractStmts = Seq(RetractEntity(eid))
+    val retractStmt     = RetractEntity(eid)
     val txMetaDataModel = Model((txMeta1 +: txMetaMore).map(m => TxMetaData(m._model.elements)))
     try {
       VerifyModel(txMetaDataModel, "save") // can throw exception
       conn.model2stmts(txMetaDataModel).saveStmts.map(txMetaStmts =>
         conn.inspect(
           "Inspect `retract` on entity with tx meta data", 1
-        )(1, retractStmts ++ txMetaStmts)
+        )(1, retractStmt +: txMetaStmts)
       )
     } catch {
       case NonFatal(exc) => Future.failed(exc)
@@ -133,8 +140,7 @@ case class DatomicEntity_Js(conn: Conn, eidAny: Any)
     graphCode(maxDepth).map(println)
   }
 
-
-  final override def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = withEid(eid =>
+  final def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] = withEid(eid =>
     rpc.graphCode(conn.connProxy, eid, maxDepth)
   )
 

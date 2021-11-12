@@ -1,6 +1,9 @@
 package moleculeTests.tests.db.datomic.txMetaData
 
+import molecule.core.ast.elements.Card
 import molecule.datomic.api.in3_out10._
+import molecule.datomic.api.in3_out12.inspectRetract
+import molecule.datomic.base.ast.transactionModel.{Add, RetractEntity}
 import molecule.datomic.base.ops.QueryOps
 import molecule.datomic.base.util.SystemPeerServer
 import moleculeTests.setup.AsyncTestSuite
@@ -47,12 +50,12 @@ object MetaRetract extends AsyncTestSuite {
         // What was retracted and with what tx meta data
         _ <- if (system == SystemPeerServer) {
           Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
-            // 1 was retracted with tx meta data "meta"
+            // 1 was retracted with tx meta data "meta2" and "meta1"
             (eid, 1, tx2, false, "meta2", "meta1")
           ))
         } else {
           Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
-            // 1 was retracted with tx meta data "meta"
+            // 1 was retracted with tx meta data "meta2" and "meta1"
             (eid, 1, tx2, false, "meta2", "meta1")
           ))
         }
@@ -69,29 +72,15 @@ object MetaRetract extends AsyncTestSuite {
         // What was retracted and with what tx meta data
         _ <- if (system == SystemPeerServer) {
           Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
-            // 1 was retracted with tx meta data "meta"
+            // 1 was retracted with tx meta data "meta2" and "meta1"
             (eid, 1, tx2, false, "meta2", "meta1")
           ))
         } else {
           Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
-            // 1 was retracted with tx meta data "meta"
+            // 1 was retracted with tx meta data "meta2" and "meta1"
             (eid, 1, tx2, false, "meta2", "meta1")
           ))
         }
-      } yield ()
-    }
-
-
-    "Multiple entities without tx meta data" - core { implicit conn =>
-      for {
-        List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
-
-        _ <- Ns.int.get.map(_ ==> List(1, 2, 3))
-
-        // Retract multiple entities (without tx meta data)
-        _ <- retract(Seq(e1, e2))
-
-        _ <- Ns.int.get.map(_ ==> List(3))
       } yield ()
     }
 
@@ -246,6 +235,81 @@ object MetaRetract extends AsyncTestSuite {
             ))
           } yield res
         }
+      } yield ()
+    }
+
+
+    "Inspect retracting 1 entity" - core { implicit conn =>
+      for {
+        eid <- Ns.int(1).save.map(_.eid)
+
+        // Inspect retraction statements
+        _ <- eid.inspectRetract
+        /*
+          ## 1 ## Inspect `retract` on entity
+          =============================================================================
+          list(
+            RetractEntity(17592186045453))
+          =============================================================================
+         */
+
+        // Inspect retraction statements with tx meta data
+        _ <- eid.inspectRetract(Ref2.str2("meta2") + Ref1.str1("meta1"))
+        /*
+          ## 1 ## Inspect `retract` on entity with tx meta data
+          =============================================================================
+          list(
+            RetractEntity(17592186045453),
+            Add(datomic.tx,:Ref2/str2,meta2,Card(1)),
+            Add(datomic.tx,:Ref1/str1,meta1,Card(1)))
+          =============================================================================
+         */
+      } yield ()
+    }
+
+    "Inspect retracting multiple entities" - core { implicit conn =>
+      for {
+        eids <- Ns.int.insert(1, 2).map(_.eids)
+
+        // Inspect retraction statements
+        _ <- inspectRetract(eids)
+        /*
+          ## 1 ## molecule.core.Datomic.inspectRetract
+          =============================================================================
+          Model()
+          -----------------------------------------------------------------------------
+          List()
+          -----------------------------------------------------------------------------
+          List(
+            list(
+              RetractEntity(17592186045453),
+              RetractEntity(17592186045454)))
+          =============================================================================
+         */
+
+        // Inspect retraction statements with tx meta data
+        _ <- inspectRetract(eids, Ref2.str2("meta2"), Ref1.str1("meta1"))
+        /*
+          ## 1 ## molecule.core.Datomic.inspectRetract
+          =============================================================================
+          Model(
+            TxMetaData(
+              Atom("Ref2", "str2", "String", 1, Eq(Seq("meta2")), None, Seq(), Seq()))
+            TxMetaData(
+              Atom("Ref1", "str1", "String", 1, Eq(Seq("meta1")), None, Seq(), Seq())))
+          -----------------------------------------------------------------------------
+          List(
+            Add(tx,:Ref2/str2,Values(Eq(Seq("meta2")),None),Card(1)),
+            Add(tx,:Ref1/str1,Values(Eq(Seq("meta1")),None),Card(1)))
+          -----------------------------------------------------------------------------
+          List(
+            list(
+              RetractEntity(17592186045453),
+              RetractEntity(17592186045454),
+              Add(datomic.tx,:Ref2/str2,meta2,Card(1)),
+              Add(datomic.tx,:Ref1/str1,meta1,Card(1))))
+          =============================================================================
+         */
       } yield ()
     }
   }

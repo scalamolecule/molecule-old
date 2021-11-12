@@ -187,7 +187,6 @@ object Model2Query extends Helpers {
         abort("Couldn't attach tx to any DataClause in query:\n" + query0)
       (query0.copy(wh = Where(cls1)), txV)
     }
-    //    var first = true
     val (q2, e2, v2, prevNs2, prevAttr2, prevRefNs2) = txMetaData.elements.foldLeft((query, txV, w, prevNs, prevAttr, prevRefNs)) {
       case ((q1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element) =>
         make(model, q1, element, e1, v1, prevNs1, prevAttr1, prevRefNs1)
@@ -246,7 +245,6 @@ object Model2Query extends Helpers {
         (v, b +: elements)
       else
         (e, b +: elements)
-      //        (w, b +: elements)
       val (q2, _, v2, ns2, attr2, refNs2) = elements2.foldLeft((query, e, v, prevNs, prevAttr, prevRefNs)) {
         case ((query1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element1) =>
           make(model, query1, element1, e1, v1, prevNs1, prevAttr1, prevRefNs1)
@@ -267,8 +265,10 @@ object Model2Query extends Helpers {
         abort(s"Unexpected first clause of composite query: " + other + "\n" + query.wh.clauses.mkString("\n"))
     }
 
-    val eid: String = if (e == "tx" || txMetaComposite)
+    val eid: String = if (e == "tx")
       "tx"
+    else if (txMetaComposite)
+      e
     else if (query.wh.clauses.isEmpty)
       e
     else
