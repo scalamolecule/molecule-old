@@ -9,52 +9,52 @@ import scala.annotation.StaticAnnotation
   * For small projects, the schema can be defined without partition definitions where
   * all namespaces reside in a default tacit partition:
   * {{{
-  *   package path.to.your.project
-  *   import molecule.data.model._       // import data model DSL
+  * package path.to.your.project
+  * import molecule.data.model._       // import data model DSL
   *
-  *   @InOut(1, 8)                       // Set input/output arity
-  *   object SeattleDataModel {          // data model object
+  * @InOut(1, 8)                       // Set input/output arity
+  * object SeattleDataModel {          // data model object
   *
-  *     trait Person {                   // Namespace
-  *       val name = oneString.fulltext  // String attribute definition with fulltext search
-  *       val age  = oneInt              // Int attribute definition
-  *     }
-  *
-  *     // Additional namespaces...
+  *   trait Person {                   // Namespace
+  *     val name = oneString.fulltext  // String attribute definition with fulltext search
+  *     val age  = oneInt              // Int attribute definition
   *   }
+  *
+  *   // Additional namespaces...
+  * }
   * }}}
   * For larger projects, it is recommended to group namespaces in partitions:
   * {{{
-  *   package path.to.your.project
-  *   import molecule.data.model._
+  * package path.to.your.project
+  * import molecule.data.model._
   *
-  *   @InOut(3, 15)
-  *   object SeattleDataModel {
+  * @InOut(3, 15)
+  * object SeattleDataModel {
   *
-  *     object customer {
-  *       trait Person {
-  *         val name    = oneString.fulltext
-  *         val age     = oneInt
-  *         val address = one[Address]
-  *         val bought  = many[products.Item]
-  *       }
-  *       trait Address {
-  *         val street = oneString.fulltext
-  *         val city   = oneInt
-  *       }
-  *       // ..more namespaces in the `customer` partition
+  *   object customer {
+  *     trait Person {
+  *       val name    = oneString.fulltext
+  *       val age     = oneInt
+  *       val address = one[Address]
+  *       val bought  = many[products.Item]
   *     }
-  *
-  *     object products {
-  *       trait Item {
-  *         val title   = oneString
-  *         val inStock = oneInt
-  *       }
-  *       // ..more namespaces in the `products` partition
+  *     trait Address {
+  *       val street = oneString.fulltext
+  *       val city   = oneInt
   *     }
-  *
-  *     // Additional partitions...
+  *     // ..more namespaces in the `customer` partition
   *   }
+  *
+  *   object products {
+  *     trait Item {
+  *       val title   = oneString
+  *       val inStock = oneInt
+  *     }
+  *     // ..more namespaces in the `products` partition
+  *   }
+  *
+  *   // Additional partitions...
+  * }
   * }}}
   *
   * @groupname setup Setup

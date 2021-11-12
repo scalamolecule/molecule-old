@@ -12,25 +12,26 @@ import scala.util.control.NonFatal
 
 
 /** Shared interfaces of input molecules awaiting 1 input.
-  * {{{
-  *   // Sample data set
-  *   Person.name.age insert List(
-  *     ("Joe", 42),
-  *     ("Liz", 34)
-  *   )
-  *
-  *   // Input molecule awaiting 1 input for `name`
-  *   val ageOfPersons = m(Person.name_(?).age)
-  *
-  *   // Resolve input molecule with name input in various ways
-  *   ageOfPersons("Joe").get.map(_ ==> List(42))
-  *   ageOfPersons("Joe", "Liz").get.map(_ ==> List(42, 34))
-  *   ageOfPersons("Joe" or "Liz").get.map(_ ==> List(42, 34))
-  *   ageOfPersons(Seq("Joe", "Liz")).get.map(_ ==> List(42, 34))
-  * }}}
-  *
-  * @tparam I1 Type of input matching attribute with `?` marker
-  */
+ * {{{
+ * // Input molecule awaiting 1 input for `name`
+ * val ageOfPersons = m(Person.name_(?).age)
+ * for {
+ *   // Sample data set
+ *   _ <- Person.name.age insert List(
+ *     ("Joe", 42),
+ *     ("Liz", 34)
+ *   )
+ *
+ *   // Resolve input molecule with name input in various ways
+ *   _ <- ageOfPersons("Joe").get.map(_ ==> List(42))
+ *   _ <- ageOfPersons("Joe", "Liz").get.map(_ ==> List(42, 34))
+ *   _ <- ageOfPersons("Joe" or "Liz").get.map(_ ==> List(42, 34))
+ *   _ <- ageOfPersons(Seq("Joe", "Liz")).get.map(_ ==> List(42, 34))
+ * } yield ()
+ * }}}
+ *
+ * @tparam I1 Type of input matching attribute with `?` marker
+ */
 abstract class Molecule_1[Obj, I1](
   model: Model,
   queryData: (Query, String, Option[Throwable])
@@ -72,90 +73,74 @@ abstract class Molecule_1[Obj, I1](
 
 
   /** Apply one or more input values to resolve input molecule.
-    * {{{
-    *   // Input molecule awaiting name input
-    *   val ageOfPersons = Person.name_(?).age
-    *
-    *   // Apply one or more input value(s)
-    *   ageOfPersons.apply("Ben", "Liz") // (one or more input values...)
-    *
-    *   // Same as
-    *   ageOfPersons("Ben" or "Liz")
-    *   ageOfPersons(Seq("Ben", "Liz"))
-    *   ageOfPersons(Set("Ben", "Liz"))
-    * }}}
-    * Querying the resolved molecule will match all entities having `name` set to the value(s) applied.
-    *
-    * @note Only distinct values are matched.
-    * @return Resolved molecule that can be queried
-    */
+   * {{{
+   * // Input molecule awaiting name input
+   * val ageOfPersons = Person.name_(?).age
+   * for {
+   *   // Apply single value
+   *   _ <- ageOfPersons("Joe").get.map(_ ==> List(42))
+   * } yield ()
+   * }}}
+   * Querying the resolved molecule will match all entities having `name` set to the value(s) applied.
+   *
+   * @note Only distinct values are matched.
+   * @return Resolved molecule that can be queried
+   */
   def apply(arg: I1)(implicit conn: Future[Conn]): Molecule
 
 
   /** Apply one or more input values to resolve input molecule.
-    * {{{
-    *   // Input molecule awaiting name input
-    *   val ageOfPersons = Person.name_(?).age
-    *
-    *   // Apply one or more input value(s)
-    *   ageOfPersons.apply("Ben", "Liz") // (one or more input values...)
-    *
-    *   // Same as
-    *   ageOfPersons("Ben" or "Liz")
-    *   ageOfPersons(Seq("Ben", "Liz"))
-    *   ageOfPersons(Set("Ben", "Liz"))
-    * }}}
-    * Querying the resolved molecule will match all entities having `name` set to the value(s) applied.
-    *
-    * @note Only distinct values are matched.
-    * @return Resolved molecule that can be queried
-    */
+   * {{{
+   * // Input molecule awaiting name input
+   * val ageOfPersons = Person.name_(?).age
+   * for {
+   *   // Apply two or more values as vararg
+   *   _ <- ageOfPersons("Joe", "Liz").get.map(_ ==> List(42, 34))
+   * } yield ()
+   * }}}
+   * Querying the resolved molecule will match all entities having `name` set to the value(s) applied.
+   *
+   * @note Only distinct values are matched.
+   * @return Resolved molecule that can be queried
+   */
   def apply(arg: I1, arg2: I1, moreArgs: I1*)(implicit conn: Future[Conn]): Molecule
 
 
   /** Apply OR expression of input values to resolve input molecule.
-    * <br><br>
-    * Input value type matches attribute having `?` marker.
-    * {{{
-    *   // Input molecule awaiting name input
-    *   val ageOfPersons = Person.name_(?).age
-    *
-    *   // Apply OR expression of two or more input values
-    *   ageOfPersons.apply("Ben" or "Liz") // (one or more input values...)
-    *
-    *   // Same as
-    *   ageOfPersons("Ben", "Liz")
-    *   ageOfPersons(Seq("Ben", "Liz"))
-    *   ageOfPersons(Set("Ben", "Liz"))
-    * }}}
-    * Querying the resolved molecule will match all entities having `name` set to the values applied.
-    *
-    * @note Only distinct values are matched.
-    * @return Resolved molecule that can be queried
-    */
+   * <br><br>
+   * Input value type matches attribute having `?` marker.
+   * {{{
+   * // Input molecule awaiting name input
+   * val ageOfPersons = Person.name_(?).age
+   * for {
+   *   // Apply OR expression of two or more input values
+   *   _ <- ageOfPersons("Joe" or "Liz").get.map(_ ==> List(42, 34))
+   * } yield ()
+   * }}}
+   * Querying the resolved molecule will match all entities having `name` set to the values applied.
+   *
+   * @note Only distinct values are matched.
+   * @return Resolved molecule that can be queried
+   */
   def apply(or: Or[I1])(implicit conn: Future[Conn]): Molecule
 
 
   /** Apply Seq of input values with OR semantics to resolve input molecule.
-    * <br><br>
-    * Resolve input molecule by applying a Set of values that the attribute is expected to have (OR semantics).
-    * {{{
-    *   // Input molecule awaiting name input
-    *   val ageOfPersons = Person.name_(?).age
-    *
-    *   // Apply Seq of one or more input value(s)
-    *   ageOfPersons.apply(Seq("Ben", "Liz"))
-    *
-    *   // Same as
-    *   ageOfPersons(Set("Ben", "Liz"))
-    *   ageOfPersons("Ben" or "Liz")
-    *   ageOfPersons("Ben", "Liz")
-    * }}}
-    * Querying the resolved molecule will match all entities having `name` set to the value(s) applied.
-    *
-    * @note Only distinct values are matched.
-    * @return Resolved molecule that can be queried
-    */
+   * <br><br>
+   * Resolve input molecule by applying a Set of values that the attribute is expected to have (OR semantics).
+   * {{{
+   * // Input molecule awaiting name input
+   * val ageOfPersons = Person.name_(?).age
+   * for {
+   *   // Apply Seq of one or more input value(s)
+   *   _ <- ageOfPersons(Seq("Joe", "Liz")).get.map(_ ==> List(42, 34))
+   * } yield ()
+   * }}}
+   * Querying the resolved molecule will match all entities having `name` set to the value(s) applied.
+   *
+   * @note Only distinct values are matched.
+   * @return Resolved molecule that can be queried
+   */
   def apply(args: Seq[I1])(implicit conn: Future[Conn]): Molecule
 }
 

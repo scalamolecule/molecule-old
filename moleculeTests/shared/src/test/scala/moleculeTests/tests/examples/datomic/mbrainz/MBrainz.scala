@@ -68,34 +68,36 @@ object MBrainz extends AsyncTestSuite {
     }
 
 
-    //  // Todo: model as graph with bidirectional relationships
-    //  "Collaboration" - mbrainz { implicit conn =>
+    //    // Todo: model as graph with bidirectional relationships
+    //    "Collaboration" - mbrainz { implicit conn =>
+    //      for {
+    //        // Who collaborated with one of the Beatles?
+    //        // Repeated attributes was translated to transitive lookups - model graph instead... todo
     //
-    //    // Who collaborated with one of the Beatles?
-    //    // Repeated attributes was translated to transitive lookups - model graph instead... todo
+    //        _ <- Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.get.map(_ ==> List(
+    //          ("John Lennon", "The Plastic Ono Band"),
+    //          ("George Harrison", "Bob Dylan"),
+    //          ("John Lennon", "Yoko Ono"),
+    //          ("George Harrison", "Ravi Shankar"),
+    //          ("Paul McCartney", "Linda McCartney")
+    //        ))
     //
-    //    Track.Artists.name("John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr").name.get.map(_ ==> List(
-    //      ("John Lennon", "The Plastic Ono Band"),
-    //      ("George Harrison", "Bob Dylan"),
-    //      ("John Lennon", "Yoko Ono"),
-    //      ("George Harrison", "Ravi Shankar"),
-    //      ("Paul McCartney", "Linda McCartney"))
+    //        // Who directly collaborated with George Harrison,
+    //        _ <- Track.Artists.name_("George Harrison").name.get.map(_ ==> List("Bob Dylan", "Ravi Shankar"))
+    //        // .. or collaborated with one of his collaborators?
+    //        _ <- Track.Artists.name_("George Harrison").name_.name.get.map(_ ==> List("Ali Akbar Khan"))
     //
-    //    // Who directly collaborated with George Harrison,
-    //    Track.Artists.name_("George Harrison").name.get.map(_ ==> List("Bob Dylan", "Ravi Shankar"))
-    //    // .. or collaborated with one of his collaborators?
-    //    Track.Artists.name_("George Harrison").name_.name.get.map(_ ==> List("Ali Akbar Khan"))
+    //        // Parameterized input molecule for direct collaborators
+    //        collaborators = m(Track.Artists.name_(?).name)
     //
-    //    // Parameterized input molecule for direct collaborators
-    //    val collaborators = m(Track.Artists.name_(?).name)
+    //        // George Harrison's collaborators
     //
-    //    // George Harrison's collaborators
-    //    val collabs1 = collaborators("George Harrison").get.toSeq
-    //    collabs1 === List("Bob Dylan", "Ravi Shankar")
+    //        collabs1 <- collaborators("George Harrison").get.map(_.toSeq)
+    //        _ = collabs1 ==> List("Bob Dylan", "Ravi Shankar")
     //
-    //    // George Harrison's collaborators collaborators (includes George...)
-    //    collaborators(collabs1).get.map(_ ==> List("George Harrison", "Ali Akbar Khan"))
-    //    } yield ()
+    //        // George Harrison's collaborators collaborators (includes George...)
+    //        _ <- collaborators(collabs1).get.map(_ ==> List("George Harrison", "Ali Akbar Khan"))
+    //      } yield ()
     //    }
 
     "2-step querying" - mbrainz { implicit conn =>

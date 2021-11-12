@@ -11,35 +11,18 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
 
-/** Default asynchronous data getter methods on molecules returning `Future[List[Tpl]]`.
- * <br><br>
- * For expected smaller result sets it's convenient to return Lists of tuples of data.
- * Considered as the default getter, no postfix has been added (`getAsync` instead of `getAsyncList`).
- * {{{
- *   val futureList: Future[List[(String, Int)]] = Person.name.age.getAsync
- *   for {
- *     list <- futureList
- *   } yield {
- *     list === List(
- *       ("Ben", 42),
- *       ("Liz", 37)
- *     )
- *   }
- * }}}
- * Each asynchronous getter in this package simply wraps the result of its equivalent synchronous getter (in the
- * `get` package) in a Future. `getAsyncAsOf` thus wraps the result of `getAsOf` in a Future and so on.
- * */
+/** Default data getter methods on molecules that return data as lists of tuples. */
 trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule.
+  /** Get Future with List of all rows as tuples matching a molecule.
    * <br><br>
    * {{{
-   *   Person.name.age.get.map(_ ==> List(
-   *     ("Ben", 42),
-   *     ("Liz", 37),
-   *   ))
+   * Person.name.age.get.map(_ ==> List(
+   *   ("Ben", 42),
+   *   ("Liz", 37),
+   * ))
    * }}}
    * <br><br>
    * Since retrieving a List is considered the default fetch format, the getter method is
@@ -89,13 +72,11 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     )(Future.failed) // Pass on exception from input failure
   }
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule.
-   * <br><br>
-   * Only n rows are type-casted.
+  /** Get Future with List of n rows as tuples matching a molecule.
    * {{{
-   *   Person.name.age.get(1).map(_ ==> List(
-   *     ("Ben", 42)
-   *   )
+   * Person.name.age.get(1).map(_ ==> List(
+   *   ("Ben", 42)
+   * )
    * }}}
    * <br><br>
    * Since retrieving a List is considered the default fetch format, the getter method is
@@ -142,49 +123,51 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
 
   // get as of ================================================================================================
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule as of transaction time `t`.
+  /** Get Future with List of all rows as tuples matching molecule as of transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved in a getHistory call for an attribute and then be
    * used to get data as of that point in time (including that transaction):
    * {{{
+   * for {
    *   // Insert (t 1028)
-   *   val List(ben, liz) = Person.name.age insert List(
+   *   List(ben, liz) <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   ) eids
    *
    *   // Update (t 1031)
-   *   Person(ben).age(43).update
+   *   _ <- Person(ben).age(43).update
    *
    *   // Retract (t 1032)
-   *   ben.retract
+   *   _ <- ben.retract
    *
    *   // History of Ben
-   *   Person(ben).age.t.op..get(History.sortBy(r => )(r._2, r._3)).map(_ ==> List(
+   *   _ <- Person(ben).age.t.op.getHistory.map(_.sortBy(r => (r._2, r._3)) ==> List(
    *     (42, 1028, true),  // Insert:  42 asserted
    *     (42, 1031, false), // Update:  42 retracted
    *     (43, 1031, true),  //          43 asserted
    *     (43, 1032, false)  // Retract: 43 retracted
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of transaction t 1028 (after insert)
-   *   Person.name.age.getAsOf(1028).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(1028).map(_ ==> List(
    *     ("Liz", 37),
    *     ("Ben", 42)
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of transaction t 1031 (after update)
-   *   Person.name.age.getAsOf(1031).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(1031).map(_ ==> List(
    *     ("Liz", 37),
    *     ("Ben", 43)
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of transaction t 1032 (after retract)
-   *   Person.name.age.getAsOf(1032).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(1032).map(_ ==> List(
    *     ("Liz", 37)
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    * <br><br>
    * For more info and code examples see equivalent synchronous
@@ -199,39 +182,41 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule as of transaction time `t`.
+  /** Get Future with List of n rows as tuples matching molecule as of transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved in a getHistory call for an attribute and then be
    * used to get data as of that point in time (including that transaction):
    * {{{
+   * for {
    *   // Insert (t 1028)
-   *   val List(ben, liz) = Person.name.age insert List(
+   *   List(ben, liz) <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   ) eids
    *
    *   // Update (t 1031)
-   *   Person(ben).age(43).update
+   *   _ <- Person(ben).age(43).update
    *
    *   // History of Ben
-   *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
+   *   _ <- Person(ben).age.t.op.getHistory.map(_.sortBy(r => (r._2, r._3)) ==> List(
    *     (42, 1028, true),  // Insert:  42 asserted
    *     (42, 1031, false), // Update:  42 retracted
    *     (43, 1031, true),  //          43 asserted
-   *   )
+   *   ))
    *
    *   // Get List of all all rows as of transaction t 1031 (after update)
-   *   Person.name.age.getAsOf(1031).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(1031).map(_ ==> List(
    *     ("Ben", 43),
    *     ("Liz", 37)
-   *   )
+   *   ))
    *
    *   // Get List of n rows as of transaction t 1031 (after update)
-   *   Person.name.age.getAsOf(1031, 1).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(1031, 1).map(_ ==> List(
    *     ("Ben", 43)
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    * <br><br>
    * For more info and code examples see equivalent synchronous
@@ -247,45 +232,48 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule as of tx.
+  /** Get Future with List of all rows as tuples matching molecule as of tx.
    * <br><br>
    * Datomic's internal `asOf` method can take a transaction entity id as argument to retrieve a
    * database value as of that transaction (including).
    * <br><br>
-   * Instead of supplying the transaction entity id, in Molecule we supply a [[molecule.datomic.base.facade.TxReport TxReport]]
+   * Instead of supplying the transaction entity id, in Molecule we supply a
+   * [[molecule.datomic.base.facade.TxReport TxReport]]
    * that contains the transaction entity id (which is used as argument to Datomic internally). This is more
    * convenient when using Molecule since we get a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction
    * operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Insert (tx report 1)
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   )
-   *   val List(ben, liz) = tx1.eids
+   *   List(ben, liz) = tx1.eids
    *
    *   // Update (tx report 2)
-   *   val tx2 = Person(ben).age(43).update
+   *   tx2 <- Person(ben).age(43).update
    *
    *   // Retract (tx report 3)
-   *   val tx3 = ben.retract
+   *   tx3 <- ben.retract
    *
    *   // Get List of all rows as of tx1 (after insert)
-   *   Person.name.age.getAsOf(tx1).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(tx1).map(_ ==> List(
    *     ("Ben", 42),
    *     ("Liz", 37)
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of tx2 (after update)
-   *   Person.name.age.getAsOf(tx2).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(tx2).map(_ ==> List(
    *     ("Ben", 43), // Ben now 43
    *     ("Liz", 37)
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of tx3 (after retract)
-   *   Person.name.age.getAsOf(tx3).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(tx3).map(_ ==> List(
    *     ("Liz", 37) // Ben gone
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -297,37 +285,39 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule as of tx.
+  /** Get Future with List of n rows as tuples matching molecule as of tx.
    * <br><br>
    * Datomic's internal `asOf` method can take a transaction entity id as argument to retrieve a database
    * value as of that transaction (including).
    * <br><br>
-   * Instead of supplying the transaction entity id, in Molecule we supply a [[molecule.datomic.base.facade.TxReport TxReport]]
-   * that contains the transaction entity id (which is used as argument to Datomic internally). This is more
-   * convenient when using Molecule since we get a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction
-   * operations like `get`, `update`, `retract` etc.
+   * Instead of supplying the transaction entity id, in Molecule we supply a
+   * [[molecule.datomic.base.facade.TxReport TxReport]]
+   * that contains the transaction entity id (which is used as argument to Datomic internally).
+   * This is more convenient when using Molecule since we get a [[molecule.datomic.base.facade.TxReport TxReport]]
+   * from transaction operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Insert (tx report 1)
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37)
    *   )
-   *   val List(ben, liz) = tx1.eids
+   *   List(ben, liz) = tx1.eids
    *
    *   // Update (tx report 2)
-   *   val tx2 = Person(ben).age(43).update
-   *
+   *   tx2 <- Person(ben).age(43).update
    *
    *   // Get List of all rows as of tx2 (after update)
-   *   Person.name.age.getAsOf(tx2).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(tx2).map(_ ==> List(
    *     ("Ben", 43),
    *     ("Liz", 37)
-   *   )
+   *   ))
    *
    *   // Get List of n rows as of tx2 (after update)
-   *   Person.name.age.getAsOf(tx2, 1).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(tx2, 1).map(_ ==> List(
    *     ("Ben", 43)
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -340,47 +330,49 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule as of date.
+  /** Get Future with List of all rows as tuples matching molecule as of date.
    * <br><br>
    * Get data at a human point in time (a java.util.Date).
    * {{{
-   *   val beforeInsert = new java.util.Date
+   * for {
+   *   beforeInsert = new java.util.Date
    *
    *   // Insert
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   )
-   *   val List(ben, liz) = tx1.eids
-   *   val afterInsert = new java.util.Date
+   *   List(ben, liz) = tx1.eids
+   *   afterInsert = new java.util.Date
    *
    *   // Update
-   *   val tx2 = Person(ben).age(43).update
-   *   val afterUpdate = new java.util.Date
+   *   tx2 <- Person(ben).age(43).update
+   *   afterUpdate = new java.util.Date
    *
    *   // Retract
-   *   val tx3 = ben.retract
-   *   val afterRetract = new java.util.Date
+   *   tx3 <- ben.retract
+   *   afterRetract = new java.util.Date
    *
    *   // No data yet before insert
-   *   Person.name.age.getAsOf(beforeInsert).map(_ ==> Nil)
+   *   _ <- Person.name.age.getAsOf(beforeInsert).map(_ ==> Nil)
    *
    *   // Get List of all rows as of afterInsert
-   *   Person.name.age.getAsOf(afterInsert).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(afterInsert).map(_ ==> List(
    *     ("Ben", 42),
    *     ("Liz", 37)´
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of afterUpdate
-   *   Person.name.age.getAsOf(afterUpdate).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(afterUpdate).map(_ ==> List(
    *     ("Ben", 43), // Ben now 43
    *     ("Liz", 37)
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of afterRetract
-   *   Person.name.age.getAsOf(afterRetract).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(afterRetract).map(_ ==> List(
    *     ("Liz", 37) // Ben gone
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -392,34 +384,36 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule as of date.
+  /** Get Future with List of n rows as tuples matching molecule as of date.
    * <br><br>
    * Get data at a human point in time (a java.util.Date).
    * {{{
-   *   val beforeInsert = new java.util.Date
+   * for {
+   *   beforeInsert = new java.util.Date
    *
    *   // Insert
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37)
    *   )
-   *   val List(ben, liz) = tx1.eids
-   *   val afterInsert = new java.util.Date
+   *   List(ben, liz) = tx1.eids
+   *   afterInsert = new java.util.Date
    *
    *   // Update
-   *   val tx2 = Person(ben).age(43).update
-   *   val afterUpdate = new java.util.Date
+   *   tx2 <- Person(ben).age(43).update
+   *   afterUpdate = new java.util.Date
    *
    *   // Get List of all rows as of afterUpdate
-   *   Person.name.age.getAsOf(afterUpdate).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(afterUpdate).map(_ ==> List(
    *     ("Ben", 43),
    *     ("Liz", 37)
-   *   )
+   *   ))
    *
    *   // Get List of n rows as of afterUpdate
-   *   Person.name.age.getAsOf(afterUpdate, 1).map(_ ==> List(
+   *   _ <- Person.name.age.getAsOf(afterUpdate, 1).map(_ ==> List(
    *     ("Ben", 43)
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -434,29 +428,31 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
 
   // get since ================================================================================================
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule since transaction time `t`.
+  /** Get Future with List of all rows as tuples matching molecule since transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved by calling `t` on the tx report returned from transactional operations
    * and then be used to get data since that point in time (excluding that transaction):
    * {{{
+   * for {
    *   // 3 transaction times `t`
-   *   val t1 = Person.name("Ann").save.t
-   *   val t2 = Person.name("Ben").save.t
-   *   val t3 = Person.name("Cay").save.t
+   *   t1 <- Person.name("Ann").save.map(_.t)
+   *   t2 <- Person.name("Ben").save.map(_.t)
+   *   t3 <- Person.name("Cay").save.map(_.t)
    *
    *   // Current values
-   *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
+   *   _ <- Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
    *
    *   // Ben and Cay added since transaction time t1
-   *   Person.name.getSince(t1).map(_ ==> List("Ben", "Cay"))
+   *   _ <- Person.name.getSince(t1).map(_ ==> List("Ben", "Cay"))
    *
    *   // Cay added since transaction time t2
-   *   Person.name.getSince(t2).map(_ ==> List("Cay"))
+   *   _ <- Person.name.getSince(t2).map(_ ==> List("Cay"))
    *
    *   // Nothing added since transaction time t3
-   *   Person.name.getSince(t3).map(_ ==> Nil)
+   *   _ <- Person.name.getSince(t3).map(_ ==> Nil)
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -468,26 +464,28 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule since transaction time `t`.
+  /** Get Future with List of n rows as tuples matching molecule since transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved by calling `t` on the tx report returned from transactional operations
    * and then be used to get data since that point in time (excluding that transaction):
    * {{{
+   * for {
    *   // 3 transaction times `t`
-   *   val t1 = Person.name("Ann").save.t
-   *   val t2 = Person.name("Ben").save.t
-   *   val t3 = Person.name("Cay").save.t
+   *   t1 <- Person.name("Ann").save.map(_.t)
+   *   t2 <- Person.name("Ben").save.map(_.t)
+   *   t3 <- Person.name("Cay").save.map(_.t)
    *
    *   // Current values
-   *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
+   *   _ <- Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
    *
    *   // Ben and Cay added since transaction time t1
-   *   Person.name.getSince(t1).map(_ ==> List("Ben", "Cay"))
+   *   _ <- Person.name.getSince(t1).map(_ ==> List("Ben", "Cay"))
    *
    *   // Ben and Cay added since transaction time t1 - only n (1) rows returned
-   *   Person.name.getSince(t1, 1).map(_ ==> List("Ben"))
+   *   _ <- Person.name.getSince(t1, 1).map(_ ==> List("Ben"))
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -500,31 +498,36 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(n)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule since tx.
+  /** Get Future with List of all rows as tuples matching molecule since tx.
    * <br><br>
    * Datomic's internal `since` can take a transaction entity id as argument to retrieve a database
    * value since that transaction (excluding the transaction itself).
    * <br><br>
-   * Instead of supplying the transaction entity id, in Molecule we supply a [[molecule.datomic.base.facade.TxReport TxReport]] that contains
-   * the transaction entity id (which is used as argument to Datomic internally). This is more convenient when using Molecule since we
-   * getAsync a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction operations like `get`, `update`, `retract` etc.
+   * Instead of supplying the transaction entity id, in Molecule we supply a
+   * [[molecule.datomic.base.facade.TxReport TxReport]] that contains
+   * the transaction entity id (which is used as argument to Datomic internally).
+   * This is more convenient when using Molecule since we
+   * getAsync a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction
+   * operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Get tx reports for 3 transactions
-   *   val tx1 = Person.name("Ann").save
-   *   val tx2 = Person.name("Ben").save
-   *   val tx3 = Person.name("Cay").save
+   *   tx1 <- Person.name("Ann").save
+   *   tx2 <- Person.name("Ben").save
+   *   tx3 <- Person.name("Cay").save
    *
    *   // Current values
-   *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
+   *   _ <- Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
    *
    *   // Ben and Cay added since tx1
-   *   Person.name.getSince(tx1).map(_ ==> List("Ben", "Cay"))
+   *   _ <- Person.name.getSince(tx1).map(_ ==> List("Ben", "Cay"))
    *
    *   // Cay added since tx2
-   *   Person.name.getSince(tx2).map(_ ==> List("Cay"))
+   *   _ <- Person.name.getSince(tx2).map(_ ==> List("Cay"))
    *
    *   // Nothing added since tx3
-   *   Person.name.getSince(tx3).map(_ ==> Nil)
+   *   _ <- Person.name.getSince(tx3).map(_ ==> Nil)
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -536,28 +539,33 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule since tx.
+  /** Get Future with List of n rows as tuples matching molecule since tx.
    * <br><br>
    * Datomic's internal `since` can take a transaction entity id as argument to retrieve a database
    * value since that transaction (excluding the transaction itself).
    * <br><br>
-   * Instead of supplying the transaction entity id, in Molecule we supply a [[molecule.datomic.base.facade.TxReport TxReport]] that contains
-   * the transaction entity id (which is used as argument to Datomic internally). This is more convenient when using Molecule since we
-   * getAsync a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction operations like `get`, `update`, `retract` etc.
+   * Instead of supplying the transaction entity id, in Molecule we supply a
+   * [[molecule.datomic.base.facade.TxReport TxReport]] that contains
+   * the transaction entity id (which is used as argument to Datomic internally).
+   * This is more convenient when using Molecule since we
+   * getAsync a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction
+   * operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Get tx reports for 3 transactions
-   *   val tx1 = Person.name("Ann").save
-   *   val tx2 = Person.name("Ben").save
-   *   val tx3 = Person.name("Cay").save
+   *   tx1 <- Person.name("Ann").save
+   *   tx2 <- Person.name("Ben").save
+   *   tx3 <- Person.name("Cay").save
    *
    *   // Current values
-   *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
+   *   _ <- Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
    *
    *   // Ben and Cay added since tx1
-   *   Person.name.getSince(tx1).map(_ ==> List("Ben", "Cay"))
+   *   _ <- Person.name.getSince(tx1).map(_ ==> List("Ben", "Cay"))
    *
    *   // Ben and Cay added since tx1 - only n (1) rows returned
-   *   Person.name.getSince(tx1, 1).map(_ ==> List("Ben"))
+   *   _ <- Person.name.getSince(tx1, 1).map(_ ==> List("Ben"))
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -570,26 +578,28 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(n)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule since date.
+  /** Get Future with List of all rows as tuples matching molecule since date.
    * <br><br>
    * Get data added/retracted since a human point in time (a java.util.Date).
    * {{{
+   * for {
    *   // Transact 3 times (`inst` retrieves transaction time/Date from tx report)
-   *   val date1 = Person.name("Ann").save.inst
-   *   val date2 = Person.name("Ben").save.inst
-   *   val date3 = Person.name("Cay").save.inst
+   *   date1 <- Person.name("Ann").save.map(_.inst)
+   *   date2 <- Person.name("Ben").save.map(_.inst)
+   *   date3 <- Person.name("Cay").save.map(_.inst)
    *
    *   // Current values
-   *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
+   *   _ <- Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
    *
    *   // Ben and Cay added since date1
-   *   Person.name.getSince(date1).map(_ ==> List("Ben", "Cay"))
+   *   _ <- Person.name.getSince(date1).map(_ ==> List("Ben", "Cay"))
    *
    *   // Cay added since date2
-   *   Person.name.getSince(date2).map(_ ==> List("Cay"))
+   *   _ <- Person.name.getSince(date2).map(_ ==> List("Cay"))
    *
    *   // Nothing added since date3
-   *   Person.name.getSince(date3).map(_ ==> Nil)
+   *   _ <- Person.name.getSince(date3).map(_ ==> Nil)
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -601,23 +611,25 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
     get(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule since date.
+  /** Get Future with List of n rows as tuples matching molecule since date.
    * <br><br>
    * Get data added/retracted since a human point in time (a java.util.Date).
    * {{{
+   * for {
    *   // Transact 3 times (`inst` retrieves transaction time/Date from tx report)
-   *   val date1 = Person.name("Ann").save.inst
-   *   val date2 = Person.name("Ben").save.inst
-   *   val date3 = Person.name("Cay").save.inst
+   *   date1 <- Person.name("Ann").save.map(_.inst)
+   *   date2 <- Person.name("Ben").save.map(_.inst)
+   *   date3 <- Person.name("Cay").save.map(_.inst)
    *
    *   // Current values
-   *   Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
+   *   _ <- Person.name.get.map(_ ==> List("Ann", "Ben", "Cay"))
    *
    *   // Ben and Cay added since date1
-   *   Person.name.getSince(date1).map(_ ==> List("Ben", "Cay"))
+   *   _ <- Person.name.getSince(date1).map(_ ==> List("Ben", "Cay"))
    *
    *   // Ben and Cay added since date1 - only n (1) rows returned
-   *   Person.name.getSince(date1, 1).map(_ ==> List("Ben"))
+   *   _ <- Person.name.getSince(date1, 1).map(_ ==> List("Ben"))
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -632,24 +644,27 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
 
   // get with ================================================================================================
 
-  /** Get `Future` with `List` of all rows as tuples matching molecule with applied molecule transaction data.
+  /** Get Future with List of all rows as tuples matching molecule with applied molecule transaction data.
    * <br><br>
-   * Apply one or more molecule transactions to in-memory "branch" of db without affecting db to see how it would then look:
+   * Apply one or more molecule transactions to in-memory "branch" of db without
+   * affecting db to see how it would then look:
    * {{{
+   * for {
    *   // Current state
-   *   val ben = Person.name("Ben").likes("pasta").save.eid
+   *   ben <- Person.name("Ben").likes("pasta").save.map(_.eid)
    *
    *   // Base data
-   *   Person.name.likes.getWith(
+   *   _ <- Person.name.likes.getWith(
    *     // apply imaginary transaction data
-   *     Person(ben).likes("sushi").getUpdateTx
+   *     Person(ben).likes("sushi").getUpdateStmts
    *   ).map(_ ==> List(
    *     // Effect: Ben would like sushi if tx was applied
    *     ("Ben", "sushi")
-   *   )
+   *   ))
    *
    *   // Current state is still the same
-   *   Person.name.likes.get.map(_ ==> List(("Ben", "pasta")))
+   *   _ <- Person.name.likes.get.map(_ ==> List(("Ben", "pasta")))
+   * } yield ()
    * }}}
    * Multiple transactions can be applied to test more complex what-if scenarios!
    *
@@ -670,33 +685,36 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
   }
 
 
-  /** Get `Future` with `List` of n rows as tuples matching molecule with applied molecule transaction data.
+  /** Get Future with List of n rows as tuples matching molecule with applied molecule transaction data.
    * <br><br>
-   * Apply one or more molecule transactions to in-memory "branch" of db without affecting db to see how it would then look:
+   * Apply one or more molecule transactions to in-memory "branch" of db without
+   * affecting db to see how it would then look:
    * {{{
+   * for {
    *   // Current state
-   *   val List(ben, liz) = Person.name.likes.insert(
+   *   List(ben, liz) <- Person.name.likes.insert(
    *     ("Ben", "pasta"),
    *     ("Liz", "pizza")
    *   ).eids
    *
    *   // Test multiple transactions
-   *   Person.name.likes.getWith(
-   *     Person(ben).likes("sushi").getUpdateTx,
-   *     Person(liz).likes("cake").getUpdateTx
+   *   _ <- Person.name.likes.getWith(
+   *     Person(ben).likes("sushi").getUpdateStmts,
+   *     Person(liz).likes("cake").getUpdateStmts
    *   ).map(_ ==> List(
    *     ("Ben", "sushi")
    *     ("Liz", "cake")
-   *   )
+   *   ))
    *
    *   // Same as above, but only n (1) rows returned:
-   *   Person.name.likes.getWith(
+   *   _ <- Person.name.likes.getWith(
    *     1
-   *     Person(ben).likes("sushi").getUpdateTx,
-   *     Person(liz).likes("cake").getUpdateTx
+   *     Person(ben).likes("sushi").getUpdateStmts,
+   *     Person(liz).likes("cake").getUpdateStmts
    *   ).map(_ ==> List(
    *     ("Ben", "sushi")
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    *
    * @group getWith
@@ -718,75 +736,6 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
   }
 
 
-  //  /** Get `Future` with `List` of all rows as tuples matching molecule with applied raw transaction data.
-  //    * <br><br>
-  //    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
-  //    * {{{
-  //    *   // Live size of Person db
-  //    *   Person.name.get.map(_.size ==> 150)
-  //    *
-  //    *   // Read some transaction data from file
-  //    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
-  //    *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
-  //    *
-  //    *   // Imagine future db - 100 persons would be added, apparently
-  //    *   Person.name.getWith(newDataTx).map(_.size ==> 250
-  //    * }}}
-  //    *
-  //    * @group getWith
-  //    * @param txData Raw transaction data as java.util.List[Object]
-  //    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-  //    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
-  //    */
-  //  def getWith(txData: jList[_])(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-  //    _getWith(txData, -1)
-  //  }
-  //
-  //  /** Get `Future` with `List` of n rows as tuples matching molecule with applied raw transaction data.
-  //    * <br><br>
-  //    * Apply raw transaction data to in-memory "branch" of db without affecting db to see how it would then look:
-  //    * {{{
-  //    *   // Live size of Person db
-  //    *   Person.name.get.map(_.size ==> 150)
-  //    *
-  //    *   // Read some transaction data from file
-  //    *   val data_rdr2 = new FileReader("examples/resources/seattle/seattle-data1a.dtm")
-  //    *   val newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[java.util.List[Object]]
-  //    *
-  //    *   // Imagine future db - 100 persons would be added, apparently
-  //    *   Person.name.getWith(newDataTx).map(_.size ==> 250)
-  //    *
-  //    *   // Imagine future db - Let's just take 10
-  //    *   Person.name.getWith(newDataTx, 10).map(_.size ==> 10)
-  //    * }}}
-  //    *
-  //    * @group getWith
-  //    * @param txData Raw transaction data as java.util.List[Object]
-  //    * @param n      Int Number of rows returned
-  //    * @param conn   Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-  //    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
-  //    */
-  //  def getWith(txData: jList[_], n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-  //    _getWith(txData, n)
-  //  }
-  //
-  //
-  //  private def _getWith(txData: jList[_], n: Int)
-  //                      (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-  //    val connWith = conn.flatMap { conn =>
-  //      if (conn.isJsPlatform) {
-  //        Future.failed(new IllegalArgumentException("Please use tx data from molecule statements instead."))
-  //      } else {
-  ////        Future(conn.usingDbView(With(txData.asInstanceOf[jList[jList[_]]])))
-  //
-  //
-  //
-  //        Future(conn.usingDbView(With(txData.asInstanceOf[jList[jList[_]]])))
-  //      }
-  //    }
-  //    get(n)(connWith, ec)
-  //  }
-
   // get history ================================================================================================
 
   /** Get `Future` with history of operations as `List` on an attribute in the db.
@@ -804,25 +753,27 @@ trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
    * <br><br>
    * Example:
    * {{{
+   * for {
    *   // Insert (t 1028)
-   *   val List(ben, liz) = Person.name.age insert List(
+   *   List(ben, liz) <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   ) eids
    *
    *   // Update (t 1031)
-   *   Person(ben).age(43).update
+   *   _ <- Person(ben).age(43).update
    *
    *   // Retract (t 1032)
-   *   ben.retract
+   *   _ <- ben.retract
    *
    *   // History of Ben
-   *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
+   *   _ <- Person(ben).age.t.op.getHistory.map(_.sortBy(r => (r._2, r._3)) ==> List(
    *     (42, 1028, true),  // Insert:  42 asserted
    *     (42, 1031, false), // Update:  42 retracted
    *     (43, 1031, true),  //          43 asserted
    *     (43, 1032, false)  // Retract: 43 retracted
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    *
    * @group getHistory

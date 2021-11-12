@@ -6,7 +6,7 @@ import molecule.core.ast.elements._
 
 /** Logic expression implicits to build OR/AND logic.
   * {{{
-  *   Person.name("John" or "Jonas")           // OR-logic
+  * Person.name("John" or "Jonas") // OR-logic
   * }}}
   *
   * @groupname attrLogicImplicits Expression implicits

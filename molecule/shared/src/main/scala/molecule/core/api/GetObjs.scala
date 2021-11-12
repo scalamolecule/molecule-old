@@ -10,34 +10,24 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
 
-/** Default asynchronous data getter methods on molecules returning `Future[List[Obj]]`.
+/** Data getter methods on molecules that return data as Lists of objects with attribute properties.
  * <br><br>
- * For expected smaller result sets it's convenient to return Lists of objects of data.
- * {{{
- *   for {
- *     persons <- Person.name.age.getAsyncObjList
- *   } yield {
- *     persons.map(p => s"${p.name} is ${p.age} years old")) === List(
- *       "Ben is 42 years old",
- *       "Liz is 37 years old"
- *     )
- *   }
- * }}}
- * Each asynchronous getter in this package simply wraps the result of its equivalent synchronous getter in a Future.
- * `getAsyncObjListAsOf` thus wraps the result of `getObjListAsOf` in a Future and so on.
+ * Attributes names are used as object property names.
  * */
 trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 
-  /** Get `Future` with `List` of all rows as objects matching molecule.
+  /** Get Future with List of all rows as objects matching a molecule.
    * <br><br>
    * {{{
-   *   val List(p1, p2) = Person.name.age.getObjList
-   *   p1.name === "Ben"
-   *   p1.age  === 42
-   *   p2.name === "Liz"
-   *   p2.age  === 37
+   * for {
+   *   List(p1, p2) <- Person.name.age.getObjs
+   *   _ = p1.name ==> "Ben"
+   *   _ = p1.age  ==> 42
+   *   _ = p2.name ==> "Liz"
+   *   _ = p2.age  ==> 37
+   * } yield ()
    * }}}
    *
    * @group getAsync
@@ -63,13 +53,13 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     )(Future.failed) // Pass on exception from input failure
   }
 
-  /** Get `Future` with `List` of n rows as objects matching molecule.
-   * <br><br>
-   * Only n rows are type-casted.
+  /** Get Future with List of n rows as objects matching a molecule.
    * {{{
-   *   val List(p1) = Person.name.age.getObjList(1)
-   *   p1.name === "Ben"
-   *   p1.age  === 42
+   * for {
+   *   List(p1) <- Person.name.age.getObjs(1)
+   *   _ = p1.name ==> "Ben"
+   *   _ = p1.age  ==> 42
+   * } yield ()
    * }}}
    *
    * @group get
@@ -108,11 +98,13 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     )(Future.failed) // Pass on exception from input failure
   }
 
-  /** Convenience method to get head of list of objects matching molecule.
+  /** Convenience method to get head of list of objects matching a molecule.
    * {{{
-   *   val person = Person.name.age.getObj
-   *   person.name === "Ben"
-   *   person.age  === 42
+   * for {
+   *   person <- Person.name.age.getObj
+   *   _ = person.name ==> "Ben"
+   *   _ = person.age  ==> 42
+   * } yield ()
    * }}}
    *
    * @group get
@@ -128,51 +120,53 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   // get as of ================================================================================================
 
-  /** Get `Future` with `List` of all rows as objects matching molecule as of transaction time `t`.
+  /** Get Future with List of all rows as objects matching a molecule as of transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved in a getHistory call for an attribute and then be
    * used to get data as of that point in time (including that transaction):
    * {{{
+   * for {
    *   // Insert (t 1028)
-   *   val List(ben, liz) = Person.name.age insert List(
+   *   List(ben, liz) <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   ) eids
    *
    *   // Update (t 1031)
-   *   Person(ben).age(43).update
+   *   _ <- Person(ben).age(43).update
    *
    *   // Retract (t 1032)
-   *   ben.retract
+   *   _ <- ben.retract
    *
    *   // History of Ben
-   *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
+   *   _ <- Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
    *     (42, 1028, true),  // Insert:  42 asserted
    *     (42, 1031, false), // Update:  42 retracted
    *     (43, 1031, true),  //          43 asserted
    *     (43, 1032, false)  // Retract: 43 retracted
-   *   )
+   *   ))
    *
    *   // Get List of data as of transaction t 1028 (after insert)
-   *   val List(a1, a2) = Person.name.age.getObjListAsOf(1028)
-   *   a1.name === "Ben"
-   *   a1.age  === 42
-   *   a2.name === "Liz"
-   *   a2.age  === 37
+   *   List(a1, a2) <- Person.name.age.getObjsAsOf(1028)
+   *   _ = a1.name ==> "Ben"
+   *   _ = a1.age  ==> 42
+   *   _ = a2.name ==> "Liz"
+   *   _ = a2.age  ==> 37
    *
    *   // Get List of data as of transaction t 1031 (after update)
-   *   val List(b1, b2) = Person.name.age.getObjListAsOf(1031)
-   *   b1.name === "Ben"
-   *   b1.age  === 43 // <-- updated
-   *   b2.name === "Liz"
-   *   b2.age  === 37
+   *   List(b1, b2) <- Person.name.age.getObjsAsOf(1031)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b1.age  ==> 43 // <-- updated
+   *   _ = b2.name ==> "Liz"
+   *   _ = b2.age  ==> 37
    *
    *   // Get List of all rows as of transaction t 1032 (after retract)
-   *   val List(c1) = Person.name.age.getObjListAsOf(1032)
-   *   c1.name === "Liz"
-   *   c1.age  === 37
+   *   List(c1) <- Person.name.age.getObjsAsOf(1032)
+   *   _ = c1.name ==> "Liz"
+   *   _ = c1.age  ==> 37
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -184,40 +178,42 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as objects matching molecule as of transaction time `t`.
+  /** Get Future with List of n rows as objects matching a molecule as of transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved in a getHistory call for an attribute and then be
    * used to get data as of that point in time (including that transaction):
    * {{{
+   * for {
    *   // Insert (t 1028)
-   *   val List(ben, liz) = Person.name.age insert List(
+   *   List(ben, liz) <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   ) eids
    *
    *   // Update (t 1031)
-   *   Person(ben).age(43).update
+   *   _ <- Person(ben).age(43).update
    *
    *   // History of Ben
-   *   Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
+   *   _ <- Person(ben).age.t.op.getHistory.sortBy(r => (r._2, r._3)).map(_ ==> List(
    *     (42, 1028, true),  // Insert:  42 asserted
    *     (42, 1031, false), // Update:  42 retracted
    *     (43, 1031, true),  //          43 asserted
-   *   )
+   *   ))
    *
    *   // Get List of all rows as of transaction t 1031 (after update)
-   *   val List(a1, a2) = Person.name.age.getObjListAsOf(1031)
-   *   a1.name === "Ben"
-   *   a1.age  === 43 // <-- updated
-   *   a2.name === "Liz"
-   *   a2.age  === 37
+   *   List(a1, a2) <- Person.name.age.getObjsAsOf(1031)
+   *   _ = a1.name ==> "Ben"
+   *   _ = a1.age  ==> 43 // <-- updated
+   *   _ = a2.name ==> "Liz"
+   *   _ = a2.age  ==> 37
    *
    *   // Get List of n rows as of transaction t 1031 (after update)
-   *   val List(b1) = Person.name.age.getObjListAsOf(1031)
-   *   b1.name === "Ben"
-   *   b1.age  === 43 // <-- updated
+   *   List(b1) <- Person.name.age.getObjsAsOf(1031)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b1.age  ==> 43 // <-- updated
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -230,7 +226,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as objects matching molecule as of tx.
+  /** Get Future with List of all rows as objects matching a molecule as of tx.
    * <br><br>
    * Datomic's internal `asOf` method can take a transaction entity id as argument to retrieve a
    * database value as of that transaction (including).
@@ -240,37 +236,39 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * convenient when using Molecule since we get a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction
    * operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Insert (tx report 1)
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   )
-   *   val List(ben, liz) = tx1.eids
+   *   List(ben, liz) = tx1.eids
    *
    *   // Update (tx report 2)
-   *   val tx2 = Person(ben).age(43).update
+   *   tx2 <- Person(ben).age(43).update
    *
    *   // Retract (tx report 3)
-   *   val tx3 = ben.retract
+   *   tx3 = ben.retract
    *
    *   // Get List of all rows as of tx1 (after insert)
-   *   val List(a1, a2) = Person.name.age.getObjListAsOf(tx1)
-   *   a1.name === "Ben"
-   *   a1.age  === 42
-   *   a2.name === "Liz"
-   *   a2.age  === 37
+   *   List(a1, a2) <- Person.name.age.getObjsAsOf(tx1)
+   *   _ = a1.name ==> "Ben"
+   *   _ = a1.age  ==> 42
+   *   _ = a2.name ==> "Liz"
+   *   _ = a2.age  ==> 37
    *
    *   // Get List of all rows as of tx2 (after update)
-   *   val List(b1, b2) = Person.name.age.getObjListAsOf(tx2)
-   *   b1.name === "Ben"
-   *   b1.age  === 43 // <-- updated
-   *   b2.name === "Liz"
-   *   b2.age  === 37
+   *   List(b1, b2) <- Person.name.age.getObjsAsOf(tx2)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b1.age  ==> 43 // <-- updated
+   *   _ = b2.name ==> "Liz"
+   *   _ = b2.age  ==> 37
    *
    *   // Get List of all rows as of tx3 (after retract)
-   *   val List(c1) = Person.name.age.getObjListAsOf(tx3)
-   *   c1.name === "Liz"
-   *   c1.age  === 37
+   *   List(c1) <- Person.name.age.getObjsAsOf(tx3)
+   *   _ = c1.name ==> "Liz"
+   *   _ = c1.age  ==> 37
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -282,7 +280,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as objects matching molecule as of tx.
+  /** Get Future with List of n rows as objects matching a molecule as of tx.
    * <br><br>
    * Datomic's internal `asOf` method can take a transaction entity id as argument to retrieve a database
    * value as of that transaction (including).
@@ -292,28 +290,29 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * convenient when using Molecule since we get a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction
    * operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Insert (tx report 1)
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37)
    *   )
-   *   val List(ben, liz) = tx1.eids
+   *   List(ben, liz) = tx1.eids
    *
    *   // Update (tx report 2)
-   *   val tx2 = Person(ben).age(43).update
-   *
+   *   tx2 <- Person(ben).age(43).update
    *
    *   // Get List of all rows as of tx2 (after update)
-   *   val List(a1, a2) = Person.name.age.getObjListAsOf(tx2)
-   *   a1.name === "Ben"
-   *   a1.age  === 43 // <-- updated
-   *   a2.name === "Liz"
-   *   a2.age  === 37
+   *   List(a1, a2) <- Person.name.age.getObjsAsOf(tx2)
+   *   _ = a1.name ==> "Ben"
+   *   _ = a1.age  ==> 43 // <-- updated
+   *   _ = a2.name ==> "Liz"
+   *   _ = a2.age  ==> 37
    *
    *   // Get List of n rows as of tx2 (after update)
-   *   val List(b1) = Person.name.age.getObjListAsOf(tx2, 1)
-   *   b1.name === "Ben"
-   *   b1.age  === 43 // <-- updated
+   *   List(b1) <- Person.name.age.getObjsAsOf(tx2, 1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b1.age  ==> 43 // <-- updated
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -326,50 +325,52 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as objects matching molecule as of date.
+  /** Get Future with List of all rows as objects matching a molecule as of date.
    * <br><br>
    * Get data at a human point in time (a java.util.Date).
    * {{{
-   *   val beforeInsert = new java.util.Date
+   * for {
+   *   beforeInsert = new java.util.Date
    *
    *   // Insert
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   )
-   *   val List(ben, liz) = tx1.eids
-   *   val afterInsert = new java.util.Date
+   *   List(ben, liz) = tx1.eids
+   *   afterInsert = new java.util.Date
    *
    *   // Update
-   *   val tx2 = Person(ben).age(43).update
-   *   val afterUpdate = new java.util.Date
+   *   tx2 <- Person(ben).age(43).update
+   *   afterUpdate = new java.util.Date
    *
    *   // Retract
-   *   val tx3 = ben.retract
-   *   val afterRetract = new java.util.Date
+   *   tx3 <- ben.retract
+   *   afterRetract = new java.util.Date
    *
    *
    *   // No data yet before insert
-   *   Person.name.age.getObjListAsOf(beforeInsert).map(_ ==> List())
+   *   _ <- Person.name.age.getObjsAsOf(beforeInsert).map(_ ==> Nil)
    *
    *   // Get List of all rows as of afterInsert
-   *   val List(a1, a2) = Person.name.age.getObjListAsOf(afterInsert)
-   *   a1.name === "Ben"
-   *   a1.age  === 42
-   *   a2.name === "Liz"
-   *   a2.age  === 37
+   *   List(a1, a2) <- Person.name.age.getObjsAsOf(afterInsert)
+   *   _ = a1.name ==> "Ben"
+   *   _ = a1.age  ==> 42
+   *   _ = a2.name ==> "Liz"
+   *   _ = a2.age  ==> 37
    *
    *   // Get List of all rows as of afterUpdate
-   *   val List(b1, b2) = Person.name.age.getObjListAsOf(afterUpdate)
-   *   b1.name === "Ben"
-   *   b1.age  === 43 // <-- updated
-   *   b2.name === "Liz"
-   *   b2.age  === 37
+   *   List(b1, b2) <- Person.name.age.getObjsAsOf(afterUpdate)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b1.age  ==> 43 // <-- updated
+   *   _ = b2.name ==> "Liz"
+   *   _ = b2.age  ==> 37
    *
    *   // Get List of all rows as of afterRetract
-   *   val List(c1) = Person.name.age.getObjListAsOf(afterRetract)
-   *   c1.name === "Liz"
-   *   c1.age  === 37
+   *   List(c1) <- Person.name.age.getObjsAsOf(afterRetract)
+   *   _ = c1.name ==> "Liz"
+   *   _ = c1.age  ==> 37
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -381,36 +382,37 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as objects matching molecule as of date.
+  /** Get Future with List of n rows as objects matching a molecule as of date.
    * <br><br>
    * Get data at a human point in time (a java.util.Date).
    * {{{
-   *   val beforeInsert = new java.util.Date
+   * for {
+   *   beforeInsert = new java.util.Date
    *
    *   // Insert
-   *   val tx1 = Person.name.age insert List(
+   *   tx1 <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37)
    *   )
-   *   val List(ben, liz) = tx1.eids
-   *   val afterInsert = new java.util.Date
+   *   List(ben, liz) = tx1.eids
+   *   afterInsert = new java.util.Date
    *
    *   // Update
-   *   val tx2 = Person(ben).age(43).update
-   *   val afterUpdate = new java.util.Date
-   *
+   *   tx2 <- Person(ben).age(43).update
+   *   afterUpdate = new java.util.Date
    *
    *   // Get List of all rows as of afterUpdate
-   *   val List(a1, a2) = Person.name.age.getObjListAsOf(afterUpdate)
-   *   a1.name === "Ben"
-   *   a1.age  === 43 // <-- updated
-   *   a2.name === "Liz"
-   *   a2.age  === 37
+   *   List(a1, a2) <- Person.name.age.getObjsAsOf(afterUpdate)
+   *   _ = a1.name ==> "Ben"
+   *   _ = a1.age  ==> 43 // <-- updated
+   *   _ = a2.name ==> "Liz"
+   *   _ = a2.age  ==> 37
    *
    *   // Get List of n rows as of afterUpdate
-   *   val List(b1) = Person.name.age.getObjListAsOf(afterUpdate, 1)
-   *   b1.name === "Ben"
-   *   b1.age  === 43 // <-- updated
+   *   List(b1) <- Person.name.age.getObjsAsOf(afterUpdate, 1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b1.age  ==> 43 // <-- updated
+   * } yield ()
    * }}}
    *
    * @group getAsOf
@@ -425,36 +427,37 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   // get since ================================================================================================
 
-  /** Get `Future` with `List` of all rows as objects matching molecule since transaction time `t`.
+  /** Get Future with List of all rows as objects matching a molecule since transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved by calling `t` on the tx report returned from transactional operations
    * and then be used to get data since that point in time (excluding that transaction):
    * {{{
+   * for {
    *   // 3 transaction times `t`
-   *   val t1 = Person.name("Ann").save.t
-   *   val t2 = Person.name("Ben").save.t
-   *   val t3 = Person.name("Cay").save.t
-   *
+   *   t1 <- Person.name("Ann").save.map(_.t)
+   *   t2 <- Person.name("Ben").save.map(_.t)
+   *   t3 <- Person.name("Cay").save.map(_.t)
    *
    *   // Current values
-   *   val List(a1, a2, a3) = Person.name.getObjList
-   *   a1.name === "Ann"
-   *   a2.name === "Ben"
-   *   a3.name === "Cay"
+   *   List(a1, a2, a3) <- Person.name.getObjs
+   *   _ = a1.name ==> "Ann"
+   *   _ = a2.name ==> "Ben"
+   *   _ = a3.name ==> "Cay"
    *
    *   // Ben and Cay added since transaction time t1
-   *   val List(b1, b2) = Person.name.getObjListSince(t1)
-   *   b1.name === "Ben"
-   *   b2.name === "Cay"
+   *   List(b1, b2) <- Person.name.getObjsSince(t1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b2.name ==> "Cay"
    *
    *   // Cay added since transaction time t2
-   *   val List(c1) = Person.name.getObjListSince(t2)
-   *   c1.name === "Cay"
+   *   List(c1) <- Person.name.getObjsSince(t2)
+   *   _ = c1.name ==> "Cay"
    *
    *   // Nothing added since transaction time t3
-   *   Person.name.getObjListSince(t3).map(_ ==> List())
+   *   _ <- Person.name.getObjsSince(t3).map(_ ==> Nil)
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -466,33 +469,34 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as objects matching molecule since transaction time `t`.
+  /** Get Future with List of n rows as objects matching a molecule since transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
    * <br><br>
    * `t` can for instance be retrieved by calling `t` on the tx report returned from transactional operations
    * and then be used to get data since that point in time (excluding that transaction):
    * {{{
+   * for {
    *   // 3 transaction times `t`
-   *   val t1 = Person.name("Ann").save.t
-   *   val t2 = Person.name("Ben").save.t
-   *   val t3 = Person.name("Cay").save.t
-   *
+   *   t1 <- Person.name("Ann").save.map(_.t)
+   *   t2 <- Person.name("Ben").save.map(_.t)
+   *   t3 <- Person.name("Cay").save.map(_.t)
    *
    *   // Current values
-   *   val List(a1, a2, a3) = Person.name.getObjList
-   *   a1.name === "Ann"
-   *   a2.name === "Ben"
-   *   a3.name === "Cay"
+   *   List(a1, a2, a3) <- Person.name.getObjs
+   *   _ = a1.name ==> "Ann"
+   *   _ = a2.name ==> "Ben"
+   *   _ = a3.name ==> "Cay"
    *
    *   // Ben and Cay added since transaction time t1
-   *   val List(b1, b2) = Person.name.getObjListSince(t1)
-   *   b1.name === "Ben"
-   *   b2.name === "Cay"
+   *   List(b1, b2) <- Person.name.getObjsSince(t1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b2.name ==> "Cay"
    *
    *   // Ben and Cay added since transaction time t1 - only n (1) rows returned
-   *   val List(c1) = Person.name.getObjListSince(t1, 1)
-   *   c1.name === "Ben"
+   *   List(c1) <- Person.name.getObjsSince(t1, 1)
+   *   _ = c1.name ==> "Ben"
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -505,7 +509,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(n)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as objects matching molecule since tx.
+  /** Get Future with List of all rows as objects matching a molecule since tx.
    * <br><br>
    * Datomic's internal `since` can take a transaction entity id as argument to retrieve a database
    * value since that transaction (excluding the transaction itself).
@@ -514,29 +518,30 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * the transaction entity id (which is used as argument to Datomic internally). This is more convenient when using Molecule since we
    * getAsyncObjList a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Get tx reports for 3 transactions
-   *   val tx1 = Person.name("Ann").save
-   *   val tx2 = Person.name("Ben").save
-   *   val tx3 = Person.name("Cay").save
-   *
+   *   tx1 <- Person.name("Ann").save
+   *   tx2 <- Person.name("Ben").save
+   *   tx3 <- Person.name("Cay").save
    *
    *   // Current values
-   *   val List(a1, a2, a3) = Person.name.getObjList
-   *   a1.name === "Ann"
-   *   a2.name === "Ben"
-   *   a3.name === "Cay"
+   *   List(a1, a2, a3) <- Person.name.getObjs
+   *   _ = a1.name ==> "Ann"
+   *   _ = a2.name ==> "Ben"
+   *   _ = a3.name ==> "Cay"
    *
    *   // Ben and Cay added since transaction time tx1
-   *   val List(b1, b2) = Person.name.getObjListSince(tx1)
-   *   b1.name === "Ben"
-   *   b2.name === "Cay"
+   *   List(b1, b2) <- Person.name.getObjsSince(tx1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b2.name ==> "Cay"
    *
    *   // Cay added since transaction time tx2
-   *   val List(c1) = Person.name.getObjListSince(tx2)
-   *   c1.name === "Cay"
+   *   List(c1) <- Person.name.getObjsSince(tx2)
+   *   _ = c1.name ==> "Cay"
    *
    *   // Nothing added since transaction time tx3
-   *   Person.name.getObjListSince(tx3).map(_ ==> List())
+   *   _ <- Person.name.getObjsSince(tx3).map(_ ==> Nil)
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -548,7 +553,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as objects matching molecule since tx.
+  /** Get Future with List of n rows as objects matching a molecule since tx.
    * <br><br>
    * Datomic's internal `since` can take a transaction entity id as argument to retrieve a database
    * value since that transaction (excluding the transaction itself).
@@ -557,26 +562,27 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * the transaction entity id (which is used as argument to Datomic internally). This is more convenient when using Molecule since we
    * getAsyncObjList a [[molecule.datomic.base.facade.TxReport TxReport]] from transaction operations like `get`, `update`, `retract` etc.
    * {{{
+   * for {
    *   // Get tx reports for 3 transactions
-   *   val tx1 = Person.name("Ann").save
-   *   val tx2 = Person.name("Ben").save
-   *   val tx3 = Person.name("Cay").save
-   *
+   *   tx1 <- Person.name("Ann").save
+   *   tx2 <- Person.name("Ben").save
+   *   tx3 <- Person.name("Cay").save
    *
    *   // Current values
-   *   val List(a1, a2, a3) = Person.name.getObjList
-   *   a1.name === "Ann"
-   *   a2.name === "Ben"
-   *   a3.name === "Cay"
+   *   List(a1, a2, a3) <- Person.name.getObjs
+   *   _ = a1.name ==> "Ann"
+   *   _ = a2.name ==> "Ben"
+   *   _ = a3.name ==> "Cay"
    *
    *   // Ben and Cay added since tx1
-   *   val List(b1, b2) = Person.name.getObjListSince(tx1)
-   *   b1.name === "Ben"
-   *   b2.name === "Cay"
+   *   List(b1, b2) <- Person.name.getObjsSince(tx1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b2.name ==> "Cay"
    *
    *   // Ben and Cay added since tx1 - only n (1) rows returned
-   *   val List(c1) = Person.name.getObjListSince(tx1, 1)
-   *   c1.name === "Ben"
+   *   List(c1) <- Person.name.getObjsSince(tx1, 1)
+   *   _ = c1.name ==> "Ben"
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -589,33 +595,34 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(n)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
-  /** Get `Future` with `List` of all rows as objects matching molecule since date.
+  /** Get Future with List of all rows as objects matching a molecule since date.
    * <br><br>
    * Get data added/retracted since a human point in time (a java.util.Date).
    * {{{
+   * for {
    *   // Transact 3 times (`inst` retrieves transaction time/Date from tx report)
-   *   val date1 = Person.name("Ann").save.inst
-   *   val date2 = Person.name("Ben").save.inst
-   *   val date3 = Person.name("Cay").save.inst
-   *
+   *   date1 <- Person.name("Ann").save.inst
+   *   date2 <- Person.name("Ben").save.inst
+   *   date3 <- Person.name("Cay").save.inst
    *
    *   // Current values
-   *   val List(a1, a2, a3) = Person.name.getObjList
-   *   a1.name === "Ann"
-   *   a2.name === "Ben"
-   *   a3.name === "Cay"
+   *   List(a1, a2, a3) <- Person.name.getObjs
+   *   _ = a1.name ==> "Ann"
+   *   _ = a2.name ==> "Ben"
+   *   _ = a3.name ==> "Cay"
    *
    *   // Ben and Cay added since date1
-   *   val List(b1, b2) = Person.name.getObjListSince(date1)
-   *   b1.name === "Ben"
-   *   b2.name === "Cay"
+   *   List(b1, b2) <- Person.name.getObjsSince(date1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b2.name ==> "Cay"
    *
    *   // Cay added since transaction time date2
-   *   val List(c1) = Person.name.getObjListSince(date2)
-   *   c1.name === "Cay"
+   *   List(c1) <- Person.name.getObjsSince(date2)
+   *   _ = c1.name ==> "Cay"
    *
    *   // Nothing added since transaction time date3
-   *   Person.name.getObjListSince(date3).map(_ ==> List())
+   *   _ <- Person.name.getObjsSince(date3).map(_ ==> Nil)
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -627,30 +634,31 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     getObjs(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
-  /** Get `Future` with `List` of n rows as objects matching molecule since date.
+  /** Get Future with List of n rows as objects matching a molecule since date.
    * <br><br>
    * Get data added/retracted since a human point in time (a java.util.Date).
    * {{{
+   * for {
    *   // Transact 3 times (`inst` retrieves transaction time/Date from tx report)
-   *   val date1 = Person.name("Ann").save.inst
-   *   val date2 = Person.name("Ben").save.inst
-   *   val date3 = Person.name("Cay").save.inst
-   *
+   *   date1 <- Person.name("Ann").save.inst
+   *   date2 <- Person.name("Ben").save.inst
+   *   date3 <- Person.name("Cay").save.inst
    *
    *   // Current values
-   *   val List(a1, a2, a3) = Person.name.getObjList
-   *   a1.name === "Ann"
-   *   a2.name === "Ben"
-   *   a3.name === "Cay"
+   *   List(a1, a2, a3) <- Person.name.getObjs
+   *   _ = a1.name ==> "Ann"
+   *   _ = a2.name ==> "Ben"
+   *   _ = a3.name ==> "Cay"
    *
    *   // Ben and Cay added since date1
-   *   val List(b1, b2) = Person.name.getObjListSince(date1)
-   *   b1.name === "Ben"
-   *   b2.name === "Cay"
+   *   List(b1, b2) <- Person.name.getObjsSince(date1)
+   *   _ = b1.name ==> "Ben"
+   *   _ = b2.name ==> "Cay"
    *
    *   // Ben and Cay added since date1 - only n (1) rows returned
-   *   val List(c1) = Person.name.getObjListSince(date1, 1)
-   *   c1.name === "Ben"
+   *   List(c1) <- Person.name.getObjsSince(date1, 1)
+   *   _ = c1.name ==> "Ben"
+   * } yield ()
    * }}}
    *
    * @group getSince
@@ -665,30 +673,32 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   // get with ================================================================================================
 
-  /** Get `Future` with `List` of all rows as objects matching molecule with applied molecule transaction data.
+  /** Get Future with List of all rows as objects matching a molecule with applied molecule transaction data.
    * <br><br>
    * Apply one or more molecule transactions to in-memory "branch" of db without affecting db to see how it would then look:
    * {{{
+   * for {
    *   // Current state
-   *   val ben = Person.name("Ben").likes("pasta").save.eid
+   *   ben <- Person.name("Ben").likes("pasta").save.map(_.eid)
    *
-   *   val List(p0) = Person.name.likes.getObjList
-   *   p0.name  === "Ben"
-   *   p0.likes === "pasta"
+   *   List(p0) <- Person.name.likes.getObjs
+   *   _ = p0.name  ==> "Ben"
+   *   _ = p0.likes ==> "pasta"
    *
    *   // Test adding transaction data
-   *   val List(pTest) = Person.name.likes.getObjListWith(
+   *   List(pTest) <- Person.name.likes.getObjsWith(
    *     // Additional transaction data
-   *     Person(ben).likes("sushi").getUpdateTx
+   *     Person(ben).likes("sushi").getUpdateStmts
    *   )
    *   // Effect: Ben would like sushi if tx was applied
-   *   pTest.name  === "Ben"
-   *   pTest.likes === "sushi"
+   *   _ = pTest.name  ==> "Ben"
+   *   _ = pTest.likes ==> "sushi"
    *
    *   // Current state is still the same
-   *   val List(pAfter) = Person.name.likes.getObjList
-   *   pAfter.name  === "Ben"
-   *   pAfter.likes === "pasta"
+   *   List(pAfter) <- Person.name.likes.getObjs
+   *   _ = pAfter.name  ==> "Ben"
+   *   _ = pAfter.likes ==> "pasta"
+   * } yield ()
    * }}}
    * Multiple transactions can be applied to test more complex what-if scenarios!
    *
@@ -709,49 +719,51 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   }
 
 
-  /** Get `Future` with `List` of n rows as objects matching molecule with applied molecule transaction data.
+  /** Get Future with List of n rows as objects matching a molecule with applied molecule transaction data.
    * <br><br>
    * Apply one or more molecule transactions to in-memory "branch" of db without affecting db to see how it would then look:
    * {{{
+   * for {
    *   // Current state
-   *   val List(ben, liz) = Person.name.likes.insert(
+   *   List(ben, liz) <- Person.name.likes.insert(
    *     ("Ben", "pasta"),
    *     ("Liz", "pizza")
-   *   ).eids
-   *   val List(p1, p2) = Person.name.likes.getObjList
-   *   p1.name  === "Ben"
-   *   p1.likes === "pasta"
-   *   p2.name  === "Liz"
-   *   p2.likes === "pizza"
+   *   ).map(_.eids)
    *
+   *   List(p1, p2) <- Person.name.likes.getObjs
+   *   _ = p1.name  ==> "Ben"
+   *   _ = p1.likes ==> "pasta"
+   *   _ = p2.name  ==> "Liz"
+   *   _ = p2.likes ==> "pizza"
    *
    *   // Test multiple transactions
-   *   val List(testP1, testP2) = Person.name.likes.getObjListWith(
-   *     Person(ben).likes("sushi").getUpdateTx,
-   *     Person(liz).likes("cake").getUpdateTx
+   *   List(testP1, testP2) <- Person.name.likes.getObjsWith(
+   *     Person(ben).likes("sushi").getUpdateStmts,
+   *     Person(liz).likes("cake").getUpdateStmts
    *   )
    *   // Effect: sushi and cake now liked
-   *   testP1.name  === "Ben"
-   *   testP1.likes === "sushi"
-   *   testP2.name  === "Liz"
-   *   testP2.likes === "cake"
+   *   _ = testP1.name  ==> "Ben"
+   *   _ = testP1.likes ==> "sushi"
+   *   _ = testP2.name  ==> "Liz"
+   *   _ = testP2.likes ==> "cake"
    *
    *   // Same as above, but only n (1) rows returned:
-   *   val List(oneTestP) = Person.name.likes.getObjListWith(
+   *   List(oneTestP) <- Person.name.likes.getObjsWith(
    *     1
-   *     Person(ben).likes("sushi").getUpdateTx,
-   *     Person(liz).likes("cake").getUpdateTx
+   *     Person(ben).likes("sushi").getUpdateStmts,
+   *     Person(liz).likes("cake").getUpdateStmts
    *   )
    *   // Effect: sushi and cake now liked (but only Ben returned)
-   *   oneTestP.name  === "Ben"
-   *   oneTestP.likes === "sushi"
+   *   _ = oneTestP.name  ==> "Ben"
+   *   _ = oneTestP.likes ==> "sushi"
    *
    *   // Current state is still the same
-   *   val List(p3, p4) = Person.name.likes.getObjList
-   *   p3.name  === "Ben"
-   *   p3.likes === "pasta"
-   *   p4.name  === "Liz"
-   *   p4.likes === "pizza"
+   *   List(p3, p4) <- Person.name.likes.getObjs
+   *   _ = p3.name  ==> "Ben"
+   *   _ = p3.likes ==> "pasta"
+   *   _ = p4.name  ==> "Liz"
+   *   _ = p4.likes ==> "pizza"
+   * } yield ()
    * }}}
    *
    * @group getWith
@@ -790,27 +802,29 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * <br><br>
    * Example:
    * {{{
+   * for {
    *   // Insert (t 1028)
-   *   val List(ben, liz) = Person.name.age insert List(
+   *   List(ben, liz) <- Person.name.age insert List(
    *     ("Ben", 42),
    *     ("Liz", 37),
    *   ) eids
    *
    *   // Update (t 1031)
-   *   Person(ben).age(43).update
+   *   _ <- Person(ben).age(43).update
    *
    *   // Retract (t 1032)
-   *   ben.retract
+   *   _ <- ben.retract
    *
    *   // History of Ben
-   *   Person(ben).age.t.op.getObjListHistory
+   *   _ <- Person(ben).age.t.op.getObjsHistory.map(_
    *     .sortBy(o => (o.t, o.op))
-   *     .map(o => s"${o.age} ${o.t} ${o.op}") === List(
+   *     .map(o => s"${o.age} ${o.t} ${o.op}") ==> List(
    *     "42 1028 true",  // Insert:  42 asserted
    *     "42 1031 false", // Update:  42 retracted
    *     "43 1031 true",  //          43 asserted
    *     "43 1032 false"  // Retract: 43 retracted
-   *   )
+   *   ))
+   * } yield ()
    * }}}
    *
    * @group getHistory

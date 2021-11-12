@@ -10,55 +10,55 @@ import scala.util.control.NonFatal
 
 
 /** Shared interfaces of input molecules awaiting 2 inputs.
-  * {{{
-  *   // Sample data set
-  *   Person.name.profession.age insert List(
-  *     ("Ann", "doctor", 37),
-  *     ("Ben", "teacher", 37),
-  *     ("Joe", "teacher", 32),
-  *     ("Liz", "teacher", 28)
-  *   )
-  *
-  *   // Input molecule awaiting 2 inputs for `profession` and `age`
-  *   val profAge = m(Person.name.profession_(?).age_(?))
-  *
-  *
-  *   // A. Pairs of input .................................
-  *
-  *   // One pair as params
-  *   profAge("doctor", 37).get.map(_ ==> List("Ann"))
-  *
-  *   // One or more pairs
-  *   profAge(("doctor", 37)).get.map(_ ==> List("Ann"))
-  *   profAge(("doctor", 37), ("teacher", 37)).get.map(_.sorted ==> List("Ann", "Ben"))
-  *
-  *   // One or more logical pairs
-  *   // [pair-expression] or [pair-expression] or ...
-  *   profAge(("doctor" and 37) or ("teacher" and 32)).get.map(_.sorted ==> List("Ann", "Joe"))
-  *   profAge(Seq(("doctor", 37), ("teacher", 37))).get.map(_.sorted ==> List("Ann", "Ben"))
-  *
-  *   // List of pairs
-  *   profAge(Seq(("doctor", 37))).get.map(_ ==> List("Ann"))
-  *
-  *
-  *   // B. 2 groups of input, one for each input attribute .................................
-  *
-  *   // Two expressions
-  *   // [profession-expression] and [age-expression]
-  *   profAge("doctor" and 37).get.map(_ ==> List("Ann"))
-  *   profAge(("doctor" or "teacher") and 37).get.map(_.sorted ==> List("Ann", "Ben"))
-  *   profAge(("doctor" or "teacher") and (32 or 28)).get.map(_.sorted ==> List("Joe", "Liz"))
-  *
-  *   // Two Lists
-  *   profAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
-  *   profAge(Seq("doctor", "teacher"), Seq(37)).get.map(_.sorted ==> List("Ann", "Ben"))
-  *   profAge(Seq("teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ben", "Joe"))
-  *   profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-  * }}}
-  *
-  * @tparam I1 Type of input matching first attribute with `?` marker (profession: String)
-  * @tparam I2 Type of input matching second attribute with `?` marker (age: Int)
-  */
+ * {{{
+ * // Input molecule awaiting 2 inputs for `profession` and `age`
+ * val profAge = m(Person.name.profession_(?).age_(?))
+ * for {
+ *   // Sample data set
+ *   _ <- Person.name.profession.age insert List(
+ *     ("Ann", "doctor", 37),
+ *     ("Ben", "teacher", 37),
+ *     ("Joe", "teacher", 32),
+ *     ("Liz", "teacher", 28)
+ *   )
+ *
+ *   // A. Pairs of input .................................
+ *
+ *   // One pair as params
+ *   _ <- profAge("doctor", 37).get.map(_ ==> List("Ann"))
+ *
+ *   // One or more pairs
+ *   _ <- profAge(("doctor", 37)).get.map(_ ==> List("Ann"))
+ *   _ <- profAge(("doctor", 37), ("teacher", 37)).get.map(_.sorted ==> List("Ann", "Ben"))
+ *
+ *   // One or more logical pairs
+ *   // [pair-expression] or [pair-expression] or ...
+ *   _ <- profAge(("doctor" and 37) or ("teacher" and 32)).get.map(_.sorted ==> List("Ann", "Joe"))
+ *   _ <- profAge(Seq(("doctor", 37), ("teacher", 37))).get.map(_.sorted ==> List("Ann", "Ben"))
+ *
+ *   // List of pairs
+ *   _ <- profAge(Seq(("doctor", 37))).get.map(_ ==> List("Ann"))
+ *
+ *
+ *   // B. 2 groups of input, one for each input attribute .................................
+ *
+ *   // Two expressions
+ *   // [profession-expression] and [age-expression]
+ *   _ <- profAge("doctor" and 37).get.map(_ ==> List("Ann"))
+ *   _ <- profAge(("doctor" or "teacher") and 37).get.map(_.sorted ==> List("Ann", "Ben"))
+ *   _ <- profAge(("doctor" or "teacher") and (32 or 28)).get.map(_.sorted ==> List("Joe", "Liz"))
+ *
+ *   // Two Lists
+ *   _ <- profAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
+ *   _ <- profAge(Seq("doctor", "teacher"), Seq(37)).get.map(_.sorted ==> List("Ann", "Ben"))
+ *   _ <- profAge(Seq("teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ben", "Joe"))
+ *   _ <- profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+ * } yield ()
+ * }}}
+ *
+ * @tparam I1 Type of input matching first attribute with `?` marker (profession: String)
+ * @tparam I2 Type of input matching second attribute with `?` marker (age: Int)
+ */
 abstract class Molecule_2[Obj, I1, I2](
   model: Model,
   queryData: (Query, String, Option[Throwable])
@@ -213,167 +213,173 @@ abstract class Molecule_2[Obj, I1, I2](
   // Paired inputs -----------------------------------------------------------------------------
 
   /** Resolve input molecule by applying 2 input values as individual args
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age insert List(
-    *     ("Ann", "doctor", 37),
-    *     ("Ben", "teacher", 37),
-    *     ("Joe", "teacher", 32),
-    *     ("Liz", "teacher", 28)
-    *   )
-    *
-    *   // Input molecule awaiting 2 inputs for `profession` and `age`
-    *   val profAge = m(Person.name.profession_(?).age_(?))
-    *
-    *   // Apply 2 input values
-    *   profAge("doctor", 37).get.map(_ ==> List("Ann"))
-    * }}}
-    *
-    * @param i1   Input value matching first input attribute (profession: String)
-    * @param i2   Input value matching second input attribute (age: Int)
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   * {{{
+   * // Input molecule awaiting 2 inputs for `profession` and `age`
+   * val profAge = m(Person.name.profession_(?).age_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age insert List(
+   *     ("Ann", "doctor", 37),
+   *     ("Ben", "teacher", 37),
+   *     ("Joe", "teacher", 32),
+   *     ("Liz", "teacher", 28)
+   *   )
+   *
+   *   // Apply 2 input values
+   *   _ <- profAge("doctor", 37).get.map(_ ==> List("Ann"))
+   * } yield ()
+   * }}}
+   *
+   * @param i1   Input value matching first input attribute (profession: String)
+   * @param i2   Input value matching second input attribute (age: Int)
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(i1: I1, i2: I2)(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying one or more pairs of expressions, each matching both input attributes
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age insert List(
-    *     ("Ann", "doctor", 37),
-    *     ("Ben", "teacher", 37),
-    *     ("Joe", "teacher", 32),
-    *     ("Liz", "teacher", 28)
-    *   )
-    *
-    *   // Input molecule awaiting 2 inputs for `profession` and `age`
-    *   val profAge = m(Person.name.profession_(?).age_(?))
-    *
-    *   // Apply two or more pair expressions, each matching both input attributes
-    *   // [profession/age-expression] or [profession/age-expression] or ...
-    *   profAge("doctor" and 37).get.map(_.sorted ==> List("Ann"))
-    *   profAge(("doctor" and 37) or ("teacher" and 32)).get.map(_.sorted ==> List("Ann", "Joe"))
-    * }}}
-    *
-    * @param or   Two or more pair-wise expressions separated by `or`
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 2 inputs for `profession` and `age`
+   * val profAge = m(Person.name.profession_(?).age_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age insert List(
+   *     ("Ann", "doctor", 37),
+   *     ("Ben", "teacher", 37),
+   *     ("Joe", "teacher", 32),
+   *     ("Liz", "teacher", 28)
+   *   )
+   *
+   *   // Apply two or more pair expressions, each matching both input attributes
+   *   // [profession/age-expression] or [profession/age-expression] or ...
+   *   _ <- profAge("doctor" and 37).get.map(_.sorted ==> List("Ann"))
+   *   _ <- profAge(("doctor" and 37) or ("teacher" and 32)).get.map(_.sorted ==> List("Ann", "Joe"))
+   * } yield ()
+   * }}}
+   *
+   * @param or   Two or more pair-wise expressions separated by `or`
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(or: Or2[I1, I2])(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying one or more value pairs
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age insert List(
-    *     ("Ann", "doctor", 37),
-    *     ("Ben", "teacher", 37),
-    *     ("Joe", "teacher", 32),
-    *     ("Liz", "teacher", 28)
-    *   )
-    *
-    *   // Input molecule awaiting 2 inputs for `profession` and `age`
-    *   val profAge = m(Person.name.profession_(?).age_(?))
-    *
-    *   // Apply one or more value pairs, each matching both input attributes
-    *   profAge(("doctor", 37)).get.map(_ ==> List("Ann"))
-    *   profAge(("doctor", 37), ("teacher", 37)).get.map(_.sorted ==> List("Ann", "Ben"))
-    * }}}
-    *
-    * @param tpl  First pair of values matching both input attributes
-    * @param tpls Optional more pairs of values matching both input attributes
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 2 inputs for `profession` and `age`
+   * val profAge = m(Person.name.profession_(?).age_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age insert List(
+   *     ("Ann", "doctor", 37),
+   *     ("Ben", "teacher", 37),
+   *     ("Joe", "teacher", 32),
+   *     ("Liz", "teacher", 28)
+   *   )
+   *
+   *   // Apply one or more value pairs, each matching both input attributes
+   *   _ <- profAge(("doctor", 37)).get.map(_ ==> List("Ann"))
+   *   _ <- profAge(("doctor", 37), ("teacher", 37)).get.map(_.sorted ==> List("Ann", "Ben"))
+   * } yield ()
+   * }}}
+   *
+   * @param tpl  First pair of values matching both input attributes
+   * @param tpls Optional more pairs of values matching both input attributes
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(tpl: (I1, I2), tpls: (I1, I2)*)(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying Seq of value pairs
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age insert List(
-    *     ("Ann", "doctor", 37),
-    *     ("Ben", "teacher", 37),
-    *     ("Joe", "teacher", 32),
-    *     ("Liz", "teacher", 28)
-    *   )
-    *
-    *   // Input molecule awaiting 2 inputs for `profession` and `age`
-    *   val profAge = m(Person.name.profession_(?).age_(?))
-    *
-    *   // Apply Seq of one or more value pairs, each matching both input attributes
-    *   profAge(Seq(("doctor", 37))).get.map(_ ==> List("Ann"))
-    *   profAge(Seq(("doctor", 37), ("teacher", 37))).get.map(_.sorted ==> List("Ann", "Ben"))
-    * }}}
-    *
-    * @param ins  Seq of value pairs, each matching both input attributes
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   * {{{
+   * // Input molecule awaiting 2 inputs for `profession` and `age`
+   * val profAge = m(Person.name.profession_(?).age_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age insert List(
+   *     ("Ann", "doctor", 37),
+   *     ("Ben", "teacher", 37),
+   *     ("Joe", "teacher", 32),
+   *     ("Liz", "teacher", 28)
+   *   )
+   *
+   *   // Apply Seq of one or more value pairs, each matching both input attributes
+   *   _ <- profAge(Seq(("doctor", 37))).get.map(_ ==> List("Ann"))
+   *   _ <- profAge(Seq(("doctor", 37), ("teacher", 37))).get.map(_.sorted ==> List("Ann", "Ben"))
+   * } yield ()
+   * }}}
+   *
+   * @param ins  Seq of value pairs, each matching both input attributes
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(ins: Seq[(I1, I2)])(implicit conn: Future[Conn]): Molecule
 
 
   // Separate inputs -----------------------------------------------------------------------------
 
   /** Resolve input molecule by applying 2 expressions, one for each input attribute
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age insert List(
-    *     ("Ann", "doctor", 37),
-    *     ("Ben", "teacher", 37),
-    *     ("Joe", "teacher", 32),
-    *     ("Liz", "teacher", 28)
-    *   )
-    *
-    *   // Input molecule awaiting 2 inputs for `profession` and `age`
-    *   val profAge = m(Person.name.profession_(?).age_(?))
-    *
-    *   // Apply 2 expressions, one for each input attribute
-    *   // [profession-expression] and [age-expression]
-    *   profAge("doctor" and 37).get.map(_ ==> List("Ann"))
-    *   profAge(("doctor" or "teacher") and 37).get.map(_.sorted ==> List("Ann", "Ben"))
-    *   profAge(("doctor" or "teacher") and (32 or 28)).get.map(_.sorted ==> List("Joe", "Liz"))
-    * }}}
-    *
-    * @param and  First input expr `and` second input expr
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 2 inputs for `profession` and `age`
+   * val profAge = m(Person.name.profession_(?).age_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age insert List(
+   *     ("Ann", "doctor", 37),
+   *     ("Ben", "teacher", 37),
+   *     ("Joe", "teacher", 32),
+   *     ("Liz", "teacher", 28)
+   *   )
+   *
+   *   // Apply 2 expressions, one for each input attribute
+   *   // [profession-expression] and [age-expression]
+   *   _ <- profAge("doctor" and 37).get.map(_ ==> List("Ann"))
+   *   _ <- profAge(("doctor" or "teacher") and 37).get.map(_.sorted ==> List("Ann", "Ben"))
+   *   _ <- profAge(("doctor" or "teacher") and (32 or 28)).get.map(_.sorted ==> List("Joe", "Liz"))
+   * } yield ()
+   * }}}
+   *
+   * @param and  First input expr `and` second input expr
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(and: And2[I1, I2])(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying 2 Seq of values, one for each input attribute
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age insert List(
-    *     ("Ann", "doctor", 37),
-    *     ("Ben", "teacher", 37),
-    *     ("Joe", "teacher", 32),
-    *     ("Liz", "teacher", 28)
-    *   )
-    *
-    *   // Input molecule awaiting 2 inputs for profession and age
-    *   val profAge = m(Person.name.profession_(?).age_(?))
-    *
-    *   // Apply 2 Seq of values, each matching one of the input attributes
-    *   profAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
-    *   profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-    *
-    *   // Number of arguments in each Seq don't have to match but can be asymmetric
-    *   profAge(Seq("doctor", "teacher"), Seq(37)).get.map(_.sorted ==> List("Ann", "Ben"))
-    *   profAge(Seq("teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ben", "Joe"))
-    * }}}
-    *
-    * @param in1  Seq of values matching first input attribute (professions: Seq[String])
-    * @param in2  Seq of values matching second input attribute (ages: Seq[Int])
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 2 inputs for profession and age
+   * val profAge = m(Person.name.profession_(?).age_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age insert List(
+   *     ("Ann", "doctor", 37),
+   *     ("Ben", "teacher", 37),
+   *     ("Joe", "teacher", 32),
+   *     ("Liz", "teacher", 28)
+   *   )
+   *
+   *   // Apply 2 Seq of values, each matching one of the input attributes
+   *   _ <- profAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
+   *   _ <- profAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+   *
+   *   // Number of arguments in each Seq don't have to match but can be asymmetric
+   *   _ <- profAge(Seq("doctor", "teacher"), Seq(37)).get.map(_.sorted ==> List("Ann", "Ben"))
+   *   _ <- profAge(Seq("teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ben", "Joe"))
+   * } yield ()
+   * }}}
+   *
+   * @param in1  Seq of values matching first input attribute (professions: Seq[String])
+   * @param in2  Seq of values matching second input attribute (ages: Seq[Int])
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(in1: Seq[I1], in2: Seq[I2])(implicit conn: Future[Conn]): Molecule
 }
 

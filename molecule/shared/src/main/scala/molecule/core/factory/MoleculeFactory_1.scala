@@ -8,83 +8,84 @@ import scala.language.{higherKinds, implicitConversions}
 
 
 /** Factory methods to create input molecules of arity 1-22 awaiting 1 input.
-  * == Molecules ==
-  * Molecules are type-safe custom Scala models of data structures in a Datomic database.
-  * <br><br>
-  * Molecules are build with your custom meta-DSL that is auto-generated from your Schema Definition file.
-  * Calling `m` on your modelled DSL structure lets Molecule macros create a custom molecule,
-  * ready for retrieving or manipulating data in the Datomic database.
-  * <br><br>
-  * Each molecule consists of one or more attributes that can have values or expressions applied.
-  * The arity of a molecule is determined by the number of attributes that will return data when the
-  * molecule is queried against the Datomic database. Attributes returning data are called "output attributes".
-  *
-  * == Input molecules ==
-  * Input molecules awaiting 1 input have one attribute with `?` applied to mark that
-  * it awaits an input at runtime for that attribute. Once the input molecule has been resolved
-  * with input, a normal molecule is returned that we can query against the Datomic database.
-  * <br><br>
-  * For brevity, only arity 1 and 2 method signatures are shown. Arity 3-22 follow the same pattern.
-  *
-  * @groupname input1 Factory methods to create input molecules awaiting 1 input.
-  * @groupprio input1 51
-  */
+ * == Molecules ==
+ * Molecules are type-safe custom Scala models of data structures in a Datomic database.
+ * <br><br>
+ * Molecules are build with your custom meta-DSL that is auto-generated from your Schema Definition file.
+ * Calling `m` on your modelled DSL structure lets Molecule macros create a custom molecule,
+ * ready for retrieving or manipulating data in the Datomic database.
+ * <br><br>
+ * Each molecule consists of one or more attributes that can have values or expressions applied.
+ * The arity of a molecule is determined by the number of attributes that will return data when the
+ * molecule is queried against the Datomic database. Attributes returning data are called "output attributes".
+ *
+ * == Input molecules ==
+ * Input molecules awaiting 1 input have one attribute with `?` applied to mark that
+ * it awaits an input at runtime for that attribute. Once the input molecule has been resolved
+ * with input, a normal molecule is returned that we can query against the Datomic database.
+ * <br><br>
+ * For brevity, only arity 1 and 2 method signatures are shown. Arity 3-22 follow the same pattern.
+ *
+ * @groupname input1 Factory methods to create input molecules awaiting 1 input.
+ * @groupprio input1 51
+ */
 trait Molecule_In_1_Factory2 {
 
   /** Macro creation of input molecule awaiting 1 input from user-defined DSL structure with 1 output attribute (arity 1).
-    * <br><br>
-    * Molecules are build by adding one or more attributes to an initial namespace
-    * like `Person` from the example below.
-    * <br><br>
-    * Applying the `?` marker to an attribute changes the semantics of a molecule to become
-    * an "input molecule" that awaits input at runtime for the attribute marked with `?`.
-    * <br><br>
-    * Once the input molecule has been resolved with input, we can call various
-    * actions on it, like `get` that retrieves matching data from the database.
-    * {{{
-    *   // Apply `?` to `age` attribute to create input molecule
-    *   val personOfAge = m(Person.name.age_(?))
-    *
-    *   // At runtime, an `age` value is applied to get the Person's name
-    *   personOfAge(42).get.map(_.head ==> "Ben")
-    * }}}
-    * For arity-many molecules, data structures are returned as tuples. But for arity-1
-    * molecules (like the example having only 1 output attribute, `name`) there's no need for
-    * a tuple, so values type-safely matching the attribute are returned directly in the list.
-    *
-    * @group input1
-    * @param dsl User-defined DSL structure modelling the input molecule
-    * @tparam I1 Type of input attribute 1 (`age`: Int)
-    * @tparam A Type of output attribute 1 (`name`: String)
-    * @return Input molecule ready to be resolved
-    */
+   * <br><br>
+   * Molecules are build by adding one or more attributes to an initial namespace
+   * like `Person` from the example below.
+   * <br><br>
+   * Applying the `?` marker to an attribute changes the semantics of a molecule to become
+   * an "input molecule" that awaits input at runtime for the attribute marked with `?`.
+   * <br><br>
+   * Once the input molecule has been resolved with input, we can call various
+   * actions on it, like `get` that retrieves matching data from the database.
+   * {{{
+   * // Apply `?` to `age` attribute to create input molecule
+   * val personOfAge = m(Person.name.age_(?))
+   *
+   * // At runtime, an `age` value is applied to get the Person's name
+   * personOfAge(42).get.map(_.head ==> "Ben")
+   * }}}
+   * For arity-many molecules, data structures are returned as tuples. But for arity-1
+   * molecules (like the example having only 1 output attribute, `name`) there's no need for
+   * a tuple, so values type-safely matching the attribute are returned directly in the list.
+   *
+   * @group input1
+   * @param dsl User-defined DSL structure modelling the input molecule
+   * @tparam I1 Type of input attribute 1 (`age`: Int)
+   * @tparam A  Type of output attribute 1 (`name`: String)
+   * @return Input molecule ready to be resolved
+   */
   def m[obj[_], props, I1, A](dsl: NS_1_01[obj, props, I1, A]): Molecule_1_01[props, I1, A] = macro MakeMolecule_In.await_1_01[props, I1, A]
 
 
   /** Macro creation of input molecule awaiting 1 input from user-defined DSL structure with 2 output attributes (arity 2).
-    * <br><br>
-    * Molecules are build by adding one or more attributes to an initial namespace
-    * like `Person` from the example below.
-    * <br><br>
-    * Applying the `?` marker to an attribute changes the semantics of a molecule to become
-    * an "input molecule" that awaits input at runtime for the attribute marked with `?`.
-    * <br><br>
-    * Once the input molecule has been resolved with input, we can call various
-    * actions on it, like `get` that retrieves matching data from the database.
-    * {{{
-    *   // Apply `?` to `age` attribute to create input molecule
-    *   val personOfAge = m(Person.name.age_(?).score)
-    *
-    *   // At runtime, an `age` value is applied to get the Person's name and score
-    *   personOfAge(42).get.map(_.head ==> ("Ben", 7))
-    * }}}
-    * @group input1
-    * @param dsl User-defined DSL structure modelling the input molecule
-    * @tparam I1 Type of input attribute 1 (`age`: Int)
-    * @tparam A Type of output attribute 1 (`name`: String)
-    * @tparam B Type of output attribute 2 (`score`: Int)
-    * @return Input molecule ready to be resolved
-    */
+   * <br><br>
+   * Molecules are build by adding one or more attributes to an initial namespace
+   * like `Person` from the example below.
+   * <br><br>
+   * Applying the `?` marker to an attribute changes the semantics of a molecule to become
+   * an "input molecule" that awaits input at runtime for the attribute marked with `?`.
+   * <br><br>
+   * Once the input molecule has been resolved with input, we can call various
+   * actions on it, like `get` that retrieves matching data from the database.
+   * {{{
+   * // Apply `?` to `age` attribute to create input molecule
+   * val personOfAge = m(Person.name.age_(?).score)
+   *
+   * // At runtime, an `age` value is applied to get the Person's name and score
+   * personOfAge(42).get.map(_.head ==> ("Ben", 7))
+   * }}}
+   *
+   * @group input1
+   * @param dsl User-defined DSL structure modelling the input molecule
+   * @tparam I1 Type of input attribute 1 (`age`: Int)
+   * @tparam A  Type of output attribute 1 (`name`: String)
+   * @tparam B  Type of output attribute 2 (`score`: Int)
+   * @return Input molecule ready to be resolved
+   */
   def m[obj[_], props, I1, A, B](dsl: NS_1_02[obj, props, I1, A, B]): Molecule_1_02[props, I1, A, B] = macro MakeMolecule_In.await_1_02[props, I1, A, B]
 }
 

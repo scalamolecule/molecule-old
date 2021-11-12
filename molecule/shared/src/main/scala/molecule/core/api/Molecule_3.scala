@@ -11,55 +11,55 @@ import scala.util.control.NonFatal
 
 
 /** Shared interfaces of input molecules awaiting 3 inputs.
-  * {{{
-  *   // Sample data set
-  *   Person.name.profession.age.score insert List(
-  *     ("Ann", "doctor", 37, 1.0),
-  *     ("Ben", "teacher", 37, 1.0),
-  *     ("Joe", "teacher", 32, 1.0),
-  *     ("Liz", "teacher", 28, 2.0)
-  *   )
-  *
-  *   // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
-  *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
-  *
-  *
-  *   // A. Triples of input .................................
-  *
-  *   // One triple as params
-  *   profAgeScore.apply("doctor", 37, 1.0).get.map(_ ==> List("Ann"))
-  *
-  *   // One or more triples
-  *   profAgeScore.apply(("doctor", 37, 1.0)).get.map(_ ==> List("Ann"))
-  *   profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
-  *
-  *   // One or more logical triples
-  *   // [triple-expression] or [triple-expression] or ...
-  *   profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get.map(_.sorted ==> List("Ann", "Joe"))
-  *
-  *   // List of triples
-  *   profAgeScore.apply(Seq(("doctor", 37, 1.0))).get.map(_ ==> List("Ann"))
-  *   profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
-  *
-  *
-  *   // B. 3 groups of input, one for each input attribute .................................
-  *
-  *   // Three expressions
-  *   // [profession-expression] and [age-expression] and [score-expression]
-  *   profAgeScore.apply("doctor" and 37 and 1.0).get.map(_ ==> List("Ann"))
-  *   profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get.map(_.sorted ==> List("Ann", "Ben"))
-  *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-  *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-  *
-  *   // Three lists
-  *   profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get.map(_ ==> List("Ann"))
-  *   profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
-  * }}}
-  *
-  * @tparam I1 Type of input matching first attribute with `?` marker (profession: String)
-  * @tparam I2 Type of input matching second attribute with `?` marker (age: Int)
-  * @tparam I3 Type of input matching third attribute with `?` marker (score: Double)
-  */
+ * {{{
+ * // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
+ * val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
+ * for {
+ *   // Sample data set
+ *   Person.name.profession.age.score insert List(
+ *     ("Ann", "doctor", 37, 1.0),
+ *     ("Ben", "teacher", 37, 1.0),
+ *     ("Joe", "teacher", 32, 1.0),
+ *     ("Liz", "teacher", 28, 2.0)
+ *   )
+ *
+ *   // A. Triples of input .................................
+ *
+ *   // One triple as params
+ *   _ <- profAgeScore.apply("doctor", 37, 1.0).get.map(_ ==> List("Ann"))
+ *
+ *   // One or more triples
+ *   _ <- profAgeScore.apply(("doctor", 37, 1.0)).get.map(_ ==> List("Ann"))
+ *   _ <- profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
+ *
+ *   // One or more logical triples
+ *   // [triple-expression] or [triple-expression] or ...
+ *   _ <- profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get.map(_.sorted ==> List("Ann", "Joe"))
+ *
+ *   // List of triples
+ *   _ <- profAgeScore.apply(Seq(("doctor", 37, 1.0))).get.map(_ ==> List("Ann"))
+ *   _ <- profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
+ *
+ *
+ *   // B. 3 groups of input, one for each input attribute .................................
+ *
+ *   // Three expressions
+ *   // [profession-expression] and [age-expression] and [score-expression]
+ *   _ <- profAgeScore.apply("doctor" and 37 and 1.0).get.map(_ ==> List("Ann"))
+ *   _ <- profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get.map(_.sorted ==> List("Ann", "Ben"))
+ *   _ <- profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+ *   _ <- profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+ *
+ *   // Three lists
+ *   _ <- profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get.map(_ ==> List("Ann"))
+ *   _ <- profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
+ * } yield ()
+ * }}}
+ *
+ * @tparam I1 Type of input matching first attribute with `?` marker (profession: String)
+ * @tparam I2 Type of input matching second attribute with `?` marker (age: Int)
+ * @tparam I3 Type of input matching third attribute with `?` marker (score: Double)
+ */
 abstract class Molecule_3[Obj, I1, I2, I3](
   model: Model,
   queryData: (Query, String, Option[Throwable])
@@ -334,167 +334,179 @@ abstract class Molecule_3[Obj, I1, I2, I3](
 
 
   /** Resolve input molecule by applying 3 input values as individual args
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age.score insert List(
-    *     ("Ann", "doctor", 37, 1.0),
-    *     ("Ben", "teacher", 37, 1.0),
-    *     ("Joe", "teacher", 32, 1.0),
-    *     ("Liz", "teacher", 28, 2.0)
-    *   )
-    *
-    *   // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
-    *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
-    *
-    *   // Apply 3 input values (1 triple)
-    *   profAgeScore.apply("doctor", 37, 1.0).get.map(_ ==> List("Ann"))
-    * }}}
-    *
-    * @param i1   Input value matching first input attribute (profession: String)
-    * @param i2   Input value matching second input attribute (age: Int)
-    * @param i3   Input value matching third input attribute (score: Double)
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   * {{{
+   * // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
+   * val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age.score insert List(
+   *     ("Ann", "doctor", 37, 1.0),
+   *     ("Ben", "teacher", 37, 1.0),
+   *     ("Joe", "teacher", 32, 1.0),
+   *     ("Liz", "teacher", 28, 2.0)
+   *   )
+   *
+   *   // Apply 3 input values (1 triple)
+   *   _ <- profAgeScore.apply("doctor", 37, 1.0).get.map(_ ==> List("Ann"))
+   * } yield ()
+   * }}}
+   *
+   * @param i1   Input value matching first input attribute (profession: String)
+   * @param i2   Input value matching second input attribute (age: Int)
+   * @param i3   Input value matching third input attribute (score: Double)
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(i1: I1, i2: I2, i3: I3)(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying one or more value triples
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age.score insert List(
-    *     ("Ann", "doctor", 37, 1.0),
-    *     ("Ben", "teacher", 37, 1.0),
-    *     ("Joe", "teacher", 32, 1.0),
-    *     ("Liz", "teacher", 28, 2.0)
-    *   )
-    *
-    *   // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
-    *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
-    *
-    *   // Apply one or more value triples, each matching all 3 input attributes
-    *   profAgeScore.apply(("doctor", 37, 1.0)).get.map(_ ==> List("Ann"))
-    *   profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
-    * }}}
-    *
-    * @param tpl  First triple of values matching the 3 input attributes
-    * @param tpls Optional more triples of values matching both input attributes
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
+   * val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age.score insert List(
+   *     ("Ann", "doctor", 37, 1.0),
+   *     ("Ben", "teacher", 37, 1.0),
+   *     ("Joe", "teacher", 32, 1.0),
+   *     ("Liz", "teacher", 28, 2.0)
+   *   )
+   *
+   *   // Apply one or more value triples, each matching all 3 input attributes
+   *   _ <- profAgeScore.apply(("doctor", 37, 1.0)).get.map(_ ==> List("Ann"))
+   *   _ <- profAgeScore.apply(("doctor", 37, 1.0), ("teacher", 37, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
+   * } yield ()
+   * }}}
+   *
+   * @param tpl  First triple of values matching the 3 input attributes
+   * @param tpls Optional more triples of values matching both input attributes
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(tpl: (I1, I2, I3), tpls: (I1, I2, I3)*)(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying one or more triples of expressions, each matching the 3 input attributes
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age.score insert List(
-    *     ("Ann", "doctor", 37, 1.0),
-    *     ("Ben", "teacher", 37, 1.0),
-    *     ("Joe", "teacher", 32, 1.0),
-    *     ("Liz", "teacher", 28, 2.0)
-    *   )
-    *
-    *   // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
-    *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
-    *
-    *   // Apply two or more triple expressions, each matching all 3 input attributes
-    *   // [profession/age/score-expression] or [profession/age/score-expression] or ...
-    *   profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get.map(_.sorted ==> List("Ann", "Joe"))
-    * }}}
-    *
-    * @param or   Two or more tuple3 expressions separated by `or`
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
+   * val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age.score insert List(
+   *     ("Ann", "doctor", 37, 1.0),
+   *     ("Ben", "teacher", 37, 1.0),
+   *     ("Joe", "teacher", 32, 1.0),
+   *     ("Liz", "teacher", 28, 2.0)
+   *   )
+   *
+   *   // Apply two or more triple expressions, each matching all 3 input attributes
+   *   // [profession/age/score-expression] or [profession/age/score-expression] or ...
+   *   _ <- profAgeScore.apply(("doctor" and 37 and 1.0) or ("teacher" and 32 and 1.0)).get
+   *     .map(_.sorted ==> List("Ann", "Joe"))
+   * } yield ()
+   * }}}
+   *
+   * @param or   Two or more tuple3 expressions separated by `or`
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(or: Or3[I1, I2, I3])(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying Seq of value triples
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age.score insert List(
-    *     ("Ann", "doctor", 37, 1.0),
-    *     ("Ben", "teacher", 37, 1.0),
-    *     ("Joe", "teacher", 32, 1.0),
-    *     ("Liz", "teacher", 28, 2.0)
-    *   )
-    *
-    *   // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
-    *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
-    *
-    *   // Apply Seq of one or more value triples, each matching all 3 input attributes
-    *   profAgeScore.apply(Seq(("doctor", 37, 1.0))).get.map(_ ==> List("Ann"))
-    *   profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
-    * }}}
-    *
-    * @param ins  Seq of value triples, each matching the 3 input attributes
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   * {{{
+   * // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
+   * val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age.score insert List(
+   *     ("Ann", "doctor", 37, 1.0),
+   *     ("Ben", "teacher", 37, 1.0),
+   *     ("Joe", "teacher", 32, 1.0),
+   *     ("Liz", "teacher", 28, 2.0)
+   *   )
+   *
+   *   // Apply Seq of one or more value triples, each matching all 3 input attributes
+   *   _ <- profAgeScore.apply(Seq(("doctor", 37, 1.0))).get.map(_ ==> List("Ann"))
+   *   _ <- profAgeScore.apply(Seq(("doctor", 37, 1.0), ("teacher", 37, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
+   * } yield ()
+   * }}}
+   *
+   * @param ins  Seq of value triples, each matching the 3 input attributes
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(ins: Seq[(I1, I2, I3)])(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying 3 groups of expressions, one for each of the 3 input attributes
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age.score insert List(
-    *     ("Ann", "doctor", 37, 1.0),
-    *     ("Ben", "teacher", 37, 1.0),
-    *     ("Joe", "teacher", 32, 1.0),
-    *     ("Liz", "teacher", 28, 2.0)
-    *   )
-    *
-    *   // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
-    *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
-    *
-    *   // Apply 3 expressions, one for each input attribute
-    *   // [profession-expression] and [age-expression] and [score-expression]
-    *   profAgeScore.apply("doctor" and 37 and 1.0).get.map(_ ==> List("Ann"))
-    *   profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get.map(_.sorted ==> List("Ann", "Ben"))
-    *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-    *   profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-    * }}}
-    *
-    * @param and  First input expr `and` second input expr `and` third input expr
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
+   * val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age.score insert List(
+   *     ("Ann", "doctor", 37, 1.0),
+   *     ("Ben", "teacher", 37, 1.0),
+   *     ("Joe", "teacher", 32, 1.0),
+   *     ("Liz", "teacher", 28, 2.0)
+   *   )
+   *
+   *   // Apply 3 expressions, one for each input attribute
+   *   // [profession-expression] and [age-expression] and [score-expression]
+   *   _ <- profAgeScore.apply("doctor" and 37 and 1.0).get.map(_ ==> List("Ann"))
+   *   _ <- profAgeScore.apply(("doctor" or "teacher") and 37 and 1.0).get
+   *     .map(_.sorted ==> List("Ann", "Ben"))
+   *
+   *   _ <- profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and 1.0).get
+   *     .map(_.sorted ==> List("Ann", "Ben", "Joe"))
+   *
+   *   _ <- profAgeScore.apply(("doctor" or "teacher") and (37 or 32) and (1.0 or 2.0)).get
+   *     .map(_.sorted ==> List("Ann", "Ben", "Joe"))
+   * } yield ()
+   * }}}
+   *
+   * @param and  First input expr `and` second input expr `and` third input expr
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(and: And3[I1, I2, I3])(implicit conn: Future[Conn]): Molecule
 
 
   /** Resolve input molecule by applying 3 groups of values, one for each of the 3 input attributes
-    *
-    * {{{
-    *   // Sample data set
-    *   Person.name.profession.age.score insert List(
-    *     ("Ann", "doctor", 37, 1.0),
-    *     ("Ben", "teacher", 37, 1.0),
-    *     ("Joe", "teacher", 32, 1.0),
-    *     ("Liz", "teacher", 28, 2.0)
-    *   )
-    *
-    *   // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
-    *   val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
-    *
-    *   // Apply 3 Seq of values, each matching one of the input attributes
-    *   proOfAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
-    *   proOfAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-    *
-    *   // Number of arguments in each Seq don't have to match but can be asymmetric
-    *   profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get.map(_ ==> List("Ann"))
-    *   profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
-    * }}}
-    *
-    * @param in1  Seq of values matching first input attribute (professions: Seq[String])
-    * @param in2  Seq of values matching second input attribute (ages: Seq[Int])
-    * @param in3  Seq of values matching third input attribute (scores: Seq[Double])
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
-    * @return Resolved molecule that can be queried
-    */
+   *
+   * {{{
+   * // Input molecule awaiting 3 inputs for `profession`, `age` and `score`
+   * val profAgeScore = m(Person.name.profession_(?).age_(?).score_(?))
+   * for {
+   *   // Sample data set
+   *   Person.name.profession.age.score insert List(
+   *     ("Ann", "doctor", 37, 1.0),
+   *     ("Ben", "teacher", 37, 1.0),
+   *     ("Joe", "teacher", 32, 1.0),
+   *     ("Liz", "teacher", 28, 2.0)
+   *   )
+   *
+   *   // Apply 3 Seq of values, each matching one of the input attributes
+   *   _ <- proOfAge(Seq("doctor"), Seq(37)).get.map(_ ==> List("Ann"))
+   *   _ <- proOfAge(Seq("doctor", "teacher"), Seq(37, 32)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+   *
+   *   // Number of arguments in each Seq don't have to match but can be asymmetric
+   *   _ <- profAgeScore.apply(Seq("doctor"), Seq(37), Seq(1.0)).get.map(_ ==> List("Ann"))
+   *   _ <- profAgeScore.apply(Seq("doctor", "teacher"), Seq(37), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
+   * } yield ()
+   * }}}
+   *
+   * @param in1  Seq of values matching first input attribute (professions: Seq[String])
+   * @param in2  Seq of values matching second input attribute (ages: Seq[Int])
+   * @param in3  Seq of values matching third input attribute (scores: Seq[Double])
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] in scope
+   * @return Resolved molecule that can be queried
+   */
   def apply(in1: Seq[I1], in2: Seq[I2], in3: Seq[I3])(implicit conn: Future[Conn]): Molecule
 }
 

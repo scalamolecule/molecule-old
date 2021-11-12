@@ -33,8 +33,8 @@ object QueryOps extends Helpers with JavaUtil {
   }
 
   // Hack when we can't access Peer on client side
-  // datomic.Peer.toTx(0) === 13194139533312L
-  // datomic.Peer.toTx(1) === 13194139533313L
+  // datomic.Peer.toTx(0) == 13194139533312L
+  // datomic.Peer.toTx(1) == 13194139533313L
   // etc.
   val txBase = 13194139533312L
 

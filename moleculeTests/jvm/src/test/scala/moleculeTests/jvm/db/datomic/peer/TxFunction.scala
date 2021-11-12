@@ -277,7 +277,11 @@ object TxFunction extends AsyncTestSuite {
         amount = 20
 
         // Add 2 tx meta data molecules to tx function transaction
-        _ <- transactFn(transfer(fromAccount, toAccount, amount), Ref2.str2("Tx meta data..."), Ref1.int1(12345))
+        _ <- transactFn(
+          transfer(fromAccount, toAccount, amount),
+          Ref2.str2("Tx meta data..."),
+          Ref1.int1(12345)
+        )
 
         // Live data changed
         _ <- Ns(fromAccount).int.get.map(_.head ==> 80)

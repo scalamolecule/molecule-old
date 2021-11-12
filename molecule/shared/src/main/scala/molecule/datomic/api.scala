@@ -7,28 +7,29 @@ import molecule.core.generic._
 import molecule.datomic.base.api.EntityOps
 
 /** Molecule API to be imported into your project to use Molecule with the Datomic Peer API.
-  * <br><br>
-  * To start using Molecule involves 2 initial steps:
-  *
-  *  - Define your data model
-  *  - `sbt compile` your project to let the sbt-molecule plugin generate your custom molecule DSL.
-  *
-  * Then you can start using your DSL and create molecules by importing the api, your DSL
-  * and assign a Datomic connection to an implicit val:
-  * {{{
-  *   import molecule.datomic.api._                     // import Molecule API
-  *   import molecule.datomic.peer.facade.Datomic_Peer  // import system api
-  *   import path.to.dsl.yourDomain._                   // auto-generated custom DSL
-  *   import path.to.schema.YourDomainSchema            // auto-generated custom Schema Transaction data
-  *
-  *   implicit val conn = Datomic_Peer.recreateDbFrom(YourDomainSchema)
-  *
-  *   // Create molecules
-  *   Person.name("Ben").age(42).save
-  *   val benAge = Person.name_("Ben").age.get.head // 42
-  *   // etc..
-  * }}}
-  * */
+ * <br><br>
+ * To start using Molecule involves 2 initial steps:
+ *
+ *  - Define your data model
+ *  - `sbt compile` your project to let the sbt-molecule plugin generate your custom molecule DSL.
+ *
+ * Then you can start using your DSL and create molecules by importing the api, your DSL
+ * and assign a Datomic connection to an implicit val:
+ * {{{
+ * import molecule.datomic.api._                     // import Molecule API
+ * import molecule.datomic.peer.facade.Datomic_Peer  // import system api
+ * import path.to.dsl.yourDomain._                   // auto-generated custom DSL
+ * import path.to.schema.YourDomainSchema            // auto-generated custom Schema Transaction data
+ *
+ * implicit val conn = Datomic_Peer.recreateDbFrom(YourDomainSchema)
+ *
+ * // Create molecules
+ * for {
+ *   _ <- Person.name("Ben").age(42).save
+ *   _ <- Person.name_("Ben").age.get.map(_.head ==> 42)
+ * } yield ()
+ * }}}
+ * */
 trait api
   extends Keywords
     with LogicImplicits

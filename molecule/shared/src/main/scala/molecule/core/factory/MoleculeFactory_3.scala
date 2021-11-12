@@ -32,65 +32,66 @@ import scala.language.{higherKinds, implicitConversions}
 trait Molecule_In_3_Factory2 {
 
   /** Macro creation of input molecule awaiting 3 inputs from user-defined DSL structure with 1 output attribute (arity 1).
-    * <br><br>
-    * Molecules are build by adding one or more attributes to an initial namespace
-    * like `Person` from the example below.
-    * <br><br>
-    * Applying the `?` marker to attributes changes the semantics of a molecule to become
-    * an "input molecule" that awaits input at runtime for the attributes marked with `?`.
-    * <br><br>
-    * Once the input molecule has been resolved with input, we can call various
-    * actions on it, like `get` that retrieves matching data from the database.
-    * {{{
-    *   // Apply `?` to `age`, `score` and `flags` attributes to create input molecule.
-    *   val personAgeScoreFlag = m(Person.name.age_(?).score_(?).flags_(?))
-    *
-    *   // At runtime `age`, `score` and `flags` values are applied to get the Person's name.
-    *   personAgeScoreFlag(42, 7, 3).get.map(_.head ==> "Ben")
-    * }}}
-    * For arity-many molecules, data structures are returned as tuples. But for arity-1
-    * molecules (like the example having only 1 output attribute, `name`) there's no need for
-    * a tuple, so values type-safely matching the attribute are returned directly in the list.
-    *
-    * @group input3
-    * @param dsl User-defined DSL structure modelling the input molecule
-    * @tparam I1 Type of input attribute 1 (`age`: Int)
-    * @tparam I2 Type of input attribute 2 (`score`: Int)
-    * @tparam I3 Type of input attribute 3 (`flags`: Int)
-    * @tparam A Type of output attribute 1 (`name`: String)
-    * @return Input molecule ready to be resolved
-    */
+   * <br><br>
+   * Molecules are build by adding one or more attributes to an initial namespace
+   * like `Person` from the example below.
+   * <br><br>
+   * Applying the `?` marker to attributes changes the semantics of a molecule to become
+   * an "input molecule" that awaits input at runtime for the attributes marked with `?`.
+   * <br><br>
+   * Once the input molecule has been resolved with input, we can call various
+   * actions on it, like `get` that retrieves matching data from the database.
+   * {{{
+   * // Apply `?` to `age`, `score` and `flags` attributes to create input molecule.
+   * val personAgeScoreFlag = m(Person.name.age_(?).score_(?).flags_(?))
+   *
+   * // At runtime `age`, `score` and `flags` values are applied to get the Person's name.
+   * personAgeScoreFlag(42, 7, 3).get.map(_.head ==> "Ben")
+   * }}}
+   * For arity-many molecules, data structures are returned as tuples. But for arity-1
+   * molecules (like the example having only 1 output attribute, `name`) there's no need for
+   * a tuple, so values type-safely matching the attribute are returned directly in the list.
+   *
+   * @group input3
+   * @param dsl User-defined DSL structure modelling the input molecule
+   * @tparam I1 Type of input attribute 1 (`age`: Int)
+   * @tparam I2 Type of input attribute 2 (`score`: Int)
+   * @tparam I3 Type of input attribute 3 (`flags`: Int)
+   * @tparam A  Type of output attribute 1 (`name`: String)
+   * @return Input molecule ready to be resolved
+   */
   def m[obj[_], props, I1, I2, I3, A](dsl: NS_3_01[obj, props, I1, I2, I3, A]): Molecule_3_01[props, I1, I2, I3, A] = macro MakeMolecule_In.await_3_01[props, I1, I2, I3, A]
 
 
   /** Macro creation of input molecule awaiting 3 inputs from user-defined DSL structure with 2 output attributes (arity 2).
-    * <br><br>
-    * Molecules are build by adding one or more attributes to an initial namespace
-    * like `Person` from the example below.
-    * <br><br>
-    * Applying the `?` marker to attributes changes the semantics of a molecule to become
-    * an "input molecule" that awaits input at runtime for the attributes marked with `?`.
-    * <br><br>
-    * Once the input molecule has been resolved with input, we can call various
-    * actions on it, like `get` that retrieves matching data from the database.
-    * {{{
-    *   // Apply `?` to `age`, `score` and `flags` attributes to create input molecule.
-    *   // Input attributes can be tacit or mandatory
-    *   val personAgeScoreFlag = m(Person.name.age_(?).score(?).flags_(?))
-    *
-    *   // At runtime `age`, `score` and `flags` values are applied to get the Person's name and score.
-    *   // Since `score` was mandatory (without underscore), its value is also returned.
-    *   personAgeScoreFlag(42, 7, 3).get.map(_.head ==> ("Ben", 7))
-    * }}}
-    * @group input3
-    * @param dsl User-defined DSL structure modelling the input molecule
-    * @tparam I1 Type of input attribute 1 (`age`: Int)
-    * @tparam I2 Type of input attribute 2 (`score`: Int)
-    * @tparam I3 Type of input attribute 3 (`flags`: Int)
-    * @tparam A Type of output attribute 1 (`name`: String)
-    * @tparam B Type of output attribute 2 (`score`: Int)
-    * @return Input molecule ready to be resolved
-    */
+   * <br><br>
+   * Molecules are build by adding one or more attributes to an initial namespace
+   * like `Person` from the example below.
+   * <br><br>
+   * Applying the `?` marker to attributes changes the semantics of a molecule to become
+   * an "input molecule" that awaits input at runtime for the attributes marked with `?`.
+   * <br><br>
+   * Once the input molecule has been resolved with input, we can call various
+   * actions on it, like `get` that retrieves matching data from the database.
+   * {{{
+   * // Apply `?` to `age`, `score` and `flags` attributes to create input molecule.
+   * // Input attributes can be tacit or mandatory
+   * val personAgeScoreFlag = m(Person.name.age_(?).score(?).flags_(?))
+   *
+   * // At runtime `age`, `score` and `flags` values are applied to get the Person's name and score.
+   * // Since `score` was mandatory (without underscore), its value is also returned.
+   * personAgeScoreFlag(42, 7, 3).get.map(_.head ==> ("Ben", 7))
+   * }}}
+   *
+   * @group input3
+   * @param dsl User-defined DSL structure modelling the input molecule
+   * @tparam I1 Type of input attribute 1 (`age`: Int)
+   * @tparam I2 Type of input attribute 2 (`score`: Int)
+   * @tparam I3 Type of input attribute 3 (`flags`: Int)
+   * @tparam A  Type of output attribute 1 (`name`: String)
+   * @tparam B  Type of output attribute 2 (`score`: Int)
+   * @return Input molecule ready to be resolved
+   */
   def m[obj[_], props, I1, I2, I3, A, B](dsl: NS_3_02[obj, props, I1, I2, I3, A, B]): Molecule_3_02[props, I1, I2, I3, A, B] = macro MakeMolecule_In.await_3_02[props, I1, I2, I3, A, B]
 }
 

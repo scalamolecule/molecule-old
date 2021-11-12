@@ -12,7 +12,7 @@ object GetWith extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "getSaveTx" - core { implicit conn =>
+    "getSaveStmts" - core { implicit conn =>
       for {
         _ <- Ns.str("a").int(1).save.map(_.eid)
         _ <- Ns.int.getWith(Ns.int(2).getSaveStmts).map(_ ==> List(1, 2))
@@ -34,7 +34,7 @@ object GetWith extends AsyncTestSuite {
     }
 
 
-    "getInsertTx" - core { implicit conn =>
+    "getInsertStmts" - core { implicit conn =>
       for {
         _ <- Ns.str("a").int(1).save.map(_.eid)
         _ <- Ns.int.getWith(Ns.int.getInsertStmts(2, 3)).map(_ ==> List(1, 2, 3))
@@ -71,7 +71,7 @@ object GetWith extends AsyncTestSuite {
     }
 
 
-    "getUpdateTx" - core { implicit conn =>
+    "getUpdateStmts" - core { implicit conn =>
       for {
         eid <- Ns.str("a").int(1).save.map(_.eid)
         _ <- Ns.int.getWith(Ns(eid).int(2).getUpdateStmts).map(_ ==> List(2))
@@ -86,7 +86,7 @@ object GetWith extends AsyncTestSuite {
     }
 
 
-    "getRetractTx" - core { implicit conn =>
+    "getRetractStmts" - core { implicit conn =>
       for {
         _ <- Ns.str("a").int(1).save
         eid2 <- Ns.str("b").int(2).save.map(_.eid)

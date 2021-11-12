@@ -7,75 +7,75 @@ import scala.language.experimental.macros
 
 
 /** Implicit molecule factory methods of arity 1-22.
-  * <br><br>
-  * Molecules are type-safe custom Scala models of data structures in a Datomic database.
-  * <br><br>
-  * Molecules are build with your custom meta-DSL that is auto-generated from your Schema Definition file.
-  * Calling `m` on your modelled DSL structure lets Molecule macros create a custom molecule,
-  * ready for retrieving or manipulating data in the Datomic database.
-  * <br><br>
-  * Each molecule consists of one or more attributes that can have values or expressions applied.
-  * The arity of a molecule is determined by the number of attributes that will return data when the
-  * molecule is queried against the Datomic database. Attributes returning data are called "output attributes".
-  * <br><br>
-  * For brevity, only arity 1 and 2 method signatures are shown. Arity 3-22 follow the same pattern.
-  *
-  * @groupname molecule Implicit factory methods to create molecules.
-  * @groupprio molecule 50
-  */
+ * <br><br>
+ * Molecules are type-safe custom Scala models of data structures in a Datomic database.
+ * <br><br>
+ * Molecules are build with your custom meta-DSL that is auto-generated from your Schema Definition file.
+ * Calling `m` on your modelled DSL structure lets Molecule macros create a custom molecule,
+ * ready for retrieving or manipulating data in the Datomic database.
+ * <br><br>
+ * Each molecule consists of one or more attributes that can have values or expressions applied.
+ * The arity of a molecule is determined by the number of attributes that will return data when the
+ * molecule is queried against the Datomic database. Attributes returning data are called "output attributes".
+ * <br><br>
+ * For brevity, only arity 1 and 2 method signatures are shown. Arity 3-22 follow the same pattern.
+ *
+ * @groupname molecule Implicit factory methods to create molecules.
+ * @groupprio molecule 50
+ */
 trait Molecule_Factory2 {
 
   /** Macro creation of molecule from user-defined DSL structure with 1 output attribute.
-    * <br><br>
-    * Molecules can be created explicitly or implicitly by building a DSL structure using boilerplate
-    * code generated from the schema definition file.
-    * <br><br>
-    * The builder pattern is used to add one or more attributes to an initial namespace
-    * like `Person` from the example below. Once the molecule models the desired data structure
-    * we can call various actions on it, like `get` that retrieves matching data from the database.
-    * {{{
-    *   // Explicitly calling `m` to create Person molecule with 1 output attribute
-    *   m(Person.name).get.map(_ ==> List("Ben"))
-    *
-    *   // Molecule implicitly created so we can call `get`
-    *   Person.name.get.map(_.head ==> "Ben")
-    * }}}
-    * For arity-many molecules, data structures are returned as tuples. But for arity-1
-    * molecules (like the example having only 1 output attribute, `name`) there's no need for
-    * a tuple, so values type-safely matching the attribute are returned directly in the list.
-    *
-    * @group molecule
-    * @param dsl User-defined DSL structure modelling the molecule
-    * @tparam A Type of output attribute 1 (`name`: String)
-    * @return Molecule of arity-1 typed to first attribute (Molecule_0_01[props, A])
-    */
+   * <br><br>
+   * Molecules can be created explicitly or implicitly by building a DSL structure using boilerplate
+   * code generated from the schema definition file.
+   * <br><br>
+   * The builder pattern is used to add one or more attributes to an initial namespace
+   * like `Person` from the example below. Once the molecule models the desired data structure
+   * we can call various actions on it, like `get` that retrieves matching data from the database.
+   * {{{
+   * // Explicitly calling `m` to create Person molecule with 1 output attribute
+   * m(Person.name).get.map(_ ==> List("Ben"))
+   *
+   * // Molecule implicitly created so we can call `get`
+   * Person.name.get.map(_.head ==> "Ben")
+   * }}}
+   * For arity-many molecules, data structures are returned as tuples. But for arity-1
+   * molecules (like the example having only 1 output attribute, `name`) there's no need for
+   * a tuple, so values type-safely matching the attribute are returned directly in the list.
+   *
+   * @group molecule
+   * @param dsl User-defined DSL structure modelling the molecule
+   * @tparam A Type of output attribute 1 (`name`: String)
+   * @return Molecule of arity-1 typed to first attribute (Molecule_0_01[props, A])
+   */
   implicit final def m[obj[_], props, A](dsl: NS_0_01[obj, props, A]): Molecule_0_01[props, A] = macro MakeMolecule.from01attr[props, A]
 
 
   /** Macro creation of molecule from user-defined DSL structure with 2 output attributes.
-    * <br><br>
-    * Molecules can be created explicitly or implicitly by building a DSL structure using boilerplate
-    * code generated from the schema definition file.
-    * <br><br>
-    * The builder pattern is used to add one or more attributes to an initial namespace
-    * like `Person` from the example below. Once the molecule models the desired data structure
-    * we can call various actions on it, like `get` that retrieves matching data from the database.
-    * <br><br>
-    * Data structures are returned as tuples of values type-safely matching the molecule attribute types
-    * {{{
-    *   // Explicitly calling `m` to create Person molecule with 2 attributes
-    *   m(Person.name.age).get.map(_.head ==> ("Ben", 42))
-    *
-    *   // Molecule implicitly created so we can call `get`
-    *   Person.name.age.get.map(_.head ==> ("Ben", 42))
-    * }}}
-    *
-    * @group molecule
-    * @param dsl User-defined DSL structure modelling the molecule
-    * @tparam A Type of output attribute 1 (`name`: String)
-    * @tparam B Type of output attribute 2 (`age`: Int)
-    * @return Molecule of arity-2 typed to two attributes (Molecule_0_02[props, A, B])
-    */
+   * <br><br>
+   * Molecules can be created explicitly or implicitly by building a DSL structure using boilerplate
+   * code generated from the schema definition file.
+   * <br><br>
+   * The builder pattern is used to add one or more attributes to an initial namespace
+   * like `Person` from the example below. Once the molecule models the desired data structure
+   * we can call various actions on it, like `get` that retrieves matching data from the database.
+   * <br><br>
+   * Data structures are returned as tuples of values type-safely matching the molecule attribute types
+   * {{{
+   * // Explicitly calling `m` to create Person molecule with 2 attributes
+   * m(Person.name.age).get.map(_.head ==> ("Ben", 42))
+   *
+   * // Molecule implicitly created so we can call `get`
+   * Person.name.age.get.map(_.head ==> ("Ben", 42))
+   * }}}
+   *
+   * @group molecule
+   * @param dsl User-defined DSL structure modelling the molecule
+   * @tparam A Type of output attribute 1 (`name`: String)
+   * @tparam B Type of output attribute 2 (`age`: Int)
+   * @return Molecule of arity-2 typed to two attributes (Molecule_0_02[props, A, B])
+   */
   implicit final def m[obj[_], props, A, B](dsl: NS_0_02[obj, props, A, B]): Molecule_0_02[props, A, B] = macro MakeMolecule.from02attr[props, A, B]
 }
 

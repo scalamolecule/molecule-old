@@ -37,112 +37,112 @@ import scala.language.{higherKinds, implicitConversions}
 trait CompositeFactory_2_2 {
 
   /** Macro creation of composite input molecule awaiting 2 inputs from user-defined DSL with 1 output group (arity 1).
-    * <br><br>
-    * The builder pattern is used to add one or more attributes to an initial namespace
-    * like `Person` from the example below. Further non-related attributes can be tied together
-    * with the `+` method to form "composite molecules" that is basically just attributes
-    * sharing the same entity id.
-    * <br><br>
-    * Applying the `?` marker to attributes changes the semantics of the composite
-    * molecule to become a "composite input molecule" that awaits input at runtime for the
-    * attributes marked with `?`.
-    * <br><br>
-    * Once the composite input molecule models the desired data structure and has been resolved with input
-    * we can call various actions on it, like `get` that retrieves matching data from the database.
-    * {{{
-    *   // Apply `?` to `age` and `score` attributes to create composite input molecule
-    *   val personsAgeScore = m(Person.name.age_(?) + Tag.score_(?))
-    *
-    *   // At runtime, `age` and `score` values are applied to get the Person's name
-    *   personsAgeScore(42, 7).get.map(_.head ==> "Ben")
-    * }}}
-    * Composite input molecules of arity 1 has only one sub-molecule with output attribute(s).
-    * If the sub-molecule has multiple output attributes, a tuple is returned, otherwise
-    * just the single value:
-    * {{{
-    *   Composite input molecule            Composite type (1 output group)
-    *
-    *   A.a1(?)       + B.b1_(?)      =>    a1
-    *   A.a1.a2(?)    + B.b1_(?)      =>    (a1, a2)
-    *   A.a1.a2.a3(?) + B.b1_(?)      =>    (a1, a2, a3)
-    *
-    *   A.a1_(?) + B.b1(?)            =>    b1
-    *   A.a1_(?) + B.b1.b2(?)         =>    (b1, b2)
-    *   A.a1_(?) + B.b1.b2.b3(?)      =>    (b1, b2, b3)
-    *
-    *   We could even have multiple tacit sub-molecules with multiple tacit attributes
-    *   A.a1_(?).a2_ + B.b1_(?) + C.c1.c2_.c3     =>    (c1, c3)
-    * }}}
-    * So, given 2 output attributes, a tuple is returned:
-    * {{{
-    *   m(Person.name.age(?) + Tag.score_(?))(42, 7).get.map(_.head ==> ("Ben", 42))
-    *   //  A   . a1 . a2(?) +  B .   b1_(?)                   => (  a1 , a2)
-    * }}}
-    *
-    * @group composite2
-    * @param dsl User-defined DSL structure modelling the composite input molecule awaiting 2 inputs
-    * @tparam I1 Type of input attribute 1 (`age`: Int)
-    * @tparam I2 Type of input attribute 2 (`score`: Int)
-    * @tparam T1 Type of output group
-    * @return Composite input molecule awaiting 2 inputs
-    */
+   * <br><br>
+   * The builder pattern is used to add one or more attributes to an initial namespace
+   * like `Person` from the example below. Further non-related attributes can be tied together
+   * with the `+` method to form "composite molecules" that is basically just attributes
+   * sharing the same entity id.
+   * <br><br>
+   * Applying the `?` marker to attributes changes the semantics of the composite
+   * molecule to become a "composite input molecule" that awaits input at runtime for the
+   * attributes marked with `?`.
+   * <br><br>
+   * Once the composite input molecule models the desired data structure and has been resolved with input
+   * we can call various actions on it, like `get` that retrieves matching data from the database.
+   * {{{
+   * // Apply `?` to `age` and `score` attributes to create composite input molecule
+   * val personsAgeScore = m(Person.name.age_(?) + Tag.score_(?))
+   *
+   * // At runtime, `age` and `score` values are applied to get the Person's name
+   * personsAgeScore(42, 7).get.map(_.head ==> "Ben")
+   * }}}
+   * Composite input molecules of arity 1 has only one sub-molecule with output attribute(s).
+   * If the sub-molecule has multiple output attributes, a tuple is returned, otherwise
+   * just the single value:
+   * {{{
+   * Composite input molecule            Composite type (1 output group)
+   *
+   * A.a1(?)       + B.b1_(?)      =>    a1
+   * A.a1.a2(?)    + B.b1_(?)      =>    (a1, a2)
+   * A.a1.a2.a3(?) + B.b1_(?)      =>    (a1, a2, a3)
+   *
+   * A.a1_(?) + B.b1(?)            =>    b1
+   * A.a1_(?) + B.b1.b2(?)         =>    (b1, b2)
+   * A.a1_(?) + B.b1.b2.b3(?)      =>    (b1, b2, b3)
+   *
+   * We could even have multiple tacit sub-molecules with multiple tacit attributes
+   * A.a1_(?).a2_ + B.b1_(?) + C.c1.c2_.c3     =>    (c1, c3)
+   * }}}
+   * So, given 2 output attributes, a tuple is returned:
+   * {{{
+   * m(Person.name.age(?) + Tag.score_(?))(42, 7).get.map(_.head ==> ("Ben", 42))
+   * //  A   . a1 . a2(?) +  B .   b1_(?)                   => (  a1 , a2)
+   * }}}
+   *
+   * @group composite2
+   * @param dsl User-defined DSL structure modelling the composite input molecule awaiting 2 inputs
+   * @tparam I1 Type of input attribute 1 (`age`: Int)
+   * @tparam I2 Type of input attribute 2 (`score`: Int)
+   * @tparam T1 Type of output group
+   * @return Composite input molecule awaiting 2 inputs
+   */
   def m[obj[_], props, I1, I2, T1](dsl: Composite_2_01[obj, props, I1, I2, T1]): Molecule_2_01[props, I1, I2, T1] = macro MakeComposite_In.await_2_01[props, I1, I2, T1]
 
 
   /** Macro creation of composite input molecule awaiting 2 inputs from user-defined DSL with 2 output groups (arity 2).
-    * <br><br>
-    * The builder pattern is used to add one or more attributes to an initial namespace
-    * like `Person` from the example below. Further non-related attributes can be tied together
-    * with the `+` method to form "composite molecules" that is basically just attributes
-    * sharing the same entity id.
-    * <br><br>
-    * Applying the `?` marker to attributes changes the semantics of the composite
-    * molecule to become a "composite input molecule" that awaits input at runtime for the
-    * attributes marked with `?`.
-    * <br><br>
-    * Once the composite input molecule models the desired data structure and has been resolved with input
-    * we can call various actions on it, like `get` that retrieves matching data from the database.
-    * {{{
-    *   // Apply `?` to `age` and `score` attributes to create composite input molecule
-    *   val personsAgeScore = m(Person.name.age_(?) + Tag.score(?))
-    *
-    *   // At runtime, `age` and `score` values are applied to get the Person's name
-    *   personsAgeScore(42, 7).get.map(_.head ==> ("Ben", 7))
-    * }}}
-    * Composite input molecules of arity 2 has two sub-molecules with output attribute(s). If a sub-molecule
-    * has multiple output attributes, a tuple is returned, otherwise just the single value. The two
-    * groups of either a single type or tuple are then tied together in an outer composite tuple:
-    * {{{
-    *   Composite input molecule          Composite type (2 output groups)
-    *
-    *   A.a1(?)    + B.b1(?)        =>    (a1, b1)
-    *   A.a1(?)    + B.b1(?).b2     =>    (a1, (b1, b2))
-    *   A.a1.a2(?) + B.b1(?)        =>    ((a1, a2), b1)
-    *   A.a1.a2(?) + B.b1(?).b2     =>    ((a1, a2), (b1, b2)) etc...
-    *
-    *   We could even have additional non-output sub-molecules:
-    *   A.a1.a2 + B.b1(?).b2 + C.c1_(?)     =>    ((a1, a2), (b1, b2)) etc...
-    * }}}
-    * Translating into the example:
-    * {{{
-    *   m(Person.name(?)     + Tag.score(?)      )("Ben", 7).get.map(_.head ==> ("Ben", 7))
-    *   m(Person.name(?)     + Tag.score(?).flags)("Ben", 7).get.map(_.head ==> ("Ben", (7, 3)))
-    *   m(Person.name.age(?) + Tag.score(?)      )(42, 7)   .get.map(_.head ==> (("Ben", 42), 7))
-    *   m(Person.name.age(?) + Tag.score(?).flags)(42, 7)   .get.map(_.head ==> (("Ben", 42), (7, 3)))
-    *
-    *   m(Person.name.age +
-    *     Tag.score(?).flags +
-    *     Cat.name_(?))(7, "pitcher").get.map(_.head ==> (("Ben", 42), (7, 3)))
-    * }}}
-    *
-    * @group composite2
-    * @param dsl User-defined DSL structure modelling the composite input molecule awaiting 2 inputs
-    * @tparam I1 Type of input attribute 1 (`name`: String or `age`: Int)
-    * @tparam I2 Type of input attribute 2 (`score`: Int)
-    * @tparam T1 Type of output group 1
-    * @tparam T2 Type of output group 2
-    * @return Composite input molecule awaiting 2 inputs
-    */
+   * <br><br>
+   * The builder pattern is used to add one or more attributes to an initial namespace
+   * like `Person` from the example below. Further non-related attributes can be tied together
+   * with the `+` method to form "composite molecules" that is basically just attributes
+   * sharing the same entity id.
+   * <br><br>
+   * Applying the `?` marker to attributes changes the semantics of the composite
+   * molecule to become a "composite input molecule" that awaits input at runtime for the
+   * attributes marked with `?`.
+   * <br><br>
+   * Once the composite input molecule models the desired data structure and has been resolved with input
+   * we can call various actions on it, like `get` that retrieves matching data from the database.
+   * {{{
+   * // Apply `?` to `age` and `score` attributes to create composite input molecule
+   * val personsAgeScore = m(Person.name.age_(?) + Tag.score(?))
+   *
+   * // At runtime, `age` and `score` values are applied to get the Person's name
+   * personsAgeScore(42, 7).get.map(_.head ==> ("Ben", 7))
+   * }}}
+   * Composite input molecules of arity 2 has two sub-molecules with output attribute(s). If a sub-molecule
+   * has multiple output attributes, a tuple is returned, otherwise just the single value. The two
+   * groups of either a single type or tuple are then tied together in an outer composite tuple:
+   * {{{
+   * Composite input molecule          Composite type (2 output groups)
+   *
+   * A.a1(?)    + B.b1(?)        =>    (a1, b1)
+   * A.a1(?)    + B.b1(?).b2     =>    (a1, (b1, b2))
+   * A.a1.a2(?) + B.b1(?)        =>    ((a1, a2), b1)
+   * A.a1.a2(?) + B.b1(?).b2     =>    ((a1, a2), (b1, b2)) etc...
+   *
+   * We could even have additional non-output sub-molecules:
+   * A.a1.a2 + B.b1(?).b2 + C.c1_(?)     =>    ((a1, a2), (b1, b2)) etc...
+   * }}}
+   * Translating into the example:
+   * {{{
+   * m(Person.name(?)     + Tag.score(?)      )("Ben", 7).get.map(_.head ==> ("Ben", 7))
+   * m(Person.name(?)     + Tag.score(?).flags)("Ben", 7).get.map(_.head ==> ("Ben", (7, 3)))
+   * m(Person.name.age(?) + Tag.score(?)      )(42, 7)   .get.map(_.head ==> (("Ben", 42), 7))
+   * m(Person.name.age(?) + Tag.score(?).flags)(42, 7)   .get.map(_.head ==> (("Ben", 42), (7, 3)))
+   *
+   * m(Person.name.age +
+   *   Tag.score(?).flags +
+   *   Cat.name_(?))(7, "pitcher").get.map(_.head ==> (("Ben", 42), (7, 3)))
+   * }}}
+   *
+   * @group composite2
+   * @param dsl User-defined DSL structure modelling the composite input molecule awaiting 2 inputs
+   * @tparam I1 Type of input attribute 1 (`name`: String or `age`: Int)
+   * @tparam I2 Type of input attribute 2 (`score`: Int)
+   * @tparam T1 Type of output group 1
+   * @tparam T2 Type of output group 2
+   * @return Composite input molecule awaiting 2 inputs
+   */
   def m[obj[_], props, I1, I2, T1, T2](dsl: Composite_2_02[obj, props, I1, I2, T1, T2]): Molecule_2_02[props, I1, I2, T1, T2] = macro MakeComposite_In.await_2_02[props, I1, I2, T1, T2]
 }
 

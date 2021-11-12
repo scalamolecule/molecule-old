@@ -20,6 +20,54 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
   with DatomicEntity with Quoted with Helpers with Serializations with JavaConversions {
 
 
+  def retract(implicit ec: ExecutionContext): Future[TxReport] = {
+    conn.transact(getRetractStmts)
+  }
+
+  def retract(txMeta1: Molecule, txMetaMore: Molecule*)
+             (implicit ec: ExecutionContext): Future[TxReport] = try {
+    val retractStmts    = Seq(RetractEntity(eid))
+    val txMetaDataModel = Model((txMeta1 +: txMetaMore).map(m => TxMetaData(m._model.elements)))
+    VerifyModel(txMetaDataModel, "save") // can throw exception
+    conn.transact(
+      conn.model2stmts(txMetaDataModel).saveStmts.map(txMetaStmts => retractStmts ++ txMetaStmts)
+    )
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+
+  def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = {
+    Future(List(RetractEntity(eid)))
+  }
+
+  def getRetractStmts(txMeta1: Molecule, txMetaMore: Molecule*)
+                     (implicit ec: ExecutionContext): Future[List[RetractEntity]] = {
+    Future(List(RetractEntity(eid)))
+  }
+
+
+  def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = {
+    getRetractStmts.map { stmts =>
+      Inspect("Inspect `retract` on entity", 1)(1, stmts)
+    }
+  }
+
+  def inspectRetract(txMeta1: Molecule, txMetaMore: Molecule*)
+                    (implicit ec: ExecutionContext): Future[Unit] = try {
+    val retractStmts = Seq(RetractEntity(eid))
+    val txMetaDataModel = Model((txMeta1 +: txMetaMore).map(m => TxMetaData(m._model.elements)))
+    VerifyModel(txMetaDataModel, "save") // can throw exception
+    conn.model2stmts(txMetaDataModel).saveStmts.map(txMetaStmts =>
+      Inspect("Inspect `retract` on entity with tx meta data", 1)(1, retractStmts ++ txMetaStmts)
+    )
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+
+  // Entity api -------------------------------------------------
+
   final override def apply[T](attr: String)(implicit ec: ExecutionContext): Future[Option[T]] = {
     attrDefinitions.get(attr).fold(
       Future.failed[Option[T]](MoleculeException(s"Attribute `$attr` not found in schema."))
@@ -62,48 +110,6 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
     Future.sequence((attr1 +: attr2 +: moreAttrs.toList) map apply)
   }
 
-
-  def retract(implicit ec: ExecutionContext): Future[TxReport] = {
-    conn.transact(getRetractStmts)
-  }
-
-  def retract(txMeta: Molecule)
-             (implicit ec: ExecutionContext): Future[TxReport] = try {
-    val retractStmts = Seq(RetractEntity(eid))
-    val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
-    VerifyModel(model, "save") // can throw exception
-    conn.transact(
-      conn.model2stmts(model).saveStmts.map(txMetaStmts => retractStmts ++ txMetaStmts)
-    )
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def getRetractStmts(implicit ec: ExecutionContext): Future[List[RetractEntity]] = {
-    Future(List(RetractEntity(eid)))
-  }
-
-  def inspectRetract(txMeta: Molecule)
-                    (implicit ec: ExecutionContext): Future[Unit] = try {
-    val retractStmts = Seq(RetractEntity(eid))
-    val model        = Model(Seq(TxMetaData(txMeta._model.elements)))
-    VerifyModel(model, "save") // can throw exception
-    conn.model2stmts(model).saveStmts.map(txMetaStmts =>
-      Inspect("Inspect `retract` on entity with tx meta data", 1)(1, retractStmts ++ txMetaStmts)
-    )
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def inspectRetract(implicit ec: ExecutionContext): Future[Unit] = {
-    getRetractStmts.map { stmts =>
-      Inspect("Inspect `retract` on entity", 1)(1, stmts)
-    }
-  }
-
-
-  // Entity graph -------------------------------------------------
-
   def graph(implicit ec: ExecutionContext): Future[Map[String, Any]] =
     asMap(1, 5)
 
@@ -116,9 +122,11 @@ abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(
   def inspectGraphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Unit] =
     graphCode(maxDepth).map(println)
 
-  private[molecule] final override def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
+  final override def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String] =
     asMap(1, maxDepth).map(quote(_))
 
+
+  // Internal --------------------------------------------------
 
   private[molecule] def toScala(
     attr: String,

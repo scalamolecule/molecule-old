@@ -17,6 +17,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Facade to Datomic Connection.
+ *
+ * Has additional internal state to manage using adhoc and test databases.
  * */
 trait Conn extends ColOps with Serializations {
 
@@ -62,29 +64,36 @@ trait Conn extends ColOps with Serializations {
   def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit]
 
 
-  /** Use test database with temporary transaction data.
+  /** Use test database with temporary transaction statements.
    * <br><br>
-   * Transaction data can be supplied from any molecule:
+   * Transaction statements can be supplied from a molecule:
    * {{{
-   *   val benId = Person.name("Ben").save.eid
+   * for {
+   *   conn <- futConn // implicit Future[Conn] instance in scope
    *
-   *   // Use temporary db with given transaction data applied
-   *   conn.testDbWith(
-   *     Person.name("liz").getSaveTx
+   *   // Live data
+   *   benId = Person.name("Ben").save.map(_.eid)
+   *
+   *   // Use temporary db with statements of one or more tested transactions
+   *   _ <- conn.testDbWith(
+   *     Person.name("liz").getSaveStmts,
+   *     benId.getRetractStmts
+   *     // more...
    *   )
    *
-   *   // Query using temporary database including Liz
-   *   Person.name.get.map(_ ==> List("Ben", "Liz"))
+   *   // Query using temporary database
+   *   _ <- Person.name.get.map(_ ==> List("Liz"))
    *
-   *   // Multiple transactions can be applied
-   *   conn.testDbWith(
-   *     Person.name("Joe").getSaveTx,
-   *     benId.getRetractTx
-   *   )
-   *   Person.name.get.map(_ ==> List("Liz", "Joe"))
+   *   // Discard test db and go back to live db
+   *   _ = conn.useLiveDb()
+   *
+   *   // Query using unchanged live data
+   *   _ <- Person.name.get.map(_ ==> List("Ben"))
+   * } yield ()
    * }}}
    *
-   * @param txMolecules List of List of transaction [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s
+   * @param txMolecules List of List of transaction
+   *                    [[molecule.datomic.base.ast.transactionModel.Statement Statement]]'s
    */
   def testDbWith(txMolecules: Future[Seq[Statement]]*)
                 (implicit ec: ExecutionContext): Future[Unit]
@@ -100,44 +109,69 @@ trait Conn extends ColOps with Serializations {
   def db(implicit ec: ExecutionContext): Future[DatomicDb]
 
 
+  /** Transact EDN data string
+   *
+   * @param edn EDN transaction data string
+   * @param ec ExecutionContext for Future
+   * @return Future with [[TxReport]]
+   */
   def transact(edn: String)(implicit ec: ExecutionContext): Future[TxReport]
 
 
+  /** Transact statements from a java.util.Reader
+   *
+   * Only works on jvm platform.
+   *
+   * @param stmtsReader [[Reader]]
+   * @param ec
+   * @return Future with [[TxReport]]
+   */
   def transact(stmtsReader: Reader)(implicit ec: ExecutionContext): Future[TxReport] =
     Future.failed(jvmOnly("transact(stmtsReader: Reader)"))
 
 
+  /** Transact java statements
+   *
+   * Only works on jvm platform.
+   *
+   * @param javaStmts
+   * @param ec
+   * @return Future with [[TxReport]]
+   */
   def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] =
     Future.failed(jvmOnly("transact(javaStmts: jList[_])"))
 
 
-  /** Query Datomic directly with optional Scala inputs.
+  /** Query Datomic directly with Datalog query and optional Scala inputs.
    * {{{
-   *   // Sample data
-   *   Ns.str.int.get.map(_ ==> List(
+   * for {
+   *   conn <- futConn // implicit Future[Conn] instance in scope
+   *
+   *   // Typed tuple result from molecule
+   *   _ <- Ns.str.int.get.map(_ ==> List(
    *     ("Liz", 37),
    *     ("Ben", 42),
    *   ))
    *
-   *   // Start out easily with a Datomic query from inspect output
-   *   Ns.str.int.inspectGet // shows datomic query...
-   *
-   *   // Paste Datomic query into `q` call
-   *   conn.q("""[:find  ?b ?c
-   *            | :where [?a :Ns/str ?b]
-   *            |        [?a :Ns/int ?c]]""".stripMargin) === List(
+   *   // Any-type result from query
+   *   _ <- conn.query(
+   *     "[:find  ?b ?c :where [?a :Ns/str ?b][?a :Ns/int ?c]]"
+   *   ).map(_ ==> List(
    *     List("Liz", 37),
    *     List("Ben", 42)
-   *   )
+   *   ))
    *
-   *   // Modify Datomic query to see result, for instance
-   *   // by adding input to query and applying input value
-   *   conn.q("""[:find  ?b ?c
-   *            | :in    $ ?c
-   *            | :where [?a :Ns/str ?b]
-   *            |        [?a :Ns/int ?c]]""".stripMargin, 42) === List(
+   *   // Any-type result from query with input(s)
+   *   _ <- conn.query(
+   *     "[:find  ?b ?c :in $ ?c :where [?a :Ns/str ?b][?a :Ns/int ?c]]",
+   *     42
+   *   ).map(_ ==> List(
    *     List("Ben", 42)
-   *   )
+   *   ))
+   *
+   *   // See datalog queries of molecules with `inspectGet`
+   *   _ <- Ns.str.int.inspectGet // shows Datalog query...
+   * } yield ()
    * }}}
    *
    * @param datalogQuery Datomic query string

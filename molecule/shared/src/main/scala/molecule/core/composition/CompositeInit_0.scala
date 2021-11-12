@@ -9,41 +9,43 @@ import scala.language.higherKinds // Keep for 2.12
 
 
 /** Build composite molecule.
-  * <br><br>
-  * Composite molecules model entities with attributes from different namespaces that are
-  * not necessarily related. Each group of attributes is modelled by a molecule and the
-  * "sub-molecules" are tied together with `+` methods to form a composite molecule.
-  * <br><br>
-  * The attributes of the first sub-molecule are tied
-  * together in a tuple of its own before being merged with the tuple of attribute values
-  * of the second sub-molecule. If any of the sub-molecules are of arity-1, then no tuple is created:
-  * {{{
-  *   // Arity 1 + 1
-  *   m(Article.name + Tag.category).get.map(_ ==> List(
-  *     ("Battle of Waterloo", "History")
-  *   )
-  *
-  *   // Arity 1 + 2
-  *   m(Article.name + Tag.category.weight).get.map(_ ==> List(
-  *     ("Battle of Waterloo", ("History", 5))
-  *   )
-  *
-  *   // Arity 2 + 1
-  *   m(Article.name.author + Tag.category).get.map(_ ==> List(
-  *     (("Battle of Waterloo", "Ben Bridge"), "History")
-  *   )
-  *
-  *   // Arity 2 + 2
-  *   m(Article.name.author + Tag.category.weight).get.map(_ ==> List(
-  *     (("Battle of Waterloo", "Ben Bridge"), ("History", 5))
-  *   )
-  *
-  *   // Arity 3 + 2 etc...
-  *   m(Article.name.author.editor + Tag.category.weight).get.map(_ ==> List(
-  *     (("Battle of Waterloo", "Ben Bridge", "Joe Moe"), ("History", 5))
-  *   )
-  * }}}
-  */
+ * <br><br>
+ * Composite molecules model entities with attributes from different namespaces that are
+ * not necessarily related. Each group of attributes is modelled by a molecule and the
+ * "sub-molecules" are tied together with `+` methods to form a composite molecule.
+ * <br><br>
+ * The attributes of the first sub-molecule are tied
+ * together in a tuple of its own before being merged with the tuple of attribute values
+ * of the second sub-molecule. If any of the sub-molecules are of arity-1, then no tuple is created:
+ * {{{
+ * for {
+ *   // Arity 1 + 1
+ *   _ <- m(Article.name + Tag.category).get.map(_ ==> List(
+ *     ("Battle of Waterloo", "History")
+ *   ))
+ *
+ *   // Arity 1 + 2
+ *   _ <- m(Article.name + Tag.category.weight).get.map(_ ==> List(
+ *     ("Battle of Waterloo", ("History", 5))
+ *   ))
+ *
+ *   // Arity 2 + 1
+ *   _ <- m(Article.name.author + Tag.category).get.map(_ ==> List(
+ *     (("Battle of Waterloo", "Ben Bridge"), "History")
+ *   ))
+ *
+ *   // Arity 2 + 2
+ *   _ <- m(Article.name.author + Tag.category.weight).get.map(_ ==> List(
+ *     (("Battle of Waterloo", "Ben Bridge"), ("History", 5))
+ *   ))
+ *
+ *   // Arity 3 + 2 etc...
+ *   _ <- m(Article.name.author.editor + Tag.category.weight).get.map(_ ==> List(
+ *     (("Battle of Waterloo", "Ben Bridge", "Joe Moe"), ("History", 5))
+ *   ))
+ * } yield ()
+ * }}}
+ */
 object CompositeInit_0 {
 
   trait CompositeInit_0_00[obj[_], props] {

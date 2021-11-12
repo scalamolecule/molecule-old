@@ -11,11 +11,11 @@ import scala.language.higherKinds
   * <br><br>
   * `+` methods of this interface adds a new sub-molecule to the composite.
   * {{{
-  *   //             | input composite                     | add sub-molecule
-  *   m(Article.name(?).author(?) + Tag.category.weight(?) + Publisher.name)
-  *     .apply("Battle of Waterloo", "Ben Bridge", 5).get.map(_ ==> List(
-  *       (("Battle of Waterloo", "Ben Bridge"), ("History", 5), "Bestseller Publications Inc.")
-  *     )
+  * //             | input composite                     | add sub-molecule
+  * m(Article.name(?).author(?) + Tag.category.weight(?) + Publisher.name)
+  *   .apply("Battle of Waterloo", "Ben Bridge", 5).get.map(_ ==> List(
+  *     (("Battle of Waterloo", "Ben Bridge"), ("History", 5), "Bestseller Publications Inc.")
+  *   )
   * }}}
   */
 object Composite_3 {

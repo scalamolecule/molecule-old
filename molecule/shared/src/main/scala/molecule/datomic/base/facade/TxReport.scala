@@ -23,16 +23,16 @@ trait TxReport {
    *
    * Often useful when you know only one entity was affected:
    * {{{
-   *   val benId = Person.name("Ben").eid
-   *
-   *   // We could have said
-   *   val lizId = Person.name("Liz").eids.head
+   * for {
+   *   benId <- Person.name("Ben").map(_.eid)
+   * } yield ()
    * }}}
    *
    * @return
    */
   def eid: Long = eids.head
 
+  /** Tx report data, a List of [[Datom]] */
   def txData: List[Datom]
 
   /** Print TxReport */

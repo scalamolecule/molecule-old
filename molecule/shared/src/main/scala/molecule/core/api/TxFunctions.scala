@@ -14,53 +14,59 @@ import scala.util.control.NonFatal
 
 
 /** Transactional methods for bundled transactions and tx functions
-  *
-  * @groupname bundled Bundled transactions
-  * @groupdesc bundled Multiple molecule operations in one atomic transaction.
-  * @groupprio bundled 1
-  * @groupname txfn Transaction functions
-  * @groupdesc txfn Atomic transaction logic with access to tx database value.
-  * @groupprio txfn 2
-  */
+ *
+ * @groupname bundled Bundled transactions
+ * @groupdesc bundled Multiple molecule operations in one atomic transaction.
+ * @groupprio bundled 1
+ * @groupname txfn Transaction functions
+ * @groupdesc txfn Atomic transaction logic with access to tx database value.
+ * @groupprio txfn 2
+ */
 trait TxFunctions {
 
   /** Asynchronously transact tx function invocation
-    * <br><br>
-    * Macro that takes a tx function invocation itself as its argument. The tx function is analyzed
-    * by the macro and the necessary transaction preparations done at compile time.
-    * <br><br>
-    * At runtime, the returned statements from the tx function is asynchronously transacted as
-    * one atomic transaction using Datomic's asynchronous API.
-    * {{{
-    * Await.result(
-    *   transactAsync(transfer(fromAccount, toAccount, 20)) map { txReport =>
-    *     Account(fromAccount).balance.get.map(_.head ==> 80) // (could be asynchronous too)
-    *     Account(toAccount).balance.get.map(_.head ==> 720)
-    *   },
-    *   2.seconds
-    * )
-    * }}}
-    * Additional transaction meta data can be added
-    * {{{
-    * Await.result(
-    *   transactAsync(
-    *     transfer(fromAccount, toAccount, 20),
-    *     Person.name("John"),
-    *     UseCase.name("Scheduled transfer")) map { txReport =>
-    *       Account(fromAccount).balance
-    *       .Tx(Person.name_("John"))
-    *       .Tx(UseCase.name_("Scheduled transfer"))
-    *       .get.map(_.head ==> 80) // (could be asynchronous too)
-    *   },
-    *   2.seconds
-    * )
-    * }}}
-    *
-    * @group txfn
-    * @param txFnCall    Tx function invocation
-    * @param txMolecules Optional tx meta data molecules
-    * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
-    */
+   * <br><br>
+   * Macro that takes a tx function invocation itself as its argument. The tx function is analyzed
+   * by the macro and the necessary transaction preparations done at compile time.
+   * <br><br>
+   * At runtime, the returned statements from the tx function transacted as
+   * one atomic transaction using Datomic's asynchronous API.
+   * {{{
+   * for {
+   *   // Transact transfer
+   *   _ <- transactFn(
+   *     transfer(fromAccount, toAccount, 20)
+   *   )
+   *
+   *   // Amount has been transferred safely
+   *   _ <- Account(fromAccount).balance.get.map(_.head ==> 80)
+   *   _ <- Account(toAccount).balance.get.map(_.head ==> 720)
+   * } yield ()
+   * }}}
+   * Additional transaction meta data can be added
+   * {{{
+   * for {
+   *   _ <- transactFn(
+   *     transfer(fromAccount, toAccount, 20),
+   *
+   *     // Tx meta data that John made the transfer
+   *     Person.name("John"),
+   *
+   *     // Tx meta data that the transfer was part of use case "Scheduled transfer)
+   *     UseCase.name("Scheduled transfer")
+   *   )
+   *
+   *   _ <- Account(fromAccount).balance
+   *     .Tx(Person.name_("John") + UseCase.name_("Scheduled transfer"))
+   *     .get.map(_.head ==> 80)
+   * } yield ()
+   * }}}
+   *
+   * @group txfn
+   * @param txFnCall    Tx function invocation
+   * @param txMolecules Optional tx meta data molecules
+   * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with result of transaction
+   */
   def transactFn(
     txFnCall: Future[Seq[Statement]],
     txMolecules: Molecule*
@@ -68,45 +74,45 @@ trait TxFunctions {
 
 
   /** Inspect tx function invocation
-    * <br><br>
-    * Print transaction statements to output of a tx function invocation
-    * without affecting the live database.
-    * {{{
-    * // Print inspect info for tx function invocation
-    * inspectTransact(transfer(fromAccount, toAccount, 20))
-    *
-    * // Prints produced tx statements to output:
-    * /*
-    * ## 1 ## TxReport
-    * ========================================================================
-    * 1          ArrayBuffer(
-    *   1          List(
-    *     1          :db/add       17592186045445       :Account/balance    80        Card(1))
-    *   2          List(
-    *     1          :db/add       17592186045447       :Account/balance    720       Card(1)))
-    * ------------------------------------------------
-    * 2          List(
-    *   1    1     added: true ,   t: 13194139534345,   e: 13194139534345,   a: 50,   v: Thu Nov 22 16:23:09 CET 2018
-    *
-    *   2    2     added: true ,   t: 13194139534345,   e: 17592186045445,   a: 64,   v: 80
-    *        3     added: false,  -t: 13194139534345,  -e: 17592186045445,  -a: 64,  -v: 100
-    *
-    *   3    4     added: true ,   t: 13194139534345,   e: 17592186045447,   a: 64,   v: 720
-    *        5     added: false,  -t: 13194139534345,  -e: 17592186045447,  -a: 64,  -v: 700)
-    * ========================================================================
-    * */
-    * }}}
-    *
-    * @group txfn
-    * @param txFnCall    Tx function invocation
-    * @param txMolecules Optional tx meta data molecules
-    */
+   * <br><br>
+   * Print transaction statements to output of a tx function invocation
+   * without affecting the live database.
+   * {{{
+   * for {
+   *   // Print inspect info for tx function invocation
+   *   _ <- inspectTransact(transfer(fromAccount, toAccount, 20))
+   * } yield ()
+   *
+   * // Prints produced tx statements to output:
+   * /*
+   * ## 1 ## TxReport
+   * ========================================================================
+   * 1          ArrayBuffer(
+   *   1          List(
+   *     1          :db/add       17592186045445       :Account/balance    80        Card(1))
+   *   2          List(
+   *     1          :db/add       17592186045447       :Account/balance    720       Card(1)))
+   * ------------------------------------------------
+   * 2          List(
+   *   1    1     added: true ,   t: 13194139534345,   e: 13194139534345,   a: 50,   v: Thu Nov 22 16:23:09 CET 2018
+   *
+   *   2    2     added: true ,   t: 13194139534345,   e: 17592186045445,   a: 64,   v: 80
+   *        3     added: false,  -t: 13194139534345,  -e: 17592186045445,  -a: 64,  -v: 100
+   *
+   *   3    4     added: true ,   t: 13194139534345,   e: 17592186045447,   a: 64,   v: 720
+   *        5     added: false,  -t: 13194139534345,  -e: 17592186045447,  -a: 64,  -v: 700)
+   * ========================================================================
+   * */
+   * }}}
+   *
+   * @group txfn
+   * @param txFnCall    Tx function invocation
+   * @param txMolecules Optional tx meta data molecules
+   */
   def inspectTransactFn(
     txFnCall: Future[Seq[Statement]],
     txMolecules: Molecule*
   )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = macro TxFunctionCall.inspectTxFnCall
-
-
 }
 
 
@@ -147,9 +153,9 @@ object TxFunctions extends Helpers with JavaUtil {
 
 
   /** Invoke transaction function call synchronously (blocks)
-    *
-    * See also non-blocking asynchronous implementation
-    * */
+   *
+   * See also non-blocking asynchronous implementation
+   * */
   def txFnCall(
     txFnDatomic: String,
     txMolecules: Seq[Molecule],
@@ -212,7 +218,7 @@ object TxFunctions extends Helpers with JavaUtil {
     txMolecules: Seq[Molecule],
     args: Any*
   )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = {
-    for{
+    for {
       // Use temporary branch of db to not changing any live data
       _ <- conn.map(_.testDbWith())
       // Print tx report to console

@@ -81,7 +81,7 @@ object Pull extends AsyncTestSuite {
           // Getting the darkSideMedia entity graph pulls related tracks since
           // :medium/tracks is a component attribute: (commented out for brevity)
 
-          darkSideMedia.graph === Map(
+          darkSideMedia.graph.map(_ ==> Map(
             ":db/id" -> 927987813949629L,
             ":Medium/format" -> ":Medium.format/vinyl12",
             ":Medium/position" -> 1,
@@ -119,7 +119,8 @@ object Pull extends AsyncTestSuite {
                 ":Track/name" -> "Time",
 
                 etc...
-           */
+          ))
+          */
         }
 
         // Reverse component lookup
@@ -173,7 +174,7 @@ object Pull extends AsyncTestSuite {
 
 
         // Wildcard specification
-        //     concertForBangladeshEid.graph === Map(<big data graph for Bangladesh concert>)
+        //     concertForBangladeshEid.graph.map(_ ==> Map(<big data graph for Bangladesh concert>))
 
         // Wildcard + map specification
         // Using optional attributes

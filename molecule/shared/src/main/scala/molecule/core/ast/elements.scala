@@ -5,25 +5,25 @@ import molecule.core.ast.exception.ModelException
 import molecule.core.util.Helpers
 
 /** AST for molecule Model representation.
-  * <br><br>
-  * Molecule transforms custom boilerplate DSL constructs to Datomic queries in 3 steps:
-  * <br><br>
-  * Custom DSL molecule --> Model --> Query --> Datomic query string
-  * */
+ * <br><br>
+ * Molecule transforms custom boilerplate DSL constructs to Datomic queries in 3 steps:
+ * <br><br>
+ * Custom DSL molecule --> Model --> Query --> Datomic query string
+ * */
 object elements {
 
   import Helpers._
 
   /** Molecule Model representation.
-    * <br><br>
-    * Molecule transforms custom boilerplate DSL constructs to Datomic queries in 3 steps:
-    * <br><br>
-    * Custom DSL molecule --> Model --> Query --> Datomic query string
-    * <br><br>
-    * Model is thus derived from custom meta-DSL constructs ("molecules").
-    *
-    * @param elements Elements of the model
-    */
+   * <br><br>
+   * Molecule transforms custom boilerplate DSL constructs to Datomic queries in 3 steps:
+   * <br><br>
+   * Custom DSL molecule --> Model --> Query --> Datomic query string
+   * <br><br>
+   * Model is thus derived from custom meta-DSL constructs ("molecules").
+   *
+   * @param elements Elements of the model
+   */
   case class Model(elements: Seq[Element]) {
     override def toString: String = {
       def draw(elements: Seq[Element], indent: Int): Seq[String] = {
@@ -225,15 +225,17 @@ object elements {
 
 
   /** Expression AST for building OR/AND expressions.
-    * {{{
-    *   // `or` method allows OR-logic to be applied to `name` attribute
-    *   Person.name_("Ben" or "Liz").age.get.map(_ ==> List(42, 37))
-    *
-    *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
-    *   val persons = m(Person.name_(?).age(?))
-    *   persons(("Ben" and 42) or ("Liz" and 37)).get.map(_ ==> List(42, 37))
-    * }}}
-    */
+   * {{{
+   * for {
+   *   // `or` method allows OR-logic to be applied to `name` attribute
+   *   _ <- Person.name_("Ben" or "Liz").age.get.map(_ ==> List(42, 37))
+   *
+   *   // Given an input molecule awaiting 2 inputs, we can apply AND-pairs to OR expression:
+   *   persons = m(Person.name_(?).age(?))
+   *   _ <- persons(("Ben" and 42) or ("Liz" and 37)).get.map(_ ==> List(42, 37))
+   * } yield ()
+   * }}}
+   */
   sealed trait Expression
 
   sealed trait Exp1[T1] extends Expression {
@@ -275,13 +277,7 @@ object elements {
   // Correct output of values given scala-js type mixtures (+ hack for javascript decimal handling)
 
   final private def cast2(tpe: String, value: Any): String = (tpe, value) match {
-    case ("Long", v) => v.toString + "L"
-    //    case ("Float" | "Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
-    //    case ("Float" | "Double", v)                                   => v.toString
-    //    case ("Double", v) if v.toString.startsWith("__n__") => v.toString.drop(5)
-    //    case ("Double", v)                                   => v.toString
-
-    //    case ("Double", v) if v.toString.startsWith("__n__") => "\"" + v + "\"" // leave prepend as-is
+    case ("Long", v)                              => v.toString + "L"
     case ("Date", date: Date)                     => "\"" + date2str(date) + "\""
     case ("String", s: String)                    => "\"" + escStr(s) + "\""
     case ("UUID" | "URI", v)                      => "\"" + v + "\""

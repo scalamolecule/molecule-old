@@ -18,29 +18,6 @@ import scala.concurrent.duration._
  * Note that the queue does not block producers, and will consume
  * memory until you consume the elements from it.
  *
- * A common use is to listen for incoming transactions and do something with them:
- * {{{
- *   val conn = Conn_Peer(...)
- *   val queue = conn.txReportQueue
- *   // Run TxReportQueue operations in separate thread
- *   Future {
- *     while (true) {
- *       try {
- *         // `take` pops off the head tx report of the queue. It blocks until new
- *         // reports of transactions are received.
- *         val headTxReport = queue.take
- *         val datomsInTx = headTxReport.txData
- *         // do stuff with datoms...
- *       } catch {
- *         case _: InterruptedException => println("interrupted")
- *       }
- *     }
- *   }
- *
- *   // Remove the queue associated with the connection when finished listening.
- *   conn.removeTxReportQueue()
- * }}}
- *
  * @see [[https://docs.datomic.com/on-prem/javadoc/datomic/Connection.html#txReportQueue-- datomic.Connection.txReportQueue()]]
  */
 case class TxReportQueue(javaQueue: jBlockingQueue[jMap[_, _]]) extends JavaConversions {

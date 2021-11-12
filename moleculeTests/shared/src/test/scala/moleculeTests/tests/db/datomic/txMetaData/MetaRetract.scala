@@ -15,7 +15,7 @@ object MetaRetract extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "1 entity" - core { implicit conn =>
+    "1 entity, 1 tx meta" - core { implicit conn =>
       for {
         eid <- Ns.int(1).save.map(_.eid)
 
@@ -37,6 +37,51 @@ object MetaRetract extends AsyncTestSuite {
       } yield ()
     }
 
+    "1 entity, 2 tx meta, vararg" - core { implicit conn =>
+      for {
+        eid <- Ns.int(1).save.map(_.eid)
+
+        // Retract entity with two tx meta data molecules applied as separate arguments
+        tx2 <- eid.retract(Ref2.str2("meta2"), Ref1.str1("meta1")).map(_.tx)
+
+        // What was retracted and with what tx meta data
+        _ <- if (system == SystemPeerServer) {
+          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
+            // 1 was retracted with tx meta data "meta"
+            (eid, 1, tx2, false, "meta2", "meta1")
+          ))
+        } else {
+          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
+            // 1 was retracted with tx meta data "meta"
+            (eid, 1, tx2, false, "meta2", "meta1")
+          ))
+        }
+      } yield ()
+    }
+
+    "1 entity, 2 tx meta, composite" - core { implicit conn =>
+      for {
+        eid <- Ns.int(1).save.map(_.eid)
+
+        // Retract entity with tx meta data as composite
+        tx2 <- eid.retract(Ref2.str2("meta2") + Ref1.str1("meta1")).map(_.tx)
+
+        // What was retracted and with what tx meta data
+        _ <- if (system == SystemPeerServer) {
+          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
+            // 1 was retracted with tx meta data "meta"
+            (eid, 1, tx2, false, "meta2", "meta1")
+          ))
+        } else {
+          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
+            // 1 was retracted with tx meta data "meta"
+            (eid, 1, tx2, false, "meta2", "meta1")
+          ))
+        }
+      } yield ()
+    }
+
+
     "Multiple entities without tx meta data" - core { implicit conn =>
       for {
         List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map(_.eids)
@@ -50,7 +95,8 @@ object MetaRetract extends AsyncTestSuite {
       } yield ()
     }
 
-    "Multiple entities" - core { implicit conn =>
+
+    "Multiple entities with tx meta data" - core { implicit conn =>
       for {
         // Insert multiple entities with tx meta data
         txR1 <- Ns.int.Tx(Ref2.str2_("a")) insert List(1, 2, 3)

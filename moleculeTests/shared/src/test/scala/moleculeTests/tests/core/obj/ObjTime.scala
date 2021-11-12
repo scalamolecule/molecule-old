@@ -77,19 +77,19 @@ object ObjTime extends AsyncTestSuite with Helpers {
 
 
     "With" - core { implicit conn =>
-      val saveTx2 = Ns.int(2).getSaveStmts
-      val saveTx3 = Ns.int(3).getSaveStmts
+      val saveStmts2 = Ns.int(2).getSaveStmts
+      val saveStmts3 = Ns.int(3).getSaveStmts
 
       // See raw data api on jvm platform: jvm.obj.Time
 
       for {
         _ <- Ns.int(1).save
 
-        _ <- Ns.int.getObjsWith(saveTx2).map(_.map(_.int) ==> List(1, 2))
-        _ <- Ns.int.getObjsWith(saveTx2, saveTx3).map(_.map(_.int) ==> List(1, 2, 3))
+        _ <- Ns.int.getObjsWith(saveStmts2).map(_.map(_.int) ==> List(1, 2))
+        _ <- Ns.int.getObjsWith(saveStmts2, saveStmts3).map(_.map(_.int) ==> List(1, 2, 3))
         // Note how the parameter for number of rows returned is first (since we
         // need the vararg for tx molecules last)
-        _ <- Ns.int.getObjsWith(2, saveTx2, saveTx3).map(_.map(_.int) ==> List(1, 2))
+        _ <- Ns.int.getObjsWith(2, saveStmts2, saveStmts3).map(_.map(_.int) ==> List(1, 2))
       } yield ()
     }
 

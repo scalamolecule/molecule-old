@@ -27,6 +27,14 @@ case class DatomicEntity_Client(
 ) extends DatomicEntity_Jvm(conn, eid) with RegexMatching with JavaConversions {
 
 
+  // Entity api -------------------------------------------------
+
+  final def attrs(implicit ec: ExecutionContext): Future[List[String]] =
+    entityMap.map(_.keySet.toList)
+
+
+  // Internal --------------------------------------------------
+
   final private def mapOneLevel(implicit ec: ExecutionContext): Future[Map[String, Any]] = {
     conn.query(s"[:find ?a1 ?v :where [$eid ?a ?v][?a :db/ident ?a1]]").map(_
       .map(l => l.head.toString -> l(1))
@@ -81,11 +89,8 @@ case class DatomicEntity_Client(
     }
   }
 
-  final def attrs(implicit ec: ExecutionContext): Future[List[String]] =
-    entityMap.map(_.keySet.toList)
 
-
-  def isAttrDef(attrs: List[String]): Boolean = {
+  private def isAttrDef(attrs: List[String]): Boolean = {
     attrs.intersect(List(
       ":db/ident",
       ":db/valueType",
