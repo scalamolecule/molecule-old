@@ -3,9 +3,6 @@ package moleculeTests
 import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
 import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.util.Helpers
-import molecule.datomic.api.in3_out12._
-import molecule.datomic.base.marshalling.packers.PackEntityGraph
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -13,8 +10,7 @@ import scala.concurrent.Future
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
-  with String2cast with CastTypes with CastOptNested with JsonBase
-  with PackEntityGraph {
+  with String2cast with CastTypes with CastOptNested with JsonBase {
 
 
   lazy val tests = Tests {

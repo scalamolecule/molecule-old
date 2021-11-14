@@ -5,7 +5,7 @@ import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.PackBase
 
 
-trait PackEntityGraph extends PackBase with Helpers {
+private[molecule] trait PackEntityGraph extends PackBase with Helpers {
 
   protected def entityGraph2packed(sb: StringBuffer, v: Any): StringBuffer = v match {
     case v: String    => add(sb, v); end(sb) // end of text lines

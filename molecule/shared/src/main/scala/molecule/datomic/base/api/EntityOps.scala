@@ -79,7 +79,7 @@ trait EntityOps {
     * 0 or more transaction meta data molecules can be asserted together with a
    * retraction of entities.
     * <br><br>
-    * Here we asynchronously retract two comment entities with transaction meta data
+    * Here we retract two comment entities with transaction meta data
    * asserting that the retraction was done by Ben Goodman:
     * {{{
     * retract(Seq(commentEid1, commentEid2), MetaData.user("Ben Goodman"))

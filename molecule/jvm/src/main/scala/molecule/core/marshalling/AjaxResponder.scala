@@ -34,7 +34,7 @@ object AjaxResponder extends App with Serializations {
   Http()
     .newServerAt("localhost", 8080)
     .bind(route)
-    .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
+    .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 120.seconds))
     .onComplete {
       case Success(b) => println(s"Ajax server is running ${b.localAddress} ")
       case Failure(e) => println(s"there was an error starting the server $e")

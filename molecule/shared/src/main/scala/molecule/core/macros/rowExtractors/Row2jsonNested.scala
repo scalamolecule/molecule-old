@@ -177,12 +177,6 @@ trait Row2jsonNested extends JsonBase with RowValue2json {
             q"""${portJsonLambda(colIndex, 0)}"""
           )
         }
-
-        //        val txMetaComposites = castss.takeRight(txMetas)
-        //        val metaOffset       = castss.take(levels).flatten.length
-        //        val txMetaData       = compositeCasts(txMetaComposites, levels + metaOffset)
-
-
         q"""
          final override def jsonBranch0(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = branch(0, ${initTabs.head}, ${initTabs(1)}, sb, {..$pre}, ${nestedRef.head}, leaf, {..$postProps})
          ..$subBranches

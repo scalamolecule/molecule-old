@@ -153,15 +153,6 @@ trait CastOptNested extends Helpers {
       case null | "__none__" => Option.empty[Long]
       case v: jMap[_, _]     =>
         Some(v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.asInstanceOf[jLong].toLong)
-      //        var id   = 0L
-      //        var done = false
-      //        // Hack to avoid looking up map by clojure Keyword - there must be a better way...
-      //        v.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.asInstanceOf[jMap[_, _]].forEach {
-      //          case _ if done                        =>
-      //          case (k, v) if k.toString == ":db/id" => done = true; id = v.asInstanceOf[jLong].toLong
-      //          case _                                =>
-      //        }
-      //        Some(id)
       case v =>
         Some(v
           .asInstanceOf[jMap[_, _]].values.iterator.next

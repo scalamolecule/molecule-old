@@ -4,7 +4,7 @@ import java.util.{Collection => jCollection, List => jList}
 import molecule.core.marshalling.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverFlat
 
-case class Flat2packed(
+private[molecule] case class Flat2packed(
   obj: Obj,
   rows: jCollection[jList[AnyRef]],
   maxRows: Int = -1

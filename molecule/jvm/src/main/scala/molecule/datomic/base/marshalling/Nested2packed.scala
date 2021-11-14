@@ -5,7 +5,7 @@ import java.util.{ArrayList => jArrayList, Collection => jCollection, Comparator
 import molecule.core.marshalling.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverFlat
 
-case class Nested2packed(
+private[molecule] case class Nested2packed(
   obj: Obj,
   rowCollection: jCollection[jList[AnyRef]],
   nestedLevels: Int

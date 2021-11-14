@@ -6,7 +6,7 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.PackBase
 
-trait PackFlatTypes extends PackBase with Helpers {
+private[molecule] trait PackFlatTypes extends PackBase with Helpers {
 
   // packOne -------------------------------------------------------
 

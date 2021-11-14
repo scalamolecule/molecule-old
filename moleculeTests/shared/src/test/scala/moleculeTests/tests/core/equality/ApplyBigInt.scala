@@ -268,7 +268,6 @@ object ApplyBigInt extends AsyncTestSuite {
         val s2 = Set(bigInt2)
 
         val l12 = List(bigInt1, bigInt2)
-        val l23 = List(bigInt2, bigInt3)
 
         val s12 = Set(bigInt1, bigInt2)
         val s23 = Set(bigInt2, bigInt3)

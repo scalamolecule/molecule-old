@@ -2,9 +2,8 @@ package moleculeTests.tests.core.crud
 
 import molecule.core.ops.exception.VerifyModelException
 import molecule.datomic.api.out9._
-import moleculeTests.Adhoc.{bigDec1, bigInt1, date1, uri1, uuid1}
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -167,8 +166,6 @@ object Save extends AsyncTestSuite {
       "Iterables as variable" - core { implicit conn =>
         val set0   = Set.empty[Int]
         val set12  = Set(1, 2)
-        val seq122 = Seq(1, 2, 2) // Seq with duplicate values
-        val set23  = Set(2, 3)
         val set45  = Set(4, 5)
 
         for {

@@ -134,10 +134,10 @@ case class Conn_Client(
     }
   }
 
-  final def sync(implicit ec: ExecutionContext): Conn =
+  final def sync: Conn =
     usingAdhocDbView(Sync(0))
 
-  final def sync(t: Long)(implicit ec: ExecutionContext): Conn =
+  final def sync(t: Long): Conn =
     usingAdhocDbView(Sync(t))
 
 

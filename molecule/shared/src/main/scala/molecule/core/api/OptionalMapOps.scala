@@ -6,7 +6,7 @@ package molecule.core.api
  * @groupdesc optMapOps Keywords applied to number attributes that return aggregated value(s).
  * @groupprio optMapOps 45
  */
-trait OptionalMapOps {
+private[molecule] trait OptionalMapOps {
 
   /** Implicit convenience ops on `Option[Map[String, T]]`
    *

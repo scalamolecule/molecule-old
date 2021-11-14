@@ -1,13 +1,10 @@
 package moleculeTests.tests.db.datomic.txMetaData
 
-import molecule.core.ast.elements.Card
 import molecule.datomic.api.in3_out10._
-import molecule.datomic.api.in3_out12.inspectRetract
-import molecule.datomic.base.ast.transactionModel.{Add, RetractEntity}
 import molecule.datomic.base.ops.QueryOps
 import molecule.datomic.base.util.SystemPeerServer
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

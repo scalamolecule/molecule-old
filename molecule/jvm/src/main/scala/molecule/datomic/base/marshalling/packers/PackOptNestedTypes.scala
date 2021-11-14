@@ -7,7 +7,7 @@ import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.PackBase
 
 
-trait PackOptNestedTypes extends PackBase with Helpers {
+private[molecule] trait PackOptNestedTypes extends PackBase with Helpers {
 
   // packOne -------------------------------------------------------
 

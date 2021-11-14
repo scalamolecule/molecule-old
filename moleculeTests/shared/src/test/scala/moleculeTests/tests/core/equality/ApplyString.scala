@@ -331,7 +331,6 @@ object ApplyString extends AsyncTestSuite {
         val s2 = Set(str2)
 
         val l12 = List(str1, str2)
-        val l23 = List(str2, str3)
 
         val s12 = Set(str1, str2)
         val s23 = Set(str2, str3)

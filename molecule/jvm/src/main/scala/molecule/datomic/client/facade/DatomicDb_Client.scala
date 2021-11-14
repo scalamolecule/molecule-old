@@ -1,9 +1,7 @@
 package molecule.datomic.client.facade
 
 import java.util
-import java.util.Date
 import java.util.stream.{Stream => jStream}
-import datomic.{Peer, Util}
 import datomicScala.client.api.sync.Db
 import datomicScala.client.api.{Datom => ClientDatom}
 import molecule.core.exceptions.MoleculeException

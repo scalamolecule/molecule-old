@@ -180,7 +180,6 @@ abstract class Molecule_2[Obj, I1, I2](
       query: Query,
       ph: Placeholder,
       input: Seq[T],
-      tpe: String,
       ruleName: String,
       tacit: Boolean,
       expr: Boolean
@@ -202,8 +201,8 @@ abstract class Molecule_2[Obj, I1, I2](
     val q0 = query.copy(i = In(Seq(), query.i.rules, query.i.ds))
 
     // Resolve inputs
-    val q1 = resolve(q0, ph1, input1, tpe1, "rule1", isTacit(nsFull1, attr1), isExpression(nsFull1, attr1))
-    val q2 = resolve(q1, ph2, input2, tpe2, "rule2", isTacit(nsFull2, attr2), isExpression(nsFull2, attr2))
+    val q1 = resolve(q0, ph1, input1, "rule1", isTacit(nsFull1, attr1), isExpression(nsFull1, attr1))
+    val q2 = resolve(q1, ph2, input2, "rule2", isTacit(nsFull2, attr2), isExpression(nsFull2, attr2))
     Right(q2)
   } catch {
     case NonFatal(exc) => Left(exc)

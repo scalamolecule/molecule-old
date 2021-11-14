@@ -265,14 +265,15 @@ object Model2Query extends Helpers {
         abort(s"Unexpected first clause of composite query: " + other + "\n" + query.wh.clauses.mkString("\n"))
     }
 
-    val eid: String = if (e == "tx")
+    val eid: String = if (e == "tx") {
       "tx"
-    else if (txMetaComposite)
+    } else if (txMetaComposite) {
+      if (e.endsWith("tx")) e else "tx"
+    } else if (query.wh.clauses.isEmpty) {
       e
-    else if (query.wh.clauses.isEmpty)
-      e
-    else
+    } else {
       getFirstEid(query.wh.clauses)
+    }
 
     val v = if (query.wh.clauses.nonEmpty) {
       query.wh.clauses.last match {

@@ -4,7 +4,7 @@ import java.util.{Date, List => jList, Set => jSet}
 import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.PackBase
 
-trait PackFlatAggr extends PackBase with Helpers {
+private[molecule] trait PackFlatAggr extends PackBase with Helpers {
 
   protected val packAggrInt =
     (sb: StringBuffer, colIndex: Int) => (row: jList[_]) => add(sb, row.get(colIndex).toString)

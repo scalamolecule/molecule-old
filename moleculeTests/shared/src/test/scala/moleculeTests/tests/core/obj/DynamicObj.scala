@@ -1,15 +1,12 @@
 package moleculeTests.tests.core.obj
 
-import molecule.core.dsl.base
-import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.in1_out5._
-import molecule.datomic.base.facade.Conn
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
 
 
 /**

@@ -207,7 +207,6 @@ object Comparison extends Base {
         _ <- Ns.str.<=(""""H"""").get.map(_ ==> Nil)
         _ <- Ns.str.<(""""H"""").get.map(_ ==> Nil)
 
-        str: String = """Hi "Ann""""
         letter = "H"
         _ <- Ns.str.>(letter).get.map(_ ==> List("""Hi "Ann""""))
         _ <- Ns.str.>=(letter).get.map(_ ==> List("""Hi "Ann""""))

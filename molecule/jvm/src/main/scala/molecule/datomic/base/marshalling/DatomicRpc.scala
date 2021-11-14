@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-object DatomicRpc extends MoleculeRpc
+private[molecule] object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal
   with Helpers with ClojureBridge
   with PackEntityGraph with Quoted

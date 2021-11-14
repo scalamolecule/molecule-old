@@ -3,7 +3,7 @@ package molecule.datomic.base.marshalling.packers
 import java.util.{List => jList}
 
 
-trait ResolverFlat extends PackFlatTypes with PackFlatAggr {
+private[molecule] trait ResolverFlat extends PackFlatTypes with PackFlatAggr {
 
   def packFlatAttr(
     sb: StringBuffer,

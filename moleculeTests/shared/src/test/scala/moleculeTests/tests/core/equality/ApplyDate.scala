@@ -270,7 +270,6 @@ object ApplyDate extends AsyncTestSuite {
         val s2 = Set(date2)
 
         val l12 = List(date1, date2)
-        val l23 = List(date2, date3)
 
         val s12 = Set(date1, date2)
         val s23 = Set(date2, date3)

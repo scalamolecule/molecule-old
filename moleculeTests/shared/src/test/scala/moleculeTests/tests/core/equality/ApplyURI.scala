@@ -270,7 +270,6 @@ object ApplyURI extends AsyncTestSuite {
         val s2 = Set(uri2)
 
         val l12 = List(uri1, uri2)
-        val l23 = List(uri2, uri3)
 
         val s12 = Set(uri1, uri2)
         val s23 = Set(uri2, uri3)

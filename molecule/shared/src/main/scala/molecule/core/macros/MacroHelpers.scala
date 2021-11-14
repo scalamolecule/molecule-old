@@ -48,7 +48,6 @@ private[molecule] trait MacroHelpers extends Helpers {
       if (id >= threshold && id <= max) {
 
         def traverse(x: Any, level: Int, i: Int): String = {
-//          val indent = if (i == 0) "" else "  " * level + i + "          "
           val indent = if (i == 0) "" else "  " * level
           x match {
             case l: List[_]           => indent + "List(\n" + l.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString(",\n") + ")"

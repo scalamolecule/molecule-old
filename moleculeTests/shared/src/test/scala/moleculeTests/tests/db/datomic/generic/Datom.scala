@@ -343,9 +343,6 @@ object Datom extends AsyncTestSuite {
     }
 
 
-
-
-
     "Expressions, mandatory" - core { implicit conn =>
       if (system != SystemPeerServer) {
         for {

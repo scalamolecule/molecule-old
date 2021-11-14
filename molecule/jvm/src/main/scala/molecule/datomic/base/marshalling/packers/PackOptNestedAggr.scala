@@ -4,7 +4,7 @@ import java.util.{Date, Iterator => jIterator, List => jList, Set => jSet}
 import molecule.core.util.Helpers
 import molecule.datomic.base.marshalling.PackBase
 
-trait PackOptNestedAggr extends PackBase with Helpers {
+private[molecule] trait PackOptNestedAggr extends PackBase with Helpers {
 
   protected val packAggrInt    = (sb: StringBuffer, it: jIterator[_]) => add(sb, it.next.toString)
   protected val packAggrDouble = (sb: StringBuffer, it: jIterator[_]) => add(sb, it.next.toString)

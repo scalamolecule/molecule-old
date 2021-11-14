@@ -139,9 +139,6 @@ object Input1StringIntro extends AsyncTestSuite {
         } yield ()
       }
 
-      "Aggregates" - core { implicit conn =>
-        // Todo - disallow applying aggregate keywords as input ?
-      }
 
       // Only for String attributes having fulltext option defined in schema.
       "Fulltext search" - core { implicit conn =>

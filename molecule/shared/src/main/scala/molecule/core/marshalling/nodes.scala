@@ -68,10 +68,6 @@ object nodes {
     case (acc, nested: Obj)                => acc + 1 // nested counting as 1 prop
   }
 
-//  def mergeSameNameNs(obj: Obj) = {
-//
-//  }
-
 
   def addNode(obj: Obj, node: Node, level: Int): Obj = {
     val newProps = level match {

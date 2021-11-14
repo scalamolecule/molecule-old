@@ -266,7 +266,6 @@ object ApplyBigDecimal extends AsyncTestSuite {
           val s2 = Set(bigDec2)
 
           val l12 = List(bigDec1, bigDec2)
-          val l23 = List(bigDec2, bigDec3)
 
           val s12 = Set(bigDec1, bigDec2)
           val s23 = Set(bigDec2, bigDec3)

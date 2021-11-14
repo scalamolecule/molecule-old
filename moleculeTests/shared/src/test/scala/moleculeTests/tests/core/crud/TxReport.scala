@@ -3,7 +3,6 @@ package moleculeTests.tests.core.crud
 import molecule.datomic.api.out10._
 import molecule.datomic.base.api.Datom
 import molecule.datomic.base.util.SystemPeer
-import moleculeTests.Adhoc.{bigDec5, bigDec6, bigInt4, bigInt5, date1, date2, uri1, uri2, uuid1, uuid2}
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._

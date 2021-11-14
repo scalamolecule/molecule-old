@@ -4,7 +4,7 @@ import datomic.Util
 import molecule.datomic.base.ast.query.{CollectionBinding, InVar, Query, RelationBinding}
 import molecule.datomic.base.ops.exception.QueryOpsException
 
-case class QueryOpsClojure(q: Query) {
+private[molecule] case class QueryOpsClojure(q: Query) {
 
   private def cast(a: Any): AnyRef = a match {
     case i: Int                                => i.toLong.asInstanceOf[Object]

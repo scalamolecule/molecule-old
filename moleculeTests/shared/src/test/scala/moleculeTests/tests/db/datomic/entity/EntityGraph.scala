@@ -3,7 +3,6 @@ package moleculeTests.tests.db.datomic.entity
 import molecule.core.exceptions.MoleculeException
 import molecule.datomic.api.out3._
 import molecule.datomic.base.util.SystemDevLocal
-import moleculeTests.Adhoc.system
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._

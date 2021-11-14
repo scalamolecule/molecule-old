@@ -270,7 +270,6 @@ object ApplyLong extends AsyncTestSuite {
         val s2 = Set(long2)
 
         val l12 = List(long1, long2)
-        val l23 = List(long2, long3)
 
         val s12 = Set(long1, long2)
         val s23 = Set(long2, long3)

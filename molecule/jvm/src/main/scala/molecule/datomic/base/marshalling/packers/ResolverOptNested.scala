@@ -3,7 +3,7 @@ package molecule.datomic.base.marshalling.packers
 import java.util.{Iterator => jIterator}
 
 
-trait ResolverOptNested extends PackOptNestedTypes with PackOptNestedAggr {
+private[molecule] trait ResolverOptNested extends PackOptNestedTypes with PackOptNestedAggr {
 
   def packOptNestedAttr(
     group: String,

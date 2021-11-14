@@ -205,7 +205,7 @@ trait Conn extends ColOps with Serializations {
    * @param ec an implicit execution context.
    * @return Connection with synchronization flag set
    */
-  def sync(implicit ec: ExecutionContext): Conn
+  def sync: Conn
 
 
   /** Synchronize database to have all transactions completed up to and including time t.
@@ -228,7 +228,7 @@ trait Conn extends ColOps with Serializations {
    * @param ec an implicit execution context.
    * @return Connection with synchronization flag set
    */
-  def sync(t: Long)(implicit ec: ExecutionContext): Conn
+  def sync(t: Long): Conn
 
 
 

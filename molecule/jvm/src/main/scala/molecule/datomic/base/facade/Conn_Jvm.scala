@@ -5,8 +5,7 @@ import java.net.URI
 import java.util.{Collections, Date, Collection => jCollection, List => jList, Map => jMap}
 import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
-import datomic.Peer.function
-import datomic.Util.{list, read, readAll}
+import datomic.Util.{read, readAll}
 import datomic.{Peer, Util}
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
@@ -71,7 +70,6 @@ trait Conn_Jvm extends Conn with JavaConversions {
 
 
   // Internal ------------------------------------------------------------------
-
 
   private[molecule] val isJsPlatform: Boolean = false
 

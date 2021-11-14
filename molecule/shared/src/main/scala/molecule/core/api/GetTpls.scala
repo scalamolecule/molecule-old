@@ -7,12 +7,11 @@ import molecule.core.ops.ColOps
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Default data getter methods on molecules that return data as lists of tuples. */
-trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
+private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 

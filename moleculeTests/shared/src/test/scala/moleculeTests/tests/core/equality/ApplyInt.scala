@@ -269,7 +269,6 @@ object ApplyInt extends AsyncTestSuite {
         val s2 = Set(2)
 
         val l12 = List(1, 2)
-        val l23 = List(2, 3)
 
         val s12 = Set(1, 2)
         val s23 = Set(2, 3)

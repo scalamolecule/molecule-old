@@ -2,11 +2,10 @@ package moleculeTests.tests.core.nested
 
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out4._
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 
 object NestedRef extends AsyncTestSuite {
@@ -354,13 +353,5 @@ object NestedRef extends AsyncTestSuite {
           "Attributes after nested structure not allowed (only Tx meta data is allowed)."
       )
     }
-
-    // todo
-//    "No post attributes except tx meta data" - core { implicit conn =>
-//      expectCompileError("m(Ns.double.Refs1.*(Ref1.int1).str)",
-//        "molecule.core.transform.exception.Dsl2ModelException: " +
-//          "Only Tx meta data allowed after nested structure. Found: `str`"
-//      )
-//    }
   }
 }

@@ -1,12 +1,10 @@
 package moleculeTests.tests.core.json
 
 import molecule.datomic.api.out11._
-import molecule.datomic.base.util.SystemPeer
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 
 object JsonNested extends AsyncTestSuite {
@@ -927,7 +925,7 @@ object JsonNested extends AsyncTestSuite {
 
         // Ordering only stable with Peer
         _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.int2).getJson.map { result =>
-          val variations = for{
+          val variations = for {
             a <- List(11, 12)
             b <- List(11, 12) if b != a
             c <- List(21, 22)
@@ -1011,7 +1009,7 @@ object JsonNested extends AsyncTestSuite {
 
         // Semi-nested A without intermediary attr `int1`
         _ <- Ns.str.Refs1.*(Ref1.Refs2.int2).getJson.map { result =>
-          val variations = for{
+          val variations = for {
             a <- List(11, 12)
             b <- List(11, 12) if b != a
             c <- List(21, 22)
@@ -1341,7 +1339,7 @@ object JsonNested extends AsyncTestSuite {
 
 
         // Flat without intermediary attr `int1`
-        res <- m(Ns.str.Refs1.Refs2.int2).getJson.map(_ ==>
+        _ <- m(Ns.str.Refs1.Refs2.int2).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
@@ -1412,8 +1410,6 @@ object JsonNested extends AsyncTestSuite {
             |    ]
             |  }
             |}""".stripMargin)
-        //          } yield res
-        //        } else Future.unit
       } yield ()
     }
 

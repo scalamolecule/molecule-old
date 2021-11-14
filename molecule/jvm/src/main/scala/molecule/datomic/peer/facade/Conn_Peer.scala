@@ -113,10 +113,10 @@ case class Conn_Peer(
   }
 
 
-  final def sync(implicit ec: ExecutionContext): Conn =
+  final def sync: Conn =
     usingAdhocDbView(Sync(0))
 
-  final def sync(t: Long)(implicit ec: ExecutionContext): Conn =
+  final def sync(t: Long): Conn =
     usingAdhocDbView(Sync(t))
 
 
@@ -149,7 +149,7 @@ case class Conn_Peer(
    * @param ec an implicit execution context.
    * @return Peer Connection with synchronization flag set
    */
-  final def syncIndex(t: Long)(implicit ec: ExecutionContext): Conn_Peer =
+  final def syncIndex(t: Long): Conn_Peer =
     usingAdhocDbView(SyncIndex(t)).asInstanceOf[Conn_Peer]
 
   /** Synchronize Peer database to be aware of all schema changes up to time t.
@@ -170,7 +170,7 @@ case class Conn_Peer(
    * @param ec an implicit execution context.
    * @return Connection with synchronization flag set
    */
-  final def syncSchema(t: Long)(implicit ec: ExecutionContext): Conn_Peer =
+  final def syncSchema(t: Long): Conn_Peer =
     usingAdhocDbView(SyncSchema(t)).asInstanceOf[Conn_Peer]
 
   /** Synchronize Peer database to be aware of all excisions up to time t.
@@ -191,7 +191,7 @@ case class Conn_Peer(
    * @param ec an implicit execution context.
    * @return Connection with synchronization flag set
    */
-  final def syncExcise(t: Long)(implicit ec: ExecutionContext): Conn_Peer =
+  final def syncExcise(t: Long): Conn_Peer =
     usingAdhocDbView(SyncExcise(t)).asInstanceOf[Conn_Peer]
 
 

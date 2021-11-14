@@ -2,7 +2,6 @@ package molecule.datomic.client.facade
 
 import java.util.UUID.randomUUID
 import datomic.Peer
-import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
 import molecule.core.marshalling.ConnProxy

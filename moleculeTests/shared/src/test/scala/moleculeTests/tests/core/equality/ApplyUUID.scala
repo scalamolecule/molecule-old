@@ -270,7 +270,6 @@ object ApplyUUID extends AsyncTestSuite {
         val s2 = Set(uuid2)
 
         val l12 = List(uuid1, uuid2)
-        val l23 = List(uuid2, uuid3)
 
         val s12 = Set(uuid1, uuid2)
         val s23 = Set(uuid2, uuid3)

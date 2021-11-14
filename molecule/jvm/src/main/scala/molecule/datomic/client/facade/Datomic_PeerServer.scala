@@ -1,6 +1,5 @@
 package molecule.datomic.client.facade
 
-import datomicScala.client.api.async.AsyncDatomic
 import datomicScala.client.api.sync.Datomic
 import molecule.core.marshalling.ConnProxy
 import scala.concurrent.{ExecutionContext, Future}

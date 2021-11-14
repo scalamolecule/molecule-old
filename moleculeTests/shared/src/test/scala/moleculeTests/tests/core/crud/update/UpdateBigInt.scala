@@ -96,33 +96,33 @@ object UpdateBigInt extends AsyncTestSuite {
           eid <- Ns.bigInts(bigInt1, bigInt2, bigInt3, bigInt4, bigInt5, bigInt6).save.map(_.eid)
 
           // Replace value
-          - <- Ns(eid).bigInts.replace(bigInt6 -> bigInt8).update
+          _ <- Ns(eid).bigInts.replace(bigInt6 -> bigInt8).update
           _ <- Ns.bigInts.get.map(_.head.toList.sorted ==> List(bigInt1, bigInt2, bigInt3, bigInt4, bigInt5, bigInt8))
 
           // Replace value to existing value simply retracts it
-          - <- Ns(eid).bigInts.replace(bigInt5 -> bigInt8).update
+          _ <- Ns(eid).bigInts.replace(bigInt5 -> bigInt8).update
           _ <- Ns.bigInts.get.map(_.head.toList.sorted ==> List(bigInt1, bigInt2, bigInt3, bigInt4, bigInt8))
 
           // Replace multiple values (vararg)
-          - <- Ns(eid).bigInts.replace(bigInt3 -> bigInt6, bigInt4 -> bigInt7).update
+          _ <- Ns(eid).bigInts.replace(bigInt3 -> bigInt6, bigInt4 -> bigInt7).update
           _ <- Ns.bigInts.get.map(_.head.toList.sorted ==> List(bigInt1, bigInt2, bigInt6, bigInt7, bigInt8))
 
           // Missing old value has no effect. The new value is inserted (upsert semantics)
           bigInt42 = BigInt(42)
-          - <- Ns(eid).bigInts.replace(bigInt42 -> bigInt9).update
+          _ <- Ns(eid).bigInts.replace(bigInt42 -> bigInt9).update
           _ <- Ns.bigInts.get.map(_.head.toList.sorted ==> List(bigInt1, bigInt2, bigInt6, bigInt7, bigInt8, bigInt9))
 
           // Replace with Seq of oldValue->newValue pairs
-          - <- Ns(eid).bigInts.replace(Seq(bigInt2 -> bigInt5)).update
+          _ <- Ns(eid).bigInts.replace(Seq(bigInt2 -> bigInt5)).update
           _ <- Ns.bigInts.get.map(_.head.toList.sorted ==> List(bigInt1, bigInt5, bigInt6, bigInt7, bigInt8, bigInt9))
 
           // Replace with Seq of oldValue->newValue pairs as variable
           values = Seq(bigInt1 -> bigInt4)
-          - <- Ns(eid).bigInts.replace(values).update
+          _ <- Ns(eid).bigInts.replace(values).update
           _ <- Ns.bigInts.get.map(_.head.toList.sorted ==> List(bigInt4, bigInt5, bigInt6, bigInt7, bigInt8, bigInt9))
 
           // Replacing with empty Seq of oldValue->newValue pairs has no effect
-          - <- Ns(eid).bigInts.replace(Seq[(BigInt, BigInt)]()).update
+          _ <- Ns(eid).bigInts.replace(Seq[(BigInt, BigInt)]()).update
           _ <- Ns.bigInts.get.map(_.head.toList.sorted ==> List(bigInt4, bigInt5, bigInt6, bigInt7, bigInt8, bigInt9))
 
 

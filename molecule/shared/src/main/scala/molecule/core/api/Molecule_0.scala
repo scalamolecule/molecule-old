@@ -2,7 +2,7 @@ package molecule.core.api
 
 import molecule.core.ast.elements._
 import molecule.core.macros.MakeMoleculeDynamic
-import molecule.core.macros.rowAttr.{CastAggr, CastOptNested, CastTypes, JsonAggr, JsonOptNested, JsonTypes}
+import molecule.core.macros.rowAttr._
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.marshalling.unpackAttr.{String2cast, String2json}
@@ -10,7 +10,7 @@ import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
-import molecule.datomic.base.ast.transactionModel.{Add, Statement, TempId}
+import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.util.ShowInspect
 import scala.concurrent.{ExecutionContext, Future}
@@ -141,31 +141,27 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return Future with [[molecule.datomic.base.facade.TxReport TxReport]] with info about the result of the `save` transaction.
    */
-  def save(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
-    VerifyModel(_model, "save")
-    val res = conn.flatMap { conn =>
-      if (conn.isJsPlatform) {
-        for {
-          saveStmts <- conn.model2stmts(_model).saveStmts
-          result <- {
-            //            println(_model)
-            //            saveStmts foreach println
-
-            conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
-          }
-        } yield result
-      } else {
-        conn.transact(
-          conn.model2stmts(_model).saveStmts
-        )
+  def save(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = Future {
+    try {
+      VerifyModel(_model, "save") // Can throw exception
+      val res = conn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          for {
+            saveStmts <- conn.model2stmts(_model).saveStmts
+            result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(saveStmts, conn))
+          } yield result
+        } else {
+          conn.transact(
+            conn.model2stmts(_model).saveStmts
+          )
+        }
       }
+      res
+    } catch {
+      // Catch failed model verification
+      case NonFatal(exc) => Future.failed(exc)
     }
-    //    res.foreach(r => println("@@@@@@@@@@@@ SAVE  " + r))
-    res
-  } catch {
-    // Catch failed model verification
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  }.flatten
 
   /** Get transaction statements of a call to `save` on a molecule (without affecting the db).
    *
@@ -173,15 +169,17 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return Transaction statements
    */
-  def getSaveStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
-    VerifyModel(_model, "save")
-    conn.flatMap { conn =>
-      conn.model2stmts(_model).saveStmts
+  def getSaveStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = Future {
+    try {
+      VerifyModel(_model, "save") // Can throw exception
+      conn.flatMap { conn =>
+        conn.model2stmts(_model).saveStmts
+      }
+    } catch {
+      // Catch failed model verification
+      case NonFatal(exc) => Future.failed(exc)
     }
-  } catch {
-    // Catch failed model verification
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  }.flatten
 
 
   // Insert ====================================================================
@@ -247,37 +245,42 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
 
 
   protected def _insert(conn: Future[Conn], dataRows: Iterable[Seq[Any]])
-                       (implicit ec: ExecutionContext): Future[TxReport] = try {
-    VerifyModel(_model, "insert")
-    conn.flatMap { conn =>
-      if (conn.isJsPlatform) {
-        for {
-          insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
-          (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
-          result <- conn.rpc.transact(conn.connProxy, stmtsEdn, uriAttrs)
-        } yield result
-      } else {
-        conn.transact(
-          conn.model2stmts(_model).insertStmts(untupled(dataRows))
-        )
+                       (implicit ec: ExecutionContext): Future[TxReport] = Future {
+    try {
+      VerifyModel(_model, "insert") // Can throw exception
+      conn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          for {
+            insertStmts <- conn.model2stmts(_model).insertStmts(untupled(dataRows))
+            (stmtsEdn, uriAttrs) = Stmts2Edn(insertStmts, conn)
+            result <- conn.rpc.transact(conn.connProxy, stmtsEdn, uriAttrs)
+          } yield result
+        } else {
+          conn.transact(
+            conn.model2stmts(_model).insertStmts(untupled(dataRows))
+          )
+        }
       }
+    } catch {
+      case NonFatal(exc) => Future.failed(exc)
     }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  }.flatten
+
 
   protected def _getInsertStmts(
     conn: Future[Conn],
     dataRows: Iterable[Seq[Any]]
-  )(implicit ec: ExecutionContext): Future[Seq[Statement]] = try {
-    VerifyModel(_model, "insert")
-    conn.flatMap { conn =>
-      conn.model2stmts(_model).insertStmts(untupled(dataRows))
+  )(implicit ec: ExecutionContext): Future[Seq[Statement]] = Future {
+    try {
+      VerifyModel(_model, "insert") // Can throw exception
+      conn.flatMap { conn =>
+        conn.model2stmts(_model).insertStmts(untupled(dataRows))
+      }
+    } catch {
+      // Catch failed model verification
+      case NonFatal(exc) => Future.failed(exc)
     }
-  } catch {
-    // Catch failed model verification
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  }.flatten
 
 
   // Update ====================================================================
@@ -300,28 +303,30 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return [[molecule.datomic.base.facade.TxReport TxReport]]
    */
-  def update(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
-    VerifyModel(_model, "update")
-    conn.flatMap { conn =>
-      if (conn.isJsPlatform) {
-        for {
-          updateStmts <- conn.model2stmts(_model).updateStmts
-          result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(updateStmts, conn))
-        } yield result
-      } else {
-        conn.transact(
-          try {
-            conn.model2stmts(_model).updateStmts
-          } catch {
-            case NonFatal(exc) => Future.failed(exc)
-          }
-        )
+  def update(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = Future {
+    try {
+      VerifyModel(_model, "update") // Can throw exception
+      conn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          for {
+            updateStmts <- conn.model2stmts(_model).updateStmts
+            result <- conn.rpc.transact(conn.connProxy, Stmts2Edn(updateStmts, conn))
+          } yield result
+        } else {
+          conn.transact(
+            try {
+              conn.model2stmts(_model).updateStmts
+            } catch {
+              case NonFatal(exc) => Future.failed(exc)
+            }
+          )
+        }
       }
+    } catch {
+      // Catch failed model verification
+      case NonFatal(exc) => Future.failed(exc)
     }
-  } catch {
-    // Catch failed model verification
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  }.flatten
 
 
   /** Get transaction statements of a call to `update` on a molecule (without affecting the db).
@@ -330,15 +335,17 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return
    */
-  def getUpdateStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = try {
-    VerifyModel(_model, "update")
-    conn.flatMap { conn =>
-      conn.model2stmts(_model).updateStmts
+  def getUpdateStmts(implicit conn: Future[Conn], ec: ExecutionContext): Future[Seq[Statement]] = Future {
+    try {
+      VerifyModel(_model, "update") // Can throw exception
+      conn.flatMap { conn =>
+        conn.model2stmts(_model).updateStmts
+      }
+    } catch {
+      // Catch failed model verification
+      case NonFatal(exc) => Future.failed(exc)
     }
-  } catch {
-    // Catch failed model verification
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  }.flatten
 }
 
 

@@ -1,9 +1,8 @@
 package moleculeTests.tests.core.json
 
 import molecule.datomic.api.out11._
-import molecule.datomic.base.util.{SystemPeer, SystemPeerServer}
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

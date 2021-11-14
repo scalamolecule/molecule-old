@@ -1,9 +1,8 @@
 package moleculeTests.tests.db.datomic.composite
 
-import java.util.Date
 import molecule.datomic.api.out4._
-import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 

@@ -5,7 +5,7 @@ import molecule.core.macros.rowAttr.JsonBase
 import molecule.core.marshalling.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverOptNested
 
-case class OptNested2packed(
+private[molecule] case class OptNested2packed(
   obj: Obj,
   rowCollection: jCollection[jList[AnyRef]],
   maxRows: Int = -1,

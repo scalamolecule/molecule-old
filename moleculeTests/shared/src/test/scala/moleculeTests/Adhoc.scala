@@ -8,6 +8,7 @@ import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.Helpers
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.in3_out12._
+import molecule.datomic.api.out10.m
 import molecule.datomic.base.api.Datom
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.transform.Model2Query

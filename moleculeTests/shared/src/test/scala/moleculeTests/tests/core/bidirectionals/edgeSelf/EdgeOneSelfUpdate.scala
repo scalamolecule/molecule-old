@@ -11,16 +11,12 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
 
   val loveOf = m(Person.name_(?).Loves.weight.Person.name)
 
-  def getAnn(implicit conn: Future[Conn], ec: ExecutionContext): Future[Long] = {
-    Person.name("Ann").save.map(_.eid)
-  }
-
   lazy val tests = Tests {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     "apply edge to new target" - bidirectional { implicit conn =>
       for {
-        ann <- getAnn
+        ann <- Person.name("Ann").save.map(_.eid)
 
         // New edge and new target entity
         _ <- Person(ann).Loves.weight(5).Person.name("Ben").update
@@ -46,7 +42,7 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
 
     "apply edge to existing target" - bidirectional { implicit conn =>
       for {
-        ann <- getAnn
+        ann <- Person.name("Ann").save.map(_.eid)
         List(ben, joe) <- Person.name.insert("Ben", "Joe").map(_.eids)
 
         _ <- Person(ann).Loves.weight(5).person(ben).update
@@ -67,7 +63,7 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
 
     "retract edge" - bidirectional { implicit conn =>
       for {
-        ann <- getAnn
+        _ <- Person.name("Ann").save.map(_.eid)
         List(_, annBen, _, _) <- Person.name("Ann").Loves.weight(5).Person.name("Ben").save.map(_.eids)
 
         _ <- loveOf("Ann").get.map(_ ==> List((5, "Ben")))
@@ -85,7 +81,7 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
 
     "retract base/target entity" - bidirectional { implicit conn =>
       for {
-        ann <- getAnn
+        _ <- Person.name("Ann").save.map(_.eid)
 
         List(_, _, _, ben) <- Person.name("Ann").Loves.weight(5).Person.name("Ben").save.map(_.eids)
 

@@ -16,7 +16,7 @@ package molecule.datomic.base.marshalling
   * ◄ is 0x25C4.toChar
   * ► is 0x25BA.toChar
   */
-trait PackBase {
+private[molecule] trait PackBase {
 
   def add(sb: StringBuffer, s: String): StringBuffer = {
     sb.append("\n")

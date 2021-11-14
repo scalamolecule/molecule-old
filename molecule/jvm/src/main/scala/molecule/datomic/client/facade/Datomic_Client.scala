@@ -1,7 +1,6 @@
 package molecule.datomic.client.facade
 
 import datomicClient.ClojureBridge
-import datomicScala.client.api.async.AsyncClient
 import datomicScala.client.api.sync.Client
 import molecule.core.marshalling.ConnProxy
 import molecule.core.util.JavaConversions

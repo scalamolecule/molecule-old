@@ -270,7 +270,6 @@ object ApplyDouble extends AsyncTestSuite {
         val s2 = Set(double2)
 
         val l12 = List(double1, double2)
-        val l23 = List(double2, double3)
 
         val s12 = Set(double1, double2)
         val s23 = Set(double2, double3)

@@ -1,12 +1,10 @@
 package molecule.core.api
 
-import java.net.URI
 import java.util.Date
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
-import molecule.core.util.{Helpers, fns}
+import molecule.core.util.fns
 import molecule.datomic.base.ast.query._
-import scala.util.control.NonFatal
 
 /** Shared interface of all input molecules.
  * <br><br>
@@ -44,7 +42,7 @@ import scala.util.control.NonFatal
  * }
  * }}}
  */
-abstract class InputMolecule(
+private[molecule] abstract class InputMolecule(
   model: Model,
   queryData: (Query, String, Option[Throwable])
 ) extends Molecule(model, queryData) {

@@ -1,6 +1,5 @@
 package moleculeTests.tests.core.crud
 
-import molecule.core.exceptions.TxFnException
 import molecule.datomic.api.out3._
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.dataModels.core.base.dsl.CoreTest._

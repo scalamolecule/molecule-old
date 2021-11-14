@@ -4,7 +4,6 @@ import java.util.{Date, UUID, Collection => jCollection}
 import molecule.core.api.exception.EntityException
 import molecule.datomic.base.facade.DatomicEntity_Jvm
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.existentials
 import scala.util.{Failure, Success}
 
 

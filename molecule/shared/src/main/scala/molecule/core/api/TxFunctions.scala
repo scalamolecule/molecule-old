@@ -24,7 +24,7 @@ import scala.util.control.NonFatal
  */
 trait TxFunctions {
 
-  /** Asynchronously transact tx function invocation
+  /** Invoke tx function
    * <br><br>
    * Macro that takes a tx function invocation itself as its argument. The tx function is analyzed
    * by the macro and the necessary transaction preparations done at compile time.
@@ -152,10 +152,7 @@ object TxFunctions extends Helpers with JavaUtil {
   val redundant = "molecule.core.exceptions.TxFnException: ".length
 
 
-  /** Invoke transaction function call synchronously (blocks)
-   *
-   * See also non-blocking asynchronous implementation
-   * */
+  /** Invoke transaction function call */
   def txFnCall(
     txFnDatomic: String,
     txMolecules: Seq[Molecule],

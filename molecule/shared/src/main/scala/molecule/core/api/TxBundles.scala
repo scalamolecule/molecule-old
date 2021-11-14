@@ -9,21 +9,19 @@ import scala.concurrent.{ExecutionContext, Future}
 trait TxBundles extends Helpers with Serializations {
 
 
-  /** Asynchronously transact bundled transaction statements
+  /** Transact bundled transaction statements
    *
    * Supply transaction statements of one or more molecule actions to asynchronously
    * transact a single atomic transaction.
    * {{{
-   * for {
-   *   transactBundle(
-   *     e1.getRetractStmts,
-   *     Ns.int(4).getSaveStmts,
-   *     Ns.int.getInsertStmts(List(5, 6)),
-   *     Ns(e2).int(20).getUpdateStmts
-   *   ) map { bundleTx =>
-   *     Ns.int.getAsync.map(_ ==> List(3, 4, 5, 6, 20))
-   *   }
-   * } yield ()
+   * transactBundle(
+   *   e1.getRetractStmts,
+   *   Ns.int(4).getSaveStmts,
+   *   Ns.int.getInsertStmts(List(5, 6)),
+   *   Ns(e2).int(20).getUpdateStmts
+   * ) map { bundleTx =>
+   *   Ns.int.getAsync.map(_ ==> List(3, 4, 5, 6, 20))
+   * }
    * }}}
    *
    * @group bundled

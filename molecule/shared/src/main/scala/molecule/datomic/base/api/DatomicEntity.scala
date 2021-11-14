@@ -239,7 +239,7 @@ trait DatomicEntity {
    */
   def graphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Map[String, Any]]
 
-  /** Get entity graph as Map-string (for presentation).
+  /** Print entity graph as Map-string (for presentation).
    * <br><br>
    * To show the entity graph, this method quotes all text strings so that you can paste the whole graph
    * into any presentation.
@@ -271,7 +271,7 @@ trait DatomicEntity {
    */
   def inspectGraph(implicit ec: ExecutionContext): Future[Unit]
 
-  /** Get entity graph to some depth as Map-string (for presentation).
+  /** Print entity graph to some depth as Map-string (for presentation).
    * <br><br>
    * To show the entity graph, this method quotes all text strings so that you can paste the whole graph
    * into any presentation.
@@ -313,6 +313,12 @@ trait DatomicEntity {
   def inspectGraphDepth(maxDepth: Int)(implicit ec: ExecutionContext): Future[Unit]
 
 
+  /** Get entity graph as String with code for copy/paste into tests.
+   *
+   * @param maxDepth
+   * @param ec
+   * @return
+   */
   def graphCode(maxDepth: Int)(implicit ec: ExecutionContext): Future[String]
 
   // Internal --------------------------------------------------
