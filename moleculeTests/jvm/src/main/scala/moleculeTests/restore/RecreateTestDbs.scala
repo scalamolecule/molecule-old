@@ -35,8 +35,8 @@ object RecreateTestDbs extends App {
       "m_seattle" -> SeattleSchema,
     ).map {
       case (db, schema) =>
-        val connProxy =  DatomicPeerProxy("mem", "", schema.datomicPeer, schema.attrMap)
-        Datomic_Peer.recreateDbFrom(schema, connProxy, datomicProtocol, "localhost:4334/" + db)
+        Datomic_Peer
+          .recreateDbFrom(schema, datomicProtocol, "localhost:4334/" + db)
           .map(_ => println("Created database: " + db))
     }), 1.minute)
 }

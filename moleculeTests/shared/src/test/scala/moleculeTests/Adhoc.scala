@@ -29,9 +29,10 @@ object Adhoc extends AsyncTestSuite with Helpers {
     "core" - core { implicit futConn =>
       import moleculeTests.dataModels.core.base.dsl.CoreTest._
       for {
-        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
+        _ <- Ns.int(1).save
+        _ <- Ns.int.get.map(_ ==> List(1))
 
 
 

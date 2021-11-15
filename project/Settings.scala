@@ -11,8 +11,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
     ThisBuild / version := "1.0.0-SNAPSHOT",
-    crossScalaVersions := Seq("2.12.15", "2.13.7"),
     ThisBuild / scalaVersion := "2.13.7",
+    crossScalaVersions := Seq("2.12.15", "2.13.7"),
     scalacOptions := List(
       "-feature",
       //      "-unchecked",
@@ -53,9 +53,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0"
     ),
-    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-    // Ensure clojure loads correctly for async tests run from sbt
-    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
 
   val jvm: Seq[Def.Setting[_]] = {
@@ -72,7 +70,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         "com.typesafe.akka" %% "akka-http" % "10.2.6",
         "ch.megard" %% "akka-http-cors" % "1.1.2",
 
-        // Proprietary Client dev-local dependency needed for tests against dev-local
+        // Free, but proprietary Client dev-local dependency needed for client/dev-local
         // Please download from https://cognitect.com/dev-tools and install locally per included instructions
         "com.datomic" % "dev-local" % datomicDevLocalVersion
       ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
@@ -80,14 +78,13 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         case _             =>
           // For @TxFns macro annotation on Scala 2.12
           sbt.compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) :: Nil
-      }),
-      // Ensure clojure loads correctly for async tests run from sbt
-      Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+      })
     ) ++ (if (datomicProtocol == "free") {
       Seq(libraryDependencies += "com.datomic" % "datomic-free" % "0.9.5697")
     } else {
       Seq(
-        // Please download from https://cognitect.com/dev-tools and install locally per included instructions
+        // To use Datomic Pro, please download from https://www.datomic.com/get-datomic.html
+        // and install locally per included instructions
         libraryDependencies += "com.datomic" % "datomic-pro" % datomicProVersion,
         excludeDependencies += ExclusionRule("com.datomic", "datomic-free"),
         credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
@@ -101,10 +98,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "com.lihaoyi" %%% "utest" % "0.7.10",
       "io.suzaku" %%% "boopickle" % "1.4.0",
-      "com.github.cornerman" %%% "sloth" % "0.3.0",
-      "org.specs2" %%% "specs2-core" % "4.10.6",
+      "com.github.cornerman" %%% "sloth" % "0.3.0"
     ),
-
 
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
@@ -112,7 +107,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 //    unmanagedSources / excludeFilter := {
 //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
 //      val allowed     = Seq(
-//        //        sharedTests + "/core/attr",
+//                sharedTests + "/core/attr",
 //        //        sharedTests + "/core/attrMap",
 //        //        sharedTests + "/core/bidirectionals",
 //        //        sharedTests + "/core/crud",
@@ -163,9 +158,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         case _             => file(unmanagedBase.value.getPath ++ "/2.12")
       }
     },
-
-    // Let IntelliJ detect sbt-molecule-created jars in unmanaged lib directory
-    exportJars := true,
 
     // Run tests for all systems sequentially to avoid data locks with db
     // Only applies on JVM. On JS platform there's no parallelism anyway.

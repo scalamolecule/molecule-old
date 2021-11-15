@@ -796,7 +796,7 @@ private[molecule] object DatomicRpc extends MoleculeRpc
             .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case `datomicProtocol` =>
-          devLocal.connect(dbName, proxy)
+          devLocal.connect(proxy, dbName)
             .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case other =>
@@ -807,7 +807,7 @@ private[molecule] object DatomicRpc extends MoleculeRpc
       }
 
     case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
-      Datomic_PeerServer(accessKey, secret, endpoint).connect(dbName, proxy)
+      Datomic_PeerServer(accessKey, secret, endpoint).connect(proxy, dbName)
         .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
   }
 

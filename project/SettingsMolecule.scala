@@ -4,13 +4,18 @@ import sbtmolecule.MoleculePlugin.autoImport._
 
 trait SettingsMolecule {
 
-
-  // Paths to folders where `dataModel/<..>DataModel` files reside for your domain.
-
   val moleculeTests: Seq[Def.Setting[_]] = Seq(
 
     // Generate Molecule boilerplate code with `sbt clean compile -Dmolecule=true`
     moleculePluginActive := sys.props.get("molecule").contains("true"),
+
+    // We need schema conversions for mBrainz
+    moleculeSchemaConversions := true, // (default is false)
+
+    //    moleculeMakeJars := true, // (default is true)
+    //    moleculeGenericPkg := "molecule.core.generic",
+
+    // Multiple directories with data models
     moleculeDataModelPaths := Seq(
       "moleculeTests/dataModels/core/base",
       "moleculeTests/dataModels/core/bidirectionals",
@@ -23,10 +28,7 @@ trait SettingsMolecule {
       "moleculeTests/dataModels/examples/gremlin/gettingStarted"
 
       //      "moleculeTests/tests/core/generic"
-    ),
-    //    moleculeMakeJars := true, // true is default
-    //    moleculeGenericPkg := "molecule.core.generic",
-
+    )
   )
 
   /*
